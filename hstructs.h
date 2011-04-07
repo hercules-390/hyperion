@@ -781,18 +781,20 @@ struct SYSBLK {
         LOCK    msglock;                /* lock for writemsg         */
 #endif
         int     msglvl;                 /* Message level             */
-#define MLVL_NORMAL  0x01
-#define MLVL_VERBOSE 0x02
-#define MLVL_COMM    0x08
-#define MLVL_UR      0x10
-#define MLVL_DASD    0x20
-#define MLVL_TAPE    0x40
+#define MLVL_COMM    0x01
+#define MLVL_UR      0x02
+#define MLVL_DASD    0x04
+#define MLVL_TAPE    0x08
+#define MLVL_NORMAL  0x10
+#define MLVL_VERBOSE 0x20
 #define MLVL_DEBUG   0x80               /* bits */
+#define MLVL_DEVICES 0x0f
+#define MLVL_NONE    0x00
 #define MLVL_ANY     0xff
 #if defined(_DEBUG) || defined(DEBUG)
   #define  DEFAULT_MLVL     MLVL_ANY
 #else
-  #define  DEFAULT_MLVL     MLVL_VERBOSE
+  #define  DEFAULT_MLVL     MLVL_DEVICES
 #endif
         int     emsg;                   /* error message display ctrl*/
 #define EMSG_ON     0x01
@@ -1228,17 +1230,21 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* MVS 3.8j workaround       */
           u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
           u_int auto_create:1;          /* Create Tape if needed     */
-          u_int no_initt:1;             /* default to SL labels      */
+          u_int mnt_req_type:2;         /* default to SL labels      */
           u_int SL_tape_mounted:1;      /* Tape is SL labeled        */
+          u_int AL_tape_mounted:1;      /* Tape is AL labeled        */
           U16   chksize;                /* Chunk size                */
           off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
           enum  type_loader loader;     /* Loader Operation          */
+          u_int ldr_req_remount:1;      /* Initiate Remount request  */
+          u_int scr_tape_list:1;        /* Volume contains scrlist   */
           char *pszACLfilename;         /* Pointer to FQ filename for
                                            ACL AUTO mode options     */
           char *psACLvolsers;           /* pointer to ACL volser buf */
           char *psACLvolser;            /* pointer to cur ACL volser */
           u_int uiACLvolsers;           /* length of ACL volser buf  */
+          char  pszIL_VOLSER[7];         /* Internal Label of Tape    */   
 
         }       tdparms;                /* HET device parms          */
 

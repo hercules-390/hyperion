@@ -361,9 +361,11 @@ ARCHTAB *tb;
         {
             if ( sysblk.mainsize < ONE_MEGABYTE && sysblk.arch_mode != ARCH_370 )
             {
-                int rc;
+                int rc, m;
+                m = sysblk.mainsize == 0 ? FALSE : TRUE;
                 rc = configure_storage((U64)ONE_MEGABYTE);
-                WRMSG( HHC01421, "I", "will be ", "1 Mbyte" );
+                if ( MLVL(VERBOSE) || m )
+                    WRMSG( HHC01421, "I", "will be ", "1 Mbyte" );
             }
         }
 

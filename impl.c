@@ -492,7 +492,7 @@ int     dll_count;                      /* index into array          */
 #endif // defined( OPTION_CONFIG_SYMBOLS )
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
-    sysblk.msglvl   = DEFAULT_MLVL;
+    sysblk.msglvl   = DEFAULT_MLVL;                 /* Defaults to TERSE and DEVICES */
 
     /* set default console port address */
     sysblk.cnslport = strdup("3270");
@@ -733,7 +733,7 @@ int     dll_count;                      /* index into array          */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "hf:p:l:db:s:")) != EOF)
+    while ((c = getopt(argc, argv, "hf:p:l:db:s:tv")) != EOF)
     {
 
         switch (c) {
@@ -796,6 +796,9 @@ int     dll_count;                      /* index into array          */
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         case 'b':
             sysblk.logofile=optarg;
+            break;
+        case 'v':
+            sysblk.msglvl |= MLVL_VERBOSE;
             break;
         case 'd':
             sysblk.daemon_mode = 1;

@@ -1205,72 +1205,6 @@ BYTE    c;                              /* Character work area       */
 
 #define SF_ATTR_MDT         0x01
 
-#if defined(TURBO_HERCULES)
-static char *herclogo[]={
-"@ALIGN NONE",
-"@SBA 0,0",
-"@SF P",
-"TurboHercules Ver :",
-"@SF HP",
-"$(VERSION)",
-"@NL",
-"@SF P",
-"Host Name         :",
-"@SF HP",
-"$(HOSTNAME)",
-"@NL",
-"@SF P",
-"Host OS           :",
-"@SF HP",
-"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
-"@NL",
-"@SF P",
-"Host Architecture :",
-"@SF HP",
-"$(HOSTARCH)",
-"@NL",
-"@SF P",
-"Processors        :",
-"@SF HP",
-"$(HOSTNUMCPUS)",
-"@NL",
-"@SF P",
-"LPARNAME          :",
-"@SF HP",
-"$(LPARNAME)",
-"@NL",
-"@SF P",
-"Device Number     :",
-"@SF HP",
-"$(CSS):$(CCUU)",
-"@NL",
-"@SF P",
-"Subchannel        :",
-"@SF HP",
-"$(SUBCHAN)",
-"@SF HP",
-"@NL",
-"@NL",
-"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"TTTTTTTTTTTT        b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HH        HH                       l           ","@SF HP","@NL",
-"     TT             b          ","@SF P","HHHHHHHHHHHH                       l           ","@SF HP","@NL",   
-"     TT  u   u r rr bbbb   ooo ","@SF P","HHHHHHHHHHHH  ee  r rr  ccc  u   u l  ee   sss ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s   s","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH eeee r    c     u   u l eeee  ss  ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e    r    c     u   u l e      ss ","@SF HP","@NL",
-"     TT  u   u r    b   b o   o","@SF P","HH        HH e  e r    c   c u   u l e  e s  ss","@SF HP","@NL",
-"     TT   uuu  r    bbbb   ooo ","@SF P","HH        HH  ee  r     ccc   uuu  l  ee   sss ","@SF HP","@NL",
-"@NL",
-"           (c) Copyright Roger Bowler, Jan Jaeger, and others 1999-2010","@NL",
-"           (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved","@NL",
-"            Contains Licensed Materials - Property of TurboHercules, SAS"
-};
-
-#define LOGO_BUFFERSIZE 256;
-#else // !defined(TURBO_HERCULES)
-
 /*
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
@@ -1349,9 +1283,6 @@ static char *herclogo[]={
 "           Copyright (C) 1999-2010 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
-
-#endif // defined(TURBO_HERCULES)
-
 
 static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
 {

@@ -195,7 +195,9 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     }
 
     hdl_modpath = strdup(pathname);
-    WRMSG (HHC01508, "I", hdl_modpath);
+
+    if ( MLVL(VERBOSE) )
+        WRMSG (HHC01508, "I", hdl_modpath);
 
     return hdl_modpath;
 }

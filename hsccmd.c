@@ -1924,13 +1924,16 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    if ( sysblk.auto_scsi_mount_secs )
+    if ( MLVL(VERBOSE) )
     {
-        MSGBUF( buf, "%d", sysblk.auto_scsi_mount_secs );
-        WRMSG(HHC02203, "I", argv[0], buf);
+        if ( sysblk.auto_scsi_mount_secs )
+        {
+            MSGBUF( buf, "%d", sysblk.auto_scsi_mount_secs );
+            WRMSG(HHC02203, "I", argv[0], buf);
+        }
+        else
+            WRMSG(HHC02203, "I", argv[0], "NO");
     }
-    else
-        WRMSG(HHC02203, "I", argv[0], "NO");
 
     // Scan the device list looking for all SCSI tape devices
     // with either an active scsi mount thread and/or an out-
@@ -4801,7 +4804,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     U16      ssid=0;
     U16      devnum;
     int      single_devnum = FALSE;
-    char     buf[256];
+    char     buf[1024];
 
     UNREFERENCED(cmdline);
 
