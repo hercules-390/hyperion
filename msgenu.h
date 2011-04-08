@@ -1991,6 +1991,7 @@ do { \
 #define HHC90362 "%s - " F_GREG " Same line as above"
 #define HHC90363 "%s"
 #define HHC90364 "   zp    : %s"
+#define HHC90365 "search_cce dead end %02X %02X"
 
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
