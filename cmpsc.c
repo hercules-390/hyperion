@@ -220,6 +220,7 @@ struct ec                              /* Expand context                      */
 #endif /* #ifndef NO_2ND_COMPILE */
 
 static void  ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs);
+static int   ARCH_DEP(dead_end)(struct cc *cc, U16 *is);
 static void  ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static void  ARCH_DEP(expand_is)(struct ec *ec, U16 is);
 static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index);
@@ -451,11 +452,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
       /* Try to find a child in compression character entry */
       is = ch;
       cc.ec_tested = 0;
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+      if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
+      {
+        while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
-      /* Have we found a dead end character combination */      
-      if(!cc.ec_tested && is < 0x100)
-	cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+        /* Have we found a dead end character combination */      
+        if(!cc.ec_tested && is < 0x100)
+          cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+      }
 
       /* Write the last match, this can be the alphabet entry */
       if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -486,11 +490,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
       /* Try to find a child in compression character entry */
       is = ch;
       cc.ec_tested = 0;
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+      if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
+      {
+        while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
-      /* Have we found a dead end character combination */
-      if(!cc.ec_tested && is < 0x100)
-	cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+        /* Have we found a dead end character combination */
+        if(!cc.ec_tested && is < 0x100)
+          cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+      }
 
       /* Write the last match, this can be the alphabet entry */
       cc.is[i] = is;
@@ -520,7 +527,6 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   while(GR_A(r2 + 1, regs))
   {
-
     /* Get the next character, return on end of source */
     if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
       return;
@@ -528,11 +534,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Try to find a child in compression character entry */
     is = ch;
     cc.ec_tested = 0;
-    while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+    if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
+    {
+      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
-    /* Have we found a dead end character combination */
-    if(!cc.ec_tested && is < 0x100)
-      cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+      /* Have we found a dead end character combination */
+      if(!cc.ec_tested && is < 0x100)
+        cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+    }
 
     /* Write the last match, this can be the alphabet entry */
     if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -541,6 +550,35 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Commit registers, we have completed a full compression */
     COMMITREGS(regs, iregs, r1, r2);
   }
+}
+
+/*----------------------------------------------------------------------------*/
+/* dead_end                                                                   */
+/*----------------------------------------------------------------------------*/
+int ARCH_DEP(dead_end)(struct cc *cc, U16 *is)
+{
+  BYTE ch;
+
+  /* We always match the alpabet entry, so set last match */
+  ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
+
+  /* Check for dead end character combination */
+  if(ARCH_DEP(fetch_ch(cc, &ch)))
+    return(0);
+  if(cc->dead_end[*is][ch / 8] & 0x80 >> (ch % 8))
+  {
+
+#ifdef OPTION_CMPSC_DEBUG
+    WRMSG(HHC90365, "D", *is, ch);
+#endif  /* #ifdef OPTION_CMPSC_DEBUG */
+
+    /* Dead end found */
+    return(1);
+  }
+
+  /* Get the alphabet entry as preparation for searching */
+  cc->cce = ARCH_DEP(fetch_cce)(cc, *is);
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -797,31 +835,6 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
   int i;                               /* child character index               */
   int ind_search_siblings;             /* Indicator for searching siblings    */
 
-  /* Check on initial entrance */
-  if(*is < 0x100)
-  {
-    /* We always match the alpabet entry, so set last match */
-    ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
-
-    /* Check for dead end character combination */    
-    if(ARCH_DEP(fetch_ch(cc, ch)))
-      return(0);
-    if(cc->dead_end[*is][*ch / 8] & 0x80 >> (*ch % 8))
-    {
-
-#ifdef OPTION_CMPSC_DEBUG
-      WRMSG(HHC90365, "D", *is, *ch);
-#endif  /* #ifdef OPTION_CMPSC_DEBUG */	  
-
-      /* Prevent second dead end administration */
-      cc->ec_tested = 1;
-      return(0);
-    }
-
-    /* Get the alphabet entry */
-    cc->cce = ARCH_DEP(fetch_cce)(cc, *is);
-  }
-
   /* Initialize values */
   ccs = CCE_ccs(cc->cce);
   
@@ -858,7 +871,7 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
 
         /* Found a child get the character entry */
         ccce = ARCH_DEP(fetch_cce)(cc, CCE_cptr(cc->cce) + i);
-	cc->ec_tested = 1;
+        cc->ec_tested = 1;
 
         /* Check if additional extension characters match */
         if(likely(ARCH_DEP(test_ec)(cc, ccce)))
@@ -893,7 +906,7 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
       memset(cc->dead_end[*is], 0xff, 0x100 / 8);
       cc->ec_tested = 1;
     }
-  }	
+  }
 
   /* No siblings, write found index symbol */
   return(0);
@@ -992,7 +1005,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 
         /* Found a child get the character entry */
         ccce = ARCH_DEP(fetch_cce)(cc, CCE_cptr(cc->cce) + sd_ptr + i + 1);
-	cc->ec_tested = 1;
+        cc->ec_tested = 1;
 
         /* Check if additional extension characters match */
         if(unlikely(ARCH_DEP(test_ec)(cc, ccce)))
@@ -1502,7 +1515,7 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
     /* Get preceding entry */
     index = ECE_pptr(ece) * 8;
     if(unlikely(!ec->dict[index / 0x800]))
-      ec->dict[index / 0x800] = MADDR((ec->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(ec->regs), ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);	  
+      ec->dict[index / 0x800] = MADDR((ec->dictor + (index / 0x800) * 0x800) & ADDRESS_MAXWRAP(ec->regs), ec->r2, ec->regs, ACCTYPE_READ, ec->regs->psw.pkey);
     ece = &ec->dict[index / 0x800][index % 0x800];
     ITIMER_SYNC((ec->dictor + index) & ADDRESS_MAXWRAP(ec->regs), 8 - 1, ec->regs);
 
