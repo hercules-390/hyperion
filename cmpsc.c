@@ -884,6 +884,16 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
     if(likely(CCE_mcc(cc->cce)))
       return(ARCH_DEP(search_sd)(cc, ch, is));
   }
+  else
+  {
+    /* Check for alphabet entry */
+    if(*is < 0x100)
+    {
+      /* Set all dead end combinations and prevent adminitration */
+      memset(cc->dead_end[*is], 0xff, 0x100 / 8);
+      cc->ec_tested = 1;
+    }
+  }	
 
   /* No siblings, write found index symbol */
   return(0);
