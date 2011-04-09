@@ -458,7 +458,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
         /* Have we found a dead end character combination */      
         if(!cc.ec_tested && is < 0x100)
+        {
+
+#ifdef OPTION_CMPSC_DEBUG
+          WRMSG(HHC90366, "D", is, ch);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
           cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+        }
       }
 
       /* Write the last match, this can be the alphabet entry */
@@ -496,7 +503,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
         /* Have we found a dead end character combination */
         if(!cc.ec_tested && is < 0x100)
+        {
+
+#ifdef OPTION_CMPSC_DEBUG
+          WRMSG(HHC90366, "D", is, ch);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
           cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+        }
       }
 
       /* Write the last match, this can be the alphabet entry */
@@ -540,7 +554,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Have we found a dead end character combination */
       if(!cc.ec_tested && is < 0x100)
+      {
+
+#ifdef OPTION_CMPSC_DEBUG
+        WRMSG(HHC90366, "D", is, ch);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */	  
+
         cc.dead_end[is][ch / 8] |= 0x80 >> (ch % 8);
+      }
     }
 
     /* Write the last match, this can be the alphabet entry */
@@ -902,7 +923,12 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
     /* Check for alphabet entry */
     if(*is < 0x100)
     {
-      /* Set all dead end combinations and prevent adminitration */
+
+#ifdef OPTION_CMPSC_DEBUG
+      WRMSG(HHC90367, "D", *is);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+      /* Set all dead end combinations and prevent second administration */
       memset(cc->dead_end[*is], 0xff, 0x100 / 8);
       cc->ec_tested = 1;
     }
