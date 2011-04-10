@@ -317,12 +317,12 @@ char   *strtok_str = NULL;              /* save last position        */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void fbadasd_query_device (DEVBLK *dev, char **class,
+void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKDDASD_EXT    *cckd;
 
-    BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
     cckd = dev->cckd_ext;
     if (!cckd)

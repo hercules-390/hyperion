@@ -215,7 +215,7 @@ typedef struct TAMDIR             TAMDIR;             // (see tapedev.h)
 /*-------------------------------------------------------------------*/
 
 typedef int   DEVIF  (DEVBLK *dev, int argc, char *argv[]);
-typedef void  DEVQF  (DEVBLK *dev, char **class, int buflen,
+typedef void  DEVQF  (DEVBLK *dev, char **devclass, int buflen,
                                    char *buffer);
 typedef void  DEVXF  (DEVBLK *dev, BYTE code, BYTE flags,
                                    BYTE chained, U16 count,

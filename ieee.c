@@ -930,14 +930,14 @@ static void lengthen_short_to_ext(struct sbfp *op2, struct ebfp *op1, REGS *regs
  * save result into long register and return condition code
  * Roger Bowler, 19 July 2003
  */
-static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
+static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
 {
     int exp;
     U64 fract;
     U32 r0, r1;
     int cc;
 
-    switch (class) {
+    switch (fpclass) {
     default:
     case FP_NAN:
         r0 = 0x7FFFFFFF;

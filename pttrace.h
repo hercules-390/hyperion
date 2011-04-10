@@ -91,7 +91,7 @@ void *ptt_timeout();
 
 typedef struct _PTT_TRACE {
         TID          tid;               /* Thread id                  */
-        int          class;             /* Trace record class         */
+        int          trclass;           /* Trace record class         */
 #define PTT_CL_LOG  0x0001              /* Logger records             */
 #define PTT_CL_TMR  0x0002              /* Timer/Clock records        */
 #define PTT_CL_THR  0x0004              /* Thread records             */

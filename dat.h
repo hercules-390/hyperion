@@ -836,7 +836,7 @@ RADR    ste;                            /* Segment table entry       */
 U16     pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 
-    regs->dat.private = regs->dat.protect = 0;
+    regs->dat.pvtaddr = regs->dat.protect = 0;
 
     /* Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -852,7 +852,7 @@ U32     ptl;                            /* Page table length         */
     /* Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -991,7 +991,7 @@ RADR    ste;                            /* Segment table entry       */
 RADR    pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 
-    regs->dat.private = regs->dat.protect = 0;
+    regs->dat.pvtaddr = regs->dat.protect = 0;
 
     /* [3.11.3.1] Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -1002,12 +1002,12 @@ U32     ptl;                            /* Page table length         */
         goto tran_spec_excp;
 
     /* Extract the private space bit from segment table descriptor */
-    regs->dat.private = ((regs->dat.asd & STD_PRIVATE) != 0);
+    regs->dat.pvtaddr = ((regs->dat.asd & STD_PRIVATE) != 0);
 
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -1046,7 +1046,7 @@ U32     ptl;                            /* Page table length         */
 
         /* If the segment table origin register indicates a private
            address space then STE must not indicate a common segment */
-        if (regs->dat.private && (ste & (SEGTAB_COMMON)))
+        if (regs->dat.pvtaddr && (ste & (SEGTAB_COMMON)))
             goto tran_spec_excp;
 
         /* Isolate page table origin and length */
@@ -1126,21 +1126,21 @@ U16     rfx, rsx, rtx;                  /* Region first/second/third
 U16     sx, px;                         /* Segment and page index,
                                            + 3 low-order zero bits   */
 
-    regs->dat.private = regs->dat.protect = 0;
+    regs->dat.pvtaddr = regs->dat.protect = 0;
 
     /* Load the address space control element */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
         goto tran_alet_excp;
 
     /* Extract the private space bit from the ASCE */
-    regs->dat.private = ((regs->dat.asd & (ASCE_P|ASCE_R)) != 0);
+    regs->dat.pvtaddr = ((regs->dat.asd & (ASCE_P|ASCE_R)) != 0);
 
 //  LOGMSG("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -1398,7 +1398,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Translation specification exception if the ASCE
                indicates a private space, and the segment table
                entry indicates a common segment */
-            if (regs->dat.private && (ste & ZSEGTAB_C))
+            if (regs->dat.pvtaddr && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
         
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
@@ -2189,7 +2189,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
        )
     {
-        regs->dat.private = regs->dat.protect = 0;
+        regs->dat.pvtaddr = regs->dat.protect = 0;
         regs->dat.raddr = addr;
         regs->dat.rpfra = addr & PAGEFRAME_PAGEMASK;
 
@@ -2239,7 +2239,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         {
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
             /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
-            regs->dat.private = regs->hostregs->dat.private;
+            regs->dat.pvtaddr = regs->hostregs->dat.pvtaddr;
             
             /* Build tlb entry of XC dataspace */
             regs->dat.asd = regs->hostregs->dat.asd ^ TLB_HOST_ASD;
@@ -2314,7 +2314,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Update accelerated lookup TLB fields */
         regs->tlb.storkey[ix] = regs->dat.storkey;
         regs->tlb.skey[ix]    = *regs->dat.storkey & STORKEY_KEY;
-        regs->tlb.acc[ix]     = (addr >= PSA_SIZE || regs->dat.private)
+        regs->tlb.acc[ix]     = (addr >= PSA_SIZE || regs->dat.pvtaddr)
                               ? (ACC_READ|ACC_CHECK|acctype)
                               :  ACC_READ;
         regs->tlb.main[ix]    = NEW_MAINADDR (regs, addr, apfra);

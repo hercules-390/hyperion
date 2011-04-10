@@ -770,7 +770,7 @@ U32 doipl;
 void cgibin_debug_device_list(WEBBLK *webblk)
 {
 DEVBLK *dev;
-char   *class;
+char   *devclass;
 
     html_header(webblk);
 
@@ -785,7 +785,7 @@ char   *class;
     for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
         if(dev->pmcw.flag5 & PMCW5_V)
         {
-             (dev->hnd->query)(dev, &class, 0, NULL);
+             (dev->hnd->query)(dev, &devclass, 0, NULL);
 
              hprintf(webblk->sock,"<tr>"
                                    "<td>%4.4X</td>"
@@ -796,7 +796,7 @@ char   *class;
                                    "</tr>\n",
                                    dev->devnum,
                                    dev->subchan,dev->subchan,
-                                   class,
+                                   devclass,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
                                    (dev->busy ? "busy " : ""),

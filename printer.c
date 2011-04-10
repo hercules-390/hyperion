@@ -626,10 +626,10 @@ int   sockdev = 0;                     /* 1 == is socket device     */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void printer_query_device (DEVBLK *dev, char **class,
+static void printer_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s IO[%" I64_FMT "u]",
                  dev->filename,

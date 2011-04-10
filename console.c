@@ -641,7 +641,7 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 /*      0=negotiation successful, -1=negotiation error               */
 /*-------------------------------------------------------------------*/
 static int
-negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,char *group)
+negotiate(int csock, BYTE *devclass, BYTE *model, BYTE *extatr, U16 *devn,char *group)
 {
 int    rc;                              /* Return code               */
 char  *termtype;                        /* Pointer to terminal type  */
@@ -761,7 +761,7 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
         }
 
         /* Return printer-keyboard terminal class */
-        *class = 'K';
+        *devclass = 'K';
         *model = '-';
         *extatr = '-';
         return 0;
@@ -814,8 +814,8 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
     if (rc < 0) return -1;
 
     /* Return display terminal class */
-    if (memcmp(termtype+4,"3287",4)==0) *class='P';
-    else *class = 'D';
+    if (memcmp(termtype+4,"3287",4)==0) *devclass='P';
+    else *devclass = 'D';
     return 0;
 
 } /* end function negotiate */
@@ -1550,7 +1550,7 @@ struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
 char                   *clientip;       /* Addr of client ip address */
 U16                     devnum;         /* Requested device number   */
-BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
+BYTE                    devclass;       /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
 char                    buf[1920];       /* Message buffer            */
@@ -1601,7 +1601,7 @@ char                    *logoout;
 #endif
 
     /* Negotiate telnet parameters */
-    rc = negotiate (csock, &class, &model, &extended, &devnum, group);
+    rc = negotiate (csock, &devclass, &model, &extended, &devnum, group);
     if (rc != 0)
     {
         close_socket (csock);
@@ -1617,13 +1617,13 @@ char                    *logoout;
             continue;
 
         /* Loop if non-matching device type */
-        if (class == 'D' && dev->devtype != 0x3270)
+        if (devclass == 'D' && dev->devtype != 0x3270)
             continue;
 
-        if (class == 'P' && dev->devtype != 0x3287)
+        if (devclass == 'P' && dev->devtype != 0x3287)
             continue;
 
-        if (class == 'K' && dev->devtype != 0x1052
+        if (devclass == 'K' && dev->devtype != 0x1052
             && dev->devtype != 0x3215)
             continue;
 
@@ -1724,16 +1724,16 @@ char                    *logoout;
             if(!group[0])
             {
                 MSGBUF( rejmsg, MSG(HHC01028, "E", 
-                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215"))));
+                        (devclass=='D' ? "3270" : (devclass=='P' ? "3287" : "1052 or 3215"))));
                 WRMSG( HHC01028, "E", 
-                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
+                        (devclass=='D' ? "3270" : (devclass=='P' ? "3287" : "1052 or 3215")));
             }
             else
             {
                 MSGBUF( rejmsg, MSG(HHC01029, "E",
-                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group));
+                        (devclass=='D' ? "3270" : (devclass=='P' ? "3287" : "1052 or 3215")),group));
                 WRMSG(HHC01029, "E",
-                        (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group);
+                        (devclass=='D' ? "3270" : (devclass=='P' ? "3287" : "1052 or 3215")),group);
             }
         }
         else
@@ -1745,7 +1745,7 @@ char                    *logoout;
         TNSDEBUG1( "DBG019: %s\n", rejmsg);
 
         /* Send connection rejection message to client */
-        if (class != 'K')
+        if (devclass != 'K')
         {
             len = MSGBUF( buf,
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
@@ -1778,7 +1778,7 @@ char                    *logoout;
             len = MSGBUF( buf, "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
         }
 
-        if (class != 'P')  /* do not write connection resp on 3287 */
+        if (devclass != 'P')  /* do not write connection resp on 3287 */
         {
             rc = send_packet (csock, (BYTE *)buf, (int)len, "CONNECTION RESPONSE");
         }
@@ -1798,7 +1798,7 @@ char                    *logoout;
     WRMSG(HHC01018, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype);
 
     /* Send connection message to client */
-    if (class != 'K')
+    if (devclass != 'K')
     {
 #if defined(OPTION_CONFIG_SYMBOLS)
 
@@ -1834,7 +1834,7 @@ char                    *logoout;
         logoout=buf;
     }
 
-    if (class != 'P')  /* do not write connection resp on 3287 */
+    if (devclass != 'P')  /* do not write connection resp on 3287 */
     {
         rc = send_packet (csock, (BYTE *)logoout, (int)len, "CONNECTION RESPONSE");
     }
@@ -1849,7 +1849,7 @@ char                    *logoout;
          (2) this is NOT the System-370 mode initial power-on state
          and it is not the SYSG console
     */
-    if (class != 'P'
+    if (devclass != 'P'
   #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         && dev != sysblk.sysgdev
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
@@ -2478,10 +2478,10 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 /* QUERY THE 3270 DEVICE DEFINITION                                  */
 /*-------------------------------------------------------------------*/
 static void
-loc3270_query_device (DEVBLK *dev, char **class,
+loc3270_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, devclass, buflen, buffer );
 
     if (dev->connected)
     {
@@ -2779,10 +2779,10 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 /* QUERY THE 1052/3215 DEVICE DEFINITION                             */
 /*-------------------------------------------------------------------*/
 static void
-constty_query_device (DEVBLK *dev, char **class,
+constty_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
     if (dev->connected)
     {

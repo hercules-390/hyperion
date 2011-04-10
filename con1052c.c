@@ -127,10 +127,10 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 /* QUERY THE 1052/3215 DEVICE DEFINITION                             */
 /*-------------------------------------------------------------------*/
 static void
-con1052_query_device (DEVBLK *dev, char **class,
+con1052_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
     snprintf(buffer, buflen-1,
         "*syscons cmdpref(%s)%s IO[%" I64_FMT "u]",

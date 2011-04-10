@@ -346,7 +346,7 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
        2K of non-private address spaces if CR0 bit 6 is set */
     if (addr < 2048
     && (regs->CR(0) & CR0_FETCH_OVRD)
-    && regs->dat.private == 0)
+    && regs->dat.pvtaddr == 0)
     return 0;
 #endif /*FEATURE_FETCH_PROTECTION_OVERRIDE*/
 
@@ -402,7 +402,7 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 
     /* Low-address protection does not apply to private address
        spaces */
-    if (regs->dat.private)
+    if (regs->dat.pvtaddr)
         return 0;
 
     /* Return one if location is low-address protected */

@@ -678,12 +678,12 @@ DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *loc)
 }
 #endif
 
-DLL_EXPORT void ptt_pthread_trace (int class, char * type, void *data1, void *data2,
+DLL_EXPORT void ptt_pthread_trace (int trclass, char * type, void *data1, void *data2,
                         char *loc, int result)
 {
 int i, n;
 
-    if (pttrace == NULL || pttracen == 0 || !(pttclass & class) ) return;
+    if (pttrace == NULL || pttracen == 0 || !(pttclass & trclass) ) return;
 
     /*
     ** Fish debug: it appears MSVC sometimes sets the __FILE__ macro
@@ -724,7 +724,7 @@ int i, n;
     if (pttracex >= n) pttracex = 0;
     RELEASE_PTTLOCK;
     pttrace[i].tid   = thread_id();
-    pttrace[i].class = class;
+    pttrace[i].trclass = trclass;
     pttrace[i].type  = type;
     pttrace[i].data1 = data1;
     pttrace[i].data2 = data2;
@@ -754,10 +754,10 @@ time_t tt;
         {
             tt = pttrace[i].tv.tv_sec; strlcpy(tbuf, ctime(&tt),sizeof(tbuf)); tbuf[19] = '\0';
 
-            if (pttrace[i].result == PTT_MAGIC && (pttrace[i].class & PTT_CL_THR))
+            if (pttrace[i].result == PTT_MAGIC && (pttrace[i].trclass & PTT_CL_THR))
                 result[0] = '\0';
             else
-                if((pttrace[i].class & ~PTT_CL_THR))
+                if((pttrace[i].trclass & ~PTT_CL_THR))
                     MSGBUF(result, "%8.8x", pttrace[i].result);
                 else
                     MSGBUF(result, "%d", pttrace[i].result);

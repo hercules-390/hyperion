@@ -202,7 +202,7 @@ typedef struct _DAT {
         int     stid;                   /* Address space indicator   */
         BYTE   *storkey;                /* ->Storage key             */
         U16     xcode;                  /* Translation exception code*/
-        u_int   private:1,              /* 1=Private address space   */
+        u_int   pvtaddr:1,              /* 1=Private address space   */
                 protect:2;              /* 1=Page prot, 2=ALE prot   */
       } DAT;
 

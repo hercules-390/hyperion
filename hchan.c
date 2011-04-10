@@ -108,10 +108,10 @@ static  int     hchan_init_int(DEVBLK *dev,int ac,char **av)
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void hchan_query_device (DEVBLK *dev, char **class,
+static void hchan_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "CHAN", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "CHAN", dev, devclass, buflen, buffer );
 
     snprintf(buffer,buflen,"** CONTROL UNIT OFFLINE **");
 }

@@ -315,10 +315,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void cardrdr_query_device (DEVBLK *dev, char **class,
+static void cardrdr_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s%s IO[%" I64_FMT "u]",
         ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),

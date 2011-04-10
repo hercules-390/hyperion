@@ -374,7 +374,7 @@ struct TAPEMEDIA_HANDLER
 /*-------------------------------------------------------------------*/
 extern int   tapedev_init_handler   (DEVBLK *dev, int argc, char *argv[]);
 extern int   tapedev_close_device   (DEVBLK *dev );
-extern void  tapedev_query_device   (DEVBLK *dev, char **class, int buflen, char *buffer);
+extern void  tapedev_query_device   (DEVBLK *dev, char **devclass, int buflen, char *buffer);
 
 extern void  autoload_init          (DEVBLK *dev, int ac,   char **av);
 extern int   autoload_mount_first   (DEVBLK *dev);

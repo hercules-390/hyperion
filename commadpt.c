@@ -2161,10 +2161,10 @@ static char *commadpt_lnctl_names[]={
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void commadpt_query_device (DEVBLK *dev, char **class,
+static void commadpt_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, devclass, buflen, buffer );
 
     snprintf(buffer,buflen-1,"%s STA=%s CN=%s, EIB=%s OP=%s IO[%" I64_FMT "u]",
             commadpt_lnctl_names[dev->commadpt->lnctl],

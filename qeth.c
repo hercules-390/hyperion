@@ -1039,12 +1039,12 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void qeth_query_device (DEVBLK *dev, char **class,
+static void qeth_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
 char qdiostat[80];
 
-    BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, devclass, buflen, buffer );
 
     if(dev->group->acount == OSA_GROUP_SIZE)
     {

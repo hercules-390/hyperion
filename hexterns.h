@@ -472,7 +472,7 @@ void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
 int ckddasd_close_device ( DEVBLK *dev );
-void ckddasd_query_device (DEVBLK *dev, char **class,
+void ckddasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);
 int ckddasd_hsuspend ( DEVBLK *dev, void *file );
 int ckddasd_hresume  ( DEVBLK *dev, void *file );
@@ -491,7 +491,7 @@ void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
 int fbadasd_close_device ( DEVBLK *dev );
-void fbadasd_query_device (DEVBLK *dev, char **class,
+void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);
 int fbadasd_hsuspend ( DEVBLK *dev, void *file );
 int fbadasd_hresume  ( DEVBLK *dev, void *file );

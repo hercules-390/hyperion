@@ -53,7 +53,7 @@ typedef struct _CKDDEV {                /* CKD Device table entry    */
         char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
         BYTE    model;                  /* Device model              */
-        BYTE    class;                  /* Device class              */
+        BYTE    devclass;               /* Device class              */
         BYTE    code;                   /* Device code               */
         U16     cyls;                   /* Number primary cylinders  */
         U16     altcyls;                /* Number alternate cylinders*/
@@ -99,7 +99,7 @@ typedef struct _CKDCU {                 /* CKD Control Unit entry    */
 typedef struct _FBADEV {                /* FBA Device entry          */
         char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
-        BYTE    class;                  /* Device class              */
+        BYTE    devclass;               /* Device class              */
         BYTE    type;                   /* Type                      */
         BYTE    model;                  /* Model                     */
         U32     bpg;                    /* Blocks per cyclical group */

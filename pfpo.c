@@ -50,7 +50,7 @@
 typedef struct
 {
   unsigned base;
-  unsigned class;
+  unsigned fpclass;
   char str[256];
 }
 FLOAT;
@@ -74,27 +74,27 @@ void BFPshortGet(FLOAT *f, U32 r)
   if(exp == 127)
   {
     if(!frac)
-      f->class = CLASS_ZERO;
+      f->fpclass = CLASS_ZERO;
     else
-      f->class = CLASS_SUBNORMAL;
+      f->fpclass = CLASS_SUBNORMAL;
   }
   else if(exp == 0xff)
   {
     if(!frac)
-      f->class = CLASS_INFINITY;
+      f->fpclass = CLASS_INFINITY;
     else
     {
       if(frac & 0x80000000)
-        f->class = CLASS_QNAN;
+        f->fpclass = CLASS_QNAN;
       else
-        f->class = CLASS_SNAN;
+        f->fpclass = CLASS_SNAN;
     }
   }
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 2;
-  switch(f->class)
+  switch(f->fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");
@@ -121,7 +121,7 @@ void BFPshortGet(FLOAT *f, U32 r)
         strcpy(f->str, "-0.");
       else
         strcpy(f->str, "0.");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         strcat(f->str, "1");
       else
         strcat(f->str, "0");
@@ -135,7 +135,7 @@ void BFPshortGet(FLOAT *f, U32 r)
         mask >>= 1;
       }
       strcat(f->str, "@");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 127);
       else
         strcat(f->str, "1");
@@ -158,27 +158,27 @@ void BFPlongGet(FLOAT *f, U64 r)
   if(exp == 1023)
   {
     if(!frac)
-      f->class = CLASS_ZERO;
+      f->fpclass = CLASS_ZERO;
     else
-      f->class = CLASS_SUBNORMAL;
+      f->fpclass = CLASS_SUBNORMAL;
   }
   else if(exp == 0x7ff)
   {
     if(!frac)
-      f->class = CLASS_INFINITY;
+      f->fpclass = CLASS_INFINITY;
     else
     {
       if(frac & 0x8000000000000000)
-        f->class = CLASS_QNAN;
+        f->fpclass = CLASS_QNAN;
       else
-        f->class = CLASS_SNAN;
+        f->fpclass = CLASS_SNAN;
     }
   }
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 2;
-  switch(f->class)
+  switch(f->fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");
@@ -205,7 +205,7 @@ void BFPlongGet(FLOAT *f, U64 r)
         strcpy(f->str, "-0.");
       else
         strcpy(f->str, "0.");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         strcat(f->str, "1");
       else
         strcat(f->str, "0");
@@ -219,7 +219,7 @@ void BFPlongGet(FLOAT *f, U64 r)
         mask >>= 1;
       }
       strcat(f->str, "@");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 1023);
       else
         strcat(f->str, "1");
@@ -244,27 +244,27 @@ void BFPextGet(FLOAT *f, U64 h, U64 l)
   if(exp == 16383)
   {
     if(!frach && !fracl)
-      f->class = CLASS_ZERO;
+      f->fpclass = CLASS_ZERO;
     else
-      f->class = CLASS_SUBNORMAL;
+      f->fpclass = CLASS_SUBNORMAL;
   }
   else if(exp == 0x7fff)
   {
     if(!frach && !fracl)
-      f->class = CLASS_INFINITY;
+      f->fpclass = CLASS_INFINITY;
     else
     {
       if(frach & 0x8000000000000000)
-        f->class = CLASS_QNAN;
+        f->fpclass = CLASS_QNAN;
       else
-        f->class = CLASS_SNAN;
+        f->fpclass = CLASS_SNAN;
     }
   }
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 2;
-  switch(f->class)
+  switch(f->fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");
@@ -291,7 +291,7 @@ void BFPextGet(FLOAT *f, U64 h, U64 l)
         strcpy(f->str, "-0.");
       else
         strcpy(f->str, "0.");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         strcat(f->str, "1");
       else
         strcat(f->str, "0");
@@ -314,7 +314,7 @@ void BFPextGet(FLOAT *f, U64 h, U64 l)
         mask >>= 1;
       }
       strcat(f->str, "@");
-      if(f->class == CLASS_NORMAL)
+      if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 16383);
       else
         strcat(f->str, "1");
@@ -328,7 +328,7 @@ void BFPextGet(FLOAT *f, U64 h, U64 l)
 
 void DFPshortGet(FLOAT *f, U32 r)
 {
-  unsigned class;
+  unsigned fpclass;
   decimal32 dec32;
   unsigned i;
   U32 temp;
@@ -343,22 +343,22 @@ void DFPshortGet(FLOAT *f, U32 r)
 
   f->base = 10;
   if(!strncmp(f->str, "-0E", 2) || !strncmp(f->str, "0E", 2))
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else if(strstr(f->str, "E0"))
-    f->class = CLASS_SUBNORMAL;
+    f->fpclass = CLASS_SUBNORMAL;
   else if(!strcmp(f->str, "Ininity"))
-    f->class = CLASS_INFINITY;
+    f->fpclass = CLASS_INFINITY;
   else if(!strcmp(f->str, "NaN"))
-    f->class = CLASS_QNAN;
+    f->fpclass = CLASS_QNAN;
   else if(!strcmp(f->str, "sNaN"))
-    f->class = CLASS_SNAN;
+    f->fpclass = CLASS_SNAN;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 }
 
 void DFPlongGet(FLOAT *f, U64 r)
 {
-  unsigned class;
+  unsigned fpclass;
   decimal64 dec64;
   unsigned i;
   U64 temp;
@@ -373,22 +373,22 @@ void DFPlongGet(FLOAT *f, U64 r)
 
   f->base = 10;
   if(!strncmp(f->str, "-0E", 2) || !strncmp(f->str, "0E", 2))
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else if(strstr(f->str, "E0"))
-    f->class = CLASS_SUBNORMAL;
+    f->fpclass = CLASS_SUBNORMAL;
   else if(!strcmp(f->str, "Ininity"))
-    f->class = CLASS_INFINITY;
+    f->fpclass = CLASS_INFINITY;
   else if(!strcmp(f->str, "NaN"))
-    f->class = CLASS_QNAN;
+    f->fpclass = CLASS_QNAN;
   else if(!strcmp(f->str, "sNaN"))
-    f->class = CLASS_SNAN;
+    f->fpclass = CLASS_SNAN;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 }
 
 void DFPextGet(FLOAT *f, U64 h, U64 l)
 {
-  unsigned class;
+  unsigned fpclass;
   decimal128 dec128;
   unsigned i;
   U64 temph;
@@ -408,17 +408,17 @@ void DFPextGet(FLOAT *f, U64 h, U64 l)
 
   f->base = 10;
   if(!strncmp(f->str, "-0E", 2) || !strncmp(f->str, "0E", 2))
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else if(strstr(f->str, "E0"))
-    f->class = CLASS_SUBNORMAL;
+    f->fpclass = CLASS_SUBNORMAL;
   else if(!strcmp(f->str, "Ininity"))
-    f->class = CLASS_INFINITY;
+    f->fpclass = CLASS_INFINITY;
   else if(!strcmp(f->str, "NaN"))
-    f->class = CLASS_QNAN;
+    f->fpclass = CLASS_QNAN;
   else if(!strcmp(f->str, "sNaN"))
-    f->class = CLASS_SNAN;
+    f->fpclass = CLASS_SNAN;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 }
  
 /*-------------------------------------------------------------------*/
@@ -438,12 +438,12 @@ void HFPshortGet(FLOAT *f, U32 r)
   frac = r & 0x00ffffff;
 
   if(!frac)
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 16;
-  switch(f->class)
+  switch(f->fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");
@@ -468,7 +468,7 @@ void HFPshortGet(FLOAT *f, U32 r)
 
 void HFPlongGet(FLOAT *f, U64 r)
 {
-  unsigned class;
+  unsigned fpclass;
   unsigned exp;
   U64 frac;
   unsigned i;
@@ -480,12 +480,12 @@ void HFPlongGet(FLOAT *f, U64 r)
   frac = r & 0x00ffffffffffffff;
 
   if(!frac)
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 16;
-  switch(class)
+  switch(fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");
@@ -510,7 +510,7 @@ void HFPlongGet(FLOAT *f, U64 r)
 
 void HFPextGet(FLOAT *f, U64 h, U64 l)
 {
-  unsigned class;
+  unsigned fpclass;
   unsigned exp;
   U64 frach;
   U64 fracl;
@@ -524,12 +524,12 @@ void HFPextGet(FLOAT *f, U64 h, U64 l)
   fracl = l & 0x00ffffffffffffff;
 
   if(!frach && !fracl)
-    f->class = CLASS_ZERO;
+    f->fpclass = CLASS_ZERO;
   else
-    f->class = CLASS_NORMAL;
+    f->fpclass = CLASS_NORMAL;
 
   f->base = 16;
-  switch(f->class)
+  switch(f->fpclass)
   {
     case CLASS_ZERO:
       strcpy(f->str, "0");

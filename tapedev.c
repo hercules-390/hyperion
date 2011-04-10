@@ -1469,13 +1469,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void tapedev_query_device ( DEVBLK *dev, char **class,
-                int buflen, char *buffer )
+void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
     char devparms[ MAX_PATH+1 + 128 ];
     char dispmsg [ 256 ];
 
-    BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, class, buflen, buffer );
+    BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, devclass, buflen, buffer );
 
     bzero(buffer, buflen);
     bzero(devparms,sizeof(devparms));
