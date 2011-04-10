@@ -6023,8 +6023,8 @@ BYTE     unitstat, code = 0;
                         bzero( volser, sizeof(volser) );
                         bzero( owner,  sizeof(owner)  );
 
-                        strncpy( volser, &(char)sLABEL[04],  6 );
-                        strncpy( owner,  &(char)sLABEL[37], 14 );
+                        strncpy( volser, (char*)&sLABEL[04],  6 );
+                        strncpy( owner,  (char*)&sLABEL[37], 14 );
 
                         MSGBUF( msgbuf, "%s%s%s%s%s", 
                                         volser, 
