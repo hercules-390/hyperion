@@ -451,9 +451,9 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Try to find a child in compression character entry */
       is = ch;
-      cc.ec_tested = 0;
       if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
       {
+        cc.ec_tested = 0;
         while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
         /* Have we found a dead end character combination */      
@@ -496,9 +496,9 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Try to find a child in compression character entry */
       is = ch;
-      cc.ec_tested = 0;
       if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
       {
+        cc.ec_tested = 0;
         while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
         /* Have we found a dead end character combination */
@@ -547,9 +547,9 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
     /* Try to find a child in compression character entry */
     is = ch;
-    cc.ec_tested = 0;
     if(likely(!ARCH_DEP(dead_end)(&cc, &is)))
     {
+      cc.ec_tested = 0;
       while(ARCH_DEP(search_cce)(&cc, &ch, &is));
 
       /* Have we found a dead end character combination */
