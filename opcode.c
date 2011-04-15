@@ -1225,6 +1225,10 @@ static zz_func v_opcode_a5xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
+#ifdef OPTION_OPTINST
+static zz_func opcode_50_0[1][GEN_MAXARCH];
+static zz_func opcode_58_0[1][GEN_MAXARCH];
+#endif /* OPTION_OPTINST */
 
 #define DISASM_ROUTE(_table,_route) \
 int disasm_ ## _table (BYTE inst[], char unused[], char *p) \
@@ -2329,6 +2333,14 @@ void init_opcode_tables(void)
       replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
       replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
     }
+
+#ifdef OPTION_OPTINST
+    for(i = 0; i < 0x10; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* ST */
+      replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* L */
+    }
+#endif /* OPTION_OPTINST */
   }
 }
 
@@ -6419,6 +6431,13 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FD*/ GENx___x___x___ ,
  /*E4FE*/ GENx___x___x___ ,
  /*E4FF*/ GENx___x___x___  };
+
+#ifdef OPTION_OPTINST
+static zz_func opcode_50_0[1][GEN_MAXARCH] = {
+ /*50*/   GENx370x390x900 (50_0,RX,"ST") };
+static zz_func opcode_58_0[1][GEN_MAXARCH] = {
+ /*58*/   GENx370x390x900 (58_0,RX,"L") };
+#endif /* OPTION_OPTINST */
 
 #endif /*!defined (_GEN_ARCH)*/
 

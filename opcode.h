@@ -1279,6 +1279,25 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
+#ifdef OPTION_OPTINST
+/* Optimized RX decoder in case of zero X2 */
+#undef  RXX0
+#define RXX0(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RXX0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+#define RXX0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr2) = temp & 0xfff; \
+  (_r1) = (temp >> 20) & 0xf; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if(likely(_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+  if((_len)) \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+#endif /* OPTION_OPTINST */
+
 /* RX_BC register and indexed storage - optimized for BC */
 #undef RX_BC
 
@@ -3330,6 +3349,10 @@ DEF_INST(multiply);
 DEF_INST(multiply_halfword);
 DEF_INST(store);
 DEF_INST(store_character);
+#ifdef OPTION_OPTINST
+DEF_INST(50_0);
+DEF_INST(58_0);
+#endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
 DEF_INST(or_register);

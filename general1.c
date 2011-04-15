@@ -725,6 +725,23 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load) */
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 58_0 L     - Load with zero x2                               [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(58_0)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXX0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from second operand */
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load) */
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 50   ST    - Store                                           [RX] */
@@ -742,6 +759,23 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(store) */
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 50_0 ST    - Store with zero x2                              [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(50_0)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXX0(inst, regs, r1, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store) */
+#endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
 /* 41   LA    - Load Address                                    [RX] */
