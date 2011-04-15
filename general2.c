@@ -66,7 +66,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 56   O     - Or                                              [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(or) /* O has an optimized twin */
+DEF_INST(or)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1055,7 +1055,7 @@ U64     dreg;                           /* Double word work area     */
 /*-------------------------------------------------------------------*/
 /* 40   STH   - Store Halfword                                  [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_halfword) /* STH has an optimized twin */
+DEF_INST(store_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1177,7 +1177,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5B   S     - Subtract                                        [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract) /* S has an optimized twin */
+DEF_INST(subtract)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1204,7 +1204,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 4B   SH    - Subtract Halfword                               [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_halfword) /* SH has an optimized twin */
+DEF_INST(subtract_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1254,7 +1254,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5F   SL    - Subtract Logical                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical) /* SL has an optimized twin */
+DEF_INST(subtract_logical)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1405,7 +1405,7 @@ BYTE    old;                            /* Old value                 */
 /*-------------------------------------------------------------------*/
 /* 91   TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(test_under_mask) /* TM has an optimized twin */
+DEF_INST(test_under_mask)
 {
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */

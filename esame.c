@@ -1496,7 +1496,7 @@ U32     n;
 /*-------------------------------------------------------------------*/
 /* E390 LLGC  - Load Logical Long Character                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_character) /* LLGC has an optimized twin */
+DEF_INST(load_logical_long_character)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2603,7 +2603,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E320 CG    - Compare Long                                   [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_long) /* CG has an optimized twin */
+DEF_INST(compare_long)
 {
 register int     r1;                    /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2732,7 +2732,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* E308 AG    - Add Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_long) /* AG has an optimized twin */
+DEF_INST(add_long)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -3233,7 +3233,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* E321 CLG   - Compare Logical long                           [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_long) /* CLG has an optimized twin */
+DEF_INST(compare_logical_long)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -3723,7 +3723,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E380 NG    - And Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and_long) /* NG has an optimized twin */
+DEF_INST(and_long)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -4593,7 +4593,7 @@ DEF_INST(set_addressing_mode_64)
 /*-------------------------------------------------------------------*/
 /* E324 STG   - Store Long                                     [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_long) /* STG has an optimized twin */
+DEF_INST(store_long)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -4639,7 +4639,7 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 /* E304 LG    - Load Long                                      [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_long) /* LG has an optimized twin */
+DEF_INST(load_long)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */

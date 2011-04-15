@@ -76,7 +76,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5A   A     - Add                                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add) /* A has an optimized twin */
+DEF_INST(add)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -104,7 +104,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 4A   AH    - Add Halfword                                    [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_halfword) /* AH has an optimized twin */
+DEF_INST(add_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -393,7 +393,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 45   BAL   - Branch and Link                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_and_link) /* BAL has an optimized twin */
+DEF_INST(branch_and_link)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -465,7 +465,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 4D   BAS   - Branch and Save                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_and_save) /* BAS has an optimized twin */
+DEF_INST(branch_and_save)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -621,7 +621,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 07   BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_condition_register) /* BCR has optimized twins */
+DEF_INST(branch_on_condition_register)
 {
 //int   r1, r2;                         /* Values of R fields        */
 
@@ -656,7 +656,7 @@ DEF_INST(branch_on_condition_register) /* BCR has optimized twins */
 /*-------------------------------------------------------------------*/
 /* 42   STC   - Store Character                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_character) /* STC has an optimized twin */
+DEF_INST(store_character)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -672,7 +672,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 47   BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_condition) /* BC has optimized twins */
+DEF_INST(branch_on_condition)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -692,7 +692,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 54   N     - And                                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and) /* N has an optimized twin */
+DEF_INST(and)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -712,7 +712,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 58   L     - Load                                            [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load) /* L has an optimized twin */
+DEF_INST(load)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -729,7 +729,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 50   ST    - Store                                           [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store) /* ST has an optimized twin */
+DEF_INST(store)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -746,7 +746,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 41   LA    - Load Address                                    [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_address) /* LA has an optimized twin */
+DEF_INST(load_address)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -762,7 +762,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 43   IC    - Insert Character                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(insert_character) /* IC has an optimized twin */
+DEF_INST(insert_character)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -778,7 +778,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 5E   AL    - Add Logical                                     [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical) /* AL has an optimized twin */
+DEF_INST(add_logical)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -801,7 +801,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 55   CL    - Compare Logical                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical) /* CL has an optimized twin */
+DEF_INST(compare_logical)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -822,7 +822,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 48   LH    - Load Halfword                                   [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_halfword) /* LH has an optimized twin */
+DEF_INST(load_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -839,7 +839,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* A7x4 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition) /* BRC has optimized twins */
+DEF_INST(branch_relative_on_condition)
 {
 U16   i2;                               /* 16-bit operand values     */
 
@@ -882,7 +882,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 46   BCT   - Branch on Count                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_count) /* BCT has an optimized twin */
+DEF_INST(branch_on_count)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1175,7 +1175,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 59   C     - Compare                                         [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare) /* C has an optimized twin */
+DEF_INST(compare)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -1698,7 +1698,7 @@ BYTE    sc;                             /* Store characteristic      */
 /*-------------------------------------------------------------------*/
 /* 49   CH    - Compare Halfword                                [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_halfword) /* CH has an optimized twin */
+DEF_INST(compare_halfword)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2865,7 +2865,7 @@ int     wfc;                            /* WellFormednessChecking    */
 /*-------------------------------------------------------------------*/
 /* 4F   CVB   - Convert to Binary                               [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_to_binary) /* CVB has an optimized twin */
+DEF_INST(convert_to_binary)
 {
 U64     dreg;                           /* 64-bit result accumulator */
 int     r1;                             /* Value of R1 field         */
@@ -2907,7 +2907,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
 /*-------------------------------------------------------------------*/
 /* 4E   CVD   - Convert to Decimal                              [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_to_decimal) /* CVD has an optimized twin */
+DEF_INST(convert_to_decimal)
 {
 S64     bin;                            /* 64-bit signed binary value*/
 int     r1;                             /* Value of R1 field         */
@@ -2975,7 +2975,7 @@ int     divide_overflow;                /* 1=divide overflow         */
 /*-------------------------------------------------------------------*/
 /* 5D   D     - Divide                                          [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(divide) /* D has an optimized twin */
+DEF_INST(divide)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -3021,7 +3021,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 57   X     - Exclusive Or                                    [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(exclusive_or) /* X has an optimized twin */
+DEF_INST(exclusive_or)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -3210,7 +3210,7 @@ int     cc = 0;                         /* Condition code            */
 /*-------------------------------------------------------------------*/
 /* 44   EX    - Execute                                         [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(execute) /* EX has an optimized twin */
+DEF_INST(execute)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3353,7 +3353,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* BF   ICM   - Insert Characters under Mask                    [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(insert_characters_under_mask) /* ICM has optimized twins */
+DEF_INST(insert_characters_under_mask)
 {
 int    r1, r3;                          /* Register numbers          */
 int    b2;                              /* effective address base    */
@@ -3500,7 +3500,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 /*-------------------------------------------------------------------*/
 /* 51   LAE   - Load Address Extended                           [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_address_extended) /* LAE has an optimized twin */
+DEF_INST(load_address_extended)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -4610,7 +4610,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 5C   M     - Multiply                                        [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(multiply) /* M has an optimized twin */
+DEF_INST(multiply)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -4635,7 +4635,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 4C   MH    - Multiply Halfword                               [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(multiply_halfword) /* MH has an optimized twin */
+DEF_INST(multiply_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -4690,7 +4690,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* 71   MS    - Multiply Single                                 [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(multiply_single) /* MS has an optimized twin */
+DEF_INST(multiply_single)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
