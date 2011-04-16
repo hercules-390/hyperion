@@ -688,6 +688,260 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(branch_on_condition) */
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 4700 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4700)
+{
+    UNREFERENCED(inst);
+    INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4710 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4710)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc == 3)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4720 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4720)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc == 2)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4730 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4730)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc > 1)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4740 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4740)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc == 1)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4750 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4750)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc & 0x01)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4770 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4770)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 4780 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(4780)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(!regs->psw.cc)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47A0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47A0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(!(regs->psw.cc & 0x01))
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47B0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47B0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc != 1)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47C0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47C0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc < 2)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47D0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47D0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc != 2)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47E0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47E0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if(regs->psw.cc != 3)
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
+/*-------------------------------------------------------------------*/
+/* 47F0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47F0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXX0_BC(inst, regs, b2, effective_addr2);
+    SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+
+} /* end DEF_INST(branch_on_condition) */
+
+#endif /* OPTION_OPTINST */
+
 
 /*-------------------------------------------------------------------*/
 /* 54   N     - And                                             [RX] */

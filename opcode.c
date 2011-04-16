@@ -1226,9 +1226,10 @@ static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
-static zz_func opcode_50_0[1][GEN_MAXARCH];
-static zz_func opcode_58_0[1][GEN_MAXARCH];
-static zz_func opcode_91sb[1][GEN_MAXARCH];
+static zz_func opcode_47_0[0x10][GEN_MAXARCH];
+static zz_func opcode_50_0[0x01][GEN_MAXARCH];
+static zz_func opcode_58_0[0x01][GEN_MAXARCH];
+static zz_func opcode_91sb[0x01][GEN_MAXARCH];
 #endif /* OPTION_OPTINST */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2338,6 +2339,7 @@ void init_opcode_tables(void)
 #ifdef OPTION_OPTINST
     for(i = 0; i < 0x10; i++)
     {
+      replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
       replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* Zero x2 ST */
       replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* Zero x2 L */
     }
@@ -6436,11 +6438,29 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FF*/ GENx___x___x___  };
 
 #ifdef OPTION_OPTINST
-static zz_func opcode_50_0[1][GEN_MAXARCH] = {
+static zz_func opcode_47_0[0x10][GEN_MAXARCH] = {
+ /*4700*/ GENx370x390x900 (4700,RX,"BC"),
+ /*4710*/ GENx370x390x900 (4710,RX,"BC"),
+ /*4720*/ GENx370x390x900 (4720,RX,"BC"),
+ /*4734*/ GENx370x390x900 (4730,RX,"BC"),
+ /*4740*/ GENx370x390x900 (4740,RX,"BC"),
+ /*4750*/ GENx370x390x900 (4750,RX,"BC"),
+ /*4760*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4770*/ GENx370x390x900 (4770,RX,"BC"),
+ /*4780*/ GENx370x390x900 (4780,RX,"BC"),
+ /*4790*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*47A0*/ GENx370x390x900 (47A0,RX,"BC"),
+ /*47B0*/ GENx370x390x900 (47B0,RX,"BC"),
+ /*47C0*/ GENx370x390x900 (47C0,RX,"BC"),
+ /*47D0*/ GENx370x390x900 (47D0,RX,"BC"),
+ /*47E0*/ GENx370x390x900 (47E0,RX,"BC"),
+ /*47F0*/ GENx370x390x900 (47F0,RX,"BC") };
+
+static zz_func opcode_50_0[0x01][GEN_MAXARCH] = {
  /*50*/   GENx370x390x900 (50_0,RX,"ST") }; /* Zero x2 ST */
-static zz_func opcode_58_0[1][GEN_MAXARCH] = {
+static zz_func opcode_58_0[0x01][GEN_MAXARCH] = {
  /*58*/   GENx370x390x900 (58_0,RX,"L") }; /* Zero x2 L */
-static zz_func opcode_91sb[1][GEN_MAXARCH] = {
+static zz_func opcode_91sb[0x01][GEN_MAXARCH] = {
  /*91*/   GENx370x390x900 (91sb,SI,"TM") }; /* Single bit TM */
 #endif /* OPTION_OPTINST */
 

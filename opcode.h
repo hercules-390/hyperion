@@ -1296,6 +1296,18 @@ do { \
     (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
   INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
 }
+
+#undef  RXX0_BC
+#define RXX0_BC(_inst, _regs, _b2, _effective_addr2) \
+        RXX0_BC_DECODER(_inst, _regs, _b2, _effective_addr2)
+#define RXX0_BC_DECODER(_inst, _regs, _b2, _effective_addr2) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr2) = temp & 0xfff; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if(likely(_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+}
 #endif /* OPTION_OPTINST */
 
 /* RX_BC register and indexed storage - optimized for BC */
@@ -3350,6 +3362,20 @@ DEF_INST(multiply_halfword);
 DEF_INST(store);
 DEF_INST(store_character);
 #ifdef OPTION_OPTINST
+DEF_INST(4700);
+DEF_INST(4710);
+DEF_INST(4720);
+DEF_INST(4730);
+DEF_INST(4740);
+DEF_INST(4750);
+DEF_INST(4770);
+DEF_INST(4780);
+DEF_INST(47A0);
+DEF_INST(47B0);
+DEF_INST(47C0);
+DEF_INST(47D0);
+DEF_INST(47E0);
+DEF_INST(47F0);
 DEF_INST(50_0);
 DEF_INST(58_0);
 #endif /* OPTION_OPTINST */
