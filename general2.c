@@ -1427,6 +1427,26 @@ BYTE    tbyte;                          /* Work byte                 */
             1 ;                             /* result mixed      */
 }
 
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 91sb TM    - Test under Mask with single bit test            [SI] */
+/*-------------------------------------------------------------------*/
+DEF_INST(91sb)
+{
+BYTE    i2;                             /* Immediate operand         */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+
+     SI(inst, regs, i2, b1, effective_addr1);
+
+     /* Fetch bnd test yte from operand address */
+     if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & i2)
+       regs->psw.cc = 3;
+     else 
+       regs->psw.cc = 0;
+}
+#endif /* OPTION_OPTINST */
+
 
 #if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
 /*-------------------------------------------------------------------*/

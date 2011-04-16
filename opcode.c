@@ -1228,6 +1228,7 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 #ifdef OPTION_OPTINST
 static zz_func opcode_50_0[1][GEN_MAXARCH];
 static zz_func opcode_58_0[1][GEN_MAXARCH];
+static zz_func opcode_91sb[1][GEN_MAXARCH];
 #endif /* OPTION_OPTINST */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2337,9 +2338,11 @@ void init_opcode_tables(void)
 #ifdef OPTION_OPTINST
     for(i = 0; i < 0x10; i++)
     {
-      replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* ST */
-      replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* L */
+      replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* Zero x2 ST */
+      replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* Zero x2 L */
     }
+    for(i = 0x80; i; i >>= 1)
+      replace_opcode_xxxx(arch, opcode_91sb[0][arch], 0x91, i); /* Single bit TM */
 #endif /* OPTION_OPTINST */
   }
 }
@@ -6434,9 +6437,11 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
 
 #ifdef OPTION_OPTINST
 static zz_func opcode_50_0[1][GEN_MAXARCH] = {
- /*50*/   GENx370x390x900 (50_0,RX,"ST") };
+ /*50*/   GENx370x390x900 (50_0,RX,"ST") }; /* Zero x2 ST */
 static zz_func opcode_58_0[1][GEN_MAXARCH] = {
- /*58*/   GENx370x390x900 (58_0,RX,"L") };
+ /*58*/   GENx370x390x900 (58_0,RX,"L") }; /* Zero x2 L */
+static zz_func opcode_91sb[1][GEN_MAXARCH] = {
+ /*91*/   GENx370x390x900 (91sb,SI,"TM") }; /* Single bit TM */
 #endif /* OPTION_OPTINST */
 
 #endif /*!defined (_GEN_ARCH)*/

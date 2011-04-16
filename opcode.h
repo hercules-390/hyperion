@@ -3417,6 +3417,9 @@ DEF_INST(translate_extended);
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
 DEF_INST(unpack);
 DEF_INST(update_tree);
+#ifdef OPTION_OPTINST
+DEF_INST(91sb);
+#endif /* OPTION_OPTINST */
 
 
 /* Instructions in general3.c */
