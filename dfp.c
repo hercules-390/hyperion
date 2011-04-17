@@ -853,6 +853,76 @@ static U32      maxneg32 = 0x80000000UL;
 } /* end function dfp_number_from_fix32 */
 
 /*-------------------------------------------------------------------*/
+/* Convert 32-bit unsigned binary integer to decimal number          */
+/*                                                                   */
+/* This subroutine is called by the CDLFTR and CXLFTR instructions.  */
+/* It converts a 32-bit unsigned binary integer value into a         */
+/* decimal number structure. The inexact condition will be set       */
+/* in the decimal context structure if the number is rounded to      */
+/* fit the maximum number of digits specified in the context.        */
+/*                                                                   */
+/* Input:                                                            */
+/*      dn      Pointer to decimal number structure                  */
+/*      n       32-bit unsigned binary integer value                 */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The decimal number structure is updated.                     */
+/*-------------------------------------------------------------------*/
+static void
+dfp_number_from_u32(decNumber *dn, U32 n, decContext *pset)
+{
+int             i;                      /* Counter                   */
+char            zoned[32];              /* Zoned decimal work area   */
+
+    /* Convert unsigned binary value to zoned decimal */
+    i = sizeof(zoned) - 1;
+    zoned[i] = '\0';
+    do {
+        zoned[--i] = (n % 10) + '0';
+        n /= 10;
+    } while(i > 1 && n > 0);
+
+    /* Convert zoned decimal value to decimal number structure */
+    decNumberFromString(dn, zoned+i, pset);
+
+} /* end function dfp_number_from_u32 */
+
+/*-------------------------------------------------------------------*/
+/* Convert 64-bit unsigned binary integer to decimal number          */
+/*                                                                   */
+/* This subroutine is called by the CDLGTR and CXLGTR instructions.  */
+/* It converts a 64-bit unsigned binary integer value into a         */
+/* decimal number structure. The inexact condition will be set       */
+/* in the decimal context structure if the number is rounded to      */
+/* fit the maximum number of digits specified in the context.        */
+/*                                                                   */
+/* Input:                                                            */
+/*      dn      Pointer to decimal number structure                  */
+/*      n       64-bit unsigned binary integer value                 */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The decimal number structure is updated.                     */
+/*-------------------------------------------------------------------*/
+static void
+dfp_number_from_u64(decNumber *dn, U64 n, decContext *pset)
+{
+int             i;                      /* Counter                   */
+char            zoned[32];              /* Zoned decimal work area   */
+
+    /* Convert unsigned binary value to zoned decimal */
+    i = sizeof(zoned) - 1;
+    zoned[i] = '\0';
+    do {
+        zoned[--i] = (n % 10) + '0';
+        n /= 10;
+    } while(i > 1 && n > 0);
+
+    /* Convert zoned decimal value to decimal number structure */
+    decNumberFromString(dn, zoned+i, pset);
+
+} /* end function dfp_number_from_u64 */
+
+/*-------------------------------------------------------------------*/
 /* Convert decimal number to 32-bit signed binary integer            */
 /*                                                                   */
 /* This subroutine is called by the CFDTR and CFXTR instructions.    */
