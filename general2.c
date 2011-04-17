@@ -1313,14 +1313,6 @@ int     rc;                             /* Return code               */
     /* Use the I-byte to set the SVC interruption code */
     regs->psw.intcode = i;
 
-/* OS/390 2.10 debugging for negative length GETMAIN */
-#if 0
-    if ( (i == 0x78) || (i == 0x0a) )
-    {
-        ARCH_DEP(display_inst) (regs, regs->ip);
-    }
-#endif
-
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + px);
 
