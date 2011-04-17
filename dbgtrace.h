@@ -52,15 +52,9 @@
 /* ASSERT conditions may not be evaluated */
 
 #if !_ENABLE_TRACING_STMTS_IMPL
-  #ifdef _MSVC_
-    #define VERIFY(a)       ((void)(a))
-    #define ASSERT          __noop
-    #define TRACE           __noop
-  #else
-    #define VERIFY(a)       ((void)(a))
-    #define ASSERT(a)       /* do nothing */
-    #define TRACE           1 ? ((void)0) : LOGMSG
-  #endif
+  #define VERIFY(a)       ((void)(a))
+  #define ASSERT          __noop
+  #define TRACE           __noop
 #else /* _ENABLE_TRACING_STMTS_IMPL */
   #if defined( _MSVC_ )
     #define TRACE(...) do { \

@@ -32,10 +32,8 @@
 
 #if defined( LCS_TIMING_DEBUG )
   #define PTT_LCS_TIMING_DEBUG      PTT
-#elif defined( _MSVC_ )
-  #define PTT_LCS_TIMING_DEBUG      __noop
 #else
-  #define PTT_LCS_TIMING_DEBUG      1 ? ((void)0) : PTT
+  #define PTT_LCS_TIMING_DEBUG      __noop
 #endif
 
 //-----------------------------------------------------------------------------

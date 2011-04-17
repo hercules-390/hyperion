@@ -31,6 +31,11 @@
     #define INLINE inline
   #endif
 #endif
+#if !defined(_MSVC_)
+  #if !defined(__noop)
+    #define __noop(...)
+  #endif
+#endif
 
 /*-------------------------------------------------------------------*/
 /* "Portability" macros for handling _MSVC_ port...                  */
