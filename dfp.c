@@ -1038,6 +1038,198 @@ decContext      setmax;                 /* Working context           */
 
 } /* end function dfp_number_to_fix32 */
 
+/*-------------------------------------------------------------------*/
+/* Convert decimal number to 32-bit unsigned binary integer          */
+/*                                                                   */
+/* This subroutine is called by the CLFDTR and CLFXTR instructions.  */
+/* It converts a decimal number structure to a 32-bit unsigned       */
+/* binary integer value.  The inexact condition will be set in       */
+/* the decimal context structure if the number is rounded to         */
+/* an integer. The invalid operation condition will be set if        */
+/* the decimal value is outside the range of a 32-bit unsigned int.  */
+/*                                                                   */
+/* Input:                                                            */
+/*      b       Pointer to decimal number structure                  */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The return value is the 32-bit unsigned integer result       */
+/*-------------------------------------------------------------------*/
+static U32
+dfp_number_to_u32(decNumber *b, decContext *pset)
+{
+U32             n;                      /* 32-bit unsigned result    */
+int32_t         scale;                  /* Scaling factor            */
+unsigned        i;                      /* Array subscript           */
+BYTE            packed[17];             /* 33-digit packed work area */
+decNumber       p, c;                   /* Working decimal numbers   */
+static U32      mu32 = 0xFFFFFFFFUL;    /* Max unsigned integer      */
+static char     mu32zd[]="4294967295";  /* Max unsigned zoned dec    */
+static BYTE     mu32flag = 0;           /* 1=mu32dn is initialized   */
+static decNumber mu32dn;                /* Decimal maximum unsigned  */
+decContext      setmax;                 /* Working context           */
+
+    /* Prime the decimal number structure representing the maximum
+       unsigned number representable in 32 bits. Use a 64-bit DFP
+       working context because this number is too big to be
+       represented in the 32-bit DFP format */
+    if (mu32flag == 0)
+    {
+        decContextDefault(&setmax, DEC_INIT_DECIMAL64);
+        decNumberFromString(&mu32dn, mu32zd, &setmax);
+        mu32flag = 1;
+    }
+
+    /* If operand is a NaN then set invalid operation
+       and return zero result */
+    if (decNumberIsNaN(b))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U32)0;
+    }
+
+    /* Round decimal number to integer using current rounding mode */
+    decNumberToIntegralValue(&p, b, pset);
+
+    /* If rounded value is less than zero then set invalid operation 
+       and return zero result */
+    if (decNumberIsNegative(&p))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U32)0;
+    }
+
+    /* If rounded value is greater than maximum unsigned number
+       (including where operand is positive infinity) then set
+       invalid operation and return maximum unsigned result */
+    decNumberCompare(&c, &p, &mu32dn, pset);
+    if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U32)mu32;
+    }
+
+    /* Raise inexact condition if result was rounded */
+    decNumberCompare(&c, &p, b, pset);
+    if (decNumberIsZero(&c) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Inexact;
+        if (decNumberIsNegative(&c) == decNumberIsNegative(b))
+            pset->status |= DEC_Rounded;
+    }
+
+    /* Convert decimal number structure to packed decimal */
+    decPackedFromNumber(packed, sizeof(packed), &scale, &p);
+
+    /* Convert packed decimal to binary value */
+    for (i = 0, n = 0; i < sizeof(packed)-1; i++)
+    {
+        n = n * 10 + ((packed[i] & 0xF0) >> 4);
+        n = n * 10 + (packed[i] & 0x0F);
+    }
+    n = n * 10 + ((packed[i] & 0xF0) >> 4);
+    while (scale++) n *= 10;
+
+    /* Return 32-bit unsigned result */
+    return n;
+
+} /* end function dfp_number_to_u32 */
+
+/*-------------------------------------------------------------------*/
+/* Convert decimal number to 64-bit unsigned binary integer          */
+/*                                                                   */
+/* This subroutine is called by the CLGDTR and CLGXTR instructions.  */
+/* It converts a decimal number structure to a 64-bit unsigned       */
+/* binary integer value.  The inexact condition will be set in       */
+/* the decimal context structure if the number is rounded to         */
+/* an integer. The invalid operation condition will be set if        */
+/* the decimal value is outside the range of a 64-bit unsigned int.  */
+/*                                                                   */
+/* Input:                                                            */
+/*      b       Pointer to decimal number structure                  */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The return value is the 64-bit unsigned integer result       */
+/*-------------------------------------------------------------------*/
+static U64
+dfp_number_to_u64(decNumber *b, decContext *pset)
+{
+U64             n;                      /* 64-bit unsigned result    */
+int32_t         scale;                  /* Scaling factor            */
+unsigned        i;                      /* Array subscript           */
+BYTE            packed[17];             /* 33-digit packed work area */
+decNumber       p, c;                   /* Working decimal numbers   */
+static U64      mu64 = 0xFFFFFFFFFFFFFFFFULL;    /* Max unsigned int */
+static char     mu64zd[]="18446744073709551615"; /* Max zoned dec    */
+static BYTE     mu64flag = 0;           /* 1=mu64dn is initialized   */
+static decNumber mu64dn;                /* Decimal maximum unsigned  */
+decContext      setmax;                 /* Working context           */
+
+    /* Prime the decimal number structure representing the maximum
+       unsigned number representable in 64 bits. Use a 128-bit DFP
+       working context because this number is too big to be
+       represented in the 32-bit or 64-bit DFP format */
+    if (mu64flag == 0)
+    {
+        decContextDefault(&setmax, DEC_INIT_DECIMAL128);
+        decNumberFromString(&mu64dn, mu64zd, &setmax);
+        mu64flag = 1;
+    }
+
+    /* If operand is a NaN then set invalid operation
+       and return zero result */
+    if (decNumberIsNaN(b))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U64)0;
+    }
+
+    /* Round decimal number to integer using current rounding mode */
+    decNumberToIntegralValue(&p, b, pset);
+
+    /* If rounded value is less than zero then set invalid operation 
+       and return zero result */
+    if (decNumberIsNegative(&p))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U64)0;
+    }
+
+    /* If rounded value is greater than maximum unsigned number
+       (including where operand is positive infinity) then set
+       invalid operation and return maximum unsigned result */
+    decNumberCompare(&c, &p, &mu64dn, pset);
+    if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (U64)mu64;
+    }
+
+    /* Raise inexact condition if result was rounded */
+    decNumberCompare(&c, &p, b, pset);
+    if (decNumberIsZero(&c) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Inexact;
+        if (decNumberIsNegative(&c) == decNumberIsNegative(b))
+            pset->status |= DEC_Rounded;
+    }
+
+    /* Convert decimal number structure to packed decimal */
+    decPackedFromNumber(packed, sizeof(packed), &scale, &p);
+
+    /* Convert packed decimal to binary value */
+    for (i = 0, n = 0; i < sizeof(packed)-1; i++)
+    {
+        n = n * 10 + ((packed[i] & 0xF0) >> 4);
+        n = n * 10 + (packed[i] & 0x0F);
+    }
+    n = n * 10 + ((packed[i] & 0xF0) >> 4);
+    while (scale++) n *= 10;
+
+    /* Return 64-bit unsigned result */
+    return n;
+
+} /* end function dfp_number_to_u64 */
+
 #define _DFP_FPE_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_FPE_ARCH_INDEPENDENT_)*/
 #endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
