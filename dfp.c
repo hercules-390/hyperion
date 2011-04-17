@@ -803,6 +803,175 @@ int             exp;                    /* Adjusted exponent         */
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if !defined(_DFP_FPE_ARCH_INDEPENDENT_)
+/*-------------------------------------------------------------------*/
+/* Convert 32-bit signed binary integer to decimal number            */
+/*                                                                   */
+/* This subroutine is called by the CDFTR and CXFTR instructions.    */
+/* It converts a 32-bit signed binary integer value into a           */
+/* decimal number structure. The inexact condition will be set       */
+/* in the decimal context structure if the number is rounded to      */
+/* fit the maximum number of digits specified in the context.        */
+/*                                                                   */
+/* Input:                                                            */
+/*      dn      Pointer to decimal number structure                  */
+/*      n       32-bit signed binary integer value                   */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The decimal number structure is updated.                     */
+/*-------------------------------------------------------------------*/
+static void
+dfp_number_from_fix32(decNumber *dn, S32 n, decContext *pset)
+{
+int             sign = 0;               /* Sign of binary integer    */
+int             i;                      /* Counter                   */
+char            zoned[32];              /* Zoned decimal work area   */
+static char     maxnegzd[]="-2147483648";
+static U32      maxneg32 = 0x80000000UL;
+
+    /* Handle maximum negative number as special case */
+    if (n == (S32)maxneg32)
+    {
+        decNumberFromString(dn, maxnegzd, pset);
+        return;
+    }
+
+    /* Convert binary value to zoned decimal */
+    if (n < 0) { n = -n; sign = 1; }
+    i = sizeof(zoned) - 1;
+    zoned[i] = '\0';
+    do {
+        zoned[--i] = (n % 10) + '0';
+        n /= 10;
+    } while(i > 1 && n > 0);
+    if (sign) zoned[--i] = '-';
+
+    /* Convert zoned decimal value to decimal number structure */
+    decNumberFromString(dn, zoned+i, pset);
+
+} /* end function dfp_number_from_fix32 */
+
+/*-------------------------------------------------------------------*/
+/* Convert decimal number to 32-bit signed binary integer            */
+/*                                                                   */
+/* This subroutine is called by the CFDTR and CFXTR instructions.    */
+/* It converts a decimal number structure to a 32-bit signed         */
+/* binary integer value.  The inexact condition will be set in       */
+/* the decimal context structure if the number is rounded to         */
+/* an integer. The invalid operation condition will be set if        */
+/* the decimal value is outside the range of a 32-bit integer.       */
+/*                                                                   */
+/* Input:                                                            */
+/*      b       Pointer to decimal number structure                  */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The return value is the 32-bit signed binary integer result  */
+/*-------------------------------------------------------------------*/
+static S32
+dfp_number_to_fix32(decNumber *b, decContext *pset)
+{
+S32             n;                      /* 32-bit signed result      */
+int32_t         scale;                  /* Scaling factor            */
+unsigned        i;                      /* Array subscript           */
+BYTE            packed[17];             /* 33-digit packed work area */
+decNumber       p, c;                   /* Working decimal numbers   */
+static U32      mp32 = 0x7FFFFFFFUL;    /* Max positive fixed 32     */
+static U32      mn32 = 0x80000000UL;    /* Max negative fixed 32     */
+static char     mp32zd[]="2147483647";  /* Max positive zoned dec    */
+static char     mn32zd[]="-2147483648"; /* Max negative zoned dec    */
+static BYTE     mp32flag = 0;           /* 1=mp32dn,mn32dn inited    */
+static decNumber mp32dn, mn32dn;        /* Decimal maximum pos,neg   */
+decContext      setmax;                 /* Working context           */
+
+    /* Prime the decimal number structures representing the maximum
+       positive and negative numbers representable in 32 bits. Use
+       a 64-bit DFP working context because these numbers are too
+       big to be represented in the 32-bit DFP format */
+    if (mp32flag == 0)
+    {
+        decContextDefault(&setmax, DEC_INIT_DECIMAL64);
+        decNumberFromString(&mp32dn, mp32zd, &setmax);
+        decNumberFromString(&mn32dn, mn32zd, &setmax);
+        mp32flag = 1;
+    }
+
+    /* If operand is a NaN then set invalid operation
+       and return maximum negative result */
+    if (decNumberIsNaN(b))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return (S32)mn32;
+    }
+
+    /* Remove fractional part of decimal number */
+    decNumberToIntegralValue(&p, b, pset);
+
+    /* Special case if operand is less than maximum negative
+       number (including where operand is negative infinity) */
+    decNumberCompare(&c, b, &mn32dn, pset);
+    if (decNumberIsNegative(&c))
+    {
+        /* If rounded value is less than maximum negative number
+           then set invalid operation otherwise set inexact */
+        decNumberCompare(&c, &p, &mn32dn, pset);
+        if (decNumberIsNegative(&c))
+            pset->status |= DEC_IEEE_854_Invalid_operation;
+        else
+            pset->status |= DEC_IEEE_854_Inexact;
+
+        /* Return maximum negative result */
+        return (S32)mn32;
+    }
+
+    /* Special case if operand is greater than maximum positive
+       number (including where operand is positive infinity) */
+    decNumberCompare(&c, b, &mp32dn, pset);
+    if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+    {
+        /* If rounded value is greater than maximum positive number
+           then set invalid operation otherwise set inexact */
+        decNumberCompare(&c, &p, &mp32dn, pset);
+        if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+            pset->status |= DEC_IEEE_854_Invalid_operation;
+        else
+            pset->status |= DEC_IEEE_854_Inexact;
+
+        /* Return maximum positive result */
+        return (S32)mp32;
+    }
+
+    /* Raise inexact condition if result was rounded */
+    decNumberCompare(&c, &p, b, pset);
+    if (decNumberIsZero(&c) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Inexact;
+        if (decNumberIsNegative(&c) == decNumberIsNegative(b))
+            pset->status |= DEC_Rounded;
+    }
+
+    /* Convert decimal number structure to packed decimal */
+    decPackedFromNumber(packed, sizeof(packed), &scale, &p);
+
+    /* Convert packed decimal to binary value */
+    for (i = 0, n = 0; i < sizeof(packed)-1; i++)
+    {
+        n = n * 10 + ((packed[i] & 0xF0) >> 4);
+        n = n * 10 + (packed[i] & 0x0F);
+    }
+    n = n * 10 + ((packed[i] & 0xF0) >> 4);
+    while (scale++) n *= 10;
+    if ((packed[i] & 0x0F) == 0x0D) n = -n;
+
+    /* Return 32-bit signed result */
+    return n;
+
+} /* end function dfp_number_to_fix32 */
+
+#define _DFP_FPE_ARCH_INDEPENDENT_
+#endif /*!defined(_DFP_FPE_ARCH_INDEPENDENT_)*/
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+
 /*-------------------------------------------------------------------*/
 /* Set rounding mode in decimal context structure                    */
 /*                                                                   */
