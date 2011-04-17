@@ -1230,6 +1230,7 @@ static zz_func opcode_47_0[0x10][GEN_MAXARCH];
 static zz_func opcode_50_0[0x01][GEN_MAXARCH];
 static zz_func opcode_58_0[0x01][GEN_MAXARCH];
 static zz_func opcode_91sb[0x01][GEN_MAXARCH];
+static zz_func opcode_A7_4[0x10][GEN_MAXARCH];
 #endif /* OPTION_OPTINST */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2342,6 +2343,7 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
       replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* Zero x2 ST */
       replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* Zero x2 L */
+      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xA7, (i << 4) + 4); /* Optimized BRC */
     }
     for(i = 0x80; i; i >>= 1)
       replace_opcode_xxxx(arch, opcode_91sb[0][arch], 0x91, i); /* Single bit TM */
@@ -6458,10 +6460,30 @@ static zz_func opcode_47_0[0x10][GEN_MAXARCH] = {
 
 static zz_func opcode_50_0[0x01][GEN_MAXARCH] = {
  /*50*/   GENx370x390x900 (50_0,RX,"ST") }; /* Zero x2 ST */
+
 static zz_func opcode_58_0[0x01][GEN_MAXARCH] = {
  /*58*/   GENx370x390x900 (58_0,RX,"L") }; /* Zero x2 L */
+
 static zz_func opcode_91sb[0x01][GEN_MAXARCH] = {
  /*91*/   GENx370x390x900 (91sb,SI,"TM") }; /* Single bit TM */
+
+static zz_func opcode_A7_4[0x10][GEN_MAXARCH] = {
+ /*A704*/ GENx370x390x900 (A704,RX,"BRC"),
+ /*A714*/ GENx370x390x900 (A714,RX,"BRC"),
+ /*A724*/ GENx370x390x900 (A724,RX,"BRC"),
+ /*A734*/ GENx370x390x900 (A734,RX,"BRC"),
+ /*A744*/ GENx370x390x900 (A744,RX,"BRC"),
+ /*A754*/ GENx370x390x900 (A754,RX,"BRC"),
+ /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
+ /*A774*/ GENx370x390x900 (A774,RX,"BRC"),
+ /*A784*/ GENx370x390x900 (A784,RX,"BRC"),
+ /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
+ /*A7A4*/ GENx370x390x900 (A7A4,RX,"BRC"),
+ /*A7B4*/ GENx370x390x900 (A7B4,RX,"BRC"),
+ /*A7C4*/ GENx370x390x900 (A7C4,RX,"BRC"),
+ /*A7D4*/ GENx370x390x900 (A7D4,RX,"BRC"),
+ /*A7E4*/ GENx370x390x900 (A7E4,RX,"BRC"),
+ /*A7F4*/ GENx370x390x900 (A7F4,RX,"BRC") };
 #endif /* OPTION_OPTINST */
 
 #endif /*!defined (_GEN_ARCH)*/
