@@ -1,5 +1,5 @@
-/* CTC_LCS.C    (c) Copyright James A. Pierson, 2002-2009            */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/* CTC_LCS.C    (c) Copyright James A. Pierson, 2002-2011            */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2011     */
 /*              Hercules LAN Channel Station Support                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,16 +7,6 @@
 /*   Hercules.                                                       */
 
 // $Id$
-
-// ====================================================================
-//           Hercules LAN Channel Station Support
-// ====================================================================
-//
-// Copyright (C) 2002-2009 by James A. Pierson    (original author)
-// Copyright (C) 2002-2009 by David B. Trout      (current maintainer)
-//
-//
-
 
 #include "hstdinc.h"
 
@@ -29,54 +19,24 @@
 #include "opcode.h"
 #include "herc_getopt.h"
 
-//-----------------------------------------------------------------------------
-// Debugging...
+//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
+//#define  NO_LCS_OPTIMIZE                // (Fish: DEBUGGING) (MSVC only)
+//#define  LCS_TIMING_DEBUG               // (Fish: DEBUG speed/timing)
 
-//#define NO_LCS_OPTIMIZE     // #undef for Release, #define while testing
+#if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
+  #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
+  #pragma warning( push )               // save current settings
+  #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
+#endif
 
-#if !defined( DEBUG) && !defined( _DEBUG )  // only needed for Release builds
-  #ifdef NO_LCS_OPTIMIZE                    // for reliable breakpoints and instr stepping
-    #pragma optimize( "", off )             // disable optimizations for reliable breakpoints
-    #pragma warning( push )                 // save current settings
-    #pragma warning( disable: 4748 )        // C4748:  /GS can not ... because optimizations are disabled...
-  #endif // NO_LCS_OPTIMIZE
-#endif // !defined( DEBUG) && !defined( _DEBUG )
-
-#ifdef NO_LCS_OPTIMIZE
-
-  #undef  ASSERT
-  #undef  VERIFY
-
-  #ifdef _MSVC_
-
-    #define ASSERT(a) \
-      do \
-      { \
-        if (!(a)) \
-        { \
-          WRMSG(HHC90001, "W", __FILE__, __LINE__, __FUNCTION__); \
-          if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
-        } \
-      } \
-      while(0)
-
-  #else // ! _MSVC_
-
-    #define ASSERT(a) \
-      do \
-      { \
-        if (!(a)) \
-        { \
-          WRMSG(HHC90001, "W", __FILE__, __LINE__, __FUNCTION__); \
-        } \
-      } \
-      while(0)
-
-  #endif // _MSVC_
-
-  #define VERIFY(a)   ASSERT((a))
-
-#endif // NO_LCS_OPTIMIZE
+#if defined( LCS_TIMING_DEBUG )
+  #define PTT_LCS_TIMING_DEBUG      PTT
+#elif defined( _MSVC_ )
+  #define PTT_LCS_TIMING_DEBUG      __noop
+#else
+  #define PTT_LCS_TIMING_DEBUG      1 ? ((void)0) : PTT
+#endif
 
 //-----------------------------------------------------------------------------
 /* CCW Codes 0x03 & 0xC3 are immediate commands */
@@ -961,6 +921,35 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
 }
 
 // ====================================================================
+//                   LCS Multi-Write Support
+// ====================================================================
+
+#if defined( OPTION_W32_CTCI )
+
+static void  LCS_BegMWrite( DEVBLK* pDEVBLK )
+{
+    if (((LCSDEV*)pDEVBLK->dev_data)->pLCSBLK->fNoMultiWrite) return;
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 begmw", 0, 0, 0 );
+    TUNTAP_BegMWrite( pDEVBLK->fd, CTC_FRAME_BUFFER_SIZE );
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af begmw", 0, 0, 0);
+}
+
+static void  LCS_EndMWrite( DEVBLK* pDEVBLK, int nEthBytes, int nEthFrames )
+{
+    if (((LCSDEV*)pDEVBLK->dev_data)->pLCSBLK->fNoMultiWrite) return;
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 endmw", 0, nEthBytes, nEthFrames );
+    TUNTAP_EndMWrite( pDEVBLK->fd );
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af endmw", 0, nEthBytes, nEthFrames );
+}
+
+#else // !defined( OPTION_W32_CTCI )
+
+  #define  LCS_BegMWrite( pDEVBLK )
+  #define  LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames )
+
+#endif // defined( OPTION_W32_CTCI )
+
+// ====================================================================
 //                         LCS_Write
 // ====================================================================
 
@@ -977,10 +966,15 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
     U16         iPrevOffset  = 0;
     U16         iLength      = 0;
     U16         iEthLen      = 0;
+    int         nEthFrames   = 0;
+    int         nEthBytes    = 0;
 
     UNREFERENCED( sCount );
 
     // Process each frame in the buffer...
+
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "beg write", 0, 0, 0 );
+    LCS_BegMWrite( pDEVBLK ); // (performance)
 
     while( 1 )
     {
@@ -1092,16 +1086,22 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             }
 
             // Write the Ethernet frame to the TAP device
+            nEthBytes += iEthLen;
+            nEthFrames++;
+            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 write", 0, iEthLen, 1 );
             if( TUNTAP_Write( pDEVBLK->fd,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
+                PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*WRITE ERR", 0, iEthLen, 1 );
                 WRMSG(HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
+                LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
                 return;
             }
+            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af write", 0, iEthLen, 1 );
             break;
 
         default:
@@ -1109,11 +1109,15 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
+            LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
+            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "end write",  0, 0, 0 );
             return;
 
         } // end switch( LCS Frame type )
 
     } // end while (1)
+
+    LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames ); // (performance)
 
     *pResidual = 0;
     *pUnitStat = CSW_CE | CSW_DE;
@@ -1127,6 +1131,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
         signal_condition( &pLCSDEV->Event );
         release_lock( &pLCSDEV->EventLock );
     }
+
+    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "end write",  0, 0, 0 );
 }
 
 #if 0
@@ -1669,7 +1675,9 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             break;
 
         // Read an IP packet from the TAP device
+        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", 0, 0, 0 );
         iLength = TUNTAP_Read( pLCSPORT->fd, szBuff, sizeof( szBuff ) );
+        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af tt read", 0, 0, iLength );
 
         if( iLength == 0 )      // (probably EINTR; ignore)
             continue;
@@ -1872,6 +1880,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
         // Match was found.
         // Enqueue frame on buffer, if buffer is full, keep trying
 
+        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 enqueue", 0, iLength, 0 );
         while( LCS_EnqueueEthFrame( pMatchingLCSDEV, pLCSPORT->bPort, szBuff, iLength ) < 0
             && pLCSPORT->fd != -1 && !pLCSPORT->fCloseInProgress )
         {
@@ -1879,11 +1888,14 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
             {
                 if( pLCSPORT->pLCSBLK->fDebug )
                     WRMSG(HHC00953, "W", pLCSPORT->bPort );
+                PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq drop", 0, iLength, 0 );
                 break;
             }
+            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq wait", 0, iLength, 0 );
             ASSERT( ENOBUFS == errno );
             usleep( CTC_DELAY_USECS );
         }
+        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af enqueue", 0, iLength, 0 );
     } // end for(;;)
 
     // We must do the close since we were the one doing the i/o...
@@ -2103,35 +2115,35 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         int     c;
 
-#if defined(HAVE_GETOPT_LONG)
+#if defined( OPTION_W32_CTCI )
+  #define  LCS_OPTSTRING    "n:m:o:d"  "k:i:w"
+#else
+  #define  LCS_OPTSTRING    "n:m:o:d"
+#endif
+#if defined( HAVE_GETOPT_LONG )
         int     iOpt;
 
         static struct option options[] =
         {
-            { "dev",   1, NULL, 'n' },
-#if defined(OPTION_W32_CTCI)
-            { "kbuff", 1, NULL, 'k' },
-            { "ibuff", 1, NULL, 'i' },
+            { "dev",    required_argument, NULL, 'n' },
+            { "mac",    required_argument, NULL, 'm' },
+            { "oat",    required_argument, NULL, 'o' },
+            { "debug",  no_argument,       NULL, 'd' },
+#if defined( OPTION_W32_CTCI )
+            { "kbuff",  required_argument, NULL, 'k' },
+            { "ibuff",  required_argument, NULL, 'i' },
+            { "swrite", no_argument,       NULL, 'w' },
 #endif
-            { "oat",   1, NULL, 'o' },
-            { "mac",   1, NULL, 'm' },
-            { "debug", 0, NULL, 'd' },
-            { NULL,    0, NULL, 0   }
+            { NULL,     0,                 NULL,  0  }
         };
 
-        c = getopt_long( argc, argv,
-                         "n"
-#if defined( OPTION_W32_CTCI )
-                         ":k:i"
-#endif
-                         ":o:m:d", options, &iOpt );
-#else /* defined(HAVE_GETOPT_LONG) */
-        c = getopt( argc, argv, "n"
-#if defined( OPTION_W32_CTCI )
-            ":k:i"
-#endif
-            ":o:m:d" );
-#endif /* defined(HAVE_GETOPT_LONG) */
+        c = getopt_long( argc, argv, LCS_OPTSTRING, options, &iOpt );
+
+#else /* defined( HAVE_GETOPT_LONG ) */
+
+        c = getopt( argc, argv, LCS_OPTSTRING );
+
+#endif /* defined( HAVE_GETOPT_LONG ) */
 
         if( c == -1 )
             break;
@@ -2139,6 +2151,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         switch( c )
         {
         case 'n':
+
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
@@ -2147,11 +2160,35 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             }
 
             pLCSBLK->pszTUNDevice = strdup( optarg );
+            break;
 
+        case 'm':
+
+            if( ParseMAC( optarg, mac ) != 0 )
+            {
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                      "MAC address", optarg );
+                return -1;
+            }
+
+            strcpy( pLCSBLK->Port[0].szMACAddress, optarg );
+            pLCSBLK->Port[0].fLocalMAC = TRUE;
+            break;
+
+        case 'o':
+
+            pLCSBLK->pszOATFilename = strdup( optarg );
+            break;
+
+        case 'd':
+
+            pLCSBLK->fDebug = TRUE;
             break;
 
 #if defined( OPTION_W32_CTCI )
+
         case 'k':     // Kernel Buffer Size (Windows only)
+
             iKernBuff = atoi( optarg );
 
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
@@ -2166,6 +2203,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             break;
 
         case 'i':     // I/O Buffer Size (Windows only)
+
             iIOBuff = atoi( optarg );
 
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
@@ -2178,28 +2216,13 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             pLCSBLK->iIOBuff = iIOBuff * 1024;
             break;
+
+        case 'w':     // Single packet writes mode (Windows only)
+
+            pLCSBLK->fNoMultiWrite = TRUE;
+            break;
+
 #endif // defined( OPTION_W32_CTCI )
-
-        case 'o':
-            pLCSBLK->pszOATFilename = strdup( optarg );
-            break;
-
-        case 'm':
-            if( ParseMAC( optarg, mac ) != 0 )
-            {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
-                      "MAC address", optarg );
-                return -1;
-            }
-
-            strcpy( pLCSBLK->Port[0].szMACAddress, optarg );
-            pLCSBLK->Port[0].fLocalMAC = TRUE;
-
-            break;
-
-        case 'd':
-            pLCSBLK->fDebug = TRUE;
-            break;
 
         default:
             break;
@@ -2685,16 +2708,9 @@ HDL_DEVICE_SECTION;
 END_DEVICE_SECTION
 #endif
 
-//-----------------------------------------------------------------------------
-// Debugging...
-
-#if !defined( DEBUG) && !defined( _DEBUG )  // only needed for Release builds
-  #ifdef NO_LCS_OPTIMIZE                    // for reliable breakpoints and instr stepping
-    #pragma warning( pop )                  // restore previous settings
-    #pragma optimize( "", on )              // restore previous settings
-  #endif // NO_LCS_OPTIMIZE
-#endif // !defined( DEBUG) && !defined( _DEBUG )
-
-//-----------------------------------------------------------------------------
+#if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
+  #pragma warning( pop )                // restore previous settings
+  #pragma optimize( "", on )            // restore previous settings
+#endif
 
 #endif /* !defined(__SOLARIS__)  jbs 10/2007 10/2007 */

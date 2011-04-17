@@ -29,15 +29,23 @@ int w32ctca_dummy = 0;
 ptuntap32_ ## name ## _ex   g_tt32_pfn_ ## name ## _ex = NULL;  \
 ptuntap32_ ## name          g_tt32_pfn_ ## name        = NULL
 
-#define GET_TT32_PROCADDRS( name )                                \
+#define _GET_TT32_PROCADDRS( name )                               \
                                                                   \
     g_tt32_pfn_ ## name ## _ex  =                                 \
     (ptuntap32_ ## name ## _ex  ) GetProcAddress( g_tt32_hmoddll, \
      "tuntap32_" # name   "_ex" );                                \
     g_tt32_pfn_ ## name         =                                 \
     (ptuntap32_ ## name         ) GetProcAddress( g_tt32_hmoddll, \
-     "tuntap32_" # name         ); if (!                          \
-    g_tt32_pfn_ ## name         ) goto error
+     "tuntap32_" # name         )
+
+#define GET_OPTIONAL_TT32_PROCADDR( name )                        \
+                                                                  \
+    _GET_TT32_PROCADDRS( name )
+
+#define GET_REQUIRED_TT32_PROCADDR( name )                        \
+                                                                  \
+    _GET_TT32_PROCADDRS( name );                                  \
+    if ( !g_tt32_pfn_ ## name ) goto error
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Global variables...
@@ -60,33 +68,33 @@ TT32_PROCADDRS ( set_debug_output_func );
 TT32_PROCADDRS ( version_string        );
 TT32_PROCADDRS ( version_numbers       );
 TT32_PROCADDRS ( copyright_string      );
-
-// (NOTE: the following function only exists in v3.0+)
-
-ptuntap32_build_herc_iface_mac   g_tt32_pfn_build_herc_iface_mac   = NULL;
+TT32_PROCADDRS ( build_herc_iface_mac  );
+TT32_PROCADDRS ( beg_write_multi       );
+TT32_PROCADDRS ( end_write_multi       );
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 BOOL GetTT32ProcAddrs()
 {
-    GET_TT32_PROCADDRS ( open                  );
-    GET_TT32_PROCADDRS ( close                 );
-    GET_TT32_PROCADDRS ( read                  );
-    GET_TT32_PROCADDRS ( write                 );
-    GET_TT32_PROCADDRS ( ioctl                 );
-    GET_TT32_PROCADDRS ( get_stats             );
-    GET_TT32_PROCADDRS ( get_default_iface     );
-    GET_TT32_PROCADDRS ( set_debug_output_func );
-    GET_TT32_PROCADDRS ( version_string        );
-    GET_TT32_PROCADDRS ( version_numbers       );
-    GET_TT32_PROCADDRS ( copyright_string      );
+    // (required entry-points...)
 
-    // (NOTE: we don't NEED this function (since it's new to
-    //   v3.0+ of tuntap32) so it's okay if it doesn't exist)
+    GET_REQUIRED_TT32_PROCADDR ( open                  );
+    GET_REQUIRED_TT32_PROCADDR ( close                 );
+    GET_REQUIRED_TT32_PROCADDR ( read                  );
+    GET_REQUIRED_TT32_PROCADDR ( write                 );
+    GET_REQUIRED_TT32_PROCADDR ( ioctl                 );
+    GET_REQUIRED_TT32_PROCADDR ( get_stats             );
+    GET_REQUIRED_TT32_PROCADDR ( get_default_iface     );
+    GET_REQUIRED_TT32_PROCADDR ( set_debug_output_func );
+    GET_REQUIRED_TT32_PROCADDR ( version_string        );
+    GET_REQUIRED_TT32_PROCADDR ( version_numbers       );
+    GET_REQUIRED_TT32_PROCADDR ( copyright_string      );
 
-    g_tt32_pfn_build_herc_iface_mac  =
-    (ptuntap32_build_herc_iface_mac  ) GetProcAddress( g_tt32_hmoddll,
-     "tuntap32_build_herc_iface_mac" );
+    // (optional entry-points...)
+
+    GET_OPTIONAL_TT32_PROCADDR ( build_herc_iface_mac );
+    GET_OPTIONAL_TT32_PROCADDR ( beg_write_multi      );
+    GET_OPTIONAL_TT32_PROCADDR ( end_write_multi      );
 
     LeaveCriticalSection(&g_tt32_lock);
     return TRUE;
@@ -258,6 +266,36 @@ int  tt32_write( int fd, u_char* buffer, u_long size )
         return g_tt32_pfn_write    ( fd, buffer, size );
     rc    =    g_tt32_pfn_write_ex ( fd, buffer, size, &errnum );
     errno =                                             errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  tt32_beg_write_multi( int fd, u_long bufsiz )
+{
+    int rc; if (!tt32_loaddll()) return -1;
+
+    if (     g_tt32_pfn_beg_write_multi_ex ) { int        errnum;
+        rc = g_tt32_pfn_beg_write_multi_ex ( fd, bufsiz, &errnum );
+                                                  errno = errnum;} else
+    if (     g_tt32_pfn_beg_write_multi )
+        rc = g_tt32_pfn_beg_write_multi    ( fd, bufsiz );
+    else
+        rc = 0;   // (don't fail, treat as nop instead)
+    return rc;
+}
+
+int  tt32_end_write_multi( int fd )
+{
+    int rc; if (!tt32_loaddll()) return -1;
+
+    if (     g_tt32_pfn_end_write_multi_ex ) { int        errnum;
+        rc = g_tt32_pfn_end_write_multi_ex ( fd,         &errnum );
+                                                  errno = errnum;} else
+    if (     g_tt32_pfn_end_write_multi )
+        rc = g_tt32_pfn_end_write_multi    ( fd );
+    else
+        rc = 0;   // (don't fail, treat as nop instead)
     return rc;
 }
 

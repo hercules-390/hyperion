@@ -85,18 +85,22 @@ extern void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
 // Helper Macros
 //
 
-#if defined( WIN32 )
-  #define TUNTAP_Open     tt32_open
-  #define TUNTAP_Close    tt32_close
-  #define TUNTAP_Read     tt32_read
-  #define TUNTAP_Write    tt32_write
-  #define TUNTAP_IOCtl    tt32_ioctl
+#if defined( OPTION_W32_CTCI )
+  #define TUNTAP_Open           tt32_open
+  #define TUNTAP_Close          tt32_close
+  #define TUNTAP_Read           tt32_read
+  #define TUNTAP_Write          tt32_write
+  #define TUNTAP_BegMWrite(f,n) tt32_beg_write_multi(f,n)
+  #define TUNTAP_EndMWrite(f)   tt32_end_write_multi(f)
+  #define TUNTAP_IOCtl          tt32_ioctl
 #else
-  #define TUNTAP_Open     open
-  #define TUNTAP_Close    close
-  #define TUNTAP_Read     read
-  #define TUNTAP_Write    write
-  #define TUNTAP_IOCtl    ioctl
+  #define TUNTAP_Open           open
+  #define TUNTAP_Close          close
+  #define TUNTAP_Read           read
+  #define TUNTAP_Write          write
+  #define TUNTAP_BegMWrite(f,n)
+  #define TUNTAP_EndMWrite(f)
+  #define TUNTAP_IOCtl          ioctl
 #endif // defined( WIN32 )
 
 #if defined( WIN32 )

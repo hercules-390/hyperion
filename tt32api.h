@@ -1,11 +1,11 @@
-/* TT32API.H (c)Copyright Software Development Laboratories, 2002-2008 */
+/* TT32API.H (c) Copyright Software Development Laboratories, 2002-2011 */
 /*              TunTap32 DLL exported functions interface            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (c) 2002-2008, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2002-2011, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //  TT32API.h  --  TunTap32 DLL exported functions interface
@@ -38,6 +38,12 @@
 //  mm/dd/07    3.2.0   VS2005 + x64 + WinPCap 4.0
 //  11/06/08    3.3.0   VS2008 + auto-link pragma.
 //  11/06/08    3.3.0   Additional counters...
+//  05/18/10    3.3.0   Additional zero MAC address counters...
+//  01/17/11    3.3.0   Added socketpair
+//  02/03/11    3.3.0   _O_TT32SOCK open as SOCKET option
+//  03/08/11    3.3.0   tuntap32_beg_write_multi, tuntap32_end_write_multi
+//  03/10/11    3.3.0   Add '_ex' entry-points for calc_checksum, 
+//                      calc_inet_checksum and build_herc_iface_mac.
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -92,17 +98,19 @@ extern "C"
 {
 #endif
 
-#define TT32MINMTU   (     60)       // minimum MTU value
-#define TT32DEFMTU   (   1500)       // default MTU value
-#define TT32MAXMTU  ((64*1024)-14)   // maximum MTU value  (14 == eth_hdr_size)
+#define TT32MINMTU   (     60)          // minimum MTU value
+#define TT32DEFMTU   (   1500)          // default MTU value
+#define TT32MAXMTU  ((64*1024)-14)      // maximum MTU value  (14 == eth_hdr_size)
+
+#define _O_TT32SOCK     0x08000000      // v3.3 tuntap32_open flag: open as SOCKET
 
 #define TT32_MAX_MULTICAST_LIST_ENTRIES  (32)
 
-#define TT32SDEVBUFF    _IOW('T', 220, int)
+#define TT32SDEVBUFF    _IOW('T', 220, int)  // (def: 1M)
 #define TT32GDEVBUFF    _IOR('T', 220, int)
-#define TT32SIOBUFF     _IOW('T', 221, int)
+#define TT32SIOBUFF     _IOW('T', 221, int)  // (def: 64K)
 #define TT32GIOBUFF     _IOR('T', 221, int)
-#define TT32STIMEOUT    _IOW('T', 222, int)
+#define TT32STIMEOUT    _IOW('T', 222, int)  // (def: 5 secs; _O_TT32SOCK: 0 secs)
 #define TT32GTIMEOUT    _IOR('T', 222, int)
 #define TT32GSTATS      _IOR('T', 223, int)
 
@@ -162,9 +170,11 @@ typedef struct TT32STATS
 
     // New version 3.3 counters...
 
-    int64_t  n64OwnPacketsIgnored;      // total #of packets read with our source MAC
-    int64_t  n64ZeroMACPacketsRead;     // total #of packets read with dest MAC all zeros
-    int64_t  n64ZeroMACPacketsWritten;  // total #of packets written with dest MAC all zeros
+    int64_t  n64OwnPacketsIgnored;      // total #of packets read    with src MAC == our MAC
+    int64_t  n64ZeroMACPacketsRead;     // total #of packets read    with dst MAC all zeros
+    int64_t  n64ZeroMACPacketsWritten;  // total #of packets written with dst MAC all zeros
+    int64_t  n64From0MACPacketsRead;    // total #of packets read    with src MAC all zeros
+    int64_t  n64From0MACPacketsWritten; // total #of packets written with src MAC all zeros
 }
 TT32STATS, *PTT32STATS;
 
@@ -185,6 +195,8 @@ extern void        WINAPI EXPORT tuntap32_version_numbers          (int* major, 
 extern int         WINAPI EXPORT tuntap32_set_debug_output_func    (ptr_to_print_debug_string_func pfn);
 extern int         WINAPI EXPORT tuntap32_open                     (char* gatewaydev, int flags);
 extern int         WINAPI EXPORT tuntap32_write                    (int fd, u_char* buffer, u_long len);
+extern int         WINAPI EXPORT tuntap32_beg_write_multi          (int fd, u_long bufsiz);     // (WinPCap v4.1+ only)
+extern int         WINAPI EXPORT tuntap32_end_write_multi          (int fd);                    // (WinPCap v4.1+ only)
 extern int         WINAPI EXPORT tuntap32_read                     (int fd, u_char* buffer, u_long len);
 extern int         WINAPI EXPORT tuntap32_close                    (int fd);
 extern int         WINAPI EXPORT tuntap32_ioctl                    (int fd, int request, char* argp);
@@ -193,6 +205,7 @@ extern const char* WINAPI EXPORT tuntap32_get_default_iface        ();
 extern void        WINAPI EXPORT tuntap32_build_herc_iface_mac     (u_char* mac, const u_char* ip);
 extern u_short     WINAPI EXPORT tuntap32_calc_inet_checksum       (u_char* buffer, u_long bytes);
 extern u_short     WINAPI EXPORT tuntap32_calc_checksum            (u_char* buffer, u_long bytes);
+extern int         WINAPI EXPORT tuntap32_socketpair               (int domain, int type, int protocol, int socket_vector[2]);
 
 // (functions to work around an as-yet unidentified/unresolved 'errno' bug)
 
@@ -202,11 +215,17 @@ extern void        WINAPI EXPORT tuntap32_version_numbers_ex       (int* major, 
 extern int         WINAPI EXPORT tuntap32_set_debug_output_func_ex (ptr_to_print_debug_string_func pfn,             int* eno);
 extern int         WINAPI EXPORT tuntap32_open_ex                  (char* gatewaydev, int flags,                    int* eno);
 extern int         WINAPI EXPORT tuntap32_write_ex                 (int fd, u_char* buffer, u_long len,             int* eno);
+extern int         WINAPI EXPORT tuntap32_beg_write_multi_ex       (int fd, u_long bufsiz,                          int* eno);  // (WinPCap v4.1+ only)
+extern int         WINAPI EXPORT tuntap32_end_write_multi_ex       (int fd,                                         int* eno);  // (WinPCap v4.1+ only)
 extern int         WINAPI EXPORT tuntap32_read_ex                  (int fd, u_char* buffer, u_long len,             int* eno);
 extern int         WINAPI EXPORT tuntap32_close_ex                 (int fd,                                         int* eno);
 extern int         WINAPI EXPORT tuntap32_ioctl_ex                 (int fd, int request, char* argp,                int* eno);
 extern int         WINAPI EXPORT tuntap32_get_stats_ex             (int fd, TT32STATS* stats,                       int* eno);
 extern const char* WINAPI EXPORT tuntap32_get_default_iface_ex     (                                                int* eno);
+extern void        WINAPI EXPORT tuntap32_build_herc_iface_mac_ex  (u_char* mac, const u_char* ip,                  int* eno);
+extern u_short     WINAPI EXPORT tuntap32_calc_inet_checksum_ex    (u_char* buffer, u_long bytes,                   int* eno);
+extern u_short     WINAPI EXPORT tuntap32_calc_checksum_ex         (u_char* buffer, u_long bytes,                   int* eno);
+extern int         WINAPI EXPORT tuntap32_socketpair_ex            (int domain, int type, int protocol, int socket_vector[2], int* eno);
 
 // (in case they want to use LoadLibrary and GetProcAddress instead)
 
@@ -216,6 +235,8 @@ typedef void        (WINAPI *ptuntap32_version_numbers)            (int*,int*,in
 typedef int         (WINAPI *ptuntap32_set_debug_output_func)      (ptr_to_print_debug_string_func);
 typedef int         (WINAPI *ptuntap32_open)                       (char*,int);
 typedef int         (WINAPI *ptuntap32_write)                      (int,u_char*,u_long);
+typedef int         (WINAPI *ptuntap32_beg_write_multi)            (int fd, u_long bufsiz);     // (WinPCap v4.1+ only)
+typedef int         (WINAPI *ptuntap32_end_write_multi)            (int fd);                    // (WinPCap v4.1+ only)
 typedef int         (WINAPI *ptuntap32_read)                       (int,u_char*,u_long);
 typedef int         (WINAPI *ptuntap32_close)                      (int);
 typedef int         (WINAPI *ptuntap32_ioctl)                      (int,int,char*);
@@ -224,6 +245,7 @@ typedef const char* (WINAPI *ptuntap32_get_default_iface)          ();
 typedef void        (WINAPI *ptuntap32_build_herc_iface_mac)       (u_char* mac, const u_char* ip);
 typedef u_short     (WINAPI *ptuntap32_calc_inet_checksum)         (u_char*, u_long);
 typedef u_short     (WINAPI *ptuntap32_calc_checksum)              (u_char*, u_long);
+typedef int         (WINAPI *ptuntap32_socketpair)                 (int domain, int type, int protocol, int socket_vector[2]);
 
 // (functions to work around an as-yet unidentified/unresolved 'errno' bug)
 
@@ -233,11 +255,17 @@ typedef void        (WINAPI *ptuntap32_version_numbers_ex)         (int* major, 
 typedef int         (WINAPI *ptuntap32_set_debug_output_func_ex)   (ptr_to_print_debug_string_func pfn,             int* eno);
 typedef int         (WINAPI *ptuntap32_open_ex)                    (char* gatewaydev, int flags,                    int* eno);
 typedef int         (WINAPI *ptuntap32_write_ex)                   (int fd, u_char* buffer, u_long len,             int* eno);
+typedef int         (WINAPI *ptuntap32_beg_write_multi_ex)         (int fd, u_long bufsiz,                          int* eno);  // (WinPCap v4.1+ only)
+typedef int         (WINAPI *ptuntap32_end_write_multi_ex)         (int fd,                                         int* eno);  // (WinPCap v4.1+ only)
 typedef int         (WINAPI *ptuntap32_read_ex)                    (int fd, u_char* buffer, u_long len,             int* eno);
 typedef int         (WINAPI *ptuntap32_close_ex)                   (int fd,                                         int* eno);
 typedef int         (WINAPI *ptuntap32_ioctl_ex)                   (int fd, int request, char* argp,                int* eno);
 typedef int         (WINAPI *ptuntap32_get_stats_ex)               (int fd, TT32STATS* stats,                       int* eno);
 typedef const char* (WINAPI *ptuntap32_get_default_iface_ex)       (                                                int* eno);
+typedef void        (WINAPI *ptuntap32_build_herc_iface_mac_ex)    (u_char* mac, const u_char* ip,                  int* eno);
+typedef u_short     (WINAPI *ptuntap32_calc_inet_checksum_ex)      (u_char*, u_long,                                int* eno);
+typedef u_short     (WINAPI *ptuntap32_calc_checksum_ex)           (u_char*, u_long,                                int* eno);
+typedef int         (WINAPI *ptuntap32_socketpair_ex)              (int domain, int type, int protocol, int socket_vector[2], int* eno);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 

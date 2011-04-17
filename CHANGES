@@ -1,3 +1,4 @@
+17 Apr 2011 LCS CTCI-WIN v3.3 multi-write mode (faster guest downloads) - Fish
 27 Feb 2011 Fix all-zero MAC bug in LCS cmd reply frame handling - Fish
 22 Feb 2011 Function logmsg() renamed to log_msg(); LOGMSG define added to simply implementation
 21 Feb 2011 Fix CCKD stmt 'comp=' validation bug - Fish

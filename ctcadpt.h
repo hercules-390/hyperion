@@ -474,22 +474,24 @@ struct  _LCSBLK
 {
     // Config line parameters
     char*       pszTUNDevice;             // TUN/TAP char device
-#if       defined ( _MSVC_ )
+#if defined ( _MSVC_ )
     char*       pszNDISDevice;            // NDIS char device name
     char*       pszNDISDevDesc;           // NDIS common name of device
     char*       pszNDISDevMac;            // MAC Address of the physical card
     char*       pszServiceName;           // Service Name for NDIS
-#endif // defined ( _MSVC_ )
+#endif
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
     char*       pszMACAddress;            // MAC Address (string)
     MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
-#if       defined ( _MSVC_ )
+#if defined( OPTION_W32_CTCI )
+    u_int       fNoMultiWrite:1;          // CTCI-WIN v3.3+ WinPCap v4.1+
+#endif
+#if defined ( _MSVC_ )
     u_int       passthruStarted:1;        // NDIS passthru services started
-#endif // defined ( _MSVC_ )
-
+#endif
     int         icDevices;                // Number of devices
     int         iKernBuff;                // Kernel buffer in K bytes.
     int         iIOBuff;                  // I/O buffer in K bytes.
