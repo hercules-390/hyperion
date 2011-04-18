@@ -1602,11 +1602,11 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
-        if(sysblk.mipsrate / 1000000 > 999)
-          sprintf(buf, "%6d", sysblk.mipsrate / 1000000);
-        else if(sysblk.mipsrate / 1000000 > 99)
-          sprintf(buf, "%4d.%1d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000/ 100000);
-        else if(sysblk.mipsrate / 1000000 > 9)
+        if((sysblk.mipsrate / 1000000) > 999)
+          sprintf(buf, "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
+        else if((sysblk.mipsrate / 1000000) > 99)
+          sprintf(buf, "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+        else if((sysblk.mipsrate / 1000000) > 9)
           sprintf(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
         else
           sprintf(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
@@ -3378,8 +3378,9 @@ FinishShutdown:
                     {
                         if(sysblk.mipsrate / 1000000 > 999)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %5d; IO/s %6.6s", instcnt, 
-                                    sysblk.mipsrate / 1000000, format_int(sysblk.siosrate));
+                            sprintf(ibuf, "instcnt %s; mips %1d,%03d; IO/s %6.6s", instcnt,
+                                    sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000,
+                                    format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 99)
                         {
