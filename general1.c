@@ -692,7 +692,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4700)
+DEF_INST(nop4)
 {
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 0);
@@ -1146,12 +1146,12 @@ U16   i2;                               /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* A704 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(A704)
-{
-    UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 4, 0);
-
-} /* end DEF_INST(branch_relative_on_condition) */
+//DEF_INST(nop4) /* Same as 4700 */
+//{
+//    UNREFERENCED(inst);
+//    INST_UPDATE_PSW(regs, 4, 0);
+//
+//} /* end DEF_INST(branch_relative_on_condition) */
 
 /*-------------------------------------------------------------------*/
 /* A714 BRC   - Branch Relative on Condition                    [RI] */

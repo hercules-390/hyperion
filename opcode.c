@@ -6441,7 +6441,7 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
 
 #ifdef OPTION_OPTINST
 static zz_func opcode_47_0[0x10][GEN_MAXARCH] = {
- /*4700*/ GENx370x390x900 (4700,RX,"BC"),
+ /*4700*/ GENx370x390x900 (nop4,RX,"BC"),
  /*4710*/ GENx370x390x900 (4710,RX,"BC"),
  /*4720*/ GENx370x390x900 (4720,RX,"BC"),
  /*4734*/ GENx370x390x900 (4730,RX,"BC"),
@@ -6468,7 +6468,7 @@ static zz_func opcode_91sb[0x01][GEN_MAXARCH] = {
  /*91*/   GENx370x390x900 (91sb,SI,"TM") }; /* Single bit TM */
 
 static zz_func opcode_A7_4[0x10][GEN_MAXARCH] = {
- /*A704*/ GENx370x390x900 (A704,RX,"BRC"),
+ /*A704*/ GENx370x390x900 (nop4,RX,"BRC"),
  /*A714*/ GENx370x390x900 (A714,RX,"BRC"),
  /*A724*/ GENx370x390x900 (A724,RX,"BRC"),
  /*A734*/ GENx370x390x900 (A734,RX,"BRC"),
