@@ -882,6 +882,18 @@ AC_CHECK_SIZEOF(off_t)
 
 AC_MSG_NOTICE( [begin check: whether byte structs are aligned/rounded by default...] )
 
+if test "$GCC" = "yes"; then
+
+cat > conftest.h << __EOF
+#include <stdio.h>
+struct bytestruct
+{
+    unsigned char a;
+} __attribute__((packed));
+__EOF
+
+else
+
 cat > conftest.h << __EOF
 #include <stdio.h>
 struct bytestruct
@@ -889,6 +901,8 @@ struct bytestruct
     unsigned char a;
 };
 __EOF
+
+fi
 
 AC_CHECK_SIZEOF( struct bytestruct, [], [#include "conftest.h"] )
 
