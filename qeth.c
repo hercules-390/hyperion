@@ -98,7 +98,7 @@ static const BYTE read_configuration_data_bytes[128] = {
 /* Token NED                                                         */
 /*-------------------------------------------------------------------*/
     0xF0,                               // 64:     NED code
-    0x00,                               // 65:     Type  (X'00' = N/A)   
+    0x00,                               // 65:     Type  (X'00' = N/A)
     0x00,                               // 66:     Class (X'00' = N/A)
     0x00,                               // 67:     (Reserved)
     0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 68-73:  Type  ('001730')
@@ -294,7 +294,7 @@ U32 ackseq;
                 case PDU_CMD_ENABLE:
                     VERIFY(!TUNTAP_CreateInterface(grp->tuntap,
                       ((pdu->proto != PDU_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
-                                           &grp->ttfd,                      
+                                           &grp->ttfd,
                                            grp->ttdevn));
 
                     /* Set Non-Blocking mode */
@@ -357,7 +357,7 @@ U32 ackseq;
                     switch(cmd) {
 
                     case IPA_SAP_QUERY:
-                        {    
+                        {
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
@@ -560,17 +560,17 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         FETCH_HW(datadev, iea->datadev);
         if(!IS_OSA_READ_DEVICE(dev))
         {
-            TRACE(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
-            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
-            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
@@ -587,17 +587,17 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         FETCH_HW(datadev, iea->datadev);
         if(!IS_OSA_WRITE_DEVICE(dev))
         {
-            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
-            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
-            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum); 
+            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
@@ -611,7 +611,7 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         break;
 
     default:
-        TRACE(_("QETH: IDX ACTIVATE Invalid Request %4.4x for %s device %4.4x\n"),reqtype,osa_devtyp[dev->member],dev->devnum); 
+        TRACE(_("QETH: IDX ACTIVATE Invalid Request %4.4x for %s device %4.4x\n"),reqtype,osa_devtyp[dev->member],dev->devnum);
         dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         break;
     }
@@ -642,10 +642,10 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 // When must go through the queues and buffers on a round robin basis
 // such that buffers are re-used on a least recently used bases.
 // When no buffer are available we will must keep our current position
-// When a buffer becomes available, then we will advance to that location 
-// When we reach the end of the buffer queue, we will advance to the 
-// next available queue. 
-// When a queue is newly enabled then we will start at the beginning of 
+// When a buffer becomes available, then we will advance to that location
+// When we reach the end of the buffer queue, we will advance to the
+// next available queue.
+// When a queue is newly enabled then we will start at the beginning of
 // the queue (this is handled in signal adapter)
 
 /*-------------------------------------------------------------------*/
@@ -669,7 +669,7 @@ int noread = 1;
             slsb = (OSA_SLSB*)(dev->mainstor + grp->i_slsbla[iq]);
 
             while(mb--)
-                if(slsb->slsbe[ib] == SLSBE_INPUT_EMPTY)   
+                if(slsb->slsbe[ib] == SLSBE_INPUT_EMPTY)
                 {
                 OSA_SL *sl = (OSA_SL*)(dev->mainstor + grp->i_sla[iq]);
                 U64 sa; U32 len; BYTE *buf;
@@ -684,7 +684,7 @@ int noread = 1;
                     FETCH_DW(sa,sl->sbala[ib]);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->i_slk[iq],STORKEY_REF,dev))
                     {
-                        slsb->slsbe[ib] = SLSBE_ERROR;  
+                        slsb->slsbe[ib] = SLSBE_ERROR;
                         grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->i_slk[iq]);
                         return;
@@ -696,10 +696,10 @@ int noread = 1;
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
-                            break;  // Or should this be continue - ie a discontiguous sbal???  
+                            break;  // Or should this be continue - ie a discontiguous sbal???
                         if(STORCHK(la,len-1,grp->i_sbalk[iq],STORKEY_CHANGE,dev))
                         {
-                            slsb->slsbe[ib] = SLSBE_ERROR;  
+                            slsb->slsbe[ib] = SLSBE_ERROR;
                             grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->i_sbalk[iq]);
                             return;
@@ -757,7 +757,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                         else
                             break;
                     }
-                
+
                     if(tlen > 0)
                     {
                         grp->reqpci = TRUE;
@@ -800,7 +800,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
         else
             if(++iq >= grp->i_qcnt)
                 iq = 0;
-    
+
     if(noread)
     {
     char buff[4096];
@@ -832,7 +832,7 @@ int mq = grp->o_qcnt;
             slsb = (OSA_SLSB*)(dev->mainstor + grp->o_slsbla[oq]);
 
             while(mb--)
-                if(slsb->slsbe[ob] == SLSBE_OUTPUT_PRIMED)   
+                if(slsb->slsbe[ob] == SLSBE_OUTPUT_PRIMED)
                 {
                 OSA_SL *sl = (OSA_SL*)(dev->mainstor + grp->o_sla[oq]);
                 U64 sa; U32 len; BYTE *buf;
@@ -845,7 +845,7 @@ int mq = grp->o_qcnt;
                     FETCH_DW(sa,sl->sbala[ob]);
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->o_slk[oq],STORKEY_REF,dev))
                     {
-                        slsb->slsbe[ob] = SLSBE_ERROR;  
+                        slsb->slsbe[ob] = SLSBE_ERROR;
                         grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->o_slk[oq]);
                         return;
@@ -857,10 +857,10 @@ int mq = grp->o_qcnt;
                         FETCH_DW(la,sbal->sbale[ns].addr);
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
-                            break;  // Or should this be continue - ie a discontiguous sbal???  
+                            break;  // Or should this be continue - ie a discontiguous sbal???
                         if(STORCHK(la,len-1,grp->o_sbalk[oq],STORKEY_REF,dev))
                         {
-                            slsb->slsbe[ob] = SLSBE_ERROR;  
+                            slsb->slsbe[ob] = SLSBE_ERROR;
                             grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->o_sbalk[oq]);
                             return;
@@ -892,7 +892,7 @@ else { TRACE("OUTPUT DROPPED, INVALID MAC\n"); }
                         if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
                             grp->reqpci = TRUE;
                     }
-                
+
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
                     STORAGE_KEY(grp->o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                     if(++ob >= 128)
@@ -936,7 +936,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         write_pipe(grp->ppfd[1],"*",1);
     }
     else
-        if(IS_OSA_READ_DEVICE(dev) 
+        if(IS_OSA_READ_DEVICE(dev)
           && (dev->group->acount == OSA_GROUP_SIZE))
             signal_condition(&grp->qcond);
 
@@ -955,7 +955,7 @@ int i;
     dev->numdevid = sizeof(sense_id_bytes);
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
-    
+
     dev->pmcw.flag4 |= PMCW4_Q;
 
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
@@ -967,7 +967,7 @@ int i;
 
         initialize_condition(&grp->qcond);
         initialize_lock(&grp->qlock);
-    
+
         /* Open write signalling pipe */
         create_pipe(grp->ppfd);
 
@@ -1054,7 +1054,7 @@ char qdiostat[80];
     }
     else
         strcpy(qdiostat," QDIO");
-    
+
     snprintf (buffer, buflen-1, "%s%s%s",
       (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete",
       (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : "",
@@ -1079,7 +1079,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             close_pipe(grp->ppfd[0]);
         if(grp->ppfd[1])
             close_pipe(grp->ppfd[1]);
-        
+
         if(grp->tuntap)
             free(grp->tuntap);
         if(grp->tthwaddr)
@@ -1093,7 +1093,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
-    
+
         free(dev->group->grp_data);
         dev->group->grp_data = NULL;
     }
@@ -1163,15 +1163,15 @@ int num;                                /* Number of bytes to move   */
     U16 ddc;
 
     /* Device block of device to which response is sent */
-    DEVBLK *rdev = (IS_OSA_WRITE_DEVICE(dev) 
+    DEVBLK *rdev = (IS_OSA_WRITE_DEVICE(dev)
                   && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
-                  && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE)) 
+                  && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
                  ? dev->group->memdev[OSA_READ_DEVICE] : dev;
 
         if(!rdev->qrspsz)
         {
             FETCH_HW(ddc,hdr->ddc);
-  
+
             obtain_lock(&grp->qlock);
             if(ddc == IDX_ACT_DDC)
                 osa_device_cmd(dev,(OSA_IEA*)iobuf, rdev);
@@ -1181,12 +1181,12 @@ int num;                                /* Number of bytes to move   */
 
             if(dev != rdev)
                 signal_condition(&grp->qcond);
-       
+
             /* Calculate number of bytes to write and set residual count */
             num = (count < RSP_BUFSZ) ? count : RSP_BUFSZ;
             *residual = count - num;
             if (count < RSP_BUFSZ) *more = 1;
-    
+
             /* Return normal status */
             *unitstat = CSW_CE | CSW_DE;
         }
@@ -1328,7 +1328,7 @@ int num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-        
+
     case OSA_EQ:
     /*---------------------------------------------------------------*/
     /* ESTABLISH QUEUES                                              */
@@ -1365,7 +1365,7 @@ int num;                                /* Number of bytes to move   */
             grp->i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
             grp->i_sbalk[i] = qdes->keyp2 & 0xF0;
             grp->i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
-    
+
             accerr |= STORCHK(grp->i_slsbla[i],sizeof(OSA_SLSB)-1,grp->i_slsblk[i],STORKEY_CHANGE,dev);
             accerr |= STORCHK(grp->i_sla[i],sizeof(OSA_SL)-1,grp->i_slk[i],STORKEY_REF,dev);
 
@@ -1419,7 +1419,7 @@ int num;                                /* Number of bytes to move   */
         grp->i_qmask = grp->o_qmask = 0;
 
         FD_ZERO( &readset );
-        
+
         dev->scsw.flag2 |= SCSW2_Q;
 
         do {
@@ -1434,7 +1434,7 @@ int num;                                /* Number of bytes to move   */
             {
             char c;
                 read_pipe(grp->ppfd[0],&c,1);
-               
+
                 if(grp->o_qmask)
                     process_output_queue(dev);
             }
@@ -1487,7 +1487,7 @@ int noselrd;
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
         return 1;
-    
+
     /* Is there a read select */
     noselrd = !grp->i_qmask;
 

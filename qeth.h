@@ -158,8 +158,8 @@ typedef struct _OSA_QDES0 {
 /*000*/ DBLWRD  sliba;          /* Storage List Info Block Address   */
 /*008*/ DBLWRD  sla;            /* Storage List Address              */
 /*010*/ DBLWRD  slsba;          /* Storage List State Block Address  */
-/*018*/ FWORD   resv018;  
-/*01C*/ BYTE    keyp1;          /* Access keys for SLIB and SL       */  
+/*018*/ FWORD   resv018;
+/*01C*/ BYTE    keyp1;          /* Access keys for SLIB and SL       */
 #define QDES_KEYP1_A_SLIB 0xF0
 #define QDES_KEYP1_A_SL   0x0F
 /*01D*/ BYTE    keyp2;          /* Access keys for SBALs ad SLSB     */
@@ -187,7 +187,7 @@ typedef struct _OSA_QDR {
 /*00B*/ BYTE    oqdsz;          /* Output Queue Descriptor Size      */
 /*00C*/ FWORD   resv00c[9];
 /*030*/ DBLWRD  qiba;           /* Queue Information Block Address   */
-/*038*/ FWORD   resv038;     
+/*038*/ FWORD   resv038;
 /*03C*/ BYTE    qkey;           /* Queue Information Block Key       */
 /*03D*/ BYTE    resv03d[3];
 /*040*/ OSA_QDES0 qdf0[126];    /* Format 0 Queue Descriptors        */
@@ -349,7 +349,7 @@ typedef struct _OSA_IEAR {
 #define IDX_RSP_CMD_TERM        0xC0 /* IDX_TERMINATE received       */
 /*003*/ BYTE    resv003;        /*                                   */
 /*004*/ BYTE    reason;         /* Reason code                       */
-#define IDX_RSP_REASON_INVPORT  0x22  
+#define IDX_RSP_REASON_INVPORT  0x22
 /*005*/ BYTE    resv005[3];     /*                                   */
 /*008*/ BYTE    resp;           /* Response code                     */
 #define IDX_RSP_RESP_MASK       0x03
