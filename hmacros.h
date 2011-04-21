@@ -266,10 +266,12 @@
   #warning Large File Support missing
 #endif
 // Hercules low-level file open...
+// PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required for compat-
+//                   ibility with gcc/MSVC compilers and must not be removed
 #ifdef _MSVC_
-  #define   HOPEN(_p,_o,...)    w32_hopen ((_p),(_o),__VA_ARGS__)
+  #define   HOPEN(_p,_o,...)    w32_hopen ((_p),(_o), ## __VA_ARGS__)
 #else
-  #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o),__VA_ARGS__)
+  #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o), ## __VA_ARGS__)
 #endif
 
 /*-------------------------------------------------------------------*/

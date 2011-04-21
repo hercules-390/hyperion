@@ -79,7 +79,8 @@ always be manually overridden at any time via the "msglevel" command.
 ---------------------------------------------------------------------*/
 
 /* Use these macro's */
-/* PROGRAMMING NOTE: "## __VA_ARGS__" has special meaning to gcc and should not be removed */
+/* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required for compat-
+                     ibility with gcc/MSVC compilers and must not be removed */
 #if defined (_MSVC_)
 #define MSGBUF( _buf, ... )           _snprintf_s( _buf, sizeof(_buf), sizeof(_buf)-1, ## __VA_ARGS__ )
 #else
