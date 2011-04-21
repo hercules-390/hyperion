@@ -122,20 +122,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     hostpath(pathname, dev->filename, sizeof(pathname));
     if(!dev->tdparms.logical_readonly)
     {
-        rc = open( pathname, O_RDWR | O_BINARY, 
+        rc = HOPEN( pathname, O_RDWR | O_BINARY,
                              S_IRUSR | S_IWUSR | S_IRGRP );
-        if ( rc < 0 && !sysblk.noautoinit ) 
+        if ( rc < 0 && !sysblk.noautoinit )
         {
-            rc = open( pathname, O_RDWR | O_BINARY | O_CREAT, 
+            rc = HOPEN( pathname, O_RDWR | O_BINARY | O_CREAT,
                                  S_IRUSR | S_IWUSR | S_IRGRP );
             if ( rc >= 0 )
             {
                 int tmp_fd = dev->fd;
                 int ret_code = 0;
-                
+
                 dev->fd = rc;
 
-                WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid), 
+                WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid),
                        dev->devnum, dev->filename, "fake" );
                 ret_code = write_fakemark( dev, unitstat, code );
                 if ( ret_code >= 0 )
@@ -154,7 +154,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (dev->tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
     {
         dev->readonly = 1;
-        rc = open (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        rc = HOPEN (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
     /* Check for successful open */

@@ -2558,7 +2558,7 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
 
         /* Copy parameter list pointers, skipping argv[1] */
         avm[0] = avx[0] = argv[0];
-        
+
         for ( rc = 1; rc < argc; rc++ )
         {
             if ( CMD(argv[rc],main,1) )
@@ -2571,9 +2571,9 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
                 }
                 do_main = 1;
                 if ( do_xpnd > 0 ) do_xpnd = 0;
-            
+
             }
-            else 
+            else
             if ( CMD(argv[rc],xstore,1) || CMD(argv[rc],expanded,1) )
             {
                 if ( do_xpnd != -1 )
@@ -2585,12 +2585,12 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
                 do_xpnd = 1;
                 if ( do_main > 0 ) do_main = 0;
             }
-            else 
+            else
             if ( do_main > 0 )
             {
                 avm[acm] = argv[rc];
                 acm++;
-                
+
             }
             else
             if ( do_xpnd > 0 )
@@ -4271,7 +4271,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         {
             char msgbuf[128];
             MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
-                            str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );  
+                            str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );
             WRMSG( HHC02204, "I", "model", msgbuf );
         }
     }
@@ -4279,7 +4279,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     {
         char msgbuf[128];
         MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
-                        str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );  
+                        str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );
         WRMSG( HHC02203, "I", "model", msgbuf );
     }
 
@@ -6026,24 +6026,24 @@ BYTE     unitstat, code = 0;
                         strncpy( volser, (char*)&sLABEL[04],  6 );
                         strncpy( owner,  (char*)&sLABEL[37], 14 );
 
-                        MSGBUF( msgbuf, "%s%s%s%s%s", 
-                                        volser, 
+                        MSGBUF( msgbuf, "%s%s%s%s%s",
+                                        volser,
                                         strlen(owner) == 0? "":", Owner = \"",
                                         strlen(owner) == 0? "": owner,
                                         strlen(owner) == 0? "": "\"",
                                         a ? " (ASCII LABELED) ": "" );
-                        
-                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf ); 
+
+                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf );
                         msg = FALSE;
                     }
                     else
-                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum ); 
+                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 }
                 else
                 {
-                    WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum ); 
+                    WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 }
-    
+
                 rc = dev->tmh->rewind( dev, &unitstat, code);
             }
             else
@@ -6388,7 +6388,7 @@ REGS *regs;
 
     hostpath(pathname, fname, sizeof(pathname));
 
-    if ((fd = open(pathname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
+    if ((fd = HOPEN(pathname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
     {
         int saved_errno = errno;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -7644,7 +7644,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
                 SYSTEMTIME  st;
 
-                FileTimeToSystemTime( &ftKernel, &st ); 
+                FileTimeToSystemTime( &ftKernel, &st );
                 st.wYear    -= 1601;
                 st.wDay     -= 1;
                 st.wMonth   -= 1;
@@ -7666,11 +7666,11 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 else
                     MSGBUF( msgKernel, "%s:%s:%s.%s", hh, mn, ss, ms );
 
-                FileTimeToSystemTime( &ftUser, &st ); 
+                FileTimeToSystemTime( &ftUser, &st );
                 st.wYear    -= 1601;
                 st.wDay     -= 1;
                 st.wMonth   -= 1;
-                
+
                 MSGBUF( yy, "%02d", st.wYear );
                 MSGBUF( mm, "%02d", st.wMonth );
                 MSGBUF( dd, "%02d", st.wDay );
@@ -7687,7 +7687,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                     MSGBUF( msgUser, "%s %s:%s:%s.%s", dd, hh, mn, ss, ms );
                 else
                     MSGBUF( msgUser, "%s:%s:%s.%s", hh, mn, ss, ms );
-                
+
                 MSGBUF( msgbuf, " - Host Kernel(%s) User(%s)", msgKernel, msgUser );
 
                 pmsg = msgbuf;
@@ -7697,7 +7697,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC17009, "I", PTYPSTR(i), i,
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STOPPING ) ? ':' : '*',
-                                  sysblk.regs[i]->cpupct, 
+                                  sysblk.regs[i]->cpupct,
                                   mipsrate / 1000000,
                                 ( mipsrate % 1000000 ) / 10000,
                                   sysblk.regs[i]->siosrate,

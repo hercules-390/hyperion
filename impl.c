@@ -465,7 +465,7 @@ int     dll_count;                      /* index into array          */
              hostinfo.num_physical_cpu != 0 &&
              hostinfo.num_logical_cpu  != 0 )
         {
-            MSGBUF( num_procs, "LP=%d, Cores=%d, CPUs=%d", hostinfo.num_logical_cpu, 
+            MSGBUF( num_procs, "LP=%d, Cores=%d, CPUs=%d", hostinfo.num_logical_cpu,
                                 hostinfo.num_physical_cpu, hostinfo.num_packages );
         }
         else
@@ -969,7 +969,7 @@ int     dll_count;                      /* index into array          */
 
     /* Test that we can get a read the file */
 
-    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         if ( errno == EACCES )
         {
@@ -1044,7 +1044,7 @@ int     dll_count;                      /* index into array          */
         WRMSG(HHC00102, "E", strerror(rc));
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
-    if ( ( fd_cfg = open( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
     {
         WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
         delayed_exit(-1);

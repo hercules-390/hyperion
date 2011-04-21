@@ -121,18 +121,18 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     hostpath(pathname, dev->filename, sizeof(pathname));
     if(!dev->tdparms.logical_readonly)
     {
-        rc = open (pathname, O_RDWR | O_BINARY, S_IRUSR | S_IWUSR | S_IRGRP );
-        if ( rc < 0 && !sysblk.noautoinit ) 
+        rc = HOPEN (pathname, O_RDWR | O_BINARY, S_IRUSR | S_IWUSR | S_IRGRP );
+        if ( rc < 0 && !sysblk.noautoinit )
         {
-            rc = open( pathname, O_RDWR | O_BINARY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP );
+            rc = HOPEN( pathname, O_RDWR | O_BINARY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP );
             if ( rc >= 0 )
             {
                 int tmp_fd = dev->fd;
                 int ret_code = 0;
-                
+
                 dev->fd = rc;
 
-                WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid), 
+                WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid),
                        dev->devnum, dev->filename, "aws" );
                 ret_code = write_awsmark( dev, unitstat, code );
                 if ( ret_code >= 0 )
@@ -150,7 +150,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (dev->tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
     {
         dev->readonly = 1;
-        rc = open (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        rc = HOPEN (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
     /* Check for successful open */
@@ -267,11 +267,11 @@ U16             seglen;                 /* Data length of segment    */
 
         /* Calculate the offset of the next block segment */
         blkpos += sizeof(awshdr) + seglen;
-         
+
         /* Check that block length will not exceed buffer size */
         if (blklen + seglen > MAX_BLKLEN)
         {
-            WRMSG (HHC00202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", 
+            WRMSG (HHC00202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws",
                     (int)MAX_BLKLEN, blkpos);
 
             /* Set unit check with data check */
@@ -624,7 +624,7 @@ U16             seglen;                 /* Data length of segment    */
 
         /* Calculate the offset of the next block segment */
         blkpos += sizeof(awshdr) + seglen;
-         
+
         /* Accumulate the total block length */
         blklen += seglen;
 

@@ -89,7 +89,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the devmap file */
     hostpath(pathname, filename, sizeof(pathname));
-    infd = open (pathname, O_RDONLY | O_BINARY);
+    infd = HOPEN (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
         fprintf (stderr,"dmap2hrc: Error opening %s: %s\n",
@@ -132,14 +132,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                      filename);
             exit(5);
         }
-        
+
         /* Check for end of file. */
         if (len == 0)
         {
             fprintf(stderr, "End of input file.\n");
             break;
         }
-        
+
         /* Read devices on this controller. */
         more_devices = 1;
         while (more_devices)
@@ -164,7 +164,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                          filename);
                 exit(7);
             }
-        
+
             /* Check for end of file. */
             if (len == 0)
             {
@@ -179,7 +179,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             more_devices = 0;
             break;
         }
-        
+
         /* It's a real device. Fix the type so Hercules can use it and
            locate the output filename. */
         strncpy(output_type, device.type, 4);
@@ -187,7 +187,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (isprint(device.parms.disk.volser[0]))
             output_filename = device.parms.disk.filename;
         else output_filename = device.parms.other.filename;
-        
+
         if (strncmp(device.type, "3278", 4) == 0)
         {
             strcpy(output_type, "3270");
@@ -195,7 +195,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         if (strncmp(device.type, "2540", 4) == 0)
             strcpy(output_type, "3505");
-        
+
         /* Emit the Hercules config file entry. */
         printf("%02X%02X    %s",
                device.highaddr, device.lowaddr,

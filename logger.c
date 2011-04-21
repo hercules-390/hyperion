@@ -169,7 +169,7 @@ static void logger_term(void *arg)
     char* term_msg = MSG(HHC02103, "I");
 
     UNREFERENCED(arg);
-    
+
     log_wakeup(NULL);
     usleep(1000);
 
@@ -190,13 +190,13 @@ static void logger_term(void *arg)
         {
             sleep(2);
             /* Logger is now terminating */
-            obtain_lock(&logger_lock);  
+            obtain_lock(&logger_lock);
 
             /* Wait for the logger to terminate */
             join_thread( logger_tid, NULL );
             detach_thread( logger_tid );
 
-            release_lock(&logger_lock);  
+            release_lock(&logger_lock);
 
         }
 
@@ -260,7 +260,7 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
 #endif // defined( OPTION_MSGCLR )
     /* (ignore any errors; we did the best we could) */
     if (nLeft)
-    {     
+    {
         if ( fwrite( pLeft, nLeft, 1, logger_hrdcpy ) != 1 )
         {
             fprintf(logger_hrdcpy, MSG(HHC02102, "E", "fwrite()",
@@ -275,11 +275,11 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
 #ifdef OPTION_TIMESTAMP_LOGFILE
 /* ZZ FIXME:
  * This should really be part of log_msg, as the timestamps have currently
- * the time when the logger reads the message from the log pipe.  There can be 
- * quite a delay at times when there is a high system activity. Moving the timestamp 
+ * the time when the logger reads the message from the log pipe.  There can be
+ * quite a delay at times when there is a high system activity. Moving the timestamp
  * to log_msg() will fix this.
  * The timestamp option should also NOT depend on anything like daemon mode.
- * logs entries should always be timestamped, in a fixed format, such that 
+ * logs entries should always be timestamped, in a fixed format, such that
  * log readers may decide to skip the timestamp when displaying (ie panel.c).
  */
 static void logger_logfile_timestamp()
@@ -357,7 +357,7 @@ int bytes_read;
             obtain_lock(&logger_lock);
             if(logger_hrdcpy)
             {
-                fprintf(logger_hrdcpy, MSG(HHC02102, "E", "read_pipe()", 
+                fprintf(logger_hrdcpy, MSG(HHC02102, "E", "read_pipe()",
                                         strerror(read_pipe_errno)));
             }
             release_lock(&logger_lock);
@@ -392,9 +392,9 @@ int bytes_read;
                     fwrite( pLeft2, nLeft2, 1, stderr );
             }
         }
-        
+
         obtain_lock(&logger_lock);
-        
+
         /* Write log data to hardcopy file */
         if (logger_hrdcpy)
 #if !defined( OPTION_TIMESTAMP_LOGFILE )
@@ -492,7 +492,7 @@ int bytes_read;
                 logger_logfile_write( pLeft, nLeft );
         }
 #endif // !defined( OPTION_TIMESTAMP_LOGFILE )
-        
+
         release_lock(&logger_lock);
 
         /* Increment buffer index to next available position */
@@ -576,7 +576,7 @@ DLL_EXPORT void logger_init(void)
             if(!isatty(STDOUT_FILENO))
             {
                 logger_hrdcpyfd = dup(STDOUT_FILENO);
-                strlcpy(logger_filename, "STDOUT redirected from command line", 
+                strlcpy(logger_filename, "STDOUT redirected from command line",
                         sizeof(logger_filename));
                 if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
                 {
@@ -661,7 +661,7 @@ DLL_EXPORT char *log_dsphrdcpy(void)
         pzbuf = logger_filename;
     else
         MSGBUF(buf, "'%s'", logger_filename);
-    
+
     return pzbuf;
 }
 
@@ -695,7 +695,7 @@ int   new_hrdcpyfd = -1;
                 gettimeofday( &now, NULL ); tt = now.tv_sec;
                 strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
                 hhmmss[8] = '\0';
-                fprintf(temp_hrdcpy, "%s ", hhmmss); 
+                fprintf(temp_hrdcpy, "%s ", hhmmss);
             }
             fprintf(temp_hrdcpy,MSG(HHC02101, "I"));
             fclose(temp_hrdcpy);
@@ -707,10 +707,10 @@ int   new_hrdcpyfd = -1;
     {
         char pathname[MAX_PATH];
         hostpath(pathname, filename, sizeof(pathname));
-        
+
         bzero(logger_filename, sizeof(logger_filename));
 
-        new_hrdcpyfd = open(pathname,
+        new_hrdcpyfd = HOPEN(pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
                             S_IRUSR  | S_IWUSR | S_IRGRP);
         if(new_hrdcpyfd < 0)
@@ -754,7 +754,7 @@ int   new_hrdcpyfd = -1;
                         gettimeofday( &now, NULL ); tt = now.tv_sec;
                         strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
                         hhmmss[8] = '\0';
-                        fprintf(temp_hrdcpy, "%s ", hhmmss); 
+                        fprintf(temp_hrdcpy, "%s ", hhmmss);
                     }
                     fprintf(temp_hrdcpy, MSG(HHC02104, "I", pzbuf));
                     fclose(temp_hrdcpy);

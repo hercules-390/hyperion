@@ -446,7 +446,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     }
 
     /* Open the device file */
-    rc = open (dev->filename, O_RDONLY | O_BINARY);
+    rc = HOPEN (dev->filename, O_RDONLY | O_BINARY);
     if (rc < 0)
     {
         /* Handle open failure */
@@ -575,10 +575,10 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,  
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                    "read_socket() or fread()", strerror(errno));
         else
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                    "read_socket() or fread()", "unexpected end of file");
 
         /* Set unit check with equipment check */
@@ -651,7 +651,7 @@ BYTE    c = 0;                          /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                    "read_socket() or getc()", strerror(errno));
 
             /* Set unit check with equipment check */

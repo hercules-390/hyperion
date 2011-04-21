@@ -246,7 +246,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
 
     /* Open the specified file name */
     hostpath(pathname, fname, sizeof(pathname));
-    if ((fd = open (pathname, O_RDONLY | O_BINARY)) < 0)
+    if ((fd = HOPEN (pathname, O_RDONLY | O_BINARY)) < 0)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         WRMSG(HHC02219,"E", "open()", strerror(errno));

@@ -116,7 +116,7 @@ do { \
         if ( dev->crlf ) \
         { \
             write_buffer (dev, "\r", 1, unitstat); \
-            if (*unitstat != 0) return;	\
+            if (*unitstat != 0) return; \
         } \
     } /* end if(!data-chaining) */ \
     /* Return normal status */ \
@@ -301,7 +301,7 @@ static void* spthread (DEVBLK* dev)
     {
         dev->fd = -1;
         close_socket( fd );
-        WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
     }
 
@@ -322,7 +322,7 @@ char *nxt;
 int   sockdev = 0;                     /* 1 == is socket device     */
 
     dev->excps = 0;
-    
+
     /* Forcibly disconnect anyone already currently connected */
     if (dev->bs && !unbind_device_ex(dev,1))
         return -1; // (error msg already issued)
@@ -355,18 +355,18 @@ int   sockdev = 0;                     /* 1 == is socket device     */
     dev->rawcc = 0;
     dev->nofcbcheck = 0;
     dev->ccpend = 0;
-    
+
     dev->prevline = 1;
     dev->currline = 1;
     dev->destline = 1;
 
     dev->optbrowse = 1;
-    
+
     dev->lpi = 6;
     dev->index = 0;
-    dev->ffchan = 1;	
+    dev->ffchan = 1;
     for (i = 0; i < FCBSIZE; i++)  dev->fcb[i] = 0;
-    for (i = 1; i <= 12; i++ ) 
+    for (i = 1; i <= 12; i++ )
     {
         if ( FCBMASK[i] != 0 )
             dev->fcb[FCBMASK[i]] = i;
@@ -497,9 +497,9 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             for (line = 0 ; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
             /* check for simple mode */
-            if	( strstr(argv[iarg],":") )	
+            if ( strstr(argv[iarg],":") )
             {
-                /* ':" found  ==> new mode */			
+                /* ':" found  ==> new mode */
                 ptr = argv[iarg]+4;
                 while (*ptr)
                 {
@@ -522,9 +522,9 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         return -1;
                     }
                     dev->fcb[line] = chan;
-                    if ( nxt == 0 ) 
+                    if ( nxt == 0 )
                         break ;
-                    ptr = nxt + 1; 
+                    ptr = nxt + 1;
                 }
 
             }
@@ -544,26 +544,26 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         return -1;
                     }
                     chan += 1;
-                    if ( chan > 12 ) 
+                    if ( chan > 12 )
                     {
                         j = ptr - argv[iarg] ;
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
                     dev->fcb[line] = chan;
-                    if ( nxt == 0 ) 
+                    if ( nxt == 0 )
                         break ;
-                    ptr = nxt + 1; 
+                    ptr = nxt + 1;
                 }
-                if ( chan != 12 ) 
+                if ( chan != 12 )
                 {
                     j = 5 ;
                     WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                     return -1;
                 }
             }
-                
-            continue;  
+
+            continue;
         }
 
         WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
@@ -671,10 +671,10 @@ int             rc;                     /* Return code               */
         {
             open_flags |= O_TRUNC;
         }
-        fd = open (dev->filename, open_flags,
+        fd = HOPEN (dev->filename, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
-        {            
+        {
             WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "open()", strerror(errno));
             return -1;
         }
@@ -824,7 +824,7 @@ int             rc;                     /* Return code               */
         /* Equipment check if error writing to printer file */
         if (rc < len)
         {
-            WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()", 
+            WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()",
                    rc < 0 ? strerror(errno) : "incomplete record written");
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -963,32 +963,32 @@ char            wbuf[150];
         WRITE_LINE();
         if ((flags & CCW_FLAGS_CD) == 0)
         {
-            if    ( code <= 0x80 ) /* line control */  
+            if    ( code <= 0x80 ) /* line control */
             {
-                coun = code / 8 ;	
-                if	( coun == 0 ) 
+                coun = code / 8 ;
+                if ( coun == 0 )
                 {
-                    if ( dev->optbrowse )	
+                    if ( dev->optbrowse )
                     {
                         dev->ccpend = 1;
                         *unitstat = 0;
                     }
                     else
                         write_buffer(dev, "\r", 1, unitstat);
-                    if (*unitstat == 0)  
+                    if (*unitstat == 0)
                         *unitstat = CSW_CE | CSW_DE;
-                    return;			
+                    return;
                 }
 
                 dev->ccpend = 0 ;
                 dev->currline += coun;
                 write_buffer(dev, nls, coun, unitstat);
-                if (*unitstat == 0)  
+                if (*unitstat == 0)
                     *unitstat = CSW_CE | CSW_DE;
                 return;
             }
-            else  /*code >  0x80*/ /* chan control */         
-            {	
+            else  /*code >  0x80*/ /* chan control */
+            {
                 /*
                 if ( dev->optbrowse )
                 {
@@ -998,14 +998,14 @@ char            wbuf[150];
                 }
                 */
                 chan = ( code - 128 ) / 8 ;
-                if ( chan == 1 ) 
+                if ( chan == 1 )
                 {
                     write_buffer(dev, "\r", 1, unitstat);
-                    if (*unitstat != 0)  
+                    if (*unitstat != 0)
                         return;
                 }
                 SKIP_TO_CHAN();
-                if (*unitstat == 0)  
+                if (*unitstat == 0)
                     *unitstat = CSW_CE | CSW_DE;
                 return;
             }
@@ -1041,22 +1041,22 @@ char            wbuf[150];
             if (*unitstat != 0) return;
             eor = (dev->crlf) ? "\r\n" : "\n";
             write_buffer(dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat == 0)  
+            if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
             return;
         }
 
-        if    ( code <= 0x80 ) /* line control */  
+        if    ( code <= 0x80 ) /* line control */
         {
-            coun = code / 8 ;	
+            coun = code / 8 ;
             dev->ccpend = 0 ;
             dev->currline += coun;
             write_buffer(dev, nls, coun, unitstat);
-            if (*unitstat == 0)  
+            if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
             return;
         }
-        else  /*code >  0x80*/ /* chan control */         
+        else  /*code >  0x80*/ /* chan control */
         {
             /*
             if ( dev->optbrowse && dev->ccpend)
@@ -1068,9 +1068,9 @@ char            wbuf[150];
                 if (*unitstat != 0) return;
             }
             */
-            chan = ( code - 128 ) / 8 ;  
+            chan = ( code - 128 ) / 8 ;
             SKIP_TO_CHAN();
-            if (*unitstat == 0)  
+            if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
             return;
         }
@@ -1099,7 +1099,7 @@ char            wbuf[150];
         }
         else
         {
-            int i = 0; 
+            int i = 0;
             int j = 1;
             int more = 1 ;
             for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;

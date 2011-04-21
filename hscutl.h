@@ -234,4 +234,7 @@ HUT_DLL_IMPORT  int  hlock   ( const void* addr, size_t len );
 HUT_DLL_IMPORT  int  hunlock ( const void* addr, size_t len );
 #endif
 
+// Hercules low-level file open...
+HUT_DLL_IMPORT  int hopen( const char* path, int oflag, ... );
+
 #endif /* __HSCUTL_H__ */

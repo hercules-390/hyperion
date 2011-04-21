@@ -3734,4 +3734,18 @@ DLL_EXPORT int w32_munlock( void* addr, size_t len )
     return VirtualUnlock( addr, len ) ? 0 : -1;
 }
 
+// Hercules low-level file open...
+DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
+{
+    int pmode = 0;
+    if (oflag & _O_CREAT)
+    {
+        va_list vargs;
+        va_start( vargs, oflag );
+        pmode = va_arg( vargs, int );
+    }
+    // SH_SECURE: Sets secure mode (shared read, exclusive write access).
+    return _sopen( path, oflag, _SH_SECURE, pmode );
+}
+
 #endif // defined( _MSVC_ )

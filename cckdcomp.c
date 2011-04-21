@@ -51,7 +51,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
                        force = 1;
                        break;
             case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version 
+                       display_version
                          (stderr, "Hercules cckd compress program", FALSE);
                        return 0;
             default:   return syntax ();
@@ -67,7 +67,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
         /* open the file */
         hostpath(dev->filename, argv[i], sizeof(dev->filename));
-        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+        dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
@@ -103,11 +103,11 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
         {
-            fprintf(stdout, MSG(HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));           
+            fprintf(stdout, MSG(HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
             close (dev->fd);
             continue;
         }
-    
+
         /* call compress */
         rc = cckd_comp (dev);
 

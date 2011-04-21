@@ -73,7 +73,7 @@ int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 char    pathname[MAX_PATH];             /* file path in host format  */
-char   *strtok_str = NULL;              /* save last position        */ 
+char   *strtok_str = NULL;              /* save last position        */
 
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;
@@ -108,10 +108,10 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Open the device file */
-    dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+    dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
     if (dev->fd < 0)
     {
-        dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
+        dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
             WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
@@ -185,10 +185,10 @@ char   *strtok_str = NULL;              /* save last position        */
                     dev->dasdsfx--;
                 }
                 continue;
-            }        
+            }
             if (strlen (argv[i]) > 3
              && memcmp("cu=", argv[i], 3) == 0)   /* support for cu= added but  */
-            {                                     /* is ignored for the present */   
+            {                                     /* is ignored for the present */
                 kw = strtok_r (argv[i], "=", &strtok_str );
                 cu = strtok_r (NULL, " \t", &strtok_str );
                 continue;
@@ -630,7 +630,7 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, MSG(HHC00519, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
+    logdevtr (dev, MSG(HHC00519, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                         blkgrp, offset, fba_blkgrp_len(dev, blkgrp)));
 
     /* Seek to the block group offset */
@@ -783,7 +783,7 @@ int     num;                            /* Number of bytes to move   */
 BYTE    hexzeroes[512];                 /* Bytes for zero fill       */
 int     rem;                            /* Byte count for zero fill  */
 int     repcnt;                         /* Replication count         */
-    
+
     /* increment excp count */
     dev->excps++;
 
@@ -1316,8 +1316,8 @@ int     repcnt;                         /* Replication count         */
 /*-------------------------------------------------------------------*/
 /* Read Standard Block (used by Diagnose instructions)               */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void fbadasd_read_block 
-      ( DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+DLL_EXPORT void fbadasd_read_block
+      ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U16 *residual )
 {
 int     rc;                             /* Return code               */
@@ -1353,8 +1353,8 @@ int     sector;       /* First sector being read                     */
 /*-------------------------------------------------------------------*/
 /* Write Standard Block (used by Diagnose instructions)              */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void fbadasd_write_block ( 
-        DEVBLK *dev, int blknum, int blksize, int blkfactor, 
+DLL_EXPORT void fbadasd_write_block (
+        DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U16 *residual )
 {
 int     rc;           /* Return code from write function             */
@@ -1362,7 +1362,7 @@ int     sector;       /* First sector being read                     */
 #if 0
 U64     rba;          /* Large file size offset                      */
 #endif
-                                           
+
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;
     if (sector >= dev->fbanumblk || sector < 0 )

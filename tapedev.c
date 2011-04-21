@@ -360,8 +360,8 @@ TAPEMEDIA_HANDLER  tmh_scsi   =
    The following were obtained from "EREP Release 3.5.0 Reference"
    (GC35-0152-03):
 
-       Model                        MDR          OBR   
-      -------                      -----        -----  
+       Model                        MDR          OBR
+      -------                      -----        -----
 
        3480                         0x41         0x80
        3490                         0x42         0x81
@@ -931,7 +931,7 @@ int gettapetype_bydata (DEVBLK *dev)
 
     /* Try to determine the type based on actual file contents */
     hostpath( pathname, dev->filename, sizeof(pathname) );
-    rc = open ( pathname, O_RDONLY | O_BINARY );
+    rc = HOPEN ( pathname, O_RDONLY | O_BINARY );
     if (rc >= 0)
     {
         BYTE hdr[6];                    /* block header i/o buffer   */
@@ -1156,7 +1156,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     ASSERT(dev->tapedevt != TAPEDEVT_UNKNOWN);
     ASSERT(dev->tmh != NULL);
     ASSERT(short_descr != NULL);
-    MSGBUF(msg, "not valid for %s", short_descr); 
+    MSGBUF(msg, "not valid for %s", short_descr);
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
@@ -1836,7 +1836,7 @@ void ReqAutoMount( DEVBLK *dev )
         if ( unmountreq )
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
-            WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
+            WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                             TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
         if ( mountreq )

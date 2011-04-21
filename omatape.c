@@ -62,7 +62,7 @@ char           *strtok_str = NULL;      /* last token position       */
         if (dev->filename[pathlen-1] == '/') break;
 
     }
-#if 0    
+#if 0
     // JCS thinks this is bad
     if (pathlen < 7
         || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
@@ -75,7 +75,7 @@ char           *strtok_str = NULL;      /* last token position       */
 
     /* Open the tape descriptor file */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    fd = open (pathname, O_RDONLY | O_BINARY);
+    fd = HOPEN (pathname, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "oma", "open()", strerror(errno));
@@ -367,7 +367,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the OMATAPE file */
     hostpath(pathname, omadesc->filename, sizeof(pathname));
-    fd = open (pathname, O_RDONLY | O_BINARY);
+    fd = HOPEN (pathname, O_RDONLY | O_BINARY);
 
     /* Check for successful open */
     if (fd < 0 || lseek (fd, 0, SEEK_END) > LONG_MAX)

@@ -106,7 +106,7 @@ char           *strtok_str = NULL;
 
         /* open the input file */
         hostpath(dev->filename, argv[i], sizeof(dev->filename));
-        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+        dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
             fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,

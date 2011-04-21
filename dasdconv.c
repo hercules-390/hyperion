@@ -218,7 +218,7 @@ char           *strtok_str = NULL;
     /* Release the input buffer and close the input file */
     free (itrkbuf);
     IFCLOS (ifd);
-     
+
     /* Display completion message */
     fprintf (stderr, MSG(HHC02423, "I"));
 
@@ -244,7 +244,7 @@ static void delayed_exit (int exit_code)
 static void
 argexit ( int code, char *pgm )
 {
-    if (sizeof(off_t) > 4) 
+    if (sizeof(off_t) > 4)
         fprintf( stderr, MSG(HHC02410, "I", pgm,
                 "\n            -lfs   build one large output file"));
     else
@@ -276,8 +276,8 @@ int     len = 0;                        /* Number of bytes read      */
         rc = IFREAD (ifd, buf + len, reqlen - len);
         if (rc == 0) break;
         if (rc < 0)
-        {            
-#if defined(HAVE_LIBZ)                                 
+        {
+#if defined(HAVE_LIBZ)
             fprintf (stderr, MSG(HHC02412, "E", "gzread()", strerror(errno)));
 #else
             fprintf (stderr, MSG(HHC02412, "E", "read()", strerror(errno)));
@@ -289,7 +289,7 @@ int     len = 0;                        /* Number of bytes read      */
 
     if (len < reqlen)
     {
-#if defined(HAVE_LIBZ)                                 
+#if defined(HAVE_LIBZ)
         fprintf (stderr, MSG(HHC02412, "E", "gzread()", "unexpected end of file"));
 #else
         fprintf (stderr, MSG(HHC02412, "E", "read()", "unexpected end of file"));
@@ -317,7 +317,7 @@ int     len = 0;                        /* Number of bytes read      */
 /* Return value:                                                     */
 /*      0=OK, 1=End of track, >1=Track format error detected         */
 /*-------------------------------------------------------------------*/
-static int 
+static int
 find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
                 BYTE *pkl, BYTE **pkp, U16 *pdl, BYTE **pdp,
                 U32 *pcc, U32 *phh, BYTE *prn)
@@ -334,7 +334,7 @@ int             n;                      /* Integer work area         */
 
     /* Point to record header */
     hrec = (H30CKD_RECHDR*)(*ppbuf);
-     
+
     /* End of track if record header is all zero */
     if (memcmp(*ppbuf, twelvehex00, 12) == 0) return 1;
 
@@ -370,7 +370,7 @@ int             n;                      /* Integer work area         */
     /* Return the data length and data pointer */
     *pdl = dlen;
     *pdp = *ppbuf;
-     
+
     /* Point past the data to the next record header */
     *plen -= dlen;
     *ppbuf += dlen;
@@ -407,7 +407,7 @@ int             n;                      /* Integer work area         */
 /* Return value:                                                     */
 /*      Input file descriptor                                        */
 /*-------------------------------------------------------------------*/
-static IFD 
+static IFD
 open_input_image (char *ifname, U16 *devt, U32 *vcyls,
                 U32 *itrkl, BYTE **itrkb, BYTE *volser)
 {
@@ -450,7 +450,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         ifd = STDIN_FILENO;
     else
     {
-        ifd = open (pathname, O_RDONLY | O_BINARY);
+        ifd = HOPEN (pathname, O_RDONLY | O_BINARY);
 
         if (ifd < 0)
         {
@@ -466,7 +466,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
   #if !defined(HAVE_LIBZ)
     /* Reject input if compressed and we lack gzip support */
-    if (memcmp(h30trkhdr.devcode, gz_magic_id, sizeof(gz_magic_id)) == 0) 
+    if (memcmp(h30trkhdr.devcode, gz_magic_id, sizeof(gz_magic_id)) == 0)
     {
         fprintf (stderr, MSG(HHC02413, "E"));
         EXIT(3);
@@ -552,7 +552,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = find_input_record (itrkbuf, &pbuf, &len,
                 &klen, &kptr, &dlen, &dptr,
                 &cyl, &head, &rec);
-     
+
         /* Give up if error or end of track */
         if (rc != 0) break;
 
@@ -640,7 +640,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the AWSCKD image file */
     hostpath(pathname, (char *)ofname, sizeof(pathname));
-    ofd = open (pathname,
+    ofd = HOPEN (pathname,
                 O_WRONLY | O_CREAT | O_BINARY | (repl ? 0 : O_EXCL),
                 S_IRUSR | S_IWUSR | S_IRGRP);
 
@@ -694,7 +694,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             /* Calculate the current offset in the file */
             offset = ((cyl*heads)+head)*itrklen;
 
-            /* Read the input track image (except cyl 0 head 0 
+            /* Read the input track image (except cyl 0 head 0
                already read by the open_input_image procedure) */
             if (cyl > 0 || head > 0)
             {
@@ -714,7 +714,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                         cyl, head, ihc, ihh));
                 EXIT(8);
             }
-             
+
             /* Clear the output track image to zeroes */
             memset (obuf, 0, trksize);
 
@@ -741,7 +741,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 /* Error if invalid record header detected */
                 if (rc > 1)
                 {
-                    fprintf (stderr, MSG(HHC02419, "E", 
+                    fprintf (stderr, MSG(HHC02419, "E",
                             rc, (unsigned int)(iptr-itrkbuf), cyl, head,
                             offset, ifname));
                     EXIT(9);
@@ -777,7 +777,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             rc = write (ofd, obuf, trksize);
             if (rc < 0 || (U32)rc < trksize)
             {
-                fprintf (stderr, MSG(HHC02412, "E", "write()", 
+                fprintf (stderr, MSG(HHC02412, "E", "write()",
                         errno ? strerror(errno) : "incomplete"));
                 EXIT(1);
             }
@@ -795,7 +795,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display completion message */
-    fprintf (stderr, MSG(HHC02420, "I", 
+    fprintf (stderr, MSG(HHC02420, "I",
             cyl - start, ofname));
 
 } /* end function convert_ckd_file */
@@ -867,7 +867,7 @@ U32             trksize;                /* AWSCKD image track length */
     /* Check for valid number of cylinders */
     if (volcyls < mincyls || volcyls > maxcyls)
     {
-        fprintf (stderr, MSG(HHC02421, "E", 
+        fprintf (stderr, MSG(HHC02421, "E",
                 volcyls, mincyls, maxcyls));
         EXIT(4);
     }
@@ -883,7 +883,7 @@ U32             trksize;                /* AWSCKD image track length */
     }
 
     /* Display progress message */
-    fprintf (stderr, MSG(HHC02422, "I", 
+    fprintf (stderr, MSG(HHC02422, "I",
             devtype, volser, volcyls, heads, trksize));
 #ifdef EXTERNALGUI
     if (extgui)

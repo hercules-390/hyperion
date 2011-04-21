@@ -376,15 +376,15 @@ char           *strtok_str = NULL;      /* save last position        */
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
-        dev->fd = open (dev->filename, dev->ckdrdonly ?
+        dev->fd = HOPEN (dev->filename, dev->ckdrdonly ?
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */
             if (!dev->ckdrdonly && dev->dasdsfn != NULL)
-                dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
+                dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                                  filename, "open()", strerror(errno));
                 return -1;
             }
@@ -401,7 +401,7 @@ char           *strtok_str = NULL;      /* save last position        */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), 
+            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid),
                              dev->devnum, filename, "fstat()", strerror(errno));
             return -1;
         }
@@ -628,7 +628,7 @@ char           *strtok_str = NULL;      /* save last position        */
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;
-    
+
     /* default for device cache is on */
     dev->devcache = TRUE;
 
@@ -664,7 +664,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
             snprintf( buffer, buflen-1, "%s [%d cyls] IO[%" I64_FMT "u]",
                       dev->filename,
                       dev->ckdcyls,
-                      dev->excps );    
+                      dev->excps );
         }
     }
     else
@@ -958,7 +958,7 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1, 
+    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1,
         dev->ckdtrkoff, dev->ckdtrksz));
 
     /* Seek to the track image offset */
@@ -3039,7 +3039,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
-    case 0x27: 
+    case 0x27:
     /*---------------------------------------------------------------*/
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
@@ -3612,7 +3612,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if ((*unitstat & CSW_SM) && dev->ckdkeytrace
             && isprint(guest_to_host(iobuf[0])))
         {
-            BYTE module[45]; 
+            BYTE module[45];
             str_guest_to_host( iobuf, module, (u_int)num );
             WRMSG (HHC00423, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, module);
         }
@@ -4869,7 +4869,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         break;
     }
     dev->ckdlaux = iobuf[1];
- 
+
     /* Byte 2 must contain zeroes */
     if (iobuf[2] != 0)
     {
@@ -4955,7 +4955,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
     sector = iobuf[13];
     /*
-     * When byte 1, bit 0 is '0', bytes 14-15 must contain zeros; if 
+     * When byte 1, bit 0 is '0', bytes 14-15 must contain zeros; if
      * bytes 14-15 are not zero, Locate Record Extended is terminated
      * with status that includes unit check (Command Reject, format
      * X'04', Invalid Parameter).
@@ -5272,7 +5272,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
-        
+
         dev->ckdfmask = fmask;
         dev->ckdxgattr = xgattr;
 
@@ -5311,7 +5311,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
-                
+
         dev->ckdxblksz = xblksz;
 
         /* Validate the extent block */
@@ -5345,7 +5345,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            that the extent does not exceed the already defined extent */
         if ( bcyl > ecyl
             || (bcyl == ecyl && bhead > ehead)
-            || EXTENT_CHECK(dev, bcyl, bhead) 
+            || EXTENT_CHECK(dev, bcyl, bhead)
             || EXTENT_CHECK(dev, ecyl, ehead) )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -5405,7 +5405,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* READ SUBSYSTEM DATA                                           */
     /*---------------------------------------------------------------*/
-        /* Command reject if within the domain of a Locate Record,  
+        /* Command reject if within the domain of a Locate Record,
            or if subsystem data has not been prepared in the channel
            buffer by a previous Perform Subsystem Function command */
         if (dev->ckdlcount > 0 || dev->ckdssdlen == 0)

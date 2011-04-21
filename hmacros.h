@@ -265,6 +265,12 @@
   /* No 64-bit Large File Support at all */
   #warning Large File Support missing
 #endif
+// Hercules low-level file open...
+#ifdef _MSVC_
+  #define   HOPEN(_p,_o,...)    w32_hopen ((_p),(_o),__VA_ARGS__)
+#else
+  #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o),__VA_ARGS__)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for version number                              */
@@ -852,7 +858,7 @@ do { \
 #define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
 #endif /*!defined(MAX)*/
 
-#if !defined(MINMAX)
+#if !defined(MINMAX)  /* (ensures var x remains within range y to z) */
 #define  MINMAX(_x,_y,_z)  ((_x) = MIN(MAX((_x),(_y)),(_z)))
 #endif /*!defined(MINMAX)*/
 

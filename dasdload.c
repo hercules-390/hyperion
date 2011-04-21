@@ -150,8 +150,8 @@ argexit ( int code, char *pgm )
     char *bufbz = "";
 #endif
 
-    strncpy( buflfs, 
-            (sizeof(off_t) > 4) ? 
+    strncpy( buflfs,
+            (sizeof(off_t) > 4) ?
                   "            -lfs   create single large output file\n" : "",
             sizeof( buflfs));
 
@@ -168,11 +168,11 @@ static void
 info_msg (int lvl, char *msg, ...)
 {
 va_list vl;
- 
+
     if (infolvl >= lvl)
     {
         va_start(vl, msg);
-        vprintf (msg, vl); 
+        vprintf (msg, vl);
     }
 } /* end function info_msg */
 
@@ -382,7 +382,7 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
 
     /* Open the object file */
     hostpath(pathname, iplfnm, sizeof(pathname));
-    tfd = open (pathname, O_RDONLY|O_BINARY);
+    tfd = HOPEN (pathname, O_RDONLY|O_BINARY);
     if (tfd < 0)
     {
         XMERRF ( MSG( HHC02506, "E", "open", iplfnm, strerror( errno ) ) );
@@ -860,7 +860,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         || trkhdr.head[0] != (head >> 8)
         || trkhdr.head[1] != (head & 0xFF))
     {
-        XMERRF ( MSG( HHC02514, "E", ofname, cyl, cyl, head, head, 
+        XMERRF ( MSG( HHC02514, "E", ofname, cyl, cyl, head, head,
                                      trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
                                      trkhdr.head[0], trkhdr.head[1] ) );
         return -1;
@@ -1522,7 +1522,7 @@ char    hex[17];                        /* Character work areas      */
     /* Error if remaining length is insufficient for header */
     if (bufrem < 4)
     {
-        XMERR ( MSG( HHC02531, "E" ) ); 
+        XMERR ( MSG( HHC02531, "E" ) );
         return -1;
     }
 
@@ -1555,7 +1555,7 @@ char    hex[17];                        /* Character work areas      */
         if (bufrem < 2)
         {
             XMINF (4, "\n");
-            XMERR ( MSG( HHC02531, "E" ) ); 
+            XMERR ( MSG( HHC02531, "E" ) );
             return -1;
         }
 
@@ -2070,7 +2070,7 @@ int     i;                              /* Array subscript           */
                         | copyr2->debxtent[i][15];
 
         XMINFF (4, MSG( HHC02553, "I", i, xarray[i].bcyl, xarray[i].btrk,
-                                          xarray[i].ecyl, xarray[i].etrk, 
+                                          xarray[i].ecyl, xarray[i].etrk,
                                           xarray[i].ntrk, xarray[i].ntrk ) );
 
     } /* end for(i) */
@@ -2120,7 +2120,7 @@ char            hex[49];                /* Character work areas      */
     /* Check for end of directory */
     if (blklen == 12 && memcmp(xbuf, twelvehex00, 12) == 0)
     {
-        XMINF (3, MSG( HHC02554, "I" ) ); 
+        XMINF (3, MSG( HHC02554, "I" ) );
         return 1;
     }
 
@@ -2609,7 +2609,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
 
     /* Open the input file */
     hostpath(pathname, xfname, sizeof(pathname));
-    xfd = open (pathname, O_RDONLY|O_BINARY);
+    xfd = HOPEN (pathname, O_RDONLY|O_BINARY);
     if (xfd < 0)
     {
         XMERRF ( MSG( HHC02468, "E", xfname, "open()", strerror( errno ) ) );
@@ -2768,7 +2768,7 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
                         &outtrk, &outcyl, &outhead, &outrec);
             if (rc < 0)
             {
-                XMERRF ( MSG( HHC02570, "E", ofname, "write_block()", 
+                XMERRF ( MSG( HHC02570, "E", ofname, "write_block()",
                         blkcyl, blkhead, blkrec,
                         blktrk, blkrec, keylen, datalen ) );
                 return -1;
@@ -3026,8 +3026,8 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     if (rc < 0) return -1;
 
     XMINFF (4, MSG( HHC02565, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
-    
-    if (infolvl >= 5) 
+
+    if (infolvl >= 5)
         data_dump (datablk.kdarea, keylen + datalen);
 
     /* Count number of blocks written */
@@ -3155,7 +3155,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
                     &outusedv, &outusedr, &outtrkbr,
                     &outtrk, &outcyl, &outhead, &outrec);
         if (rc < 0) return -1;
-        
+
         XMINFF (4, MSG( HHC02565, "I", outcyl, outcyl, outhead, outhead, outrec, outrec ) );
 
         if (infolvl >= 5) data_dump (datablk.kdarea, keylen + datalen);
@@ -3406,7 +3406,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
 
     /* Open the input file */
     hostpath(pathname, sfname, sizeof(pathname));
-    sfd = open (pathname, O_RDONLY|O_BINARY);
+    sfd = HOPEN (pathname, O_RDONLY|O_BINARY);
     if (sfd < 0)
     {
         XMERRF ( MSG( HHC02468, "E", sfname, "open()", strerror(errno) ) );
@@ -3757,7 +3757,7 @@ char           *strtok_str = NULL;      /* last token                */
     {
         if (pdsnam == NULL)
             XMERR ( MSG(HHC02578, "E", "DSNAME" ) );
-        if (pimeth == NULL) 
+        if (pimeth == NULL)
             XMERR ( MSG(HHC02578, "E", "Initialization method" ) );
         return -1;
     }
@@ -4400,7 +4400,7 @@ char           *strtok_str = NULL;      /* last token position       */
     ckd = dasd_lookup (DASD_CKDDEV, sdevtp, 0, 0);
     if (ckd == NULL)
     {
-        XMERRF ( MSG( HHC02502, "E", sdevtp, cfname, stmtno ) ); 
+        XMERRF ( MSG( HHC02502, "E", sdevtp, cfname, stmtno ) );
         return -1;
     }
     devtype = ckd->devt;

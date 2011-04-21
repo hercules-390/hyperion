@@ -1,3 +1,5 @@
+20 Apr 2011 Fix file opens to open files in non-multi-write-shared mode
+            (Windows-only for now; non-Windows yet to be implemented) - Fish
 17 Apr 2011 LCS CTCI-WIN v3.3 multi-write mode (faster guest downloads) - Fish
 27 Feb 2011 Fix all-zero MAC bug in LCS cmd reply frame handling - Fish
 22 Feb 2011 Function logmsg() renamed to log_msg(); LOGMSG define added to simply implementation
@@ -68,31 +70,31 @@
             that produces incorrect output under Linux due to libtool
             wrappers - Kevin Leonard
 29 Aug 2010 Virtual Architecture Level support - Jan Jaeger
-28 Aug 2010 Add "autoinit" command to control a sysblk variable noautoinit. 
+28 Aug 2010 Add "autoinit" command to control a sysblk variable noautoinit.
             sysblk.noautoinit = FALSE, devinit will create a file when requested
-            file is not found, write 2 TMs and rewind the file. 
+            file is not found, write 2 TMs and rewind the file.
             sysblk.noautoinit = TRUE, devinit will fail the open when requested
             file is not found.
-            "autoinit" sets with [on|off] - default is off. "off" means 
+            "autoinit" sets with [on|off] - default is off. "off" means
             sysblk.noautoinit = TRUE.
             New message HHC00235I is displayed when a tape file is created. - Paul Gorlinsky
 28 Aug 2010 Move update_maxrates_hwm() from panel.c and dyngui.c to timer.c to
             correct update of maxrates when daemon mode is enabled without a
-            GUI interface being used. Previous maxrates will not be displayed if a 
+            GUI interface being used. Previous maxrates will not be displayed if a
             prior interval has not occurred. Current maxrates will be displayed
             during shutdown. - Paul Gorlinsky
-26 Aug 2010 Add "midnight" option to maxrates. Sets interval to 1440 and 
-            curr_int_start_time to the prior midnight. This will cause 
-            the maxrates stats to print at midnight. 
-            "impl.c" was modified to set curr_int_start_time to the 
+26 Aug 2010 Add "midnight" option to maxrates. Sets interval to 1440 and
+            curr_int_start_time to the prior midnight. This will cause
+            the maxrates stats to print at midnight.
+            "impl.c" was modified to set curr_int_start_time to the
             previous midnight if the interval is 1440 minutes. - Paul Gorlinsky
 22 Aug 2010 CMPSC-Enhancement Facility with a lot of guessing - Bernard van der Helm
 20 Aug 2010 Interlocked-Access Facility - Roger Bowler
 16 Aug 2010 Deprecate s37x statement. Use "ldmod s37x" instead - Ivan Warren
 11 Aug 2010 Enhance IPL command adding loadparm option. - Paul Gorlinsky
 11 Aug 2010 High-Word Facility - Roger Bowler
-10 Aug 2010 'qcodepages' added as command to display valid codepages; 'codepage' command 
-            enhanced to display the current codepage value, command changed to a PANEL command. 
+10 Aug 2010 'qcodepages' added as command to display valid codepages; 'codepage' command
+            enhanced to display the current codepage value, command changed to a PANEL command.
             Paul Gorlinsky
 
 10 Aug 2010 Population-Count Facility - Roger Bowler
@@ -102,7 +104,7 @@
             channel subsystem with S/370 channel I/O.  See README.IOARCH.
             Harold Grovesteen
 08 Aug 2010 Load/Store-on-Condition Facility - Roger Bowler
-05 Aug 2010 CMDSEP function added. Default is off. The characters 
+05 Aug 2010 CMDSEP function added. Default is off. The characters
             '.', '!' and '-' are invalid. Setting the character to a '#'
             could have unexpected results if the command line attempted to
             include a trailing comment.        Paul Gorlinsky
@@ -133,59 +135,59 @@
             is added between each token. Token can be enclosed in paired single or double quotes. Quotes
             are included as part of the token string.
 
-            New variable '&$' represents the data remaining on the line past token number 9. Token '&*' 
+            New variable '&$' represents the data remaining on the line past token number 9. Token '&*'
             does include the data from the '&$' token.
 
             For example:
-            DEFSYM PF02 "SUBST DELAY herc devinit &0 &*" 
+            DEFSYM PF02 "SUBST DELAY herc devinit &0 &*"
 
-            Typing >580 "HET_TAPE.HET" RO 
-            and pressing PF2 would place 
-                   herc devinit 580 "HET_TAPE.HET" RO 
+            Typing >580 "HET_TAPE.HET" RO
+            and pressing PF2 would place
+                   herc devinit 580 "HET_TAPE.HET" RO
             on the command line.
 
-            It is possible to use '&*' more than once as with any substitution place holder. 
+            It is possible to use '&*' more than once as with any substitution place holder.
             If the command line had X Y Z A B C on it and the PF string was herc devinit &0 &* &1 &* &2
-            the result would be herc devinit X Y Z A B C Y Z A B C Z 
+            the result would be herc devinit X Y Z A B C Y Z A B C Z
 19 Jul 2010 PF Key support enhancement.
             DEFSYM PFnn -
 
                                          .-DELAY-.
             >>--DEFSYM--PFnn--.-------.--+-------+--.-------------.-><
                               '-SUBST-'  '-IMMED-'  ' <-pfdata-<  '
-                                      
+
             Operands
             PFnn
-                identifies the PF Key you are defining; the operand nn is a 
+                identifies the PF Key you are defining; the operand nn is a
                 number from 01 to 48.
 
             SUBST
                 indicates that the PF data might contain substitution place holders.
 
                 The place holder is identified by an ampersand (&) followed by a decimal
-                number from 0 to 9. 
+                number from 0 to 9.
 
                 If two ampersands ('&&') are detected, then a single ampersand is substituted.
 
             DELAY
             IMMED
                 indicates when the PF is processed. If you specify DELAY, then PF data is displayed
-                on the command line when you press the PF key. The data may then be modified if 
+                on the command line when you press the PF key. The data may then be modified if
                 necessary. Press the 'RETURN' key to process. If you specify IMMED, then PF data is
                 processed when you press the PK key.
 
             pfdata
                 defines the command that you want processed.
-             
+
               For example:
             DEFSYM PF02 "SUBST herc help &0"
-            
+
             Type QUERY on the command line and press PF02.
             The string "herc help query" will be built on the command line. Press RETURN to execute.
 
             Windows has PF1 - PF48; Other PF1-20; Other implementations depend on an xterm terminal type.
 
-17 Jul 2010 Add two additional default symbols MODPATH and MODNAME representing the 
+17 Jul 2010 Add two additional default symbols MODPATH and MODNAME representing the
             pathname and the module name of the startup program.
 16 Jul 2010 Begin Function Keys (PF1-12) Support. PF1 defaults to HELP.
             Use DEFSYM command to set PF keys. DEFSYM PF01 HELP . You must include the ZERO
@@ -194,17 +196,17 @@
             the command. DEFSYM PF12 "pscp netstat -a" for example.
 
 14 Jul 2010 Enhance devlist to display a single class of devices.
-13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value' 
-            This can be done recursively. 
+13 Jul 2010 New startup option (-s) to define symbols at startup. Format: '-s sym=Value'
+            This can be done recursively.
 12 Jul 2010 Add lock on configuration file to prevent duplicate disk/tape files from being opened.
-11 Jul 2010 Add checks for a valid CNSLPORT. If 1st char of port is numeric all must be numeric 
+11 Jul 2010 Add checks for a valid CNSLPORT. If 1st char of port is numeric all must be numeric
             and in the range of 0-65535. If the first char is not numeric, no checks are made.
-09 Jul 2010 Add DIR/LS commands as appropriate. Add "mt" command for Mag tape control. 
+09 Jul 2010 Add DIR/LS commands as appropriate. Add "mt" command for Mag tape control.
             Command mt supports rew, fsf, bsf, fsr, bsr, asf and wtm sub functions.
             Type "help mt" for more information.
 08 Jul 2010 Add code page mappings 819/037, 819/037v2, 1252/037, 1252/037v2 - Kevin Leonard
 08 Jul 2010 Add FAKETAPE support in hetupd and hetget. (autogen.sh and ./configure rerun required)
-06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for 
+06 Jul 2010 Add FTLIB.C FakeTape library; add support in hetmap and hetinit for
             FAKETAPE.
 22 Jun 2010 CAPPING feature. Capping can be set in hercules.cnf with the keyword
             CAPPING and a number, representing the maximum MIPS for CPs. Capping
@@ -214,13 +216,13 @@
             developer is not enabled then 'quit' will check for any active
             cpu. If an active cpu is found, a message is presented indicating
             that the system is running. A second message is then presented
-            asking for confirmation by entering a 2nd 'quit' command. 
+            asking for confirmation by entering a 2nd 'quit' command.
             If 'cmdlevel +developer' has been entered, then 'quit' stops
             hercules immediately. 'qquit' has been removed.
 13 Jun 2010 'EXCPs' tag has been changed to 'IO'.
 13 Jun 2010 'QUIT' will now only ask for 2nd quit if any processor is active.
             New message added indicating that the machine is not quiesced.
-13 Jun 2010 The 60 seconds for QUIT and SSD has been replaced by #define 
+13 Jun 2010 The 60 seconds for QUIT and SSD has been replaced by #define
             QUITTIME_PERIOD and is now defaulted to 10 seconds.
 08 Jun 2010 'scpimply' and 'scpecho' use ON/OFF now instead of being a toggle.
 03 Jun 2010 'scpimply' command and function added. 'Unknown' commands are passed to the
@@ -232,7 +234,7 @@
 20 May 2010 QUIT and SSD require 2nd command within 60 seconds.
 12 May 2010 Addition of a native Windows Threading Model (wthreads) enabled with
             OPTION_WTHREADS. Requires WIN2K and later. Disables PTTRACE.
-08 May 2010 HERCULES_LIB is introduced as an environment variable for LOADABLE  
+08 May 2010 HERCULES_LIB is introduced as an environment variable for LOADABLE
             MODULES DIRECTORY.
             Default library after processing startup arguments is:
             1) -p highest priority
@@ -243,10 +245,10 @@
 07 May 2010 Changes to selecting default Loadable Modules Directory. - Paul G.
             The default directory selection has been change to use the directory
             that hercules was started from if define MODULESDIR was not set.
-            Unless no path is available, then hercules will be used. 
+            Unless no path is available, then hercules will be used.
 07 May 2010 Functions basename() and dirname() are required and use the libdef.h header. (not windows)
 11 Apr 2010 Fix SCSI tape dev-attn failure if read-only media is mounted - Fish
-29 Mar 2010 Add support for cmdlevel to limit console commands to the requested 
+29 Mar 2010 Add support for cmdlevel to limit console commands to the requested
             command set. Effects only user input commands, not panel, HAO or diagnose.
             Default works as before. - Paul G.
 26 Mar 2010 Prelimiary AIX support - Alexey Bozrikov, Harold Grovesteen and Fish by Fish
@@ -255,20 +257,20 @@
 18 Mar 2010 Remove requirement to install SDK7. It will be used only if installed. - Paul G.
 18 Mar 2010 Windows changes. Add handlers for CTRL-C, CTRL-Break, CLOSE, SHUTDOWN
             and LOGOFF. CTRL-C does not do anything (yet), CTRL-Break simulates the
-            External Interrupt Key being pressed, CLOSE, SHUTDOWN and LOGOFF all 
+            External Interrupt Key being pressed, CLOSE, SHUTDOWN and LOGOFF all
             initate an immediate shutdown of hercules in order to close all files
             correctly. An orderly SHUTDOWN is not possible for the GUEST OS because
             Windows allows just 5 seconds to complete any cleanup (when using the
             cmd terminal interface). - Paul G.
 16 Mar 2010 Panel changed to add MIPS and SIOS to bottom status line. MIPS and SIOS
-            are displayed if window is width >= 104. MIPS is displayed if window 
+            are displayed if window is width >= 104. MIPS is displayed if window
             width >= 90. If window width < 90 then neither is displayed. - Paul G.
 15 Mar 2010 Expanded w32util hosting information when using VS2008 and MS SDK 7.0
             Code will not expand if less than VS2008. If VS2008 is used, then
             MS SDK 7.0 must be installed. Updates to winNT.h are in MS SDK 7.0 for
             Windows 7 and Windows Server 2008 R2. - Paul G.
-15 Mar 2010 Message cleanup, change CPUxxxx to CPxx where CP is the indicated 
-            processor type. CP, CF, AP, IL and IP. "IE" is used to indicate SIE 
+15 Mar 2010 Message cleanup, change CPUxxxx to CPxx where CP is the indicated
+            processor type. CP, CF, AP, IL and IP. "IE" is used to indicate SIE
             keeping message similar. - Paul G.
 11 Mar 2010 Correct cckddasd merge flag error. Correct fbadasd sf= filename error. - Paul G.
 10 Mar 2010 Add SIGTERM handler to cleanly shut down clients - Frans Pop
@@ -306,7 +308,7 @@
 08 Feb 2009 Ability to build 64-bit executables for Windows - Roger Bowler
 07 Feb 2009 MVCL & MVCLE now obey MP Concurrent Block Consistency rules - Ivan Warren
 07 Feb 2009 Prevent restart on special engines - Bernard van der Helm
-04 Feb 2009 Ensure unaligned LM/STM/LMG/STMG work on aligned constrained hosts - Ivan Warren 
+04 Feb 2009 Ensure unaligned LM/STM/LMG/STMG work on aligned constrained hosts - Ivan Warren
 03 Feb 2009 Fix TPROT under SIE problem reported by 'pat' - Ivan Warren
 23 Jan 2009 copyright notice - Bernard van der Helm
 17 Jan 2009 Fix change recording on page crossing first op of MVC - Reported by Greg Price

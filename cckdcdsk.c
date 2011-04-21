@@ -111,7 +111,7 @@ char           *strtok_str = NULL;      /* last token position       */
 
         /* open the file */
         hostpath(dev->filename, argv[i], sizeof(dev->filename));
-        dev->fd = open (dev->filename, ro ? O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
+        dev->fd = HOPEN (dev->filename, ro ? O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
             fprintf(stderr, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,

@@ -103,7 +103,7 @@ int             oflags;
     omode = "r+b";
     if( !( flags & FETOPEN_READONLY ) )
     {
-        fd = open( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
+        fd = HOPEN( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
     }
 
     /* If file is read-only, attempt to open again */
@@ -111,9 +111,9 @@ int             oflags;
     {
         omode = "rb";
         tfetb->writeprotect = TRUE;
-        fd = open( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        fd = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
-    
+
     /*
     || Error out if both opens failed
     */
@@ -210,7 +210,7 @@ fet_close ( FETB **fetb )
 /* and prvblkl and curblkl are undefined. Either or both of prvblkl  */
 /* and/or curblkl may be NULL.                                       */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_read_header( FETB *fetb, off_t blkpos,
                  U16* pprvblkl, U16* pcurblkl )
 {
@@ -280,7 +280,7 @@ int             xorblkl;                /* XOR check of block lens   */
 /* current file number in the device block is incremented.           */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_read ( FETB *fetb, void *buf )
 {
 int             rc;                     /* Return code               */
@@ -293,7 +293,7 @@ U16             curblkl;                /* Current block length      */
     /* Read the block header to obtain the current block length */
     rc = fet_read_header( fetb, blkpos, NULL, &curblkl );
     if ( rc == FETE_EOT ) return FETE_EOT;
-    if (rc < 0) 
+    if (rc < 0)
         return FETE_BADHDR; /* (error message already issued) */
 
     /* Calculate the offset of the next block header */
@@ -362,13 +362,13 @@ char            sblklen[5];             /* work buffer               */
         rcoff = ftell( fetb->fd );
 
     /* Build the 12-ASCII-hex-character block header */
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ); 
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl );
     sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", curblkl ); 
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", curblkl );
     sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
-    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ^ curblkl ); 
+    snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl ^ curblkl );
     sblklen[sizeof(sblklen)-1] = '\0';
     strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
@@ -395,7 +395,7 @@ char            sblklen[5];             /* work buffer               */
 /* If successful, return value is zero.                              */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_write( FETB *fetb, void *buf, U16 blklen )
 {
 int             rc;                     /* Return code               */
@@ -437,7 +437,7 @@ U16             prvblkl;                /* Length of previous block  */
 
     /* Write the block header */
     rc = fet_write_header( fetb, rcoff, prvblkl, blklen );
-    if (rc < 0) 
+    if (rc < 0)
         return FETE_EOT; /* (error message already issued) */
 
     /* Calculate the offsets of the next and previous blocks */
@@ -482,7 +482,7 @@ U16             prvblkl;                /* Length of previous block  */
 /* If successful, return value is zero.                              */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_tapemark( FETB *fetb )
 {
 int             rc;                     /* Return code               */
@@ -499,7 +499,7 @@ U16             prvblkl;                /* Length of previous block  */
     {
         /* Retrieve the previous block length */
         rc = fet_read_header( fetb, fetb->prvblkpos, NULL, &prvblkl );
-        if (rc < 0) 
+        if (rc < 0)
             return rc;
 
         /* Recalculate the offset of the next block */
@@ -525,7 +525,7 @@ U16             prvblkl;                /* Length of previous block  */
 
     /* Write the block header */
     rc = fet_write_header( fetb, rcoff, prvblkl, 0 );
-    if (rc < 0) 
+    if (rc < 0)
         return rc; /* (error message already issued) */
 
     /* Increment the block number */
@@ -557,7 +557,7 @@ U16             prvblkl;                /* Length of previous block  */
 /* If successful, return value is zero.                              */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_sync( FETB *fetb )
 {
     /* Unit check if tape is write-protected */
@@ -585,7 +585,7 @@ fet_sync( FETB *fetb )
 /* and the current file number in the device block is incremented.   */
 /* If error, return value is < 0.                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_fsb( FETB *fetb )
 {
 int             rc;                     /* Return code               */
@@ -597,7 +597,7 @@ U16             blklen;                 /* Block length              */
 
     /* Read the block header to obtain the current block length */
     rc = fet_read_header( fetb, blkpos, NULL, &blklen );
-    if (rc < 0) 
+    if (rc < 0)
         return rc; /* (error message already issued) */
 
     /* Calculate the offset of the next block */
@@ -627,7 +627,7 @@ U16             blklen;                 /* Block length              */
 /* and the current file number in the device block is decremented.   */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_bsb( FETB *fetb )
 {
 int             rc;                     /* Return code               */
@@ -646,7 +646,7 @@ off_t           blkpos;                 /* Offset of block header    */
 
     /* Read the block header to obtain the block lengths */
     rc = fet_read_header( fetb, blkpos, &prvblkl, &curblkl );
-    if (rc < 0) 
+    if (rc < 0)
         return rc; /* (error message already issued) */
 
     /* Calculate the offset of the previous block */
@@ -675,7 +675,7 @@ off_t           blkpos;                 /* Offset of block header    */
 /* in the device block is incremented by fet_fsb.                    */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_fsf( FETB *fetb )
 {
 int             rc;                     /* Return code               */
@@ -684,11 +684,11 @@ int             rc;                     /* Return code               */
     {
         /* Forward space over next block */
         rc = fet_fsb( fetb );
-        if (rc < 0) 
+        if (rc < 0)
             return rc; /* (error message already issued) */
 
         /* Exit loop if spaced over a tapemark */
-        if (rc == 0) 
+        if (rc == 0)
             break;
 
     } /* end while */
@@ -709,7 +709,7 @@ int             rc;                     /* Return code               */
 /* in the device block is decremented by fet_bsb.                    */
 /* If error, return value is < 0                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_bsf( FETB *fetb )
 {
 int             rc;                     /* Return code               */
@@ -724,11 +724,11 @@ int             rc;                     /* Return code               */
 
         /* Backspace to previous block position */
         rc = fet_bsb( fetb );
-        if (rc < 0) 
+        if (rc < 0)
             return rc; /* (error message already issued) */
 
         /* Exit loop if backspaced over a tapemark */
-        if (rc == 0) 
+        if (rc == 0)
             break;
 
     } /* end while */
@@ -742,7 +742,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Rewinds a FAKETAPE format file                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_rewind ( FETB *fetb )
 {
 int         rc;
@@ -766,18 +766,18 @@ off_t       rcoff;
 /*-------------------------------------------------------------------*/
 /* Determines if a FAKETAPE has passed a virtual EOT marker          */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int 
+DLL_EXPORT int
 fet_passedeot ( FETB *fetb )
 {
     if(fetb->nxtblkpos==0)
         fetb->eotwarning = FALSE;
-    else 
+    else
         if(fetb->maxsize==0)
             fetb->eotwarning = TRUE;
     else
         if(fetb->nxtblkpos+fetb->eotmargin > fetb->maxsize)
             fetb->eotwarning = TRUE;
-    else 
+    else
         fetb->eotwarning = FALSE;
     return fetb->eotwarning;
 }

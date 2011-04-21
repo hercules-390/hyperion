@@ -357,7 +357,7 @@ DLL_EXPORT void del_symbol(const char *sym)
             symbols[i] = NULL;
             return;
         }
-    }    
+    }
 
     return;
 }
@@ -366,14 +366,14 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
 
-    if ( sym == NULL || value == NULL || strlen(sym) == 0 ) 
+    if ( sym == NULL || value == NULL || strlen(sym) == 0 )
         return;
 
 #if defined ( _MSVC_ )
     {
-        size_t   evl = strlen(sym)+strlen(value)+2; 
+        size_t   evl = strlen(sym)+strlen(value)+2;
         char    *ev=malloc(evl);
-    
+
         if ( !ev )
         {
             WRMSG(HHC00136, "W", "malloc()", strerror(errno));
@@ -382,7 +382,7 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
         {
             int rc;
 
-            strlcpy( ev, sym, evl ); 
+            strlcpy( ev, sym, evl );
             strlcat( ev, "=", evl );
             strlcat( ev, value, evl );
             rc = putenv( ev );
@@ -420,7 +420,7 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     char *val;
     SYMBOL_TOKEN   *tok;
     static char     buf[80];
-        
+
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
     if ( CMD(sym,DATE,4) )
     {
@@ -446,7 +446,7 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     if(tok==NULL)
     {
         val=getenv(sym);
-        MSGBUF(buf, "%s", val == NULL? "" : val );    
+        MSGBUF(buf, "%s", val == NULL? "" : val );
         return(buf);
     }
     return(tok->val);
@@ -558,7 +558,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                 if (inc_lbrace >= 0)
                 {
                     /* End of variable spec? */
-                    if ( ( fDParens && c == ')' )  || ( !fDParens && c == '}' ) )    
+                    if ( ( fDParens && c == ')' )  || ( !fDParens && c == '}' ) )
                     {
                         /* Terminate it */
                         buf[stmtlen] = '\0';
@@ -604,8 +604,8 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             }
 
                             /* Copy to buffer and update index */
-                            stmtlen += snprintf( &buf[stmtlen], 
-                                                 (sizeof(buf) - stmtlen) - 1, 
+                            stmtlen += snprintf( &buf[stmtlen],
+                                                 (sizeof(buf) - stmtlen) - 1,
                                                  "%s", inc_envvar );
                         }
                         bzero(&buf[stmtlen],(sizeof(buf) - stmtlen));
@@ -801,7 +801,7 @@ DLL_EXPORT int timed_wait_condition_relative_usecs
     timeout_timespec.tv_nsec *= 1000;
 
 #if defined( OPTION_WTHREADS )
-    if ( usecs < 1000 ) return ( ETIMEDOUT ); 
+    if ( usecs < 1000 ) return ( ETIMEDOUT );
     else return timed_wait_condition( pCOND, pLOCK, usecs/1000 );
 #else
     return timed_wait_condition( pCOND, pLOCK, &timeout_timespec );
@@ -880,11 +880,11 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 
   #if defined(TCP_KEEPALIVE)
     optval = idle_time;
-    rc = setsockopt(sfd, IPPROTO_TCP, TCP_KEEPALIVE, &optval, sizeof(optval)); 
+    rc = setsockopt(sfd, IPPROTO_TCP, TCP_KEEPALIVE, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #elif defined(TCP_KEEPIDLE)
     optval = idle_time;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE, &optval, sizeof(optval)); 
+    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror(errno));
   #else
     UNREFERENCED(idle_time);
@@ -892,7 +892,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 
   #if defined(TCP_KEEPINTVL)
     optval = probe_interval;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL, &optval, sizeof(optval)); 
+    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #else
     UNREFERENCED(probe_interval);
@@ -900,7 +900,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 
   #if defined(TCP_KEEPCNT)
     optval = probe_count;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPCNT, &optval, sizeof(optval)); 
+    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPCNT, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCPKEEPCNT)", strerror(errno));
   #else
     UNREFERENCED(probe_count);
@@ -921,6 +921,19 @@ DLL_EXPORT  int  hunlock( const void* addr, size_t len )
     return -1;
 }
 #endif
+
+// Hercules low-level file open...
+DLL_EXPORT  int hopen( const char* path, int oflag, ... )
+{
+    int pmode = 0;
+    if (oflag & _O_CREAT)
+    {
+        va_list vargs;
+        va_start( vargs, oflag );
+        pmode = va_arg( vargs, int );
+    }
+    return open( path, oflag, pmode );
+}
 
 #endif // !defined(_MSVC_)
 
@@ -1008,15 +1021,15 @@ DLL_EXPORT int hprintf(int s,char *fmt,...)
 
 DLL_EXPORT void* hpcalloc( BYTE type, size_t size )
 {
-    void *ptr       = NULL; 
+    void *ptr       = NULL;
     void *p         = NULL;
     size_t hpgsz    = 0;
 
     hpgsz = (size_t)HPAGESIZE();
 
     p = calloc( size + hpgsz - 1 + sizeof(void*), 1 );
-    
-    if (p) 
+
+    if (p)
     {
         ptr = (void*)(((uintptr_t)p + sizeof(void*) + hpgsz - 1) & ~(hpgsz-1));
         *(void**)((uintptr_t)ptr - sizeof(void*)) = p;

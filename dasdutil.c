@@ -542,7 +542,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Read the device header so we can determine the device type */
     strlcpy( sfxname, fname, sizeof(sfxname));
     hostpath(pathname, sfxname, sizeof(pathname));
-    fd = open (pathname, omode);
+    fd = HOPEN (pathname, omode);
     if (fd < 0)
     {
         /* If no shadow file name was specified, then try opening the
@@ -581,7 +581,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             }
             *suffix = '1';
             hostpath(pathname, sfxname, sizeof(pathname));
-            fd = open (pathname, omode);
+            fd = HOPEN (pathname, omode);
         }
         if (fd < 0 && rmtdev == NULL)
         {
@@ -597,7 +597,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
        and set the device type */
     if (fd >= 0)
     {
-       
+
         iLen = read(fd, &devhdr, CKDDASD_DEVHDR_SIZE);
         if (iLen < 0)
         {
@@ -1192,7 +1192,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the DASD image file */
     hostpath(pathname, fname, sizeof(pathname));
-    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
+    fd = HOPEN (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -1905,7 +1905,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the DASD image file */
     hostpath(pathname, fname, sizeof(pathname));
-    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
+    fd = HOPEN (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -2032,7 +2032,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the DASD image file */
     hostpath(pathname, fname, sizeof(pathname));
-    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
+    fd = HOPEN (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -2220,7 +2220,7 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
     for ( i = 0; i < iLen; i++ )
     {
         BYTE c = pszdsname[i];
-        if ( isalnum( c ) ) 
+        if ( isalnum( c ) )
             continue;
         else if ( c == '$' )
             continue;

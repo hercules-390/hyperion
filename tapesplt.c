@@ -131,7 +131,7 @@ char           *strtok_str = NULL;
 
     /* Open the tape device */
     hostpath(pathname, infilename, sizeof(pathname));
-    infd = open (pathname, O_RDONLY | O_BINARY);
+    infd = HOPEN (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
         printf( MSG( HHC02715, "E", infilename, errno, strerror(errno) ) );
@@ -151,7 +151,7 @@ char           *strtok_str = NULL;
         outfilename = argv[outfilenum];
         printf ( MSG( HHC02740, "I", outfilename ) );
         hostpath(pathname, outfilename, sizeof(pathname));
-        outfd = open (pathname, O_WRONLY | O_CREAT | O_BINARY,
+        outfd = HOPEN (pathname, O_WRONLY | O_CREAT | O_BINARY,
                         S_IRUSR | S_IWUSR | S_IRGRP);
 
         if (outfd < 0)
@@ -159,7 +159,7 @@ char           *strtok_str = NULL;
             printf ( MSG (HHC02715, "E", outfilename, errno, strerror(errno) ) );
             exit (3);
         }
-        
+
         if (outfilenum == argc)
         {
             /* count not specified for last file, so use big number */
@@ -208,7 +208,7 @@ char           *strtok_str = NULL;
             /* Check for end of tape. */
             if (len == 0)
             {
-                printf( MSG( HHC02704, "I" ) ); 
+                printf( MSG( HHC02704, "I" ) );
                 break;
             }
 
@@ -236,7 +236,7 @@ char           *strtok_str = NULL;
                 maxblksz = 0;
                 blkcount = 0;
                 file_bytes = 0;
-                
+
                 /* Count the file we just copied. */
                 outfilecount++;
 
@@ -310,7 +310,7 @@ char           *strtok_str = NULL;
             } /* end if(tapemark) */
 
         } /* end for(outfilecount) */
-        
+
         close(outfd);
 
     } /* end for(outfilenum) */

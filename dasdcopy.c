@@ -82,7 +82,7 @@ char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str = NULL;      
+char           *strtok_str = NULL;
 
     /* Set program name */
     if ( argc > 0 )
@@ -225,7 +225,7 @@ char           *strtok_str = NULL;
     {
         BYTE buf[8];
         hostpath(pathname, ifile, sizeof(pathname));
-        fd = open (pathname, O_RDONLY|O_BINARY);
+        fd = HOPEN (pathname, O_RDONLY|O_BINARY);
         if (fd < 0)
         {
             fprintf (stderr, MSG(HHC02412, "E", "open()", strerror(errno)));
@@ -544,8 +544,8 @@ int syntax (char *pgm)
     char *bufbz = "";
 #endif
 
-    strncpy( buflfs, 
-            (sizeof(off_t) > 4) ? 
+    strncpy( buflfs,
+            (sizeof(off_t) > 4) ?
                 "            -lfs   create single large output file\n" : "",
             sizeof( buflfs));
     MSGBUF( usage, MSG_C( HHC02499, "I", pgm, "DASD copy/convert" ) );

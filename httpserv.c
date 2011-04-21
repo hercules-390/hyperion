@@ -461,7 +461,7 @@ static void http_download(WEBBLK *webblk, char *filename)
         http_error(webblk, "404 File Not Found","",
                            "The requested file is not a regular file");
 
-    fd = open(fullname,O_RDONLY|O_BINARY,0);
+    fd = HOPEN(fullname,O_RDONLY|O_BINARY,0);
     if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
@@ -730,10 +730,10 @@ char *http_root()
 
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
-        
+
         /* Save the absolute path */
         free(http_serv.httproot);
-        
+
         if (strlen(absolute_httproot_path) > MAX_PATH )
         {
             char msgbuf[MAX_PATH+3] = { 0 };
@@ -745,7 +745,7 @@ char *http_root()
                 MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
 
             WRMSG(HHC01801, "E", p, "path length too long");
-            
+
             release_lock( &http_lock_root );
 
             return NULL;
@@ -769,7 +769,7 @@ char *http_root()
             WRMSG(HHC01802, "I", p);
         }
     }
-    
+
     release_lock( &http_lock_root );
 
     return http_serv.httproot;
@@ -782,7 +782,7 @@ char *http_root()
 static void http_shutdown(void * unused)
 {
     UNREFERENCED(unused);
-    
+
     obtain_lock(&http_serv.http_lock_shutdown);
 
     http_serv.httpshutdown = TRUE;      /* signal shutdown */
@@ -811,7 +811,7 @@ struct timeval      timeout;            /* timeout value             */
     http_serv.httpshutdown = TRUE;
 
     hdl_adsc("http_shutdown",http_shutdown, NULL);
-    
+
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
@@ -855,7 +855,7 @@ struct timeval      timeout;            /* timeout value             */
     while (TRUE)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
-        
+
         if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
         WRMSG(HHC01804, "W", http_serv.httpport);
@@ -869,7 +869,7 @@ struct timeval      timeout;            /* timeout value             */
     }
     else
         http_serv.httpbinddone = TRUE;
-    
+
     /* Put the socket into listening state */
     rc = listen (lsock, 32);
 
@@ -885,13 +885,13 @@ struct timeval      timeout;            /* timeout value             */
     WRMSG(HHC01803, "I", http_serv.httpport);
 
     /* Handle http requests */
-    while ( !http_serv.httpshutdown ) 
+    while ( !http_serv.httpshutdown )
     {
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
-     
+
         timeout.tv_sec  = 0;
         timeout.tv_usec = 10000;
 
@@ -959,7 +959,7 @@ http_server_stop:
 /* http startup - start HTTP server                                  */
 /*-------------------------------------------------------------------*/
 int http_startup(int isconfigcalling)
-{ 
+{
     int rc = 0;
     static int first_call = TRUE;
 
@@ -977,7 +977,7 @@ int http_startup(int isconfigcalling)
     }
 
     if ( http_serv.httpport == 0 )
-    {    
+    {
         rc = -1;
     }
     else if ( isconfigcalling )
@@ -993,7 +993,7 @@ int http_startup(int isconfigcalling)
         if ( sysblk.httptid == 0 )
         {
             int rc_ct;
-                
+
             rc_ct = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
             if ( rc_ct )
             {
@@ -1036,13 +1036,13 @@ int http_command(int argc, char *argv[])
 
     if ( argc == 2 && CMD(argv[0],rootx,4) &&
          ( ( strlen(argv[0]) == 5 && argv[2] != NULL && strcmp(argv[2],"httproot") == 0 ) ||
-           ( strlen(argv[0]) == 4 ) ) )    
+           ( strlen(argv[0]) == 4 ) ) )
     {
         if ( strlen(argv[0]) == 5 )
         {
             http_serv.httpstmtold = TRUE;
         }
-        
+
         obtain_lock( &http_lock_root );
         if (http_serv.httproot)
         {
@@ -1053,7 +1053,7 @@ int http_command(int argc, char *argv[])
         if ( strlen(argv[1]) > 0 )
         {
             char    pathname[MAX_PATH];
-            
+
             hostpath(pathname, argv[1], sizeof(pathname));
 
             if ( pathname[strlen(pathname)-1] != PATHSEPC )
@@ -1066,9 +1066,9 @@ int http_command(int argc, char *argv[])
         http_root();
 
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "httproot": "root", 
+            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "httproot": "root",
                         http_serv.httproot ? http_serv.httproot : "<not specified>");
-        
+
         if ( http_serv.httpstmtold )
             http_startup(TRUE);
 
@@ -1076,7 +1076,7 @@ int http_command(int argc, char *argv[])
     }
     else if ( (argc == 2 || argc == 3 || argc == 5) && CMD(argv[0],portx,4) &&
               ( ( strlen(argv[0]) == 5 && argv[5] != NULL && strcmp(argv[5],"httpport") == 0 ) ||
-                ( strlen(argv[0]) == 4 ) ) )    
+                ( strlen(argv[0]) == 4 ) ) )
     {
         if ( strlen(argv[0]) == 5 )
         {
@@ -1091,9 +1091,9 @@ int http_command(int argc, char *argv[])
         else
         {
             char c;
-            
+
             if (sscanf(argv[1], "%hu%c", &http_serv.httpport, &c) != 1
-                    || http_serv.httpport == 0 
+                    || http_serv.httpport == 0
                     || (http_serv.httpport < 1024 && http_serv.httpport != 80) )
             {
                 rc = -1;
@@ -1114,11 +1114,11 @@ int http_command(int argc, char *argv[])
                     if (http_serv.httpuser)
                         free(http_serv.httpuser);
                     http_serv.httpuser = strdup(argv[3]);
-                 
+
                     if (http_serv.httppass)
                         free(http_serv.httppass);
                     http_serv.httppass = strdup(argv[4]);
-                 
+
                     http_serv.httpauth = 1;
                 }
             }
@@ -1127,17 +1127,17 @@ int http_command(int argc, char *argv[])
                 WRMSG( HHC02299, "E", "http" );
                 rc = -1;
             }
-            
+
             if ( rc >= 0 && MLVL(VERBOSE) )
             {
                 char msgbuf[128];
                 if ( http_serv.httpauth == 1 )
                 {
-                    MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>", 
-                            http_serv.httpport, 
-                          ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
+                    MSGBUF( msgbuf, "port=%hu auth userid<%s> password<%s>",
+                            http_serv.httpport,
+                          ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ?
                                 "" : http_serv.httpuser,
-                          ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
+                          ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ?
                                 "" : http_serv.httppass );
                 }
                 else
@@ -1149,8 +1149,8 @@ int http_command(int argc, char *argv[])
                     http_startup(TRUE);
 
             }   /* VERBOSE */
-        }       
-    } 
+        }
+    }
     else if ( argc == 1 && CMD(argv[0],start,3) )
     {
         if ( http_serv.httpport == 0 )
@@ -1191,14 +1191,14 @@ int http_command(int argc, char *argv[])
                 rc = 1;
             }
         }
-        else 
+        else
         {
             WRMSG( HHC01810, "I" );
             rc = 1;
         }
 
         WRMSG(HHC01811, "I", http_get_root());
-        
+
         WRMSG(HHC01808, "I", http_get_port(), http_get_portauth());
     }
     else
@@ -1215,7 +1215,7 @@ int http_command(int argc, char *argv[])
 char *http_get_port()
 {
 static char msgbuf[128];
-            
+
     MSGBUF( msgbuf, "%hu", http_serv.httpport );
 
     return msgbuf;
@@ -1228,13 +1228,13 @@ static char msgbuf[128];
 char *http_get_portauth()
 {
 static char msgbuf[128];
-            
+
     if ( http_serv.httpauth == 1)
     {
-        MSGBUF( msgbuf, "auth userid<%s> password<%s>", 
-                ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ? 
+        MSGBUF( msgbuf, "auth userid<%s> password<%s>",
+                ( http_serv.httpuser == NULL || strlen(http_serv.httpuser) == 0 ) ?
                                 "" : http_serv.httpuser,
-                ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ? 
+                ( http_serv.httppass == NULL || strlen(http_serv.httppass) == 0 ) ?
                                 "" : http_serv.httppass );
     }
     else
@@ -1256,7 +1256,7 @@ static  char msgbuf[FILENAME_MAX+3];
 
     if ( http_serv.httproot == NULL )
         p = "is <not specified>";
-            
+
     else if ( strchr(http_serv.httproot, SPACE) != NULL )
     {
         MSGBUF( msgbuf, "'%s'", http_serv.httproot );

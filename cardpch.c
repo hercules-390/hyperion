@@ -29,7 +29,7 @@
 static void
 write_buffer (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
 {
-int             rc;                 	/* Return code               */
+int             rc;                     /* Return code               */
 
     /* Write data to the output file */
     rc = write (dev->fd, buf, len);
@@ -37,7 +37,7 @@ int             rc;                 	/* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()", 
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()",
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -195,7 +195,7 @@ BYTE            c;                      /* Output character          */
         {
             open_flags |= O_TRUNC;
         }
-        rc = open (dev->filename, open_flags,
+        rc = HOPEN (dev->filename, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)
         {

@@ -64,7 +64,7 @@ int syntax(char *pgm)
 void snap(char *msg, void *data, int len) {
 int    x;
 
-    if (msg != NULL) 
+    if (msg != NULL)
         fprintf(stderr, "%s\n", msg);
     data_dump(data, len);
     if (pausesnap) {
@@ -96,7 +96,7 @@ void *makbuf(int len, char *label) {
         clean();
         exit(4);
     }
-    if (debug) fprintf(stderr, "\nHHC90000D DBG: MAKBUF() malloc %s buffer of %d bytes at %p\n", 
+    if (debug) fprintf(stderr, "\nHHC90000D DBG: MAKBUF() malloc %s buffer of %d bytes at %p\n",
                label, len, p);
     return p;
 }
@@ -111,16 +111,16 @@ int readpos(
             off_t offset,         /* offset into CCKD image to read  */
             unsigned int len      /* length of data to read          */
             ) {
-    if (debug) 
-        fprintf(stderr, "\nHHC90000D DBG: READPOS seeking %d (0x%8.8X)\n", 
+    if (debug)
+        fprintf(stderr, "\nHHC90000D DBG: READPOS seeking %d (0x%8.8X)\n",
                         (int)offset, (unsigned int)offset);
     if (lseek(fd, offset, SEEK_SET) < 0) {
         fprintf(stderr, MSG( HHC02603, "E", "READPOS", (unsigned int) offset, strerror(errno) ) );
         clean();
         exit (1);
     }
-    if (debug) 
-        fprintf(stderr, 
+    if (debug)
+        fprintf(stderr,
                 "HHC90000D DBG: READPOS reading buf addr %p length %d (0x%X)\n",
                 buf, len, len);
     if (read(fd, buf, len) < (ssize_t)len) {
@@ -178,9 +178,9 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
         bufp = (BYTE *)obuf;
         memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         bufl = obuflen - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress(&obuf[CKDDASD_TRKHDR_SIZE], 
+        rc = uncompress(&obuf[CKDDASD_TRKHDR_SIZE],
                          (void *)&bufl,
-                         &ibuf[CKDDASD_TRKHDR_SIZE], 
+                         &ibuf[CKDDASD_TRKHDR_SIZE],
                          ibuflen);
         if (rc != Z_OK) {
             if (msg)
@@ -199,10 +199,10 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
         bufp = obuf;
         memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         ubufl = obuflen - CKDDASD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( 
-                 (char *)&obuf[CKDDASD_TRKHDR_SIZE], 
+        rc = BZ2_bzBuffToBuffDecompress (
+                 (char *)&obuf[CKDDASD_TRKHDR_SIZE],
                  &ubufl,
-                 (char *)&ibuf[CKDDASD_TRKHDR_SIZE], 
+                 (char *)&ibuf[CKDDASD_TRKHDR_SIZE],
                  ibuflen, 0, 0);
         if (rc != BZ_OK) {
             if (msg)
@@ -284,7 +284,7 @@ CKDDASD_RECHDR  *rh;                   /* CCKD COUNT field           */
 BYTE            *bufp;
 int             len;
 
-    if (debug) 
+    if (debug)
        snap("\nHHC90000D DBG: SHOWTRK Compressed track header and data", buf, imglen);
     len = decomptrk(
               (BYTE *)buf,        /* input buffer address            */
@@ -295,7 +295,7 @@ int             len;
               trk,                /* relative track or block number  */
               msg                 /* addr of message buffer          */
               );
-    if (debug) 
+    if (debug)
        snap("\nHHC90000D DBG: SHOWTRK Decompressed track header and data", buf2, len);
     bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
     while (bufp < &buf2[sizeof(buf2)]) {
@@ -321,7 +321,7 @@ off_t offtify(char *s) {
 
 static const char  xd[] = {"0123456789abcdefABCDEF"};
 static const char  xv[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                           10, 11, 12, 13, 14, 15, 
+                           10, 11, 12, 13, 14, 15,
                            10, 11, 12, 13, 14, 15};
 off_t              v;
 char               *p;
@@ -329,18 +329,18 @@ char               *p;
         p = s;
         if ( (*s == '0') && (*(s+1) == 'x') ) {
             s = s + 2;
-            for (v = 0; isxdigit(*s); ++s) 
+            for (v = 0; isxdigit(*s); ++s)
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
-            if (debug) 
-                fprintf(stderr, 
+            if (debug)
+                fprintf(stderr,
                         "HHC90000D DBG: OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d\n",
                         p, (U64)v, (U64)v);
             return v;
         } else {                                 /* decimal input */
             v = (off_t) atoll(s);
-            if (debug) 
-                fprintf(stderr, 
-                        "HHC90000D DBG: OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n", 
+            if (debug)
+                fprintf(stderr,
+                        "HHC90000D DBG: OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n",
                         p, (U64)v, (U64)v);
             return v;
         }
@@ -430,8 +430,8 @@ char           *strtok_str = NULL;
     display_version (stderr, msgbuf+10, FALSE);
 
     /* parse the arguments */
-    argc--; 
-    argv++ ; 
+    argc--;
+    argv++ ;
     while (argc > 0) {
         if(**argv != '-') break;
 
@@ -491,7 +491,7 @@ char           *strtok_str = NULL;
 
     /* open the file */
     hostpath(pathname, fn, sizeof(pathname));
-    fd = open(pathname, O_RDONLY | O_BINARY);
+    fd = HOPEN(pathname, O_RDONLY | O_BINARY);
     if (fd < 0) {
         fprintf(stderr,
                 _("cckddiag: error opening file %s: %s\n"),
@@ -504,7 +504,7 @@ char           *strtok_str = NULL;
     /*---------------------------------------------------------------*/
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
-        fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n", 
+        fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n",
                 (int)sizeof(devhdr));
         data_dump(&devhdr, sizeof(devhdr));
     }
@@ -517,20 +517,20 @@ char           *strtok_str = NULL;
         ckddasd = 1;
         ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.devtype, 0);
         if (ckd == NULL) {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "DASD table entry not found for devtype 0x%2.2X\n",
                     devhdr.devtype);
             clean();
             exit(5);
         }
     }
-    else 
+    else
         if (memcmp(devhdr.devid, "FBA_C370", 8) == 0
            || memcmp(devhdr.devid, "FBA_S370", 8) == 0) {
         ckddasd = 0;
         fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.devtype, 0);
         if (fba == NULL) {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "DASD table entry not found for "
                     "devtype 0x%2.2X\n",
                     DEFAULT_FBA_TYPE);
@@ -552,9 +552,9 @@ char           *strtok_str = NULL;
               | ((U32)(devhdr.heads[2]) << 16)
               | ((U32)(devhdr.heads[1]) << 8)
               | (U32)(devhdr.heads[0]);
-        if (debug) 
-            fprintf(stderr, 
-                "\nHHC90000D DBG: %s device has %d heads/cylinder\n", 
+        if (debug)
+            fprintf(stderr,
+                "\nHHC90000D DBG: %s device has %d heads/cylinder\n",
                 ckd->name, heads);
     } else {
         blks  = 0;
@@ -605,7 +605,7 @@ char           *strtok_str = NULL;
     if (cmd_offset) {
         bulk = makbuf(op_length, "BULK");
         readpos(fd, bulk, op_offset, op_length);
-        fprintf(stderr, 
+        fprintf(stderr,
             "\nIMAGE OFFSET %d (0x%8.8X) "
             "of length %d (0x%8.8X) bytes:\n",
             op_offset, op_offset, op_length, op_length);
@@ -644,19 +644,19 @@ char           *strtok_str = NULL;
     /* display CKD CCHH or relative track data                       */
     /*---------------------------------------------------------------*/
     if ((cmd_cchh) || (cmd_tt)) {
-        fprintf(stderr, 
-                "CC %d HH %d = reltrk %d; " 
+        fprintf(stderr,
+                "CC %d HH %d = reltrk %d; "
                 "L1 index = %d, L2 index = %d\n"
                 "L1 index %d = L2TAB offset %d (0x%8.8X)\n",
-                op_cc, op_hh, trk, 
+                op_cc, op_hh, trk,
                 l1ndx, l2ndx,
                 l1ndx, (int)l2taboff, (int)l2taboff);
         l2 = makbuf(cdevhdr.numl2tab * sizeof(CCKD_L2ENT), "L2TAB");
-        readpos(fd, l2, l2taboff, 
+        readpos(fd, l2, l2taboff,
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
-            fprintf(stderr, 
-                   "\nL2TAB - %d (decimal) bytes\n", 
+            fprintf(stderr,
+                   "\nL2TAB - %d (decimal) bytes\n",
                    (int)(cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
@@ -670,7 +670,7 @@ char           *strtok_str = NULL;
             cckd_swapend4((char *)&imglen);
         }
         fprintf(stderr, "\nTRKHDR offset %d (0x%8.8X); "
-                "length %d (0x%4.4X)\n", 
+                "length %d (0x%4.4X)\n",
                 (int)trkhdroff, (int)trkhdroff, imglen, imglen);
         tbuf = makbuf(imglen, "TRKHDR+DATA");
         readpos(fd, tbuf, trkhdroff, imglen);

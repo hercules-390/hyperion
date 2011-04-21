@@ -20,7 +20,7 @@ char            pathname[MAX_PATH];
 
         hostpath(pathname, argv[1], sizeof(pathname));
 
-        fd = open (pathname, O_RDWR|O_BINARY);
+        fd = HOPEN (pathname, O_RDWR|O_BINARY);
         if (fd < 0) return 1;
 
         read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);

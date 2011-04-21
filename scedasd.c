@@ -84,7 +84,7 @@ char tempdir[MAX_PATH];
     }
     else
     {
-        sce_basedir = NULL; 
+        sce_basedir = NULL;
         return path;
     }
 }
@@ -106,7 +106,7 @@ char tempreal[MAX_PATH];
     /* Establish the full path of the file we are trying to access */
     strlcpy(temppath,sce_basedir,sizeof(temppath));
     strlcat(temppath,path,sizeof(temppath));
-    
+
     if(!realpath(temppath,tempreal))
     {
         hostpath(fullpath, tempreal, sizeof(temppath));
@@ -114,7 +114,7 @@ char tempreal[MAX_PATH];
             errno = EACCES;
         return NULL;
     }
-    
+
     hostpath(fullpath, tempreal, sizeof(temppath));
     if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
     {
@@ -180,7 +180,7 @@ int     rc = 0;                         /* Return codes (work)       */
         WRMSG(HHC00601,"E",fname,strerror(errno));
         return -1;
     }
-    
+
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
@@ -245,7 +245,7 @@ int rc = 0;
 RADR pageaddr;
 U32  pagesize;
 
-    fd = open (fname, O_RDONLY|O_BINARY);
+    fd = HOPEN (fname, O_RDONLY|O_BINARY);
     if (fd < 0)
     {
         if(errno != ENOENT)
@@ -295,12 +295,14 @@ static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)
 int fd, nwrite;
 U64 totwrite = 0;
 
-    fd = open (fname, mode |O_WRONLY|O_BINARY,
+#undef HOPEN_PMODE
 #if defined(_MSVC_)
-            S_IREAD|S_IWRITE);
+  #define HOPEN_PMODE (S_IREAD|S_IWRITE)
 #else
-            S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  #define HOPEN_PMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 #endif
+
+    fd = HOPEN (fname, mode |O_WRONLY|O_BINARY,HOPEN_PMODE);
     if (fd < 0)
     {
         WRMSG (HHC00600, "E", fname, "open()", strerror(errno));
@@ -398,7 +400,7 @@ static S64 ARCH_DEP(read_file)(char *fname, CREG sto, S64 seek, S64 size)
 int fd, nread;
 U64 totread = 0;
 
-    fd = open (fname, O_RDONLY|O_BINARY);
+    fd = HOPEN (fname, O_RDONLY|O_BINARY);
     if (fd < 0)
     {
         if(errno != ENOENT)
@@ -760,13 +762,12 @@ static int scedio_pending;
         /* Create the scedio thread */
         rc = create_thread(&scedio_tid, &sysblk.detattr,
             ARCH_DEP(scedio_thread), &static_scedio_bk, "scedio_thread");
-	if (rc)
-	{
-	    WRMSG(HHC00102, "E", strerror(rc));
+        if (rc)
+        {
+            WRMSG(HHC00102, "E", strerror(rc));
             return -1;
-	}
+        }
         scedio_pending = 1;
-
     }
 
     return 0;

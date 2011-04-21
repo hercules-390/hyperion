@@ -577,7 +577,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cckd_close (dev, sfx);
 
     hostpath(pathname, cckd_sf_name (dev, sfx), sizeof(pathname));
-    cckd->fd[sfx] = open (pathname, flags, mode);
+    cckd->fd[sfx] = HOPEN (pathname, flags, mode);
     if (sfx == 0) dev->fd = cckd->fd[sfx];
 
     if (cckd->fd[sfx] >= 0)
@@ -650,7 +650,7 @@ int             rc;                     /* Return code               */
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx), 
+        WRMSG (HHC00302, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
         "lseek()", off, strerror(errno));
         cckd_print_itrace ();
         return -1;
@@ -2036,7 +2036,7 @@ cckd_get_space_atend:
     }
 
     /* This can happen if largest comes before l2bounds */
-    if (i < 0) goto cckd_get_space_atend; 
+    if (i < 0) goto cckd_get_space_atend;
 
     flen = cckd->free[i].len;
     p = cckd->free[i].prev;
@@ -2678,7 +2678,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
         /* size needed for new format free space */
         n = (cckd->cdevhdr[sfx].free_number+1) * CCKD_FREEBLK_SIZE;
 
-        /* look for existing free space to fit new format free space */   
+        /* look for existing free space to fit new format free space */
         fpos = 0;
         for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
             if (n <= (int)cckd->free[i].len)
@@ -3816,7 +3816,7 @@ int             syncio;                 /* Saved syncio bit          */
 
     /* Create a new shadow file */
     if (cckd_sf_new (dev) < 0) {
-        WRMSG (HHC00319, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1, 
+        WRMSG (HHC00319, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn+1,
                  cckd_sf_name(dev, cckd->sfn+1)?cckd_sf_name(dev, cckd->sfn+1):"(null)");
         goto cckd_sf_add_exit;
     }
@@ -3962,7 +3962,7 @@ BYTE            buf[65536];             /* Buffer                    */
         if (merge)
         {
             WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, from_sfx, cckd_sf_name(dev, from_sfx),
-                                 to_sfx, "cannot be opened read-write", 
+                                 to_sfx, "cannot be opened read-write",
                                  to_sfx == 0 && dev->ckdrdonly && !force ? ", try 'force'" : "");
             goto sf_remove_exit;
         }
@@ -3976,7 +3976,7 @@ BYTE            buf[65536];             /* Buffer                    */
         if (cckd_chkdsk (dev, 0) < 0)
         {
             cckd->sfn = from_sfx;
-            WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, to_sfx, cckd_sf_name(dev, to_sfx), 
+            WRMSG (HHC00324, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, to_sfx, cckd_sf_name(dev, to_sfx),
                                  to_sfx, "check failed", "");
             goto sf_remove_exit;
         }
@@ -4421,7 +4421,7 @@ int             freenbr=0;              /* Total number free spaces  */
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        WRMSG (HHC00341, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+        WRMSG (HHC00341, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 i, (S64)cckd->cdevhdr[i].size,
                 ((S64)(cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -4482,9 +4482,9 @@ void cckd_lock_devchain(int flag)
 #endif
         cckdblk.devwaiters--;
     }
-    if (flag) 
+    if (flag)
         cckdblk.devusers--;
-    else 
+    else
         cckdblk.devusers++;
 
     release_lock(&cckdblk.devlock);
@@ -4493,9 +4493,9 @@ void cckd_unlock_devchain()
 {
     obtain_lock(&cckdblk.devlock);
 
-    if (cckdblk.devusers < 0) 
+    if (cckdblk.devusers < 0)
         cckdblk.devusers++;
-    else 
+    else
         cckdblk.devusers--;
 
     if (cckdblk.devusers == 0 && cckdblk.devwaiters)
@@ -4648,7 +4648,7 @@ int             gctab[5]= {             /* default gcol parameters   */
                     cckdblk.gcwait, ctime (&tt_now));
 
 #if defined( OPTION_WTHREADS )
-// Use a relative time value 
+// Use a relative time value
         timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, cckdblk.gcwait * 1000);
 
 #else
@@ -4883,7 +4883,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
 cckd_gc_perc_space_error:
 
-    WRMSG (HHC00342, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+    WRMSG (HHC00342, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
             cckd->sfn,cckd_sf_name(dev, cckd->sfn), upos + i,
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
     cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
@@ -5153,7 +5153,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
 
     /* Unable to uncompress */
     WRMSG (HHC00343, "E",
-            SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn), trk, 
+            SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn), trk,
             from[0], from[1], from[2], from[3], from[4]);
     if (comp & ~cckdblk.comps)
         WRMSG (HHC00344, "E",
@@ -5358,14 +5358,14 @@ void cckd_command_help()
 void cckd_command_opts()
 {
     char msgbuf[128];
-    
+
     MSGBUF( msgbuf, "cckd opts: comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,wr=%d,gcint=%d",
                     cckdblk.comp == 0xff ? -1 : cckdblk.comp,
                     cckdblk.compparm, cckdblk.ramax,
                     cckdblk.ranbr, cckdblk.readaheads,
                     cckdblk.wrmax, cckdblk.gcwait );
     WRMSG( HHC00346, "I", msgbuf );
-  
+
     MSGBUF( msgbuf, "           gcparm=%d,nostress=%d,freepend=%d,fsync=%d,linuxnull=%d,trace=%d",
                     cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
                     cckdblk.fsync, cckdblk.linuxnull, cckdblk.itracen );
@@ -5380,7 +5380,7 @@ void cckd_command_opts()
 void cckd_command_stats()
 {
     char msgbuf[128];
-    
+
     WRMSG( HHC00347, "I", "cckd stats:" );
 
     MSGBUF( msgbuf, "  reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
@@ -5418,7 +5418,7 @@ void cckd_command_stats()
     MSGBUF( msgbuf, "  garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
                     cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10 );
     WRMSG( HHC00347, "I", msgbuf );
-    
+
     return;
 } /* end function cckd_command_stats */
 
@@ -5724,7 +5724,7 @@ int   rc;
         }
     }
 
-    if (cmd && opts) 
+    if (cmd && opts)
         cckd_command_opts();
 
     return 0;
@@ -5739,7 +5739,7 @@ CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
 int             n;                      /* Trace Entries Printed     */
 
     WRMSG (HHC00399, "I");
-    if (!cckdblk.itrace) 
+    if (!cckdblk.itrace)
         return;
     n = 0;
     i = cckdblk.itrace;

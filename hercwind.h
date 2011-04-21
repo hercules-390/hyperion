@@ -98,6 +98,7 @@ typedef int             pid_t;
 typedef int             mode_t;
 
 #include <io.h>
+#include <share.h>
 #include <process.h>
 #include <signal.h>
 #include <direct.h>
@@ -128,8 +129,8 @@ typedef int             mode_t;
 #define strerror        w32_strerror
 #define strerror_r      w32_strerror_r
 
-#define srandom         srand 
-#define random          rand 
+#define srandom         srand
+#define random          rand
 
 #define inline          __inline
 #define __inline__      __inline
@@ -153,7 +154,7 @@ typedef int             mode_t;
 #endif
 
 #if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
-#define OPTION_FTHREADS 
+#define OPTION_FTHREADS
 #endif
 
 #define HAVE_STRSIGNAL
@@ -200,7 +201,7 @@ typedef int             mode_t;
 
 #if defined(HAVE_PCRE)
   // (earlier packages failed to define this so we must do so ourselves)
-  #define  PCRE_DATA_SCOPE  
+  #define  PCRE_DATA_SCOPE
       // extern __declspec(dllimport)
   #include PCRE_INCNAME                 // (passed by makefile)
   #define  OPTION_HAO                   // Hercules Automatic Operator

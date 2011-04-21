@@ -109,7 +109,7 @@ char           *strtok_str = NULL;
     /* Display the program identification message */
     MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape map" ) );
     display_version (stderr, msgbuf+10, FALSE);
-    
+
     /* The only argument is the tape image file name */
     if (argc == 2 && argv[1] != NULL)
     {
@@ -123,7 +123,7 @@ char           *strtok_str = NULL;
 
     /* Open the tape device */
     hostpath(pathname, filename, sizeof(pathname));
-    infd = open (pathname, O_RDONLY | O_BINARY);
+    infd = HOPEN (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
         printf( MSG( HHC02715, "E", filename, errno, strerror(errno) ) );
@@ -171,17 +171,17 @@ char           *strtok_str = NULL;
             printf( MSG( HHC02741, "E", filename, "AWSTAPE" ) );
             exit(4);
         }
-        
+
         /* Check for end of tape. */
         if (len == 0)
         {
             printf( MSG( HHC02704, "I" ) );
             break;
         }
-        
+
         /* Parse the block header */
         memcpy(&awshdr, buf, sizeof(AWSTAPE_BLKHDR));
-        
+
         /* Tapemark? */
         if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
         {
@@ -203,7 +203,7 @@ char           *strtok_str = NULL;
             curblkl = awshdr.curblkl[0] + (awshdr.curblkl[1] << 8);
             if (curblkl > maxblksz) maxblksz = curblkl;
             if (minblksz == 0 || curblkl < minblksz) minblksz = curblkl;
-            
+
             file_bytes += curblkl;
 
             /* Read the data block. */
@@ -223,14 +223,14 @@ char           *strtok_str = NULL;
                 printf (MSG( HHC02742, "E", filename, curblkl, len ) );
                 exit(6);
             }
-        
+
             /* Check for end of tape */
             if (len == 0)
             {
                 printf ( MSG( HHC02743, "E", filename, "AWSTAPE" ) );
                 exit(7);
             }
-        
+
             /* Print standard labels */
             if (len == 80 && blkcount < 4
                 && (memcmp(buf, vollbl, 3) == 0
@@ -243,7 +243,7 @@ char           *strtok_str = NULL;
                 labelrec[i] = '\0';
                 printf ( MSG( HHC02722, "I", labelrec ) );
             }
-            
+
         } /* end if(tapemark) */
 
     } /* end while */

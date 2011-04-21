@@ -143,7 +143,7 @@ static void print_status (char *devname, long stat)
 {
     char msgbuf[256];
 
-    MSGBUF( msgbuf, MSG( HHC02702, "I", devname, stat, 
+    MSGBUF( msgbuf, MSG( HHC02702, "I", devname, stat,
         (GMT_EOF    ( stat )) ? " EOF" : "",
         (GMT_BOT    ( stat )) ? " BOT" : "",
         (GMT_EOT    ( stat )) ? " EOT" : "",
@@ -324,7 +324,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         rc = read (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
         if (rc == 0)
         {
-            printf ( MSG( HHC02706, "I", filenamein, "AWSTAPE" ) ); 
+            printf ( MSG( HHC02706, "I", filenamein, "AWSTAPE" ) );
             return (-1);
         }
         if (rc < (int)sizeof(AWSTAPE_BLKHDR))
@@ -666,9 +666,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         char msgbuf[64];
 
         if (tapeinfo[i].t_name)
-            MSGBUF( msgbuf, ": %s", tapeinfo[i].t_name); 
+            MSGBUF( msgbuf, ": %s", tapeinfo[i].t_name);
         else
-            MSGBUF( msgbuf, " code: 0x%lX", mtget.mt_type); 
+            MSGBUF( msgbuf, " code: 0x%lX", mtget.mt_type);
 
         printf ( MSG( HHC02718, "I", (devnamein ? devnamein : devnameout), msgbuf ) );
     }
@@ -697,12 +697,12 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     if (filenamein)
     {
         hostpath( pathname, filenamein, sizeof(pathname) );
-        diskfd = open (pathname, O_RDONLY | O_BINARY);
+        diskfd = HOPEN (pathname, O_RDONLY | O_BINARY);
     }
     else
     {
         hostpath( pathname, filenameout, sizeof(pathname) );
-        diskfd = open (pathname, O_WRONLY | O_CREAT | O_BINARY,
+        diskfd = HOPEN (pathname, O_WRONLY | O_CREAT | O_BINARY,
                         S_IRUSR | S_IWUSR | S_IRGRP);
     }
     if (diskfd < 0)
@@ -874,7 +874,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     printf
     (
-        MSG( HHC02724, "I" 
+        MSG( HHC02724, "I"
         ,           bytes_read
         ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
         ,totalblks
