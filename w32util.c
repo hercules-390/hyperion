@@ -3738,7 +3738,7 @@ DLL_EXPORT int w32_munlock( void* addr, size_t len )
 DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 {
     int pmode = 0;
-    if (oflag & _O_CREAT)
+    if (oflag & O_CREAT)
     {
         va_list vargs;
         va_start( vargs, oflag );

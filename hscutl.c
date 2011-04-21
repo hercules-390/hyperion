@@ -926,7 +926,7 @@ DLL_EXPORT  int  hunlock( const void* addr, size_t len )
 DLL_EXPORT  int hopen( const char* path, int oflag, ... )
 {
     int pmode = 0;
-    if (oflag & _O_CREAT)
+    if (oflag & O_CREAT)
     {
         va_list vargs;
         va_start( vargs, oflag );
