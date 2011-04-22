@@ -1431,7 +1431,7 @@ VADR    effective_addr1;                /* Effective address         */
 
      SI(inst, regs, i2, b1, effective_addr1);
 
-     /* Fetch bnd test yte from operand address */
+     /* Fetch and test byte from operand address */
      if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & i2)
        regs->psw.cc = 3;
      else 
