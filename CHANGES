@@ -1,3 +1,5 @@
+23 Apr 2011 Provide initial DIAGNOSE X'F18' README and release Host Resource Access
+            Facility - Harold Grovesteen
 20 Apr 2011 Fix file opens to open files in non-multi-write-shared mode
             (Windows-only for now; non-Windows yet to be implemented) - Fish
 17 Apr 2011 LCS CTCI-WIN v3.3 multi-write mode (faster guest downloads) - Fish

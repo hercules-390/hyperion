@@ -1126,4 +1126,3 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
 #endif
 
 #endif /*!defined(_GEN_ARCH)*/
-

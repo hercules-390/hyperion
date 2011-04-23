@@ -9,7 +9,7 @@
 
 /*--------------------------------------------------------------------*/
 /* This module implements Hercules DIAGNOSE code X'F18'               */
-/* described in ?                                                     */
+/* described in README.HRAF and supporting documentation              */
 /*--------------------------------------------------------------------*/
 
 
@@ -70,7 +70,7 @@
 #define QUERY   0x00000000   /* Query Operation */
 //#define CSOCKET 0x00000001 /* Socket Function Compatibility Mode */
 #define CFILE   0x00000002   /* File Operation Compatibility Mode  */
-//#define NSOCKET 0x00000003 /* Socket Function Native Mode */ 
+//#define NSOCKET 0x00000003 /* Socket Function Native Mode */
 //#define NFILE   0x00000004 /* File Operation Native Mode  */
 
 /*-------------------------------------------------------------------*/
@@ -101,7 +101,7 @@ CPB cap =
              0x80
 #elif defined(_LFS64_LARGEFILE)
              0x80
-#endif 
+#endif
 /*        ( 0x80 * ( SIZEOF_SIZE_T == 8 ) ) */
 #if   defined(__gnu_linux__)
           + 0x01
@@ -126,7 +126,7 @@ CPB cap =
         /* reserved */
         0,0,0,0,0,0
 };
-    
+
 #endif /* !defined(_HDIAGF18_H) */
 
 /*-------------------------------------------------------------------*/
@@ -140,9 +140,9 @@ U16 df18_ck_opts(U16, U16, REGS *);  /* Check options */
 U16 df18_ck_opts(U16 regopts, U16 invalid, REGS *regs)
 {
 U16 amode;     /* address mode requested for parameter block */
-    
+
     amode = regopts & AMODE_MASK;
-    if (   
+    if (
            /* version must be specified */
            ( (regopts & VER_MASK)==0 ) ||
            /* version must not be higher than we support */
@@ -181,21 +181,20 @@ void ARCH_DEP(hdiagf18_FC) (U32, VADR, REGS *);
 void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs)
 {
 /* Guest related paramters and values                                */
-//RADR    pbaddr;                      /* Parameter block real address */
 U16     options;                     /* supplied options             */
-    
-//#if 0
+
+#if 0
     if (sizeof(CPB) != 16)
     {
             LOGMSG("CPB size not 8: %d\n",sizeof(CPB));
     }
-//#endif
+#endif
 
 
     /* Specification exception if Rx is not even/odd or facility not enabled */
-    if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) || 
-         ((r1 & 0x1) != 0) 
-       ) 
+    if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) ||
+         ((r1 & 0x1) != 0)
+       )
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
@@ -207,17 +206,17 @@ U16     options;                     /* supplied options             */
 /* Perform the Query Operation                            */
 /*--------------------------------------------------------*/
     case QUERY:
-        
+
         /* Specification exception if CPB is not on a doubleword boundary */
         if ( (regs->GR(2) & 0x7 ) !=0 )
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
-        
+
         /* Store the CPB at the designated location */
         ARCH_DEP(wstorec)
             (&cap,(BYTE)sizeof(CPB)-1,(VADR)GR_A(r2,regs),USE_REAL_ADDR,regs);
-        
+
         break;
 
 #if defined(CSOCKET)
@@ -225,7 +224,7 @@ U16     options;                     /* supplied options             */
 /* Perform Socket Function in Compatibility Mode          */
 /*--------------------------------------------------------*/
     case CSOCKET:
-        
+
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
         {
@@ -241,7 +240,7 @@ U16     options;                     /* supplied options             */
 /* Perform File Operation in Compatibility Mode           */
 /*--------------------------------------------------------*/
     case CFILE:
-        
+
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
         {
@@ -251,7 +250,7 @@ U16     options;                     /* supplied options             */
 
         options = df18_ck_opts
             ( (U16)regs->GR_L(r1+1) & 0x0000FFFF, (U16) COMPAT_INVALID, regs );
-            
+
         /* Retrieve the Parameter Block address from Ry */
         ARCH_DEP(hdiagf18_FC) (options, (VADR)GR_A(r2,regs), regs);
 
@@ -265,7 +264,7 @@ U16     options;                     /* supplied options             */
 /*--------------------------------------------------------*/
     case NSOCKET:
         break;
-        
+
 #endif /* defined(NSOCKET) */
 
 #if defined(NFILE)
@@ -275,7 +274,7 @@ U16     options;                     /* supplied options             */
     case NFILE:
         break;
 
-#endif /* defined(NFILE) */ 
+#endif /* defined(NFILE) */
 
     default:
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
