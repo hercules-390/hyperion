@@ -1265,6 +1265,9 @@
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>
+    <None Include="README.HRAF">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto\aes.h">
