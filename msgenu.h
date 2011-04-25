@@ -1993,8 +1993,6 @@ do { \
 #define HHC90363 "%s"
 #define HHC90364 "   zp    : %s"
 #define HHC90365 "dead_end : dead end %02X %02X encountered"
-#define HHC90366 "compress : dead end %02X %02X discovered"
-#define HHC90367 "search_cce alphabet entry %02X discovered"
 
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
