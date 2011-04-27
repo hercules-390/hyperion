@@ -2514,30 +2514,29 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
-  LOGBYTE("icv   :", parameter_block, 8);
   switch(tfc)
   {
     case 1: /* dea */
     {
-      LOGBYTE("k     :", &parameter_block[8], 8);
+      LOGBYTE("k     :", parameter_block, 8);
       break;
     }
     case 2: /* tdea-128 */
     {
-      LOGBYTE("k1    :", &parameter_block[8], 8);
-      LOGBYTE("k2    :", &parameter_block[16], 8);
+      LOGBYTE("k1    :", parameter_block, 8);
+      LOGBYTE("k2    :", &parameter_block[8], 8);
       break;
     }
     case 3: /* tdea-192 */
     {
-      LOGBYTE("k1    :", &parameter_block[8], 8);
-      LOGBYTE("k2    :", &parameter_block[16], 8);
-      LOGBYTE("k3    :", &parameter_block[24], 8);
+      LOGBYTE("k1    :", parameter_block, 8);
+      LOGBYTE("k2    :", &parameter_block[8], 8);
+      LOGBYTE("k3    :", &parameter_block[16], 8);
       break;
     }
   }
   if(wrap)
-    LOGBYTE("wkvp  :", &parameter_block[24], 24);
+    LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 24], 24);
 #endif /* #ifdef OPTION_KMCTR_DEBUG */
 
   /* Verify and unwrap */
@@ -2557,20 +2556,20 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   {
     case 1: /* dea */
     {
-      des_set_key(&context1, &parameter_block[8]);
+      des_set_key(&context1, parameter_block);
       break;
     }
     case 2: /* tdea-128 */
     {
-      des_set_key(&context1, &parameter_block[8]);
-      des_set_key(&context2, &parameter_block[16]);
+      des_set_key(&context1, parameter_block);
+      des_set_key(&context2, &parameter_block[8]);
       break;
     }
     case 3: /* tdea-192 */
     {
-      des_set_key(&context1, &parameter_block[8]);
-      des_set_key(&context2, &parameter_block[16]);
-      des_set_key(&context3, &parameter_block[24]);
+      des_set_key(&context1, parameter_block);
+      des_set_key(&context2, &parameter_block[8]);
+      des_set_key(&context3, &parameter_block[16]);
       break;
     }
   }
@@ -2695,10 +2694,9 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
-  LOGBYTE("icv   :", parameter_block, 16);
-  LOGBYTE("k     :", &parameter_block[16], parameter_blocklen - 16);
+  LOGBYTE("k     :", parameter_block, keylen);
   if(wrap)
-    LOGBYTE("wkvp  :", &parameter_block[keylen + 16], 32);
+    LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 32], 32);
 #endif /* #ifdef OPTION_KMCTR_DEBUG */
 
   if(wrap && unwrap_aes(parameter_block, keylen))
@@ -2713,7 +2711,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], keylen * 8);
+  aes_set_key(&context, parameter_block, keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;

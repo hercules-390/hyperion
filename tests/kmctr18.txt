@@ -1,0 +1,36 @@
+* KMCTR fc18
+stopall
+pause 1
+sysclear
+archmode esame
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=41000012     # LA R0,18          R0->function code 18
+r 204=41100500     # LA R1,PB          R1->parameter block address
+r 208=41200600     # LA R2,FO          R2->first operand 
+r 20C=41400700     # LA R4,SO          R4->second operand
+r 210=41500010     # LA R5,SOL         R5->second operand length
+r 214=41600800     # LA R6,TO          R6->third operand
+r 218=B92D6024     # KMCTR R2,R6,R4    Cipher message with counter
+r 21C=41200900     # LA R2,FO          R2->first operand
+r 220=41400600     # LA R4,SO          R4->second operand
+r 224=41500010     # LA R5,SOL         R5->second operand length
+r 228=41600800     # LA R6,TO          R6->third operand
+r 22C=B92D6024     # KMCTR R2,R6,R4    Cipher message with counter
+r 230=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
+*
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
+r 600=101112131415161718191A1B1C1D1E1F # First operand
+r 700=202122232425262728292A2B2C2D2E2F # Second operand
+r 800=303132333435363738393A3B3C3D3E3F # Third operand
+*
+r 680=23D3E19EEEA74DD7AAFEE59B19E096EE # Expected result
+*
+ostailor null
+restart
+pause 1
+* Display parameter block
+r 600.f
+* Expected result
+r 680.f
