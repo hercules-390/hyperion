@@ -2910,7 +2910,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KMF_DEBUG
-    LOGBYTE("input: ", message_block, lcfb);
+    LOGBYTE("input :", message_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     for(i = 0; i < lcfb; i++)
@@ -3046,7 +3046,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KMF_DEBUG
-    LOGBYTE("input: ", message_block, lcfb);
+    LOGBYTE("input :", message_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     for(i = 0; i < lcfb; i++)
@@ -3237,6 +3237,11 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
       }
     }
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMO_DEBUG
+    LOGBYTE("input :", message_block, 8);
+#endif /* #ifdef OPTION_KMO_DEBUG */
+
     for(i = 0; i < 8; i++)
       message_block[i] ^= parameter_block[i];
 
@@ -3244,7 +3249,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
 
 #ifdef OPTION_KMO_DEBUG
-    LOGBYTE("output:", message_block, 7);
+    LOGBYTE("output:", message_block, 8);
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
     /* Store the chaining value */
@@ -3346,7 +3351,12 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     aes_encrypt(&context, parameter_block, parameter_block);
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);                    
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMO_DEBUG
+    LOGBYTE("input :", message_block, 16);
+#endif /* #ifdef OPTION_KMO_DEBUG */
+
     for(i = 0; i < 16; i++)
       message_block[i] ^= parameter_block[i];
 
