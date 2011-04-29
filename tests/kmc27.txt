@@ -1,4 +1,4 @@
-* KM fc27
+* KMC fc27
 stopall
 pause 1
 sysclear

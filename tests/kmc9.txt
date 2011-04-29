@@ -1,4 +1,4 @@
-* KM fc9
+* KMC fc9
 stopall
 pause 1
 sysclear
