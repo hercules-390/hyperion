@@ -1,0 +1,46 @@
+* KMF fc2
+stopall
+pause 1
+sysclear
+archmode esame
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=58000400     # LA R0,X'01'       R0->function code 1 encrypt
+r 204=41100500     # LA R1,PB          R1->parameter block address
+r 208=41200600     # LA R2,FO          R2->first operand 
+r 20C=41400700     # LA R4,SO          R4->second operand
+r 210=41500008     # LA R5,SOL         R5->second operand length
+r 214=B92A0024     # KMF R2,R4         Cipher message with cipher feedback
+r 218=58000408     # LA R0,X'81'       R0->function code 1 decrypt
+r 21C=41100580     # LA R1,PB          R1->parameter block address
+r 220=41200800     # LA R2,SO          R2->second operand from encrypt operation
+r 224=41400600     # LA R4,FO          R4->first operand from encrypt operation
+r 228=41500008     # LA R5,FOL         R5->first operand length
+r 22C=B92A0024     # KMF R2,R4         Cipher message with cipher feedback
+r 230=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
+*
+r 400=04000003
+r 408=04000083
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
+r 510=101112131415161718191A1B1C1D1E1F # Parameter block
+r 580=000102030405060708090A0B0C0D0E0F # Parameter block
+r 590=101112131415161718191A1B1C1D1E1F # Parameter block
+*
+r 600=0001020304050607                 # First operand
+*
+r 680=C8A06C9E3CD315ED                 # Expected result
+*
+r 700=0001020304050607                 # Second operand
+*
+r 800=FFFFFFFFFFFFFFFF                 # Expected result
+*
+ostailor null
+restart
+pause 1
+* Display parameter blocks
+r 600.8
+r 800.8
+* Expected results
+r 680.8
+r 700.8

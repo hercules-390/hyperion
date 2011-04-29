@@ -2791,9 +2791,9 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 
   /* Initialize values */
   lcfb = GR0_lcfb(regs);
-  
+
   /* Check special conditions */
-  if(unlikely(!lcfb || lcfb > 8 || GR_A(r2 + 1, regs)))
+  if(unlikely(!lcfb || lcfb > 8 || GR_A(r2 + 1, regs) % lcfb))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -2841,7 +2841,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     }
   }
   if(wrap) 
-    LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
+    LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 24], 24);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
   /* Verify and unwrap */
@@ -2908,32 +2908,33 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
       }
     }
     ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMF_DEBUG
+    LOGBYTE("input: ", message_block, lcfb);
+#endif /* #ifdef OPTION_KMF_DEBUG */
+
+    for(i = 0; i < lcfb; i++)
+      output_block[i] ^= message_block[i];
+    for(i = 0; i < 8 - lcfb; i++)
+       parameter_block[i] = parameter_block[i + lcfb];
     if(modifier_bit)
     {
       /* Decipher */
-      for(i = 0; i < 8 - lcfb; i++)
-        parameter_block[i] = parameter_block[i + lcfb];                  
       for(i = 0; i < lcfb; i++)        
         parameter_block[i + 8 - lcfb] = message_block[i];
-      for(i = 0; i < lcfb; i++)
-        message_block[i] ^= output_block[i];
     }
     else
     {
       /* Encipher */
       for(i = 0; i < lcfb; i++)
-        message_block[i] ^= output_block[i];
-      for(i = 0; i < 8 - lcfb; i++)
-        parameter_block[i] = parameter_block[i + lcfb];                  
-      for(i = 0; i < lcfb; i++)        
         parameter_block[i + 8 - lcfb] = output_block[i];
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, lcfb - 1, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs), r1, regs);
 
 #ifdef OPTION_KMF_DEBUG
-    LOGBYTE("output:", message_block, lcfb);
+    LOGBYTE("output:", output_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     /* Store the chaining value */
@@ -3018,7 +3019,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
   LOGBYTE("cv    :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], keylen);
   if(wrap) 
-    LOGBYTE("wkvp  :", &parameter_block[keylen + 16], 32);
+    LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 32], 32);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
   /* Verify and unwrap */
@@ -3042,33 +3043,34 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += lcfb)
   {
     aes_encrypt(&context, parameter_block, output_block);
-    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);      
+    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMF_DEBUG
+    LOGBYTE("input: ", message_block, lcfb);
+#endif /* #ifdef OPTION_KMF_DEBUG */
+
+    for(i = 0; i < lcfb; i++)
+      output_block[i] ^= message_block[i];
+    for(i = 0; i < 16 - lcfb; i++)
+      parameter_block[i] = parameter_block[i + lcfb];
     if(modifier_bit)
     {
       /* Decipher */
-      for(i = 0; i < 16 - lcfb; i++)
-        parameter_block[i] = parameter_block[i + lcfb];                  
-      for(i = 0; i < lcfb; i++)        
-        parameter_block[i + 16 - lcfb] = message_block[i];
       for(i = 0; i < lcfb; i++)
-        message_block[i] ^= output_block[i];
+        parameter_block[i + 16 - lcfb] = message_block[i];                  
     }
     else
     {
       /* Encipher */
-      for(i = 0; i < lcfb; i++)
-        message_block[i] ^= output_block[i];
-      for(i = 0; i < 16 - lcfb; i++)
-        parameter_block[i] = parameter_block[i + lcfb];                  
       for(i = 0; i < lcfb; i++)        
         parameter_block[i + 16 - lcfb] = output_block[i];
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, lcfb - 1, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs), r1, regs);
 
 #ifdef OPTION_KMF_DEBUG
-    LOGBYTE("output:", message_block, lcfb);
+    LOGBYTE("output:", output_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     /* Store the chaining value */

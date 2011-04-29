@@ -1,0 +1,55 @@
+* KMF fc28
+stopall
+pause 1
+sysclear
+archmode esame
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=41000014     # LA R0,X'14'       R0->function code 20 
+r 204=41100510     # LA R1,PB          R1->parameter block address
+r 208=B9280000     # PCKMO             Encrypt DEA Key
+r 20C=58000400     # LA R0,X'1C'       R0->function code 28 encrypt
+r 210=41100500     # LA R1,PB          R1->parameter block address
+r 214=41200600     # LA R2,FO          R2->first operand 
+r 218=41400700     # LA R4,SO          R4->second operand
+r 21C=41500008     # LA R5,SOL         R5->second operand length
+r 220=B92A0024     # KMF R2,R4         Cipher message with cipher feedback
+r 224=41800590     # LA R8,CV          Load address CV
+r 228=D20F10008000 # MVC ?             Copy CV parameter value
+r 22E=58000408     # LA R0,X'9C'       R0->function code 28 decrypt
+r 232=41100500     # LA R1,PB          R1->parameter block address
+r 236=41200800     # LA R2,SO          R2->second operand from encrypt operation
+r 23A=41400600     # LA R4,FO          R4->first operand from encrypt operation
+r 23E=41500008     # LA R5,FOL         R5->first operand length
+r 242=B92A0024     # KMF R2,R4         Cipher message with cipher feedback
+r 246=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
+*
+r 400=0400001C
+r 408=0400009C
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
+r 510=101112131415161718191A1B1C1D1E1F # Parameter block
+r 520=202122232425262728292A2B2C2D2E2F # Parameter block
+r 530=303132333435363738393A3B3C3D3E3F # Parameter block
+r 540=404142434445464748494A4B4C4D4E4F # Parameter block
+r 550=5051525354555657
+*
+r 590=000102030405060708090A0B0C0D0E0F # Parameter block
+*
+r 600=0001020304050607                 # First operand
+*
+r 680=70D334B048136EE0                 # Expected result
+*
+r 700=0001020304050607                 # Second operand
+*
+r 800=FFFFFFFFFFFFFFFF                 # Expected result
+*
+ostailor null
+restart
+pause 1
+* Display parameter blocks
+r 600.8
+r 800.8
+* Expected results
+r 680.8
+r 700.8
