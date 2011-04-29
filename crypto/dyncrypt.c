@@ -4792,7 +4792,7 @@ DEF_INST(perform_cryptographic_computation)
 
 #ifdef OPTION_PCC_DEBUG
   WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation\n");
+  WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation");
   WRGMSG(HHC90101, "D", 1, r1);
   WRGMSG(HHC90102, "D", regs->GR(r1));
   WRGMSG(HHC90101, "D", 2, r2);
