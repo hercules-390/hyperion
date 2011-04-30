@@ -230,8 +230,8 @@ main( int argc, char *argv[] )
     U32  cmaxsz;
     U32  cbytes;
     U32  totblocks;
-    U32  totubytes;
-    U32  totcbytes;
+    U64  totubytes;
+    U64  totcbytes;
     U32  opts = 0;
     SInt32  lResidue	= max_bytes_dsply;	/* amount of space left to print */ 
     char *pgm;
@@ -589,9 +589,9 @@ main( int argc, char *argv[] )
         printf( "%-20.20s: %d\n", "Blocks", (int)totblocks );
         if ( !i_faketape )
         {
-            printf( "%-20.20s: %d\n", "Uncompressed bytes", (int)totubytes );
-            printf( "%-20.20s: %d\n", "Compressed bytes", (int)totcbytes );
-            printf( "%-20.20s: %d\n", "Reduction", (int)(totubytes - totcbytes) );
+            printf( "%-20.20s: %lu\n", "Uncompressed bytes", (U64)totubytes );
+            printf( "%-20.20s: %lu\n", "Compressed bytes", (U64)totcbytes );
+            printf( "%-20.20s: %lu\n", "Reduction", (U64)(totubytes - totcbytes) );
         }
     }
 
