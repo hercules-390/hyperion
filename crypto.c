@@ -25,12 +25,11 @@
 void renew_wrapping_keys(void)
 {
   int i;
-  U64 time;
   BYTE lparname[8];
   U64 cpuid;
+  BYTE byte;
 
-  time = host_tod();
-  srandom(time);
+  srandom(host_tod()); /* Randomize related to time */
   obtain_wrlock(&sysblk.wklock);
   for(i = 0; i < 32; i++)
     sysblk.wkaes_reg[i] = random();
@@ -41,7 +40,7 @@ void renew_wrapping_keys(void)
   /* cpuid (8 bytes) */
   /* lpar name (8 bytes) */
   /* lparnum (1 byte) */
-  /* time (8 bytes at the end) */
+  /* random number 8 bytes at the end) */
   memset(sysblk.wkvpaes_reg, 0, 32);
   memset(sysblk.wkvpdea_reg, 0, 24);
   cpuid = sysblk.cpuid;
@@ -58,9 +57,9 @@ void renew_wrapping_keys(void)
   sysblk.wkvpdea_reg[16] = sysblk.lparnum;
   for(i = 0; i < 8; i++)
   {
-    sysblk.wkvpaes_reg[31 - i] = time;
-    sysblk.wkvpdea_reg[23 - i] = time;
-    time >>= 8;
+    byte = random();
+    sysblk.wkvpaes_reg[31 - i] = byte;
+    sysblk.wkvpdea_reg[23 - i] = byte;
   }
   release_rwlock(&sysblk.wklock);
 
