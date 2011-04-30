@@ -615,7 +615,6 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     ( (_dev)->hnd->immed && (_dev)->hnd->immed[(_dev)->code]) \
     || ( (_dev)->immed      && (_dev)->immed[(_dev)->code]) \
     || IS_CCW_NOP((_dev)->code) \
-    || IS_CCW_SET_EXTENDED((_dev)->code) \
   )
 
 /*-------------------------------------------------------------------*/
