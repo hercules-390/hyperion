@@ -1156,6 +1156,12 @@ DEF_INST(execute_opcode_e3________xx)
   regs->ARCH_DEP(runtime_opcode_e3________xx)[inst[5]](inst, regs);
 }
 
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0)
+{
+  regs->ARCH_DEP(runtime_opcode_e3_0______xx)[inst[5]](inst, regs);
+}
+#endif /* #ifdef OPTION_OPTINST */
 
 DEF_INST(execute_opcode_eb________xx)
 {
@@ -1231,6 +1237,9 @@ static zz_func opcode_50_0[0x01][GEN_MAXARCH];
 static zz_func opcode_58_0[0x01][GEN_MAXARCH];
 static zz_func opcode_91sb[0x01][GEN_MAXARCH];
 static zz_func opcode_A7_4[0x10][GEN_MAXARCH];
+static zz_func opcode_E3_0[0x01][GEN_MAXARCH];
+static zz_func opcode_E3_0______04[0x01][GEN_MAXARCH];
+static zz_func opcode_E3_0______24[0x01][GEN_MAXARCH];
 #endif /* OPTION_OPTINST */
 
 #define DISASM_ROUTE(_table,_route) \
@@ -2125,6 +2134,10 @@ static zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][0x100];
 static zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][0x100];
 static zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][0x100];
 
+#ifdef OPTION_OPTINST
+static zz_func runtime_opcode_e3_0______xx[GEN_ARCHCOUNT][0x100];
+#endif /* #ifdef OPTION_OPTINST */
+
 
 /*----------------------------------------------------------------------------*/
 /* replace_opcode_xx                                                          */
@@ -2343,10 +2356,26 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
       replace_opcode_xxxx(arch, opcode_50_0[0][arch], 0x50, i << 4); /* Zero x2 ST */
       replace_opcode_xxxx(arch, opcode_58_0[0][arch], 0x58, i << 4); /* Zero x2 L */
-      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xA7, (i << 4) + 4); /* Optimized BRC */
+      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xa7, (i << 4) + 4); /* Optimized BRC */
+      replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
     }
     for(i = 0x80; i; i >>= 1)
       replace_opcode_xxxx(arch, opcode_91sb[0][arch], 0x91, i); /* Single bit TM */
+    for(i = 0; i < 0x100; i++)
+    {
+      switch(i)
+      {
+        case 0x04:
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch];
+          break;
+        case 0x24:
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch];
+          break;
+        default:
+          runtime_opcode_e3_0______xx[arch][i] = opcode_e3xx[i][arch];
+          break;
+      }
+    }
 #endif /* OPTION_OPTINST */
   }
 }
@@ -2375,6 +2404,12 @@ void init_opcode_pointers(REGS *regs)
   regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900];
   regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900];
   regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900];
+
+#ifdef OPTION_OPTINST
+  regs->s370_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_370];
+  regs->s390_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_390];
+  regs->z900_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_900];
+#endif /* OPTION_OPTINST */ 
 }
 
 
@@ -6484,6 +6519,16 @@ static zz_func opcode_A7_4[0x10][GEN_MAXARCH] = {
  /*A7D4*/ GENx370x390x900 (A7D4,RX,"BRC"),
  /*A7E4*/ GENx370x390x900 (A7E4,RX,"BRC"),
  /*A7F4*/ GENx370x390x900 (A7F4,RX,"BRC") };
+
+static zz_func opcode_E3_0[0x01][GEN_MAXARCH] = {
+ /*E3*/   GENx370x390x900 (E3_0,e3xx,"") };
+
+static zz_func opcode_E3_0______04[0x01][GEN_MAXARCH] = {
+ /*E304*/ GENx___x___x900 (E3_0______04,RXY,"LG") };
+
+static zz_func opcode_E3_0______24[0x01][GEN_MAXARCH] = {
+ /*E324*/ GENx___x___x900 (E3_0______24,RXY,"STG") };
+
 #endif /* OPTION_OPTINST */
 
 #endif /*!defined (_GEN_ARCH)*/

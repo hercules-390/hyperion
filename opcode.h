@@ -1534,6 +1534,53 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
+#ifdef OPTION_OPTINST
+#undef RXYX0
+#ifdef FEATURE_LONG_DISPLACEMENT
+  #define RXYX0(_inst, _regs, _r1, _b2, _effective_addr2) \
+          RXYX0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
+#else
+  #define RXYX0(_inst, _regs, _r1, _b2, _effective_addr2) \
+          RXYX0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
+#endif /* #ifdef FEATURE_LONG_DISPLACEMENT */
+
+#define RXYX0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp; S32 disp2; \
+  temp  = fetch_fw(_inst); \
+  (_effective_addr2) = 0; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if((_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+  disp2 = temp & 0xfff; \
+  if(unlikely((_inst)[4])) \
+  { \
+    disp2 |= (_inst[4] << 12); \
+    if(disp2 & 0x80000) \
+      disp2 |= 0xfff00000; \
+  } \
+  (_effective_addr2) += disp2; \
+  if((_len)) \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  (_r1) = (temp >> 20) & 0xf; \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+
+#define RXYX0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr2) = temp & 0xfff; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if((_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+  if((_len)) \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  (_r1) = (temp >> 20) & 0xf; \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+
+#endif /* #ifdef OPTION_OPTINST */
+
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
 #undef RS0
@@ -2898,6 +2945,7 @@ DEF_INST(execute_ec________xx);
 DEF_INST(execute_ed________xx);
 DEF_INST(operation_exception);
 DEF_INST(dummy_instruction);
+DEF_INST(E3_0);
 
 
 /* Instructions in assist.c */
@@ -4016,6 +4064,10 @@ DEF_INST(extract_cpu_time);
 #if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
 DEF_INST(load_program_parameter);                               /*810*/
 #endif /*defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)*/
+#ifdef OPTION_OPTINST
+DEF_INST(E3_0______04);
+DEF_INST(E3_0______24);
+#endif /* #ifdef OPTION_OPTINST */
 
 /* Instructions in ecpsvm.c */
 #if defined(FEATURE_ECPSVM)

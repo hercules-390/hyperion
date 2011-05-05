@@ -4605,6 +4605,25 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E324 STG   - Store Long                                     [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______24)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXYX0(inst, regs, r1, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
+
+} /* end DEF_INST(store_long) */
+
+#endif /* #ifdef OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -4651,6 +4670,25 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_long) */
+
+#ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* E304 LG    - Load Long                                      [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(E3_0______04)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXYX0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from second operand */
+    regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_long) */
+
+#endif /* #ifdef OPTION_OPTINST */
 #endif /*defined(FEATURE_ESAME)*/
 
 
