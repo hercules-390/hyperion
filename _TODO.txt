@@ -10,6 +10,21 @@
 
 -------------------------------------------------------------------------------
 
+  Per Mark Gaubatz, we need a new dasd util to fix CE/SA alt cyl issue
+  for existing dasds created using the old dasdinit.
+
+-------------------------------------------------------------------------------
+
+  Card reader: @stack support, like Ivan's tape autoloader, to provide
+  ability to specify different options (ascii/ebcdic) for each i/p file.
+  Then you could stack a VM USERID card in ebcdic followed by a normal
+  ascii text file (which would be auto-translated to ebcdic of course),
+  or vice-versa: an ascii USERID card followed by ebcdic binary data.
+  Would make getting VMARC files into VM much easier without having to
+  mess with a ebcdic USERID card.
+
+-------------------------------------------------------------------------------
+
   Maxrates off: reset/disable automatic maxrates
 
 -------------------------------------------------------------------------------
