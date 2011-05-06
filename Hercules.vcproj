@@ -2104,6 +2104,10 @@
 					Name="scripts"
 					>
 					<File
+						RelativePath=".\tests\agf.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\alsi.txt"
 						>
 					</File>
@@ -2164,6 +2168,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\diag24.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\diag8.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\dxtr.txt"
 						>
 					</File>
@@ -2204,6 +2216,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\kimd65.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\klmd0.txt"
 						>
 					</File>
@@ -2228,6 +2244,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\km10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km11.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\km18.txt"
 						>
 					</File>
@@ -2244,7 +2268,39 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\km26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km28.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\km3.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km50.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km52.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km58.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km60.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\km9.txt"
 						>
 					</File>
 					<File
@@ -2256,11 +2312,47 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\kmac10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac11.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac18.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac19.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\kmac2.txt"
 						>
 					</File>
 					<File
+						RelativePath=".\tests\kmac20.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac28.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\kmac3.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmac9.txt"
 						>
 					</File>
 					<File
@@ -2269,6 +2361,14 @@
 					</File>
 					<File
 						RelativePath=".\tests\kmc1.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmc10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmc11.txt"
 						>
 					</File>
 					<File
@@ -2288,11 +2388,183 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\kmc26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmc27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmc28.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\kmc3.txt"
 						>
 					</File>
 					<File
 						RelativePath=".\tests\kmc67.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmc9.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr0.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr1.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr11.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr18.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr19.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr2.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr20.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr28.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr3.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmctr9.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf0.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf1.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf11.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf18.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf19.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf2.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf20.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf28.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf3.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmf9.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo0.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo1.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo10.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo11.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo18.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo19.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo2.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo20.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo26.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo27.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo28.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo3.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\kmo9.txt"
 						>
 					</File>
 					<File
@@ -2320,6 +2592,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\lpp.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\lxdtr.txt"
 						>
 					</File>
@@ -2333,6 +2609,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\mxtr.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\popcnt.txt"
 						>
 					</File>
 					<File
@@ -2357,6 +2637,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\stfle.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\stidp.txt"
 						>
 					</File>
 					<File
