@@ -2093,7 +2093,12 @@ char    buf[1024];                      /* Buffer workarea           */
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
-        maxfd = keybfd;
+        FD_SET (logger_syslogfd[LOG_READ], &readset);
+	FD_SET (0, &readset);
+        if(keybfd > logger_syslogfd[LOG_READ])
+          maxfd = keybfd;
+        else
+          maxfd = logger_syslogfd[LOG_READ];
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
