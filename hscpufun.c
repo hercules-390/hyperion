@@ -505,10 +505,7 @@ int     rc = HNOERROR;
         if (strlen(argv[1]) >= 1
           && sscanf(argv[1], "%u%c", &cap, &c) == 1)
         {
-            if((rc = configure_capping(cap)))
-            {
-                rc = HERROR;
-            }
+            rc = configure_capping(cap);
         }
         else
         {
@@ -528,7 +525,6 @@ int     rc = HNOERROR;
             WRMSG( HHC00838, "I" );
         else
             WRMSG( HHC00832, "I", sysblk.capvalue );
-        rc = (int)sysblk.capvalue;
     }
 
     return rc;

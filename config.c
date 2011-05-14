@@ -423,8 +423,10 @@ int configure_capping(U32 value)
             int rc;
             rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
             if ( rc )
+            {
                 WRMSG(HHC00102, "E", strerror(rc));
-            return HERROR;
+                return HERROR;
+            }
         }
 
     }
