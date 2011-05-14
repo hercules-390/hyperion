@@ -1856,6 +1856,14 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         if (INTERRUPT_PENDING(&regs))
             ARCH_DEP(process_interrupt)(&regs);
 
+#ifdef OPTION_CAPPING	
+        else if (caplocked[0])
+        {
+            obtain_lock(caplock);
+            release_lock(caplock);
+        }	    
+#endif /* #ifdef OPTION_CAPPING */
+
         ip = INSTRUCTION_FETCH(&regs, 0);
 
         EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
@@ -1872,14 +1880,6 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         }
         regs.instcount += i * 2;
 
-#if defined(OPTION_CAPPING)
-        if (caplocked[0])
-        {
-            obtain_lock(caplock);
-            /* Greg must be proud of me */
-            release_lock(caplock);
-        }
-#endif // OPTION_CAPPING
     } while (1);
 
     /* Never reached */
