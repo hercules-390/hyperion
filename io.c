@@ -525,7 +525,7 @@ ORB     orb;                            /* Operation request block   */
     ARCH_DEP(vfetchc) ( &orb, sizeof(ORB)-1, effective_addr2, b2, regs );
 
     /* Program check if reserved bits are not zero */
-    if (orb.flag5 & ORB5_RESV
+    if (orb.flag5 & ORB5_B /* Fiber Channel Extension (FCX) unsupported */
         || orb.flag7 & ORB7_RESV
         || orb.ccwaddr[0] & 0x80)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);

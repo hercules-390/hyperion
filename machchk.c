@@ -65,7 +65,7 @@ U32 i,j;
                 {
                     sysblk.chp_reset[i] &= ~(0x80000000 >> j);
                     RELEASE_INTLOCK(regs);
-                    return CRW_SOL | CRW_CHPID | CRW_AR | CRW_INIT | ((i*32)+j);
+                    return CRW_SOL | CRW_RSC_CHPID | CRW_AR | CRW_ERC_INIT | ((i*32)+j);
                 }
             }
             RELEASE_INTLOCK(regs);
@@ -82,7 +82,7 @@ U32 i,j;
             {
                 dev->crwpending = 0;
                 release_lock(&dev->lock);
-                return CRW_SUBCH | CRW_AR | CRW_ALERT | dev->subchan;
+                return CRW_RSC_SUBCH | CRW_AR | CRW_ERC_ALERT | dev->subchan;
             }
             release_lock(&dev->lock);
         }

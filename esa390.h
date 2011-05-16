@@ -802,7 +802,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 /*1380*/ DBLWRD storecr[16];            /* Control register save area*/
 } PSA_900;
 
-/* Bit settings for translation exception address */
+/* Bit settings for Translation Exception Address */
 #define TEA_SECADDR     0x80000000      /* Secondary addr (370,390)  */
 #define TEA_FETCH       0x800           /* Fetch exception        810*/
 #define TEA_STORE       0x400           /* Store exception        810*/
@@ -818,7 +818,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define TEA_ASN         0x0000FFFF      /* Address space number      */
 #define TEA_PCN         0x000FFFFF      /* Program call number       */
 
-/* Bit settings for machine check interruption code */
+/* Bit settings for Machine Check Interruption Code */
 #define MCIC_SD  0x8000000000000000ULL  /* System damage             */
 #define MCIC_P   0x4000000000000000ULL  /* Instruction proc damage   */
 #define MCIC_SR  0x2000000000000000ULL  /* System recovery           */
@@ -861,26 +861,31 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define MCIC_CC  0x0000000000010000ULL  /* Clock comparator validity */
 
 /* Channel Report Word definitions */
+#define CRW_FLAGS_MASK  0xF0C00000      /* Flags mask                */
+//      (unassigned)    0x80000000      /* (unassigned)              */
 #define CRW_SOL         0x40000000      /* Solicited CRW             */
-#define CRW_OVER        0x20000000      /* Overflow, CRW's lost      */
+#define CRW_OFLOW       0x20000000      /* Overflow, some CRW's lost */
 #define CRW_CHAIN       0x10000000      /* More CRW's describe event */
-#define CRW_RSC         0x0F000000      /* Reporting resource mask   */
-#define CRW_MONIT       0x02000000      /* Channel monitor is source */
-#define CRW_SUBCH       0x03000000      /* Subchannel is source      */
-#define CRW_CHPID       0x04000000      /* Channel path is source    */
-#define CRW_CAF         0x09000000      /* Configuration alert       */
-#define CRW_CSS         0x0B000000      /* Channel subsys is source  */
-#define CRW_AR          0x00800000      /* Ancillary report indicator*/
-#define CRW_ERC         0x003F0000      /* Error recovery code       */
-#define CRW_AVAIL       0x00010000      /* Available                 */
-#define CRW_INIT        0x00020000      /* Initialized no parm. chg. */
-#define CRW_TEMP        0x00030000      /* Temporary error           */
-#define CRW_ALERT       0x00040000      /* Installed, subch changed  */
-#define CRW_TERM        0x00050000      /* Terminal                  */
-#define CRW_PERM        0x00060000      /* Permanent error / not init*/
-#define CRW_PERMI       0x00070000      /* Permanent, initialized    */
-#define CRW_IPM         0x00080000      /* PIM / PAM / CHPIDs changed*/
-#define CRW_RSID        0x0000FFFF      /* Resource identifier       */
+#define CRW_RSC_MASK    0x0F000000      /* Reporting-Source Code mask*/
+#define CRW_RSC_MONIT   0x02000000      /* Channel Monitor is source */
+#define CRW_RSC_SUBCH   0x03000000      /* Subchannel is source      */
+#define CRW_RSC_CHPID   0x04000000      /* Channel Path is source    */
+#define CRW_RSC_CAF     0x09000000      /* Config. Alert Facility    */
+#define CRW_RSC_CSS     0x0B000000      /* Channel subsys is source  */
+#define CRW_AR          0x00800000      /* Ancillary Report indicator*/
+//      (unassigned)    0x00400000      /* (unassigned)              */
+#define CRW_ERC_MASK    0x003F0000      /* Error-Recovery Code mask  */
+#define CRW_ERC_NULL    0x00000000      /* Event Information Pending */
+#define CRW_ERC_AVAIL   0x00010000      /* Available                 */
+#define CRW_ERC_INIT    0x00020000      /* Initialized, no parms chg.*/
+#define CRW_ERC_TEMP    0x00030000      /* Temporary error           */
+#define CRW_ERC_ALERT   0x00040000      /* Installed, parms changed  */
+#define CRW_ERC_ABORT   0x00050000      /* Terminal                  */
+#define CRW_ERC_ERROR   0x00060000      /* Perm. error, not init'ed  */
+#define CRW_ERC_RESET   0x00070000      /* Perm. error, initialized  */
+#define CRW_ERC_MODFY   0x00080000      /* PIM, PAM or CHPIDs changed*/
+#define CRW_ERC_RSTRD   0x000A0000      /* PIM, PAM or CHPID restored*/
+#define CRW_RSID_MASK   0x0000FFFF      /* Reporting-Source ID mask  */
 
 /* Bit settings for channel id */
 #define CHANNEL_TYPE    0xF0000000      /* Bits 0-3=Channel type...  */
@@ -976,7 +981,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define IS_CCW_TIC(c)           (((c)&0x0F)==0x08)
 #define IS_CCW_RDBACK(c)        (((c)&0x0F)==0x0C)
 
-/* Operation request block structure definition */
+/* Operation-Request Block (ORB) structure definition */
 typedef struct _ORB {
         FWORD   intparm;                /* Interruption parameter    */
         BYTE    flag4;                  /* Flag byte 4               */
@@ -999,7 +1004,7 @@ typedef struct _ORB {
 #define ORB5_I          0x20            /* Initial status interrupt  */
 #define ORB5_A          0x10            /* Address limit checking    */
 #define ORB5_U          0x08            /* Suppress susp interrupt   */
-#define ORB5_RESV       0x04            /* Reserved bit - must be 0  */
+#define ORB5_B          0x04            /* Channel Program Type      */
 #define ORB5_H          0x02            /* Format-2 IDAW control     */
 #define ORB5_T          0x01            /* 2K format-2 IDAW control  */
 
@@ -1063,7 +1068,7 @@ typedef struct _PMCW {
 #define PMCW27_S        0x01            /* Concurrent sense mode     */
 #define PMCW27_RESV     0x7E            /* Reserved bits - must be 0 */
 
-/* Extended status word structure definition */
+/* Extended-Status Word (ESW) structure definition */
 typedef struct _ESW {
         BYTE    scl0;                   /* Subchannel logout byte 0  */
         BYTE    lpum;                   /* Last path used mask       */
@@ -1113,6 +1118,9 @@ typedef struct _ESW {
 #define SCL3_SC         0x07            /* Sequence code             */
 
 /* Bit definitions for extended report word byte 0 */
+#define ERW0_RSV        0x80            /* (reserved)                */
+#define ERW0_L          0x40            /* Request Logging Only      */
+#define ERW0_E          0x20            /* Extended Logout Pending   */
 #define ERW0_A          0x10            /* Authorization check       */
 #define ERW0_P          0x08            /* Path verification required*/
 #define ERW0_T          0x04            /* Channel path timeout      */
@@ -1120,6 +1128,8 @@ typedef struct _ESW {
 #define ERW0_S          0x01            /* Concurrent sense          */
 
 /* Bit definitions for extended report word byte 1 */
+#define ERW1_C          0x80            /* 2ndary CCW Addr. Validity */
+#define ERW1_R          0x40            /* Fail. Stor. Addr. Format  */
 #define ERW1_SCNT       0x3F            /* Concurrent sense count    */
 
 /* Subchannel status word structure definition */
