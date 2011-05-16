@@ -2722,7 +2722,7 @@ int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                               U32 *iointid, BYTE zone);
 void io_reset (void);
-int  chp_reset(REGS *, BYTE chpid);
+int  chp_reset(BYTE chpid, int solicited);
 void channelset_reset(REGS *regs);
 
 
@@ -2838,10 +2838,14 @@ void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *);
 /* Functions in module machchk.c */
 int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
     RADR *fsta);
-U32  channel_report (REGS *);
+U32  get_next_channel_report_word (REGS *);
 void machine_check_crwpend (void);
 void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);
+void build_attach_chrpt( DEVBLK *dev );
+void build_detach_chrpt( DEVBLK *dev );
+void build_chp_reset_chrpt( BYTE chpid, int solicited );
+int  queue_channel_report( U32* crwarray, U32 crwcount );
 
 
 /* Functions in module opcode.c */

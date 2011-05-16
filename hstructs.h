@@ -570,14 +570,12 @@ struct SYSBLK {
                 stape_query_status_tod; /* TOD of last status query  */
 #endif // defined( OPTION_SCSI_TAPE )
 
-
         /*-----------------------------------------------------------*/
         /*      Control Units                                        */
         /*-----------------------------------------------------------*/
 
         U16     cuhigh;                 /* Highest used CU number    */
        CHAINBLK cuchain;                /* -> CU chain               */
-
 
         /*-----------------------------------------------------------*/
         /*      Devices                                              */
@@ -595,12 +593,15 @@ struct SYSBLK {
         u_int   dasdcache:1;            /* 0 = system cache off
                                            1 = system cache on       */
 
-
         /*-----------------------------------------------------------*/
         /*      I/O Management                                       */
         /*-----------------------------------------------------------*/
 
-        U32     chp_reset[8];           /* Channel path reset masks  */
+        LOCK    crwlock;                /* CRW queue lock            */
+        U32    *crwarray;               /* CRW queue                 */
+        U32     crwalloc;               /* #of entries allocated     */
+        U32     crwcount;               /* #of entries queued        */
+        U32     crwindex;               /* CRW queue index           */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
         DEVBLK *ioq;                    /* I/O queue                 */
@@ -626,10 +627,10 @@ struct SYSBLK {
         char   *defdir;                 /* Default AUTOMOUNT dir     */
 #endif
 
-
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
+                ipled:1,                /* 1 = guest has been IPL'ed */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */
@@ -1079,8 +1080,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 resumesuspended:1;      /* 1=Hresuming suspended dev */
 #define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
 #define INITIAL_POWERON_370() \
-    ( dev->crwpending && ARCH_370 == sysblk.arch_mode )
-        int     crwpending;             /* 1=CRW pending             */
+    ( !sysblk.ipled && ARCH_370 == sysblk.arch_mode )
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
 

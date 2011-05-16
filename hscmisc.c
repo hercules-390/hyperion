@@ -766,6 +766,293 @@ static REGS  *copy_regs (REGS *regs)
     return newregs;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Format Channel Report Word (CRW) for display                      */
+/*-------------------------------------------------------------------*/
+const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
+{
+static const char* rsctab[] =
+{
+    "0",
+    "1",
+    "MONIT",
+    "SUBCH",
+    "CHPID",
+    "5",
+    "6",
+    "7",
+    "8",
+    "CAF",
+    "10",
+    "CSS",
+};
+static const BYTE  numrsc  =  _countof( rsctab );
+
+static const char* erctab[] =
+{
+    "NULL",
+    "AVAIL",
+    "INIT",
+    "TEMP",
+    "ALERT",
+    "ABORT",
+    "ERROR",
+    "RESET",
+    "MODFY",
+    "9",
+    "RSTRD",
+};
+static const BYTE  numerc  =  _countof( erctab );
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1)
+        return buf;
+
+    if (crw)
+    {
+        U32     flags   =  (U32)    ( crw & CRW_FLAGS_MASK );
+        BYTE    erc     =  (BYTE) ( ( crw & CRW_ERC_MASK   ) >> 16 );
+        BYTE    rsc     =  (BYTE) ( ( crw & CRW_RSC_MASK   ) >> 24 );
+        U16     rsid    =  (U16)    ( crw & CRW_RSID_MASK  );
+        size_t  n;
+
+        n = (size_t)  snprintf( buf, bufsz - 1,
+
+            "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%04.4X Flags:%s%s%s%s%s%s%s"
+
+            , rsc
+            , rsc < numrsc ? rsctab[ rsc ] : "???"
+
+            , erc
+            , erc < numerc ? erctab[ erc ] : "???"
+
+            , rsid
+            , rsid
+
+            , ( flags & CRW_FLAGS_MASK ) ? ""            : "0"
+            , ( flags & 0x80000000     ) ? "0x80000000," : ""
+            , ( flags & CRW_SOL        ) ? "SOL,"        : ""
+            , ( flags & CRW_OFLOW      ) ? "OFLOW,"      : ""
+            , ( flags & CRW_CHAIN      ) ? "CHAIN,"      : ""
+            , ( flags & CRW_AR         ) ? "AR,"         : ""
+            , ( flags & 0x00400000     ) ? "0x00400000," : ""
+        );
+
+        if (n < bufsz)
+            *(buf + n) = 0;             // (null terminate)
+
+        if (n > 0 && 
+            *(buf + n - 1) == ',')      // (remove trailing comma)
+            *(buf + n - 1) = 0;         // (remove trailing comma)
+    }
+    else
+        strlcpy( buf, "(end)", bufsz ); // (end of channel report)
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format Operation-Request Block (ORB) for display                  */
+/*-------------------------------------------------------------------*/
+const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
+{
+size_t n;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !orb)
+        return buf;
+
+    n = (size_t) snprintf( buf, bufsz - 1,
+
+        "IntP:%08.8X Key:%d LPM:%02.2X Flags:%X%02.2X%02.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%08.8X"
+
+        , orb->intparm
+        , (orb->flag4 & ORB4_KEY) >> 4
+        , orb->lpm
+
+        , (orb->flag4 & ~ORB4_KEY)
+        , orb->flag5
+        , orb->flag7
+
+        , ( orb->flag4 & ORB4_S ) ? 'S' : '.'
+        , ( orb->flag4 & ORB4_C ) ? 'C' : '.'
+        , ( orb->flag4 & ORB4_M ) ? 'M' : '.'
+        , ( orb->flag4 & ORB4_Y ) ? 'Y' : '.'
+
+        , ( orb->flag5 & ORB5_F ) ? 'F' : '.'
+        , ( orb->flag5 & ORB5_P ) ? 'P' : '.'
+        , ( orb->flag5 & ORB5_I ) ? 'I' : '.'
+        , ( orb->flag5 & ORB5_A ) ? 'A' : '.'
+
+        , ( orb->flag5 & ORB5_U ) ? 'U' : '.'
+        , ( orb->flag5 & ORB5_B ) ? 'B' : '.'
+        , ( orb->flag5 & ORB5_H ) ? 'H' : '.'
+        , ( orb->flag5 & ORB5_T ) ? 'T' : '.'
+
+        , ( orb->flag7 & ORB7_L ) ? 'L' : '.'
+        , ( orb->flag7 & ORB7_D ) ? 'D' : '.'
+        , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
+
+        , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
+        , orb->ccwaddr
+    );
+
+    if (n < bufsz)
+        *(buf + n) = 0;     // (null terminate)
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format ESW's Subchannel Logout information for display            */
+/*-------------------------------------------------------------------*/
+const char* FormatSCL( ESW* esw, char* buf, size_t bufsz )
+{
+size_t n;
+static const char* sa[] =
+{
+    "00",
+    "RD",
+    "WR",
+    "BW",
+};
+static const char* tc[] =
+{
+    "HA",
+    "ST",
+    "CL",
+    "11",
+};
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    n = (size_t) snprintf( buf, bufsz - 1,
+
+        "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%02.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
+
+        , ( esw->scl0 & 0x80           ) ? '0' : '.'
+        , ( esw->scl0 & SCL0_ESF_KEY   ) ? 'K' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBPGK ) ? 'G' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBDCK ) ? 'D' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBPTK ) ? 'P' : '.'
+        , ( esw->scl0 & SCL0_ESF_CCWCK ) ? 'C' : '.'
+        , ( esw->scl0 & SCL0_ESF_IDACK ) ? 'I' : '.'
+        , ( esw->scl0 & 0x01           ) ? '7' : '.'
+
+        , ( esw->scl2 & SCL2_R ) ? " (R)" : ""
+
+        , ( esw->scl2 & SCL2_FVF_LPUM  ) ? 'L' : '.'
+        , ( esw->scl2 & SCL2_FVF_TC    ) ? 'T' : '.'
+        , ( esw->scl2 & SCL2_FVF_SC    ) ? 'S' : '.'
+        , ( esw->scl2 & SCL2_FVF_USTAT ) ? 'D' : '.'
+        , ( esw->scl2 & SCL2_FVF_CCWAD ) ? 'C' : '.'
+
+        , esw->lpum
+
+        , sa[  esw->scl2 & SCL2_SA ]
+
+        , tc[ (esw->scl3 & SCL3_TC) >> 6 ]
+
+        , ( esw->scl3 & SCL3_D ) ? 'D' : '.'
+        , ( esw->scl3 & SCL3_E ) ? 'E' : '.'
+        , ( esw->scl3 & SCL3_A ) ? 'A' : '.'
+
+        , ( esw->scl3 & SCL3_SC )
+    );
+
+    if (n < bufsz)
+        *(buf + n) = 0;     // (null terminate)
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format ESW's Extended-Report Word (ERW) for display               */
+/*-------------------------------------------------------------------*/
+const char* FormatERW( ESW* esw, char* buf, size_t bufsz )
+{
+size_t n;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    n = (size_t) snprintf( buf, bufsz - 1,
+
+        "Flags:%c%c%c%c%c%c%c%c %c%c SCNT:%d"
+
+        , ( esw->erw0 & ERW0_RSV ) ? '0' : '.'
+        , ( esw->erw0 & ERW0_L   ) ? 'L' : '.'
+        , ( esw->erw0 & ERW0_E   ) ? 'E' : '.'
+        , ( esw->erw0 & ERW0_A   ) ? 'A' : '.'
+        , ( esw->erw0 & ERW0_P   ) ? 'P' : '.'
+        , ( esw->erw0 & ERW0_T   ) ? 'T' : '.'
+        , ( esw->erw0 & ERW0_F   ) ? 'F' : '.'
+        , ( esw->erw0 & ERW0_S   ) ? 'S' : '.'
+
+        , ( esw->erw1 & ERW1_C   ) ? 'C' : '.'
+        , ( esw->erw1 & ERW1_R   ) ? 'R' : '.'
+
+        , ( esw->erw1 & ERW1_SCNT )
+    );
+
+    if (n < bufsz)
+        *(buf + n) = 0;     // (null terminate)
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format Extended-Status Word (ESW) for display                     */
+/*-------------------------------------------------------------------*/
+const char* FormatESW( ESW* esw, char* buf, size_t bufsz )
+{
+char scl[64];                               /* Subchannel Logout     */
+char erw[64];                               /* Extended-Report Word  */
+
+size_t  n;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    n = (size_t) snprintf( buf, bufsz - 1,
+
+        "SCL = %s, ERW = %s"
+
+        , FormatSCL( esw, scl, _countof( scl ))
+        , FormatERW( esw, erw, _countof( erw ))
+    );
+
+    if (n < bufsz)
+        *(buf + n) = 0;     // (null terminate)
+
+    return buf;
+}
+
+
 #endif /*!defined(_HSCMISC_C)*/
 
 

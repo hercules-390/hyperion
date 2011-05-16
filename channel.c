@@ -1223,7 +1223,6 @@ void device_reset (DEVBLK *dev)
     memset (&dev->attnscsw, 0, sizeof(SCSW));
 
     dev->readpending = 0;
-    dev->crwpending = 0;
     dev->ckdxtdef = 0;
     dev->ckdsetfm = 0;
     dev->ckdlcount = 0;
@@ -1291,25 +1290,25 @@ int     console = 0;                    /* 1 = console device reset  */
 /*   Called by:                                                      */
 /*     RHCP (Reset Channel Path)    (io.c)                           */
 /*-------------------------------------------------------------------*/
-int chp_reset(REGS *regs, BYTE chpid)
+int chp_reset(BYTE chpid, int solicited)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
-int operational = 3;
 int console = 0;
 
-    OBTAIN_INTLOCK(regs);
-
-    /* Reset each device in the configuration */
+    /* Reset each device in the configuration with this chpid */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        if (!IS_DEV(dev))
+            continue;
+
         for(i = 0; i < 8; i++)
         {
             if((chpid == dev->pmcw.chpid[i])
               && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
             {
-                operational = 0;
-                if (dev->console) console = 1;
+                if (dev->console)
+                    console = 1;
                 device_reset(dev);
             }
         }
@@ -1319,9 +1318,9 @@ int console = 0;
     if (console)
         SIGNAL_CONSOLE_THREAD();
 
-    RELEASE_INTLOCK(regs);
-
-    return operational;
+    /* Indicate channel path reset completed */
+    build_chp_reset_chrpt( chpid, solicited );
+    return 0;
 
 } /* end function chp_reset */
 
@@ -1357,6 +1356,10 @@ int i;
     }
 
     /* No crws pending anymore */
+    OBTAIN_CRWLOCK();
+    sysblk.crwcount = 0;
+    sysblk.crwindex = 0;
+    RELEASE_CRWLOCK();
     OFF_IC_CHANRPT;
 
     /* Signal console thread to redrive select */
@@ -3822,20 +3825,8 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 #if defined(_370)
         case ARCH_370:
             /* Do NOT raise if initial power-on state */
-            /*
-             * FIXME : The dev->crwpending test in S/370
-             *         mode prevents any devices added
-             *         at run time after IPL from being
-             *         operational. The test has been
-             *         temporarily disabled until it is
-             *         either confirmed as being superfluous
-             *         or another solution is found.
-             *         ISW 20070109
-             */
-            /*
-            if (dev->crwpending) return 3;
-            */
-            return s370_device_attention(dev, unitstat);
+            if (!INITIAL_POWERON_370())
+                return s370_device_attention(dev, unitstat);
 #endif
 #if defined(_390)
         case ARCH_390: return s390_device_attention(dev, unitstat);

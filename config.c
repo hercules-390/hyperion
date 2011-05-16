@@ -890,14 +890,6 @@ DEVBLK**dvpp;
     dev->shrdwait = -1;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Indicate a CRW is pending for this device */
-#if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
-#endif /*defined(_370)*/
-        dev->crwpending = 1;
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
-
 #ifdef EXTERNALGUI
     if ( !dev->pGUIStat )
     {
@@ -1024,11 +1016,11 @@ int     i;                              /* Loop index                */
     release_lock(&dev->lock);
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Signal machine check */
+    /* Build Channel Report */
 #if defined(_370)
     if (sysblk.arch_mode != ARCH_370)
 #endif
-        machine_check_crwpend();
+        build_attach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /*
@@ -1078,14 +1070,6 @@ int     i;                              /* Loop index                */
 
     free(dev->typname);
 
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Indicate a CRW is pending for this device */
-#if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
-#endif /*defined(_370)*/
-        dev->crwpending = 1;
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
-
     // detach all devices in group
     if(dev->group)
     {
@@ -1113,15 +1097,12 @@ int     i;                              /* Loop index                */
 
     ret_devblk(dev);
 
-    /* Zeroize the PMCW */
-    memset (&dev->pmcw, 0, sizeof(PMCW));
-
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Signal machine check */
+    /* Build Channel Report */
 #if defined(_370)
     if (sysblk.arch_mode != ARCH_370)
 #endif
-        machine_check_crwpend();
+        build_detach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     return 0;
@@ -1218,6 +1199,14 @@ DEVBLK *dev;                            /* -> Device block           */
         return 1;
     }
 
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
+    /* Build Channel Report */
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif
+        build_detach_chrpt( dev );
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
@@ -1235,23 +1224,15 @@ DEVBLK *dev;                            /* -> Device block           */
     DelDevnumFastLookup(lcss,newdevn);
 #endif
 
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Indicate a CRW is pending for this device */
-#if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
-#endif /*defined(_370)*/
-        dev->crwpending = 1;
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
-
     /* Release device lock */
     release_lock(&dev->lock);
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Signal machine check */
+    /* Build Channel Report */
 #if defined(_370)
     if (sysblk.arch_mode != ARCH_370)
 #endif
-        machine_check_crwpend();
+        build_attach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
 //    WRMSG (HHC01459, "I", lcss, olddevn, lcss, newdevn);

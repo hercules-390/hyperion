@@ -19,6 +19,13 @@
 #endif
 #include "sr.h"
 
+#if defined(WORDS_BIGENDIAN)
+BYTE ourendian = 1;
+#else // (little endian)
+BYTE ourendian = 0;
+#endif // defined(WORDS_BIGENDIAN)
+BYTE crwendian;
+
 /* subroutine to check for active devices */
 DEVBLK *sr_active_devices()
 {
@@ -162,11 +169,17 @@ BYTE     psw[16];
             SR_WRITE_VALUE(file,SR_SYS_IOPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
         }
 
-    for (i = 0; i < 8; i++)
-        SR_WRITE_VALUE(file,SR_SYS_CHP_RESET+i,sysblk.chp_reset[i],sizeof(sysblk.chp_reset[0]));
+    SR_WRITE_VALUE ( file, SR_SYS_CRWCOUNT, sysblk.crwcount, sizeof( sysblk.crwcount ));
+    if (sysblk.crwcount)
+    {
+        SR_WRITE_BUF   ( file, SR_SYS_CRWARRAY,  sysblk.crwarray, sizeof( U32 ) * sysblk.crwcount );
+        SR_WRITE_VALUE ( file, SR_SYS_CRWINDEX,  sysblk.crwindex, sizeof( sysblk.crwindex ) );
+        SR_WRITE_VALUE ( file, SR_SYS_CRWENDIAN, ourendian, 1 );
+    }
 
     SR_WRITE_VALUE (file,SR_SYS_SERVPARM,sysblk.servparm,sizeof(sysblk.servparm));
     SR_WRITE_VALUE (file,SR_SYS_SIGINTREQ,sysblk.sigintreq,1);
+    SR_WRITE_VALUE (file,SR_SYS_IPLED,sysblk.ipled,1);
     SR_WRITE_STRING(file,SR_SYS_LOADPARM,str_loadparm());
     SR_WRITE_VALUE (file,SR_SYS_INTS_STATE,sysblk.ints_state,sizeof(sysblk.ints_state));
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
@@ -274,7 +287,6 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_DEV_ATTNPENDING, dev->attnpending, 1);
         SR_WRITE_VALUE(file, SR_DEV_PENDING, dev->pending, 1);
         SR_WRITE_VALUE(file, SR_DEV_STARTPENDING, dev->startpending, 1);
-        SR_WRITE_VALUE(file, SR_DEV_CRWPENDING, dev->crwpending, 1);
         SR_WRITE_VALUE(file, SR_DEV_CCWADDR, dev->ccwaddr, sizeof(dev->ccwaddr));
         SR_WRITE_VALUE(file, SR_DEV_IDAPMASK, dev->idapmask, sizeof(dev->idapmask));
         SR_WRITE_VALUE(file, SR_DEV_IDAWFMT, dev->idawfmt, sizeof(dev->idawfmt));
@@ -586,16 +598,37 @@ S64      dreg;
             lcss = 0;
             break;
 
-        case SR_SYS_CHP_RESET_0:
-        case SR_SYS_CHP_RESET_1:
-        case SR_SYS_CHP_RESET_2:
-        case SR_SYS_CHP_RESET_3:
-        case SR_SYS_CHP_RESET_4:
-        case SR_SYS_CHP_RESET_5:
-        case SR_SYS_CHP_RESET_6:
-        case SR_SYS_CHP_RESET_7:
-            i = key - SR_SYS_CHP_RESET;
-            SR_READ_VALUE(file, len, &sysblk.chp_reset[i], sizeof(sysblk.chp_reset[0]));
+        case SR_SYS_CRWCOUNT:
+            SR_READ_VALUE( file, len, &sysblk.crwcount, sizeof( sysblk.crwcount ));
+            if (sysblk.crwcount)
+            {
+                sysblk.crwarray = malloc( sizeof(U32) * sysblk.crwcount );
+                if (!sysblk.crwarray)
+                {
+                    // "SR: error loading CRW queue: not enough memory for %d CRWs"
+                    WRMSG(HHC02022, "E", sysblk.crwcount);
+                    goto sr_error_exit;
+                }
+                sysblk.crwalloc = sysblk.crwcount;
+            }
+            break;
+
+        case SR_SYS_CRWARRAY:
+            ASSERT( sysblk.crwarray && sysblk.crwcount );
+            SR_READ_BUF( file, sysblk.crwarray, sizeof(U32) * sysblk.crwcount );
+            break;
+
+        case SR_SYS_CRWINDEX:
+            ASSERT( sysblk.crwarray && sysblk.crwcount );
+            SR_READ_VALUE( file, len, &sysblk.crwindex, sizeof( sysblk.crwindex ));
+            break;
+
+        case SR_SYS_CRWENDIAN:
+            ASSERT( sysblk.crwarray && sysblk.crwcount );
+            SR_READ_VALUE(file, len, &crwendian, 1);
+            if (ourendian != crwendian)
+                for (i=0; (U32)i < sysblk.crwcount; i++)
+                    *(sysblk.crwarray + i) = bswap_32(*(sysblk.crwarray + i));
             break;
 
         case SR_SYS_SERVPARM:
@@ -605,6 +638,11 @@ S64      dreg;
         case SR_SYS_SIGINTREQ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             sysblk.sigintreq = rc;
+            break;
+
+        case SR_SYS_IPLED:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            sysblk.ipled = rc;
             break;
 
         case SR_SYS_LOADPARM:
@@ -1140,7 +1178,7 @@ S64      dreg;
             }
             SR_READ_BUF(file, &dev->pgid, len);
             break;
-   
+
         /* By Adrian - SR_DEV_DRVPWD                          */   
         case SR_DEV_DRVPWD:   
             SR_SKIP_NULL_DEV(dev, file, len);   
@@ -1150,9 +1188,7 @@ S64      dreg;
                 goto sr_error_exit;   
             }   
             SR_READ_BUF(file, &dev->drvpwd, len);   
-            break;   
-   
-   
+            break;
 
         case SR_DEV_BUSY:
             SR_SKIP_NULL_DEV(dev, file, len);
@@ -1197,12 +1233,6 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             dev->startpending = rc;
-            break;
-
-        case SR_DEV_CRWPENDING:
-            SR_SKIP_NULL_DEV(dev, file, len);
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->crwpending = rc;
             break;
 
         case SR_DEV_CCWADDR:
