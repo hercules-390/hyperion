@@ -125,6 +125,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug-All|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
@@ -165,6 +167,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release-All|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
@@ -266,6 +270,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug-All|Itanium"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
@@ -285,6 +291,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release-All|Itanium"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
@@ -304,6 +312,8 @@
 		</Configuration>
 		<Configuration
 			Name="All-All|Itanium"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			BuildLogFile="$(SolutionDir)$(ConfigurationName) BuildLog.htm"
 			>
