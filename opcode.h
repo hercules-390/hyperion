@@ -1308,6 +1308,36 @@ do { \
   if(likely(_b2)) \
     (_effective_addr2) += (_regs)->GR((_b2)); \
 }
+
+#undef  RXX0RX
+#define RXX0RX(_inst, _regs, _b2, _effective_addr2) \
+        RXX0RX_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
+#define RXX0RX_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr2) = temp & 0xfff; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if(likely(_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+  if((_len)) \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+
+#undef  RX0X0RX
+#define RX0X0RX(_inst, _regs, _b2, _effective_addr2) \
+        RX0X0RX_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 0)
+#define RX0X0RX_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr2) = temp & 0xfff; \
+  (_b2) = (temp >> 12) & 0xf; \
+  if(likely(_b2)) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+  if((_len)) \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
 #endif /* OPTION_OPTINST */
 
 /* RX_BC register and indexed storage - optimized for BC */
@@ -2163,6 +2193,24 @@ do { \
             (_i2) = (temp >> 16) & 0xff; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
+
+#ifdef OPTION_OPTINST
+#undef SISB
+#define SISB(_inst, _regs, _b1, _effective_addr1) \
+        SISB_DECODER(_inst, _regs, _b1, _effective_addr1, 4, 4)
+#define SISB_DECODER(_inst, _regs, _b1, _effective_addr1, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_b1) = (temp >> 12) & 0xf; \
+  (_effective_addr1) = temp & 0xfff; \
+  if((_b1)) \
+  { \
+    (_effective_addr1) += (_regs)->GR((_b1)); \
+    (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+  } \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+#endif /* #ifdef OPTION_OPTINST */
 
 /* SIY storage and immediate with long displacement */
 #undef SIY
@@ -3414,6 +3462,56 @@ DEF_INST(multiply_halfword);
 DEF_INST(store);
 DEF_INST(store_character);
 #ifdef OPTION_OPTINST
+#define LRdefgen(r1, r2) DEF_INST(18 ## r1 ## r2)
+#define LRdefgenr2(r1) \
+  LRdefgen(r1, 0); \
+  LRdefgen(r1, 1); \
+  LRdefgen(r1, 2); \
+  LRdefgen(r1, 3); \
+  LRdefgen(r1, 4); \
+  LRdefgen(r1, 5); \
+  LRdefgen(r1, 6); \
+  LRdefgen(r1, 7); \
+  LRdefgen(r1, 8); \
+  LRdefgen(r1, 9); \
+  LRdefgen(r1, A); \
+  LRdefgen(r1, B); \
+  LRdefgen(r1, C); \
+  LRdefgen(r1, D); \
+  LRdefgen(r1, E); \
+  LRdefgen(r1, F) 
+LRdefgenr2(0);
+LRdefgenr2(1);
+LRdefgenr2(2);
+LRdefgenr2(3);
+LRdefgenr2(4);
+LRdefgenr2(5);
+LRdefgenr2(6);
+LRdefgenr2(7);
+LRdefgenr2(8);
+LRdefgenr2(9);
+LRdefgenr2(A);
+LRdefgenr2(B);
+LRdefgenr2(C);
+LRdefgenr2(D);
+LRdefgenr2(E);
+LRdefgenr2(F);
+DEF_INST(4100);
+DEF_INST(4110);
+DEF_INST(4120);
+DEF_INST(4130);
+DEF_INST(4140);
+DEF_INST(4150);
+DEF_INST(4160);
+DEF_INST(4170);
+DEF_INST(4180);
+DEF_INST(4190);
+DEF_INST(41A0);
+DEF_INST(41B0);
+DEF_INST(41C0);
+DEF_INST(41D0);
+DEF_INST(41E0);
+DEF_INST(41F0);
 DEF_INST(nop4);
 DEF_INST(4710);
 DEF_INST(4720);
@@ -3428,8 +3526,54 @@ DEF_INST(47C0);
 DEF_INST(47D0);
 DEF_INST(47E0);
 DEF_INST(47F0);
-DEF_INST(50_0);
-DEF_INST(58_0);
+DEF_INST(5000);
+DEF_INST(5010);
+DEF_INST(5020);
+DEF_INST(5030);
+DEF_INST(5040);
+DEF_INST(5050);
+DEF_INST(5060);
+DEF_INST(5070);
+DEF_INST(5080);
+DEF_INST(5090);
+DEF_INST(50A0);
+DEF_INST(50B0);
+DEF_INST(50C0);
+DEF_INST(50D0);
+DEF_INST(50E0);
+DEF_INST(50F0);
+DEF_INST(5500);
+DEF_INST(5510);
+DEF_INST(5520);
+DEF_INST(5530);
+DEF_INST(5540);
+DEF_INST(5550);
+DEF_INST(5560);
+DEF_INST(5570);
+DEF_INST(5580);
+DEF_INST(5590);
+DEF_INST(55A0);
+DEF_INST(55B0);
+DEF_INST(55C0);
+DEF_INST(55D0);
+DEF_INST(55E0);
+DEF_INST(55F0);
+DEF_INST(5800);
+DEF_INST(5810);
+DEF_INST(5820);
+DEF_INST(5830);
+DEF_INST(5840);
+DEF_INST(5850);
+DEF_INST(5860);
+DEF_INST(5870);
+DEF_INST(5880);
+DEF_INST(5890);
+DEF_INST(58A0);
+DEF_INST(58B0);
+DEF_INST(58C0);
+DEF_INST(58D0);
+DEF_INST(58E0);
+DEF_INST(58F0);
 DEF_INST(A714);
 DEF_INST(A724);
 DEF_INST(A734);
@@ -3509,7 +3653,14 @@ DEF_INST(translate_extended);
 DEF_INST(unpack);
 DEF_INST(update_tree);
 #ifdef OPTION_OPTINST
-DEF_INST(91sb);
+DEF_INST(9180);
+DEF_INST(9140);
+DEF_INST(9120);
+DEF_INST(9110);
+DEF_INST(9108);
+DEF_INST(9104);
+DEF_INST(9102);
+DEF_INST(9101);
 #endif /* OPTION_OPTINST */
 
 

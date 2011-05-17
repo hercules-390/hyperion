@@ -1420,23 +1420,26 @@ BYTE    tbyte;                          /* Work byte                 */
 }
 
 #ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 91sb TM    - Test under Mask with single bit test            [SI] */
-/*-------------------------------------------------------------------*/
-DEF_INST(91sb)
-{
-BYTE    i2;                             /* Immediate operand         */
-int     b1;                             /* Base of effective addr    */
-VADR    effective_addr1;                /* Effective address         */
+#define TMgen(i2) \
+  DEF_INST(91 ## i2) \
+  { \
+    int b1; \
+    VADR effective_addr1; \
+    SISB(inst, regs, b1, effective_addr1); \
+    if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & 0x ## i2) \
+      regs->psw.cc = 3; \
+    else \
+      regs->psw.cc = 0; \
+  }
 
-     SI(inst, regs, i2, b1, effective_addr1);
-
-     /* Fetch and test byte from operand address */
-     if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & i2)
-       regs->psw.cc = 3;
-     else 
-       regs->psw.cc = 0;
-}
+TMgen(80)
+TMgen(40)
+TMgen(20)
+TMgen(10)
+TMgen(08)
+TMgen(04)
+TMgen(02)
+TMgen(01)	
 #endif /* OPTION_OPTINST */
 
 

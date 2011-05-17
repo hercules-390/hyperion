@@ -939,7 +939,6 @@ VADR    effective_addr2;                /* Effective address         */
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
 } /* end DEF_INST(branch_on_condition) */
-
 #endif /* OPTION_OPTINST */
 
 
@@ -980,22 +979,33 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load) */
 
 #ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 58_0 L     - Load with zero x2                               [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(58_0)
-{
-int     r1;                             /* Value of R field          */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+#define Lgen(r1) \
+  DEF_INST(58 ## r1 ## 0) \
+  { \
+    int b2; \
+    VADR effective_addr2; \
+    RXX0RX(inst, regs, b2, effective_addr2); \
+    regs->GR_L(0x ## r1) = ARCH_DEP(vfetch4)(effective_addr2, b2, regs); \
+  }
 
-    RXX0(inst, regs, r1, b2, effective_addr2);
-
-    /* Load R1 register from second operand */
-    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-
-} /* end DEF_INST(load) */
+Lgen(0)
+Lgen(1)
+Lgen(2)
+Lgen(3)
+Lgen(4)
+Lgen(5)
+Lgen(6)
+Lgen(7)
+Lgen(8)
+Lgen(9)
+Lgen(A)
+Lgen(B)
+Lgen(C)
+Lgen(D)
+Lgen(E)
+Lgen(F)
 #endif /* OPTION_OPTINST */
+
 
 /*-------------------------------------------------------------------*/
 /* 50   ST    - Store                                           [RX] */
@@ -1014,22 +1024,33 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store) */
 
 #ifdef OPTION_OPTINST
-/*-------------------------------------------------------------------*/
-/* 50_0 ST    - Store with zero x2                              [RX] */
-/*-------------------------------------------------------------------*/
-DEF_INST(50_0)
-{
-int     r1;                             /* Values of R fields        */
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+#define STgen(r1) \
+  DEF_INST(50 ## r1 ## 0) \
+  { \
+      int b2; \
+      VADR effective_addr2; \
+      RXX0RX(inst, regs, b2, effective_addr2); \
+      ARCH_DEP(vstore4)(regs->GR_L(0x ## r1), effective_addr2, b2, regs); \
+  }
 
-    RXX0(inst, regs, r1, b2, effective_addr2);
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
-
-} /* end DEF_INST(store) */
+STgen(0)
+STgen(1) 
+STgen(2)
+STgen(3)
+STgen(4)
+STgen(5)
+STgen(6)
+STgen(7)
+STgen(8)
+STgen(9)
+STgen(A)
+STgen(B)
+STgen(C)
+STgen(D)
+STgen(E)
+STgen(F)
 #endif /* OPTION_OPTINST */
+
 
 /*-------------------------------------------------------------------*/
 /* 41   LA    - Load Address                                    [RX] */
@@ -1045,6 +1066,34 @@ VADR    effective_addr2;                /* Effective address         */
     /* Load operand address into register */
     SET_GR_A(r1, regs, effective_addr2);
 }
+
+#ifdef OPTION_OPTINST
+#define LAgen(r1) \
+  DEF_INST(41 ## r1 ## 0) \
+  { \
+    int b2; \
+    VADR effective_addr2; \
+    RX0X0RX(inst, regs, b2, effective_addr2); \
+    SET_GR_A(0x ## r1, regs, effective_addr2); \
+  }
+
+LAgen(0)
+LAgen(1)
+LAgen(2)
+LAgen(3)
+LAgen(4)
+LAgen(5)
+LAgen(6)
+LAgen(7)
+LAgen(8)
+LAgen(9)
+LAgen(A)
+LAgen(B)
+LAgen(C)
+LAgen(D)
+LAgen(E)
+LAgen(F)
+#endif /* #ifdef OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/
@@ -1105,6 +1154,36 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = regs->GR_L(r1) < n ? 1 :
                    regs->GR_L(r1) > n ? 2 : 0;
 }
+
+#ifdef OPTION_OPTINST
+#define CLgen(r1) \
+  DEF_INST(55 ## r1 ## 0) \
+  { \
+      int b2; \
+      VADR effective_addr2; \
+      U32 n; \
+      RXX0RX(inst, regs, b2, effective_addr2); \
+      n = ARCH_DEP(vfetch4)(effective_addr2, b2, regs); \
+      regs->psw.cc = regs->GR_L(0x ## r1) < n ? 1 : regs->GR_L(0x ## r1) > n ? 2 : 0; \
+   }
+
+CLgen(0)
+CLgen(1)
+CLgen(2)
+CLgen(3)
+CLgen(4)
+CLgen(5)
+CLgen(6)
+CLgen(7)
+CLgen(8)
+CLgen(9)
+CLgen(A)
+CLgen(B)
+CLgen(C)
+CLgen(D)
+CLgen(E)
+CLgen(F)
+#endif /* #ifdef OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/
@@ -1279,8 +1358,6 @@ U16   i2;                               /* 16-bit operand values     */
 
 } /* end DEF_INST(branch_relative_on_condition) */
 
-#endif /* OPTION_OPTINST */
-
 /*-------------------------------------------------------------------*/
 /* A7A4 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
@@ -1382,7 +1459,7 @@ U16   i2;                               /* 16-bit operand values     */
     SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
 
 } /* end DEF_INST(branch_relative_on_condition) */
-
+#endif /* #ifdef OPTION_OPTINST */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 
@@ -3975,6 +4052,50 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy second operand to first operand */
     regs->GR_L(r1) = regs->GR_L(r2);
 }
+
+#ifdef OPTION_OPTINST
+#define LRgen(r1, r2) \
+  DEF_INST(18 ## r1 ## r2) \
+  { \
+    UNREFERENCED(inst); \
+    INST_UPDATE_PSW(regs, 2, 0); \
+    regs->GR_L(0x ## r1) = regs->GR_L(0x ## r2); \
+  }
+#define LRgenr2(r1) \
+  LRgen(r1, 0) \
+  LRgen(r1, 1) \
+  LRgen(r1, 2) \
+  LRgen(r1, 3) \
+  LRgen(r1, 4) \
+  LRgen(r1, 5) \
+  LRgen(r1, 6) \
+  LRgen(r1, 7) \
+  LRgen(r1, 8) \
+  LRgen(r1, 9) \
+  LRgen(r1, A) \
+  LRgen(r1, B) \
+  LRgen(r1, C) \
+  LRgen(r1, D) \
+  LRgen(r1, E) \
+  LRgen(r1, F)
+
+LRgenr2(0)
+LRgenr2(1)
+LRgenr2(2)
+LRgenr2(3)
+LRgenr2(4)
+LRgenr2(5)
+LRgenr2(6)
+LRgenr2(7)
+LRgenr2(8)
+LRgenr2(9)
+LRgenr2(A)
+LRgenr2(B)
+LRgenr2(C)
+LRgenr2(D)
+LRgenr2(E)
+LRgenr2(F)
+#endif /* #ifdef OPTION_OPTINST */
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
