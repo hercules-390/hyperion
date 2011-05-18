@@ -171,6 +171,50 @@ int     r1, r2;                         /* Values of R fields        */
                     regs->GR_L(r2));
 }
 
+#ifdef OPTION_OPTINST
+#define ALRgen(r1, r2) \
+  DEF_INST(1E ## r1 ## r2) \
+  { \
+    UNREFERENCED(inst); \
+    INST_UPDATE_PSW(regs, 2, 0); \
+    regs->psw.cc = add_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
+  }
+#define ALRgenr2(r1) \
+  ALRgen(r1, 0) \
+  ALRgen(r1, 1) \
+  ALRgen(r1, 2) \
+  ALRgen(r1, 3) \
+  ALRgen(r1, 4) \
+  ALRgen(r1, 5) \
+  ALRgen(r1, 6) \
+  ALRgen(r1, 7) \
+  ALRgen(r1, 8) \
+  ALRgen(r1, 9) \
+  ALRgen(r1, A) \
+  ALRgen(r1, B) \
+  ALRgen(r1, C) \
+  ALRgen(r1, D) \
+  ALRgen(r1, E) \
+  ALRgen(r1, F) 
+
+ALRgenr2(0)
+ALRgenr2(1)
+ALRgenr2(2)
+ALRgenr2(3)
+ALRgenr2(4)
+ALRgenr2(5)
+ALRgenr2(6)
+ALRgenr2(7)
+ALRgenr2(8)
+ALRgenr2(9)
+ALRgenr2(A)
+ALRgenr2(B)
+ALRgenr2(C)
+ALRgenr2(D)
+ALRgenr2(E)
+ALRgenr2(F)
+#endif /* #ifdef OPTION_OPTINST */
+
 
 /*-------------------------------------------------------------------*/
 /* 14   NR    - And Register                                    [RR] */
@@ -4023,6 +4067,78 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 }
+
+#ifdef OPTION_OPTINST
+DEF_INST(BF_7)
+{
+int    r1;                              /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+BYTE   vbyte[4];                        /* Fetched storage bytes     */
+U32    n;                               /* Fetched value             */
+
+    RSMX(inst, regs, r1, b2, effective_addr2);
+
+    /* Optimized case */
+    vbyte[0] = 0;
+    ARCH_DEP(vfetchc) (vbyte + 1, 2, effective_addr2, b2, regs);
+    n = fetch_fw (vbyte);
+    regs->GR_L(r1) = (regs->GR_L(r1) & 0xFF000000) | n;
+    regs->psw.cc = n ? n & 0x00800000 ? 1 : 2 : 0;
+}
+
+DEF_INST(BF_F)
+{
+int    r1;                              /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+
+    RSMX(inst, regs, r1, b2, effective_addr2);
+
+    /* Optimized case */
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+    regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 1 : 2 : 0;
+}
+
+DEF_INST(BF_x)
+{
+int    r1, r3;                          /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+int    i;                               /* Integer work area         */
+BYTE   vbyte[4];                        /* Fetched storage bytes     */
+U32    n;                               /* Fetched value             */
+static const int                        /* Length-1 to fetch by mask */
+       icmlen[16] = {0, 0, 0, 1, 0, 1, 1, 2, 0, 1, 1, 2, 1, 2, 2, 3};
+static const unsigned int               /* Turn reg bytes off by mask*/
+       icmmask[16] = {0xFFFFFFFF, 0xFFFFFF00, 0xFFFF00FF, 0xFFFF0000,
+                      0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
+                      0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
+                      0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
+
+    RS(inst, regs, r1, r3, b2, effective_addr2);
+
+    memset (vbyte, 0, 4);
+    ARCH_DEP(vfetchc)(vbyte, icmlen[r3], effective_addr2, b2, regs);
+
+    /* If mask was 0 then we still had to fetch, according to POP.
+       If so, set the fetched byte to 0 to force zero cc */
+    if (!r3) vbyte[0] = 0;
+
+    n = fetch_fw (vbyte);
+    regs->psw.cc = n ? n & 0x80000000 ? 1 : 2 : 0;
+
+    /* Turn off the reg bytes we are going to set */
+    regs->GR_L(r1) &= icmmask[r3];
+
+    /* Set bytes one at a time according to the mask */
+    i = 0;
+    if (r3 & 0x8) regs->GR_L(r1) |= vbyte[i++] << 24;
+    if (r3 & 0x4) regs->GR_L(r1) |= vbyte[i++] << 16;
+    if (r3 & 0x2) regs->GR_L(r1) |= vbyte[i++] << 8;
+    if (r3 & 0x1) regs->GR_L(r1) |= vbyte[i];
+}
+#endif /* #ifdef OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/

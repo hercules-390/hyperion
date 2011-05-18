@@ -1662,6 +1662,26 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
+#ifdef OPTION_OPTINST
+#define RSMX(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RSMX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+#define RSMX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_r1) = (temp >> 20) & 0xf; \
+  (_b2) = (temp >> 12) & 0xf; \
+  (_effective_addr2) = temp & 0xfff; \
+  if((_b2)) \
+  { \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+    if((_len)) \
+      (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  } \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+#endif /* #ifdef OPTION_OPTINST */
+
+
 #if 0
 /* RSE register and storage with extended op code and additional
    R3 or M3 field (note, this is NOT the ESA/390 vector RSE format) */
@@ -3496,6 +3516,40 @@ LRdefgenr2(C);
 LRdefgenr2(D);
 LRdefgenr2(E);
 LRdefgenr2(F);
+#define ALRdefgen(r1, r2) DEF_INST(1E ## r1 ## r2)
+#define ALRdefgenr2(r1) \
+  ALRdefgen(r1, 0); \
+  ALRdefgen(r1, 1); \
+  ALRdefgen(r1, 2); \
+  ALRdefgen(r1, 3); \
+  ALRdefgen(r1, 4); \
+  ALRdefgen(r1, 5); \
+  ALRdefgen(r1, 6); \
+  ALRdefgen(r1, 7); \
+  ALRdefgen(r1, 8); \
+  ALRdefgen(r1, 9); \
+  ALRdefgen(r1, A); \
+  ALRdefgen(r1, B); \
+  ALRdefgen(r1, C); \
+  ALRdefgen(r1, D); \
+  ALRdefgen(r1, E); \
+  ALRdefgen(r1, F) 
+ALRdefgenr2(0);
+ALRdefgenr2(1);
+ALRdefgenr2(2);
+ALRdefgenr2(3);
+ALRdefgenr2(4);
+ALRdefgenr2(5);
+ALRdefgenr2(6);
+ALRdefgenr2(7);
+ALRdefgenr2(8);
+ALRdefgenr2(9);
+ALRdefgenr2(A);
+ALRdefgenr2(B);
+ALRdefgenr2(C);
+ALRdefgenr2(D);
+ALRdefgenr2(E);
+ALRdefgenr2(F);
 DEF_INST(4100);
 DEF_INST(4110);
 DEF_INST(4120);
@@ -3587,6 +3641,9 @@ DEF_INST(A7C4);
 DEF_INST(A7D4);
 DEF_INST(A7E4);
 DEF_INST(A7F4);
+DEF_INST(BF_7);
+DEF_INST(BF_F);
+DEF_INST(BF_x);
 #endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
