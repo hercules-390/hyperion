@@ -1232,8 +1232,10 @@ static zz_func v_opcode_a6xx[0x100][GEN_MAXARCH];
 static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH];
 
 #ifdef OPTION_OPTINST
+static zz_func opcode_15__[0x100][GEN_MAXARCH];
 static zz_func opcode_18__[0x100][GEN_MAXARCH];
 static zz_func opcode_1E__[0x100][GEN_MAXARCH];
+static zz_func opcode_1F__[0x100][GEN_MAXARCH];
 static zz_func opcode_41_0[0x10][GEN_MAXARCH];
 static zz_func opcode_47_0[0x10][GEN_MAXARCH];
 static zz_func opcode_50_0[0x10][GEN_MAXARCH];
@@ -2359,9 +2361,11 @@ void init_opcode_tables(void)
 #ifdef OPTION_OPTINST
     for(i = 0; i < 0x100; i++)
     {
+      replace_opcode_xxxx(arch, opcode_15__[i][arch], 0x15, i); /* Optimized CLR */
       replace_opcode_xxxx(arch, opcode_18__[i][arch], 0x18, i); /* Optimized LR */
-      replace_opcode_xxxx(arch, opcode_1E__[i][arch], 0x1E, i); /* Optimized ALR */
-      replace_opcode_xxxx(arch, opcode_BF_x[0][arch], 0xBF, i); /* Optimized ICM */
+      replace_opcode_xxxx(arch, opcode_1E__[i][arch], 0x1e, i); /* Optimized ALR */
+      replace_opcode_xxxx(arch, opcode_1F__[i][arch], 0x1f, i); /* Optimized SLR */
+      replace_opcode_xxxx(arch, opcode_BF_x[0][arch], 0xbf, i); /* Optimized ICM */
     }	
     for(i = 0; i < 0x10; i++)
     {
@@ -2371,8 +2375,8 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
       replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
       replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xa7, (i << 4) + 0x4); /* Optimized BRC */
-      replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xBF, (i << 4) + 0x7); /* Optimized ICM */
-      replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xBF, (i << 4) + 0xf); /* Optimized ICM */
+      replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
+      replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
     }
     bit = 0x80;
@@ -2386,10 +2390,10 @@ void init_opcode_tables(void)
       switch(i)
       {
         case 0x04:
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch];
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch]; /* Optimized LG */
           break;
         case 0x24:
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch];
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch]; /* Optimized STG */
           break;
         default:
           runtime_opcode_e3_0______xx[arch][i] = opcode_e3xx[i][arch];
@@ -6495,6 +6499,43 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
  /*E4FF*/ GENx___x___x___  };
 
 #ifdef OPTION_OPTINST
+#define CLRgen(r1, r2) GENx370x390x900 (15 ## r1 ## r2,RR,"LR")
+#define CLRgenr2(r1) \
+  CLRgen(r1, 0), \
+  CLRgen(r1, 1), \
+  CLRgen(r1, 2), \
+  CLRgen(r1, 3), \
+  CLRgen(r1, 4), \
+  CLRgen(r1, 5), \
+  CLRgen(r1, 6), \
+  CLRgen(r1, 7), \
+  CLRgen(r1, 8), \
+  CLRgen(r1, 9), \
+  CLRgen(r1, A), \
+  CLRgen(r1, B), \
+  CLRgen(r1, C), \
+  CLRgen(r1, D), \
+  CLRgen(r1, E), \
+  CLRgen(r1, F) 
+
+static zz_func opcode_15__[0x100][GEN_MAXARCH] = {
+  CLRgenr2(0),
+  CLRgenr2(1),
+  CLRgenr2(2),
+  CLRgenr2(3),
+  CLRgenr2(4),
+  CLRgenr2(5),
+  CLRgenr2(6),
+  CLRgenr2(7),
+  CLRgenr2(8),
+  CLRgenr2(9),
+  CLRgenr2(A),
+  CLRgenr2(B),
+  CLRgenr2(C),
+  CLRgenr2(D),
+  CLRgenr2(E),
+  CLRgenr2(F) };
+
 #define LRgen(r1, r2) GENx370x390x900 (18 ## r1 ## r2,RR,"LR")
 #define LRgenr2(r1) \
   LRgen(r1, 0), \
@@ -6515,22 +6556,22 @@ static zz_func v_opcode_e4xx[0x100][GEN_MAXARCH] = {
   LRgen(r1, F) 
 
 static zz_func opcode_18__[0x100][GEN_MAXARCH] = {
-LRgenr2(0),
-LRgenr2(1),
-LRgenr2(2),
-LRgenr2(3),
-LRgenr2(4),
-LRgenr2(5),
-LRgenr2(6),
-LRgenr2(7),
-LRgenr2(8),
-LRgenr2(9),
-LRgenr2(A),
-LRgenr2(B),
-LRgenr2(C),
-LRgenr2(D),
-LRgenr2(E),
-LRgenr2(F) };
+  LRgenr2(0),
+  LRgenr2(1),
+  LRgenr2(2),
+  LRgenr2(3),
+  LRgenr2(4),
+  LRgenr2(5),
+  LRgenr2(6),
+  LRgenr2(7),
+  LRgenr2(8),
+  LRgenr2(9),
+  LRgenr2(A),
+  LRgenr2(B),
+  LRgenr2(C),
+  LRgenr2(D),
+  LRgenr2(E),
+  LRgenr2(F) };
 
 #define ALRgen(r1, r2) GENx370x390x900 (1E ## r1 ## r2,RR,"ALR")
 #define ALRgenr2(r1) \
@@ -6552,22 +6593,59 @@ LRgenr2(F) };
    ALRgen(r1, F) 
 
 static zz_func opcode_1E__[0x100][GEN_MAXARCH] = {
-ALRgenr2(0),
-ALRgenr2(1),
-ALRgenr2(2),
-ALRgenr2(3),
-ALRgenr2(4),
-ALRgenr2(5),
-ALRgenr2(6),
-ALRgenr2(7),
-ALRgenr2(8),
-ALRgenr2(9),
-ALRgenr2(A),
-ALRgenr2(B),
-ALRgenr2(C),
-ALRgenr2(D),
-ALRgenr2(E),
-ALRgenr2(F) };
+  ALRgenr2(0),
+  ALRgenr2(1),
+  ALRgenr2(2),
+  ALRgenr2(3),
+  ALRgenr2(4),
+  ALRgenr2(5),
+  ALRgenr2(6),
+  ALRgenr2(7),
+  ALRgenr2(8),
+  ALRgenr2(9),
+  ALRgenr2(A),
+  ALRgenr2(B),
+  ALRgenr2(C),
+  ALRgenr2(D),
+  ALRgenr2(E),
+  ALRgenr2(F) };
+
+#define SLRgen(r1, r2) GENx370x390x900 (1F ## r1 ## r2,RR,"SLR")
+#define SLRgenr2(r1) \
+   SLRgen(r1, 0), \
+   SLRgen(r1, 1), \
+   SLRgen(r1, 2), \
+   SLRgen(r1, 3), \
+   SLRgen(r1, 4), \
+   SLRgen(r1, 5), \
+   SLRgen(r1, 6), \
+   SLRgen(r1, 7), \
+   SLRgen(r1, 8), \
+   SLRgen(r1, 9), \
+   SLRgen(r1, A), \
+   SLRgen(r1, B), \
+   SLRgen(r1, C), \
+   SLRgen(r1, D), \
+   SLRgen(r1, E), \
+   SLRgen(r1, F) 
+
+static zz_func opcode_1F__[0x100][GEN_MAXARCH] = {
+  SLRgenr2(0),
+  SLRgenr2(1),
+  SLRgenr2(2),
+  SLRgenr2(3),
+  SLRgenr2(4),
+  SLRgenr2(5),
+  SLRgenr2(6),
+  SLRgenr2(7),
+  SLRgenr2(8),
+  SLRgenr2(9),
+  SLRgenr2(A),
+  SLRgenr2(B),
+  SLRgenr2(C),
+  SLRgenr2(D),
+  SLRgenr2(E),
+  SLRgenr2(F) };
 
 static zz_func opcode_41_0[0x10][GEN_MAXARCH] = {
  /*4100*/ GENx370x390x900 (4100,RX,"LA"),
@@ -6594,10 +6672,10 @@ static zz_func opcode_47_0[0x10][GEN_MAXARCH] = {
  /*4734*/ GENx370x390x900 (4730,RX,"BC"),
  /*4740*/ GENx370x390x900 (4740,RX,"BC"),
  /*4750*/ GENx370x390x900 (4750,RX,"BC"),
- /*4760*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4760*/ GENx370x390x900 (47_0,RX,"BC"),
  /*4770*/ GENx370x390x900 (4770,RX,"BC"),
  /*4780*/ GENx370x390x900 (4780,RX,"BC"),
- /*4790*/ GENx370x390x900 (branch_on_condition,RX,"BC"),
+ /*4790*/ GENx370x390x900 (47_0,RX,"BC"),
  /*47A0*/ GENx370x390x900 (47A0,RX,"BC"),
  /*47B0*/ GENx370x390x900 (47B0,RX,"BC"),
  /*47C0*/ GENx370x390x900 (47C0,RX,"BC"),

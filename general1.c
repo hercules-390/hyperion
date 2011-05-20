@@ -724,7 +724,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
+#ifdef OPTION_OPTINST
+        RXXx_BC(inst, regs, b2, effective_addr2);
+#else	    
         RX_BC(inst, regs, b2, effective_addr2);
+#endif /* #ifdef OPTION_OPTINST */
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
@@ -733,6 +737,25 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_on_condition) */
 
 #ifdef OPTION_OPTINST
+/*-------------------------------------------------------------------*/
+/* 47_0 BC    - Branch on Condition                             [RX] */
+/*-------------------------------------------------------------------*/
+DEF_INST(47_0)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Branch to operand address if r1 mask bit is set */
+    if ((0x80 >> regs->psw.cc) & inst[1])
+    {
+        RXX0_BC(inst, regs, b2, effective_addr2);
+        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    }
+    else
+        INST_UPDATE_PSW(regs, 4, 0);
+
+} /* end DEF_INST(branch_on_condition) */
+
 /*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                             [RX] */
 /*-------------------------------------------------------------------*/
@@ -1015,7 +1038,11 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#ifdef OPTION_OPTINST
+    RXXx(inst, regs, r1, b2, effective_addr2);
+#else
     RX(inst, regs, r1, b2, effective_addr2);
+#endif /* #ifdef OPTION_OPTINST */
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1060,7 +1087,11 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#ifdef OPTION_OPTINST
+    RXXx(inst, regs, r1, b2, effective_addr2);
+#else
     RX(inst, regs, r1, b2, effective_addr2);
+#endif /* #ifdef OPTION_OPTINST */
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
@@ -1105,7 +1136,11 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#ifdef OPTION_OPTINST
+    RX0Xx(inst, regs, r1, b2, effective_addr2);
+#else
     RX0(inst, regs, r1, b2, effective_addr2);
+#endif /* #ifdef OPTION_OPTINST */
 
     /* Load operand address into register */
     SET_GR_A(r1, regs, effective_addr2);
@@ -1189,7 +1224,11 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
+#ifdef OPTION_OPTINST
+    RXXx(inst, regs, r1, b2, effective_addr2);
+#else
     RX(inst, regs, r1, b2, effective_addr2);
+#endif /* #ifdef OPTION_OPTINST */
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2402,6 +2441,51 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
                    regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
 }
+
+#ifdef OPTION_OPTINST
+/* Optimized case (r1 equal r2) is optimized by compiler */
+#define CLRgen(r1, r2) \
+  DEF_INST(15 ## r1 ## r2) \
+  { \
+    UNREFERENCED(inst); \
+    INST_UPDATE_PSW(regs, 2, 0); \
+    regs->psw.cc = regs->GR_L(0x ## r1) < regs->GR_L(0x ## r2) ? 1 : regs->GR_L(0x ## r1) > regs->GR_L(0x ## r2) ? 2 : 0; \
+  }
+#define CLRgenr2(r1) \
+  CLRgen(r1, 0) \
+  CLRgen(r1, 1) \
+  CLRgen(r1, 2) \
+  CLRgen(r1, 3) \
+  CLRgen(r1, 4) \
+  CLRgen(r1, 5) \
+  CLRgen(r1, 6) \
+  CLRgen(r1, 7) \
+  CLRgen(r1, 8) \
+  CLRgen(r1, 9) \
+  CLRgen(r1, A) \
+  CLRgen(r1, B) \
+  CLRgen(r1, C) \
+  CLRgen(r1, D) \
+  CLRgen(r1, E) \
+  CLRgen(r1, F) 
+
+CLRgenr2(0)
+CLRgenr2(1)
+CLRgenr2(2)
+CLRgenr2(3)
+CLRgenr2(4)
+CLRgenr2(5)
+CLRgenr2(6)
+CLRgenr2(7)
+CLRgenr2(8)
+CLRgenr2(9)
+CLRgenr2(A)
+CLRgenr2(B)
+CLRgenr2(C)
+CLRgenr2(D)
+CLRgenr2(E)
+CLRgenr2(F)
+#endif /* #ifdef OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/

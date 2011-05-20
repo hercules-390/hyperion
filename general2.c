@@ -1250,6 +1250,51 @@ int     r1, r2;                         /* Values of R fields        */
                            regs->GR_L(r2));
 }
 
+#ifdef OPTION_OPTINST
+/* Optimized case (r1 equal r2) is optimized by compiler */
+#define SLRgen(r1, r2) \
+  DEF_INST(1F ## r1 ## r2) \
+  { \
+    UNREFERENCED(inst); \
+    INST_UPDATE_PSW(regs, 2, 0); \
+    regs->psw.cc = sub_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
+  }
+#define SLRgenr2(r1) \
+	  SLRgen(r1, 0) \
+  SLRgen(r1, 1) \
+  SLRgen(r1, 2) \
+  SLRgen(r1, 3) \
+  SLRgen(r1, 4) \
+  SLRgen(r1, 5) \
+  SLRgen(r1, 6) \
+  SLRgen(r1, 7) \
+  SLRgen(r1, 8) \
+  SLRgen(r1, 9) \
+  SLRgen(r1, A) \
+  SLRgen(r1, B) \
+  SLRgen(r1, C) \
+  SLRgen(r1, D) \
+  SLRgen(r1, E) \
+  SLRgen(r1, F) 
+
+SLRgenr2(0)
+SLRgenr2(1)
+SLRgenr2(2)
+SLRgenr2(3)
+SLRgenr2(4)
+SLRgenr2(5)
+SLRgenr2(6)
+SLRgenr2(7)
+SLRgenr2(8)
+SLRgenr2(9)
+SLRgenr2(A)
+SLRgenr2(B)
+SLRgenr2(C)
+SLRgenr2(D)
+SLRgenr2(E)
+SLRgenr2(F)
+#endif /* #ifdef OPTION_OPTINST */
+
 
 /*-------------------------------------------------------------------*/
 /* 5F   SL    - Subtract Logical                                [RX] */
@@ -1425,7 +1470,7 @@ BYTE    tbyte;                          /* Work byte                 */
   { \
     int b1; \
     VADR effective_addr1; \
-    SISB(inst, regs, b1, effective_addr1); \
+    SIIX(inst, regs, b1, effective_addr1); \
     if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & 0x ## i2) \
       regs->psw.cc = 3; \
     else \

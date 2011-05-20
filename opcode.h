@@ -1297,6 +1297,7 @@ do { \
   INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
 }
 
+/* Optimized RX decoder in case of zero X2 */
 #undef  RXX0_BC
 #define RXX0_BC(_inst, _regs, _b2, _effective_addr2) \
         RXX0_BC_DECODER(_inst, _regs, _b2, _effective_addr2)
@@ -1309,9 +1310,13 @@ do { \
     (_effective_addr2) += (_regs)->GR((_b2)); \
 }
 
+/* Optimized RX decoder in case of zero X2 without r1 calculation */
 #undef  RXX0RX
+#undef  RX0X0RX
 #define RXX0RX(_inst, _regs, _b2, _effective_addr2) \
         RXX0RX_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
+#define RX0X0RX(_inst, _regs, _b2, _effective_addr2) \
+        RXX0RX_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 0)
 #define RXX0RX_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
 { \
   U32 temp = fetch_fw(_inst); \
@@ -1324,19 +1329,39 @@ do { \
   INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
 }
 
-#undef  RX0X0RX
-#define RX0X0RX(_inst, _regs, _b2, _effective_addr2) \
-        RX0X0RX_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 0)
-#define RX0X0RX_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+/* Optimized RX decoder in case of non-zero X2 */
+#undef RXXx
+#undef RX0Xx
+#define RXXx(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RXXx_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
+#define RX0Xx(_inst, _regs, _r1, _b2, _effective_addr2) \
+        RXXx_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 0)
+#define RXXx_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
 { \
   U32 temp = fetch_fw(_inst); \
-  (_effective_addr2) = temp & 0xfff; \
+  (_r1) = (temp >> 20) & 0xf; \
+  (_b2) = (temp >> 16) & 0xf; \
+  (_effective_addr2) = (temp & 0xfff) + (_regs)->GR((_b2)); \
   (_b2) = (temp >> 12) & 0xf; \
   if(likely(_b2)) \
     (_effective_addr2) += (_regs)->GR((_b2)); \
   if((_len)) \
     (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
   INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+
+/* Optimized RX decoder in case of non-zero X2 */
+#undef  RXXx_BC
+#define RXXx_BC(_inst, _regs, _b2, _effective_addr2) \
+        RXXx_BC_DECODER(_inst, _regs, _b2, _effective_addr2, 0, 0)
+#define RXXx_BC_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_b2) = (temp >> 16) & 0xf; \
+  (_effective_addr2) = (temp & 0xfff) + (_regs)->GR((_b2)); \
+  (_b2) = (temp >> 12) & 0xf; \
+  if(likely((_b2))) \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
 }
 #endif /* OPTION_OPTINST */
 
@@ -1565,6 +1590,7 @@ do { \
     }
 
 #ifdef OPTION_OPTINST
+/* Optimized RXY decoder in case of zero X2 */
 #undef RXYX0
 #ifdef FEATURE_LONG_DISPLACEMENT
   #define RXYX0(_inst, _regs, _r1, _b2, _effective_addr2) \
@@ -1663,6 +1689,7 @@ do { \
     }
 
 #ifdef OPTION_OPTINST
+/* Optimized RS decoder without M3 calculation */
 #define RSMX(_inst, _regs, _r1, _b2, _effective_addr2) \
         RSMX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 4, 4)
 #define RSMX_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
@@ -2215,10 +2242,11 @@ do { \
     }
 
 #ifdef OPTION_OPTINST
-#undef SISB
-#define SISB(_inst, _regs, _b1, _effective_addr1) \
-        SISB_DECODER(_inst, _regs, _b1, _effective_addr1, 4, 4)
-#define SISB_DECODER(_inst, _regs, _b1, _effective_addr1, _len, _ilc) \
+/* Optimized SI decoder without i2 calculation */
+#undef SIIX
+#define SIIX(_inst, _regs, _b1, _effective_addr1) \
+        SIIX_DECODER(_inst, _regs, _b1, _effective_addr1, 4, 4)
+#define SIIX_DECODER(_inst, _regs, _b1, _effective_addr1, _len, _ilc) \
 { \
   U32 temp = fetch_fw(_inst); \
   (_b1) = (temp >> 12) & 0xf; \
@@ -3550,6 +3578,40 @@ ALRdefgenr2(C);
 ALRdefgenr2(D);
 ALRdefgenr2(E);
 ALRdefgenr2(F);
+#define CLRdefgen(r1, r2) DEF_INST(15 ## r1 ## r2)
+#define CLRdefgenr2(r1) \
+  CLRdefgen(r1, 0); \
+  CLRdefgen(r1, 1); \
+  CLRdefgen(r1, 2); \
+  CLRdefgen(r1, 3); \
+  CLRdefgen(r1, 4); \
+  CLRdefgen(r1, 5); \
+  CLRdefgen(r1, 6); \
+  CLRdefgen(r1, 7); \
+  CLRdefgen(r1, 8); \
+  CLRdefgen(r1, 9); \
+  CLRdefgen(r1, A); \
+  CLRdefgen(r1, B); \
+  CLRdefgen(r1, C); \
+  CLRdefgen(r1, D); \
+  CLRdefgen(r1, E); \
+  CLRdefgen(r1, F) 
+CLRdefgenr2(0);
+CLRdefgenr2(1);
+CLRdefgenr2(2);
+CLRdefgenr2(3);
+CLRdefgenr2(4);
+CLRdefgenr2(5);
+CLRdefgenr2(6);
+CLRdefgenr2(7);
+CLRdefgenr2(8);
+CLRdefgenr2(9);
+CLRdefgenr2(A);
+CLRdefgenr2(B);
+CLRdefgenr2(C);
+CLRdefgenr2(D);
+CLRdefgenr2(E);
+CLRdefgenr2(F);
 DEF_INST(4100);
 DEF_INST(4110);
 DEF_INST(4120);
@@ -3566,6 +3628,7 @@ DEF_INST(41C0);
 DEF_INST(41D0);
 DEF_INST(41E0);
 DEF_INST(41F0);
+DEF_INST(47_0);
 DEF_INST(nop4);
 DEF_INST(4710);
 DEF_INST(4720);
@@ -3718,6 +3781,40 @@ DEF_INST(9108);
 DEF_INST(9104);
 DEF_INST(9102);
 DEF_INST(9101);
+#define SLRdefgen(r1, r2) DEF_INST(1F ## r1 ## r2)
+#define SLRdefgenr2(r1) \
+  SLRdefgen(r1, 0); \
+  SLRdefgen(r1, 1); \
+  SLRdefgen(r1, 2); \
+  SLRdefgen(r1, 3); \
+  SLRdefgen(r1, 4); \
+  SLRdefgen(r1, 5); \
+  SLRdefgen(r1, 6); \
+  SLRdefgen(r1, 7); \
+  SLRdefgen(r1, 8); \
+  SLRdefgen(r1, 9); \
+  SLRdefgen(r1, A); \
+  SLRdefgen(r1, B); \
+  SLRdefgen(r1, C); \
+  SLRdefgen(r1, D); \
+  SLRdefgen(r1, E); \
+  SLRdefgen(r1, F) 
+SLRdefgenr2(0);
+SLRdefgenr2(1);
+SLRdefgenr2(2);
+SLRdefgenr2(3);
+SLRdefgenr2(4);
+SLRdefgenr2(5);
+SLRdefgenr2(6);
+SLRdefgenr2(7);
+SLRdefgenr2(8);
+SLRdefgenr2(9);
+SLRdefgenr2(A);
+SLRdefgenr2(B);
+SLRdefgenr2(C);
+SLRdefgenr2(D);
+SLRdefgenr2(E);
+SLRdefgenr2(F);
 #endif /* OPTION_OPTINST */
 
 
