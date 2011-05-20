@@ -2529,6 +2529,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
     m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
+#ifndef OPTION_OPTINST
     /* Quick out if comparing just 1 byte */
     if (unlikely(len == 0))
     {
@@ -2536,6 +2537,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
         regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
         return;
     }
+#endif /* #ifndef OPTION_OPTINST */
 
     /* There are several scenarios (in optimal order):
      * (1) dest boundary and source boundary not crossed
@@ -2680,6 +2682,30 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     }
     regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
 }
+
+#ifdef OPTION_OPTINST
+DEF_INST(D500)
+{
+unsigned int len;                       /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
+
+    SS_L(inst, regs, len, b1, ea1, b2, ea2);
+
+    ITIMER_SYNC(ea1,len,regs);
+    ITIMER_SYNC(ea2,len,regs);
+
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+    m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Quick out if comparing just 1 byte */
+    rc = *m1 - *m2;
+    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+}
+#endif /* #ifdef OPTION_OPTINST */
 
 
 /*-------------------------------------------------------------------*/

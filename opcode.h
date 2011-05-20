@@ -1706,6 +1706,23 @@ do { \
   } \
   INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
 }
+
+/* Optimized RS decoder without R1, R3 calculation */
+#define RSRR(_inst, _regs, _b2, _effective_addr2) \
+        RSRR_DECODER(_inst, _regs, _b2, _effective_addr2, 4, 4)
+#define RSRR_DECODER(_inst, _regs, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_b2) = (temp >> 12) & 0xf; \
+  (_effective_addr2) = temp & 0xfff; \
+  if((_b2)) \
+  { \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+    if((_len)) \
+      (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  } \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
 #endif /* #ifdef OPTION_OPTINST */
 
 
@@ -3707,6 +3724,7 @@ DEF_INST(A7F4);
 DEF_INST(BF_7);
 DEF_INST(BF_F);
 DEF_INST(BF_x);
+DEF_INST(D500);
 #endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
