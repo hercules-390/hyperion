@@ -105,7 +105,7 @@ APIRET APIENTRY hSubCmd( PRXSTRING command, PUSHORT flags, PRXSTRING retval )
 {
 SHORT rc;
 
-    rc = ProcessCmdLine(RXSTRPTR(*command));
+    rc = HercCmdLine(RXSTRPTR(*command));
 
     *flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
 

@@ -340,8 +340,8 @@ int stop_cmd_cpu (int argc, char *argv[], char *cmdline);
 HCEM_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 
 /* Functions in module cmdtab.c */
-CMDT_DLL_IMPORT int ProcessCommand (int argc, char **argv, char *cmdline);
-CMDT_DLL_IMPORT int ProcessCmdLine (char *cmdline);
+CMDT_DLL_IMPORT int HercCmdLine (char *cmdline);
+CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 
 /* Functions in module losc.c */
 #if defined(OPTION_LPP_RESTRICT)

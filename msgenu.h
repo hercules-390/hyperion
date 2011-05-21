@@ -1134,7 +1134,7 @@ do { \
 
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown herc command '%s', enter 'help' for a list of valid commands"
-#define HHC01602 "%-9.9s    %s"
+#define HHC01602 "%-9.9s   %c%s"
 #define HHC01603 "%s"
 #define HHC01604 "Unknown herc command '%s', no help available"
 #define HHC01605 "Invalid 'cmdlevel' option: '%s'"
@@ -1142,6 +1142,7 @@ do { \
 #define HHC01607 "No help available yet for message '%s'"
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
 #define HHC01609 "No help available for mask '%s'"
+#define HHC01610 " (*)  More help available."
 
 /* ecpsvm.c */
 // reserve 017xx for ecps:vm support

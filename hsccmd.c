@@ -26,7 +26,6 @@
  */
 
 /*
-
    Standard conventions are:
 
      argc             contains the number of elements in argv[]
@@ -42,7 +41,7 @@
 
      > 1 Failure:  one or more functions could not complete
 
-   int test_cmd(int argc, char *argv[],char *cmdline)
+   int test_cmd(int argc, char *argv[], char *cmdline)
    {
 
    .
@@ -52,9 +51,7 @@
 
    }
 
-
 */
-
 
 #include "hstdinc.h"
 
@@ -82,7 +79,7 @@
 #if defined(FEATURE_ECPSVM)
 extern void ecpsvm_command( int argc, char **argv );
 #endif
-int ProcessCmdLine ( char * );
+int HercCmdLine ( char *cmdline );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
@@ -4763,7 +4760,7 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* FishHangReport - verify/debug proper Hercules LOCK handling...    */
 /*-------------------------------------------------------------------*/
-int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
+int hang_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -7212,9 +7209,9 @@ int herc_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
   if (argc == 1)
-    ProcessCmdLine(" ");
+    HercCmdLine(" ");
   else
-    ProcessCmdLine(&cmdline[5]);
+    HercCmdLine(&cmdline[5]);
   return 0;
 }
 #endif // OPTION_CMDTGT

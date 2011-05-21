@@ -384,19 +384,19 @@ int errorcount = 0;
             exec_numcpu[1]    = addargv[5];
             exec_loadparm[1]  = addargv[6];
 
-            if(ProcessCommand (2, exec_cpuserial, NULL) < 0 )
+            if(CallHercCmd (2, exec_cpuserial, NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_cpumodel,  NULL) < 0 )
+            if(CallHercCmd (2, exec_cpumodel,  NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_mainsize,  NULL) < 0 )
+            if(CallHercCmd (2, exec_mainsize,  NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_xpndsize,  NULL) < 0 )
+            if(CallHercCmd (2, exec_xpndsize,  NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_cnslport,  NULL) < 0 )
+            if(CallHercCmd (2, exec_cnslport,  NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_numcpu,    NULL) < 0 )
+            if(CallHercCmd (2, exec_numcpu,    NULL) < 0 )
                 errorcount++;
-            if(ProcessCommand (2, exec_loadparm,  NULL) < 0 )
+            if(CallHercCmd (2, exec_loadparm,  NULL) < 0 )
                 errorcount++;
 
             if(errorcount)
@@ -415,7 +415,7 @@ int errorcount = 0;
                 strlcat(addcmdline, addargv[i], sizeof(addcmdline));
             }
 
-            rc = ProcessCommand (addargc, addargv, addcmdline);
+            rc = CallHercCmd (addargc, addargv, addcmdline);
 
             /* rc < 0 abort, rc == 0 OK, rc > warnings */
             
@@ -458,7 +458,7 @@ int errorcount = 0;
             strlcat(attcmdline, attargv[i], sizeof(attcmdline));
         }
 
-        rc = ProcessCommand (attargc, attargv, attcmdline);
+        rc = CallHercCmd (attargc, attargv, attcmdline);
 
         free(attargv);
 

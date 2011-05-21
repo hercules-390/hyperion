@@ -71,7 +71,7 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
          /* Issue command to temporary target cpu */
          if (i < n)
          {
-             rc = ProcessCmdLine(cmd+i);
+             rc = HercCmdLine(cmd+i);
              sysblk.pcpu = currcpu;
              sysblk.dummyregs.cpuad = currcpu;
          }
@@ -999,11 +999,11 @@ int     rc = 0;
     if ( argc == 2 )
     {
         ArchlvlCmd[1] = argv[1];
-        ProcessCommand(3,ArchlvlCmd,NULL);
+        CallHercCmd(3,ArchlvlCmd,NULL);
     }
     else if ( argc == 1 )
     {
-        ProcessCommand(3,ArchlvlCmd,NULL);
+        CallHercCmd(3,ArchlvlCmd,NULL);
     }
     else
     {

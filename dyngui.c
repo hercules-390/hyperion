@@ -1975,7 +1975,7 @@ void  Initialize ()
     {
         char* $zapcmd[] = { "$zapcmd", "quiet", "NoCmd" };
 
-        ProcessCommand( 3, $zapcmd, NULL );
+        CallHercCmd( 3, $zapcmd, NULL );
     }
 
     // Initialize streams...
