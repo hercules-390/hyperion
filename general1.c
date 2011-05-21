@@ -2557,6 +2557,8 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     {
         if ( (ea2 & 0x7FF) <= 0x7FF - len )
         {
+
+#ifndef OPTION_OPTINST
             /* (1) - No boundaries are crossed */
             switch(len) {
 
@@ -2594,10 +2596,15 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                 }
 
             default:
+#endif /* #ifndef OPTION_OPTINST */
+
                 /* (1d) - other compare */
                 rc = memcmp(m1, m2, len + 1);
+
+#ifndef OPTION_OPTINST
                 break;
             }
+#endif /* #ifndef OPTION_OPTINST */
         }
         else
         {
@@ -2686,16 +2693,15 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
 #ifdef OPTION_OPTINST
 DEF_INST(D500)
 {
-unsigned int len;                       /* Lengths                   */
 int      rc;                            /* memcmp() return code      */
 int      b1, b2;                        /* Base registers            */
 VADR     ea1, ea2;                      /* Effective addresses       */
 BYTE    *m1, *m2;                       /* Mainstor addresses        */
 
-    SS_L(inst, regs, len, b1, ea1, b2, ea2);
+    SS_LXL(inst, regs, b1, ea1, b2, ea2);
 
-    ITIMER_SYNC(ea1,len,regs);
-    ITIMER_SYNC(ea2,len,regs);
+    ITIMER_SYNC(ea1,0,regs);
+    ITIMER_SYNC(ea2,0,regs);
 
     /* Translate addresses of leftmost operand bytes */
     m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
@@ -2705,6 +2711,386 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     rc = *m1 - *m2;
     regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
 }
+
+DEF_INST(D501)
+{
+unsigned int len1, len2;                /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
+
+    SS_LXL(inst, regs, b1, ea1, b2, ea2);
+
+    ITIMER_SYNC(ea1,1,regs);
+    ITIMER_SYNC(ea2,1,regs);
+
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+    m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) halfword compare
+     *     (b) fullword compare
+     *     (c) doubleword compare (64-bit machines)
+     *     (d) other
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ( (ea1 & 0x7FF) <= 0x7FF - 1 )
+    {
+        if ( (ea2 & 0x7FF) <= 0x7FF - 1 )
+        {
+            /* (1a) - halfword compare */
+            U16 v1, v2;
+            v1 = fetch_hw(m1);
+            v2 = fetch_hw(m2);
+            regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+            return;
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            rc = memcmp(m1, m2, len2);
+            if (rc == 0)
+            {
+                m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                            b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1 + len2, m2, 1 - len2 + 1);
+             }
+        }
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len1 = 0x800 - (ea1 & 0x7FF);
+        if ( (ea2 & 0x7FF) <= 0x7FF - 1 )
+        {
+            /* (3) - First operand crosses a boundary */
+            rc = memcmp(m1, m2, len1);
+            if (rc == 0)
+            {
+                m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                            b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1, m2 + len1, 1 - len1 + 1);
+             }
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    m2 = MADDR ((ea2 + len1) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp(m1, m2, 1 - len1 +1);
+                }
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - First operand crosses first */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1, len2 - len1);
+                }
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2 - len1, m2, 1 - len2 + 1);
+                }
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                rc = memcmp(m1, m2, len2);
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2, m2, len1 - len2);
+                }
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1 - len2, 1 - len1 + 1);
+                }
+            }
+        }
+    }
+    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+}
+
+DEF_INST(D503)
+{
+unsigned int len1, len2;                /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
+
+    SS_LXL(inst, regs, b1, ea1, b2, ea2);
+
+    ITIMER_SYNC(ea1,3,regs);
+    ITIMER_SYNC(ea2,3,regs);
+
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+    m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) halfword compare
+     *     (b) fullword compare
+     *     (c) doubleword compare (64-bit machines)
+     *     (d) other
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ( (ea1 & 0x7FF) <= 0x7FF - 3 )
+    {
+        if ( (ea2 & 0x7FF) <= 0x7FF - 3 )
+        {
+            /* (1b) - fullword compare */
+            U32 v1, v2;
+            v1 = fetch_fw(m1);
+            v2 = fetch_fw(m2);
+            regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+            return;
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            rc = memcmp(m1, m2, len2);
+            if (rc == 0)
+            {
+                m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                            b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1 + len2, m2, 3 - len2 + 1);
+             }
+        }
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len1 = 0x800 - (ea1 & 0x7FF);
+        if ( (ea2 & 0x7FF) <= 0x7FF - 3 )
+        {
+            /* (3) - First operand crosses a boundary */
+            rc = memcmp(m1, m2, len1);
+            if (rc == 0)
+            {
+                m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                            b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1, m2 + len1, 3 - len1 + 1);
+             }
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    m2 = MADDR ((ea2 + len1) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp(m1, m2, 3 - len1 +1);
+                }
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - First operand crosses first */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1, len2 - len1);
+                }
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2 - len1, m2, 3 - len2 + 1);
+                }
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                rc = memcmp(m1, m2, len2);
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2, m2, len1 - len2);
+                }
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1 - len2, 3 - len1 + 1);
+                }
+            }
+        }
+    }
+    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+}
+
+DEF_INST(D507)
+{
+unsigned int len1, len2;                /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
+
+    SS_LXL(inst, regs, b1, ea1, b2, ea2);
+
+    ITIMER_SYNC(ea1,7,regs);
+    ITIMER_SYNC(ea2,7,regs);
+
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+    m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) halfword compare
+     *     (b) fullword compare
+     *     (c) doubleword compare (64-bit machines)
+     *     (d) other
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ( (ea1 & 0x7FF) <= 0x7FF - 7 )
+    {
+        if ( (ea2 & 0x7FF) <= 0x7FF - 7 )
+        {
+            /* (1c) - doubleword compare (64-bit machines) */
+            U64 v1, v2;
+            v1 = fetch_dw(m1);
+            v2 = fetch_dw(m2);
+            regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+            return;
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            rc = memcmp(m1, m2, len2);
+            if (rc == 0)
+            {
+                m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                            b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1 + len2, m2, 7 - len2 + 1);
+             }
+        }
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len1 = 0x800 - (ea1 & 0x7FF);
+        if ( (ea2 & 0x7FF) <= 0x7FF - 7 )
+        {
+            /* (3) - First operand crosses a boundary */
+            rc = memcmp(m1, m2, len1);
+            if (rc == 0)
+            {
+                m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                            b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1, m2 + len1, 7 - len1 + 1);
+             }
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    m2 = MADDR ((ea2 + len1) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp(m1, m2, 7 - len1 +1);
+                }
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - First operand crosses first */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1, len2 - len1);
+                }
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2 - len1, m2, 7 - len2 + 1);
+                }
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                rc = memcmp(m1, m2, len2);
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2, m2, len1 - len2);
+                }
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1 - len2, 7 - len1 + 1);
+                }
+            }
+        }
+    }
+    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+}
+
+
 #endif /* #ifdef OPTION_OPTINST */
 
 

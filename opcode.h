@@ -2266,8 +2266,8 @@ do { \
 #define SIIX_DECODER(_inst, _regs, _b1, _effective_addr1, _len, _ilc) \
 { \
   U32 temp = fetch_fw(_inst); \
-  (_b1) = (temp >> 12) & 0xf; \
   (_effective_addr1) = temp & 0xfff; \
+  (_b1) = (temp >> 12) & 0xf; \
   if((_b1)) \
   { \
     (_effective_addr1) += (_regs)->GR((_b1)); \
@@ -2506,7 +2506,31 @@ do { \
             (_l) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
-    
+   
+#ifdef OPTION_OPTINST
+#define SS_LXL(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2) \
+        SS_LXL_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, 6, 6)
+#define SS_LXL_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, _len, _ilc) \
+{ \
+  U32 temp = fetch_fw(_inst); \
+  (_effective_addr1) = temp & 0xfff; \
+  (_b1) = (temp >> 12) & 0xf; \
+  if((_b1)) \
+  { \
+    (_effective_addr1) += (_regs)->GR((_b1)); \
+    (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+  } \
+  (_effective_addr2) = (((_inst)[4] & 0x0F) << 8) | (_inst)[5]; \
+  (_b2) = (_inst)[4] >> 4; \
+  if((_b2)) \
+  { \
+    (_effective_addr2) += (_regs)->GR((_b2)); \
+    (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+  } \
+  INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+}
+#endif /* #ifdef OPTION_OPTINST */
+
 /* SSE storage to storage with extended op code */
 #undef SSE
 
@@ -3725,6 +3749,9 @@ DEF_INST(BF_7);
 DEF_INST(BF_F);
 DEF_INST(BF_x);
 DEF_INST(D500);
+DEF_INST(D501);
+DEF_INST(D503);
+DEF_INST(D507);
 #endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */
