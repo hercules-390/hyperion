@@ -52,12 +52,16 @@
 /* is modified in-place by inserting null characters at the end of   */
 /* each argument found. The returned array of argument pointers      */
 /* then points to each argument found in the original string. Any    */
-/* argument that begins with '#' comment indicator causes early      */
-/* termination of the parsing and is not included in the count. Any  */
-/* argument found that starts with a quote or apostrophe causes      */
-/* all characters up to the next quote or apostrophe to be           */
-/* included as part of that argument. The quotes/apostrophes them-   */
-/* selves are not considered part of any argument and are ignored.   */
+/* argument (except the first one) that begins with '#' character    */
+/* is considered a line comment and causes early termination of      */
+/* parsing and is not included in the argument count. If the first   */
+/* argument begins with a '#' character, it is treated as a command  */
+/* and parsing continues as normal, thus allowing comments to be     */
+/* processed as commands. Any argument beginning with a double quote */
+/* or single apostrophe causes all characters up to the next quote   */
+/* or apostrophe to be included as part of that argument. The quotes */
+/* and/or apostrophes themselves are not considered to be a part of  */
+/* the argument itself and are replaced with nulls.                  */
 /* p            Points to string to be parsed.                       */
 /* maxargc      Maximum allowable number of arguments. (Prevents     */
 /*              overflowing the pargv array)                         */
@@ -74,7 +78,7 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
     {
         while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
 
-        if (*p == '#') break; // stop on comments
+        if (*p == '#' && *pargc) break; // stop when line comment reached
 
         *pargv = p; ++*pargc; // count new arg
 

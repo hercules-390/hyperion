@@ -349,7 +349,7 @@
   "    devc       is a single device class. Device classes are CON,\n"           \
   "               CTCA, DASD, DSP, LINE, PCH, PRT, QETH, RDR, and TAPE.\n"       \
   "\n"                                                                           \
-  "If no arguments are given then all devices will be listed.\n" 
+  "If no arguments are given then all devices will be listed.\n"
 
 #define devprio_cmd_desc        "Set/Display devprio parameter"
 #define devtmax_cmd_desc        "Display or set max device threads"
@@ -604,7 +604,7 @@
 #define log_cmd_help            \
                                 \
   "Format: \"log [ OFF | newfile ]\".   Sets log filename or stops\n"            \
-  "log file output with the \"OFF\" option." 
+  "log file output with the \"OFF\" option."
 
 #define logopt_cmd_desc         "Set/Display logging options"
 #define logopt_cmd_help         \
@@ -839,8 +839,7 @@
 #define pscp_cmd_desc           "Send prio message scp command"
 #define pscp_cmd_help           \
                                 \
-  "Format: \"pscp [cmd]\". Send priority message cmd to scp in any\n"            \
-  "cmdtgt mode.\n"
+  "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n"
 
 #define psw_cmd_desc            "Display or alter program status word"
 #define psw_cmd_help            \
@@ -1183,7 +1182,7 @@
   "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how\n"    \
   "the registers are displayed during instruction tracing and stepping.\n"       \
   "Entering the command without any argument simply displays the current\n"      \
-  "mode.\n" 
+  "mode.\n"
 
 #define tt32_cmd_desc           "Control/query CTCI-W32 functionality"
 #define tt32_cmd_help           \
@@ -1400,11 +1399,11 @@ COMMAND( "asn_and_lx_reuse",        alrf_cmd,               SYSCMDNOPER,        
 #if defined( _FEATURE_CPU_RECONFIG )
 COMMAND( "cf",                      cf_cmd,                 SYSCMDNDIAG8,       cf_cmd_desc,            cf_cmd_help         )
 COMMAND( "cfall",                   cfall_cmd,              SYSCMDNDIAG8,       cfall_cmd_desc,         NULL                )
-#else                                                                           
+#else
 COMMAND( "cf",                      cf_cmd,                 SYSCMDNDIAG8,       NULL,                   NULL                )
 COMMAND( "cfall",                   cfall_cmd,              SYSCMDNDIAG8,       NULL,                   NULL                )
-#endif                                                                          
-#if defined( FEATURE_ECPSVM )                                                   
+#endif
+#if defined( FEATURE_ECPSVM )
 COMMAND( "ecps:vm",                 ecpsvm_cmd,             SYSCMDNOPER,        ecps_cmd_desc,          ecps_cmd_help       )
 COMMAND( "ecpsvm",                  ecpsvm_cmd,             SYSCMDNOPER,        ecpsvm_cmd_desc,        ecpsvm_cmd_help     )
 COMMAND( "evm",                     ecpsvm_cmd,             SYSCMDNOPER,        evm_cmd_desc,           evm_cmd_help        )
@@ -1415,12 +1414,12 @@ COMMAND( ".reply",                  g_cmd,                  SYSCMD,             
 COMMAND( "scpecho",                 scpecho_cmd,            SYSCMD,             scpecho_cmd_desc,       scpecho_cmd_help    )
 COMMAND( "scpimply",                scpimply_cmd,           SYSCMD,             scpimply_cmd_desc,      scpimply_cmd_help   )
 COMMAND( "ssd",                     ssd_cmd,                SYSCMD,             ssd_cmd_desc,           ssd_cmd_help        )
-#endif                                                                          
-#if defined( FISH_HANG )                                                        
+#endif
+#if defined( FISH_HANG )
 COMMAND( "FishHangReport",          hang_cmd,               SYSCMDNOPER,        fish_hang_cmd_desc,     NULL                )
 COMMAND( "hangrpt",                 hang_cmd,               SYSCMDNOPER,        hang_cmd_desc,          hang_cmd_help       )
-#endif                                                                          
-#if !defined( _FW_REF )                                                         
+#endif
+#if !defined( _FW_REF )
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             NULL                )
 COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )
 COMMAND( "sf-dev",                  NULL,                   SYSCMDNOPER,        sfminus_cmd_desc,       NULL                )
@@ -1435,93 +1434,93 @@ COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        
 #endif
 #if defined( HAVE_REGINA_REXXSAA_H )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
-#endif                                                                          
-#if defined( _MSVC_ )                                                           
+#endif
+#if defined( _MSVC_ )
 COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       dir_cmd_desc,           NULL                )
-#else                                                                           
+#else
 COMMAND( "ls",                      ls_cmd,                 SYSCMDNDIAG8,       ls_cmd_desc,            NULL                )
-#endif                                                                          
-#if defined( OPTION_CAPPING )                                                   
+#endif
+#if defined( OPTION_CAPPING )
 COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )
-#endif                                                                          
-#if defined( OPTION_CMDTGT )                                                    
+#endif
+#if defined( OPTION_CMDTGT )
 COMMAND( "cmdtgt",                  cmdtgt_cmd,             SYSCMD,             cmdtgt_cmd_desc,        cmdtgt_cmd_help     )
 COMMAND( "herc",                    herc_cmd,               SYSCMD,             herc_cmd_desc,          herc_cmd_help       )
 COMMAND( "pscp",                    prioscp_cmd,            SYSCMD,             pscp_cmd_desc,          pscp_cmd_help       )
 COMMAND( "scp",                     scp_cmd,                SYSCMD,             scp_cmd_desc,           scp_cmd_help        )
-#endif                                                                          
-#if defined( OPTION_CONFIG_SYMBOLS )                                            
+#endif
+#if defined( OPTION_CONFIG_SYMBOLS )
 CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
 COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        delsym_cmd_desc,        delsym_cmd_help     )
-#endif                                                                          
-#if defined( OPTION_COUNTING )                                                  
+#endif
+#if defined( OPTION_COUNTING )
 COMMAND( "count",                   count_cmd,              SYSCMDNOPER,        count_cmd_desc,         NULL                )
-#endif                                                                          
-#if defined( OPTION_DYNAMIC_LOAD )                                              
+#endif
+#if defined( OPTION_DYNAMIC_LOAD )
 COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )
 COMMAND( "lsdep",                   lsdep_cmd,              SYSCMDNOPER,        lsdep_cmd_desc,         NULL                )
 COMMAND( "lsmod",                   lsmod_cmd,              SYSCMDNOPER,        lsmod_cmd_desc,         NULL                )
 COMMAND( "rmmod",                   rmmod_cmd,              SYSCMDNOPER,        rmmod_cmd_desc,         NULL                )
-#endif                                                                          
-#if defined( OPTION_HAO )                                                       
+#endif
+#if defined( OPTION_HAO )
 COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       hao_cmd_desc,           hao_cmd_help        )
-#endif                                                                          
-#if defined( OPTION_HTTP_SERVER )                                               
+#endif
+#if defined( OPTION_HTTP_SERVER )
 COMMAND( "http",                    http_cmd,               SYSCONFIG,          http_cmd_desc,          http_cmd_help       )
 COMMAND( "httpport",                httpport_cmd,           SYSCONFIG,          httpport_cmd_desc,      httpport_cmd_help   )
 COMMAND( "httproot",                httproot_cmd,           SYSCONFIG,          httproot_cmd_desc,      httproot_cmd_help   )
 #endif
 #if defined( OPTION_INSTRUCTION_COUNTING )
 COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        icount_cmd_desc,        NULL                )
-#endif                                                                          
-#if defined( OPTION_IODELAY_KLUDGE )                                            
+#endif
+#if defined( OPTION_IODELAY_KLUDGE )
 COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        iodelay_cmd_desc,       iodelay_cmd_help    )
-#endif                                                                          
-#if defined( OPTION_LPP_RESTRICT )                                              
+#endif
+#if defined( OPTION_LPP_RESTRICT )
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      NULL                )
-#else                                                                           
+#else
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       NULL,                   NULL                )
-#endif                                                                          
-#if defined( OPTION_MIPS_COUNTING )                                             
+#endif
+#if defined( OPTION_MIPS_COUNTING )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
-#endif                                                                          
-#if defined( OPTION_MSGHLD )                                                    
+#endif
+#if defined( OPTION_MSGHLD )
 COMMAND( "kd",                      msghld_cmd,             SYSCMD,             kd_cmd_desc,            NULL                )
 COMMAND( "msghld",                  msghld_cmd,             SYSCMD,             msghld_cmd_desc,        msghld_cmd_help     )
-#endif                                                                          
-#if defined( OPTION_PTTRACE )                                                   
+#endif
+#if defined( OPTION_PTTRACE )
 COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
-#endif                                                                          
-#if defined( OPTION_SCSI_TAPE )                                                 
+#endif
+#if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )
-#endif                                                                          
-#if defined( OPTION_SET_STSI_INFO )                                             
+#endif
+#if defined( OPTION_SET_STSI_INFO )
 CMDABBR( "manufacturer",  8,        stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
 COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
 COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
-#endif                                                                          
-#if defined( OPTION_SHARED_DEVICES )                                            
+#endif
+#if defined( OPTION_SHARED_DEVICES )
 COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      NULL                )
 #endif
 #if defined ( OPTION_SHUTDOWN_CONFIRMATION )
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
 COMMAND( "quitmout",                quitmout_cmd,           SYSCMDNOPER,        quitmout_cmd_desc,      quitmout_cmd_help   )
-#else                                                                           
+#else
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_ssd_cmd_desc,      quit_ssd_cmd_help   )
-#endif                                                                          
-#if defined( OPTION_TAPE_AUTOMOUNT )                                            
+#endif
+#if defined( OPTION_TAPE_AUTOMOUNT )
 COMMAND( "automount",               automount_cmd,          SYSCMDNOPER,        automount_cmd_desc,     automount_cmd_help  )
-#endif                                                                          
-#if defined( OPTION_W32_CTCI )                                                  
+#endif
+#if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )
-#endif                                                                          
-#if defined( PANEL_REFRESH_RATE )                                               
+#endif
+#if defined( PANEL_REFRESH_RATE )
 COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
-#endif                                                                          
-#if defined( SIE_DEBUG_PERFMON )                                                
+#endif
+#if defined( SIE_DEBUG_PERFMON )
 COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        spm_cmd_desc,           NULL                )
 #endif
 

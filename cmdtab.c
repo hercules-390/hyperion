@@ -239,80 +239,150 @@ char*  argv[MAX_ARGS];
 int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 {
 CMDTAB* pCmdTab;
-int     rc = HERRINVCMD;             // Indicate invalid command
 size_t  cmdlen, matchlen;
+int     rc = HERRINVCMD;             /* Default to invalid command   */
 
-#if defined(OPTION_DYNAMIC_LOAD)
+    /* [ENTER] key by itself: either start the CPU or ignore
+       it altogether when instruction stepping is not active. */
+    if (0
+        || !argc            /* (no args)    */
+        || !argv[0]         /* (no cmd)     */
+        || !cmdline         /* (no cmdline) */
+        || !cmdline[0]      /* (empty cmd)  */
+        || !argv[0][0]      /* (empty cmd)  */
+    )
+    {
+        if (sysblk.inststep)
+            rc = start_cmd( 0, NULL, NULL );
+        else
+            rc = 0;         /* ignore [ENTER] */
+        return rc;
+    }
+
+    /* (sanity check) */
+    ASSERT( argc && cmdline && *cmdline && argv[0] && argv[0][0] );
+
+#if defined( OPTION_DYNAMIC_LOAD )
     /* If a system command hook exists, let it try processing it first. */
     /* Only if it rejects it, will we then try processing it ourselves. */
     if(system_command)
-        if((rc = system_command(argc, (char**)argv, cmdline)) != HERRINVCMD)
+        if((rc = system_command( CMDFUNC_ARGS )) != HERRINVCMD)
             return rc;
-#endif
+#endif /* defined( OPTION_DYNAMIC_LOAD ) */
 
-    /* Route standard formatted commands from our routing table */
-    if (argc)
-        for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
+    /* Check for comment command. We need to test for this separately
+       rather than scanning our COMAMND table since the first token
+       of the "command" might not be a single '#' or '*'. That is to
+       say, the first token might be "#comment" or "*comment" (with
+       no blanks following the '#' or '*'), which would thus not match
+       either of our "comment_cmd" COMMAND table entries. Note that
+       this also means the COMMAND table entries for '*' and '#' are
+       redundant since they will never be used (since we're processing
+       comments here and not via our table search), but that's okay. */
+    if (0
+        || argv[0][0] == '#'       /* (comment command?) */
+        || argv[0][0] == '*'       /* (comment command?) */
+    )
+    {
+        /* PROGRAMMING NOTE: we ALWAYS call the "comment_cmd" function
+           for comments even though today it does nothing. We might decide
+           to do additional processing for comments in the future (such
+           as simply counting them for example), so we should ALWAYS call
+           our comment_cmd function here instead of just returning. */
+        return comment_cmd( CMDFUNC_ARGS );
+    }
+
+    /* Route standard formatted commands from our COMMAND routing table */
+
+    /* PROGRAMMING NOTE: since our table is now sorted, the below could
+       be converted to a more efficient binary search algorithm instead */
+
+    for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
+    {
+        if (1
+            && pCmdTab->function
+            && (pCmdTab->type & sysblk.sysgroup)
+            /* Commands issues through DIAG8 must NOT be part of the SYSNDIAG8 group */
+            && (!(sysblk.diag8cmd & DIAG8CMD_RUNNING) || !(pCmdTab->type & SYSNDIAG8))
+        )
         {
-            if (1
-                && pCmdTab->function
-                && (pCmdTab->type & sysblk.sysgroup)
-                /* Commands issues through DIAG8 must NOT be part of the SYSNDIAG8 group */
-                && (!(sysblk.diag8cmd & DIAG8CMD_RUNNING) || !(pCmdTab->type & SYSNDIAG8))
-            )
+            cmdlen = pCmdTab->mincmdlen ? pCmdTab->mincmdlen : strlen( pCmdTab->statement );
+            matchlen = MAX( strlen(argv[0]), cmdlen );
+
+            if (!strncasecmp( argv[0], pCmdTab->statement, matchlen ))
             {
-                cmdlen = pCmdTab->mincmdlen ? pCmdTab->mincmdlen : strlen( pCmdTab->statement );
-                matchlen = MAX( strlen(argv[0]), cmdlen );
+                char cmd[256]; /* (copy of command name) */
 
-                if (!strncasecmp( argv[0], pCmdTab->statement, matchlen ))
+                /* Make full-length copy of the true command's name */
+                strlcpy( cmd, pCmdTab->statement, sizeof(cmd) );
+                argv[0] = cmd; /* (since theirs may be abbreviated) */
+
+                /* Run command in background? (last argument == '&') */
+                if (strcmp(argv[argc-1],"&") == 0)
                 {
-                    char cmd[256]; /* (copy of command name) */
+                BGCMD *bgcmd;
+                TID tid;
+                int i,len;
 
-                    /* Make full-length copy of the true command's name */
-                    strlcpy( cmd, pCmdTab->statement, sizeof(cmd) );
-                    argv[0] = cmd; /* (since theirs may be abbreviated) */
+                    /* Calculate length of the command-line (all arguments
+                       except the last one), including intervening blanks. */
+                    for (len=0, i=0; i < argc-1; i++ )
+                        len += (int) strlen( (char*) argv[i] ) + 1;
 
-                    /* Run command in background? (last argument == '&') */
-                    if (strcmp(argv[argc-1],"&") == 0)
+                    /* Build parameter to pass to background thread */
+                    bgcmd = (BGCMD*) malloc( sizeof(BGCMD) + len );
+                    bgcmd->func = pCmdTab->function;
+
+                    /* Build private copy of cmdline for bgcmd_thread */
+                    strlcpy( bgcmd->cmdline, argv[0], len );
+                    for (i=1; i < argc-1; i++)
                     {
-                    BGCMD *bgcmd;
-                    TID tid;
-                    int i,len;
-
-                        /* Calculate length of the command-line (all arguments
-                           except the last one), including intervening blanks. */
-                        for (len=0, i=0; i < argc-1; i++ )
-                            len += (int) strlen( (char*) argv[i] ) + 1;
-
-                        /* Build parameter to pass to background thread */
-                        bgcmd = (BGCMD*) malloc( sizeof(BGCMD) + len );
-                        bgcmd->func = pCmdTab->function;
-
-                        /* Build private copy of cmdline for bgcmd_thread */
-                        strlcpy( bgcmd->cmdline, argv[0], len );
-                        for (i=1; i < argc-1; i++)
-                        {
-                            strlcat( bgcmd->cmdline,  " ",    len );
-                            strlcat( bgcmd->cmdline, argv[i], len );
-                        }
-
-                        /* Process command asynchronously in the background */
-                        rc = create_thread( &tid, DETACHED, bgcmd_thread, bgcmd, "bgcmd_thread" );
+                        strlcat( bgcmd->cmdline,  " ",    len );
+                        strlcat( bgcmd->cmdline, argv[i], len );
                     }
-                    else /* (not a background command) */
-                    {
-                        /* Does last argument start with two ampersands? */
-                        if (strncmp( argv[argc-1], "&&", 2 ) == 0)
-                            /* Yes, skip past the first one */
-                            argv[argc-1]++; /* ("&&&" ==> "&&", "&&" ==> "&", etc) */
 
-                        /* Process the Hercules command */
-                        rc = pCmdTab->function( CMDFUNC_ARGS );
-                    }
-                    return rc;
+                    /* Process command asynchronously in the background */
+                    rc = create_thread( &tid, DETACHED, bgcmd_thread, bgcmd, "bgcmd_thread" );
                 }
+                else /* (not a background command) */
+                {
+                    /* Does last argument start with two ampersands? */
+                    if (strncmp( argv[argc-1], "&&", 2 ) == 0)
+                        /* Yes, skip past the first one */
+                        argv[argc-1]++; /* ("&&&" ==> "&&", "&&" ==> "&", etc) */
+
+                    /* Process the Hercules command */
+                    rc = pCmdTab->function( CMDFUNC_ARGS );
+                }
+                break;
             }
+            /* end strncasecmp( table entry match ) */
         }
+        /* end if ( valid table entry ) */
+    }
+    /* end for ( search table ) */
+
+    /* If we didn't find an exact match in our table, check if
+       this is maybe a special non-standard formatted command. */
+    if (rc == HERRINVCMD && (sysblk.sysgroup & SYSCMDNOPER))
+    {
+        /* shadow file commands: add/remove/compress/display/check */
+        if (0
+            || !strncasecmp( cmdline, "sf+", 3 )
+            || !strncasecmp( cmdline, "sf-", 3 )
+            || !strncasecmp( cmdline, "sfc", 3 )
+            || !strncasecmp( cmdline, "sfd", 3 )
+            || !strncasecmp( cmdline, "sfk", 3 )
+        )
+            rc = ShadowFile_cmd( CMDFUNC_ARGS );
+        else
+        /* "x+" and "x-" commands: turn switch on or off */
+        if (0
+            || '+' == cmdline[1]
+            || '-' == cmdline[1]
+        )
+            rc = OnOffCommand( CMDFUNC_ARGS );
+    }
 
     return rc;
 }
@@ -322,17 +392,17 @@ size_t  cmdlen, matchlen;
 /*-------------------------------------------------------------------*/
 int HercCmdLine (char* pszCmdLine)
 {
-    char*    pszSaveCmdLine  = NULL;
-    int      rc              = -1;
-    int      cmd_argc;
-    char*    cmd_argv[MAX_ARGS];
+    int      argc;
+    char*    argv[ MAX_ARGS ];
+    char*    cmdline  = NULL;
+    int      rc       = -1;
 
     if (!ConsoleCommandLockInitialized) {
-        ConsoleCommandLockInitialized = TRUE;
+         ConsoleCommandLockInitialized = TRUE;
         initialize_lock( &ProcessConsoleCommandLock );
     }
 
-    obtain_lock(&ProcessConsoleCommandLock);
+    obtain_lock( &ProcessConsoleCommandLock );
 
     if (MLVL( DEBUG ))
     {
@@ -343,74 +413,32 @@ int HercCmdLine (char* pszCmdLine)
 
     CommandLockCounter++;
 
-    if (!pszCmdLine || !*pszCmdLine)
-    {
-        /* [enter key] by itself: start the CPU
-           (ignore if not instruction stepping) */
-        if (sysblk.inststep)
-            rc = start_cmd( 0, NULL, NULL );
-        goto HercCmdExit;
-    }
-
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
-    pszSaveCmdLine = strdup( pszCmdLine );
+    cmdline = strdup( pszCmdLine );
 
     /* Parse the command line into its individual arguments.
        Note: original command line now sprinkled with nulls */
-    parse_args( pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc );
+    parse_args( pszCmdLine, MAX_ARGS, argv, &argc );
 
-    /* If no command was entered (i.e. they entered just a comment
-       (e.g. "# comment")) then ignore their input */
-    if (!cmd_argv[0] || !*cmd_argv[0])
+    /* Our primary Hercules command function gets first crack. */
+    if ((rc = CallHercCmd( CMDFUNC_ARGS )) != HERRINVCMD)
         goto HercCmdExit;
-
-    /* Call primary command routing function. If it doesn't understand
-       what the command is, check if maybe it's a non-standard command. */
-    if ((rc = CallHercCmd( cmd_argc, cmd_argv, pszSaveCmdLine )) != HERRINVCMD)
-        goto HercCmdExit;
-
-    /* (possible non-standard command?) */
-    if ( sysblk.sysgroup & SYSCMDNOPER )
-    {
-        /* Route non-standard formatted commands */
-
-        /* sf commands - shadow file add/remove/compress/display/check */
-        if ( 0
-            || !strncasecmp(pszSaveCmdLine,"sf+",3)
-            || !strncasecmp(pszSaveCmdLine,"sf-",3)
-            || !strncasecmp(pszSaveCmdLine,"sfc",3)
-            || !strncasecmp(pszSaveCmdLine,"sfd",3)
-            || !strncasecmp(pszSaveCmdLine,"sfk",3)
-           )
-        {
-            rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-            goto HercCmdExit;
-        }
-
-        /* x+ and x- commands - turn switches on or off */
-        if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
-        {
-            rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-            goto HercCmdExit;
-        }
-    }
-
-    ASSERT( cmd_argv[0] );      /* (sanity check) */
+    ASSERT( argv[0] ); /* (herc handles any/all empty commands) */
 
 #if defined( _FEATURE_SYSTEM_CONSOLE )
-    /* See if maybe it's a command that the guest might understand */
+    /* See if maybe it's a command that the guest understands. */
     if ( sysblk.scpimply && can_send_command() )
-        scp_command( pszSaveCmdLine, FALSE, sysblk.scpecho ? TRUE : FALSE );
+        scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
     else
 #endif
         /* Error: unknown/unsupported command */
-        WRMSG( HHC01600, "E", cmd_argv[0] );
+        WRMSG( HHC01600, "E", argv[0] );
 
 HercCmdExit:
 
     /* Free our saved copy */
-    free( pszSaveCmdLine );
+    free( cmdline );
 
     CommandLockCounter--;
 
@@ -653,153 +681,178 @@ int scr_recursion_level();  // (external helper function; see script.c)
 /*-------------------------------------------------------------------*/
 /* panel_command entry-point:  determine if Hercules or scp_command  */
 /*-------------------------------------------------------------------*/
-#if defined(OPTION_DYNAMIC_LOAD)
+#if defined( OPTION_DYNAMIC_LOAD )
 DLL_EXPORT void *panel_command_r (void *cmdline)
 #else
 void *panel_command (void *cmdline)
 #endif
 {
 #define MAX_CMD_LEN (32768)
-    char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
+    char  cmd[ MAX_CMD_LEN ];           /* Copy of panel command     */
     char *pCmdLine;
-    char *cl;
     unsigned i;
-    int noredisp;
+    int hercecho = 1;                   /* Default echo to console   */
 
-    pCmdLine = cmdline; ASSERT(pCmdLine);
-    /* every command will be stored in history list */
-    /* except null commands, script commands, scp input and noredisplay */
+    pCmdLine = cmdline; ASSERT( pCmdLine );
+    /* Every command will be stored in history list,
+       EXCEPT: null commands, script commands, scp input,
+       and "silent" commands (prefixed with '-') */
     if (*pCmdLine != 0 && scr_recursion_level()  == 0)
     {
-        if (!(*pCmdLine == '-'))
+        if (!(*pCmdLine == '-'))    /* (normal command?) */
         {
-#if defined(_FEATURE_SYSTEM_CONSOLE)
+#if defined( _FEATURE_SYSTEM_CONSOLE )
             if (*pCmdLine == '.' || *pCmdLine == '!')
             {
                 if (sysblk.scpecho)
-                    history_add(cmdline);
+                    history_add( cmdline );
             }
             else
-#endif
-                history_add(cmdline);
+#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
+                history_add( cmdline );
         }
     }
 
     /* Copy panel command to work area, skipping leading blanks */
 
     /* If the command starts with a -, then strip it and indicate
-     * that we do not want command redisplay
-     */
-    noredisp=0;
-    while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
+     * that we do NOT want the command echoed to the console. */
+    hercecho = 1; /* (default) */
+    while (*pCmdLine && isspace( *pCmdLine ))
+        pCmdLine++;
     i = 0;
     while (*pCmdLine && i < (MAX_CMD_LEN-1))
     {
-        if(i==0 && *pCmdLine=='-')
+        if (i == 0 && (0            /* (1st character?) */
+            || *pCmdLine == '-'     /* (silent command) */
+            || *pCmdLine == '#'     /* (silent comment) */
+        ))
         {
-            noredisp=1;
-            /* and remove blanks again.. */
-            while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
+            hercecho = 0;           /* (silence please) */
+            if (*pCmdLine == '-')   /* (silent command) */
+            {
+                pCmdLine++;         /* (skip past the '-' ... */
+                                    /* ... and remove blanks) */
+                while (*pCmdLine && isspace(*pCmdLine))
+                    pCmdLine++;     /* (get past blank) */
+            }
         }
-        else
-        {
-            cmd[i] = *pCmdLine;
-            i++;
-        }
+        cmd[i] = *pCmdLine;
+        i++;
         pCmdLine++;
     }
     cmd[i] = 0;
 
-    /* Ignore null commands (just pressing enter)
-       unless instruction stepping is enabled or
-       commands are being sent to the SCP by default. */
-    if (!sysblk.inststep
-#ifdef OPTION_CMDTGT
-                         && (sysblk.cmdtgt == 0)
-#endif
-                                                 && (0 == cmd[0]))
-        return NULL;
+    /* (just pressing the enter key shouldn't be echoed) */
+    if (0 == cmd[0])
+        hercecho = 0;               /* (silence please) */
 
-#ifdef OPTION_CMDTGT
-    /* check for herc, scp or pscp command */
-    /* Please note that cmdtgt is a hercules command! */
-    /* Changing the target to herc in scp mode is done by using herc cmdtgt herc */
-    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
+#if defined( OPTION_CMDTGT )
+    /* Check for herc, scp or pscp command... */
+
+    /* Please note: 'cmdtgt' is a hercules command, but will be
+       passed to the scp if scp target is set! This means that
+       once the scp target has been set, to change the target
+       back to herc, you must use: "herc cmdtgt herc". This is
+       because the 'herc' command is ALWAYS a Hercules command
+       (regardless of command target mode), whereas the 'cmdtgt'
+       is passed to the scp whenever scp target mode is set.
+       Thus you must explicitly request 'cmdtgt' be processed
+       by Hercules and not the scp, by using the 'herc' prefix.
+    */
+    if (0
+        || !strncasecmp( cmd, "herc ", 5 )   /* Hercules     */
+        || !strncasecmp( cmd, "scp ",  4 )   /* Guest O/S    */
+        || !strncasecmp( cmd, "pscp ", 5 )   /* Priority SCP */
+    )
     {
-        if (!noredisp) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
-        HercCmdLine(cmd);
+        if (hercecho)
+            WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+        HercCmdLine( cmd );
         return NULL;
     }
 
-    /* Send command to the selected command target */
-    switch(sysblk.cmdtgt)
+    /* Send the command to the currently active command target */
+    switch (sysblk.cmdtgt)
     {
         case CMDTGT_HERC:           /* Hercules */
         {
-        /* Stay compatible */
-#ifdef _FEATURE_SYSTEM_CONSOLE
+            /* (stay compatible) */
+#if defined( _FEATURE_SYSTEM_CONSOLE )
             if(cmd[0] == '.' || cmd[0] == '!')
             {
-                if(!cmd[1])
-                {
-                    cmd[1] = ' ';
+            int priomsg = cmd[0] == '!'  ? TRUE : FALSE;
+            int scpecho = sysblk.scpecho ? TRUE : FALSE;
+                if (!cmd[1]) {      /* (empty command given?) */
+                    cmd[1] = ' ';   /* (must send something!) */
                     cmd[2] = 0;
                 }
-                scp_command(cmd + 1, cmd[0] == '!', sysblk.scpecho ? TRUE: FALSE);
+                scp_command( cmd+1, priomsg, scpecho );
             }
             else
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
+#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
             {
-                if (!noredisp && *cmd) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
-#if defined(OPTION_CONFIG_SYMBOLS)
+                if (hercecho && *cmd)
+                    WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+#if defined( OPTION_CONFIG_SYMBOLS )
                 /* Perform variable substitution */
-                /* First, set some 'dynamic' symbols to their own values */
-                set_symbol("CUU","$(CUU)");
-                set_symbol("CCUU","$(CCUU)");
-                set_symbol("DEVN","$(DEVN)");
-                cl=resolve_symbol_string(cmd);
-                HercCmdLine(cl);
-                free(cl);
-#else
-                HercCmdLine(cmd);
-#endif
+                /* First, set some 'dynamic' symbols
+                   to their own values */
+                set_symbol( "CUU",  "$(CUU)"  );
+                set_symbol( "CCUU", "$(CCUU)" );
+                set_symbol( "DEVN", "$(DEVN)" );
+                {
+                char *cl = resolve_symbol_string( cmd );
+                HercCmdLine( cl );
+                free( cl );
+                }
+#else /* !defined( OPTION_CONFIG_SYMBOLS ) */
+                HercCmdLine( cmd );
+#endif /* defined( OPTION_CONFIG_SYMBOLS ) */
             }
             break;
         }
         case CMDTGT_SCP:        /* Guest O/S */
         {
-            if(!cmd[0])
-            {
-                cmd[0] = ' ';
+        int priomsg = FALSE;    /* normal scp command     */
+        int scpecho = TRUE;     /* (always echo to hmc)   */
+            if (!cmd[0]) {      /* (empty command given?) */
+                cmd[0] = ' ';   /* (MUST send something!) */
                 cmd[1] = 0;
             }
-            scp_command(cmd, 0, TRUE);      // echo command
+            scp_command( cmd, priomsg, scpecho );
             break;
         }
         case CMDTGT_PSCP:       /* Priority SCP */
         {
-            if(!cmd[0])
-            {
-                cmd[0] = ' ';
+        int priomsg = TRUE;     /* Priority scp command   */
+        int scpecho = TRUE;     /* (always echo to hmc)   */
+            if (!cmd[0]) {      /* (empty command given?) */    
+                cmd[0] = ' ';   /* (MUST send something!) */
                 cmd[1] = 0;
             }
-            scp_command(cmd, 1, TRUE);      // echo command
+            scp_command( cmd, priomsg, scpecho );
             break;
         }
     }
-#else // OPTION_CMDTGT
-#ifdef _FEATURE_SYSTEM_CONSOLE
+#else /* !defined( OPTION_CMDTGT ) */
+#if defined( _FEATURE_SYSTEM_CONSOLE )
     if ('.' == cmd[0] || '!' == cmd[0])
     {
-        if (!cmd[1]) { cmd[1]=' '; cmd[2]=0; }
-        scp_command (cmd+1, cmd[0] == '!', sysblk.scpecho ? TRUE: FALSE);
+    int priomsg = cmd[0] == '!'  ? TRUE : FALSE;
+    int scpecho = sysblk.scpecho ? TRUE : FALSE;
+        if (!cmd[1]) {          /* (empty command given?) */
+            cmd[1] = ' ';       /* (MUST send something!) */
+            cmd[2] = 0;
+        }
+        scp_command( cmd+1, priomsg, scpecho );
         return NULL;
     }
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
-    if (!noredisp && *cmd) WRMSG(HHC00013, "I", cmd);     // Echo command to the control panel
-    HercCmdLine(cmd);
-
-#endif // OPTION_CMDTGT
+#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
+    if (hercecho && *cmd)
+        WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+    HercCmdLine( cmd );
+#endif /* defined( OPTION_CMDTGT ) */
 
     return NULL;
 }
