@@ -333,12 +333,12 @@ struct REGS {                           /* Processor registers       */
                *z900_runtime_opcode_ec________xx,
                *z900_runtime_opcode_ed________xx;
 #ifdef OPTION_OPTINST
-        const zz_func 
+        const zz_func
                *s370_runtime_opcode_e3_0______xx,
                *s390_runtime_opcode_e3_0______xx,
                *z900_runtime_opcode_e3_0______xx;
 #endif /* #ifdef OPTION_OPTINST */
-               
+
      /* TLB - Translation lookaside buffer                           */
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
@@ -773,7 +773,10 @@ struct SYSBLK {
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
 #ifdef OPTION_CMDTGT
-        int     cmdtgt;                 /* 0=herc,1=scp,2=!scp       */
+        int     cmdtgt;                 /* Command Processing Target */
+#define         CMDTGT_HERC     0       /*   Hercules                */
+#define         CMDTGT_SCP      1       /*   Guest O/S               */
+#define         CMDTGT_PSCP     2       /*   Priority SCP            */
 #endif // OPTION_CMDTGT
 
         int     regs_copy_len;          /* Length to copy for REGS   */
@@ -1250,7 +1253,7 @@ struct DEVBLK {                         /* Device configuration block*/
           char *psACLvolsers;           /* pointer to ACL volser buf */
           char *psACLvolser;            /* pointer to cur ACL volser */
           u_int uiACLvolsers;           /* length of ACL volser buf  */
-          char  pszIL_VOLSER[7];         /* Internal Label of Tape    */   
+          char  pszIL_VOLSER[7];         /* Internal Label of Tape    */
 
         }       tdparms;                /* HET device parms          */
 
@@ -1304,7 +1307,7 @@ struct DEVBLK {                         /* Device configuration block*/
         /* 3480/3490/3590 tape vault support */
 
         TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
-        u_int   utapemountreq;          /* Count of tape mounts      */    
+        u_int   utapemountreq;          /* Count of tape mounts      */
         char   *pszVaultPath;           /* path to tape vault        */
         void   *ptvfb;                  /* reserve pointer to struct */
 
@@ -1452,7 +1455,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     qrspsz;                 /* Response Buffer Size      */
         int     qidxstate;              /* IDX state                 */
 #define OSA_IDX_STATE_INACTIVE  0x00
-#define OSA_IDX_STATE_ACTIVE 	0x01
+#define OSA_IDX_STATE_ACTIVE    0x01
 
         BYTE    blkend[16];             /* eye-end                   */
 };

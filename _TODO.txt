@@ -29,21 +29,6 @@
 
 -------------------------------------------------------------------------------
 
-  BUG? 'cmdtgt' support needs re-worked to prevent e.g. DIAG8 commands from
-  being erroneously sent to (processed by) the guest instead of by Hercules.
-  Issue was raised by Martin Trübner [Martin@pi-sysprog.de] on the main Herc
-  list on 2/12/2010: setting 'cmdtgt', while handy in regards to letting you
-  issue panel commands directly to the guest without having to precede the
-  command with a '.', also unfortunately causes "hypervisor" commands (i.e.
-  Hercules commands) issued via DIAG8 to be processed as GUEST commands and
-  not Hercules (hypervisor) commands! Oops! (see "panel_command" function
-  in 'cmdtab.c' near line 390 in the "#ifdef OPTION_CMDTGT" block) The fix
-  MIGHT be to have an "internal" "panel_command" function that all of our
-  internal functions can use instead, which would set a flag to FORCE the
-  'cmdtab.c' logic to treat that specific call as "cmdtgt herc" instead?
-
--------------------------------------------------------------------------------
-
   Also provide separate zip file containing .PDB files for download for
   Windows snapshots (but especially for final official Windows releases!)
   so that on the rare occasion that Hercules ever does crash we're able

@@ -175,11 +175,11 @@ static char  *NPhelp[] = {
 #define SCROLL_LINES (MSG_LINES - numkept) /* #of scrollable lines   */
 #define CMD_SIZE     256                /* cmdline buffer size       */
 
-#define DEV_LINE        3               /* Line to start devices   */ 
-#define PSW_LINE        2               /* Line to place PSW       */ 
+#define DEV_LINE        3               /* Line to start devices   */
+#define PSW_LINE        2               /* Line to place PSW       */
 #define REGS_LINE       5               /* Line to place REGS      */
 #define ADDR_LINE       15              /* Line to place Addr/data */
-#define BUTTONS_LINE    17              /* Line to place Buttons   */ 
+#define BUTTONS_LINE    17              /* Line to place Buttons   */
 #define CPU_GRAPH_LINE 20               /* Line to start CPU Graph */
 
 ///////////////////////////////////////////////////////////////////////
@@ -208,13 +208,13 @@ static FILE *confp   = NULL;            /* Console file pointer      */
 
 ///////////////////////////////////////////////////////////////////////
 
-#define CMD_PREFIX_STR   "herc =====> " /* Keep same len as below!   */
+#define CMD_PREFIX_HERC  "herc =====> " /* Keep same len as below!   */
 #ifdef  OPTION_CMDTGT
-#define CMD_PREFIX_STR1  "scp ======> " /* Keep same len as above!   */
-#define CMD_PREFIX_STR2  "pscp =====> " /* Keep same len as above!   */
+#define CMD_PREFIX_SCP   "scp ======> " /* Keep same len as above!   */
+#define CMD_PREFIX_PSCP  "pscp =====> " /* Keep same len as above!   */
 #endif // OPTION_CMDTGT
 
-#define CMD_PREFIX_LEN  (strlen(CMD_PREFIX_STR))
+#define CMD_PREFIX_LEN  (strlen(CMD_PREFIX_HERC))
 #define CMDLINE_ROW     ((short)(cons_rows-1))
 #define CMDLINE_COL     ((short)(CMD_PREFIX_LEN+1))
 
@@ -499,7 +499,7 @@ void colormsg(PANMSG *p)
           i += 6;   // skip nokeep
           k = TRUE;
       }
-      else 
+      else
         break; // rubbish
     }
     if(p->msg[i] == '>')
@@ -674,8 +674,8 @@ static void do_panel_command( void* cmd )
     if (!is_currline_visible())
         scroll_to_bottom_screen( 1 );
     strlcpy( cmdline, cmd, sizeof(cmdline) );
-    if ( sysblk.cmdsep != NULL && 
-         strlen(sysblk.cmdsep) == 1 && 
+    if ( sysblk.cmdsep != NULL &&
+         strlen(sysblk.cmdsep) == 1 &&
          strstr(cmdline, sysblk.cmdsep) != NULL )
     {
         char *command;
@@ -914,7 +914,7 @@ void set_console_title ( char *status )
 
     if ( sysblk.daemon_mode ) return;
 
-    redraw_status = 1;          
+    redraw_status = 1;
 
     if ( !sysblk.pantitle && ( !status || strlen(status) == 0 ) ) return;
 
@@ -929,8 +929,8 @@ void set_console_title ( char *status )
         bzero(msgbuf,sizeof(msgbuf));
 
         strlcat(systype,str_systype(),sizeof(systype));
-        strlcat(sysname,str_sysname(),sizeof(sysname)); 
-        strlcat(sysplex,str_sysplex(),sizeof(sysplex)); 
+        strlcat(sysname,str_sysname(),sizeof(sysname));
+        strlcat(sysplex,str_sysplex(),sizeof(sysplex));
         strlcat(lparnam,str_lparname(),sizeof(lparnam));
 
         if ( strlen(lparnam)+strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
@@ -1058,7 +1058,7 @@ static void NP_screen_redraw (REGS *regs)
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text("ment");
 
-    /* PSW_LINE = PSW */ 
+    /* PSW_LINE = PSW */
     NPpswmode = (regs->arch_mode == ARCH_900);
     NPpswzhost =
 #if defined(_FEATURE_SIE)
@@ -1164,7 +1164,7 @@ static void NP_screen_redraw (REGS *regs)
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
 
     /* CPU busy graph */
-    line = CPU_GRAPH_LINE;                          // this is where the dashes start 
+    line = CPU_GRAPH_LINE;                          // this is where the dashes start
     NPcpugraph_ncpu = MIN(cons_rows - line - 1, sysblk.hicpu);
     if (sysblk.hicpu > 0)
     {
@@ -1298,7 +1298,7 @@ static void NP_update(REGS *regs)
             if ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
             {
                 n++;
-                cpupct_total += sysblk.regs[i]->cpupct; 
+                cpupct_total += sysblk.regs[i]->cpupct;
             }
     set_color (COLOR_WHITE, COLOR_BLUE);
     set_pos (1, 22);
@@ -1377,8 +1377,8 @@ static void NP_update(REGS *regs)
 
     /* Display psw state */
     sprintf (buf, "%2d%c%c%c%c%c%c%c%c",
-                  regs->psw.amode64                  ? 64  : 
-                  regs->psw.amode                    ? 31  : 24, 
+                  regs->psw.amode64                  ? 64  :
+                  regs->psw.amode                    ? 31  : 24,
                   regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                   sysblk.inststep                    ? 'T' : '.',
                   WAITSTATE (&regs->psw)             ? 'W' : '.',
@@ -1745,7 +1745,7 @@ static void NP_update(REGS *regs)
             {
                 /* locate first nonprintable and truncate */
                 int l, p;
-                
+
                 l = (int)strlen(devnam);
                 for ( p = 0; p < l; p++ )
                 {
@@ -2094,7 +2094,7 @@ char    buf[1024];                      /* Buffer workarea           */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
         FD_SET (logger_syslogfd[LOG_READ], &readset);
-	FD_SET (0, &readset);
+        FD_SET (0, &readset);
         if(keybfd > logger_syslogfd[LOG_READ])
           maxfd = keybfd;
         else
@@ -2373,7 +2373,7 @@ char    buf[1024];                      /* Buffer workarea           */
             {
 #if defined ( _MSVC_ )
                 /* Test for PF key  Windows */
-                if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */ 
+                if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */
                 {
                     char szPF[6];
                     char msgbuf[32];
@@ -2428,7 +2428,7 @@ char    buf[1024];                      /* Buffer workarea           */
 #endif
 #if    defined ( OPTION_CONFIG_SYMBOLS )
                     pf = (char*)get_symbol(szPF);
-#else  // !OPTION_CONFIG_SYMBOLS 
+#else  // !OPTION_CONFIG_SYMBOLS
                     pf = NULL;
 #endif //  OPTION_CONFIG_SYMBOLS
 
@@ -2486,7 +2486,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         {
                             char    psz_cmdline[sizeof(cmdline)];
                             char   *p = cmdline;
-                            
+
                             while (*p && ncmd_tok < 10 )
                             {
                                 while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
@@ -2495,13 +2495,13 @@ char    buf[1024];                      /* Buffer workarea           */
 
                                 cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
 
-                                while ( *p && !isspace(*p) && 
+                                while ( *p && !isspace(*p) &&
                                         *p != '\"' && *p != '\'' ) p++; if (!*p) break; // find end of arg
 
                                 if (*p == '\"' || *p == '\'')
                                 {
                                     char delim = *p;
-                                    
+
                                     while (*++p && *p != delim); if (!*p) break; // find end of quoted string
 
                                     p++; if (!*p) break;                    // found end of args
@@ -2514,13 +2514,13 @@ char    buf[1024];                      /* Buffer workarea           */
                                         psz_cmdline[0] = 0;
                                     }
                                 }
-                                                            
+
                                 *p++ = 0; // mark end of arg
                             }
-                            
+
                             ncmd_tok--;
 
-                            /* token 10 represents the rest of the line */  
+                            /* token 10 represents the rest of the line */
                             if ( ncmd_tok == 9 && strlen(p) > 0 )
                                 cmd_tok[++ncmd_tok] = p;
                         }
@@ -2534,7 +2534,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             memset(psz_cmdline, 0, sizeof(psz_cmdline));
 
                             pt1 = psz_PF+j;
-                            
+
                             for ( idx = 0; idx < (int)strlen(pt1); idx++ )
                             {
                                 if ( pt1[idx] != '&' )
@@ -2560,7 +2560,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                             {
                                                 if ( cmd_tok[ctok] != NULL )
                                                 {
-                                                    if ( first ) 
+                                                    if ( first )
                                                         first = FALSE;
                                                     else
                                                         psz_cmdline[odx++] = ' ';         // add one space
@@ -2575,10 +2575,10 @@ char    buf[1024];                      /* Buffer workarea           */
                                     {
                                         psz_cmdline[odx++] = pt1[idx];
                                     }
-                                    else 
+                                    else
                                     {
                                         idx++;
-                                        if ( pt1[idx] == '$' ) 
+                                        if ( pt1[idx] == '$' )
                                             ctok = 10;
                                         else
                                         {
@@ -2595,7 +2595,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                     }
                                 }
 
-                                if ( odx > (int)sizeof(cmdline) ) 
+                                if ( odx > (int)sizeof(cmdline) )
                                 {
                                     WRMSG(HHC01608, "W", ((int)sizeof(cmdline) - 1) );
                                     break;
@@ -2605,7 +2605,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             if ( isdelay )
                             {
                                 strncpy( cmdline, psz_cmdline, sizeof(cmdline) );
-                                cmdline[sizeof(cmdline) - 1] = 0;   
+                                cmdline[sizeof(cmdline) - 1] = 0;
                                 cmdlen = (int)strlen(cmdline);
                                 cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                                 ADJ_CMDCOL();
@@ -2635,7 +2635,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     }
                     break;
                 }
-                
+
                 /* Test for END */
                 if (strcmp(kbbuf+i, KBD_END) == 0) {
                     if (NPDup == 1 || !is_cursor_on_cmdline() || cmdlen) {
@@ -2838,14 +2838,14 @@ char    buf[1024];                      /* Buffer workarea           */
                 }
 
                 /* Process TAB */
-                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F') 
+                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F')
                 {
-                    if (NPDup == 1 || !is_cursor_on_cmdline()) 
+                    if (NPDup == 1 || !is_cursor_on_cmdline())
                     {
                         cursor_cmdline_home();
                         redraw_cmd = 1;
-                    } 
-                    else 
+                    }
+                    else
                     {
                         tab_pressed(cmdline, sizeof(cmdline), &cmdoff);
                         cmdlen = (int)strlen(cmdline);
@@ -2869,7 +2869,7 @@ char    buf[1024];                      /* Buffer workarea           */
 #if defined(OPTION_MSGHLD)
                             /* ENTER pressed on kept msg; remove msg */
                             unkeep_by_keepnum( keepnum, 1 );
-#endif 
+#endif
                             redraw_msgs = 1;
                             break;
                         }
@@ -2884,11 +2884,14 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Process the command when the ENTER key is pressed */
                 if (kbbuf[i] == '\n') {
-                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep
-#if defined(OPTION_CMDTGT)
-                     && sysblk.cmdtgt == 0
-#endif /*defined(OPTION_CMDTGT)*/
-                                           ) {
+                    if (1
+                        && cmdlen == 0
+                        && NPDup == 0
+                        && !sysblk.inststep
+#if defined( OPTION_CMDTGT )
+                        && sysblk.cmdtgt == CMDTGT_HERC
+#endif /* defined( OPTION_CMDTGT ) */
+                    ) {
                         history_show();
                     } else {
                         cmdline[cmdlen] = '\0';
@@ -3260,28 +3263,16 @@ FinishShutdown:
                 set_pos (CMDLINE_ROW, 1);
                 set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
 
-#if defined(OPTION_CMDTGT)
-                switch(sysblk.cmdtgt)
+#if defined( OPTION_CMDTGT )
+                switch (sysblk.cmdtgt)
                 {
-                  case 0: // cmdtgt herc 
-                  {
-                    draw_text(CMD_PREFIX_STR);
-                    break;
-                  }
-                  case 1: // cmdtgt scp
-                  {
-                    draw_text(CMD_PREFIX_STR1);
-                    break;
-                  }
-                  case 2: // cmdtgt pscp
-                  {
-                    draw_text(CMD_PREFIX_STR2);
-                    break;
-                  }
+                  case CMDTGT_HERC: draw_text( CMD_PREFIX_HERC ); break;
+                  case CMDTGT_SCP:  draw_text( CMD_PREFIX_SCP  ); break;
+                  case CMDTGT_PSCP: draw_text( CMD_PREFIX_PSCP ); break;
                 }
-#else // !defined(OPTION_CMDTGT)
-                draw_text (CMD_PREFIX_STR);
-#endif // defined(OPTION_CMDTGT)
+#else // !defined( OPTION_CMDTGT )
+                draw_text( CMD_PREFIX_HERC );
+#endif // defined( OPTION_CMDTGT )
 
                 set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
                 PUTC_CMDLINE ();
@@ -3312,7 +3303,7 @@ FinishShutdown:
                             cnt_online++;
                             if ( sysblk.regs[i]->cpustate != CPUSTATE_STARTED )
                                 cnt_stopped++;
-                            if ( WAITSTATE(&sysblk.regs[i]->psw) && 
+                            if ( WAITSTATE(&sysblk.regs[i]->psw) &&
                                  IS_IC_DISABLED_WAIT_PSW( sysblk.regs[i] ) )
                                 cnt_disabled++;
                         }
@@ -3332,7 +3323,7 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 memset (buf, ' ', cons_cols);
-                len = sprintf ( buf, "%s%02X ", 
+                len = sprintf ( buf, "%s%02X ",
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
@@ -3353,7 +3344,7 @@ FinishShutdown:
 #endif /*defined(_FEATURE_SIE)*/
                     len += sprintf (buf+len, "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
-                           regs->psw.amode                    ? 31 : 24, 
+                           regs->psw.amode                    ? 31 : 24,
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                            sysblk.inststep                    ? 'T' : '.',
                            WAITSTATE(&regs->psw)              ? 'W' : '.',
@@ -3389,22 +3380,22 @@ FinishShutdown:
                         }
                         else if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6.6s", 
-                                    instcnt, sysblk.mipsrate / 1000000, 
+                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6.6s",
+                                    instcnt, sysblk.mipsrate / 1000000,
                                     sysblk.mipsrate % 1000000 / 100000, format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6.6s", 
-                                    instcnt, sysblk.mipsrate / 1000000, 
+                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6.6s",
+                                    instcnt, sysblk.mipsrate / 1000000,
                                     sysblk.mipsrate % 1000000 / 10000, format_int(sysblk.siosrate));
                         }
-                        else 
+                        else
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6.6s", 
-                                    instcnt, sysblk.mipsrate / 1000000, 
+                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6.6s",
+                                    instcnt, sysblk.mipsrate / 1000000,
                                     sysblk.mipsrate % 1000000 / 1000, format_int(sysblk.siosrate));
-                        }                        
+                        }
                     }
                     else if(len + i + 11 < cons_cols) // instcnt and mips
                     {
@@ -3414,14 +3405,14 @@ FinishShutdown:
                         }
                         else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%1d", 
+                            sprintf(ibuf, "instcnt %s; mips %2d.%1d",
                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
                         }
-                        else 
+                        else
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%02d", 
+                            sprintf(ibuf, "instcnt %s; mips %1d.%02d",
                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
-                        }                        
+                        }
                     }
                     else if(len + i < cons_cols) // instcnt
                     {
@@ -3432,7 +3423,7 @@ FinishShutdown:
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - (int)strlen(ibuf);
                     strcpy (buf + len, ibuf);
-                    
+
 #endif /* OPTION_MIPS_COUNTING */
                 }
                 else
@@ -3499,7 +3490,6 @@ FinishShutdown:
     sysblk.panel_init = 0;
 
     WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
-	
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
@@ -3564,9 +3554,9 @@ PANMSG* p;
         WRMSG(HHC02272, "I", buf);
         MSGBUF( buf, "    to %s", pszCurrentDateTime);
         WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "  MIPS: %d.%02d  IO/s: %d", 
+        MSGBUF( buf, "  MIPS: %d.%02d  IO/s: %d",
                     curr_high_mips_rate / 1000000,
-                    curr_high_mips_rate % 1000000, 
+                    curr_high_mips_rate % 1000000,
                     curr_high_sios_rate );
         WRMSG(HHC02272, "I", buf);
 

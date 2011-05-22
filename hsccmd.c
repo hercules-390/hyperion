@@ -7125,22 +7125,21 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 
   if (argc == 1)
   {
+    // "Missing argument(s). Type 'help %s' for assistance."
     WRMSG(HHC02202, "E", argv[0] );
     return -1;
   }
 
   if (argc == 2)
   {
-    if     ( CMD(argv[1],herc,4) )
-      sysblk.cmdtgt = 0;
-    else if ( CMD(argv[1],scp,3) )
-      sysblk.cmdtgt = 1;
-    else if ( CMD(argv[1],pscp,4) )
-      sysblk.cmdtgt = 2;
-    else if ( CMD(argv[1],?,1) )
-      ;
+    if      (CMD( argv[1], herc, 4 )) sysblk.cmdtgt = CMDTGT_HERC;
+    else if (CMD( argv[1], scp,  3 )) sysblk.cmdtgt = CMDTGT_SCP;
+    else if (CMD( argv[1], pscp, 4 )) sysblk.cmdtgt = CMDTGT_PSCP;
+    else if (CMD( argv[1], ?,    1 )) /* (query) */
+      ; /* (nop) */
     else
     {
+      // "Invalid argument '%s'%s"
       WRMSG(HHC02205, "I", argv[1], "");
       return 0;
     }
@@ -7148,25 +7147,28 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 
   if (argc > 2)
   {
+    // "Invalid argument '%s'%s"
     WRMSG(HHC02205, "I", argv[2], "");
     return 0;
   }
 
+  // HHC02288: "Commands are sent to '%s'"
+
   switch(sysblk.cmdtgt)
   {
-    case 0:
+    case CMDTGT_HERC:   /* Hercules */
     {
-      WRMSG(HHC02288, "I", "herc");
+      WRMSG( HHC02288, "I", "herc" );
       break;
     }
-    case 1:
+    case CMDTGT_SCP:    /* Guest O/S */
     {
-      WRMSG(HHC02288, "I", "scp");
+      WRMSG( HHC02288, "I", "scp" );
       break;
     }
-    case 2:
+    case CMDTGT_PSCP:   /* Priority SCP */
     {
-      WRMSG(HHC02288, "I", "pscp");
+      WRMSG( HHC02288, "I", "pscp" );
       break;
     }
   }
@@ -7373,24 +7375,14 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
     else if ( sysblk.emsg & EMSG_ON )
         strlcat(msgbuf, "on ",sizeof(msgbuf));
 
-    if ( sysblk.msglvl & MLVL_VERBOSE )
-        strlcat(msgbuf, "verbose ",sizeof(msgbuf));
-    else
-        strlcat(msgbuf, "terse ",sizeof(msgbuf));
-
-    if ( sysblk.msglvl & MLVL_DEBUG )
-        strlcat(msgbuf, "debug ",sizeof(msgbuf));
-    else
-        strlcat(msgbuf, "nodebug ",sizeof(msgbuf));
-
-    if ( sysblk.msglvl & MLVL_TAPE )
-        strlcat(msgbuf, "tape ",sizeof(msgbuf));
-    if ( sysblk.msglvl & MLVL_DASD )
-        strlcat(msgbuf, "dasd ",sizeof(msgbuf));
-    if ( sysblk.msglvl & MLVL_UR )
-        strlcat(msgbuf, "ur ",sizeof(msgbuf));
-    if ( sysblk.msglvl & MLVL_COMM )
-        strlcat(msgbuf, "comm ",sizeof(msgbuf));
+    if (MLVL( VERBOSE )) strlcat( msgbuf, "verbose ", sizeof( msgbuf ));
+    else                 strlcat( msgbuf, "terse ",   sizeof( msgbuf ));
+    if (MLVL( DEBUG   )) strlcat( msgbuf, "debug ",   sizeof( msgbuf ));
+    else                 strlcat( msgbuf, "nodebug ", sizeof( msgbuf ));
+    if (MLVL( TAPE    )) strlcat( msgbuf, "tape ",    sizeof( msgbuf ));
+    if (MLVL( DASD    )) strlcat( msgbuf, "dasd ",    sizeof( msgbuf ));
+    if (MLVL( UR      )) strlcat( msgbuf, "ur ",      sizeof( msgbuf ));
+    if (MLVL( COMM    )) strlcat( msgbuf, "comm ",    sizeof( msgbuf ));
 
     if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
         msgbuf[(int)strlen(msgbuf) - 1] = '\0';

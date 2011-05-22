@@ -734,7 +734,7 @@ void *panel_command (void *cmdline)
     /* Send command to the selected command target */
     switch(sysblk.cmdtgt)
     {
-        case 0: // cmdtgt herc
+        case CMDTGT_HERC:           /* Hercules */
         {
         /* Stay compatible */
 #ifdef _FEATURE_SYSTEM_CONSOLE
@@ -766,7 +766,7 @@ void *panel_command (void *cmdline)
             }
             break;
         }
-        case 1: // cmdtgt scp
+        case CMDTGT_SCP:        /* Guest O/S */
         {
             if(!cmd[0])
             {
@@ -776,7 +776,7 @@ void *panel_command (void *cmdline)
             scp_command(cmd, 0, TRUE);      // echo command
             break;
         }
-        case 2: // cmdtgt pscp
+        case CMDTGT_PSCP:       /* Priority SCP */
         {
             if(!cmd[0])
             {
