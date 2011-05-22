@@ -64,7 +64,7 @@ static     void* hao_thread(void* dummy);
 /*---------------------------------------------------------------------------*/
 DLL_EXPORT int hao_initialize(void)
 {
-  int i = 0; 
+  int i = 0;
   int rc;
 
   initialize_lock(&ao_lock);
@@ -159,8 +159,8 @@ DLL_EXPORT void hao_command(char *cmd)
 /*---------------------------------------------------------------------------*/
 /* hao_cpstrp(char *dest, char *src)                                         */
 /*                                                                           */
-/* This function copies the string from src to dest, without the trailing    */
-/* and ending spaces.                                                        */
+/* This function copies the string from src to dest, without the leading     */
+/* or trailing spaces.                                                       */
 /*---------------------------------------------------------------------------*/
 static void hao_cpstrp(char *dest, char *src)
 {
@@ -425,7 +425,7 @@ static void hao_list(char *arg)
     {
       if(ao_tgt[i])
       {
-        if(!size) 
+        if(!size)
           WRMSG(HHC00087, "I");
         WRMSG(HHC00088, "I", i, ao_tgt[i], (ao_cmd[i] ? ao_cmd[i] : "not specified"));
         size++;
@@ -556,6 +556,60 @@ static void* hao_thread(void* dummy)
 }
 
 /*---------------------------------------------------------------------------*/
+/* int hao_ignoremsg(char *msg)                                              */
+/*                                                                           */
+/* This function determines whether the message being processed should be    */
+/* ignored or not (so we don't react to it).  Returns 1 (TRUE) if message    */
+/* should be ignored, or 0 == FALSE if message should be processed.          */
+/*---------------------------------------------------------------------------*/
+static int hao_ignoremsg(char *msg)
+{
+  static int debuglen = 0;
+  char* nocolor = msg;
+  int msglen;
+
+#if defined( OPTION_MSGCLR )
+  /* Get past color string if there is one */
+  if (!(msglen = skippnlpfx( &nocolor )))       /* Skip past <pnl pfx  */
+      return TRUE;                              /* Ignore if now empty */
+  if (nocolor > msg)                            /* Color prefix found? */
+    memmove( msg, nocolor, msglen+1 );          /* Remove color prefix */
+#endif /* defined( OPTION_MSGCLR ) */
+
+  if (!debuglen)
+  {
+    char prefix[64] = {0};
+    MSGBUF( prefix, MLVL_DEBUG_PRINTF_PATTERN, "foo", 999 );
+    debuglen = strlen( prefix );
+  }
+
+  /* Get past debug prefix if msglevel DEBUG is active */
+  if (MLVL( DEBUG ) && msglen >= debuglen)
+    memmove( msg, msg + debuglen, (msglen -= debuglen)+1 );
+
+  /* Ignore our own messages (HHC0007xx, HHC0008xx and HHC0009xx
+     are reserved so that hao.c. can recognize its own messages) */
+  if (0
+      || !strncasecmp( msg, "HHC0007", 7 )
+      || !strncasecmp( msg, "HHC0008", 7 )
+      || !strncasecmp( msg, "HHC0009", 7 )
+  )
+    return TRUE;  /* (it's one of our hao messages; ignore it) */
+
+  /* To be extra safe, ignore any messages with the string "hao" in them */
+  // HHC00013: "Herc command: '%s'"
+  if (strcasestr( msg, "HHC00013I" ) && (strcasestr( msg, "'hao " ) ||
+                                         strcasestr( msg, "herc hao " )))
+    return TRUE;  /* ("hao" message; ignore) */
+
+  /* Same idea but for messages logged as coming from the .rc file */
+  if (!strncasecmp( msg, "> hao ", 6 ))
+    return TRUE;
+
+  return FALSE;   /* (message appears to be one we should process) */
+}
+
+/*---------------------------------------------------------------------------*/
 /* void hao_message(char *buf)                                               */
 /*                                                                           */
 /* This function is called by hao_thread whenever a message is about to be   */
@@ -575,15 +629,9 @@ DLL_EXPORT void hao_message(char *buf)
   while(!strncmp(work, "herc", 4))
     hao_cpstrp(work, &work[4]);
 
-  /* don't react on own commands */
-  if(!strncasecmp(work, "HHC0007", 7) || !strncasecmp(work, "HHC0008", 7) || !strncasecmp(work, "HHC0009", 7))
-    return;
-  if(strcasestr(work, "HHC00013I") && (strcasestr(work, "'hao ") || strcasestr(work, "herc hao ")))
-    return;
-
-  /* also from the .rc file */
-  if(!strncasecmp(work, "> hao", 5))
-    return;
+  /* Ignore the message if we should (e.g. if one of our own!) */
+  if (hao_ignoremsg( work ))
+      return;
 
   /* serialize */
   obtain_lock(&ao_lock);
@@ -596,7 +644,7 @@ DLL_EXPORT void hao_message(char *buf)
       /* does this rule match our message? */
       if(!regexec(&ao_preg[i], work, 1, &rm, 0))
       {
-        BYTE sysgroup; 
+        BYTE sysgroup;
 
         /* issue command for this rule */
         WRMSG(HHC00081, "I", i, ao_cmd[i]);
@@ -622,7 +670,7 @@ DLL_EXPORT void hao_message(char *buf)
         The following demonstrates how the REG_NOTBOL flag could be used
         with regexec() to find all substrings in a line that match a pattern
         supplied by a user. (For simplicity of the example, very little
-        error checking is done.) 
+        error checking is done.)
     */
 
     regex_t     re;         /*  regular expression  */

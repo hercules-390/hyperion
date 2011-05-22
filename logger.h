@@ -55,9 +55,15 @@ extern int logger_syslogfd[2];
 #endif
 #endif
 
+/* Constants used by 'writemsg()' function in logmsg.c */
+#define  MLVL_DEBUG_FILE_FIELD_WIDTH  10
+#define  MLVL_DEBUG_LINE_FIELD_WIDTH  5
+#define  MLVL_DEBUG_PRINTF_PATTERN "%-" MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "." MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "s %" MSTRING( MLVL_DEBUG_LINE_FIELD_WIDTH ) "d "
+
 /* Logging functions in logmsg.c */
 LOG_DLL_IMPORT void log_msg(char *,...);
 LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
+LOG_DLL_IMPORT int skippnlpfx(const char** ppsz);
 
 // BHe I want to remove these functions for simplification
 //LOG_DLL_IMPORT void logmsgp(char *,...);
@@ -85,4 +91,4 @@ LOG_DLL_IMPORT void log_write(int,char *);
 /* Log routing utility */
 LOG_DLL_IMPORT char *log_capture(void *(*)(void *),void *);
 
-#endif
+#endif /* __LOGGER_H__ */

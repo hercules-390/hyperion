@@ -196,7 +196,7 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
-DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function, 
+DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
                          int grp, int lvl, char *color, char *msg, ...)
 {
     char   *bfr     =   NULL;
@@ -212,7 +212,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     strlcpy(file, basename(bfr), sizeof(file));
     free(bfr);
     bfr = NULL;
-    
+
     bzero(prefix,sizeof(prefix));
 
 #ifdef OPTION_MSGLCK
@@ -221,7 +221,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 #endif
 
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
 
     BFR_VSNPRINTF();
@@ -254,12 +254,10 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     {
 #if defined( OPTION_MSGCLR )
         if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init && !sysblk.daemon_mode)
-            MSGBUF(prefix, "%s%-10.10s %5d ", color, file, line);
+            MSGBUF(prefix, "%s" MLVL_DEBUG_PRINTF_PATTERN, color, file, line);
         else
-            MSGBUF(prefix, "%-10.10s %5d ", file, line);
-#else
-            MSGBUF(prefix, "%-10.10s %5d ", file, line);
 #endif
+            MSGBUF(prefix, MLVL_DEBUG_PRINTF_PATTERN, file, line);
     }
     else
     {
@@ -278,7 +276,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         if (msgbuf)
         {
             if ( strlen(bfr) > 10 && SNCMP(bfr, "HHC", 3) )
-                snprintf( msgbuf, l-1, "%s%s", prefix, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr ); 
+                snprintf( msgbuf, l-1, "%s%s", prefix, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
             else
                 snprintf( msgbuf, l-1, "%s%s", prefix, bfr );
             log_write( 0, msgbuf );
@@ -291,7 +289,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
         LOGMSG("HHC00007" "I" " " HHC00007 "\n", function, file, line);
 
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
 
 #ifdef OPTION_MSGLCK
@@ -314,7 +312,7 @@ DLL_EXPORT void log_msg(char *msg,...)
     va_list vl;
 
 #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
 #endif
     BFR_VSNPRINTF();
     if ( bfr )
@@ -325,7 +323,7 @@ DLL_EXPORT void log_msg(char *msg,...)
             log_write( 0, bfr );
     }
 #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
 #endif
     if ( bfr )
     {
@@ -346,7 +344,7 @@ DLL_EXPORT void logmsgp(char *msg,...)
     int siz=1024;
     va_list vl;
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
     BFR_VSNPRINTF();
     if(bfr)
@@ -357,14 +355,14 @@ DLL_EXPORT void logmsgp(char *msg,...)
             log_write( 1, bfr );
     }
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
     if(bfr)
     {
         free(bfr);
     }
 }
- 
+
 /*-------------------------------------------------------------------*/
 /* Log message: Both panel and logmsg routing                        */
 /*-------------------------------------------------------------------*/
@@ -376,7 +374,7 @@ DLL_EXPORT void logmsgb(char *msg,...)
     int siz=1024;
     va_list vl;
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
     BFR_VSNPRINTF();
     if(bfr)
@@ -387,7 +385,7 @@ DLL_EXPORT void logmsgb(char *msg,...)
             log_write( 2, bfr );
     }
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
     if(bfr)
     {
@@ -406,10 +404,10 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
     int     siz=1024;
     va_list vl;
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
-    if(dev->ccwtrace||dev->ccwstep) 
-    { 
+    if(dev->ccwtrace||dev->ccwstep)
+    {
         BFR_VSNPRINTF();
         if(bfr)
         {
@@ -418,32 +416,32 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
             else
                 log_write( 2, bfr );
         }
-    } 
+    }
   #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);  
+    fflush(stdout);
   #endif
     if(bfr)
     {
         free(bfr);
     }
-} /* end function logdevtr */ 
+} /* end function logdevtr */
 
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg)
 {
 /* (log_write function proper starts here) */
     int     slot;
-    char   *ptr; 
+    char   *ptr;
     size_t  pl;
     char   *pszMSG;
 
     pl = strlen(msg) + 1 + 20;
     ptr = malloc( pl );
 
-    if ( ptr == NULL ) 
+    if ( ptr == NULL )
         pszMSG = msg;
-    else 
-    {   
+    else
+    {
         if ( sysblk.emsg & EMSG_TS && strncasecmp( msg, "<pnl", 4 ) )
         {
             struct timeval  now;
@@ -452,7 +450,7 @@ DLL_EXPORT void log_write(int panel,char *msg)
 
             gettimeofday( &now, NULL ); tt = now.tv_sec;
             strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
-        
+
             strlcpy( ptr, hhmmss, pl);
             strlcat( ptr, msg,    pl);
             pszMSG = ptr;
@@ -499,7 +497,7 @@ DLL_EXPORT void log_write(int panel,char *msg)
             nLeft -= (int)(pLeft - (char*)msg);
         }
 
-#endif // defined( OPTION_MSGCLR )  
+#endif // defined( OPTION_MSGCLR )
         if (nLeft)
             log_routes[slot].w(log_routes[slot].u,pLeft);
     }
@@ -552,4 +550,22 @@ DLL_EXPORT char *log_capture(void *(*fun)(void *),void *p)
     fun(p);
     log_close();
     return(cd.obfr);
+}
+
+/*-------------------------------------------------------------------*/
+/* Skip past "<pnl ...>" message prefix...                           */
+/* Input:                                                            */
+/*    ppsz      pointer to char* pointing to message                 */
+/* Output:                                                           */
+/*    ppsz      updated *ppsz --> msg following <pnl prefix          */
+/* Returns:     new strlen of message (strlen of updated *ppsz)      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int skippnlpfx(const char** ppsz)
+{
+    if (strncasecmp( *ppsz, "<pnl,", 5 ) == 0)
+    {
+        char* p = strchr( (*ppsz)+5, '>' );
+        if (p) *ppsz = ++p;
+    }
+    return strlen( *ppsz );
 }

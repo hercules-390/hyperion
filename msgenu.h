@@ -50,7 +50,7 @@ Examples:
 "HHC01234I This is a correct message"
 "HHC12345E This is wrong!"
 "HHC23456E THIS IS ALSO WRONG"
-"HHC34567E Do not end with a dot or somehting else!"
+"HHC34567E Do not end with a dot or something else!"
 "HHC45678E This string %s cannot be seen and is therefore wrong", ""
 "HHC56789I This is a '%s' better example", "much"
 
