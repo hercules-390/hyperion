@@ -493,9 +493,9 @@ u_int           extsize;                /* Extent size in tracks     */
 /* Subroutine to open a CKD image file                               */
 /* Input:                                                            */
 /*      fname    CKD image file name                                 */
-/*      sfname   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           */
+/*      sfname   Shadow-File option string  (e.g. "sf=shadow_*.xxx") */
 /*      omode    Open mode: O_RDONLY or O_RDWR                       */
-/*      dasdcopy xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           */
+/*      option   IMAGE_OPEN_NORMAL, IMAGE_OPEN_DASDCOPY, etc.        */
 /*                                                                   */
 /* The CKD image file is opened, a track buffer is obtained,         */
 /* and a CKD image file descriptor structure is built.               */
@@ -503,7 +503,7 @@ u_int           extsize;                /* Extent size in tracks     */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
-                       int dasdcopy)
+                       int option)
 {
 int             fd;                     /* File descriptor           */
 int             rc;                     /* Return code               */
@@ -534,7 +534,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev = &cif->devblk;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
-    dev->dasdcopy = dasdcopy;
+    dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
+    dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
+    dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
 
     /* If the filename has a `:' then it may be a remote device */
     rmtdev = strchr(fname, ':');
@@ -732,9 +734,9 @@ BYTE            unitstat;               /* Unit status               */
 /* Subroutine to open a FBA image file                               */
 /* Input:                                                            */
 /*      fname    FBA image file name                                 */
-/*      sfname   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           */
+/*      sfname   Shadow-File option string  (e.g. "sf=shadow_*.xxx") */
 /*      omode    Open mode: O_RDONLY or O_RDWR                       */
-/*      dasdcopy xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           */
+/*      option   IMAGE_OPEN_NORMAL, IMAGE_OPEN_DASDCOPY, etc.        */
 /*                                                                   */
 /* The FBA image file is opened, a track buffer is obtained,         */
 /* and a FBA image file descriptor structure is built.               */
@@ -742,7 +744,7 @@ BYTE            unitstat;               /* Unit status               */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
-                        int dasdcopy)
+                        int option)
 {
 int             rc;                     /* Return code               */
 CIFBLK         *cif;                    /* FBA image file descriptor */
@@ -766,7 +768,9 @@ int             argc=0;                 /*  device open              */
     dev = &cif->devblk;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
-    dev->dasdcopy = dasdcopy;
+    dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
+    dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
+    dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
 
     /* Set the device type */
     fba = dasd_lookup (DASD_FBADEV, NULL, DEFAULT_FBA_TYPE, 0);

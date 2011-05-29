@@ -1078,6 +1078,18 @@
   "command. The entered command and any arguments are passed as-is to the\n"     \
   "shell for processing and the results are displayed on the console.\n"
 
+#define showdvol1_cmd_desc      "Enable showing of dasd volsers in device list"
+#define showdvol1_cmd_help      \
+                                \
+  "Format:   showdvol1  [ NO | YES | ONLY ]\n\n"                                      \
+                                                                                      \
+  "Indicates whether to show the dasd VOL1 labels (volser) in the device list\n"      \
+  "display. 'YES' shows the volser in addition to the usual filename, whereas\n"      \
+  "'NO' shows the device list in a traditional filename only format. The 'ONLY'\n"    \
+  "option shows only the volser; the filename is not shown at all. The default\n"     \
+  "is 'NO', which results in a traditional device list display. Enter the command\n"  \
+  "without any operands to echo the current settings to the console.\n"
+
 #define shcmdopt_cmd_desc       "Set diag8 sh option"
 #define shrd_cmd_desc           "shrd command"
 #define shrdport_cmd_desc       "Set shrdport value"
@@ -1283,6 +1295,7 @@ CMDABBR( "qpid",    4,              qpid_cmd,               SYSCMD,             
 CMDABBR( "qports",  5,              qports_cmd,             SYSCMD,             qports_cmd_desc,        NULL                )
 CMDABBR( "qproc",   5,              qproc_cmd,              SYSCMD,             qproc_cmd_desc,         NULL                )
 CMDABBR( "qstor",   5,              qstor_cmd,              SYSCMD,             qstor_cmd_desc,         NULL                )
+COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
 COMMAND( "start",                   start_cmd,              SYSCMD,             start_cmd_desc,         start_cmd_help      )
 COMMAND( "stop",                    stop_cmd,               SYSCMD,             stop_cmd_desc,          stop_cmd_help       )
 

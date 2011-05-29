@@ -370,10 +370,14 @@ DUT_DLL_IMPORT int  search_key_equal (CIFBLK *cif, BYTE *key, U8 keylen, u_int n
         DSXTENT extent[], U32 *cyl, U8 *head, U8 *rec);
 DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 heads,
         U32 *cyl, U8 *head);
+#define IMAGE_OPEN_NORMAL   0x00000000
+#define IMAGE_OPEN_DASDCOPY 0x00000001
+#define IMAGE_OPEN_QUIET    0x00000002  /* (no msgs) */
+#define IMAGE_OPEN_DVOL1    0x00000004  /* (showdvol1 open) */
 DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
-        int dasdcopy);
+        int option);
 DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
-        int dasdcopy);
+        int option);
 DUT_DLL_IMPORT int  close_ckd_image (CIFBLK *cif);
 #define close_image_file(cif) close_ckd_image((cif))
 DUT_DLL_IMPORT int  build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],

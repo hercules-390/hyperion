@@ -291,9 +291,9 @@ char           *strtok_str = NULL;
 
     /* Open the input file */
     if (ckddasd)
-        icif = open_ckd_image (ifile, sfile, O_RDONLY|O_BINARY, 0);
+        icif = open_ckd_image (ifile, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
     else
-        icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, 0);
+        icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
     if (icif == NULL)
     {
         fprintf (stderr, MSG(HHC02403, "E", ifile));
@@ -355,9 +355,9 @@ char           *strtok_str = NULL;
 
     /* Open the output file */
     if (ckddasd)
-        ocif = open_ckd_image (ofile, NULL, O_RDWR|O_BINARY, 1);
+        ocif = open_ckd_image (ofile, NULL, O_RDWR|O_BINARY, IMAGE_OPEN_DASDCOPY);
     else
-        ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, 1);
+        ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, IMAGE_OPEN_DASDCOPY);
     if (ocif == NULL)
     {
         fprintf (stderr, MSG(HHC02403, "E", ofile));

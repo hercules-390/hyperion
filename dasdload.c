@@ -4450,7 +4450,7 @@ char           *strtok_str = NULL;      /* last token position       */
     }
 
     /* Open the output file */
-    cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY, 0);
+    cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY, IMAGE_OPEN_NORMAL);
     if (!cif)
     {
         XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd_image()" ) );

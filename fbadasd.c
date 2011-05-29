@@ -56,6 +56,8 @@
 
 #define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 
+static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat);
+
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
@@ -90,6 +92,44 @@ char   *strtok_str = NULL;              /* save last position        */
 
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
+
+    /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
+    {
+        CIFBLK* pCIF;
+        char dasdvol[7];
+        if (!dev->showdvol1) /* (first time here for this open?) */
+        {
+            char* sfname = NULL;
+            if (dev->dasdsfn)
+            {
+                int sfnlen = strlen( "sf=" ) + strlen( dev->dasdsfn ) + 1;
+                sfname = malloc( sfnlen );
+                strlcpy( sfname, "sf=", sfnlen );
+                strlcat( sfname, dev->dasdsfn, sfnlen );
+            }
+            pCIF = open_fba_image( dev->filename, sfname, O_RDONLY | O_BINARY,
+                IMAGE_OPEN_DVOL1 | IMAGE_OPEN_QUIET );
+            if (pCIF)
+            {
+                const int vol1sector = 1;
+                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 };
+                BYTE vol1data[10];
+                BYTE unitstat;
+                pCIF->devblk.fbamask   = 0;
+                pCIF->devblk.fbaxblkn  = 0;
+                pCIF->devblk.fbaxfirst = 0;
+                pCIF->devblk.fbaxlast  = pCIF->devblk.fbanumblk - 1;
+                pCIF->devblk.fbarba    = vol1sector * pCIF->devblk.fbablksiz;
+                rc = fba_read( &pCIF->devblk, vol1data, 10, &unitstat );
+                if (rc == 10 && memcmp( vol1data, vol1, 4 ) == 0)
+                    make_asciiz( dasdvol, 7, vol1data+4, 6 );
+                close_image_file( pCIF );
+                strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
+            }
+            if (sfname)
+                free( sfname );
+        }
+    }
 
     /* Device is shareable */
     dev->shared = 1;
@@ -237,7 +277,8 @@ char   *strtok_str = NULL;              /* save last position        */
             dev->fbablksiz = 512;
             dev->fbaorigin = 0;
             dev->fbanumblk = statbuf.st_size;
-            WRMSG (HHC00504, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            if (!dev->quiet)
+                WRMSG (HHC00504, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         }
         else
 #endif // defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
@@ -279,7 +320,8 @@ char   *strtok_str = NULL;              /* save last position        */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
+    if (!dev->quiet)
+        WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
@@ -321,21 +363,36 @@ void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKDDASD_EXT    *cckd;
+    char            devname[ 6 + 1 + MAX_PATH + 1 ] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
+
+    switch (sysblk.showdvol1)
+    {
+    default:
+    case SHOWDVOL1_NO:
+        MSGBUF( devname, "%s", dev->filename );
+        break;
+    case SHOWDVOL1_YES:
+        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
+        break;
+    case SHOWDVOL1_ONLY:
+        MSGBUF( devname, "%-6.6s", dev->dasdvol );
+        break;
+    }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
         snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] IO[%"I64_FMT"u]",
-                  dev->filename,
+                  devname,
                   dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
         snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] [%d sfs] IO[%"I64_FMT"u]",
-                  dev->filename,
+                  devname,
                   dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,
                   dev->excps);

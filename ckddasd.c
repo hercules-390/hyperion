@@ -30,6 +30,7 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "sr.h"
+#include "dasdblks.h"
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
@@ -369,9 +370,42 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->ckdtrks = 0;
     dev->ckdcyls = 0;
 
+    /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
+    {
+        CIFBLK* pCIF;
+        char dasdvol[7];
+        if (!dev->showdvol1) /* (first time here for this open?) */
+        {
+            char* sfname = NULL;
+            if (dev->dasdsfn)
+            {
+                int sfnlen = strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1;
+                sfname = malloc( sfnlen );
+                strlcpy( sfname, "sf=\"", sfnlen );
+                strlcat( sfname, dev->dasdsfn, sfnlen );
+            }
+            pCIF = open_ckd_image( dev->filename, sfname, O_RDONLY | O_BINARY,
+                IMAGE_OPEN_DVOL1 | IMAGE_OPEN_QUIET );
+            if (pCIF)
+            {
+                BYTE *vol1data;
+                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 };
+                rc = read_block( pCIF, 0, 0, 3, NULL, NULL, &vol1data, NULL );
+                if (rc == 0)
+                    if (memcmp( vol1data, vol1, 4 ) == 0)
+                        make_asciiz( dasdvol, 7, vol1data+4, 6 );
+                close_image_file( pCIF );
+                strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
+            }
+            if (sfname)
+                free( sfname );
+        }
+    }
+
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
-        WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename,
+        if (!dev->quiet)
+            WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename,
                 dev->ckdfakewr ? " with fake writing" : "");
     for (fileseq = 1;;)
     {
@@ -516,7 +550,8 @@ char           *strtok_str = NULL;      /* save last position        */
 
         if (devhdr.fileseq > 0)
         {
-            WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->ckdcyls,
+            if (!dev->quiet)
+                WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->ckdcyls,
                     (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
@@ -585,7 +620,8 @@ char           *strtok_str = NULL;      /* save last position        */
     *sfxptr = sfxchar;
 
     /* Log the device geometry */
-    WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->ckdcyls,
+    if (!dev->quiet)
+        WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     /* Locate the CKD dasd table entry */
@@ -645,8 +681,23 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKDDASD_EXT    *cckd;
+    char            devname[ 6 + 1 + MAX_PATH + 1 ] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
+
+    switch (sysblk.showdvol1)
+    {
+    default:
+    case SHOWDVOL1_NO:
+        MSGBUF( devname, "%s", dev->filename );
+        break;
+    case SHOWDVOL1_YES:
+        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
+        break;
+    case SHOWDVOL1_ONLY:
+        MSGBUF( devname, "%-6.6s", dev->dasdvol );
+        break;
+    }
 
     cckd = dev->cckd_ext;
     if (!cckd)
@@ -654,7 +705,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
         if ( dev->ckdnumfd > 1)
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] [%d segs] IO[%" I64_FMT "u]",
-                      dev->filename,
+                      devname,
                       dev->ckdcyls,
                       dev->ckdnumfd,
                       dev->excps );
@@ -662,7 +713,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
         else
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] IO[%" I64_FMT "u]",
-                      dev->filename,
+                      devname,
                       dev->ckdcyls,
                       dev->excps );
         }
@@ -670,7 +721,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
     else
     {
         snprintf( buffer, buflen-1, "%s [%d cyls] [%d sfs] IO[%" I64_FMT "u]",
-                  dev->filename,
+                  devname,
                   dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );
@@ -713,7 +764,8 @@ BYTE    unitstat;                       /* Unit Status               */
     cache_unlock(CACHE_DEVBUF);
 
     if (!dev->batch)
-        WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->cachehits, dev->cachemisses,
+        if (!dev->quiet)
+            WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->cachehits, dev->cachemisses,
                 dev->cachewaits);
 
     /* Close all of the CKD image files */

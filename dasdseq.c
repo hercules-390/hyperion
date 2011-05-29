@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 
 //  Open CKD image
 
-    cif = open_ckd_image(din, sfn, O_RDONLY | O_BINARY, 0);
+    cif = open_ckd_image(din, sfn, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL);
     if (!cif || cif == NULL )
         return -1;
 

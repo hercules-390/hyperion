@@ -184,7 +184,7 @@ char           *strtok_str = NULL;
     }
 
     /* Open the CKD image file */
-    cif = open_ckd_image (fname, sfname, O_RDWR|O_BINARY, 0);
+    cif = open_ckd_image (fname, sfname, O_RDWR|O_BINARY, IMAGE_OPEN_NORMAL);
     if (cif == NULL) return -1;
 
     /* Build the extent array for the SVCLIB dataset */
