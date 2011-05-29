@@ -6133,6 +6133,7 @@ int      i, rc;
 int      nomountedtapereinit = sysblk.nomountedtapereinit;
 int      init_argc;
 char   **init_argv;
+char   **save_argv = NULL;
 
     UNREFERENCED(cmdline);
 
@@ -6229,15 +6230,38 @@ char   **init_argv;
         if (init_argc)
         {
             init_argv = malloc ( init_argc * sizeof(char*) );
+            save_argv = malloc ( init_argc * sizeof(char*) );
             for (i = 0; i < init_argc; i++)
+            {
                 if (dev->argv[i])
                     init_argv[i] = strdup(dev->argv[i]);
                 else
                     init_argv[i] = NULL;
+                save_argv[i] = init_argv[i];
+            }
         }
         else
             init_argv = NULL;
     }
+
+    /* Save arguments for next time */
+    for (i = 0; i < dev->argc; i++)
+        if (dev->argv[i])
+            free(dev->argv[i]);
+    if (dev->argv)
+        free(dev->argv);
+    dev->argc = init_argc;
+    if (init_argc)
+    {
+        dev->argv = malloc ( init_argc * sizeof(char*) );
+        for (i = 0; i < init_argc; i++)
+            if (init_argv[i])
+                dev->argv[i] = strdup(init_argv[i]);
+            else
+                dev->argv[i] = NULL;
+    }
+    else
+        dev->argv = NULL;
 
     /* Call the device init routine to do the hard work */
     if ((rc = (dev->hnd->init)(dev, init_argc, init_argv)) < 0)
@@ -6247,27 +6271,14 @@ char   **init_argv;
         WRMSG(HHC02245, "I", lcss, devnum );
     }
 
-    /* Save arguments for next time */
-    if (rc == 0)
+    /* Free work memory */
+    if (save_argv)
     {
-        for (i = 0; i < dev->argc; i++)
-            if (dev->argv[i])
-                free(dev->argv[i]);
-        if (dev->argv)
-            free(dev->argv);
-
-        dev->argc = init_argc;
-        if (init_argc)
-        {
-            dev->argv = malloc ( init_argc * sizeof(char*) );
-            for (i = 0; i < init_argc; i++)
-                if (init_argv[i])
-                    dev->argv[i] = strdup(init_argv[i]);
-                else
-                    dev->argv[i] = NULL;
-        }
-        else
-            dev->argv = NULL;
+        for (i=0; i < init_argc; i++)
+            if (save_argv[i])
+                free(save_argv[i]);
+        free(save_argv);
+        free(init_argv);
     }
 
     /* Release the device lock */
