@@ -746,6 +746,57 @@ int     len;                            /* Length for page crossing  */
 /*-------------------------------------------------------------------*/
 #ifndef _VSTORE_CONCPY
 #define _VSTORE_CONCPY
+#if 0
+static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
+{
+  BYTE *u8d = d;
+  BYTE *u8s = s;
+
+  /* Copy until ready or 8 byte integral boundary */
+  while(n && ((uintptr_t) u8d & 7))
+  {
+    *u8d++ = *u8s++;
+    n--;
+  }
+
+#if !((defined(SIZEOF_LONG) && SIZEOF_LONG > 7) || (defined(SIZEOF_INT_P) && SIZEOF_INT_P > 7) || defined(OPTION_STRICT_ALLIGNMENT))
+  /* Code for 32bit machines */
+  /* Copy full words in right conditon, on enough length and src - dst distance */
+  if(n && regs->cpubit == regs->sysblk->started_mask && ((u8d - u8s) & 0xf) > 3)
+  {
+    while(n > 3)
+    {
+      store_fw(u8d, fetch_fw(u8s));
+      u8d += 4;
+      u8s += 4;
+      n -= 4;
+    }
+  }
+  else /* copy double words */
+#else
+  UNREFERENCED(regs);
+#endif /* Hercules for 32bit machine builds */
+
+  /* Copy double words on enough length and src - dst distance */
+  if(n && ((u8d - u8s) & 0xf) > 7)
+  {
+    while(n > 7)
+    {
+      store_dw(u8d, fetch_dw(u8s));
+      u8d += 8;
+      u8s += 8;
+      n -= 8;
+    }
+  }
+
+  /* Copy leftovers */
+  while(n)
+  {
+    *u8d++ = *u8s++;
+    n--;
+  }
+}
+#else
 static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
 {
  int   n2;
@@ -815,6 +866,7 @@ static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
     for ( ; n; n--)
         *(dest++) = *(src++);
 }
+#endif
 #endif /* !defined(_VSTORE_CONCPY) */
 
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
