@@ -5143,6 +5143,22 @@ VADR    effective_addr1,
                 effective_addr2, b2, regs->psw.pkey, l, regs);
 }
 
+#ifdef OPTION_OPTINST
+DEF_INST(D200)
+{
+int     b1, b2;                         /* Values of base fields     */
+VADR    ea1, ea2;                       /* Effective addresses       */
+BYTE    *d, *s; 
+
+    SS_LXL(inst, regs, b1, ea1, b2, ea2);
+
+    s = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    d = MADDR (ea1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    *d = *s;
+    ITIMER_UPDATE(ea1, 1, regs);
+}
+#endif
+
 
 /*-------------------------------------------------------------------*/
 /* E8   MVCIN - Move Inverse                                    [SS] */

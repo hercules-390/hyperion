@@ -3752,6 +3752,7 @@ DEF_INST(D500);
 DEF_INST(D501);
 DEF_INST(D503);
 DEF_INST(D507);
+DEF_INST(D200);
 #endif /* OPTION_OPTINST */
 
 /* Instructions in general2.c */

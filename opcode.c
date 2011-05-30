@@ -1244,6 +1244,7 @@ static zz_func opcode_58_0[0x10][GEN_MAXARCH];
 static zz_func opcode_91xx[0x08][GEN_MAXARCH];
 static zz_func opcode_A7_4[0x10][GEN_MAXARCH];
 static zz_func opcode_BF_x[0x03][GEN_MAXARCH];
+static zz_func opcode_D20x[0x01][GEN_MAXARCH];
 static zz_func opcode_D50x[0x04][GEN_MAXARCH];
 static zz_func opcode_E3_0[0x01][GEN_MAXARCH];
 static zz_func opcode_E3_0______04[0x01][GEN_MAXARCH];
@@ -2380,6 +2381,7 @@ void init_opcode_tables(void)
       replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
     }
+    replace_opcode_xxxx(arch, opcode_D20x[0][arch], 0xd2, 0x00); /* Optimized MVC */    
     replace_opcode_xxxx(arch, opcode_D50x[0][arch], 0xd5, 0x00); /* Optimized CLC */
     replace_opcode_xxxx(arch, opcode_D50x[1][arch], 0xd5, 0x01); /* Optimized CLC */
     replace_opcode_xxxx(arch, opcode_D50x[2][arch], 0xd5, 0x03); /* Optimized CLC */
@@ -6774,6 +6776,9 @@ static zz_func opcode_BF_x[0x03][GEN_MAXARCH] = {
  /*BF_x*/ GENx370x390x900 (BF_x,RS,"ICM"),
  /*BF_7*/ GENx370x390x900 (BF_7,RS,"ICM"),
  /*BF_F*/ GENx370x390x900 (BF_F,RS,"ICM") };
+
+static zz_func opcode_D20x[0x01][GEN_MAXARCH] = {
+ /*D200*/ GENx370x390x900 (D200,SS,"MVC") };
 
 static zz_func opcode_D50x[0x04][GEN_MAXARCH] = {
  /*D500*/ GENx370x390x900 (D500,SS,"CLC"),
