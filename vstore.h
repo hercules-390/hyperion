@@ -746,7 +746,6 @@ int     len;                            /* Length for page crossing  */
 /*-------------------------------------------------------------------*/
 #ifndef _VSTORE_CONCPY
 #define _VSTORE_CONCPY
-#if 0
 static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
 {
   BYTE *u8d = d;
@@ -766,7 +765,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
   {
     while(n > 3)
     {
-      store_fw(u8d, fetch_fw(u8s));
+      store_fw_noswap(u8d, fetch_fw_noswap(u8s));
       u8d += 4;
       u8s += 4;
       n -= 4;
@@ -796,77 +795,6 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
     n--;
   }
 }
-#else
-static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
-{
- int   n2;
- BYTE *dest = (BYTE *)d, *src = (BYTE *)s;
-
-    /* Byte for byte copy if short length or possible overlap */
-    if (n < 8
-     || (dest <= src  && dest + 8 > src)
-     || (src  <= dest && src  + 8 > dest))
-    {
-        /* use memset directly when the copy's effect is to
-           propagate a byte over an area - like in MVC 1(255,2),0(2) */
-        if(dest==src+1)
-        {
-            memset(dest,*src,n);
-        }
-        else
-        {
-            for ( ; n; n--)
-                *(dest++) = *(src++);
-        }
-        return;
-    }
-
-    /* copy to an 8 byte boundary */
-    n2 = (intptr_t)dest & 7;
-    n -= n2;
-    for ( ; n2; n2--)
-        *(dest++) = *(src++);
-
-#if !defined(OPTION_STRICT_ALIGNMENT) && \
-    ((!defined(_MSVC_) && defined(SIZEOF_LONG)  && SIZEOF_LONG  >= 8) || \
-     ( defined(_MSVC_) && defined(SIZEOF_INT_P) && SIZEOF_INT_P >= 8))
-
-    /* Below for 64-bit BUILDS ONLY, since the below C code
-       does NOT generate atomic 64-bit load/store assembler
-       code sequence compatible with Concurrent Block Update
-       except when building for 64-bit systems...
-    */
-    UNREFERENCED(regs);
-
-    /* copy 8 bytes at a time */
-    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
-        *(U64 *)dest = *(U64 *)src;
-
-#else /* 32-bit builds... */
-
- #if !defined(OPTION_STRICT_ALIGNMENT)
-
-    /* copy 4 bytes at a time if only one cpu started */
-    if (regs->cpubit == regs->sysblk->started_mask)
-        for ( ; n >= 4; n -= 4, dest += 4, src += 4)
-            *(U32 *)dest = *(U32 *)src;
-    else
-
- #else /* defined(OPTION_STRICT_ALIGNMENT) */
-    UNREFERENCED(regs);
- #endif
-
-    /* else copy 8 bytes at a time concurrently */
-        for ( ; n >= 8; n -= 8, dest += 8, src += 8)
-            store_dw_noswap(dest,fetch_dw_noswap(src));
-
-#endif /* (64-bit builds test...) */
-
-    /* copy leftovers */
-    for ( ; n; n--)
-        *(dest++) = *(src++);
-}
-#endif
 #endif /* !defined(_VSTORE_CONCPY) */
 
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
