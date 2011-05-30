@@ -373,7 +373,7 @@ char           *strtok_str = NULL;      /* save last position        */
     /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
     {
         CIFBLK* pCIF;
-        char dasdvol[7];
+        char dasdvol[7] = {0};
         if (!dev->showdvol1) /* (first time here for this open?) */
         {
             char* sfname = NULL;
@@ -389,10 +389,16 @@ char           *strtok_str = NULL;      /* save last position        */
             if (pCIF)
             {
                 BYTE *vol1data;
-                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 };
+                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 }; // "VOL1"
+                const BYTE cms1[4] = { 0xC3, 0xD4, 0xE2, 0xF1 }; // "CMS1"
+                const BYTE lnx1[4] = { 0xD3, 0xD5, 0xE7, 0xF1 }; // "LNX1"
                 rc = read_block( pCIF, 0, 0, 3, NULL, NULL, &vol1data, NULL );
                 if (rc == 0)
-                    if (memcmp( vol1data, vol1, 4 ) == 0)
+                    if (0
+                        || memcmp( vol1data, vol1, 4 ) == 0
+                        || memcmp( vol1data, cms1, 4 ) == 0
+                        || memcmp( vol1data, lnx1, 4 ) == 0
+                    )
                         make_asciiz( dasdvol, 7, vol1data+4, 6 );
                 close_image_file( pCIF );
                 strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
