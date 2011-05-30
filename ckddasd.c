@@ -370,6 +370,7 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->ckdtrks = 0;
     dev->ckdcyls = 0;
 
+#if defined( OPTION_SHOWDVOL1 )
     /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
     {
         CIFBLK* pCIF;
@@ -407,6 +408,7 @@ char           *strtok_str = NULL;      /* save last position        */
                 free( sfname );
         }
     }
+#endif /* defined( OPTION_SHOWDVOL1 ) */
 
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)

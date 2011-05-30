@@ -1295,7 +1295,6 @@ CMDABBR( "qpid",    4,              qpid_cmd,               SYSCMD,             
 CMDABBR( "qports",  5,              qports_cmd,             SYSCMD,             qports_cmd_desc,        NULL                )
 CMDABBR( "qproc",   5,              qproc_cmd,              SYSCMD,             qproc_cmd_desc,         NULL                )
 CMDABBR( "qstor",   5,              qstor_cmd,              SYSCMD,             qstor_cmd_desc,         NULL                )
-COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
 COMMAND( "start",                   start_cmd,              SYSCMD,             start_cmd_desc,         start_cmd_help      )
 COMMAND( "stop",                    stop_cmd,               SYSCMD,             stop_cmd_desc,          stop_cmd_help       )
 
@@ -1536,5 +1535,8 @@ COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             
 #if defined( SIE_DEBUG_PERFMON )
 COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        spm_cmd_desc,           NULL                )
 #endif
+#if defined( OPTION_SHOWDVOL1 )
+COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
+#endif /* defined( OPTION_SHOWDVOL1 ) */
 
 /*------------------------------(EOF)--------------------------------*/

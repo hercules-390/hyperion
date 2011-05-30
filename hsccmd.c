@@ -694,6 +694,7 @@ int log_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
+#if defined( OPTION_SHOWDVOL1 )
 /*-------------------------------------------------------------------*/
 /* showdvol1 command - toggle displaying of dasd vol1 in device list */
 /*-------------------------------------------------------------------*/
@@ -742,6 +743,7 @@ int showdvol1_cmd(int argc, char *argv[], char *cmdline)
     }
     return rc;
 }
+#endif /* defined( OPTION_SHOWDVOL1 ) */
 
 
 /*-------------------------------------------------------------------*/

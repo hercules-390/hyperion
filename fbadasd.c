@@ -93,6 +93,7 @@ char   *strtok_str = NULL;              /* save last position        */
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
+#if defined( OPTION_SHOWDVOL1 )
     /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
     {
         CIFBLK* pCIF;
@@ -136,6 +137,7 @@ char   *strtok_str = NULL;              /* save last position        */
                 free( sfname );
         }
     }
+#endif /* defined( OPTION_SHOWDVOL1 ) */
 
     /* Device is shareable */
     dev->shared = 1;
