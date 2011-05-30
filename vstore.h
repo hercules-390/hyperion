@@ -917,6 +917,7 @@ int     len2, len3;                     /* Lengths to copy           */
 
     ITIMER_SYNC(addr2,len,regs);
 
+#ifndef OPTION_OPTINST
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 0))
     {
@@ -926,6 +927,7 @@ int     len2, len3;                     /* Lengths to copy           */
         ITIMER_UPDATE(addr1,len,regs);
         return;
     }
+#endif
 
     /* Translate addresses of leftmost operand bytes */
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
