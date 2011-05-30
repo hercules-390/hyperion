@@ -781,7 +781,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
   {
     while(n > 7)
     {
-      store_dw(u8d, fetch_dw(u8s));
+      store_dw_noswap(u8d, fetch_dw_noswap(u8s));
       u8d += 8;
       u8s += 8;
       n -= 8;
