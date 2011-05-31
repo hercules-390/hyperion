@@ -124,6 +124,13 @@ static  CMDTAB   cmdtab[]  = {              /* (COMMAND table)       */
 #endif     /* ( OPTION_PTTRACE ) */         /* ( OPTION_PTTRACE )    */
 
 /*-------------------------------------------------------------------*/
+/* Static Variables                                                  */
+/*-------------------------------------------------------------------*/
+static LOCK  ProcessConsoleCommandLock;
+static int   ConsoleCommandLockInitialized = FALSE;
+static int   CommandLockCounter = 0;        /* (for Debug Purposes)  */
+
+/*-------------------------------------------------------------------*/
 /* $zapcmd - internal debug - may cause havoc - use with caution     */
 /*-------------------------------------------------------------------*/
 int zapcmd_cmd( CMDFUNC_ARGS_PROTO )
@@ -390,6 +397,22 @@ int HercCmdLine (char* pszCmdLine)
     char*    cmdline  = NULL;
     int      rc       = -1;
 
+    if (!ConsoleCommandLockInitialized) {
+         ConsoleCommandLockInitialized = TRUE;
+        initialize_lock( &ProcessConsoleCommandLock );
+    }
+
+    obtain_lock( &ProcessConsoleCommandLock );
+
+    if (MLVL( DEBUG ))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Panel_Enter CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    CommandLockCounter++;
+
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
     cmdline = strdup( pszCmdLine );
@@ -416,6 +439,21 @@ HercCmdExit:
 
     /* Free our saved copy */
     free( cmdline );
+
+    CommandLockCounter--;
+
+    if (MLVL( DEBUG ))
+    {
+        char msgbuf[64];
+        MSGBUF( msgbuf, "Panel_Exit CommandLockCounter %d", CommandLockCounter );
+        WRMSG( HHC90000, "D", msgbuf );
+    }
+
+    if (CommandLockCounter <= 0)
+    {
+        CommandLockCounter = 0;
+        release_lock( &ProcessConsoleCommandLock );
+    }
 
     if (MLVL( DEBUG ))
     {
