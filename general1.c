@@ -5155,7 +5155,7 @@ BYTE    *d, *s;
     s = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
     d = MADDR (ea1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     *d = *s;
-    ITIMER_UPDATE(ea1, 1, regs);
+    ITIMER_UPDATE(ea1, 0, regs);
 }
 #endif
 
