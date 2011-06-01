@@ -103,19 +103,24 @@ char   *strtok_str = NULL;              /* save last position        */
             char* sfname = NULL;
             if (dev->dasdsfn)
             {
-                int sfnlen = strlen( "sf=" ) + strlen( dev->dasdsfn ) + 1;
+                /* (N.B. must NOT have end quote, ONLY begin quote) */
+                int sfnlen = strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1;
                 sfname = malloc( sfnlen );
-                strlcpy( sfname, "sf=", sfnlen );
+                strlcpy( sfname, "sf=\"", sfnlen );
                 strlcat( sfname, dev->dasdsfn, sfnlen );
             }
             pCIF = open_fba_image( dev->filename, sfname, O_RDONLY | O_BINARY,
                 IMAGE_OPEN_DVOL1 | IMAGE_OPEN_QUIET );
+            if (sfname)
+                free( sfname );
             if (pCIF)
             {
                 const int vol1sector = 1;
-                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 }; // "VOL1"
-                const BYTE cms1[4] = { 0xC3, 0xD4, 0xE2, 0xF1 }; // "CMS1"
-                const BYTE lnx1[4] = { 0xD3, 0xD5, 0xE7, 0xF1 }; // "LNX1"
+                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 }; /* "VOL1" Standard OS volume marker */
+                const BYTE cmse[4] = { 0xC3, 0xD4, 0xE2, 0x7E }; /* "CMS=" CMS */
+                const BYTE cms1[4] = { 0xC3, 0xD4, 0xE2, 0xF1 }; /* "CMS1" CMS EDF */
+                const BYTE dir1[4] = { 0xC4, 0xC9, 0xD9, 0xF1 }; /* "DIR1" Recognized by VM */
+                const BYTE lnx1[4] = { 0xD3, 0xD5, 0xE7, 0xF1 }; /* "LNX1" Linux */
                 BYTE vol1data[10];
                 BYTE unitstat;
                 pCIF->devblk.fbamask   = 0;
@@ -126,15 +131,15 @@ char   *strtok_str = NULL;              /* save last position        */
                 rc = fba_read( &pCIF->devblk, vol1data, 10, &unitstat );
                 if (rc == 10 && (0
                     || memcmp( vol1data, vol1, 4 ) == 0
+                    || memcmp( vol1data, cmse, 4 ) == 0
                     || memcmp( vol1data, cms1, 4 ) == 0
+                    || memcmp( vol1data, dir1, 4 ) == 0
                     || memcmp( vol1data, lnx1, 4 ) == 0
                 ))
                     make_asciiz( dasdvol, 7, vol1data+4, 6 );
                 close_image_file( pCIF );
                 strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
             }
-            if (sfname)
-                free( sfname );
         }
     }
 #endif /* defined( OPTION_SHOWDVOL1 ) */
