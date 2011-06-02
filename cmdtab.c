@@ -124,13 +124,6 @@ static  CMDTAB   cmdtab[]  = {              /* (COMMAND table)       */
 #endif     /* ( OPTION_PTTRACE ) */         /* ( OPTION_PTTRACE )    */
 
 /*-------------------------------------------------------------------*/
-/* Static Variables                                                  */
-/*-------------------------------------------------------------------*/
-static LOCK  ProcessConsoleCommandLock;
-static int   ConsoleCommandLockInitialized = FALSE;
-static int   CommandLockCounter = 0;        /* (for Debug Purposes)  */
-
-/*-------------------------------------------------------------------*/
 /* $zapcmd - internal debug - may cause havoc - use with caution     */
 /*-------------------------------------------------------------------*/
 int zapcmd_cmd( CMDFUNC_ARGS_PROTO )
@@ -234,6 +227,38 @@ char*  argv[MAX_ARGS];
 }
 
 /*-------------------------------------------------------------------*/
+/* Helper macros to ensure serialized command processing             */
+/*-------------------------------------------------------------------*/
+
+#define HERC_CMD_ENTRY()                                            \
+do {                                                                \
+    /* Wait for current command to complete before starting         \
+       the next one, UNLESS this is the same thread calling         \
+       (to allow commands to call other commands if needed) */      \
+    obtain_lock( &sysblk.cmdlock );                                 \
+    {                                                               \
+        TID tid = thread_id();                                      \
+        while (sysblk.cmdtid && tid != sysblk.cmdtid)               \
+            wait_condition( &sysblk.cmdcond, &sysblk.cmdlock );     \
+        sysblk.cmdtid = tid;                                        \
+    }                                                               \
+    release_lock( &sysblk.cmdlock );                                \
+} while (0)
+
+#define HERC_CMD_EXIT( rc )                                         \
+do {                                                                \
+    /* Indicate the current command has now completed processing.   \
+       This allows the next waiting command to begin processing. */ \
+    obtain_lock( &sysblk.cmdlock );                                 \
+    {                                                               \
+        sysblk.cmdtid = 0;                                          \
+        broadcast_condition( &sysblk.cmdcond );                     \
+    }                                                               \
+    release_lock( &sysblk.cmdlock );                                \
+    return (rc);                                                    \
+} while (0)
+
+/*-------------------------------------------------------------------*/
 /* Route Hercules command to proper command handling function        */
 /*-------------------------------------------------------------------*/
 int CallHercCmd ( CMDFUNC_ARGS_PROTO )
@@ -241,6 +266,12 @@ int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 CMDTAB* pCmdTab;
 size_t  cmdlen, matchlen;
 int     rc = HERRINVCMD;             /* Default to invalid command   */
+
+    /* Let 'cscript' command run immediately in any context */
+    if (argc >= 1 && strcasecmp( argv[0], "cscript" ) == 0)
+        return cscript_cmd( 0, NULL, NULL );
+
+    HERC_CMD_ENTRY();
 
     /* [ENTER] key by itself: either start the CPU or ignore
        it altogether when instruction stepping is not active. */
@@ -256,7 +287,7 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
             rc = start_cmd( 0, NULL, NULL );
         else
             rc = 0;         /* ignore [ENTER] */
-        return rc;
+        HERC_CMD_EXIT( rc );
     }
 
     /* (sanity check) */
@@ -267,7 +298,7 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
     /* Only if it rejects it, will we then try processing it ourselves. */
     if(system_command)
         if((rc = system_command( CMDFUNC_ARGS )) != HERRINVCMD)
-            return rc;
+            HERC_CMD_EXIT( rc );
 #endif /* defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Check for comment command. We need to test for this separately
@@ -289,7 +320,8 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
            to do additional processing for comments in the future (such
            as simply counting them for example), so we should ALWAYS call
            our comment_cmd function here instead of just returning. */
-        return comment_cmd( CMDFUNC_ARGS );
+        rc = comment_cmd( CMDFUNC_ARGS );
+        HERC_CMD_EXIT( rc );
     }
 
     /* Route standard formatted commands from our COMMAND routing table */
@@ -384,8 +416,9 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
             rc = OnOffCommand( CMDFUNC_ARGS );
     }
 
-    return rc;
+    HERC_CMD_EXIT( rc );
 }
+/* end CallHercCmd */
 
 /*-------------------------------------------------------------------*/
 /* Hercules command line processor                                   */
@@ -396,22 +429,6 @@ int HercCmdLine (char* pszCmdLine)
     char*    argv[ MAX_ARGS ];
     char*    cmdline  = NULL;
     int      rc       = -1;
-
-    if (!ConsoleCommandLockInitialized) {
-         ConsoleCommandLockInitialized = TRUE;
-        initialize_lock( &ProcessConsoleCommandLock );
-    }
-
-    obtain_lock( &ProcessConsoleCommandLock );
-
-    if (MLVL( DEBUG ))
-    {
-        char msgbuf[64];
-        MSGBUF( msgbuf, "Panel_Enter CommandLockCounter %d", CommandLockCounter );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-
-    CommandLockCounter++;
 
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
@@ -440,21 +457,6 @@ HercCmdExit:
     /* Free our saved copy */
     free( cmdline );
 
-    CommandLockCounter--;
-
-    if (MLVL( DEBUG ))
-    {
-        char msgbuf[64];
-        MSGBUF( msgbuf, "Panel_Exit CommandLockCounter %d", CommandLockCounter );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-
-    if (CommandLockCounter <= 0)
-    {
-        CommandLockCounter = 0;
-        release_lock( &ProcessConsoleCommandLock );
-    }
-
     if (MLVL( DEBUG ))
     {
         char msgbuf[32];
@@ -464,6 +466,7 @@ HercCmdExit:
 
     return rc;
 }
+/* end HercCmdLine */
 
 /*-------------------------------------------------------------------*/
 /* HelpMessage - print help text for message hhcnnnnna               */
@@ -508,9 +511,9 @@ static int SortCmdTab( const void* p1, const void* p2 )
 }
 
 /*-------------------------------------------------------------------*/
-/* HelpCommand - display additional help for a given command         */
+/* HelpCommand - display more help for a given command    (internal) */
 /*-------------------------------------------------------------------*/
-int HelpCommand( CMDFUNC_ARGS_PROTO )
+static int HelpCommand( CMDFUNC_ARGS_PROTO )
 {
     static int didinit = 0;
     CMDTAB* pCmdTab;
@@ -675,6 +678,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
     }
     return rc;
 }
+/* end HelpCommand */
 
 int scr_recursion_level();  // (external helper function; see script.c)
 
@@ -856,3 +860,4 @@ void *panel_command (void *cmdline)
 
     return NULL;
 }
+/* end panel_command / panel_command_r */

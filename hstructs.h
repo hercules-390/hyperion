@@ -519,6 +519,9 @@ struct SYSBLK {
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
+        LOCK    cmdlock;                /* Command processing lock   */
+        COND    cmdcond;                /* Command processing cond   */
+        TID     cmdtid;                 /* Active command thread     */
         char   *cmdsep;                 /* Single Char cmd Sep       */
         BYTE    sysgroup;               /* Panel Command grouping    */
 #define SYSGROUP_SYSOPER     0x01     /* computer operator functions */

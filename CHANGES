@@ -1,3 +1,4 @@
+02 Jun 2011 Fix command processing serialization/locking - Fish
 29 May 2011 SHOWDVOL1 command/statement to show dasd VOL1 in device list - Fish
 28 May 2011 Fix rare devinit bug and leak in reuse of previous arguments - Fish
 23 Apr 2011 Provide initial DIAGNOSE X'F18' README and release Host Resource Access

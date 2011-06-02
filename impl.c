@@ -633,6 +633,8 @@ int     dll_count;                      /* index into array          */
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
     initialize_lock (&sysblk.mntlock);
+    initialize_lock      (&sysblk.cmdlock);
+    initialize_condition (&sysblk.cmdcond);
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     /* Initialize the wrapping key registers lock */
