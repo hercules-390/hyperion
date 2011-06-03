@@ -1034,7 +1034,7 @@
   "Format: \"script filename [...filename...]\". Sequentially executes\n"        \
   "the commands contained within the file 'filename'. The script file may\n"     \
   "also contain \"script\" commands, but the system ensures that no more\n"      \
-  "than 10 levels of script are invoked at any one time.\n"
+  "than " MSTRING( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n"
 
 #define scsimount_cmd_desc      "Automatic SCSI tape mounts"
 #define scsimount_cmd_help      \

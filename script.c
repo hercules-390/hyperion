@@ -180,7 +180,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         set_symbol("CUU","$(CUU)");
         set_symbol("CCUU","$(CCUU)");
         set_symbol("DEVN","$(DEVN)");
-        
+
         buf1=resolve_symbol_string(buf);
 
         if(buf1!=NULL)
@@ -227,7 +227,7 @@ FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 int  inc_ignore_errors = 0;             /* 1==ignore include errors  */
 BYTE    c;                              /* Work area for sscanf      */
 char    pathname[MAX_PATH];             /* file path in host format  */
-char    fname[MAX_PATH];                /* normalized filename       */ 
+char    fname[MAX_PATH];                /* normalized filename       */
 int errorcount = 0;
 
     /* Open the base configuration file */
@@ -242,8 +242,8 @@ int errorcount = 0;
     if (inc_fp[inc_level] == NULL)
     {
         WRMSG(HHC01432, "S", 1, fname, "fopen()", strerror(errno));
-        fflush(stderr);  
-        fflush(stdout);  
+        fflush(stderr);
+        fflush(stdout);
         usleep(100000);
         return -1;
     }
@@ -286,8 +286,8 @@ int errorcount = 0;
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
         {
-            if  (strcasecmp (addargv[1], "include_errors") == 0) 
-            {              
+            if  (strcasecmp (addargv[1], "include_errors") == 0)
+            {
                 WRMSG(HHC01435, "I", fname);
                 inc_ignore_errors = 1 ;
             }
@@ -297,7 +297,7 @@ int errorcount = 0;
 
         /* Check for include statement */
         if (strcasecmp (addargv[0], "include") == 0)
-        {              
+        {
             if (++inc_level >= MAX_INC_LEVEL)
             {
                 WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
@@ -314,12 +314,12 @@ int errorcount = 0;
             if (inc_fp[inc_level] == NULL)
             {
                 inc_level--;
-                if ( inc_ignore_errors == 1 ) 
+                if ( inc_ignore_errors == 1 )
                 {
                     WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
                     continue ;
                 }
-                else 
+                else
                 {
                     WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
                     return -1;
@@ -422,7 +422,7 @@ int errorcount = 0;
             rc = CallHercCmd (addargc, addargv, addcmdline);
 
             /* rc < 0 abort, rc == 0 OK, rc > warnings */
-            
+
             if( rc < 0 )
             {
                 errorcount++;
@@ -503,12 +503,12 @@ int errorcount = 0;
             if (inc_fp[inc_level] == NULL)
             {
                 inc_level--;
-                if ( inc_ignore_errors == 1 ) 
+                if ( inc_ignore_errors == 1 )
                 {
                     WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
                     continue ;
                 }
-                else 
+                else
                 {
                     WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
                     return -1;
@@ -547,271 +547,367 @@ rexx_done:
 } /* end function process_config */
 
 
-/* PATCH ISW20030220 - Script command support */
-static int scr_recursion=0;         /* Recursion count (set to 0) */
-static int scr_aborted=0;           /* Script abort flag */
-static int scr_uaborted=0;          /* Script user abort flag */
-static TID scr_tid=0;               /* Script TID */
-static char *pszCmdline = NULL;     /* save pointer to cmdline */
+/*-------------------------------------------------------------------*/
+/* Global static work variables for the Script Processing thread     */
+/* Must only be accessed under the control of the sysblk.scrlock!    */
+/*-------------------------------------------------------------------*/
+static char** scr_slots     = NULL;     /* Ptr to command-line queue */
+static int    scr_alloc     = 0;        /* Queue slots allocated     */
+static int    scr_count     = 0;        /* Number of slots queued    */
+static int    scr_recursion = 0;        /* Current recursion level   */
+static int    scr_flags     = 0;        /* Script processing flags   */
+#define       SCR_CANCEL     0x80       /* Cancel script requested   */
+#define       SCR_ABORT      0x40       /* Script abort requested    */
+#define       SCR_CANCELED   0x20       /* Script has been canceled  */
+#define       SCR_ABORTED    0x10       /* Script has been aborted   */
 
-int scr_recursion_level() { return scr_recursion; }
+#define  SCRTHREADNAME   "Script Processing"    /* (our thread name) */
 
 /*-------------------------------------------------------------------*/
-/* cancel script command                                             */
+/* Query script recursion level function                  (external) */
 /*-------------------------------------------------------------------*/
-int cscript_cmd(int argc, char *argv[], char *cmdline)
+int scr_recursion_level()
+{
+    return  scr_recursion;        /* (query only; no locking needed) */
+}
+
+/*-------------------------------------------------------------------*/
+/* cscript command  --  cancel a running script           (external) */
+/*-------------------------------------------------------------------*/
+int cscript_cmd( int argc, char *argv[], char *cmdline )
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    if (scr_tid!=0)
-    {
-        scr_uaborted=1;
-    }
+    obtain_lock( &sysblk.scrlock );
+    scr_flags |= SCR_CANCEL;
+    release_lock( &sysblk.scrlock );
     return 0;
 }
 
-
-void script_test_userabort()
+/*-------------------------------------------------------------------*/
+/* Check if script has aborted or been canceled           (internal) */
+/*-------------------------------------------------------------------*/
+static int script_abort()
 {
-    if (scr_uaborted)
+    int abort;
+    obtain_lock( &sysblk.scrlock );
+    if (scr_flags & SCR_CANCEL)             /* cancel requested? */
     {
-        WRMSG(HHC02259, "E", "user cancel request");
-        scr_aborted=1;
+        if (!(scr_flags & SCR_CANCELED))    /* no msg issued yet? */
+        {
+            // "Script aborted: '%s'"
+            WRMSG( HHC02259, "E", "user cancel request" );
+            scr_flags |= SCR_CANCELED;
+        }
+        scr_flags |= SCR_ABORT;             /* request abort */
     }
+    abort = (scr_flags & SCR_ABORT) ? 1 : 0;
+    release_lock( &sysblk.scrlock );
+    return abort;
 }
 
-
-int process_script_file(char *script_name,int isrcfile)
+/*-------------------------------------------------------------------*/
+/* Process a single script file                 (internal, external) */
+/*-------------------------------------------------------------------*/
+int process_script_file( char *script_name, int isrcfile )
 {
-FILE   *scrfp;                          /* RC file pointer           */
-int     scrbufsize = 1024;              /* Size of RC file  buffer   */
-char   *scrbuf = NULL;                  /* RC file input buffer      */
-int     scrlen;                         /* length of RC file record  */
-int     scr_pause_amt = 0;              /* seconds to pause RC file  */
-int     lineno = 0;
+char    script_path[MAX_PATH];          /* Full path of script file  */
+FILE   *fp          = NULL;             /* Script FILE pointer       */
+char    stmt[ MAX_SCRIPT_STMT ];        /* script statement buffer   */
+int     stmtlen     = 0;                /* Length of current stmt    */
+int     stmtnum     = 0;                /* Current stmt line number  */
+int     pauseamt    = 0;                /* Seconds to pause script   */
 char   *p;                              /* (work)                    */
-char    pathname[MAX_PATH];             /* (work)                    */
-int     i;
+int     i;                              /* (work)                    */
 
-    /* Check the recursion level - if it exceeds a certain amount
-       abort the script stack
-    */
-    if (scr_recursion>=10)
+    obtain_lock( &sysblk.scrlock );
+
+    /* Abort script if already at maximum recursion level */
+    if (scr_recursion >= MAX_SCRIPT_DEPTH)
     {
-        WRMSG(HHC02259, "E", "script recursion level exceeded");
-        scr_aborted=1;
-        return 0;
+        // "Script aborted: '%s'"
+        WRMSG( HHC02259, "E", "script recursion level exceeded" );
+        scr_flags |= SCR_ABORT;
+        release_lock( &sysblk.scrlock );
+        return -1;
     }
 
-    /* Open RC file */
+    release_lock( &sysblk.scrlock );
 
-    hostpath(pathname, script_name, sizeof(pathname));
-
-    if (!(scrfp = fopen(pathname, "r")))
+    /* Open the specified script file */
+    hostpath( script_path, script_name, sizeof( script_path ));
+    if (!(fp = fopen( script_path, "r" )))
     {
-        int save_errno = errno;
-
-        if (!isrcfile)
+        /* We only issue the "File not found" error message if the
+           script file being processed is NOT the ".RC" file since
+           .RC files are optional. For all OTHER type of errors we
+           ALWAYS issue an error message, even for the ".RC" file.
+        */
+        int save_errno = errno; /* (save error code for caller) */
         {
-            if (ENOENT != errno)
-                WRMSG(HHC02219, "E", "fopen()", strerror(errno));
-            else
-                WRMSG(HHC01405, "E", pathname);
+            if (ENOENT != errno)    /* If NOT "File Not found" */
+            {
+                // "Error in function '%s': '%s'"
+                WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
+            }
+            else if (!isrcfile)     /* If NOT the ".RC" file */
+            {
+                // "Script file '%s' not found"
+                WRMSG( HHC01405, "E", script_path );
+            }
         }
-        else /* (this IS the .rc file...) */
-        {
-            if (ENOENT != errno)
-                WRMSG(HHC02219, "E", "fopen()", strerror(errno));
-        }
-
-        errno = save_errno;
+        errno = save_errno;  /* (restore error code for caller) */
         return -1;
     }
 
     scr_recursion++;
 
-    if (isrcfile)
+    /* Read the first line into our statement buffer */
+    if (!script_abort() && !fgets( stmt, MAX_SCRIPT_STMT, fp ))
     {
-        WRMSG(HHC02260, "I", pathname);
+        // "Script file processing started using file '%s'"
+        WRMSG( HHC02260, "I", script_path );
+        goto script_end;
     }
 
-    /* Obtain storage for the SCRIPT file buffer */
+#if defined( HAVE_REGINA_REXXSAA_H )
 
-    if (!(scrbuf = malloc (scrbufsize)))
+    /* Skip past blanks to start of command */
+    for (p = stmt; isspace( *p ); p++)
+        ; /* (nop; do nothing) */
+
+    /* Execute REXX script if line begins with "/*" */
+    if (!script_abort() && !strncmp( p, "/*", 2 ))
     {
-        char buf[40];
-        MSGBUF( buf, "malloc(%d)", scrbufsize);
-        WRMSG(HHC02219, "E", buf, strerror(errno));
-        fclose(scrfp);
-        return 0;
+        char *rcmd[2] = { "exec", NULL };
+        rcmd[1] = script_name;
+        fclose( fp ); fp = NULL;
+        exec_cmd( 2, rcmd, NULL );  /* (synchronous) */
+        goto script_end;
     }
 
-    for (; ;)
+#endif /* defined( HAVE_REGINA_REXXSAA_H ) */
+
+    // "Script file processing started using file '%s'"
+    WRMSG( HHC02260, "I", script_path );
+
+    do
     {
-        script_test_userabort();
-        if (scr_aborted)
-        {
-           break;
-        }
-        /* Read a complete line from the SCRIPT file */
+        stmtnum++;
 
-        if (!fgets(scrbuf, scrbufsize, scrfp)) break;
-
-        lineno++;
+        /* Skip past blanks to start of statement */
+        for (p = stmt; isspace( *p ); p++)
+            ; /* (nop; do nothing) */
 
         /* Remove trailing whitespace */
+        for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
+        p[stmtlen] = 0;
 
-        for (scrlen = (int)strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
-        scrbuf[scrlen] = 0;
-
-#if defined(HAVE_REGINA_REXXSAA_H)
-        /* Check for a REXX exec being executed */
-        if ( lineno == 1 && !strncmp(scrbuf,"/*",2))
+        /* Special handling for 'pause' statement */
+        if (strncasecmp( p, "pause ", 6 ) == 0)
         {
-        char *rcmd[2] = { "exec", NULL };
-            rcmd[1] = script_name;
-            exec_cmd(2,rcmd,NULL);
-            goto rexx_done;
-        }
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+            sscanf( p+6, "%d", &pauseamt );
 
-        /* Remove any # comments on the line before processing */
-
-        if ((p = strchr(scrbuf,'#')) && p > scrbuf)
-            do *p = 0; while (isspace(*--p) && p >= scrbuf);
-
-        if ( !strncasecmp(scrbuf,"pause",5) )
-        {
-            sscanf(scrbuf+5, "%d", &scr_pause_amt);
-
-            if (scr_pause_amt < 0 || scr_pause_amt > 999)
+            if (pauseamt < 0 || pauseamt > 999)
             {
-                WRMSG(HHC02261, "W",scrbuf+5);
-                continue;
+                // "Script file statement only; %s ignored"
+                WRMSG( HHC02261, "W", p+6 );
+                continue; /* (go on to next statement) */
             }
 
-            if (MLVL(VERBOSE))
-                WRMSG(HHC02262, "I",scr_pause_amt);
-            for ( i = scr_pause_amt; i > 0; i--)
+            if (!script_abort() && MLVL( VERBOSE ))
             {
-                SLEEP(1);
-                if (scr_uaborted) break;
-            }
-            if (!scr_uaborted)
-            {
-                if (MLVL(VERBOSE))
-                    WRMSG(HHC02263, "I");
+                // "Script file processing paused for %d seconds..."
+                WRMSG( HHC02262, "I", pauseamt );
             }
 
-            continue;
-        }
+            for (i = pauseamt * 4; i > 0 && !script_abort(); i--)
+                usleep( 250 * 1000 ); /* (0.25 seconds) */
 
-        /* Process the command */
-
-        for (p = scrbuf; isspace(*p); p++);
-        
-        panel_command(p);
-        script_test_userabort();
-        if (scr_aborted)
-        {
-           break;
+            if (!script_abort() && MLVL( VERBOSE ))
+            {
+                // "Script file processing resuming..."
+                WRMSG( HHC02263, "I" );
+            }
+            continue;  /* (go on to next statement) */
         }
+        /* (end 'pause' stmt) */
+
+        /* Process statement as command */
+        panel_command( p );
     }
+    while (!script_abort() && fgets( stmt, MAX_SCRIPT_STMT, fp ));
 
-    if (feof(scrfp))
-        WRMSG(HHC02264, "I", script_name );
-    else
+script_end:
+
+    /* Issue termination message and close file */
+    if (fp)
     {
-        if (!scr_aborted)
+        if (feof( fp ))
         {
-           WRMSG (HHC02219,"E", "read()",strerror(errno));
+            // "Script %s file processing complete"
+            WRMSG( HHC02264, "I", script_name );
         }
-        else
+        else /* (canceled, recursion, or i/o error) */
         {
-           WRMSG (HHC02265, "I", pathname);
-           scr_uaborted=1;
+            obtain_lock( &sysblk.scrlock );
+            if (!(scr_flags & SCR_ABORTED))  /* (no msg issued yet?) */
+            {
+                if (!script_abort())         /* (not abort request?) */
+                {
+                    // "Error in function '%s': '%s'"
+                    WRMSG( HHC02219,"E", "read()", strerror( errno ));
+                    scr_flags |= SCR_ABORT;
+                }
+
+                // "Script file '%s' aborted due to previous conditions"
+                WRMSG( HHC02265, "I", script_path );
+                scr_flags |= SCR_ABORTED;
+            }
+            release_lock( &sysblk.scrlock );
         }
-    }
-#if defined(HAVE_REGINA_REXXSAA_H)
-rexx_done:
-#endif /* defined(HAVE_REGINA_REXXSAA_H) */
-    fclose(scrfp);
-    scr_recursion--;        /* Decrement recursion count */
-    if (scr_recursion==0)
-    {
-        scr_aborted=0;      /* reset abort flag */
-        scr_tid=0;          /* reset script thread id */
+        fclose( fp );
     }
 
+    scr_recursion--;
     return 0;
 }
-
-
-void *script_process_thread( void *cmd)
-{
-int     cmd_argc;
-char*   cmd_argv[MAX_ARGS];
-int     i;
-
-    UNREFERENCED(cmd);
-
-    /* Parse the command line into its individual arguments...
-       Note: original command line now sprinkled with nulls */
-    parse_args (pszCmdline, MAX_ARGS, cmd_argv, &cmd_argc);
-
-    /* If no command was entered (i.e. they entered just a comment
-       (e.g. "# comment")) then ignore their input */
-    if ( cmd_argc > 1 )
-        for (i=1;i<cmd_argc;i++)
-            process_script_file(cmd_argv[i],0);
-    scr_tid = 0;
-    scr_aborted = 0;
-    scr_uaborted = 0;
-    free(pszCmdline);
-    pszCmdline = NULL;
-    return 0;
-}
-
+/* end process_script_file */
 
 /*-------------------------------------------------------------------*/
-/* script command                                                    */
+/* Script processing thread -- process queued script cmds (internal) */
 /*-------------------------------------------------------------------*/
-int script_cmd(int argc, char *argv[], char *cmdline)
+static void *script_thread( void *arg )
 {
-    int rc;
-    UNREFERENCED(argv);
+    int   slotidx = 0;                  /* Current active queue slot */
+    char* cmd_argv[MAX_ARGS];           /* Command arguments array   */
+    int   cmd_argc;                     /* Number of cmd arguments   */
+    int   i;                            /* (work)                    */
 
-    if (argc<2)
+    // "Thread id "TIDPAT", prio %2d, name '%s' started"
+    WRMSG( HHC00100, "I", (u_long) thread_id(),
+        getpriority( PRIO_PROCESS, 0 ), SCRTHREADNAME );
+
+    /* Loop forever or until told to exit via sysblk.scrtid == 0 */
+    obtain_lock( &sysblk.scrlock );
+    while (sysblk.scrtid)
     {
-        WRMSG( HHC02299, "E", argv[0] );
-        return 1;
-    }
+        /* Wait for work item(s) to be queued... */
+        while (sysblk.scrtid && !scr_count)
+            wait_condition( &sysblk.scrcond, &sysblk.scrlock );
 
-    if (scr_tid==0)
-    {
-        pszCmdline = strdup(cmdline);
-
-        scr_aborted = 0;
-        scr_uaborted = 0;
-        rc = create_thread(&scr_tid,DETACHED,
-                  script_process_thread,NULL,"script processing");
-        if (rc)
+        /* Process all entries in our work queue... */
+        for (slotidx=0; sysblk.scrtid && slotidx < scr_count; slotidx++)
         {
-            if (pszCmdline != NULL)
+            /* Parse the command line into its individual arguments...
+               Note: original command line now sprinkled with nulls */
+            parse_args( scr_slots[ slotidx ], MAX_ARGS, cmd_argv, &cmd_argc );
+            ASSERT( cmd_argc > 1 );   /* (sanity check) */
+
+            /* Process each filename argument on this script command */
+            scr_flags = 0;
+            scr_recursion = 0;
+            for (i=1; !script_abort() && i < cmd_argc; i++)
             {
-                free(pszCmdline);
-                pszCmdline = NULL;
+                release_lock( &sysblk.scrlock );
+                process_script_file( cmd_argv[i], 0 );
+                obtain_lock( &sysblk.scrlock );
             }
-            WRMSG(HHC00102, "E", strerror(rc));
-            scr_tid = 0;
+            scr_flags = 0;
+            scr_recursion = 0;
+        }
+        /* end for (slotidx=0; ... */
+
+        /* Queue has been processed and is now empty */
+        scr_count = 0;
+    }
+    /* end while (sysblk.scrtid) */
+
+    // "Thread id "TIDPAT", prio %2d, name '%s' ended"
+    WRMSG( HHC00101, "I", (u_long) thread_id(),
+        getpriority( PRIO_PROCESS, 0 ), SCRTHREADNAME );
+    release_lock( &sysblk.scrlock );
+    return NULL;
+}
+/* end script_thread */
+
+/*-------------------------------------------------------------------*/
+/* script_cmd function  --  add script cmd to work queue  (external) */
+/*-------------------------------------------------------------------*/
+int script_cmd( int argc, char* argv[], char* cmdline )
+{
+    ASSERT( cmdline && *cmdline );  /* (sanity check) */
+
+    obtain_lock( &sysblk.scrlock );
+
+    /* Create the script processing thread if needed */
+    if (!sysblk.scrtid)
+    {
+        int rc = create_thread( &sysblk.scrtid, DETACHED,
+            script_thread, NULL, SCRTHREADNAME );
+        if (rc != 0)
+        {
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
+            release_lock( &sysblk.scrlock );
+            return -1;
         }
     }
-    else
+
+    /* Allow Script Processing thread to recursively call itself */
+    if (thread_id() == sysblk.scrtid)
     {
-        return process_script_file(argv[1], 0);
+        int i, rc, rc2 = 0;
+        release_lock( &sysblk.scrlock );
+        for (i=1; !script_abort() && i < argc; i++)
+        {
+            rc = process_script_file( argv[i], 0 );
+            rc2 = MAX( rc, rc2 );
+        }
+        return rc2;
     }
 
+    /* Allocate larger work queue if needed */
+    if (scr_count >= scr_alloc)
+    {
+        int newalloc = scr_count + 1;
+        char** newslots = (char**) malloc( newalloc * sizeof( char* ));
+        if (!newslots)
+        {
+            // "Out of memory"
+            WRMSG( HHC00152, "E" );
+            release_lock( &sysblk.scrlock );
+            return -1;
+        }
+        if (scr_slots)
+        {
+            memcpy( newslots, scr_slots, scr_alloc * sizeof( char* ));
+            free( scr_slots );
+        }
+        scr_slots = newslots;
+        scr_alloc = newalloc;
+    }
+
+    /* Add the script command to the work queue */
+    scr_slots[ scr_count ] = strdup( cmdline );
+
+    if (!scr_slots[ scr_count ])
+    {
+        // "Out of memory"
+        WRMSG( HHC00152, "E" );
+        release_lock( &sysblk.scrlock );
+        return -1;
+    }
+    else
+        scr_count++;
+
+    /* Notify the Script Processing thread it has work */
+    broadcast_condition( &sysblk.scrcond );
+
+    release_lock( &sysblk.scrlock );
     return 0;
 }
+/* end script_cmd */
+
 #endif /*!defined(_GEN_ARCH)*/

@@ -299,6 +299,12 @@
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
 
 /*-------------------------------------------------------------------*/
+/* Script processing constants                                       */
+/*-------------------------------------------------------------------*/
+#define  MAX_SCRIPT_STMT    1024        /* Max script stmt length    */
+#define  MAX_SCRIPT_DEPTH   10          /* Max script nesting depth  */
+
+/*-------------------------------------------------------------------*/
 /* Macros for storage functions:                                     */
 /*                                                                   */
 /*    HPCALLOC:    Hercules page-aligned 'calloc'. Used *ONLY*       */

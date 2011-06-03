@@ -633,6 +633,8 @@ int     dll_count;                      /* index into array          */
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
     initialize_lock (&sysblk.mntlock);
+    initialize_lock     ( &sysblk.scrlock );
+    initialize_condition( &sysblk.scrcond );
     initialize_lock      (&sysblk.cmdlock);
     initialize_condition (&sysblk.cmdcond);
 

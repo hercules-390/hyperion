@@ -701,7 +701,7 @@ void *panel_command (void *cmdline)
     /* Every command will be stored in history list,
        EXCEPT: null commands, script commands, scp input,
        and "silent" commands (prefixed with '-') */
-    if (*pCmdLine != 0 && scr_recursion_level()  == 0)
+    if (*pCmdLine != 0 && thread_id() != sysblk.scrtid)
     {
         if (!(*pCmdLine == '-'))    /* (normal command?) */
         {

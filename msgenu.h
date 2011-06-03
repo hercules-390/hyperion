@@ -93,7 +93,7 @@ always be manually overridden at any time via the "msglevel" command.
 
 
 /* DO NOT REMOVE - This code is used to verify various printf type functions have the
- * correct arguments and data types 
+ * correct arguments and data types
  */
 #if defined(DEBUG_MSGS) || ( !defined(_MSVC_) && ( defined(_DEBUG) || defined(DEBUG) ) )
 #define WRMSG(id, s, ...) \
@@ -345,7 +345,8 @@ do { \
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
 #define HHC00150 "%s module loaded%s"
 #define HHC00151 "Activated facility: '%s'"
-// 00152 - 00159 unused
+#define HHC00152 "Out of memory"
+// 00153 - 00159 unused
 #define HHC00160 "SCP %scommand: '%s'"
 #define HHC00161 "Function %s failed: '[%02d] %s'"
 
