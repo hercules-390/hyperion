@@ -683,6 +683,19 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 int scr_recursion_level();  // (external helper function; see script.c)
 
 /*-------------------------------------------------------------------*/
+/* Helper function to echo a command to the console       (internal) */
+/*-------------------------------------------------------------------*/
+static void EchoHercCmdLine( const char* cmd )
+{
+#if defined( OPTION_CMDTGT )
+    if (CMDTGT_HERC != sysblk.cmdtgt)
+        WRMSG( HHC00013, "I", cmd );    // "Herc command: '%s'"
+    else
+#endif /* defined( OPTION_CMDTGT ) */
+        WRMSG( HHC01603, "I", cmd );    // "%s"
+}
+
+/*-------------------------------------------------------------------*/
 /* panel_command entry-point:  determine if Hercules or scp_command  */
 /*-------------------------------------------------------------------*/
 #if defined( OPTION_DYNAMIC_LOAD )
@@ -771,7 +784,7 @@ void *panel_command (void *cmdline)
     )
     {
         if (hercecho)
-            WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+            EchoHercCmdLine( cmd );
         HercCmdLine( cmd );
         return NULL;
     }
@@ -797,7 +810,7 @@ void *panel_command (void *cmdline)
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
             {
                 if (hercecho && *cmd)
-                    WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+                    EchoHercCmdLine( cmd );
 #if defined( OPTION_CONFIG_SYMBOLS )
                 /* Perform variable substitution */
                 /* First, set some 'dynamic' symbols
@@ -854,7 +867,7 @@ void *panel_command (void *cmdline)
     }
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
     if (hercecho && *cmd)
-        WRMSG( HHC00013, "I", cmd );  /* (echo command to console) */
+        EchoHercCmdLine( cmd );
     HercCmdLine( cmd );
 #endif /* defined( OPTION_CMDTGT ) */
 

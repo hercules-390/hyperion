@@ -588,7 +588,7 @@ static int hao_ignoremsg(char *msg)
     memmove( msg, msg + debuglen, (msglen -= debuglen)+1 );
 
   /* Ignore our own messages (HHC0007xx, HHC0008xx and HHC0009xx
-     are reserved so that hao.c. can recognize its own messages) */
+     are reserved so that hao.c can recognize its own messages) */
   if (0
       || !strncasecmp( msg, "HHC0007", 7 )
       || !strncasecmp( msg, "HHC0008", 7 )
@@ -597,10 +597,13 @@ static int hao_ignoremsg(char *msg)
     return TRUE;  /* (it's one of our hao messages; ignore it) */
 
   /* To be extra safe, ignore any messages with the string "hao" in them */
-  // HHC00013: "Herc command: '%s'"
-  if (strcasestr( msg, "HHC00013I" ) && (strcasestr( msg, "'hao " ) ||
-                                         strcasestr( msg, "herc hao " )))
-    return TRUE;  /* ("hao" message; ignore) */
+  if (0
+      || !strncasecmp( msg, "HHC00013I Herc command: 'hao ",      29 )
+      || !strncasecmp( msg, "HHC00013I Herc command: 'herc hao ", 34 )
+      || !strncasecmp( msg, "HHC01603I hao ",                     14 )
+      || !strncasecmp( msg, "HHC01603I herc hao ",                19 )
+  )
+    return TRUE;  /* (it's one of our hao messages; ignore it) */
 
   /* Same idea but for messages logged as coming from the .rc file */
   if (!strncasecmp( msg, "> hao ", 6 ))
