@@ -2914,10 +2914,11 @@ char    buf[1024];                      /* Buffer workarea           */
                                 if (history_requested == 1) {
                                     strcpy(cmdline, historyCmdLine);
                                     cmdlen = (int)strlen(cmdline);
-                                    cmdoff = cmdlen;
+                                    cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                                     ADJ_CMDCOL();
-                                    NPDup = 0;
-                                    NPDinit = 1;
+                                    redraw_cmd = 1;
+                                    cursor_cmdline_end();
+                                    break;
                                 }
                             }
                         } else {
