@@ -513,7 +513,7 @@ static int SortCmdTab( const void* p1, const void* p2 )
 /*-------------------------------------------------------------------*/
 /* HelpCommand - display more help for a given command    (internal) */
 /*-------------------------------------------------------------------*/
-static int HelpCommand( CMDFUNC_ARGS_PROTO )
+int HelpCommand( CMDFUNC_ARGS_PROTO )
 {
     static int didinit = 0;
     CMDTAB* pCmdTab;
