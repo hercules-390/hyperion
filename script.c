@@ -588,10 +588,9 @@ int cscript_cmd( int argc, char *argv[], char *cmdline )
 /*-------------------------------------------------------------------*/
 /* Check if script has aborted or been canceled           (internal) */
 /*-------------------------------------------------------------------*/
-static int script_abort()
+static int script_abort_nolock()
 {
     int abort;
-    obtain_lock( &sysblk.scrlock );
     if (scr_flags & SCR_CANCEL)             /* cancel requested? */
     {
         if (!(scr_flags & SCR_CANCELED))    /* no msg issued yet? */
@@ -603,6 +602,17 @@ static int script_abort()
         scr_flags |= SCR_ABORT;             /* request abort */
     }
     abort = (scr_flags & SCR_ABORT) ? 1 : 0;
+    return abort;
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if script has aborted or been canceled           (internal) */
+/*-------------------------------------------------------------------*/
+static int script_abort()
+{
+    int abort;
+    obtain_lock( &sysblk.scrlock );
+    abort = script_abort_nolock();
     release_lock( &sysblk.scrlock );
     return abort;
 }
@@ -754,7 +764,7 @@ script_end:
             obtain_lock( &sysblk.scrlock );
             if (!(scr_flags & SCR_ABORTED))  /* (no msg issued yet?) */
             {
-                if (!script_abort())         /* (not abort request?) */
+                if (!script_abort_nolock())  /* (not abort request?) */
                 {
                     // "Error in function '%s': '%s'"
                     WRMSG( HHC02219,"E", "read()", strerror( errno ));
