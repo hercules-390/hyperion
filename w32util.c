@@ -3373,7 +3373,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
         // Now print ALL captured messages AT ONCE (if any)...
 
-        if (*pPipedProcessCtl->pszBuffer)
+        if (pPipedProcessCtl->nStrLen && *pPipedProcessCtl->pszBuffer)
             LOGMSG( "%s\n", pPipedProcessCtl->pszBuffer );
 
         // Free resources...
