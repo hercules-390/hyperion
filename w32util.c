@@ -3371,9 +3371,10 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         WaitForSingleObject( piProcInfo.hProcess, INFINITE );
         CloseHandle( piProcInfo.hProcess );
 
-        // Now print ALL captured messages AT ONCE...
+        // Now print ALL captured messages AT ONCE (if any)...
 
-        LOGMSG( "%s", pPipedProcessCtl->pszBuffer );
+        if (*pPipedProcessCtl->pszBuffer)
+            LOGMSG( "%s\n", pPipedProcessCtl->pszBuffer );
 
         // Free resources...
 
