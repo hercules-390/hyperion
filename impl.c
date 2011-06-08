@@ -635,8 +635,10 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.mntlock);
     initialize_lock     ( &sysblk.scrlock );
     initialize_condition( &sysblk.scrcond );
+#if defined(OPTION_CMDSER)
     initialize_lock      (&sysblk.cmdlock);
     initialize_condition (&sysblk.cmdcond);
+#endif /*defined(OPTION_CMDSER)*/
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     /* Initialize the wrapping key registers lock */

@@ -58,6 +58,7 @@
 #endif
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
+//#define OPTION_CMDSER                   /* Serialise all commands    */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */

@@ -229,35 +229,41 @@ char*  argv[MAX_ARGS];
 /*-------------------------------------------------------------------*/
 /* Helper macros to ensure serialized command processing             */
 /*-------------------------------------------------------------------*/
+#if defined(OPTION_CMDSER)
+ #define HERC_CMD_ENTRY()                                            \
+ do {                                                                \
+     /* Wait for current command to complete before starting         \
+        the next one, UNLESS this is the same thread calling         \
+        (to allow commands to call other commands if needed) */      \
+     obtain_lock( &sysblk.cmdlock );                                 \
+     {                                                               \
+         TID tid = thread_id();                                      \
+         while (sysblk.cmdtid && tid != sysblk.cmdtid)               \
+             wait_condition( &sysblk.cmdcond, &sysblk.cmdlock );     \
+         sysblk.cmdtid = tid;                                        \
+     }                                                               \
+     release_lock( &sysblk.cmdlock );                                \
+ } while (0)
+#else
+ #define HERC_CMD_ENTRY()
+#endif
 
-#define HERC_CMD_ENTRY()                                            \
-do {                                                                \
-    /* Wait for current command to complete before starting         \
-       the next one, UNLESS this is the same thread calling         \
-       (to allow commands to call other commands if needed) */      \
-    obtain_lock( &sysblk.cmdlock );                                 \
-    {                                                               \
-        TID tid = thread_id();                                      \
-        while (sysblk.cmdtid && tid != sysblk.cmdtid)               \
-            wait_condition( &sysblk.cmdcond, &sysblk.cmdlock );     \
-        sysblk.cmdtid = tid;                                        \
-    }                                                               \
-    release_lock( &sysblk.cmdlock );                                \
-} while (0)
-
-#define HERC_CMD_EXIT( rc )                                         \
-do {                                                                \
-    /* Indicate the current command has now completed processing.   \
-       This allows the next waiting command to begin processing. */ \
-    obtain_lock( &sysblk.cmdlock );                                 \
-    {                                                               \
-        sysblk.cmdtid = 0;                                          \
-        broadcast_condition( &sysblk.cmdcond );                     \
-    }                                                               \
-    release_lock( &sysblk.cmdlock );                                \
-    return (rc);                                                    \
-} while (0)
-
+#if defined(OPTION_CMDSER)
+ #define HERC_CMD_EXIT()                                             \
+ do {                                                                \
+     /* Indicate the current command has now completed processing.   \
+        This allows the next waiting command to begin processing. */ \
+     obtain_lock( &sysblk.cmdlock );                                 \
+     {                                                               \
+         sysblk.cmdtid = 0;                                          \
+         broadcast_condition( &sysblk.cmdcond );                     \
+     }                                                               \
+     release_lock( &sysblk.cmdlock );                                \
+ } while (0)
+#else
+ #define HERC_CMD_EXIT()
+#endif
+ 
 /*-------------------------------------------------------------------*/
 /* Route Hercules command to proper command handling function        */
 /*-------------------------------------------------------------------*/
@@ -287,7 +293,9 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
             rc = start_cmd( 0, NULL, NULL );
         else
             rc = 0;         /* ignore [ENTER] */
-        HERC_CMD_EXIT( rc );
+
+        HERC_CMD_EXIT();
+        return rc;
     }
 
     /* (sanity check) */
@@ -298,7 +306,10 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
     /* Only if it rejects it, will we then try processing it ourselves. */
     if(system_command)
         if((rc = system_command( CMDFUNC_ARGS )) != HERRINVCMD)
-            HERC_CMD_EXIT( rc );
+        {
+            HERC_CMD_EXIT();
+            return rc;
+        }
 #endif /* defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Check for comment command. We need to test for this separately
@@ -321,7 +332,8 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
            as simply counting them for example), so we should ALWAYS call
            our comment_cmd function here instead of just returning. */
         rc = comment_cmd( CMDFUNC_ARGS );
-        HERC_CMD_EXIT( rc );
+        HERC_CMD_EXIT();
+        return rc;
     }
 
     /* Route standard formatted commands from our COMMAND routing table */
@@ -416,7 +428,8 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
             rc = OnOffCommand( CMDFUNC_ARGS );
     }
 
-    HERC_CMD_EXIT( rc );
+    HERC_CMD_EXIT();
+    return rc;
 }
 /* end CallHercCmd */
 

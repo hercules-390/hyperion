@@ -522,8 +522,10 @@ struct SYSBLK {
         TID     scrtid;                 /* Script proc'ing thread-id */
         LOCK    scrlock;                /* Script proc'ing lock      */
         COND    scrcond;                /* Script proc'ing cond      */
+#if defined(OPTION_CMDSER)
         LOCK    cmdlock;                /* Command processing lock   */
         COND    cmdcond;                /* Command processing cond   */
+#endif /*defined(OPTION_CMDSER)*/
         TID     cmdtid;                 /* Active command thread     */
         char   *cmdsep;                 /* Single Char cmd Sep       */
         BYTE    sysgroup;               /* Panel Command grouping    */
