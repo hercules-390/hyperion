@@ -381,7 +381,7 @@ char           *strtok_str = NULL;      /* save last position        */
             if (dev->dasdsfn)
             {
                 /* (N.B. must NOT have end quote, ONLY begin quote) */
-                int sfnlen = strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1;
+                int sfnlen = (int)(strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1);
                 sfname = malloc( sfnlen );
                 strlcpy( sfname, "sf=\"", sfnlen );
                 strlcat( sfname, dev->dasdsfn, sfnlen );

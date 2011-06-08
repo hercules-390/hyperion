@@ -567,5 +567,5 @@ DLL_EXPORT int skippnlpfx(const char** ppsz)
         char* p = strchr( (*ppsz)+5, '>' );
         if (p) *ppsz = ++p;
     }
-    return strlen( *ppsz );
+    return (int)strlen( *ppsz );
 }

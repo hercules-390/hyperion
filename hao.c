@@ -580,7 +580,7 @@ static int hao_ignoremsg(char *msg)
   {
     char prefix[64] = {0};
     MSGBUF( prefix, MLVL_DEBUG_PRINTF_PATTERN, "foo", 999 );
-    debuglen = strlen( prefix );
+    debuglen = (int)strlen( prefix );
   }
 
   /* Get past debug prefix if msglevel DEBUG is active */
