@@ -270,7 +270,7 @@ int errorcount = 0;
         /* Parse the statement just read */
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
-#if defined(HAVE_REGINA_REXXSAA_H)
+#if defined(HAVE_REXX)
         /* Check for REXX exec being executed */
         if( inc_level == 0
          && inc_stmtnum[inc_level] == 1
@@ -281,7 +281,7 @@ int errorcount = 0;
             errorcount = exec_cmd(2,rcmd,NULL);
             goto rexx_done;
         }
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+#endif /*defined(HAVE_REXX)*/
 
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
@@ -531,9 +531,9 @@ int errorcount = 0;
 
     } /* end while(1) */
 
-#if defined(HAVE_REGINA_REXXSAA_H)
+#if defined(HAVE_REXX)
 rexx_done:
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+#endif /*defined(HAVE_REXX)*/
 
 #if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     /* close configuration file */
@@ -681,7 +681,7 @@ int     i;                              /* (work)                    */
         goto script_end;
     }
 
-#if defined( HAVE_REGINA_REXXSAA_H )
+#if defined( HAVE_REXX )
 
     /* Skip past blanks to start of command */
     for (p = stmt; isspace( *p ); p++)
@@ -697,7 +697,7 @@ int     i;                              /* (work)                    */
         goto script_end;
     }
 
-#endif /* defined( HAVE_REGINA_REXXSAA_H ) */
+#endif /* defined( HAVE_REXX ) */
 
     // "Script file processing started using file '%s'"
     WRMSG( HHC02260, "I", script_path );

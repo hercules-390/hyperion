@@ -1444,7 +1444,7 @@ COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        
 COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL )
 #endif
 #endif
-#if defined( HAVE_REGINA_REXXSAA_H )
+#if defined( HAVE_REXX )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
 #endif
 #if defined( _MSVC_ )

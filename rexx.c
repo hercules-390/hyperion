@@ -14,7 +14,7 @@
 
 #include "hercules.h"
 
-#if defined(HAVE_REGINA_REXXSAA_H)
+#if defined(HAVE_REXX)
 
 #define REXX_PACKAGE "Regina"
 
@@ -24,7 +24,11 @@
 #if defined( _MSVC_ )
 #include "rexxsaa.h"
 #else
+#if defined(HAVE_REGINA_REXXSAA_H)
 #include <regina/rexxsaa.h>
+#else
+#include <rexxsaa.h>
+#endif
 #endif
 
 #define hSubcom  "HERCULES"
@@ -255,4 +259,4 @@ RXSYSEXIT ExitList[2];
     return rc ? rc : ret;
 }
 
-#endif /*defined(HAVE_REGINA_REXXSAA_H)*/
+#endif /*defined(HAVE_REXX)*/

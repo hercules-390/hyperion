@@ -134,7 +134,7 @@ static const char *build_info[] = {
     "Regular Expressions support",
 #endif
 
-#if defined(HAVE_REGINA_REXXSAA_H)
+#if defined(HAVE_REXX)
     "REXX(Regina) support",
 #endif
 
