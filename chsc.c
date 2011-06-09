@@ -256,7 +256,7 @@ int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     case CHSC_REQ31_MSS:
         /* Enable Multiple Subchannel-Sets Facility */
         sysblk.mss     = TRUE;
-        sysblk.maxssid = FEATURE_LCSS_MAX - 1;
+        sysblk.lcssmax = FEATURE_LCSS_MAX - 1;
         STORE_HW( chsc_rsp->rsp, CHSC_REQ_OK );
         break;
 

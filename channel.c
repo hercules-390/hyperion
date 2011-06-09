@@ -1328,7 +1328,7 @@ int reset = 0, console = 0;
 
 
 /*-------------------------------------------------------------------*/
-/* I/O RESET                                                         */
+/* I/O RESET  --  handle the "Channel Subsystem Reset" signal        */
 /* Resets status of all devices ready for IPL.  Note that device     */
 /* positioning is not affected by I/O reset; thus the system can     */
 /* be IPLed from current position in a tape or card reader file.     */
@@ -1341,6 +1341,10 @@ io_reset (void)
 DEVBLK *dev;                            /* -> Device control block   */
 int     console = 0;                    /* 1 = console device reset  */
 int i;
+
+    /* Reset channel subsystem back to default initial non-MSS state */
+    sysblk.mss = FALSE;                 /* (not enabled by default)  */
+    sysblk.lcssmax = 0;                 /* (default to single lcss)  */
 
     /* reset sclp interface */
     sclp_reset();

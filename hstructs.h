@@ -606,7 +606,7 @@ struct SYSBLK {
         /*-----------------------------------------------------------*/
 
         int     mss;                    /* Multiple CSS enabled      */
-        int     maxssid;                /* Maximum Subchannel-Set Id */
+        int     lcssmax;                /* Maximum Subchannel-Set Id */
         LOCK    crwlock;                /* CRW queue lock            */
         U32    *crwarray;               /* CRW queue                 */
         U32     crwalloc;               /* #of entries allocated     */

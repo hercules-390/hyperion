@@ -562,7 +562,7 @@ do { \
 
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
-    || (_regs)->GR_LHH(1) > (0x0001|((sysblk.maxssid) << 1))) \
+    || (_regs)->GR_LHH(1) > (0x0001|((sysblk.lcssmax) << 1))) \
         (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
 #define IOID_TO_SSID(_ioid) \
