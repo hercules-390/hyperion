@@ -48,13 +48,13 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     FETCH_HW(lcss,chsc_req4->ssidfmt);
     lcss &= CHSC_REQ4_SSID;
     lcss >>= 4;
-    
+
     /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req4->length);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
 
-    if(l_sch < f_sch 
+    if(l_sch < f_sch
       || rsp_len > (0x1000 - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
@@ -82,10 +82,10 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
             memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
         }
     }
-    
+
     /* Store response length */
     STORE_HW(chsc_rsp->length,rsp_len);
-    
+
     /* Store request OK */
     STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
 
@@ -126,7 +126,7 @@ U16 req_len, rsp_len;
     memset(chsc_rsp10->general_char, 0x00, sizeof(chsc_rsp10->general_char));
     memset(chsc_rsp10->chsc_char, 0x00, sizeof(chsc_rsp10->chsc_char));
 
-    chsc_rsp10->general_char[0][0] = 0 
+    chsc_rsp10->general_char[0][0] = 0
 #if defined(FEATURE_REGION_RELOCATE)
                                    | 0x24
 #endif
@@ -144,7 +144,7 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_QUEUED_DIRECT_IO)
                                    | 0x40  /* Adapter Interruption Facility */
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
-//                                 | 0x40  /* Multiple CSS */
+                                   | (sysblk.mss ? 0x04 : 0x00) /* Multiple CSS */
                                    ;
 
     chsc_rsp10->general_char[1][3] = 0
@@ -188,7 +188,7 @@ int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
 
-    if(l_sch < f_sch 
+    if(l_sch < f_sch
       || rsp_len > (0x1000 - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
@@ -207,10 +207,10 @@ int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
             if(dev->hnd->ssqd)
                 (dev->hnd->ssqd)(dev, chsc_rsp24);
     }
-    
+
     /* Store response length */
     STORE_HW(chsc_rsp->length,rsp_len);
-    
+
     /* Store request OK */
     STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
 
@@ -219,6 +219,53 @@ int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 
     return 0;
 
+}
+
+
+int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+    U16 req_len, rsp_len, facility;
+
+    CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
+    CHSC_RSP31* chsc_rsp31 = (CHSC_RSP31*) (chsc_rsp+1);
+
+    /* Fetch length of request field and validate */
+    FETCH_HW( req_len, chsc_req31->length );
+
+    if (0x0400 != req_len) {
+        STORE_HW( chsc_rsp->length,  sizeof(CHSC_RSP) );
+        STORE_HW( chsc_rsp->rsp,     CHSC_REQ_ERRREQ  );
+        STORE_FW( chsc_rsp->info,    0                );
+        STORE_FW( chsc_rsp31->resv1, 0                );
+        return 0;
+    }
+
+    /* Calculate response length */
+    rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP31);
+
+    /* Prepare the response */
+    STORE_HW( chsc_rsp->length,  rsp_len );
+    STORE_FW( chsc_rsp->info,    0       );
+    STORE_FW( chsc_rsp31->resv1, 0       );
+
+    /* Fetch requested facility and enable it */
+    FETCH_HW( facility, chsc_req31->facility );
+
+    switch (facility)
+    {
+    case CHSC_REQ31_MSS:
+        /* Enable Multiple Subchannel-Sets Facility */
+        sysblk.mss     = TRUE;
+        sysblk.maxssid = FEATURE_LCSS_MAX - 1;
+        STORE_HW( chsc_rsp->rsp, CHSC_REQ_OK );
+        break;
+
+    default: /* Unknown Facility */
+        STORE_HW( chsc_rsp->rsp, CHSC_REQ_FACILITY );
+        break;
+    }
+
+    return 0;  /* call success */
 }
 
 
@@ -244,7 +291,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     PTT(PTT_CL_INF,"CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     n = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    
+
     if(n & 0xFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -278,23 +325,23 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             regs->psw.cc = ARCH_DEP(chsc_get_ssqd) (chsc_req, chsc_rsp);
             break;
 
+        case CHSC_REQ_ENFACIL:
+            regs->psw.cc = ARCH_DEP(chsc_enable_facility) (chsc_req, chsc_rsp);
+            break;
+
         default:
-
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
-
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
                 break;
-
             /* Set response field length */
             STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
             /* Store unsupported command code */
             STORE_HW(chsc_rsp->rsp,CHSC_REQ_INVALID);
             /* No reaon code */
             STORE_FW(chsc_rsp->info,0);
-
+            /* The instr. succeeds even if request does not? */
             regs->psw.cc = 0;
     }
-
 }
 #endif /*defined(FEATURE_CHSC)*/
 

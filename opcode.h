@@ -562,7 +562,7 @@ do { \
 
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
-    || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \
+    || (_regs)->GR_LHH(1) > (0x0001|((sysblk.maxssid) << 1))) \
         (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
 #define IOID_TO_SSID(_ioid) \
@@ -2981,7 +2981,7 @@ void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);
 void build_attach_chrpt( DEVBLK *dev );
 void build_detach_chrpt( DEVBLK *dev );
-void build_chp_reset_chrpt( BYTE chpid, int solicited );
+void build_chp_reset_chrpt( BYTE chpid, int solicited, int found );
 int  queue_channel_report( U32* crwarray, U32 crwcount );
 
 

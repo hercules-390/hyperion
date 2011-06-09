@@ -1286,27 +1286,26 @@ int     console = 0;                    /* 1 = console device reset  */
 
 /*-------------------------------------------------------------------*/
 /* Reset all devices on a particular chpid                           */
-/*                                                                   */
-/*   Called by:                                                      */
-/*     RHCP (Reset Channel Path)    (io.c)                           */
+/* Called by io.c 'RHCP' Reset Channel Path instruction.             */
 /*-------------------------------------------------------------------*/
 int chp_reset(BYTE chpid, int solicited)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
-int console = 0;
+int reset = 0, console = 0;
 
     /* Reset each device in the configuration with this chpid */
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    for (reset=0, dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if (!IS_DEV(dev))
             continue;
 
-        for(i = 0; i < 8; i++)
+        for (i=0; i < 8; i++)
         {
             if((chpid == dev->pmcw.chpid[i])
               && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
             {
+                reset = 1;
                 if (dev->console)
                     console = 1;
                 device_reset(dev);
@@ -1316,10 +1315,13 @@ int console = 0;
 
     /* Signal console thread to redrive select */
     if (console)
+    {
+        ASSERT( reset ); /* (sanity check) */
         SIGNAL_CONSOLE_THREAD();
+    }
 
     /* Indicate channel path reset completed */
-    build_chp_reset_chrpt( chpid, solicited );
+    build_chp_reset_chrpt( chpid, solicited, reset );
     return 0;
 
 } /* end function chp_reset */

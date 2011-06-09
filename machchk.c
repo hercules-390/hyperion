@@ -44,14 +44,22 @@
 /*-------------------------------------------------------------------*/
 /* Build a Channel Path Reset Channel Report                         */
 /*-------------------------------------------------------------------*/
-void build_chp_reset_chrpt( BYTE path, int solicited )
+void build_chp_reset_chrpt( BYTE chpid, int solicited, int found )
 {
-U32 chpid, crwarray[8], crwcount=0;
+U32 crw_erc, crwarray[8], crwcount=0;
 
-    chpid = ((U32)path) & CRW_RSID_MASK;
+    chpid = ((U32)chpid) & CRW_RSID_MASK;
 
-    /* Build the ChpId Reset Channel Report */
-    crwarray[crwcount++] = (solicited ? CRW_SOL : 0) | CRW_RSC_CHPID | CRW_ERC_INIT | chpid;
+    /* If a subchannel was found on this path and was reset. Ref:
+       SA22-7832 "Channel-Path-Reset-Function-Completion Signaling   */
+    if (found)
+        crw_erc = CRW_ERC_INIT;         /* Init'ed, parms unchanged  */
+    else
+        crw_erc = CRW_ERC_RESET;        /* Error, parms initialized  */
+
+    /* Build the Channel Path Reset Channel Report */
+    crwarray[crwcount++] = (solicited ? CRW_SOL : 0) |
+        CRW_RSC_CHPID | CRW_AR | crw_erc | chpid;
 
     /* Queue the Channel Report */
     VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );
@@ -61,43 +69,35 @@ U32 chpid, crwarray[8], crwcount=0;
 /*-------------------------------------------------------------------*/
 /* Build a device attach Channel Report                              */
 /*-------------------------------------------------------------------*/
-void build_attach_chrpt( DEVBLK *ourdev )
+void build_attach_chrpt( DEVBLK *dev )
 {
-DEVBLK *dev;
-U32 i, ssid, chpid, subchan, crwarray[8], crwcount=0, newchpid=1;
+U32 ssid, subchan, crwarray[8], crwcount=0;
 
     /* Retrieve Source IDs */
-    obtain_lock( &ourdev->lock );
+    obtain_lock( &dev->lock );
     {
-        ssid    = ((U32)(SSID_TO_LCSS( ourdev->ssid ) << 4)) & CRW_RSID_MASK;
-        chpid   = ((U32)ourdev->pmcw.chpid[0])               & CRW_RSID_MASK;
-        subchan = ((U32)ourdev->subchan)                     & CRW_RSID_MASK;
+        ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
+        subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
-    release_lock( &ourdev->lock );
+    release_lock( &dev->lock );
 
-    /* Build the ChpId Alert Channel Report -- if needed */
-    for (dev = sysblk.firstdev; dev != NULL && newchpid; dev = dev->nextdev)
-    {
-        if (!dev->allocated || dev == ourdev) continue;
-
-        for (i=0; i < 8; i++)
-        {
-            if (1
-                && (dev->pmcw.pim & (0x80 >> i))  /* chpid installed */
-                && (dev->pmcw.chpid[i] == chpid)  /* is same as ours */
-            )
-            {
-                newchpid = 0;
-                break;
-            }
-        }
-    }
-    if (newchpid)
-        crwarray[crwcount++] = CRW_CHAIN | CRW_RSC_CHPID | CRW_ERC_INIT | chpid;
-
-    /* Build the Subchannel Alert Channel Report */
-    crwarray[crwcount++] = CRW_CHAIN | CRW_RSC_SUBCH          | CRW_ERC_ALERT | subchan;
-    crwarray[crwcount++] =             CRW_RSC_SUBCH | CRW_AR | CRW_ERC_ALERT | ssid;
+    /* Build Subchannel Alert Channel Report */
+    crwarray[crwcount++] =
+        0
+        | (sysblk.mss ? CRW_CHAIN : 0)
+        | CRW_RSC_SUBCH
+        | CRW_AR
+        | CRW_ERC_ALERT
+        | subchan
+        ;
+    if (sysblk.mss)
+        crwarray[crwcount++] =
+            0
+            | CRW_RSC_SUBCH
+            | CRW_AR
+            | CRW_ERC_ALERT
+            | (ssid << 8)
+            ;
 
     /* Queue the Channel Report(s) */
     VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );
@@ -114,14 +114,28 @@ U32 ssid, subchan, crwarray[8], crwcount=0;
     /* Retrieve Source IDs */
     obtain_lock( &dev->lock );
     {
-        ssid    = ((U32)(SSID_TO_LCSS( dev->ssid ) << 4)) & CRW_RSID_MASK;
-        subchan = ((U32)dev->subchan)                     & CRW_RSID_MASK;
+        ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
+        subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
     release_lock( &dev->lock );
 
     /* Build Subchannel Alert Channel Report */
-    crwarray[crwcount++] = CRW_CHAIN | CRW_RSC_SUBCH          | CRW_ERC_ALERT | subchan;
-    crwarray[crwcount++] =             CRW_RSC_SUBCH | CRW_AR | CRW_ERC_ALERT | ssid;
+    crwarray[crwcount++] =
+        0
+        | (sysblk.mss ? CRW_CHAIN : 0)
+        | CRW_RSC_SUBCH
+        | CRW_AR
+        | CRW_ERC_ALERT
+        | subchan
+        ;
+    if (sysblk.mss)
+        crwarray[crwcount++] =
+            0
+            | CRW_RSC_SUBCH
+            | CRW_AR
+            | CRW_ERC_ALERT
+            | (ssid << 8)
+            ;
 
     /* Queue the Channel Report */
     VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );

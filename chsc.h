@@ -12,17 +12,16 @@
 /*                                                                   */
 /* This implementation is based on the S/390 Linux implementation    */
 
-#if !defined(_CHSC_H)
-
+#ifndef _CHSC_H
 #define _CHSC_H
 
-// #if defined(FEATURE_CHSC)
 typedef struct _CHSC_REQ {
         HWORD   length;                 /* Offset to response field  */
         HWORD   req;                    /* Request code              */
-#define CHSC_REQ_SCHDESC        0x04
-#define CHSC_REQ_CSSINFO        0x10
-#define CHSC_REQ_GETSSQD        0x24
+#define CHSC_REQ_SCHDESC        0x0004
+#define CHSC_REQ_CSSINFO        0x0010
+#define CHSC_REQ_GETSSQD        0x0024
+#define CHSC_REQ_ENFACIL        0x0031  /* Enable facility           */
         FWORD   resv[3];
     } CHSC_REQ;
 
@@ -38,6 +37,29 @@ typedef struct _CHSC_REQ4 {
         FWORD   resv3;
     } CHSC_REQ4;
 
+typedef struct _CHSC_REQ24 {
+        HWORD   length;                 /* Offset to response field  */
+        HWORD   req;                    /* Request code              */
+        HWORD   ssidfmt;
+#define CHSC_REQ24_SSID         0x0030
+#define CHSC_REQ24_FMT          0x000f
+        HWORD   first_sch;
+        HWORD   resv1;
+        HWORD   last_sch;
+        FWORD   resv2;
+    } CHSC_REQ24;
+
+typedef struct _CHSC_REQ31 {            /* Enable Facility Request   */
+        HWORD   length;                 /* Offset to response field  */
+        HWORD   req;                    /* Request code              */
+        HWORD   resv1;
+        HWORD   facility;               /* Operation Code            */
+#define CHSC_REQ31_MSS          0x0002  /* MSS Facility              */
+        FWORD   resv2;
+        FWORD   resv3;
+        FWORD   opdata[252];            /* Operation Code Data       */
+    } CHSC_REQ31;
+
 typedef struct _CHSC_RSP {
         HWORD   length;                 /* Length of response field  */
         HWORD   rsp;                    /* Reponse code              */
@@ -45,6 +67,7 @@ typedef struct _CHSC_RSP {
 #define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
 #define CHSC_REQ_ERRREQ         0x0003  /* Error in request block    */
 #define CHSC_REQ_NOTSUPP        0x0004  /* Request not supported     */
+#define CHSC_REQ_FACILITY       0x0101  /* Unknown Facility          */
         FWORD   info;
     } CHSC_RSP;
 
@@ -81,21 +104,6 @@ typedef struct _CHSC_RSP10 {
                                            in length which is probably
                                            an error -    *JJ/10/10/04*/
     } CHSC_RSP10;
-
-
-typedef struct _CHSC_REQ24 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-
-        HWORD   ssidfmt;
-#define CHSC_REQ24_SSID         0x0030
-#define CHSC_REQ24_FMT          0x000f
-        HWORD   first_sch;
-        HWORD   resv1;
-        HWORD   last_sch;
-        FWORD   resv2;
-    } CHSC_REQ24;
-
 
 typedef struct _CHSC_RSP24 {
         BYTE    flags;
@@ -135,6 +143,8 @@ typedef struct _CHSC_RSP24 {
         BYTE    mmwc;
     } CHSC_RSP24;
 
-// #endif /*defined(FEATURE_CHSC)*/
+typedef struct _CHSC_RSP31 {
+        FWORD   resv1;
+    } CHSC_RSP31;
 
-#endif /*!defined(_CHSC_H)*/
+#endif /* _CHSC_H */
