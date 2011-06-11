@@ -818,7 +818,7 @@ static void *script_thread( void *arg )
             /* Process each filename argument on this script command */
             scr_flags = 0;
             scr_recursion = 0;
-            for (i=1; !script_abort() && i < cmd_argc; i++)
+            for (i=1; !script_abort_nolock() && i < cmd_argc; i++)
             {
                 release_lock( &sysblk.scrlock );
                 process_script_file( cmd_argv[i], 0 );
