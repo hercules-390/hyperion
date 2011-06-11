@@ -525,6 +525,7 @@ struct SYSBLK {
 #if defined(OPTION_CMDSER)
         LOCK    cmdlock;                /* Command processing lock   */
         COND    cmdcond;                /* Command processing cond   */
+        int     cmdcnt;                 /* Command processing count  */
 #endif /*defined(OPTION_CMDSER)*/
         TID     cmdtid;                 /* Active command thread     */
         char   *cmdsep;                 /* Single Char cmd Sep       */

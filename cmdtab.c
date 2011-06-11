@@ -241,6 +241,7 @@ char*  argv[MAX_ARGS];
          while (sysblk.cmdtid && tid != sysblk.cmdtid)               \
              wait_condition( &sysblk.cmdcond, &sysblk.cmdlock );     \
          sysblk.cmdtid = tid;                                        \
+         sysblk.cmdcnt++;                                            \
      }                                                               \
      release_lock( &sysblk.cmdlock );                                \
  } while (0)
@@ -255,8 +256,12 @@ char*  argv[MAX_ARGS];
         This allows the next waiting command to begin processing. */ \
      obtain_lock( &sysblk.cmdlock );                                 \
      {                                                               \
-         sysblk.cmdtid = 0;                                          \
-         broadcast_condition( &sysblk.cmdcond );                     \
+         sysblk.cmdcnt--;                                            \
+         if (!sysblk.cmdcnt)                                         \
+         {                                                           \
+             sysblk.cmdtid = 0;                                      \
+             broadcast_condition( &sysblk.cmdcond );                 \
+         }                                                           \
      }                                                               \
      release_lock( &sysblk.cmdlock );                                \
  } while (0)
