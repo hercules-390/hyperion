@@ -254,7 +254,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
                 break;
             }
         } /* for each ptt argument */
-    
+
         /* wakeup timeout thread if to= specified */
         if (to >= 0 && ptttotid)
         {
@@ -263,15 +263,15 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             signal_condition (&ptttocond);
             release_lock (&ptttolock);
         }
-    
+
         /* start timeout thread if positive to= specified */
         if (to > 0)
         {
             obtain_lock (&ptttolock);
             ptttotid = 0;
             rc = create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
-	    if (rc)
-		    WRMSG(HHC00102, "E", strerror(rc));
+        if (rc)
+            WRMSG(HHC00102, "E", strerror(rc));
             release_lock (&ptttolock);
         }
     }
@@ -279,7 +279,7 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
     {
         if (pttracen)
             rc = ptt_pthread_print();
-    
+
         WRMSG(HHC90012, "I",
                (pttclass & PTT_CL_INF) ? "control " : "",
                (pttclass & PTT_CL_ERR) ? "error " : "",
@@ -347,6 +347,8 @@ U64 s;
     else
         s = 0;
     PTTRACE ("lock after", mutex, (void *) s, loc, result);
+    if (EDEADLK == result)
+        LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
     return result;
 }
 
@@ -556,6 +558,8 @@ int result;
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
     PTTRACE ("lock after", mutex, NULL, loc, result);
+    if (EDEADLK == result)
+        LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
     return result;
 }
 DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
@@ -701,7 +705,6 @@ int i, n;
             loc = p+1;
     }
 #endif
-
     /*
      * Messages from timer.c, clock.c and/or logger.c are not usually
      * that interesting and take up table space.  Check the flags to
@@ -761,7 +764,6 @@ time_t tt;
                     MSGBUF(result, "%8.8x", pttrace[i].result);
                 else
                     MSGBUF(result, "%d", pttrace[i].result);
-
             LOGMSG
             (
                 "%-18s "                           // File name
