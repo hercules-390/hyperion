@@ -732,8 +732,8 @@ int     i;                              /* (work)                    */
                 WRMSG( HHC02262, "I", pauseamt );
             }
 
-            for (i = pauseamt * 4; i > 0 && !script_abort(); i--)
-                usleep( 250 * 1000 ); /* (0.25 seconds) */
+            for (i = pauseamt; i > 0 && !script_abort(); i--)
+                SLEEP(1); /* (one second) */
 
             if (!script_abort() && MLVL( VERBOSE ))
             {
