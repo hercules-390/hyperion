@@ -340,8 +340,6 @@ U64 s;
     result = pthread_mutex_trylock(mutex);
     if(result)
     {
-        if (EDEADLK == result)
-            LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
         s = host_tod();
         result = pthread_mutex_lock(mutex);
         s = host_tod() - s;
@@ -554,24 +552,12 @@ DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *rwlock, char *loc)
 DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
 {
 int result;
-U64 s;
 
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
-    result = fthread_mutex_trylock(mutex);
-    if(result)
-    {
-        if (EDEADLK == result)
-            LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
-        s = host_tod();
-        result = fthread_mutex_lock(mutex);
-        s = host_tod() - s;
-    }
-    else
-        s = 0;
-    PTTRACE ("lock after", mutex, (void *) s, loc, result);
+    result = fthread_mutex_lock(mutex);
+    PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
-
 DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
 {
     LOCK *mutex = (LOCK*)rwlock;
