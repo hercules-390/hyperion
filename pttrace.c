@@ -340,7 +340,7 @@ U64 s;
     result = pthread_mutex_trylock(mutex);
     if(result)
     {
-        if (EDEADLK == result || EBUSY == result)
+        if (EDEADLK == result)
             LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
         s = host_tod();
         result = pthread_mutex_lock(mutex);
@@ -560,7 +560,7 @@ U64 s;
     result = fthread_mutex_trylock(mutex);
     if(result)
     {
-        if (EDEADLK == result || EBUSY == result)
+        if (EDEADLK == result)
             LOGMSG("\n    ++++++++++++++++   DEADLOCK!  %s   ++++++++++++++++\n\n", loc);
         s = host_tod();
         result = fthread_mutex_lock(mutex);
