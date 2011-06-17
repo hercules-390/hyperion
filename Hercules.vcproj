@@ -1239,6 +1239,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\chain.h"
+							>
+						</File>
+						<File
 							RelativePath=".\chsc.h"
 							>
 						</File>
@@ -1276,6 +1280,10 @@
 						</File>
 						<File
 							RelativePath=".\esa390.h"
+							>
+						</File>
+						<File
+							RelativePath=".\extstring.h"
 							>
 						</File>
 						<File

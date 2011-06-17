@@ -93,6 +93,8 @@
 #include "hthreads.h"     // (Hercules-wide threading macros)
 #include "hmacros.h"      // (Hercules-wide #define macros)
 #include "herror.h"       // (Hercules-wide error definitions)
+#include "chain.h"        // (Chain and queue macros/inlines)
+#include "extstring.h"    // (Extended string handling routines)
 
 #if !defined(HAVE_BYTESWAP_H) || defined(NO_ASM_BYTESWAP)
  #include "hbyteswp.h"    // (Hercules equivalent of <byteswap.h>)
