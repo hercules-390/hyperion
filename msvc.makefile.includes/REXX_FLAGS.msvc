@@ -11,5 +11,5 @@
 
 !IFDEF REXX_DIR
 LIBS   = $(LIBS) "$(REXX_LIBPATH)"
-cflags = $(cflags) /D HAVE_REGINA_REXXSAA_H /I"$(REXX_INCDIR)" 
+cflags = $(cflags) /D HAVE_REXX /I"$(REXX_INCDIR)" 
 !ENDIF
