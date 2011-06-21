@@ -597,11 +597,14 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 #endif // !defined( HAVE_GETTIMEOFDAY )
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Sleep for specified number of nanoseconds...
+// (INTERNAL) Sleep for specified number of nanoseconds...
 
 static int w32_nanosleep ( const struct timespec* rqtp )
 {
-    /*
+    /**************************************************************************
+
+                                NANOSLEEP
+
     DESCRIPTION
 
         The nanosleep() function shall cause the current thread
@@ -629,7 +632,8 @@ static int w32_nanosleep ( const struct timespec* rqtp )
         the interruption. If the rmtp argument is non-NULL, the timespec
         structure referenced by it is updated to contain the amount of time
         remaining in the interval (the requested time minus the time actually
-        slept). If the rmtp argument is NULL, the remaining time is not returned.
+        slept). If the rmtp argument is NULL, the remaining time is not
+        returned.
 
         If nanosleep() fails, it shall return a value of -1 and set errno
         to indicate the error.
@@ -640,9 +644,18 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
         [EINTR]   The nanosleep() function was interrupted by a signal.
 
-        [EINVAL]  The rqtp argument specified a nanosecond value less than zero
-                  or greater than or equal to 1000 million.
-    */
+        [EINVAL]  The rqtp argument specified a nanosecond value less than
+                  zero or greater than or equal to 1000 million.
+
+    **************************************************************************/
+
+    //                      IMPLEMENTATION NOTE
+    //
+    // The following code of course does not actually implement true nano-
+    // second resolution sleep functionality since Windows does not support
+    // such finely grained timers (yet). It is however coded in such a way
+    // that should Windows ever begin providing such support in the future,
+    // the changes needed to support such high precisions should be trivial.
 
     static LONGLONG         timerint    =  0;       // TOD clock interval
     static HANDLE           hTimer      = NULL;     // Waitable timer handle
@@ -780,6 +793,14 @@ static int w32_nanosleep ( const struct timespec* rqtp )
             tsWakeTime.tv_sec = 0;     // (needs recalculated)
             tsWakeTime.tv_nsec = 0;    // (needs recalculated)
         }
+
+        // PROGRAMMING NOTE: I thought about simply using either
+        // 'tsWakeTime' or 'tsSaveWake' (depending on the above
+        // condition) as our new current TOD value, but doing so
+        // does not yield the desired behavior, since the system
+        // does not always wake us at our exact requested time.
+        // Thus obtaining a fresh/current TOD value each time we
+        // are awakened yields more precise/desireable behavior.
 
         VERIFY( w32_nanogtod( &tsCurrTime ) == 0);
     }
