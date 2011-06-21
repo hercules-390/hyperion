@@ -1,3 +1,7 @@
+21 Jun 2011 Sub-second script pausing support - Fish
+20 Jun 2011 Correct long standing nanosleep/usleep bug in MSVC build - Fish
+20 Jun 2011 Proper reimplementation of asynchronous scripts handling - Fish
+20 Jun 2011 OPTION_MUTEX_ERRORCHECK locking model build option/reporting - Fish
 03 Jun 2011 Fix script recursion and cscript handling - Fish
 02 Jun 2011 Fix command processing serialization/locking - Fish
 29 May 2011 SHOWDVOL1 command/statement to show dasd VOL1 in device list - Fish

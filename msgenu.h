@@ -1337,7 +1337,7 @@ do { \
 #define HHC02259 "Script %d aborted: '%s'"
 #define HHC02260 "Script %d: begin processing file '%s'"
 #define HHC02261 "Script %d: file statement only; '%s' ignored"
-#define HHC02262 "Script %d: processing paused for %d seconds..."
+#define HHC02262 "Script %d: processing paused for %d milliseconds..."
 #define HHC02263 "Script %d: processing resumed..."
 #define HHC02264 "Script %d: file '%s' processing ended"
 #define HHC02265 "Script %d: file '%s' aborted due to previous conditions"

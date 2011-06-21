@@ -854,10 +854,9 @@ FILE   *fp          = NULL;             /* Script FILE pointer       */
 char    stmt[ MAX_SCRIPT_STMT ];        /* script statement buffer   */
 int     stmtlen     = 0;                /* Length of current stmt    */
 int     stmtnum     = 0;                /* Current stmt line number  */
-int     pauseamt    = 0;                /* Seconds to pause script   */
 TID     tid         = thread_id();      /* Our thread Id             */
 char   *p;                              /* (work)                    */
-int     i, rc;                          /* (work)                    */
+int     rc;                             /* (work)                    */
 
     /* Retrieve our control entry */
     if (!(pCtl = FindSCRCTL( tid )))
@@ -866,7 +865,7 @@ int     i, rc;                          /* (work)                    */
         ASSERT( isrcfile );
 
         /* Create a temporary working control entry */
-        if (!(pCtl = NewSCRCTL( thread_id(), script_name, isrcfile )))
+        if (!(pCtl = NewSCRCTL( tid, script_name, isrcfile )))
             return -1; /* (error message already issued) */
 
         /* Start over again using our temporary control entry */
@@ -957,23 +956,37 @@ int     i, rc;                          /* (work)                    */
         /* Special handling for 'pause' statement */
         if (strncasecmp( p, "pause ", 6 ) == 0)
         {
-            sscanf( p+6, "%d", &pauseamt );
+            double pauseamt     = 0.0;    /* (secs to pause) */
+            struct timespec ts  = {0};    /* (nanosleep arg) */
+            long i, nsecs       =  0;     /* (nanoseconds)   */
 
-            if (pauseamt < 0 || pauseamt > 999)
+            pauseamt = atof( p+6 );
+
+            if (pauseamt < 0.0 || pauseamt > 999.0)
             {
                 // "Script %d: file statement only; %s ignored"
                 WRMSG( HHC02261, "W", pCtl->scr_id, p+6 );
                 continue; /* (go on to next statement) */
             }
 
+            nsecs = (long) (pauseamt * 1000000000.0);
+            ts.tv_nsec = 250000000; /* 1/4th of a second */
+            ts.tv_sec  = 0;
+
             if (!script_abort( pCtl ) && MLVL( VERBOSE ))
             {
-                // "Script %d: processing paused for %d seconds..."
-                WRMSG( HHC02262, "I", pCtl->scr_id, pauseamt );
+                // "Script %d: processing paused for %d milliseconds..."
+                WRMSG( HHC02262, "I", pCtl->scr_id, (int)(pauseamt * 1000.0) );
             }
 
-            for (i = pauseamt; i > 0 && !script_abort( pCtl ); i--)
-                SLEEP(1); /* (one second) */
+            for (i = nsecs; i >= ts.tv_nsec && !script_abort( pCtl ); i -= ts.tv_nsec)
+                nanosleep( &ts, NULL );
+
+            if (i && !script_abort( pCtl ))
+            {
+                ts.tv_nsec = i;
+                nanosleep( &ts, NULL );
+            }
 
             if (!script_abort( pCtl ) && MLVL( VERBOSE ))
             {
@@ -1123,9 +1136,9 @@ int script_cmd( int argc, char* argv[], char* cmdline )
     if ((rc = create_thread( &pCtl->scr_tid, DETACHED,
         script_thread, NULL, SCRTHREADNAME )) != 0)
     {
+        pCtl->scr_tid = 0; /* (deactivate) */
         // "Error in function create_thread(): %s"
         WRMSG( HHC00102, "E", strerror( rc ));
-        pCtl->scr_tid = 0; /* (deactivate) */
         release_lock( &sysblk.scrlock );
         FreeSCRCTL( pCtl );
         return -1;
