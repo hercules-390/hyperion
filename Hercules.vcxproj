@@ -747,6 +747,7 @@
     <None Include="hercules.cnf" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="chain.h" />
     <ClInclude Include="crypto\aes.h" />
     <ClInclude Include="crypto\des.h" />
     <ClInclude Include="crypto\sha1.h" />
@@ -761,6 +762,7 @@
     <ClInclude Include="decNumber\decPacked.h" />
     <ClInclude Include="commadpt.h" />
     <ClInclude Include="ctcadpt.h" />
+    <ClInclude Include="extstring.h" />
     <ClInclude Include="hdiagf18.h" />
     <ClInclude Include="hercifc.h" />
     <ClInclude Include="tt32api.h" />

@@ -1555,6 +1555,12 @@
     <ClInclude Include="hdiagf18.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="chain.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="extstring.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc">
