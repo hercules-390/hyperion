@@ -19,6 +19,8 @@
 /* communicate with external device handlers.                        */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "devtype.h"
 #include "hchan.h"
