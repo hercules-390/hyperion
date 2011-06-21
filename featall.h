@@ -88,6 +88,16 @@
   #error CKD_MAXFILES can not exceed design limit of 35
 #endif
 
+/*********************************************************************/
+/*                  Hercules Mutex Locks Model                       */
+/*********************************************************************/
+
+#define  OPTION_MUTEX_NORMAL       1        /* re-obtain == deadlock */
+#define  OPTION_MUTEX_ERRORCHECK   2        /* re-obtain == error    */
+#define  OPTION_MUTEX_RECURSIVE    3        /* re-obtain == allowed  */
+
+#define  OPTION_MUTEX_DEFAULT      OPTION_MUTEX_ERRORCHECK
+
 /*********************************************************************\
  *********************************************************************
  **                                                                 **

@@ -414,6 +414,7 @@ int  fthread_cond_timedwait
 //                            An implementation may map this mutex to one of the other
 //                            mutex types.
 
+#define  FTHREAD_MUTEX_NORMAL       0x44656164                  // "Dead" in ASCII  (*UNSUPPORTED*)
 #define  FTHREAD_MUTEX_ERRORCHECK   0x4F6E6365                  // "Once" in ASCII
 #define  FTHREAD_MUTEX_RECURSIVE    0x4D616E79                  // "Many" in ASCII
 #define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_ERRORCHECK

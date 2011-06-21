@@ -58,10 +58,10 @@ FT_COND_VAR, *PFT_COND_VAR;
 static BOOL  IsValidMutexType ( DWORD dwMutexType )
 {
     return (0
-//      || FTHREAD_MUTEX_DEFAULT    == dwMutexType  // (FTHREAD_MUTEX_RECURSIVE)
+//      || FTHREAD_MUTEX_NORMAL     == dwMutexType  // (*UNSUPPORTED*)
         || FTHREAD_MUTEX_RECURSIVE  == dwMutexType
         || FTHREAD_MUTEX_ERRORCHECK == dwMutexType
-//      || FTHREAD_MUTEX_NORMAL     == dwMutexType  // (not currently supported)
+//      || FTHREAD_MUTEX_DEFAULT    == dwMutexType  // (FTHREAD_MUTEX_RECURSIVE)
     );
 }
 

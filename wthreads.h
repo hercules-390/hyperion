@@ -25,6 +25,12 @@
 #endif
 
 #if defined(OPTION_WTHREADS)
+
+#define  WTHREAD_MUTEX_NORMAL       1
+#define  WTHREAD_MUTEX_ERRORCHECK   2
+#define  WTHREAD_MUTEX_RECURSIVE    3
+#define  WTHREAD_MUTEX_DEFAULT      WTHREAD_MUTEX_RECURSIVE
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Use Windows threading calls directly.
 // Differences:

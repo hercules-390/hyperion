@@ -32,10 +32,21 @@
 
 #include "wthreads.h"
 
+#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
+  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_NORMAL
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
+  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_ERRORCHECK
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
+  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_RECURSIVE
+#else
+  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
+#endif
+
 typedef fthread_t              TID;
 typedef CRITICAL_SECTION       LOCK;
 typedef CONDITION_VARIABLE     COND;
 typedef fthread_attr_t         ATTR;
+typedef int                    MATTR;
 #define waitdelta              DWORD;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +68,9 @@ typedef fthread_attr_t         ATTR;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The lock object of Hercules threading is translated into a Windows critical section
-#define initialize_lock(plk)                   (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(plk),3000))
+#define hthread_mutexattr_init(pla)            ((*(pla)=HTHREAD_MUTEX_DEFAULT),0)
+#define hthread_mutexattr_settype(pla,typ)     ((*(pla)=(typ)),0)
+#define hthread_mutex_init(plk,pla)            ((InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(plk),3000)),0)
 #define destroy_lock(plk)                      (DeleteCriticalSection((CRITICAL_SECTION*)(plk)))
 #define obtain_lock(plk)                       (EnterCriticalSection((CRITICAL_SECTION*)(plk)))
 #define release_lock(plk)                      (LeaveCriticalSection((CRITICAL_SECTION*)(plk)))
@@ -107,17 +120,31 @@ typedef fthread_attr_t         ATTR;
 
 #include "fthreads.h"
 
-typedef fthread_t         TID;
-typedef fthread_mutex_t   LOCK;
-typedef fthread_cond_t    COND;
-typedef fthread_attr_t    ATTR;
+#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
+  #define HTHREAD_MUTEX_DEFAULT   FTHREAD_MUTEX_NORMAL
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
+  #define HTHREAD_MUTEX_DEFAULT   FTHREAD_MUTEX_ERRORCHECK
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
+  #define HTHREAD_MUTEX_DEFAULT   FTHREAD_MUTEX_RECURSIVE
+#else
+  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
+#endif
+
+typedef fthread_t            TID;
+typedef fthread_mutex_t      LOCK;
+typedef fthread_cond_t       COND;
+typedef fthread_attr_t       ATTR;
+typedef fthread_mutexattr_t  MATTR;
+
+    #define hthread_mutexattr_init(pla)            fthread_mutexattr_init((pla))
+    #define hthread_mutexattr_settype(pla,typ)     fthread_mutexattr_settype((pla),(typ))
 
 #if defined(FISH_HANG)
 
+    #define hthread_mutex_init(plk,pla)            fthread_mutex_init(PTT_LOC,(plk),(pla))
+
     #define create_thread(ptid,pat,fn,arg,nm)      fthread_create(PTT_LOC,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm))
     #define join_thread(tid,pcode)                 fthread_join(PTT_LOC,(tid),(pcode))
-
-    #define initialize_lock(plk)                   fthread_mutex_init(PTT_LOC,(plk),NULL)
     #define destroy_lock(plk)                      fthread_mutex_destroy(PTT_LOC,(plk))
     #define obtain_lock(plk)                       fthread_mutex_lock(PTT_LOC,(plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock(PTT_LOC,(plk))
@@ -146,10 +173,10 @@ typedef fthread_attr_t    ATTR;
 
 #else // !defined(FISH_HANG)
 
+    #define hthread_mutex_init(plk,pla)            fthread_mutex_init((plk),(pla))
+
     #define create_thread(ptid,pat,fn,arg,nm)      fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),nm)
     #define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
-
-    #define initialize_lock(plk)                   fthread_mutex_init((plk),NULL)
     #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
     #define obtain_lock(plk)                       fthread_mutex_lock((plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
@@ -208,12 +235,27 @@ typedef fthread_attr_t    ATTR;
 
 #include <pthread.h>
 
-typedef pthread_t                               TID;
-typedef pthread_mutex_t                         LOCK;
-typedef pthread_rwlock_t                        RWLOCK;
-typedef pthread_cond_t                          COND;
-typedef pthread_attr_t                          ATTR;
-#define initialize_lock(plk)                    pthread_mutex_init((plk),NULL)
+#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
+  #define HTHREAD_MUTEX_DEFAULT   PTHREAD_MUTEX_NORMAL
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
+  #define HTHREAD_MUTEX_DEFAULT   PTHREAD_MUTEX_ERRORCHECK
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
+  #define HTHREAD_MUTEX_DEFAULT   PTHREAD_MUTEX_RECURSIVE
+#else
+  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
+#endif
+
+typedef pthread_t                   TID;
+typedef pthread_mutex_t             LOCK;
+typedef pthread_rwlock_t            RWLOCK;
+typedef pthread_cond_t              COND;
+typedef pthread_attr_t              ATTR;
+typedef pthread_mutexattr_t         MATTR;
+
+#define hthread_mutexattr_init(pla)             pthread_mutexattr_init((pla))
+#define hthread_mutexattr_settype(pla,typ)      pthread_mutexattr_settype((pla),(typ))
+#define hthread_mutex_init(plk,pla)             pthread_mutex_init((plk),(pla))
+
 #define destroy_lock(plk)                       pthread_mutex_destroy((plk))
 #define obtain_lock(plk)                        pthread_mutex_lock((plk))
 #define try_obtain_lock(plk)                    pthread_mutex_trylock((plk))
@@ -263,6 +305,17 @@ typedef void*THREAD_FUNC(void*);
 
 #endif // !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
 
+#define initialize_lock(plk) \
+    do { \
+        MATTR attr; \
+        int rc; \
+        if ((rc = hthread_mutexattr_init(&attr)) == 0) { \
+            if ((rc = hthread_mutexattr_settype(&attr,HTHREAD_MUTEX_DEFAULT)) == 0) { \
+                rc = hthread_mutex_init((plk),&attr); \
+            } \
+        } \
+    } while (0)
+
 ///////////////////////////////////////////////////////////////////////
 // 'Thread' tracing...
 ///////////////////////////////////////////////////////////////////////
@@ -272,7 +325,16 @@ typedef void*THREAD_FUNC(void*);
 #include "pttrace.h"
 
 #undef  initialize_lock
-#define initialize_lock(plk)                    ptt_pthread_mutex_init((plk),NULL,PTT_LOC)
+#define initialize_lock(plk) \
+    do { \
+        MATTR attr; \
+        int rc; \
+        if ((rc = hthread_mutexattr_init(&attr)) == 0) { \
+            if ((rc = hthread_mutexattr_settype(&attr,HTHREAD_MUTEX_DEFAULT)) == 0) { \
+                ptt_pthread_mutex_init((plk),&attr,PTT_LOC); \
+            } \
+        } \
+    } while (0)
 #undef  obtain_lock
 #define obtain_lock(plk)                        ptt_pthread_mutex_lock((plk),PTT_LOC)
 #undef  try_obtain_lock

@@ -84,6 +84,16 @@ static const char *build_info[] = {
     #endif
 #endif
 
+#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
+    "Using Normal Mutex Locking Model",
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
+    "Using Error-Checking Mutex Locking Model",
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
+    "Using Recursive Mutex Locking Model",
+#else
+    "Using (undefined) Mutex Locking Model",
+#endif
+
 #if defined( OPTION_FISHIO)
     "Using FishIO",
 #endif
