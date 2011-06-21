@@ -940,10 +940,18 @@ DLL_EXPORT  int hopen( const char* path, int oflag, ... )
 //////////////////////////////////////////////////////////////////////////////////////////
 // (testing)
 
+#ifdef _MSVC_
+#pragma optimize( "", off )
+#endif
+
 DLL_EXPORT void cause_crash()
 {
     static int x = 0; x = x / x - x;
 }
+
+#ifdef _MSVC_
+#pragma optimize( "", on )
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

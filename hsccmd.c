@@ -84,120 +84,83 @@ int exec_cmd(int argc, char *argv[],char *cmdline);
 
 static void fcb_dump( DEVBLK*, char *, unsigned int );
 
-
-/* $test_cmd - do something or other */
-#ifdef _MSVC_
-#pragma optimize( "", off )
-#endif
-int test_p   = 0;
-int test_n   = 0;
-int test_t   = 0;
-TID test_tid = 0;
-int test_msg_num = 0;
-
-char* test_p_msg = "<pnl,color(lightyellow,black),keep>Test protected message %d...\n";
-char* test_n_msg =                                    "Test normal message %d...\n";
-
-void do_test_msgs()
-{
-    int  i;
-    for (i=0; i < test_n; i++)
-        LOGMSG(   test_n_msg, test_msg_num++ );
-
-    if (         !test_p) return;
-    for (i=0; i < test_p; i++)
-        LOGMSG(   test_p_msg, test_msg_num++ );
-
-    if (         !test_n) return;
-    for (i=0; i < test_n; i++)
-        LOGMSG(   test_n_msg, test_msg_num++ );
-
-}
-
-void* test_thread(void* parg)
-{
-    UNREFERENCED(parg);
-
-    LOGMSG("test thread: STARTING\n");
-
-    SLEEP( 5 );
-
-    do_test_msgs();
-
-    LOGMSG("test thread: EXITING\n");
-    test_tid = 0;
-    return NULL;
-}
-
 /*-------------------------------------------------------------------*/
-/* test command                                                      */
+/* $test command - do something or other                             */
 /*-------------------------------------------------------------------*/
+void* test_thread(void* parg);      /* (forward reference) */
+
+#define  NUM_THREADS    10
+#define  MAX_WAIT_SECS  6
+
 int test_cmd(int argc, char *argv[],char *cmdline)
 {
-//  UNREFERENCED(argc);
-//  UNREFERENCED(argv);
+    int i, secs, rc;
+    TID tids[ NUM_THREADS ];
+
+    //UNREFERENCED(argc);
+    //UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    if ( CMD(argv[1],crash,5) )
-        cause_crash();
-
-    if (test_tid)
-    {
-        LOGMSG("ERROR: test thread still running!\n");
-        return 0;
-    }
-
-    if (argc < 2 || argc > 4)
-    {
-        LOGMSG("Format: \"$test p=#msgs n=#msgs &\" (args can be in any order)\n");
-        return 0;
-    }
-
-    test_p = 0;
-    test_n = 0;
-    test_t = 0;
-
     if (argc > 1)
+        if ( CMD(argv[1],crash,5) )
+            cause_crash(); // (see hscutl.c)
+
+    /*-------------------------------------------*/
+    /*             test 'nanosleep'              */
+    /*  Use "$test &" to run test in background  */
+    /*-------------------------------------------*/
+
+    srand( (unsigned int) time( NULL ));
+
+    /* Create the test threads */
+    LOGMSG("*** $test command: creating threads...\n");
+    for (i=0; i < NUM_THREADS; i++)
     {
-        do
+        secs = 1 + rand() % MAX_WAIT_SECS;
+        if ((rc = create_thread( &tids[i], JOINABLE, test_thread, (void*)secs, "test_thread" )) != 0)
         {
-            if ( SNCMP(argv[1],"p=",2) ) { test_p = atoi( &argv[1][2] ); break; }
-            if ( SNCMP(argv[1],"n=",2) ) { test_n = atoi( &argv[1][2] ); break; }
-            if ( argv[1][0] == '&') test_t = 1;
-        } while(0);
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
+            tids[i] = 0;
+        }
+
+        secs = rand() % 3;
+        if (secs)
+            SLEEP(1);
     }
 
-    if (argc > 2)
-    {
-        do
-        {
-            if ( SNCMP(argv[2],"p=",2) ) { test_p = atoi( &argv[2][2] ); break; }
-            if ( SNCMP(argv[2],"n=",2) ) { test_n = atoi( &argv[2][2] ); break; }
-            if ( argv[2][0] == '&') test_t = 1;
-        } while(0);
-    }
+    /* Wait for all threads to exit */
+    LOGMSG("*** $test command: waiting for threads to exit...\n");
+    for (i=0; i < NUM_THREADS; i++)
+        if (tids[i])
+            join_thread( tids[i], NULL );
 
-    if (argc > 3)
-    {
-        do
-        {
-            if ( SNCMP(argv[3],"p=",2) ) { test_p = atoi( &argv[3][2] ); break; }
-            if ( SNCMP(argv[3],"n=",2) ) { test_n = atoi( &argv[3][2] ); break; }
-            if ( argv[3][0] == '&') test_t = 1;
-        } while(0);
-    }
-
-    if (test_t)
-        create_thread( &test_tid, DETACHED, test_thread, NULL, "test thread" );
-    else
-        do_test_msgs();
-
+    LOGMSG("*** $test command: test complete.\n");
     return 0;
 }
 
-#ifdef _MSVC_
-#pragma optimize( "", on )
-#endif
+/* $test command helper thread */
+void* test_thread( void* parg)
+{
+    TID tid = thread_id();          /* thread identity */
+    int rc, secs = (int) parg;      /* how long to wait */
+    struct timespec ts;             /* nanosleep argument */
+
+    ts.tv_sec  = secs;
+    ts.tv_nsec = 0;
+
+    /* Introduce Heisenberg */
+    sched_yield();
+
+    /* Do nanosleep for the specified number of seconds */
+    LOGMSG("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    rc = nanosleep( &ts, NULL );
+    LOGMSG("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+
+    return NULL;
+}
+
+/* ---------------------- (end $test command) ---------------------- */
 
 /* Issue generic Device not found error message */
 static inline int devnotfound_msg(U16 lcss,U16 devnum)
