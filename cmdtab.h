@@ -267,8 +267,11 @@
 #define cscript_cmd_desc        "Cancels a running script thread"
 #define cscript_cmd_help        \
                                 \
-  "Format: \"cscript\". This command will cancel the currently running\n"       \
-  "script. If no script is running, no action is taken.\n"
+  "Format: \"cscript  ['*' | 'ALL' | id]\".  This command cancels a running\n"  \
+  "script or all scripts. If '*' or 'ALL' is given then all running scripts\n"  \
+  "are canceled. If no arguments are given only the first running script is\n"  \
+  "cancelled. Otherwise the specific script 'id' is canceled. The 'script'\n"   \
+  "command may be used to display a list of all currently running scripts.\n"
 
 #define ctc_cmd_desc            "Enable/Disable CTC debugging"
 #define ctc_cmd_help            \
@@ -1031,10 +1034,12 @@
 #define script_cmd_desc         "Run a sequence of panel commands contained in a file"
 #define script_cmd_help         \
                                 \
-  "Format: \"script filename [...filename...]\". Sequentially executes\n"        \
-  "the commands contained within the file 'filename'. The script file may\n"     \
-  "also contain \"script\" commands, but the system ensures that no more\n"      \
-  "than " MSTRING( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n"
+  "Format: \"script [filename [filename] ...]\". Sequentially executes\n"        \
+  "the commands contained within the file 'filename'. The script file\n"         \
+  "may also contain \"script\" commands, but the system ensures that no\n"       \
+  "more than " MSTRING( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n\n"  \
+                                                                                 \
+  "Enter the command without no arguments to list all running scripts.\n"
 
 #define scsimount_cmd_desc      "Automatic SCSI tape mounts"
 #define scsimount_cmd_help      \

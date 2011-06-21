@@ -280,7 +280,7 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
 
     /* Let 'cscript' command run immediately in any context */
     if (argc >= 1 && strcasecmp( argv[0], "cscript" ) == 0)
-        return cscript_cmd( 0, NULL, NULL );
+        return cscript_cmd( CMDFUNC_ARGS );
 
     HERC_CMD_ENTRY();
 
@@ -698,8 +698,6 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 }
 /* end HelpCommand */
 
-int scr_recursion_level();  // (external helper function; see script.c)
-
 /*-------------------------------------------------------------------*/
 /* Helper function to echo a command to the console       (internal) */
 /*-------------------------------------------------------------------*/
@@ -712,6 +710,8 @@ static void EchoHercCmdLine( const char* cmd )
 #endif /* defined( OPTION_CMDTGT ) */
         WRMSG( HHC01603, "I", cmd );    // "%s"
 }
+
+void* FindSCRCTL( TID tid );// (external helper function; see script.c)
 
 /*-------------------------------------------------------------------*/
 /* panel_command entry-point:  determine if Hercules or scp_command  */
@@ -732,7 +732,7 @@ void *panel_command (void *cmdline)
     /* Every command will be stored in history list,
        EXCEPT: null commands, script commands, scp input,
        and "silent" commands (prefixed with '-') */
-    if (*pCmdLine != 0 && thread_id() != sysblk.scrtid)
+    if (*pCmdLine != 0 && !FindSCRCTL(thread_id()))
     {
         if (!(*pCmdLine == '-'))    /* (normal command?) */
         {

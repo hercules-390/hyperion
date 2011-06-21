@@ -519,9 +519,7 @@ struct SYSBLK {
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
-        TID     scrtid;                 /* Script proc'ing thread-id */
-        LOCK    scrlock;                /* Script proc'ing lock      */
-        COND    scrcond;                /* Script proc'ing cond      */
+        LOCK    scrlock;                /* Script processing lock    */
 #if defined(OPTION_CMDSER)
         LOCK    cmdlock;                /* Command processing lock   */
         COND    cmdcond;                /* Command processing cond   */
