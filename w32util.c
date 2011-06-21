@@ -402,23 +402,202 @@ DLL_EXPORT char* strtok_r ( char* s, const char* sep, char** lasts )
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Can't use "HAVE_SLEEP" since Win32's "Sleep" causes HAVE_SLEEP to
-// be erroneously #defined due to autoconf AC_CHECK_FUNCS case issues...
+// nanosleep, usleep and gettimeofday
 
-//#if !defined( HAVE_SLEEP )
+#if !defined( HAVE_NANOSLEEP ) || !defined( HAVE_USLEEP )
+#if !defined( HAVE_GETTIMEOFDAY )
 
-DLL_EXPORT unsigned sleep ( unsigned seconds )
+// (INTERNAL) Convert Windows SystemTime value to #of nanoseconds since 1/1/1970...
+
+static LARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
 {
-    Sleep( seconds * 1000 );
+    LARGE_INTEGER  liRetVal;
+    ASSERT( pFT );
+
+    // Convert FILETIME to LARGE_INTEGER
+
+    liRetVal.HighPart = pFT->dwHighDateTime;
+    liRetVal.LowPart  = pFT->dwLowDateTime;
+
+    // Convert from 100-nsec units since 1/1/1601
+    // to number of 100-nsec units since 1/1/1970
+
+    liRetVal.QuadPart -= 116444736000000000ULL;
+
+    // Convert from 100-nsec units to just nsecs
+
+    liRetVal.QuadPart *= 100;
+
+    return liRetVal;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (INTERNAL) Nanosecond resolution GTOD (getimeofday)...
+
+static int w32_nanogtod( struct timespec* pTS )
+{
+    LARGE_INTEGER           liWork;                   // (high-performance-counter tick count)
+    static LARGE_INTEGER    liStartingHPCTick;        // (high-performance-counter tick count)
+    static LARGE_INTEGER    liStartingNanoTime;       // (time of last resync in nanoseconds)
+    static struct timespec  tsPrevSyncVal = {0};      // (time of last resync as timespec)
+    static struct timespec  tsPrevRetVal  = {0};      // (previously returned value)
+    static double           dHPCTicksPerNanosecond;   // (just what it says)
+    static BOOL             bInSync = FALSE;          // (work flag)
+
+    // Validate parameters...
+
+    ASSERT( pTS );
+    if (unlikely( !pTS ))
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Perform (re-)initialization...
+
+    if (unlikely( !bInSync ))
+    {
+        FILETIME       ftStartingSystemTime;
+        LARGE_INTEGER  liHPCTicksPerSecond;
+
+        // The "GetSystemTimeAsFileTime" function obtains the current system date
+        // and time. The information is in Coordinated Universal Time (UTC) format.
+
+        GetSystemTimeAsFileTime( &ftStartingSystemTime );
+        VERIFY( QueryPerformanceCounter( &liStartingHPCTick ) );
+
+        VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
+        dHPCTicksPerNanosecond = (double) liHPCTicksPerSecond.QuadPart / 1000000000.0;
+
+        liStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
+
+        tsPrevSyncVal.tv_sec = 0;       // (to force init further below)
+        tsPrevSyncVal.tv_nsec = 0;      // (to force init further below)
+
+        bInSync = TRUE;
+    }
+
+    // Query current high-performance counter value...
+
+    VERIFY( QueryPerformanceCounter( &liWork ) );
+
+    // Calculate elapsed HPC ticks...
+
+    liWork.QuadPart -= liStartingHPCTick.QuadPart;
+
+    // Convert to elapsed nanoseconds...
+
+    liWork.QuadPart = (LONGLONG)
+        ( (double) liWork.QuadPart / dHPCTicksPerNanosecond );
+
+    // Add starting time to yield current TOD in nanoseconds...
+
+    liWork.QuadPart += liStartingNanoTime.QuadPart;
+
+    // Build results...
+
+    pTS->tv_sec   =  (long) (liWork.QuadPart / 1000000000);
+    pTS->tv_nsec  =  (long) (liWork.QuadPart % 1000000000);
+
+    // Re-sync to system clock every so often to prevent clock drift
+    // since high-performance timer updated independently from clock.
+
+#define RESYNC_GTOD_EVERY_SECS      30      // (every 30 seconds)
+
+    // (initialize time of previous 'sync')
+
+    if (unlikely( !tsPrevSyncVal.tv_sec ))
+    {
+        tsPrevSyncVal.tv_sec  = pTS->tv_sec;
+        tsPrevSyncVal.tv_nsec = pTS->tv_nsec;
+    }
+
+    // (is is time to resync again?)
+
+    if (unlikely( (pTS->tv_sec - tsPrevSyncVal.tv_sec) > RESYNC_GTOD_EVERY_SECS ))
+    {
+        bInSync = FALSE; // (force resync)
+        return w32_nanogtod( pTS );
+    }
+
+    // Ensure each call returns a unique, ever-increasing value...
+
+    if (unlikely( !tsPrevRetVal.tv_sec ))
+    {
+        tsPrevRetVal.tv_sec  = pTS->tv_sec;
+        tsPrevRetVal.tv_nsec = pTS->tv_nsec;
+    }
+
+    if (unlikely
+    (0
+        ||      pTS->tv_sec  <  tsPrevRetVal.tv_sec
+        || (1
+            &&  pTS->tv_sec  == tsPrevRetVal.tv_sec
+            &&  pTS->tv_nsec <= tsPrevRetVal.tv_nsec
+           )
+    ))
+    {
+        pTS->tv_sec  = tsPrevRetVal.tv_sec;
+        pTS->tv_nsec = tsPrevRetVal.tv_nsec + 1;
+
+        if (unlikely(pTS->tv_nsec >= 1000000000))
+        {
+            pTS->tv_sec  += pTS->tv_nsec / 1000000000;
+            pTS->tv_nsec  = pTS->tv_nsec % 1000000000;
+        }
+    }
+
+    // Save previously returned value for next time...
+
+    tsPrevRetVal.tv_sec  = pTS->tv_sec;
+    tsPrevRetVal.tv_nsec = pTS->tv_nsec;
+
+    // Done!
+
+    return 0;       // (always unless user error)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (PUBLIC) Microsecond resolution GTOD (getimeofday)...
+
+DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
+{
+    static struct timeval tvPrevRetVal = {0};
+    struct timespec ts = {0};
+
+    // Validate parameters...
+
+    UNREFERENCED( pTZ );
+    ASSERT( pTV );
+
+    if (unlikely( !pTV ))
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Get nanosecond resolution TOD...
+
+    VERIFY( w32_nanogtod( &ts ) == 0 );
+
+    // Convert to microsecond resolution...
+
+    pTV->tv_sec  = (long)  (ts.tv_sec);
+    pTV->tv_usec = (long) ((ts.tv_nsec + 500) / 1000);
+
+    if (unlikely( pTV->tv_usec >= 1000000 ))
+    {
+        pTV->tv_sec  += 1;
+        pTV->tv_usec -= 1000000;
+    }
+
     return 0;
 }
 
-//#endif
+#endif // !defined( HAVE_GETTIMEOFDAY )
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// high resolution sleep
-
-#if !defined( HAVE_NANOSLEEP ) || !defined( HAVE_USLEEP )
+// Sleep for specified number of nanoseconds...
 
 static int w32_nanosleep ( const struct timespec* rqtp )
 {
@@ -465,22 +644,22 @@ static int w32_nanosleep ( const struct timespec* rqtp )
                   or greater than or equal to 1000 million.
     */
 
-    static BOOL    bDidInit    = FALSE;
-    static HANDLE  hTimer      = NULL;
-    LARGE_INTEGER  liDueTime;
-
-    // Create the waitable timer if needed...
-
-    if (unlikely( !bDidInit ))
-    {
-        bDidInit = TRUE;
-
-        VERIFY( ( hTimer = CreateWaitableTimer( NULL, TRUE, NULL ) ) != NULL );
-    }
+    static LONGLONG         timerint    =  0;       // TOD clock interval
+    static HANDLE           hTimer      = NULL;     // Waitable timer handle
+    static LARGE_INTEGER    liWaitAmt   = {0};      // Amount of time to wait
+    static CRITICAL_SECTION waitlock    = {0};      // Multi-threading lock
+    static struct timespec  tsCurrTime  = {0};      // Current Time-of-Day
+    static struct timespec  tsWakeTime  = {0};      // Current wakeup time
+           struct timespec  tsSaveWake  = {0};      // Saved   wakeup time
+           struct timespec  tsOurWake   = {0};      // Our wakeup time
 
     // Check passed parameters...
 
-    if (unlikely(!rqtp
+    ASSERT( rqtp );
+
+    if (unlikely
+    (0
+        || !rqtp
         || rqtp->tv_nsec < 0
         || rqtp->tv_nsec >= 1000000000
     ))
@@ -489,29 +668,136 @@ static int w32_nanosleep ( const struct timespec* rqtp )
         return -1;
     }
 
-    // Note: Win32 waitable timers: parameter is #of 100-nanosecond intervals.
-    //       Positive values indicate absolute UTC time. Negative values indicate
-    //       relative time. The actual timer accuracy depends on the capability
-    //       of your hardware.
+    // Perform first time initialization...
 
-    liDueTime.QuadPart = -(                 // (negative means relative)
-        (((__int64)rqtp->tv_sec * 10000000))
-        +
-        (((__int64)rqtp->tv_nsec + 99) / 100)
+    if (unlikely( !hTimer ))
+    {
+        InitializeCriticalSectionAndSpinCount( &waitlock, 4000 );
+        VERIFY(( hTimer = CreateWaitableTimer( NULL, TRUE, NULL ) ) != NULL );
+    }
+
+    EnterCriticalSection( &waitlock );
+
+    do
+    {
+        // Calculate our wakeup time if we haven't done so yet...
+
+        if (unlikely( !tsOurWake.tv_sec ))
+        {
+            VERIFY( w32_nanogtod( &tsCurrTime ) == 0);
+
+            tsOurWake = tsCurrTime;
+            tsOurWake.tv_sec  += rqtp->tv_sec;
+            tsOurWake.tv_nsec += rqtp->tv_nsec;
+
+            if (unlikely( tsOurWake.tv_nsec >= 1000000000 ))
+            {
+                tsOurWake.tv_sec  += 1;
+                tsOurWake.tv_nsec -= 1000000000;
+            }
+        }
+
+        //                    (CRTICIAL TEST)
+        //
+        // If our wakeup time is earlier than the current alarm time,
+        // then set the timer again with our new earlier wakeup time.
+        //
+        // Otherwise (our wakeup time comes later than the currently
+        // set wakeup/alarm time) we proceed directly to waiting for
+        // the existing currently set alarm to expire first...
+
+        if (0
+            || !tsWakeTime.tv_sec
+            || tsOurWake.tv_sec < tsWakeTime.tv_sec
+            || (1
+                && tsOurWake.tv_sec  == tsWakeTime.tv_sec
+                && tsOurWake.tv_nsec <  tsWakeTime.tv_nsec
+               )
+        )
+        {
+            // Calculate how long to wait in 100-nanosecond units...
+
+            liWaitAmt.QuadPart =
+            (
+                ( (LONGLONG)(tsOurWake.tv_sec  - tsCurrTime.tv_sec)  * 10000000 )
+                +
+                (((LONGLONG)(tsOurWake.tv_nsec - tsCurrTime.tv_nsec) + 50) / 100)
+            );
+
+            // For efficiency don't allow any wait interval shorter
+            // than our currently defined TOD clock update interval...
+
+            timerint = sysblk.timerint;   // (copy volatile value)
+
+            if (unlikely( liWaitAmt.QuadPart < (timerint * 10) ))
+            {
+                // (adjust wakeup time to respect imposed minimum)
+
+                tsOurWake.tv_nsec += (long) ((timerint * 10) - liWaitAmt.QuadPart) * 100;
+                liWaitAmt.QuadPart = (timerint * 10);
+
+                if (unlikely( tsOurWake.tv_nsec >= 1000000000 ))
+                {
+                    tsOurWake.tv_sec  += (tsOurWake.tv_nsec / 1000000000);
+                    tsOurWake.tv_nsec %= 1000000000;
+                }
+            }
+
+            liWaitAmt.QuadPart = -liWaitAmt.QuadPart; // (negative == relative)
+            VERIFY( SetWaitableTimer( hTimer, &liWaitAmt, 0, NULL, NULL, FALSE ) );
+            tsWakeTime = tsOurWake; // (use our wakeup time)
+        }
+
+        tsSaveWake = tsWakeTime;    // (save the wakeup time)
+
+        // Wait for the currently calculated wakeup time to arrive...
+
+        LeaveCriticalSection( &waitlock );
+        {
+            VERIFY( WaitForSingleObject( hTimer, INFINITE ) == WAIT_OBJECT_0 );
+        }
+        EnterCriticalSection( &waitlock );
+
+        // Reset the wakeup time (if the previously awakened thread
+        // hasn't done that yet) and get a new updated current TOD.
+
+        //                (CRTICIAL TEST)
+        if (1
+            && tsWakeTime.tv_sec  == tsSaveWake.tv_sec
+            && tsWakeTime.tv_nsec == tsSaveWake.tv_nsec
+            && WaitForSingleObject( hTimer, 0 ) == WAIT_OBJECT_0
+        )
+        {
+            // The wakeup time hasn't been changed and the timer
+            // is still signaled so we must be the first thread
+            // to be woken up (otherwise the previously awakened
+            // thread would have set a new wakeup time and the
+            // timer thus wouldn't still be signaled). We clear
+            // the wakeup time too (since it's now known to be
+            // obsolete) which forces us to calculate a new one
+            // further above.
+
+            tsWakeTime.tv_sec = 0;     // (needs recalculated)
+            tsWakeTime.tv_nsec = 0;    // (needs recalculated)
+        }
+
+        VERIFY( w32_nanogtod( &tsCurrTime ) == 0);
+    }
+    while // (has our wakeup time arrived yet?)
+    (0
+        || tsCurrTime.tv_sec < tsOurWake.tv_sec
+        || (1
+            && tsCurrTime.tv_sec  == tsOurWake.tv_sec
+            && tsCurrTime.tv_nsec <  tsOurWake.tv_nsec
+           )
+
     );
 
-    // Set the waitable timer...
+    // Our wakeup time has arrived...
 
-    VERIFY( SetWaitableTimer( hTimer, &liDueTime, 0, NULL, NULL, FALSE ) );
-
-    // Wait for the waitable timer to expire...
-
-    VERIFY( WaitForSingleObject( hTimer, INFINITE ) == WAIT_OBJECT_0 );
-
+    LeaveCriticalSection( &waitlock );
     return 0;
 }
-
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // nanosleep - high resolution sleep
@@ -520,7 +806,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
 DLL_EXPORT int nanosleep ( const struct timespec* rqtp, struct timespec* rmtp )
 {
-    if (unlikely(rmtp))
+    if (unlikely( rmtp ))
     {
         rmtp->tv_sec  = 0;
         rmtp->tv_nsec = 0;
@@ -529,7 +815,7 @@ DLL_EXPORT int nanosleep ( const struct timespec* rqtp, struct timespec* rmtp )
     return w32_nanosleep ( rqtp );
 }
 
-#endif
+#endif // !defined( HAVE_NANOSLEEP )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // usleep - suspend execution for an interval
@@ -568,162 +854,23 @@ DLL_EXPORT int usleep ( useconds_t useconds )
     return w32_nanosleep ( &rqtp );
 }
 
-#endif
+#endif // !defined( HAVE_USLEEP )
+
+#endif // !defined( HAVE_NANOSLEEP ) || !defined( HAVE_USLEEP )
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// gettimeofday...
+// Can't use "HAVE_SLEEP" since Win32's "Sleep" causes HAVE_SLEEP to
+// be erroneously #defined due to autoconf AC_CHECK_FUNCS case issues...
 
-#if !defined( HAVE_GETTIMEOFDAY )
+//#if !defined( HAVE_SLEEP )
 
-// Number of 100-nanosecond units from 1 Jan 1601 to 1 Jan 1970
-
-#define  EPOCH_BIAS  116444736000000000ULL
-
-// Helper function to convert Windows system-time value to microseconds...
-
-static LARGE_INTEGER FileTimeToMicroseconds( const FILETIME* pFT )
+DLL_EXPORT unsigned sleep ( unsigned seconds )
 {
-    LARGE_INTEGER  liWork;  // (work area)
-
-    // Copy value to be converted to work area
-
-    liWork.HighPart = pFT->dwHighDateTime;
-    liWork.LowPart  = pFT->dwLowDateTime;
-
-    // Convert to 100-nanosecond units since 1 Jan 1970
-
-    liWork.QuadPart -= EPOCH_BIAS;
-
-    // Convert to microseconds since 1 Jan 1970
-
-    liWork.QuadPart /= (LONGLONG) 10;
-
-    return liWork;
+    Sleep( seconds * 1000 );
+    return 0;
 }
 
-DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
-{
-    LARGE_INTEGER          liCurrentHPCValue;       // (high-performance-counter tick count)
-    static LARGE_INTEGER   liStartingHPCValue;      // (high-performance-counter tick count)
-    static LARGE_INTEGER   liStartingSystemTime;    // (time of last resync in microseconds)
-    static struct timeval  tvPrevSyncVal = {0,0};   // (time of last resync as timeval)
-    static struct timeval  tvPrevRetVal  = {0,0};   // (previously returned value)
-    static double          dHPCTicksPerMicrosecond; // (just what it says)
-    static BOOL            bInSync = FALSE;         // (work flag)
-
-    UNREFERENCED(pTZ);
-
-    // One-time (and periodic!) initialization...
-
-    if (unlikely( !bInSync ))
-    {
-        FILETIME       ftStartingSystemTime;
-        LARGE_INTEGER  liHPCTicksPerSecond;
-
-        // The "GetSystemTimeAsFileTime" function obtains the current system date
-        // and time. The information is in Coordinated Universal Time (UTC) format.
-
-        GetSystemTimeAsFileTime( &ftStartingSystemTime );
-        VERIFY( QueryPerformanceCounter( &liStartingHPCValue ) );
-
-        VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
-        dHPCTicksPerMicrosecond = (double) liHPCTicksPerSecond.QuadPart / 1000000.0;
-
-        liStartingSystemTime = FileTimeToMicroseconds( &ftStartingSystemTime );
-
-        tvPrevSyncVal.tv_sec = 0;       // (to force init further below)
-        tvPrevSyncVal.tv_usec = 0;      // (to force init further below)
-
-        bInSync = TRUE;
-    }
-
-    // The following check for user error must FOLLOW the above initialization
-    // code block so the above initialization code block ALWAYS gets executed!
-
-    if (unlikely( !pTV ))
-        return EFAULT;
-
-    // Query current high-performance counter value...
-
-    VERIFY( QueryPerformanceCounter( &liCurrentHPCValue ) );
-
-    // Calculate elapsed HPC ticks...
-
-    liCurrentHPCValue.QuadPart -= liStartingHPCValue.QuadPart;
-
-    // Convert to elapsed microseconds...
-
-    liCurrentHPCValue.QuadPart = (LONGLONG)
-        ( (double) liCurrentHPCValue.QuadPart / dHPCTicksPerMicrosecond );
-
-    // Add to starting system time...
-
-    liCurrentHPCValue.QuadPart += liStartingSystemTime.QuadPart;
-
-    // Build results...
-
-    pTV->tv_sec   =  (long)(liCurrentHPCValue.QuadPart / 1000000);
-    pTV->tv_usec  =  (long)(liCurrentHPCValue.QuadPart % 1000000);
-
-    // Re-sync to system clock every so often to prevent clock drift
-    // since high-performance timer updated independently from clock.
-
-#define  RESYNC_GTOD_EVERY_SECS  30
-
-    // (initialize time of previous 'sync')
-
-    if (unlikely( !tvPrevSyncVal.tv_sec ))
-    {
-        tvPrevSyncVal.tv_sec  = pTV->tv_sec;
-        tvPrevSyncVal.tv_usec = pTV->tv_usec;
-    }
-
-    // (is is time to resync again?)
-
-    if (unlikely( (pTV->tv_sec - tvPrevSyncVal.tv_sec ) > RESYNC_GTOD_EVERY_SECS ))
-    {
-        bInSync = FALSE;    // (force resync)
-        return gettimeofday( pTV, NULL );
-    }
-
-    // Ensure that each call returns a unique, ever-increasing value...
-
-    if (unlikely( !tvPrevRetVal.tv_sec ))
-    {
-        tvPrevRetVal.tv_sec  = pTV->tv_sec;
-        tvPrevRetVal.tv_usec = pTV->tv_usec;
-    }
-
-    if (unlikely
-    (0
-        ||      pTV->tv_sec  <  tvPrevRetVal.tv_sec
-        || (1
-            &&  pTV->tv_sec  == tvPrevRetVal.tv_sec
-            &&  pTV->tv_usec <= tvPrevRetVal.tv_usec
-           )
-    ))
-    {
-        pTV->tv_sec  = tvPrevRetVal.tv_sec;
-        pTV->tv_usec = tvPrevRetVal.tv_usec + 1;
-
-        if (unlikely(pTV->tv_usec >= 1000000))
-        {
-            pTV->tv_sec  += pTV->tv_usec / 1000000;
-            pTV->tv_usec  = pTV->tv_usec % 1000000;
-        }
-    }
-
-    // Save previously returned value for next time...
-
-    tvPrevRetVal.tv_sec  = pTV->tv_sec;
-    tvPrevRetVal.tv_usec = pTV->tv_usec;
-
-    // Done!
-
-    return 0;       // (always unless user error)
-}
-
-#endif
+//#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // scandir...

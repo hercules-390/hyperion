@@ -606,52 +606,62 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* timerint - display or set the timer interval                      */
 /*-------------------------------------------------------------------*/
-int timerint_cmd(int argc, char *argv[], char *cmdline)
+int timerint_cmd( int argc, char *argv[], char *cmdline )
 {
     int rc = 0;
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc == 2 )
+    if (argc == 2)  /* Define a new value? */
     {
-        if ( CMD( argv[1], default, 7 ) || CMD( argv[1], reset, 5 ) )
+        if (CMD( argv[1], default, 7 ) || CMD( argv[1], reset, 5 ))
         {
-            sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
-            if ( MLVL(VERBOSE) )
+            sysblk.timerint = DEF_TOD_UPDATE_USECS;
+            if (MLVL( VERBOSE ))
+            {
+                // "%-14s set to %s"
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
+            }
         }
         else
         {
             int timerint = 0; BYTE c;
 
             if (1
-                && sscanf(argv[1], "%d%c", &timerint, &c) == 1
-                && timerint >= 1
-                && timerint <= 1000000
+                && sscanf( argv[1], "%d%c", &timerint, &c ) == 1
+                && timerint >= MIN_TOD_UPDATE_USECS
+                && timerint <= MAX_TOD_UPDATE_USECS
             )
             {
                 sysblk.timerint = timerint;
-                if ( MLVL(VERBOSE) )
+                if (MLVL( VERBOSE ))
                 {
                     char buf[25];
-                    MSGBUF( buf, "%d", sysblk.timerint);
-                    WRMSG(HHC02204, "I", argv[0], buf );
+                    MSGBUF( buf, "%d", sysblk.timerint );
+                    // "%-14s set to %s"
+                    WRMSG( HHC02204, "I", argv[0], buf );
                 }
             }
             else
             {
-                WRMSG( HHC02205, "E", argv[1], ": must be 'default' or n where 1<=n<=1000000" );
+                // "Invalid argument '%s'%s"
+                WRMSG( HHC02205, "E", argv[1], ": must be 'default' or n where "
+                    MSTRING( MIN_TOD_UPDATE_USECS ) " <= n <= "
+                    MSTRING( MAX_TOD_UPDATE_USECS ) );
                 rc = -1;
             }
         }
     }
-    else if ( argc == 1 )
+    else if (argc == 1)
     {
+        /* Display the current value */
         char buf[25];
-        MSGBUF( buf, "%d", sysblk.timerint);
-        WRMSG(HHC02203, "I", argv[0], buf );
+        MSGBUF( buf, "%d", sysblk.timerint );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }

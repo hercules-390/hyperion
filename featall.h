@@ -21,9 +21,17 @@
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 #define OPTION_MIPS_COUNTING            /* Display MIPS on ctl panel */
 #define PANEL_REFRESH_RATE              /* Enable panrate feature    */
-#define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate         */
-#define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */
-#define DEFAULT_TIMER_REFRESH_USECS  50 /* Default timer refresh int */
+#define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
+#define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
+#ifdef _MSVC_                           /*        (Windows)          */
+#define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
+#define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
+#define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
+#else                                   /*      (non-Windows)        */
+#define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
+#define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
+#define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
+#endif
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 #undef  OPTION_NO_INLINE_DAT            /* Performance option        */
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */

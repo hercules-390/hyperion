@@ -545,7 +545,7 @@ int     dll_count;                      /* index into array          */
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_NONE;
 
-    sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+    sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
     /* set default thread priorities */
     sysblk.hercprio = DEFAULT_HERCPRIO;
