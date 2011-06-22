@@ -1562,6 +1562,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif // defined(SIOCGIFHWADDR)
 
     /* Report what MAC address we will really be using */
+    // "CTC: lcs device '%s' using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
     WRMSG(HHC00942, "I", pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
                                     *(pIFaceMAC+2),*(pIFaceMAC+3),
                                     *(pIFaceMAC+4),*(pIFaceMAC+5));

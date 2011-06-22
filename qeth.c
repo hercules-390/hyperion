@@ -45,13 +45,29 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-//#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
-//#include "dbgtrace.h"                   // (Fish: DEBUGGING)
+#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+#include "dbgtrace.h"                   // (Fish: DEBUGGING)
+#define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
+#define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
 
-#if defined(WIN32) && !defined(_MSVC_) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL)
-  SYSBLK *psysblk;
-  #define sysblk (*psysblk)
+#if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
+  #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
+  #pragma warning( push )               // save current settings
+  #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
 #endif
+
+#if defined( QETH_TIMING_DEBUG )
+  #define PTT_QETH_TIMING_DEBUG     PTT
+#else
+  #define PTT_QETH_TIMING_DEBUG     __noop
+#endif
+
+#if defined( OPTION_DYNAMIC_LOAD )
+  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+    SYSBLK *psysblk;
+    #define sysblk (*psysblk)
+  #endif
+#endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 
 static const BYTE sense_id_bytes[] = {
@@ -60,6 +76,8 @@ static const BYTE sense_id_bytes[] = {
     0x17, 0x32, 0x01,                   // Device Type
     0x00,
     0x40, OSA_RCD,0x00, 0x80,           // Read Configuration Data CIW
+    0x41, OSA_SII,0x00, 0x04,           // Set Interfiace Identifier CIW
+    0x42, OSA_RNI,0x00, 0x40,           // Read Node Identifier CIW
     0x43, OSA_EQ, 0x10, 0x00,           // Establish Queues CIW
     0x44, OSA_AQ, 0x00, 0x00            // Activate Queues CIW
 };
@@ -102,7 +120,7 @@ static const BYTE read_configuration_data_bytes[128] = {
     0x00,                               // 66:     Class (X'00' = N/A)
     0x00,                               // 67:     (Reserved)
     0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 68-73:  Type  ('001730')
-    0xF0,0xF0,0xF1,                     // 74-76:  Model ('001')
+    0xF0,0xF0,0xF4,                     // 74-76:  Model ('001')
     0xC8,0xD9,0xC3,                     // 77-79:  Manufacturer ('HRC' = Hercules)
     0xE9,0xE9,                          // 80-81:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
@@ -121,6 +139,37 @@ static const BYTE read_configuration_data_bytes[128] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
     0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
     0x00,0x00                           // 126-127:?
+};
+
+
+static const BYTE read_nodeid_bytes[64] = {
+/*-------------------------------------------------------------------*/
+/* ND                                                                */
+/*-------------------------------------------------------------------*/
+    0x00,                               // 0:      ND type
+    0x00,                               // 1:      (Reserved)
+    0x06,                               // 2:      Class (X'06' = Comms)
+    0x00,                               // 3:      (Reserved)
+    0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 4-9:    Type  ('001730')
+    0xF0,0xF0,0xF4,                     // 10-12:  Model ('001')
+    0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
+    0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
+    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+    0x00,0x00,                          // 30-31:  Tag cuaddr
+/*-------------------------------------------------------------------*/
+/* NQ                                                                */
+/*-------------------------------------------------------------------*/
+    0x00,                               // 32:     NQ          
+    0x00,                               // 33:     ?
+    0x00,0x00,                          // 34-35:  ?
+    0x00,                               // 36:     ?
+    0x00,0x00,0x00,                     // 37-39:  ?
+    0x00,                               // 40:     ?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 41-61:  ?
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
+    0x00,0x00                           // 62:63:  ?
 };
 
 
@@ -292,27 +341,45 @@ U32 ackseq;
                     break;
 
                 case PDU_CMD_ENABLE:
-                    VERIFY(!TUNTAP_CreateInterface(grp->tuntap,
-                      ((pdu->proto != PDU_PROTO_L3) ? IFF_TAP : IFF_TUN) | IFF_NO_PI,
-                                           &grp->ttfd,
-                                           grp->ttdevn));
+                    VERIFY
+                    (
+                        TUNTAP_CreateInterface
+                        (
+                            grp->tuntap,
+                            0
+                                | IFF_NO_PI
+                                | IFF_OSOCK
+                                | (PDU_PROTO_L3 == pdu->proto ? IFF_TUN : IFF_TAP)
+                            ,
+                            &grp->ttfd,
+                            grp->ttdevn
+                        )
+                        == 0
+                    );
 
                     /* Set Non-Blocking mode */
                     socket_set_blocking_mode(grp->ttfd,0);
 
-#if defined(OPTION_TUNTAP_SETMACADDR)
+                    if (grp->debug)
+                        VERIFY(!TUNTAP_SetFlags(grp->ttdevn,IFF_DEBUG));
+#if defined( OPTION_TUNTAP_SETMACADDR )
                     if(grp->tthwaddr)
                         VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
-#endif /*defined(OPTION_TUNTAP_SETMACADDR)*/
+#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
                     if(grp->ttipaddr)
+#if defined( OPTION_W32_CTCI )
+                        VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,grp->ttipaddr));
+#else /*!defined( OPTION_W32_CTCI )*/
                         VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
-#if defined(OPTION_TUNTAP_SETNETMASK)
+#endif /*defined( OPTION_W32_CTCI )*/
+#if defined( OPTION_TUNTAP_SETNETMASK )
                     if(grp->ttnetmask)
                         VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
-#endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
                     if(grp->ttmtu)
                         VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
 
+                    /* end case PDU_CMD_ENABLE: */
                     break;
 
                 case PDU_CMD_ACTIVATE:
@@ -322,7 +389,9 @@ U32 ackseq;
                 default:
                     TRACE(_("ULP Target OSA Cmd %2.2x\n"),pdu->cmd);
                 }
+                /* end switch(pdu->cmd) */
                 break;
+            /* end case PDU_TGT_OSA: */
 
             case PDU_TGT_QDIO:
                 TRACE(_("PDU QDIO\n"));
@@ -331,8 +400,10 @@ U32 ackseq;
             default:
                 TRACE(_("ULP Target %2.2x\n"),pdu->tgt);
             }
+            /* end switch(pdu->tgt) */
 
         }
+        /* end case RRH_TYPE_ULP: */
         break;
 
     case RRH_TYPE_IPA:
@@ -385,23 +456,24 @@ U32 ackseq;
                     }
 
                 }
+                /* end case IPA_CMD_SETADPPARMS: */
                 break;
 
             case IPA_CMD_STARTLAN:
                 {
                     TRACE(_("STARTLAN\n"));
 
-                    if(
-                       TUNTAP_SetFlags(grp->ttdevn,IFF_UP
-                                                 |QETH_RUNNING
-                                                 |QETH_PROMISC
-                                                 | IFF_MULTICAST
-                                                 | IFF_BROADCAST )
-                                )
+                    if (TUNTAP_SetFlags( grp->ttdevn, 0
+                        | IFF_UP
+                        | QETH_RUNNING
+                        | QETH_PROMISC
+                        | IFF_MULTICAST
+                        | IFF_BROADCAST
+                        | (grp->debug ? IFF_DEBUG : 0)
+                    ))
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else
                         STORE_HW(ipa->rc,IPA_RC_OK);
-
                 }
                 break;
 
@@ -477,9 +549,9 @@ U32 ackseq;
 //              snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
 
                 VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,ipaddr));
-#if defined(OPTION_TUNTAP_SETNETMASK)
+#if defined( OPTION_TUNTAP_SETNETMASK )
 //              VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
-#endif /*defined(OPTION_TUNTAP_SETNETMASK)*/
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
                 STORE_HW(ipa->rc,IPA_RC_OK);
             }
                 break;
@@ -524,21 +596,25 @@ U32 ackseq;
                 TRACE("Invalid IPA Cmd(%02x)\n",ipa->cmd);
                 STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
+            /* end switch(ipa->cmd) */
 
             ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
 
             DUMP("IPA_HDR RSP",ipa,sizeof(OSA_IPA));
             DUMP("IPA_REQ RSP",(ipa+1),offset-sizeof(OSA_IPA));
         }
+        /* end case RRH_TYPE_IPA: */
         break;
 
     default:
         TRACE("Invalid Type=%2.2x\n",rrh->type);
     }
+    /* end switch(rrh->type) */
 
     // Set Response
     rdev->qrspsz = rqsize;
 }
+/* end osa_adapter_cmd */
 
 
 /*-------------------------------------------------------------------*/
@@ -639,14 +715,14 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 }
 
 
-// When must go through the queues and buffers on a round robin basis
-// such that buffers are re-used on a least recently used bases.
-// When no buffer are available we will must keep our current position
-// When a buffer becomes available, then we will advance to that location
-// When we reach the end of the buffer queue, we will advance to the
+// We must go through the queues/buffers in a round robin manner
+// so that buffers are re-used on a LRU (Least Recently Used) basis.
+// When no buffers are available we must keep our current position.
+// When a buffer becomes available we will advance to that location.
+// When we reach the end of the buffer queue we will advance to the
 // next available queue.
-// When a queue is newly enabled then we will start at the beginning of
-// the queue (this is handled in signal adapter)
+// When a queue is newly enabled then we will start at the beginning
+// of the queue (this is handled in signal adapter).
 
 /*-------------------------------------------------------------------*/
 /* Process Input Queue                                               */
@@ -714,7 +790,9 @@ int noread = 1;
                         if(len > sizeof(OSA_HDR2))
                         {
                             do {
-                                olen = TUNTAP_Read(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
+                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", ns, len-sizeof(OSA_HDR2), 0 );
+                                olen = TUNTAP_Read(grp->ttfd,  buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
+                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", ns, len-sizeof(OSA_HDR2), olen );
 if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
 if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
@@ -805,11 +883,17 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
     {
     char buff[4096];
     int n;
-        if((n = TUNTAP_Read(grp->ttfd,buff,sizeof(buff))) > 0)
-        {
-            grp->reqpci = TRUE;
+        do {
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
+            n = TUNTAP_Read(grp->ttfd,          buff,             sizeof(buff));
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
+
+            if(n > 0)
+            {
+                grp->reqpci = TRUE;
 DUMP("TAP DROPPED",buff,n);
-        }
+            }
+        } while (QETH_PROMISC && n > 0);
     }
 }
 
@@ -883,7 +967,9 @@ DUMP("OUTPUT BUF",buf,len);
                         {
                             if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_UNICST,grp))
                             {
-                                TUNTAP_Write(grp->ttfd,buf+sizeof(OSA_HDR2),len-sizeof(OSA_HDR2));
+                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", ns, len-sizeof(OSA_HDR2), 0 );
+                                TUNTAP_Write(grp->ttfd,      buf+sizeof(OSA_HDR2),    len-sizeof(OSA_HDR2));
+                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", ns, len-sizeof(OSA_HDR2), 0 );
                                 grp->txcnt++;
                             }
 else { TRACE("OUTPUT DROPPED, INVALID MAC\n"); }
@@ -939,7 +1025,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         if(IS_OSA_READ_DEVICE(dev)
           && (dev->group->acount == OSA_GROUP_SIZE))
             signal_condition(&grp->qcond);
-
 }
 
 
@@ -975,7 +1060,11 @@ int i;
         socket_set_blocking_mode(grp->ppfd[0],0);
 
         /* Set defaults */
+#if defined( OPTION_W32_CTCI )
+        grp->tuntap = strdup( tt32_get_default_iface() );
+#else /*!defined( OPTION_W32_CTCI )*/
         grp->tuntap = strdup(TUNTAP_NAME);
+#endif /*defined( OPTION_W32_CTCI )*/
     }
     else
         grp = dev->group->grp_data;
@@ -989,7 +1078,8 @@ int i;
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
         {
-            free(grp->tuntap);
+            if(grp->tuntap)
+                free(grp->tuntap);
             grp->tuntap = strdup(argv[++i]);
             continue;
         }
@@ -1021,6 +1111,11 @@ int i;
             grp->ttmtu = strdup(argv[++i]);
             continue;
         }
+        else if(!strcasecmp("debug",argv[i]) && (i+1) < argc)
+        {
+            grp->debug = 1;
+            continue;
+        }
         else
             LOGMSG(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
 
@@ -1042,23 +1137,28 @@ int i;
 static void qeth_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-char qdiostat[80];
+char qdiostat[80] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, devclass, buflen, buffer );
 
-    if(dev->group->acount == OSA_GROUP_SIZE)
+    if (OSA_GROUP_SIZE == dev->group->acount)
     {
         OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-        snprintf(qdiostat,sizeof(qdiostat)-1," QDIO tx[%u] rx[%u] %s",
-          grp->txcnt,grp->rxcnt,grp->ttdevn);
+        snprintf( qdiostat, sizeof(qdiostat)-1, "%s%s%stx[%u] rx[%u] "
+            , grp->ttdevn[0] ? grp->ttdevn : ""
+            , grp->ttdevn[0] ? " "         : ""
+            , grp->debug     ? "debug "    : ""
+            , grp->txcnt
+            , grp->rxcnt
+        );
     }
-    else
-        strcpy(qdiostat," QDIO");
 
-    snprintf (buffer, buflen-1, "%s%s%s",
-      (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete",
-      (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : "",
-      (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? " IDX" : "");
+    snprintf( buffer, buflen-1, "QDIO %s %s%sIO[%" I64_FMT "u]"
+        , (OSA_GROUP_SIZE == dev->group->acount) ? osa_devtyp[dev->member] : "*Incomplete"
+        , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
+        , (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""
+        , dev->excps
+    );
 
 } /* end function qeth_query_device */
 
@@ -1329,6 +1429,48 @@ int num;                                /* Number of bytes to move   */
         break;
 
 
+    case OSA_SII:
+    /*---------------------------------------------------------------*/
+    /* SET INTERFACE IDENTIFIER                                      */
+    /*---------------------------------------------------------------*/
+// DUMP("SID",iobuf,count);
+#if 0
+        /* Calculate residual byte count */
+        num = (count < 4) ? count : 4;
+        *residual = count - num;
+        if (count < dev->numsense) *more = 1;
+#endif
+
+        /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+
+    case OSA_RNI:   
+    /*---------------------------------------------------------------*/
+    /* READ NODE IDENTIFIER                                          */
+    /*---------------------------------------------------------------*/
+
+        /* Copy configuration data from tempate */
+        memcpy (iobuf, read_nodeid_bytes, sizeof(read_nodeid_bytes));
+
+        /* Use unit address of OSA read device as control unit address */
+        iobuf[3] = (dev->devnum >> 8) & 0xff;
+
+        /* Insert chpid & unit address in the ND */
+        iobuf[30] = (dev->devnum >> 8) & 0xff;
+        iobuf[31] = (dev->devnum) & 0xff;
+
+        /* Calculate residual byte count */
+        num = (count < sizeof(read_nodeid_bytes) ? count : sizeof(read_configuration_data_bytes));
+        *residual = count - num;
+        if (count < sizeof(read_nodeid_bytes)) *more = 1;
+
+        /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+
     case OSA_EQ:
     /*---------------------------------------------------------------*/
     /* ESTABLISH QUEUES                                              */
@@ -1415,6 +1557,7 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     {
     fd_set readset;
+    int rc;
 
         grp->i_qmask = grp->o_qmask = 0;
 
@@ -1422,11 +1565,15 @@ int num;                                /* Number of bytes to move   */
 
         dev->scsw.flag2 |= SCSW2_Q;
 
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0, 0, 0 );
+
         do {
             /* Process the Input Queue if data has been received */
             if(grp->i_qmask && FD_ISSET(grp->ttfd,&readset))
             {
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0, 0, 0 );
                 process_input_queue(dev);
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0, 0, 0 );
             }
 
             /* Process Output Queue if data needs to be sent */
@@ -1436,7 +1583,11 @@ int num;                                /* Number of bytes to move   */
                 read_pipe(grp->ppfd[0],&c,1);
 
                 if(grp->o_qmask)
+                {
+                    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0, 0, 0 );
                     process_output_queue(dev);
+                    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0, 0, 0 );
+                }
             }
 
             if(grp->i_qmask)
@@ -1449,10 +1600,17 @@ int num;                                /* Number of bytes to move   */
                 raise_adapter_interrupt(dev);
             }
 
-            select (((grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0]) + 1,
-              &readset, NULL, NULL, NULL);
+            do {
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
+                rc = select (((grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0]) + 1,
+                    &readset, NULL, NULL, NULL);
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
 
-        } while(dev->scsw.flag2 & SCSW2_Q);
+            } while (0 == rc || (rc < 0 && HSO_EINTR == HSO_errno));
+
+        } while (rc > 0 && dev->scsw.flag2 & SCSW2_Q);
+
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0, 0, rc );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1554,7 +1712,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 }
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
+#if defined( OPTION_DYNAMIC_LOAD )
 static
 #endif
 DEVHND qeth_device_hndinfo =
@@ -1585,7 +1743,7 @@ DEVHND qeth_device_hndinfo =
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtqeth_LTX_hdl_ddev
 #define hdl_depc hdtqeth_LTX_hdl_depc
 #define hdl_reso hdtqeth_LTX_hdl_reso
@@ -1593,30 +1751,51 @@ DEVHND qeth_device_hndinfo =
 #define hdl_fini hdtqeth_LTX_hdl_fini
 #endif
 
+#if defined( OPTION_DYNAMIC_LOAD )
 
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY(HERCULES);
-     HDL_DEPENDENCY(DEVBLK);
-     HDL_DEPENDENCY(SYSBLK);
+     HDL_DEPENDENCY( HERCULES );
+     HDL_DEPENDENCY( DEVBLK );
+     HDL_DEPENDENCY( SYSBLK );
 }
 END_DEPENDENCY_SECTION
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
-  #undef sysblk
-  HDL_RESOLVER_SECTION;
-  {
+HDL_RESOLVER_SECTION;
+{
+  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+    #undef sysblk
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-  }
-  END_RESOLVER_SECTION
-#endif
+  #endif
+}
+END_RESOLVER_SECTION
+
+
+HDL_REGISTER_SECTION;
+{
+    //              Hercules's          Our
+    //              registered          overriding
+    //              entry-point         entry-point
+    //              name                value
+
+  #if defined( OPTION_W32_CTCI )
+    HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
+    HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
+  #endif /*defined( OPTION_W32_CTCI )*/
+}
+END_REGISTER_SECTION
 
 
 HDL_DEVICE_SECTION;
 {
-    HDL_DEVICE(QETH, qeth_device_hndinfo );
+    HDL_DEVICE ( QETH, qeth_device_hndinfo );
 }
 END_DEVICE_SECTION
+
+#endif // defined(OPTION_DYNAMIC_LOAD)
+
+#if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
+  #pragma warning( pop )                // restore previous settings
+  #pragma optimize( "", on )            // restore previous settings
 #endif

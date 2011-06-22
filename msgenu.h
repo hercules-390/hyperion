@@ -787,8 +787,6 @@ do { \
 #define HHC00962 "CTC: error in file '%s': reading line %d: '%s'"
 #define HHC00963 "CTC: error in file '%s': line %d is too long"
 #define HHC00964 "CTC: packet trace: %s %s %s"
-#define HHC00965 "CTC: qeth device '%s' using mac %s"
-#define HHC00966 "CTC: qeth device '%s' not using mac %s"
 
 /*ctcadpt.c */
 #define HHC00970 "%1d:%04X CTC: unrecognized emulation type '%s'"

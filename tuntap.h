@@ -35,6 +35,14 @@ extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
                                           int     iFlags,
                                           int*    pfd,
                                           char*   pszNetDevName );
+//
+// TUNTAP_CreateInterface flag: open as SOCKET (CTCI-WIN v3.3+ only)
+//
+#if defined(OPTION_W32_CTCI)
+  #define IFF_OSOCK             _O_TT32SOCK
+#else
+  #define IFF_OSOCK             0
+#endif
 
 //
 // Configure TUN/TAP Interface

@@ -2208,6 +2208,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     U16      devnum;
     U16      lcss;
     DEVBLK*  dev;
+    char*    devclass;
 
     UNREFERENCED(cmdline);
 
@@ -2234,9 +2235,24 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
             return -1;
         }
 
-        if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype || (strcmp(dev->typname, "8232") == 0) )
+        // Device must be a non-8232 "CTCA" LCS/CTCI device or an "OSA" device
+
+        (dev->hnd->query)(dev, &devclass, 0, NULL);
+
+        if (1
+            && strcasecmp( devclass, "OSA" ) != 0
+            && (0
+                || strcasecmp( devclass, "CTCA" ) != 0
+                || strcmp( dev->typname, "8232" ) == 0
+                || (1
+                    && CTC_CTCI != dev->ctctype
+                    && CTC_LCS  != dev->ctctype
+                   )
+               )
+        )
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI or LCS" );
+            // "%1d:%04X device is not a '%s'"
+            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LCS or OSA device" );
             return -1;
         }
 

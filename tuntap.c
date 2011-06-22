@@ -233,32 +233,32 @@ static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
 //                       IFF_NO_PI - Do not include packet information
 //
 // On Win32, calls are made to Fish's TT32 DLL's to accomplish the same
-// functionality. There are a few differences in regards to the arguments
-// however:
+// functionality. There are, however, a few differences in regards to the
+// arguments:
 //
 // Input:
-//      pszTUNDevice  Pointer to a string that describes the physical
-//                    adapter to attach the TUN/TAP interface to.
-//                    This string can contain any of the following:
-//                      1) IP address (in a.b.c.d notation)
-//                      2) MAC address (in xx-xx-xx-xx-xx-xx or
-//                                         xx:xx:xx:xx:xx:xx notation).
-//                      3) Name of the adapter as displayed on your
-//                         Network and Dial-ip Connections window
-//                         (Windows 2000 only future implementation)
-//      iFlags        Flags for the new interface:
+//      pszTUNDevice   Pointer to a string that describes the physical
+//                     adapter to attach the TUN/TAP interface to.
+//                     This string can contain any of the following:
+//                       1) IP address (in a.b.c.d notation)
+//                       2) MAC address (in xx-xx-xx-xx-xx-xx or
+//                                          xx:xx:xx:xx:xx:xx notation).
+//                       3) Name of the adapter as displayed on your
+//                          Network and Dial-ip Connections window
+//                          (Windows 2000 only future implementation)
+//      iFlags         Flags for the new interface:
 //                       IFF_TAP   - Create a TAP interface or
 //                       IFF_TUN   - Create a TUN interface
 //                       IFF_NO_PI - Do not include packet information
-//      pszNetDevName Pointer to receive the name if the interface,
-//                    If this field is prefilled then that interface
-//                    will be allocated.
+//                       IFF_OSOCK - Create as socket (CTCI-WIN v3.3)
+//      pszNetDevName  Pointer to receive the name if the interface,
+//                     If this field is prefilled then that interface
+//                     will be allocated.
 //
 // Output:
-//      pfd           Pointer to receive the file descriptor of the
+//      pfd            Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
-//      pszNetDevName Pointer to receive the name if the interface.
-//
+//      pszNetDevName  Pointer to receive the name if the interface.
 
 int             TUNTAP_CreateInterface( char* pszTUNDevice,
                                         int   iFlags,
@@ -278,7 +278,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 #endif
 
     // Open TUN device
-    fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
+    fd = TUNTAP_Open( pszTUNDevice, O_RDWR | (iFlags & IFF_OSOCK) );
 
     if( fd < 0 )
     {
@@ -297,7 +297,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         struct ifreq ifr;
 
         memset( &ifr, 0, sizeof( ifr ) );
-        ifr.ifr_flags = iFlags;
+        ifr.ifr_flags = iFlags & ~(iFlags & IFF_OSOCK);
         if(*pszNetDevName)
             strcpy( ifr.ifr_name, pszNetDevName );
 

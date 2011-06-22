@@ -15,17 +15,17 @@
 
 
 /* We need all frames from CTCI-W32 */
-#if defined(OPTION_W32_CTCI)
- #define QETH_PROMISC IFF_PROMISC
+#if defined( OPTION_W32_CTCI )
+  #define QETH_PROMISC      IFF_PROMISC
 #else
- #define QETH_PROMISC 0
+  #define QETH_PROMISC      0
 #endif
 
 /* Some systems need IFF_RUNNING to be set */
-#if defined(TUNTAP_IFF_RUNNING_NEEDED)
-  #define QETH_RUNNING IFF_RUNNING
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+  #define QETH_RUNNING      IFF_RUNNING
 #else
- #define QETH_RUNNING 0
+  #define QETH_RUNNING      0
 #endif
 
 
@@ -139,6 +139,7 @@ typedef struct _OSA_GRP {
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
+    int   debug;                /* Adapter in IFF_DEBUG mode         */
 
     } OSA_GRP;
 
@@ -149,6 +150,8 @@ typedef struct _OSA_GRP {
 #define OSA_RCD                 0xFA
 #define OSA_EQ                  0x1B
 #define OSA_AQ                  0x1F
+#define OSA_SII                 0x81
+#define OSA_RNI                 0x82
 
 
 /*-------------------------------------------------------------------*/
