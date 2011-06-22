@@ -34,6 +34,7 @@
   #define PTT_LCS_TIMING_DEBUG      PTT
 #else
   #define PTT_LCS_TIMING_DEBUG      __noop
+  #define PTT_CL_INF                __noop
 #endif
 
 //-----------------------------------------------------------------------------
