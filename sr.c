@@ -143,7 +143,7 @@ BYTE     psw[16];
     SR_WRITE_VALUE (file,SR_SYS_SKEYSIZE,sysblk.mainsize/STORAGE_KEY_UNITSIZE,sizeof(int));
     SR_WRITE_BUF   (file,SR_SYS_STORKEYS,sysblk.storkeys,sysblk.mainsize/STORAGE_KEY_UNITSIZE);
     SR_WRITE_VALUE (file,SR_SYS_XPNDSIZE,sysblk.xpndsize,sizeof(sysblk.xpndsize));
-    SR_WRITE_BUF   (file,SR_SYS_XPNDSTOR,sysblk.xpndstor,sysblk.xpndsize);
+    SR_WRITE_BUF   (file,SR_SYS_XPNDSTOR,sysblk.xpndstor,4096*sysblk.xpndsize);
     SR_WRITE_VALUE (file,SR_SYS_CPUID,sysblk.cpuid,sizeof(sysblk.cpuid));
     SR_WRITE_VALUE (file,SR_SYS_IPLDEV,sysblk.ipldev,sizeof(sysblk.ipldev));
     SR_WRITE_VALUE (file,SR_SYS_IPLCPU,sysblk.iplcpu,sizeof(sysblk.iplcpu));
@@ -277,9 +277,8 @@ BYTE     psw[16];
         SR_WRITE_BUF  (file, SR_DEV_SENSE, dev->sense, 32);
         SR_WRITE_VALUE(file, SR_DEV_PGSTAT, dev->pgstat, sizeof(dev->pgstat));
         SR_WRITE_BUF  (file, SR_DEV_PGID, dev->pgid, 11);
-        /* By Adrian - SR_DEV_DRVPWD                          */   
-        SR_WRITE_BUF  (file, SR_DEV_DRVPWD, dev->drvpwd, 11);   
-   
+        /* By Adrian - SR_DEV_DRVPWD */
+        SR_WRITE_BUF  (file, SR_DEV_DRVPWD, dev->drvpwd, 11);
         SR_WRITE_VALUE(file, SR_DEV_BUSY, dev->busy, 1);
         SR_WRITE_VALUE(file, SR_DEV_RESERVED, dev->reserved, 1);
         SR_WRITE_VALUE(file, SR_DEV_SUSPENDED, dev->suspended, 1);
@@ -465,7 +464,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%dM", len / (1024*1024));
                 MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
-                WRMSG(HHC02009, "E", "mainsize", buf1, buf2);              
+                WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.mainstor, len);
@@ -479,7 +478,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
                 MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
-                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
+                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
             }
             break;
@@ -491,7 +490,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
                 MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
-                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);              
+                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.storkeys, len);
@@ -503,21 +502,21 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                MSGBUF(buf1, "%dM", len / (1024*1024));
-                MSGBUF(buf2, "%dM", sysblk.xpndsize / (1024*1024));
-                WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
+                MSGBUF(buf1, "%dM", len / (256));
+                MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
+                WRMSG(HHC02009, "E", "expand size", buf1, buf2);
                 goto sr_error_exit;
             }
             break;
 
         case SR_SYS_XPNDSTOR:
-            if (len > sysblk.xpndsize)
+            if (len > 4096*sysblk.xpndsize)
             {
                 char buf1[20];
                 char buf2[20];
-                MSGBUF(buf1, "%dM", len / (1024*1024));
-                MSGBUF(buf2, "%dM", sysblk.xpndsize / (1024*1024));
-                WRMSG(HHC02009, "E", "expand size", buf1, buf2);              
+                MSGBUF(buf1, "%dM", len / (256));
+                MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
+                WRMSG(HHC02009, "E", "expand size", buf1, buf2);
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, sysblk.xpndstor, len);
@@ -1179,15 +1178,15 @@ S64      dreg;
             SR_READ_BUF(file, &dev->pgid, len);
             break;
 
-        /* By Adrian - SR_DEV_DRVPWD                          */   
-        case SR_DEV_DRVPWD:   
-            SR_SKIP_NULL_DEV(dev, file, len);   
-            if (len != 11)   
-            {   
-                WRMSG(HHC02017, "E", dev->devnum, "DRVPWD", len, 11);   
-                goto sr_error_exit;   
-            }   
-            SR_READ_BUF(file, &dev->drvpwd, len);   
+        /* By Adrian - SR_DEV_DRVPWD */
+        case SR_DEV_DRVPWD:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            if (len != 11)
+            {
+                WRMSG(HHC02017, "E", dev->devnum, "DRVPWD", len, 11);
+                goto sr_error_exit;
+            }
+            SR_READ_BUF(file, &dev->drvpwd, len);
             break;
 
         case SR_DEV_BUSY:

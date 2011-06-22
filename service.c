@@ -103,7 +103,7 @@ void sclp_attn_thread(U16 *type)
 
     OBTAIN_INTLOCK(NULL);
 
-    // The VM boys appear to have made an error in not 
+    // The VM boys appear to have made an error in not
     // allowing for asyncronous attentions to be merged
     // with pending interrupts as such we will wait here
     // until a pending interrupt has been cleared. *JJ
@@ -580,7 +580,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         if (unitstat & CSW_UC)
         {
             PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
-            
+
             /* Set response code X'0040' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
             sccb->resp = SCCB_RESP_BACKOUT;
@@ -592,7 +592,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         sccb->resp = SCCB_RESP_COMPLETE;
     }
 }
-    
+
 /*-------------------------------------------------------------------*/
 /* Read data from the SYSG console                                   */
 /*                                                                   */
@@ -768,7 +768,7 @@ SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
     UNREFERENCED(sccb);
     UNREFERENCED(evd_hdr);
-    
+
     LOGMSG(_("VT220 poll\n"));
 }
 #endif /*defined(_FEATURE_INTEGRATED_ASCII_CONSOLE)*/
@@ -820,7 +820,7 @@ int servc_hresume(void *file)
             break;
         case SR_SYS_SERVC_SCPCMD:
             if ( len <= sizeof(servc_scpcmdstr) )
-                SR_READ_STRING(file, servc_scpcmdstr, sizeof(servc_scpcmdstr));
+                SR_READ_STRING(file, servc_scpcmdstr, len);
             else
                 SR_READ_SKIP(file, len);
             break;
@@ -1532,7 +1532,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
-    #ifdef OPTION_SCP_MSG_PREFIX    
+    #ifdef OPTION_SCP_MSG_PREFIX
                             WRCMSG("<pnl,color(lightyellow,black),keep>", HHC00001, "I", message);
                           else
                             WRCMSG("<pnl,color(green,black)>", HHC00001, "I", message);

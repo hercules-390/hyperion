@@ -1,3 +1,4 @@
+22 Jun 2011 Fix expanded storage suspend/resume bug - Tomas Fott by Fish
 21 Jun 2011 Sub-second script pausing support - Fish
 20 Jun 2011 Correct long standing nanosleep/usleep bug in MSVC build - Fish
 20 Jun 2011 Proper reimplementation of asynchronous scripts handling - Fish
