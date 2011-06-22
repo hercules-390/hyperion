@@ -30,13 +30,10 @@
   #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
 #endif
 
-#if defined( LCS_TIMING_DEBUG )
+#if defined( LCS_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
   #define PTT_LCS_TIMING_DEBUG      PTT
 #else
   #define PTT_LCS_TIMING_DEBUG      __noop
-  #if !defined( PTT_CL_INF )
-    #define PTT_CL_INF                __noop
-  #endif
 #endif
 
 //-----------------------------------------------------------------------------
