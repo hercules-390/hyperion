@@ -320,7 +320,6 @@ typedef void*THREAD_FUNC(void*);
         } \
         if (rc != 0) {\
             perror( "Fatal error initializing Mutex Locking Model" ); \
-            fflush( stdout ); \
             exit(1); \
         } \
     } while (0)
@@ -346,7 +345,6 @@ typedef void*THREAD_FUNC(void*);
         } \
         if (rc != 0) {\
             perror( "Fatal error initializing Mutex Locking Model" ); \
-            fflush( stdout ); \
             exit(1); \
         } \
     } while (0)
