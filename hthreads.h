@@ -69,6 +69,7 @@ typedef int                    MATTR;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The lock object of Hercules threading is translated into a Windows critical section
 #define hthread_mutexattr_init(pla)            ((*(pla)=HTHREAD_MUTEX_DEFAULT),0)
+#define hthread_mutexattr_destroy(pla)         ((*(pla)=0),0)
 #define hthread_mutexattr_settype(pla,typ)     ((*(pla)=(typ)),0)
 #define hthread_mutex_init(plk,pla)            ((InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(plk),3000)),0)
 #define destroy_lock(plk)                      (DeleteCriticalSection((CRITICAL_SECTION*)(plk)))
@@ -137,6 +138,7 @@ typedef fthread_attr_t       ATTR;
 typedef fthread_mutexattr_t  MATTR;
 
     #define hthread_mutexattr_init(pla)            fthread_mutexattr_init((pla))
+    #define hthread_mutexattr_destroy(pla)         fthread_mutexattr_destroy((pla))
     #define hthread_mutexattr_settype(pla,typ)     fthread_mutexattr_settype((pla),(typ))
 
 #if defined(FISH_HANG)
@@ -253,6 +255,7 @@ typedef pthread_attr_t              ATTR;
 typedef pthread_mutexattr_t         MATTR;
 
 #define hthread_mutexattr_init(pla)             pthread_mutexattr_init((pla))
+#define hthread_mutexattr_destroy(pla)          pthread_mutexattr_destroy((pla))
 #define hthread_mutexattr_settype(pla,typ)      pthread_mutexattr_settype((pla),(typ))
 #define hthread_mutex_init(plk,pla)             pthread_mutex_init((plk),(pla))
 
@@ -309,10 +312,16 @@ typedef void*THREAD_FUNC(void*);
     do { \
         MATTR attr; \
         int rc; \
-        if ((rc = hthread_mutexattr_init(&attr)) == 0) { \
-            if ((rc = hthread_mutexattr_settype(&attr,HTHREAD_MUTEX_DEFAULT)) == 0) { \
-                rc = hthread_mutex_init((plk),&attr); \
+        if ((rc = hthread_mutexattr_init( &attr )) == 0) { \
+            if ((rc = hthread_mutexattr_settype( &attr, HTHREAD_MUTEX_DEFAULT )) == 0) { \
+                rc = hthread_mutex_init( (plk), &attr ); \
             } \
+            hthread_mutexattr_destroy( &attr ); \
+        } \
+        if (rc != 0) {\
+            perror( "Fatal error initializing Mutex Locking Model" ); \
+            fflush( stdout ); \
+            exit(1); \
         } \
     } while (0)
 
@@ -329,10 +338,16 @@ typedef void*THREAD_FUNC(void*);
     do { \
         MATTR attr; \
         int rc; \
-        if ((rc = hthread_mutexattr_init(&attr)) == 0) { \
-            if ((rc = hthread_mutexattr_settype(&attr,HTHREAD_MUTEX_DEFAULT)) == 0) { \
-                ptt_pthread_mutex_init((plk),&attr,PTT_LOC); \
+        if ((rc = hthread_mutexattr_init( &attr )) == 0) { \
+            if ((rc = hthread_mutexattr_settype( &attr, HTHREAD_MUTEX_DEFAULT )) == 0) { \
+                rc = ptt_pthread_mutex_init( (plk), &attr, PTT_LOC ); \
             } \
+            hthread_mutexattr_destroy( &attr ); \
+        } \
+        if (rc != 0) {\
+            perror( "Fatal error initializing Mutex Locking Model" ); \
+            fflush( stdout ); \
+            exit(1); \
         } \
     } while (0)
 #undef  obtain_lock
