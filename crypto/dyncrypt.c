@@ -856,7 +856,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
   if(parameter_blocklen > 32)
@@ -900,7 +900,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += message_blocklen)
   {
     /* Fetch and process a block of data */
-    ARCH_DEP(vfetchc)(message_block, message_blocklen - 1, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, message_blocklen - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KIMD_DEBUG
     LOGBYTE2("input :", message_block, 16, message_blocklen / 16);
@@ -936,7 +936,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
     }
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
     if(parameter_blocklen > 32)
@@ -1000,7 +1000,7 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
@@ -1011,7 +1011,7 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch and process a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KIMD_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -1023,7 +1023,7 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
     gcm_gf_mult(parameter_block, &parameter_block[16], parameter_block);
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
     LOGBYTE("ocv   :", parameter_block, 16);
@@ -1121,7 +1121,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen + mbllen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen + mbllen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
   if(parameter_blocklen > 32)
@@ -1165,7 +1165,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   /* Fetch and process possible last block of data */
   if(likely(GR_A(r2 + 1, regs)))
   {
-    ARCH_DEP(vfetchc)(message_block, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KLMD_DEBUG
     if(GR_A(r2 + 1, regs) > 32)
@@ -1253,7 +1253,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
   }
-  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
   if(parameter_blocklen > 32)
@@ -1316,7 +1316,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     parameter_blocklen += 24;
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
   switch(tfc)
@@ -1384,7 +1384,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -1413,7 +1413,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("output:", message_block, 8);
@@ -1480,7 +1480,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
     parameter_blocklen += 32;
   
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
   LOGBYTE("k     :", parameter_block, keylen);
@@ -1511,7 +1511,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -1524,7 +1524,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
       aes_encrypt(&context, message_block, message_block);
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("output:", message_block, 16);
@@ -1598,7 +1598,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)((GR_A(1, regs) + parameter_blocklen - 16) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
   
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
   xts = &parameter_block[parameter_blocklen - 16];
 
 #ifdef OPTION_KM_DEBUG
@@ -1629,7 +1629,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KM_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -1649,7 +1649,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
     gcm_gf_mult(xts, two, xts);
     
     /* Store the output and XTS */
-    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
     ARCH_DEP(vstorec)(xts, 15, (GR_A(1, regs) + parameter_blocklen - 16) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
@@ -1724,7 +1724,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", parameter_block, 8);
@@ -1794,7 +1794,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMAC_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -1829,7 +1829,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
     LOGBYTE("ocv   :", parameter_block, 8);
@@ -1897,7 +1897,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
@@ -1925,7 +1925,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMAC_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -1939,7 +1939,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
     aes_encrypt(&context, message_block, parameter_block);
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
     LOGBYTE("ocv   :", parameter_block, 16);
@@ -2010,7 +2010,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", parameter_block, 8);
@@ -2082,7 +2082,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -2162,14 +2162,14 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("output:", message_block, 8);
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("ocv   :", ocv, 8);
@@ -2244,7 +2244,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", parameter_block, 16);
@@ -2276,7 +2276,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -2302,14 +2302,14 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("output:", message_block, 16);
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("ocv   :", ocv, 16);
@@ -2375,7 +2375,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", parameter_block, 8);
@@ -2394,7 +2394,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -2417,7 +2417,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
     des_encrypt(&context3, message_block, message_block);
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("output:", message_block, 8);
@@ -2435,7 +2435,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
     memcpy(ocv, message_block, 8);
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
     LOGBYTE("ocv   :", ocv, 8);
@@ -2511,7 +2511,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
     parameter_blocklen += 24;
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
   switch(tfc)
@@ -2581,8 +2581,8 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 8)
   {
     /* Fetch a block of data and counter-value */
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
-    ARCH_DEP(vfetchc)(countervalue_block, 7, GR_A(r3, regs), r3, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    ARCH_DEP(vfetchc)(countervalue_block, 7, GR_A(r3, regs) & ADDRESS_MAXWRAP(regs), r3, regs);
     
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -2619,7 +2619,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
       countervalue_block[i] ^= message_block[i];
 
     /* Store the output */
-    ARCH_DEP(vstorec)(countervalue_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(countervalue_block, 7, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("output:", countervalue_block, 8);
@@ -2691,7 +2691,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
     parameter_blocklen += 32;
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
   LOGBYTE("k     :", parameter_block, keylen);
@@ -2720,8 +2720,8 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data and counter-value */
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
-    ARCH_DEP(vfetchc)(countervalue_block, 15, GR_A(r3, regs), r3, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    ARCH_DEP(vfetchc)(countervalue_block, 15, GR_A(r3, regs) & ADDRESS_MAXWRAP(regs), r3, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -2735,7 +2735,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
       countervalue_block[i] ^= message_block[i];
 
     /* Store the output */
-    ARCH_DEP(vstorec)(countervalue_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(countervalue_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("output:", countervalue_block, 16);
@@ -2815,7 +2815,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
   LOGBYTE("cv    :", parameter_block, 8);
@@ -2907,7 +2907,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 	break;
       }
     }
-    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("input :", message_block, lcfb);
@@ -2931,14 +2931,14 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("output:", output_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     /* Store the chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("cv    :", parameter_block, 8);
@@ -3013,7 +3013,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
   LOGBYTE("cv    :", parameter_block, 16);
@@ -3043,7 +3043,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += lcfb)
   {
     aes_encrypt(&context, parameter_block, output_block);
-    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("input :", message_block, lcfb);
@@ -3067,14 +3067,14 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
     }
 
     /* Store the output */
-    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(output_block, lcfb - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("output:", output_block, lcfb);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
     /* Store the chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
     LOGBYTE("cv    :", parameter_block, 16);
@@ -3145,7 +3145,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
   LOGBYTE("cv    :", parameter_block, 8);
@@ -3236,7 +3236,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
         break;
       }
     }
-    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("input :", message_block, 8);
@@ -3246,14 +3246,14 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
       message_block[i] ^= parameter_block[i];
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 7, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("output:", message_block, 8);
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
     /* Store the chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 7, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("cv    :", parameter_block, 8);
@@ -3322,7 +3322,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
   LOGBYTE("cv    :", parameter_block, 16);
@@ -3351,7 +3351,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     aes_encrypt(&context, parameter_block, parameter_block);
-    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs), r2, regs);
+    ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("input :", message_block, 16);
@@ -3361,14 +3361,14 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
       message_block[i] ^= parameter_block[i];
 
     /* Store the output */
-    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
+    ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("output:", message_block, 16);
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
     /* Store the chaining value */
-    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
     LOGBYTE("cv    :", parameter_block, 16);
@@ -3432,7 +3432,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   ARCH_DEP(validate_operand)((GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("ml    :", parameter_block, 1);
@@ -3639,7 +3639,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   ARCH_DEP(validate_operand)((GR_A(1, regs) + 24) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("ml    :", parameter_block, 1);
@@ -3766,7 +3766,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   ARCH_DEP(validate_operand)((GR_A(1, regs) + parameter_blocklen - 16) & ADDRESS_MAXWRAP(regs), 1, 31, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
   tweak = &parameter_block[parameter_blocklen - 64];
   bsn = &parameter_block[parameter_blocklen - 48];
   ibi = &parameter_block[parameter_blocklen - 32];
@@ -3867,7 +3867,7 @@ static void ARCH_DEP(pckmo_dea)(REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
   LOGBYTE("key in : ", parameter_block, keylen);
@@ -3878,7 +3878,7 @@ static void ARCH_DEP(pckmo_dea)(REGS *regs)
   wrap_dea(parameter_block, keylen);
         
   /* Store the parameterblock */
-  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
   LOGBYTE("key out: ", parameter_block, keylen);
@@ -3905,7 +3905,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
-  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
   LOGBYTE("key in : ", parameter_block, keylen);
@@ -3916,7 +3916,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   wrap_aes(parameter_block, keylen);
         
   /* Store the parameterblock */
-  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs), 1, regs);
+  ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
   LOGBYTE("key out: ", parameter_block, keylen);
@@ -3972,7 +3972,7 @@ DEF_INST(compute_intermediate_message_digest)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4076,7 +4076,7 @@ DEF_INST(compute_last_message_digest)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4168,7 +4168,7 @@ DEF_INST(cipher_message)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KM_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4302,7 +4302,7 @@ DEF_INST(compute_message_authentication_code)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4404,7 +4404,7 @@ DEF_INST(cipher_message_with_chaining)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4539,7 +4539,7 @@ DEF_INST(cipher_message_with_counter)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMCTR_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4632,7 +4632,7 @@ DEF_INST(cipher_message_with_cipher_feedback)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMF_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4723,7 +4723,7 @@ DEF_INST(cipher_message_with_output_feedback)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_KMO_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4813,7 +4813,7 @@ DEF_INST(perform_cryptographic_computation)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4919,7 +4919,7 @@ DEF_INST(perform_cryptographic_key_management_operation)
     case 0: /* Query */
     {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCKMO_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
