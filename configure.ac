@@ -1801,7 +1801,7 @@ if test "$hc_cv_opt_debug" = "yes"; then
     # their own optimization flags via "--enable-optimization=(flags)", but will
     # be kept if they specify an optimized build via "--enable-optimization=yes"
 
-    hc_cv_optimization_flags="-g"
+    hc_cv_optimization_flags="-g -ggdb"
 fi
 
 case "$hc_cv_opt_optimization" in
@@ -1837,6 +1837,7 @@ case "$hc_cv_opt_optimization" in
 esac
 
 if test "$hc_cv_auto_optimize" = "yes"; then
+
 
     if test "$hc_cv_builtin_alloca_broke" != "yes"; then
 
