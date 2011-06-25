@@ -853,7 +853,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -997,7 +997,7 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -1118,7 +1118,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen + mbllen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -1721,7 +1721,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -1894,7 +1894,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
     parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -2007,7 +2007,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -2241,7 +2241,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
     parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -2372,7 +2372,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -2812,7 +2812,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -3010,7 +3010,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
     parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -3142,7 +3142,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
     parameter_blocklen += 24;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -3319,7 +3319,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
     parameter_blocklen += 32;
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -3864,7 +3864,7 @@ static void ARCH_DEP(pckmo_dea)(REGS *regs)
   parameter_blocklen = keylen + 24;
       
   /* Test writeability */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -3902,7 +3902,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   parameter_blocklen = keylen + 32;
       
   /* Test writeability */
-  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
