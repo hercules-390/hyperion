@@ -715,7 +715,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    alter_display_real (cmdline+1, regs);
+    alter_display_real (regs, argc-1, argv+1, cmdline);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -743,7 +743,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    disasm_stor (regs, cmdline+2);
+    disasm_stor (regs, argc-1, argv+1, cmdline);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -771,7 +771,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    alter_display_virt (cmdline+1, regs);
+    alter_display_virt (regs, argc-1, argv+1, cmdline);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

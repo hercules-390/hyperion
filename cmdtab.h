@@ -947,7 +947,7 @@
 #define r_cmd_desc              "Display or alter real storage"
 #define r_cmd_help              \
                                 \
-  "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"                \
+  "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display real\n"             \
   "storage, or \"r addr=value\" to alter real storage, where 'value'\n"          \
   "is a hex string of up to 32 pairs of digits.\n"
 
@@ -1211,15 +1211,23 @@
 
 #define tzoffset_cmd_desc       "Set tzoffset parameter"
 #define u_cmd_desc              "Disassemble storage"
+#define u_cmd_help              \
+                                \
+  "Format: \"u [R|V|P|H]addr[.len]\" or \"u [R|V|P|H]addr[-addr2]\" to\n"       \
+  "disassemble storage beginning at address 'addr' for length 'len' or\n"       \
+  "to address 'addr2'. The optional 'R', 'V', 'P' or 'H' address prefix\n"      \
+  "forces Real, Virtual, Primary Space, or Home Space address translation\n"    \
+  "mode instead of using the current PSW mode, which is the default.\n"
+
 #define uptime_cmd_desc         "Display how long Hercules has been running"
 #define v_cmd_desc              "Display or alter virtual storage"
 #define v_cmd_help              \
                                 \
-  "Format: \"v [P|S|H] addr[.len]\" or \"v [P|S|H] addr-addr\" to display\n"     \
-  "virtual storage, or \"v [P|S|H] addr=value\" to alter virtual storage,\n"     \
-  "where 'value' is a hex string of up to 32 pairs of digits. The\n"             \
-  "optional 'P' or 'S' or 'H' will force Primary, Secondary, or Home\n"          \
-  "translation instead of current PSW mode.\n"
+  "Format: \"v [P|S|H]addr[.len]\" or \"v [P|S|H]addr[-addr2]\" to display\n"   \
+  "virtual storage, or \"v [P|S|H]addr=value\" to alter virtual storage,\n"     \
+  "where 'value' is a hex string of up to 32 pairs of digits. The optional\n"   \
+  "'P', 'S' or 'H' address prefix character forces Primary Space, Secondary\n"  \
+  "Space or Home Space address translation mode instead of current PSW mode.\n"
 
 #define version_cmd_desc        "Display version information"
 #define xpndsize_cmd_desc       "Define/Display xpndsize parameter"
@@ -1359,7 +1367,7 @@ COMMAND( "timerint",                timerint_cmd,           SYSCMDNOPER,        
 COMMAND( "tlb",                     tlb_cmd,                SYSCMDNOPER,        tlb_cmd_desc,           NULL                )
 COMMAND( "toddrag",                 toddrag_cmd,            SYSCMDNOPER,        toddrag_cmd_desc,       NULL                )
 COMMAND( "traceopt",                traceopt_cmd,           SYSCMDNOPER,        traceopt_cmd_desc,      traceopt_cmd_help   )
-COMMAND( "u",                       u_cmd,                  SYSCMDNOPER,        u_cmd_desc,             NULL                )
+COMMAND( "u",                       u_cmd,                  SYSCMDNOPER,        u_cmd_desc,             u_cmd_help          )
 COMMAND( "v",                       v_cmd,                  SYSCMDNOPER,        v_cmd_desc,             v_cmd_help          )
 
 COMMAND( "cd",                      cd_cmd,                 SYSCMDNDIAG8,       cd_cmd_desc,            NULL                )

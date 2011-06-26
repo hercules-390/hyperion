@@ -538,9 +538,9 @@ const char* FormatSCL( ESW* esw, char* buf, size_t bufsz );
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz );
 const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
-void alter_display_real (char *opnd, REGS *regs);
-void alter_display_virt (char *opnd, REGS *regs);
-void disasm_stor(REGS *regs, char *opnd);
+void alter_display_real (REGS *regs, int argc, char *argv[], char *cmdline);
+void alter_display_virt (REGS *regs, int argc, char *argv[], char *cmdline);
+void disasm_stor        (REGS *regs, int argc, char *argv[], char *cmdline);
 int drop_privileges(int capa);
 
 /* Functions in module rexx.c */

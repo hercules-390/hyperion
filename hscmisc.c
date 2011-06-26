@@ -1187,8 +1187,9 @@ U16     xcode;                          /* Exception code            */
 /*-------------------------------------------------------------------*/
 /* Disassemble real                                                  */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(disasm_stor) (REGS *regs, char *opnd)
+static void ARCH_DEP(disasm_stor) (REGS *regs, int argc, char *argv[], char *cmdline)
 {
+char*   opnd;                           /* range/alteration operand  */
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
 RADR    raddr;                          /* Real storage address      */
@@ -1203,30 +1204,34 @@ U16     xcode;
 char    type;
 char    buf[512];
 
+    /* We require only one operand */
+    if (argc != 1)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return;
+    }
+
+    /* Parse optional address-space prefix */
+    opnd = argv[0];
+    type = toupper( *opnd );
+
+    if (0
+        || type == 'R'
+        || type == 'V'
+        || type == 'P'
+        || type == 'H'
+    )
+        opnd++;
+    else
+        type = REAL_MODE( &regs->psw ) ? 'R' : 'V';
+
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
     maxadr = 0xFFFFFFFFFFFFFFFFULL;
   #else /*!defined(FEATURE_ESAME)*/
     maxadr = 0x7FFFFFFF;
   #endif /*!defined(FEATURE_ESAME)*/
-
-    while((opnd && *opnd != '\0') &&
-      (*opnd == ' ' || *opnd == '\t'))
-        opnd++;
-
-    if(REAL_MODE(&regs->psw))
-        type = 'R';
-    else
-        type = 'V';
-
-    switch(toupper(*opnd)) {
-        case 'R': /* real */
-        case 'V': /* virtual */
-        case 'P': /* primary */
-        case 'H': /* home */
-          type = toupper(*opnd);
-          opnd++;
-    }
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, NULL);
@@ -1291,8 +1296,9 @@ char    buf[512];
 /*-------------------------------------------------------------------*/
 /* Process real storage alter/display command                        */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(alter_display_real) (char *opnd, REGS *regs)
+static void ARCH_DEP(alter_display_real) (REGS *regs, int argc, char *argv[], char *cmdline)
 {
+char*   opnd;                           /* range/alteration operand  */
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
 RADR    raddr;                          /* Real storage address      */
@@ -1301,6 +1307,15 @@ int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
+
+    /* We require only one operand */
+    if (argc != 1)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return;
+    }
+    opnd = argv[0];
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -1341,8 +1356,9 @@ char    buf[512];                       /* Message buffer            */
 /*-------------------------------------------------------------------*/
 /* Process virtual storage alter/display command                     */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(alter_display_virt) (char *opnd, REGS *regs)
+static void ARCH_DEP(alter_display_virt) (REGS *regs, int argc, char *argv[], char *cmdline)
 {
+char*   opnd;                           /* range/alteration operand  */
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest virt storage addr */
 VADR    vaddr;                          /* Virtual storage address   */
@@ -1356,6 +1372,36 @@ int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
+char    type;
+
+    /* We require only one operand */
+    if (argc != 1)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return;
+    }
+
+    /* Parse optional address-space prefix */
+    opnd = argv[0];
+    type = toupper( *opnd );
+
+    if (1
+        && type != 'P'
+        && type != 'S'
+        && type != 'H'
+    )
+        arn = 0;
+    else
+    {
+        switch (type)
+        {
+            case 'P': arn = USE_PRIMARY_SPACE;   break;
+            case 'S': arn = USE_SECONDARY_SPACE; break;
+            case 'H': arn = USE_HOME_SPACE;      break;
+        }
+        opnd++;
+    }
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -1363,26 +1409,6 @@ char    buf[512];                       /* Message buffer            */
   #else /*!defined(FEATURE_ESAME)*/
     maxadr = 0x7FFFFFFF;
   #endif /*!defined(FEATURE_ESAME)*/
-
-    while((opnd && *opnd != '\0') &&
-      (*opnd == ' ' || *opnd == '\t'))
-        opnd++;
-
-    switch(toupper(*opnd))
-    {
-        case 'P': /* primary */
-          arn = USE_PRIMARY_SPACE;
-          opnd++;
-          break;
-        case 'S': /* secondary */
-          arn = USE_SECONDARY_SPACE;
-          opnd++;
-          break;
-        case 'H': /* home */
-          arn = USE_HOME_SPACE;
-          opnd++;
-          break;
-    }
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, newval);
@@ -1713,27 +1739,27 @@ REGS   *regs;                           /* Copied regs               */
 /*-------------------------------------------------------------------*/
 /* Wrappers for architecture-dependent functions                     */
 /*-------------------------------------------------------------------*/
-void alter_display_real (char *opnd, REGS *regs)
+void alter_display_real (REGS *regs, int argc, char *argv[], char *cmdline)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            s370_alter_display_real (opnd, regs); break;
+            s370_alter_display_real (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            s390_alter_display_real (opnd, regs); break;
+            s390_alter_display_real (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            z900_alter_display_real (opnd, regs); break;
+            z900_alter_display_real (regs, argc, argv, cmdline); break;
 #endif
     }
 
 } /* end function alter_display_real */
 
 
-void alter_display_virt (char *opnd, REGS *iregs)
+void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
 {
  REGS *regs;
 
@@ -1745,15 +1771,15 @@ void alter_display_virt (char *opnd, REGS *iregs)
     switch(sysblk.arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            s370_alter_display_virt (opnd, regs); break;
+            s370_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            s390_alter_display_virt (opnd, regs); break;
+            s390_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            z900_alter_display_virt (opnd, regs); break;
+            z900_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
     }
 
@@ -1794,7 +1820,7 @@ void display_inst(REGS *iregs, BYTE *inst)
 }
 
 
-void disasm_stor(REGS *iregs, char *opnd)
+void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
 {
  REGS *regs;
 
@@ -1806,17 +1832,17 @@ void disasm_stor(REGS *iregs, char *opnd)
     switch(regs->arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            s370_disasm_stor(regs,opnd);
+            s370_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            s390_disasm_stor(regs,opnd);
+            s390_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            z900_disasm_stor(regs,opnd);
+            z900_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
     }

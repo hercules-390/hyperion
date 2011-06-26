@@ -645,7 +645,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 
                 WRMSG( HHC01603, "I", "" );
                 WRMSG( HHC01602, "I", "Command", ' ', "Description" );
-                WRMSG( HHC01602, "I", "-------", ' ', "-----------------------------------------------" );
+                WRMSG( HHC01602, "I", "-------", ' ', "-------------------------------------------------------" );
                 WRMSG( HHC01602, "I", pCmdTab->statement, longflag, pCmdTab->shortdesc);
 
                 if (pCmdTab->longdesc)
