@@ -45,10 +45,10 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
-#include "dbgtrace.h"                   // (Fish: DEBUGGING)
-#define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
-#define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
+// #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+// #include "dbgtrace.h"                   // (Fish: DEBUGGING)
+// #define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
+// #define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
 
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
