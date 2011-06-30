@@ -56,7 +56,7 @@
   #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
 #endif
 
-#if defined( QETH_TIMING_DEBUG )
+#if defined( QETH_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
   #define PTT_QETH_TIMING_DEBUG     PTT
 #else
   #define PTT_QETH_TIMING_DEBUG     __noop
