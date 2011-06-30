@@ -263,8 +263,7 @@ int errorcount = 0;
         }
         if (inc_level < 0)
         {
-            WRMSG(HHC01434, "S", fname);
-            return -1;
+            return 0;
         }
 
         /* Parse the statement just read */
@@ -330,38 +329,64 @@ int errorcount = 0;
         }
 #endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
 
-        /* Exit loop if first device statement found */
-        if (strlen(addargv[0]) <= 4
+        if ( ( strlen(addargv[0]) <= 4 &&
 #if defined( _MSVC_)
-            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
+               sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
 #else
-            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
+               sscanf(addargv[0], "%x%c", &rc, &c) == 1 )
 #endif
-            break;
-
+             || 
+        /* Also, if addargv[0] contains ':' (added by Harold Grovesteen jan2008)  */
+        /* Added because device statements may now contain channel set or LCSS id */
+             strchr( addargv[0], ':' )
 #if defined(OPTION_ENHANCED_DEVICE_ATTACH)
         /* ISW */
-        /* Also exit if addargv[0] contains '-', ',' or '.' */
+        /* Also, if addargv[0] contains '-', ',' or '.' */
         /* Added because device statements may now be a compound device number specification */
-        if(strchr(addargv[0],'-'))
-        {
-            break;
-        }
-        if(strchr(addargv[0],'.'))
-        {
-            break;
-        }
-        if(strchr(addargv[0],','))
-        {
-            break;
-        }
+             ||
+             strchr( addargv[0],'-' )
+             ||
+             strchr( addargv[0],'.' )
+             ||
+             strchr( addargv[0],',' )
 #endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
-
-        /* Also exit if addargv[0] contains ':' (added by Harold Grovesteen jan2008) */
-        /* Added because device statements may now contain channel set or LCSS id */
-        if(strchr(addargv[0],':'))
+           ) /* end if */
         {
-            break;
+#define MAX_CMD_LEN 32768
+            int   attargc;
+            char **attargv;
+            char  attcmdline[MAX_CMD_LEN];
+
+            if ( addargv[0] == NULL || addargv[1] == NULL )
+            {
+                WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
+                return -1;
+            }
+
+            /* Build attach command to attach device(s) */
+            attargc = addargc + 1;
+            attargv = malloc( attargc * sizeof(char *) );
+
+            attargv[0] = "attach";
+            strlcpy( attcmdline, attargv[0], sizeof(attcmdline) );
+            for ( i = 1; i < attargc; i++ )
+            {
+                attargv[i] = addargv[i - 1];
+                strlcat( attcmdline, " ", sizeof(attcmdline) );
+                strlcat( attcmdline, attargv[i], sizeof(attcmdline) );
+            }
+
+            rc = CallHercCmd( attargc, attargv, attcmdline );
+
+            free( attargv );
+
+            if ( rc == -2 )
+            {
+                WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, addargv[0], "device number specification");
+                return -1;
+            }
+
+            continue;
         }
 
         /* Check for old-style CPU statement */
@@ -408,7 +433,7 @@ int errorcount = 0;
         }
         else
         {
-            char addcmdline[256];
+            char addcmdline[MAX_CMD_LEN];
             int i;
             int rc;
 
@@ -432,104 +457,6 @@ int errorcount = 0;
         } /* end else (not old-style CPU statement) */
 
     } /* end for(scount) (end of configuration file statement loop) */
-
-    /*****************************************************************/
-    /* Parse configuration file device statements...                 */
-    /*****************************************************************/
-
-    while(1)
-    {
-    int   attargc;
-    char **attargv;
-    char  attcmdline[260];
-
-        if (addargv[0] == NULL || addargv[1] == NULL)
-        {
-            WRMSG(HHC01448, "S", inc_stmtnum[inc_level], fname);
-            return -1;
-        }
-
-        /* Build attach command to attach device(s) */
-        attargc = addargc + 1;
-        attargv = malloc(attargc * sizeof(char *));
-
-        attargv[0] = "attach";
-        strlcpy(attcmdline, attargv[0], sizeof(attcmdline));
-        for(i = 1; i < attargc; i++)
-        {
-            attargv[i] = addargv[i - 1];
-            strlcat(attcmdline, " ", sizeof(attcmdline));
-            strlcat(attcmdline, attargv[i], sizeof(attcmdline));
-        }
-
-        rc = CallHercCmd (attargc, attargv, attcmdline);
-
-        free(attargv);
-
-        if(rc == -2)
-        {
-            WRMSG(HHC01443, "S", inc_stmtnum[inc_level], fname, addargv[0], "device number specification");
-            return -1;
-        }
-
-        /* Read next device record from the configuration file */
-#if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        while (1)
-        {
-            while (inc_level >= 0 && read_config (fname, inc_fp[inc_level], buf, sizeof(buf), &inc_stmtnum[inc_level]) )
-            {
-                fclose (inc_fp[inc_level--]);
-            }
-
-            /* Parse the statement just read */
-            parse_args (buf, MAX_ARGS, addargv, &addargc);
-
-            if (inc_level < 0 || strcasecmp (addargv[0], "include") != 0)
-                break;
-
-            if (++inc_level >= MAX_INC_LEVEL)
-            {
-                WRMSG(HHC01436, "S", inc_stmtnum[inc_level-1], fname, MAX_INC_LEVEL);
-                return -1;
-            }
-
-            hostpath(pathname, addargv[1], sizeof(pathname));
-            WRMSG(HHC01437, "I", inc_stmtnum[inc_level-1], fname, pathname);
-#if defined(_MSVC_)
-            fopen_s( &inc_fp[inc_level], pathname,  "r");
-#else
-            inc_fp[inc_level] = fopen (pathname, "r");
-#endif
-            if (inc_fp[inc_level] == NULL)
-            {
-                inc_level--;
-                if ( inc_ignore_errors == 1 )
-                {
-                    WRMSG(HHC01438, "W", fname, addargv[1], strerror(errno));
-                    continue ;
-                }
-                else
-                {
-                    WRMSG(HHC01439, "S", fname, addargv[1], strerror(errno));
-                    return -1;
-                }
-            }
-            inc_stmtnum[inc_level] = 0;
-            continue;
-        }
-
-        if (inc_level < 0)
-#else // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        if (read_config (fname, inc_fp[inc_level], buf, sizeof(buf), &inc_stmtnum[inc_level]))
-#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-            break;
-
-#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-        /* Parse the statement just read */
-        parse_args (buf, MAX_ARGS, addargv, &addargc);
-#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-
-    } /* end while(1) */
 
 #if defined(HAVE_REXX)
 rexx_done:
