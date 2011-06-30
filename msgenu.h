@@ -393,6 +393,7 @@ do { \
 #define HHC00240 "%1d:%04X Tape SCRATCH '%s', type '%s': tape volume '%s' being returned to pool"
 #define HHC00241 "%1d:%04X Tape file '%s', type '%s': '%s'"
 #define HHC00242 "%1d:%04X Tape DWTVFscrtap must be 6 character volser; defaulting to SCRTAP"
+#define HHC00243 "%1d:%04X Tape status retrieval timeout"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"

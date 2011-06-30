@@ -1,3 +1,4 @@
+24 Apr 2011 Fix IEHINITT blank tape BSR bug - Fish
 23 Jun 2011 Fix 0671 FBA blocks per access position (bpp) - paoloG by Fish
 22 Jun 2011 Fix expanded storage suspend/resume bug - Tomas Fott by Fish
 21 Jun 2011 Sub-second script pausing support - Fish

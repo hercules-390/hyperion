@@ -31,6 +31,7 @@
 
 // (the following is just a [slightly] shorter name for our own internal use)
 #define SLOW_UPDATE_STATUS_TIMEOUT  MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS
+#define MAX_GSTAT_FREQ_USECS        1000000   // (once per second max)
 
 /*-------------------------------------------------------------------*/
 /*                 Open a SCSI tape device                           */
@@ -93,7 +94,7 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
 
     /* Obtain the initial tape device/media status information */
     /* and start the mount-monitoring thread if option enabled */
-    int_scsi_status_update( dev, 0 );
+    int_scsi_status_update( dev, 0, 0 );
 
     /* Asynchronous open now in progress? */
     if (dev->stape_mntdrq.link.Flink)
@@ -343,7 +344,7 @@ int  save_errno;
 
     if (errno == ENOSPC)
     {
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
 
         rc = write_tape (dev->fd, buf, len);
 
@@ -362,7 +363,7 @@ int  save_errno;
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, "scsi", "write_tape()", strerror(errno));
 
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
     }
     errno = save_errno;
 
@@ -421,7 +422,7 @@ int  rc, save_errno;
 
     if (errno == ENOSPC)
     {
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
 
         if (int_write_scsimark( dev ) >= 0)
         {
@@ -437,7 +438,7 @@ int  rc, save_errno;
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, "scsi", "write_scsimark()", strerror(errno));
 
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
     }
     errno = save_errno;
 
@@ -552,7 +553,7 @@ struct mtop opblk;
 
     if (errno == ENOSPC)
     {
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
 
         opblk.mt_op    = MTWEOF;
         opblk.mt_count = 0;         // (zero to force a commit)
@@ -571,7 +572,7 @@ struct mtop opblk;
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
             dev->filename, "scsi", "ioctl_tape(MTWEOF)", strerror(errno));
 
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
     }
     errno = save_errno;
 
@@ -634,7 +635,7 @@ struct mtop opblk;
 
     save_errno = errno;
     {
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
     }
     errno = save_errno;
 
@@ -724,7 +725,7 @@ struct mtget starting_mtget;
     */
 
     /* Obtain tape status before backward space... */
-    int_scsi_status_update( dev, 0 );
+    int_scsi_status_update( dev, 0, 1 );
 
     /* (save the current status before the i/o in case of error) */
     memcpy( &starting_mtget, &dev->mtget, sizeof( struct mtget ) );
@@ -753,7 +754,7 @@ struct mtget starting_mtget;
     /* Retrieve new status after the [supposed] i/o error... */
     save_errno = errno;
     {
-        int_scsi_status_update( dev, 0 );
+        int_scsi_status_update( dev, 0, 0 );
     }
     errno = save_errno;
 
@@ -958,7 +959,7 @@ struct mtop opblk;
     */
 
     /* Obtain tape status before backward space... (no choice!) */
-    int_scsi_status_update( dev, 0 );
+    int_scsi_status_update( dev, 0, 1 );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -1137,7 +1138,7 @@ int rc;
 
             if (errno == ENOSPC)
             {
-                int_scsi_status_update( dev, 0 );
+                int_scsi_status_update( dev, 0, 0 );
 
                 opblk.mt_op    = MTERASE;
                 opblk.mt_count = 0;         // (zero means "short" erase-gap)
@@ -1546,8 +1547,8 @@ void blockid_22_to_32 ( BYTE *in_22blkid, BYTE *out_32blkid )
 /*********************************************************************/
 
 /* Forward references...                                             */
-extern void  int_scsi_status_update   ( DEVBLK* dev, int mountstat_only );
-static void  scsi_get_status_fast     ( DEVBLK* dev );
+extern void  int_scsi_status_update   ( DEVBLK* dev, int mountstat_only, int forced_wait );
+static int   int_scsi_status_wait     ( DEVBLK* dev, int usecs );
 static void* get_stape_status_thread  ( void* notused );
 
 /*-------------------------------------------------------------------*/
@@ -1629,7 +1630,7 @@ void* get_stape_status_thread( void* notused )
                         (
                             &sysblk.stape_getstat_cond,
                             &sysblk.stape_lock,
-                            1000000, // (once/second max)
+                            MAX_GSTAT_FREQ_USECS,
                             &sysblk.stape_query_status_tod
                         ))
                 ;
@@ -1701,13 +1702,15 @@ void* get_stape_status_thread( void* notused )
 } /* end function get_stape_status_thread */
 
 /*-------------------------------------------------------------------*/
-/* scsi_get_status_fast                                              */
+/* int_scsi_status_wait                                              */
 /*-------------------------------------------------------------------*/
 static
-void scsi_get_status_fast( DEVBLK* dev )
+int int_scsi_status_wait( DEVBLK* dev, int usecs )
 {
+    int rc;
+
     if (unlikely( dev->fd < 0 ))    // (has drive been opened yet?)
-        return;                     // (cannot proceed until it is)
+        return -1;                  // (cannot proceed until it is)
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -1751,17 +1754,17 @@ void scsi_get_status_fast( DEVBLK* dev )
 
     // Wait only so long for the status to be updated...
 
-    timed_wait_condition_relative_usecs
+    rc = timed_wait_condition_relative_usecs
     (
         &dev->stape_sstat_cond,     // ptr to condition to wait on
         &sysblk.stape_lock,         // ptr to controlling lock (must be held!)
-        SLOW_UPDATE_STATUS_TIMEOUT, // max #of microseconds to wait
+        usecs,                      // max #of microseconds to wait
         NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
     );
 
     release_lock( &sysblk.stape_lock );
-
-} /* end function scsi_get_status_fast */
+    return rc;
+} /* end function int_scsi_status_wait */
 
 /*-------------------------------------------------------------------*/
 /* Check if a SCSI tape is positioned past the EOT reflector or not  */
@@ -1781,7 +1784,7 @@ int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
     UNREFERENCED(code);
 
     /* Update tape mounted status */
-    int_scsi_status_update( dev, 1 );   // (safe/fast internal call)
+    int_scsi_status_update( dev, 1, 0 ); // (safe/fast internal call)
 
     return ( !STS_NOT_MOUNTED( dev ) );
 } /* end function driveready_scsitape */
@@ -1814,8 +1817,8 @@ int update_status_scsitape( DEVBLK *dev )   // (external tmh call)
     // a status refresh if the current status is "not mounted" but we
     // purposely do NOT force a refresh if the status is "mounted"!!
 
-    if ( STS_NOT_MOUNTED( dev ) )           // (if no tape mounted)
-        int_scsi_status_update( dev, 0 );   // (then probably safe)
+    if ( STS_NOT_MOUNTED( dev ) )            // (if no tape mounted)
+        int_scsi_status_update( dev, 0, 0 ); // (then probably safe)
 
     return 0;
 } /* end function update_status_scsitape */
@@ -1823,7 +1826,7 @@ int update_status_scsitape( DEVBLK *dev )   // (external tmh call)
 /*-------------------------------------------------------------------*/
 /* Update SCSI tape status (and display it if CCW tracing is active) */
 /*-------------------------------------------------------------------*/
-void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call)
+void int_scsi_status_update( DEVBLK* dev, int mountstat_only, int forced_wait )
 {
     create_automount_thread( dev );     // (only if needed of course)
 
@@ -1851,7 +1854,22 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
 
     // Retrieve actual status...
 
-    scsi_get_status_fast( dev );        // (doesn't take long time)
+    if (forced_wait)  // (forced wait for actual completion?)
+    {
+        int rc;
+        while (ETIMEDOUT == (rc = int_scsi_status_wait( dev,
+            MAX_GSTAT_FREQ_USECS + (2 * SLOW_UPDATE_STATUS_TIMEOUT) )))
+        {
+            if ( dev->ccwtrace || dev->ccwstep )
+            {
+                // "%1d:%04X Tape status retrieval timeout"
+                WRMSG( HHC00243, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            }
+        }
+    }
+    else
+        int_scsi_status_wait( dev, SLOW_UPDATE_STATUS_TIMEOUT );
+
     create_automount_thread( dev );     // (in case status changed)
 
     /* Display tape status if tracing is active */
@@ -2025,7 +2043,7 @@ void *scsi_tapemountmon_thread( void *notused )
 
                 release_lock( &sysblk.stape_lock );
                 {
-                    int_scsi_status_update( dev, 0 );
+                    int_scsi_status_update( dev, 0, 0 );
                 }
                 obtain_lock( &sysblk.stape_lock );
 

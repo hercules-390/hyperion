@@ -49,7 +49,7 @@ extern int   locateblk_scsitape       ( DEVBLK* dev, U32 blockid,        BYTE *u
 // Internal functions...
 
 extern void  int_scsi_rewind_unload( DEVBLK *dev, BYTE *unitstat, BYTE code );
-extern void  int_scsi_status_update( DEVBLK *dev, int mountstat_only );
+extern void  int_scsi_status_update( DEVBLK *dev, int mountstat_only, int forced_wait );
 extern int   int_write_scsimark    ( DEVBLK *dev );
 
 extern void  blockid_emulated_to_actual( DEVBLK *dev, BYTE *emu_blkid, BYTE *act_blkid );
@@ -86,7 +86,7 @@ extern void  define_BOT_pos( DEVBLK *dev );
 
 // This is because I happened to notice on some systems with moderate
 // host (Windows) workload, etc, querying the status of the tape drive,
-// while *usally* only taking 4 - 6 milliseonds maximum, would sometimes
+// while *usually* only taking 4-6 milliseconds maximum, would sometimes
 // take up to 113 or more milliseconds! (thereby sometimes causing the
 // guest to experience intermittent/sporadic unsolicited ATTN interrupts
 // on the tape drive as their tape jobs ran (since "not mounted" status
