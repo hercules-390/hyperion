@@ -350,24 +350,17 @@ char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
 int     dll_count;                      /* index into array          */
 #endif
 
-    /* Initialize/verify locking model */
-    {
-        LOCK               dummy;
-        initialize_lock ( &dummy );
-        obtain_lock     ( &dummy );
-        release_lock    ( &dummy );
-        destroy_lock    ( &dummy );
-    }
-
     /* Clear the system configuration block */
-    MLOCK ( &sysblk,    sizeof( SYSBLK ));
-    memset( &sysblk, 0, sizeof( SYSBLK ));
+    memset( &sysblk, 0, sizeof( SYSBLK ) );
 
     /* Initialize Guest System Information */
     init_gsysinfo();
 
 #if defined (_MSVC_)
+    VERIFY( VirtualLock( &sysblk, sizeof( SYSBLK ) ) );
     _setmaxstdio(2048);
+#else
+    VERIFY( mlock( &sysblk, sizeof( SYSBLK ) ) == 0 );
 #endif
 
     /* Initialize EYE-CATCHERS for SYSBLK       */

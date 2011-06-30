@@ -210,7 +210,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     }
 #endif
 
-    pHostInfo->hostpagesz = (RADR) HPAGESIZE();
+    pHostInfo->hostpagesz = (RADR)getpagesize();
 
     if ( pHostInfo->cachelinesz == 0 )
     {

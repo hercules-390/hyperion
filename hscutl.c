@@ -907,20 +907,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #endif
 }
 
-#if !defined( HAVE_MLOCK ) && !defined( _MSVC_ )
-DLL_EXPORT  int  hlock( const void* addr, size_t len )
-{
-    UNREFERENCED( addr );
-    UNREFERENCED( len  );
-    return -1;
-}
-DLL_EXPORT  int  hunlock( const void* addr, size_t len )
-{
-    UNREFERENCED( addr );
-    UNREFERENCED( len  );
-    return -1;
-}
-#endif
+
 
 // Hercules low-level file open...
 DLL_EXPORT  int hopen( const char* path, int oflag, ... )
@@ -1023,35 +1010,6 @@ DLL_EXPORT int hprintf(int s,char *fmt,...)
     rc=hwrite(s,bfr,strlen(bfr));
     free(bfr);
     return rc;
-}
-
-/* Hercules page-aligned calloc/free */
-
-DLL_EXPORT void* hpcalloc( BYTE type, size_t size )
-{
-    void *ptr       = NULL;
-    void *p         = NULL;
-    size_t hpgsz    = 0;
-
-    hpgsz = (size_t)HPAGESIZE();
-
-    p = calloc( size + hpgsz - 1 + sizeof(void*), 1 );
-
-    if (p)
-    {
-        ptr = (void*)(((uintptr_t)p + sizeof(void*) + hpgsz - 1) & ~(hpgsz-1));
-        *(void**)((uintptr_t)ptr - sizeof(void*)) = p;
-        if (HPC_MAINSTOR == type) sysblk.main_clear = 1;
-        if (HPC_XPNDSTOR == type) sysblk.xpnd_clear = 1;
-    }
-    return ptr;
-}
-
-DLL_EXPORT void hpcfree( BYTE type, void* ptr )
-{
-    free(*(void**)((uintptr_t)ptr - sizeof(void*)));
-    if (HPC_MAINSTOR == type) sysblk.main_clear = 0;
-    if (HPC_XPNDSTOR == type) sysblk.xpnd_clear = 0;
 }
 
 /* Posix 1003.1e capabilities support */

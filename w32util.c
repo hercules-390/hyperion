@@ -3886,7 +3886,7 @@ DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
     return NULL;
 }
 
-DLL_EXPORT unsigned long w32_hpagesize()
+DLL_EXPORT unsigned long w32_getpagesize(void)
 {
     static long g_pagesize = 0;
     if (!g_pagesize)
@@ -3907,6 +3907,23 @@ DLL_EXPORT int w32_munlock( void* addr, size_t len )
 {
     return VirtualUnlock( addr, len ) ? 0 : -1;
 }
+
+DLL_EXPORT void * w32_valloc( size_t bytes )
+{
+
+    return (_aligned_malloc( bytes, (size_t)w32_getpagesize()));
+
+}
+
+DLL_EXPORT void w32_vfree( void * maddr )
+{
+
+    _aligned_free( maddr );
+
+    return;
+
+}
+
 
 // Hercules low-level file open...
 DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
