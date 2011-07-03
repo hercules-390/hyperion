@@ -892,8 +892,6 @@ BYTE            c;                      /* Print character           */
 char            hex[3];                 /* for hex conversion        */
 char            wbuf[150];
 
-    dev->excps++;
-
     /* Reset flags at start of CCW chain */
     if (chained == 0)
     {

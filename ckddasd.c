@@ -2160,9 +2160,6 @@ BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
-    /* update excps count */
-    dev->excps++;
-
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)

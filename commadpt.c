@@ -2239,8 +2239,6 @@ BYTE    gotdle;                 /* Write routine DLE marker */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
     
-    dev->excps++;
-
     *residual = 0;
     /*
      * Obtain the COMMADPT lock

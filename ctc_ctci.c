@@ -348,8 +348,6 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( bPrevCode );
     UNREFERENCED( iCCWSeq   );
 
-    pDEVBLK->excps++;
-
     // Intervention required if the device file is not open
     if( pDEVBLK->fd < 0 &&
         !IS_CCW_SENSE( bCode ) &&

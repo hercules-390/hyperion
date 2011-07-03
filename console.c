@@ -3066,8 +3066,6 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
-    dev->excps++;
-
     /* Clear the current screen position at start of CCW chain */
     if (!chained)
         dev->pos3270 = 0;
@@ -3496,8 +3494,6 @@ BYTE    stat;                           /* Unit status               */
     UNREFERENCED(chained);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
-
-    dev->excps++;
 
     /* Unit check with intervention required if no client connected */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))

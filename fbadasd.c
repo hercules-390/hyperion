@@ -854,9 +854,6 @@ BYTE    hexzeroes[512];                 /* Bytes for zero fill       */
 int     rem;                            /* Byte count for zero fill  */
 int     repcnt;                         /* Replication count         */
 
-    /* increment excp count */
-    dev->excps++;
-
     /* Reset extent flag at start of CCW chain */
     if (chained == 0)
         dev->fbaxtdef = 0;

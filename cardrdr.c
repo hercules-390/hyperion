@@ -710,8 +710,6 @@ int     num;                            /* Number of bytes to move   */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
-    dev->excps++;
-
     /* Open the device file if necessary */
     if ( !IS_CCW_SENSE(code) &&
         (dev->fd < 0 || (!dev->bs && !dev->fh)))

@@ -169,8 +169,6 @@ BYTE    c;                              /* Print character           */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
-    dev->excps++;
-
     /* Unit check with intervention required if no client connected */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))
     {

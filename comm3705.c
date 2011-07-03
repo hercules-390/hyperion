@@ -2185,8 +2185,6 @@ void    *eleptr;
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
     
-    dev->excps++;
-
     *residual = 0;
 
     /*

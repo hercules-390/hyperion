@@ -2499,6 +2499,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->startpending = 0;
     }
 
+    /* Increment excp count */
+    dev->excps++;
+
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* For hercules `resume' resume suspended state */
     if (dev->resumesuspended)

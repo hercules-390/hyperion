@@ -185,8 +185,6 @@ BYTE            c;                      /* Output character          */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
-    dev->excps++;
-
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
