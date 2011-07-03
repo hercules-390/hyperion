@@ -45,10 +45,18 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-// #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
-// #include "dbgtrace.h"                   // (Fish: DEBUGGING)
-// #define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
-// #define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
+// #define QETH_DEBUG
+
+#if defined(DEBUG) && !defined(QETH_DEBUG)
+ #define QETH_DEBUG
+#endif
+
+#if defined(QETH_DEBUG)
+ #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+ #include "dbgtrace.h"                   // (Fish: DEBUGGING)
+ #define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
+ #define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
+#endif
 
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
@@ -213,7 +221,7 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
 
 
-#if defined( ENABLE_TRACING_STMTS ) && ENABLE_TRACING_STMTS
+#if defined(DEBUG_QETH)
 static inline void DUMP(char* name, void* ptr, int len)
 {
 int i;
@@ -791,7 +799,7 @@ int noread = 1;
                         {
                             do {
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", ns, len-sizeof(OSA_HDR2), 0 );
-                                olen = TUNTAP_Read(grp->ttfd,  buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
+                                olen = TUNTAP_Read(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", ns, len-sizeof(OSA_HDR2), olen );
 if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
@@ -883,9 +891,11 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
     {
     char buff[4096];
     int n;
+#if defined( OPTION_W32_CTCI )
         do {
+#endif
             PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
-            n = TUNTAP_Read(grp->ttfd,          buff,             sizeof(buff));
+            n = TUNTAP_Read(grp->ttfd, buff, sizeof(buff));
             PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
 
             if(n > 0)
@@ -893,7 +903,9 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                 grp->reqpci = TRUE;
 DUMP("TAP DROPPED",buff,n);
             }
-        } while (QETH_PROMISC && n > 0);
+#if defined( OPTION_W32_CTCI )
+        } while (n > 0);
+#endif
     }
 }
 
@@ -968,7 +980,7 @@ DUMP("OUTPUT BUF",buf,len);
                             if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_UNICST,grp))
                             {
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", ns, len-sizeof(OSA_HDR2), 0 );
-                                TUNTAP_Write(grp->ttfd,      buf+sizeof(OSA_HDR2),    len-sizeof(OSA_HDR2));
+                                TUNTAP_Write(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", ns, len-sizeof(OSA_HDR2), 0 );
                                 grp->txcnt++;
                             }
@@ -1600,15 +1612,21 @@ int num;                                /* Number of bytes to move   */
                 raise_adapter_interrupt(dev);
             }
 
+#if defined( OPTION_W32_CTCI )
             do {
+#endif
+
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
                 rc = select (((grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0]) + 1,
                     &readset, NULL, NULL, NULL);
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
 
+#if defined( OPTION_W32_CTCI )
             } while (0 == rc || (rc < 0 && HSO_EINTR == HSO_errno));
-
         } while (rc > 0 && dev->scsw.flag2 & SCSW2_Q);
+#else
+        } while (dev->scsw.flag2 & SCSW2_Q);
+#endif
 
         PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0, 0, rc );
 
@@ -1774,15 +1792,10 @@ END_RESOLVER_SECTION
 
 HDL_REGISTER_SECTION;
 {
-    //              Hercules's          Our
-    //              registered          overriding
-    //              entry-point         entry-point
-    //              name                value
-
   #if defined( OPTION_W32_CTCI )
     HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
     HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
-  #endif /*defined( OPTION_W32_CTCI )*/
+  #endif
 }
 END_REGISTER_SECTION
 
