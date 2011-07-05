@@ -222,18 +222,21 @@ static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
-int  inc_level;                         /* Current nesting level     */
+int     inc_level;                      /* Current nesting level     */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
-int  inc_ignore_errors = 0;             /* 1==ignore include errors  */
+int     inc_ignore_errors = 0;          /* 1==ignore include errors  */
 BYTE    c;                              /* Work area for sscanf      */
 char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */
-int errorcount = 0;
+int     errorcount = 0;
+int     shell_flg;                      /* indicate it is has a shell 
+                                           path specified            */
 
     /* Open the base configuration file */
     hostpath(fname, cfg_name, sizeof(fname));
 
     inc_level = 0;
+    shell_flg = FALSE;
 #if defined(_MSVC_)
     fopen_s( &inc_fp[inc_level], fname, "r");
 #else
@@ -270,15 +273,31 @@ int errorcount = 0;
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
 #if defined(HAVE_REXX)
-        /* Check for REXX exec being executed */
-        if( inc_level == 0
-         && inc_stmtnum[inc_level] == 1
-         && !strncmp(addargv[0], "/*",2) )
+        // Test for REXX script. If first card starts with "/*" or
+        // first card has shell path specification "#!" and second card 
+        // "/*", then we will process as a REXX script.
+
+        if ( inc_level == 0 && inc_stmtnum[0] < 3 )
         {
-        char *rcmd[2] = { "exec", NULL };
-            rcmd[1] = fname;
-            errorcount = exec_cmd(2,rcmd,NULL);
-            goto rexx_done;
+            /* Ignore #! (shell path) card if found */
+            if ( shell_flg == FALSE   &&
+                 inc_stmtnum[0] == 1 &&
+                 !strncmp( addargv[0], "#!", 2 ) )
+            {
+                shell_flg = TRUE;
+            }
+            /* Check for REXX exec being executed */
+            if ( !strncmp( addargv[0], "/*", 2 ) &&
+                 ( ( shell_flg == FALSE && inc_stmtnum[0] == 1 ) ||
+                   ( shell_flg == TRUE  && inc_stmtnum[0] == 2 )
+                 )
+               )
+            {
+                char *rcmd[2] = { "exec", NULL };
+                rcmd[1] = fname;
+                errorcount = exec_cmd( 2, rcmd, NULL );
+                goto rexx_done;
+            }
         }
 #endif /*defined(HAVE_REXX)*/
 
