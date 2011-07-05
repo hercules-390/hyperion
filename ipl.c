@@ -55,12 +55,6 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     OFF_IC_SERVSIG;
     OFF_IC_INTKEY;
     
-    if ( sysblk.mainsize < ONE_MEGABYTE && sysblk.arch_mode != ARCH_370 )
-    {
-        configure_storage((U64)ONE_MEGABYTE);
-        WRMSG( HHC01421, "I", "", "1 Mbyte" );
-    }
-
     /* Perform system-reset-normal or system-reset-clear function */
     if (clear)
     {
