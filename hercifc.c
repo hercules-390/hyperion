@@ -25,9 +25,10 @@
 // The exit status is zero if successful, non-zero if error.
 //
 
-#include "hercules.h"
+#include "hstdinc.h"
 
 #if defined(BUILD_HERCIFC)
+#include "hercules.h"
 #include "hercifc.h"
 
 // --------------------------------------------------------------------
