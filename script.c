@@ -904,7 +904,7 @@ int     rc;                             /* (work)                    */
         {
             double pauseamt     = 0.0;    /* (secs to pause) */
             struct timespec ts  = {0};    /* (nanosleep arg) */
-            long i, nsecs       =  0;     /* (nanoseconds)   */
+            U64 i, nsecs        =  0;     /* (nanoseconds)   */
 
             pauseamt = atof( p+6 );
 
@@ -915,7 +915,7 @@ int     rc;                             /* (work)                    */
                 continue; /* (go on to next statement) */
             }
 
-            nsecs = (long) (pauseamt * 1000000000.0);
+            nsecs = (U64) (pauseamt * 1000000000.0);
             ts.tv_nsec = 250000000; /* 1/4th of a second */
             ts.tv_sec  = 0;
 
