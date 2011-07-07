@@ -128,7 +128,7 @@ static const BYTE read_configuration_data_bytes[128] = {
     0x00,                               // 66:     Class (X'00' = N/A)
     0x00,                               // 67:     (Reserved)
     0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 68-73:  Type  ('001730')
-    0xF0,0xF0,0xF4,                     // 74-76:  Model ('001')
+    0xF0,0xF0,0xF4,                     // 74-76:  Model ('004')
     0xC8,0xD9,0xC3,                     // 77-79:  Manufacturer ('HRC' = Hercules)
     0xE9,0xE9,                          // 80-81:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
@@ -159,7 +159,7 @@ static const BYTE read_nodeid_bytes[64] = {
     0x06,                               // 2:      Class (X'06' = Comms)
     0x00,                               // 3:      (Reserved)
     0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 4-9:    Type  ('001730')
-    0xF0,0xF0,0xF4,                     // 10-12:  Model ('001')
+    0xF0,0xF0,0xF4,                     // 10-12:  Model ('004')
     0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
     0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
     0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
