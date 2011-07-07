@@ -221,7 +221,7 @@ static const char *osa_devtyp[] = { "Read", "Write", "Data" };
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
 
 
-#if defined(DEBUG_QETH)
+#if defined(QETH_DEBUG)
 static inline void DUMP(char* name, void* ptr, int len)
 {
 int i;
@@ -284,7 +284,7 @@ int i;
         if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,6))
             return grp->mac[i].type | grp->promisc;
     }
-    return grp->promisc;
+    return grp->l3 ? type | grp->promisc : grp->promisc;
 }
 
 
@@ -349,6 +349,8 @@ U32 ackseq;
                     break;
 
                 case PDU_CMD_ENABLE:
+                    grp->l3 = (pdu->proto == PDU_PROTO_L3);
+
                     VERIFY
                     (
                         TUNTAP_CreateInterface
@@ -357,7 +359,7 @@ U32 ackseq;
                             0
                                 | IFF_NO_PI
                                 | IFF_OSOCK
-                                | (PDU_PROTO_L3 == pdu->proto ? IFF_TUN : IFF_TAP)
+                                | (grp->l3 ? IFF_TUN : IFF_TAP)
                             ,
                             &grp->ttfd,
                             grp->ttdevn
@@ -440,6 +442,7 @@ U32 ackseq;
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
+// STORE_FW(qry->suppcm, 0xFFFFFFFF);
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
@@ -567,6 +570,7 @@ U32 ackseq;
             case IPA_CMD_QIPASSIST:
                 TRACE("L3 Query IP Assist\n");
                 STORE_FW(ipa->ipas,IPA_SUPP);
+// STORE_FW(ipa->ipas, 0xFFFFFFFF);
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -816,7 +820,7 @@ if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
 
                             grp->rxcnt++;
 
-                            hdr2->id = HDR2_ID_LAYER2;
+                            hdr2->id = grp->l3 ? HDR2_ID_LAYER3 : HDR2_ID_LAYER2;
                             STORE_HW(hdr2->pktlen,olen);
 
                             switch(mactype & MAC_TYPE_ANY) {
@@ -1153,7 +1157,7 @@ char qdiostat[80] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, devclass, buflen, buffer );
 
-    if (OSA_GROUP_SIZE == dev->group->acount)
+    if (dev->group->acount == OSA_GROUP_SIZE)
     {
         OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         snprintf( qdiostat, sizeof(qdiostat)-1, "%s%s%stx[%u] rx[%u] "
@@ -1166,7 +1170,7 @@ char qdiostat[80] = {0};
     }
 
     snprintf( buffer, buflen-1, "QDIO %s %s%sIO[%" I64_FMT "u]"
-        , (OSA_GROUP_SIZE == dev->group->acount) ? osa_devtyp[dev->member] : "*Incomplete"
+        , (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete"
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
         , (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""
         , dev->excps
@@ -1622,7 +1626,7 @@ int num;                                /* Number of bytes to move   */
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
 
 #if defined( OPTION_W32_CTCI )
-            } while (0 == rc || (rc < 0 && HSO_EINTR == HSO_errno));
+            } while (0 == rc || (rc < 0 && HSO_errno == HSO_EINTR));
         } while (rc > 0 && dev->scsw.flag2 & SCSW2_Q);
 #else
         } while (dev->scsw.flag2 & SCSW2_Q);

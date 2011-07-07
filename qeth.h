@@ -136,6 +136,8 @@ typedef struct _OSA_GRP {
     BYTE  qibk;                 /* Queue Information Block Key       */
     U64   qiba;                 /* Queue Information Block Address   */
 
+    int   l3;                   /* Adapter in layer 3 mode           */
+
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
