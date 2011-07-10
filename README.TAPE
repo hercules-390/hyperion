@@ -207,27 +207,77 @@ onto a tape drive, and the 0xE4 (Sense Id) CCW opcode is used to query the
 name of the currently mounted file.
 
 For mounts, the 0x4B CCW specifies the filename of the file to be mounted
-onto the drive. The file MUST reside in the specified AUTOMOUNT directory
-or the automount request will be rejected. To unmount the currently mounted
-file, simply do a mount of the special filename "OFFLINE".
+onto the drive. Furthermore, the file MUST reside in one of the specified
+AUTOMOUNT directories or the request will be rejected. To unmount a file,
+simply do a mount of the special filename "OFFLINE".
 
 To query the name of the currently mounted file, the 0xE4 CCW is used. Note
 however that the 0xE4 (Sense Id) CCW opcode cannot be used by itself since
-the drive may also already natively support the Sense Id CCW opcode. Instead,
-it must be preceded by (command-chained from) a 0x4B CCW with a data transfer
-length of one byte. The following 0xE4 command is the one that then specifies
-the i/o buffer and buffer length of where the query function is to place the
-device's currently mounted host filename.
+the drive may already natively support the Sense Id CCW opcode. Instead, it
+MUST be preceded by (command-chained from) a 0x4B CCW which specifies a data
+transfer length of exactly one byte. The 0xE4 CCW which follows it specifies
+the i/o buffer and buffer length of where the query function is to copy the
+device's currently mounted host filename into. If the 0x4B Set Diagnose CCW
+is not command chained, or if it is, if it does not specify a data-transfer
+length of exactly one byte, then it is not recognized as a Automount Query
+request and is instead treated as an Automount Mount/Dismount request.
 
-In summary:
+As a result of this restriction, if the automount 0x4B Set Diagnose CCW is
+chained, the filename must be at least two bytes or longer. To mount a one
+byte filename, the 0x4B Set Diagnose CCW must *NOT* be chained:
 
 
-    MOUNT:      X'4B', <filename>, X'20', <length>
+      --------------- The following works okay ---------------
+
+      ONECHAR DC  C'Z'                    (one byte filename)
+
+      CCW   X'4B',ONECHAR,X'20',L'ONECHAR        (automount)
+
+
+
+      --------------- The following works okay ---------------
+
+      MYFILE  DC  C'MYTAPE.AWS'             (normal filename)
+
+      CCW   X'4B',MYFILE,X'20',L'MYFILE          (automount)
+
+
+
+      --------------- The following works okay ---------------
+
+      MYFILE  DC  C'MYTAPE.AWS'             (normal filename)
+      VOL1LBL DC  CL80' '
+
+      CCW   X'4B',MYFILE,X'60',L'MYFILE          (automount)
+      CCW   X'07',*,X'60',1                      (rewind)
+      CCW   X'02',VOL1LBL,X'60',L'VOL1LBL        (read VOL1)
+      CCW   X'07',*,X'20',1                      (rewind)
+
+
+
+      --------------- The following will FAIL! ---------------
+
+      ONECHAR DC  C'Z'                    (one byte filename)
+      VOL1LBL DC  CL80' '
+
+      CCW   X'4B',ONECHAR,X'60',L'ONECHAR        (automount)
+      CCW   X'07',*,X'60',1                      (rewind)
+      CCW   X'02',VOL1LBL,X'60',L'VOL1LBL        (read VOL1)
+      CCW   X'07',*,X'20',1                      (rewind)
+
+
+
+To summarize:
+
+
+    MOUNT:      X'4B', <filename>, X'nn', <length>
+                ...(other optional CCWS)...
 
     UNMOUNT:    (same thing but use filename "OFFLINE" instead)
 
-    QUERY:      X'4B', <buffer>, X'60', 1
-                X'E4', <buffer>, X'20', <buffersize>
+    QUERY:      X'4B', <buffer>, X'nn', 1
+                X'E4', <buffer>, X'nn', <buffersize>
+                ...(other optional CCWS)...
 
 
 Again, please refer to the provided TMOUNT sample for a simple example.
@@ -235,3 +285,4 @@ Again, please refer to the provided TMOUNT sample for a simple example.
 
 -- Fish
 28 May 2008
+10 Jul 2011

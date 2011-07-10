@@ -1548,14 +1548,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Command Reject if command-chained and i/o length not 1 */
-        if (flags & CCW_FLAGS_CC)
+        if ((flags & CCW_FLAGS_CC) && count == 1)
         {
-            if (count != 1)
-            {
-                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-                break;
-            }
-
             /* AUTOMOUNT QUERY - part 1 (chained 0xE4 SENSE ID = part 2) */
 
             /* Set normal status but do nothing else; the next CCW
@@ -1570,9 +1564,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (sizeof(newfile)-1);   /* (minus-1 for NULL) */
 
         /* Copy the device's new filename from guest storage */
-        for (i=0; i < num; i++)
-            newfile[i] = guest_to_host( iobuf[i] );
-        newfile[num] = 0;
+        str_guest_to_host( iobuf, newfile, num );
 
         /* Change "OFFLINE" to "*" (tape unloaded) */
         if (strcasecmp (newfile, "OFFLINE") == 0)
@@ -3209,14 +3201,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             && 0x4B == prevcode
         )
         {
-            int  i;   // (work)
-
             /* Calculate residual byte count */
             RESIDUAL_CALC ((int)strlen(dev->filename));
 
             /* Copy device filename to guest storage */
-            for (i=0; i < num; i++)
-                iobuf[i] = host_to_guest( dev->filename[i] );
+            str_host_to_guest( dev->filename, iobuf, num );
 
             /* Return normal status */
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
