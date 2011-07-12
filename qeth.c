@@ -442,7 +442,7 @@ U32 ackseq;
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
-// STORE_FW(qry->suppcm, 0xFFFFFFFF);
+// STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
@@ -570,7 +570,7 @@ U32 ackseq;
             case IPA_CMD_QIPASSIST:
                 TRACE("L3 Query IP Assist\n");
                 STORE_FW(ipa->ipas,IPA_SUPP);
-// STORE_FW(ipa->ipas, 0xFFFFFFFF);
+// STORE_FW(ipa->ipas, 0xFFFFFFFF); /* ZZ */
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -794,11 +794,10 @@ int noread = 1;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
 
+// ZZ FIXME
 // ZZ INCOMPLETE PROCESS BUFFER HERE
 // ZZ THIS CODE IS NOT QUITE RIGHT YET!!!!
-// ZZ IS MUST BE ABLE TO SPLIT FRAMES INTO MULTIPLE SEGMENTS
-// ZZ ALL STORAGE ACCESS IS NOT CHECKED FOR VALIDITY (ACCESS LIMITS KEYS...)
-// ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
+// ZZ THIS CODE MUST BE ABLE TO SPLIT FRAMES INTO MULTIPLE SEGMENTS
                         if(len > sizeof(OSA_HDR2))
                         {
                             do {
@@ -967,11 +966,10 @@ int mq = grp->o_qcnt;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
 
+// ZZ FIXME
 // ZZ INCOMPLETE PROCESS BUFFER HERE
 // ZZ THIS CODE IS NOT QUITE RIGHT YET IT MUST BE ABLE TO ASSEMBLE
 // ZZ MULTIPLE FRAGMENTS INTO ONE ETHERNET FRAME
-// ZZ ALL STORAGE ACCESS IS NOT CHECKED FOR VALIDITY (ACCESS LIMITS KEYS...)
-// ZZ INCORRECT BUFFER ADDRESSES MAY GENERATE SEGFAULTS!!!!!
 
 if(sa && la && len)
 {
