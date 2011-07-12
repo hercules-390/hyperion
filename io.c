@@ -576,9 +576,9 @@ DEF_INST(store_channel_path_status)
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
+BYTE    work[32];                       /* Work area                 */
 BYTE    lpum;                           /* Device's Last Path Used   */
 BYTE    chpid;                          /* CHPID associated w/lpum   */
-BYTE    chpst;                          /* Channel Path Status byte  */
 int     i;                              /* (work)                    */
 
     S(inst, regs, b2, effective_addr2);
@@ -593,11 +593,13 @@ int     i;                              /* (work)                    */
     if ( effective_addr2 & 0x0000001F )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    memset(work, 0x00, 32);
+
     /* Scan DEVBLK chain for busy devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         /* Obtain the device lock */
-        obtain_lock( &dev->lock );
+        obtain_lock(&dev->lock);
 
         if (1
             &&  dev->allocated                     /* Valid DEVBLK   */
@@ -616,21 +618,18 @@ int     i;                              /* (work)                    */
                     break;
 
             /* Retrieve active CHPID */
-            ASSERT( i <= 7 ); // (sanity check)
             chpid = dev->pmcw.chpid[i];
 
-            /* Release the device lock */
-            release_lock( &dev->lock );
-
-            /* Update channel path status word bit at operand address */
-            /* (N.B. Program Checks are possible here) */
-            chpst = ARCH_DEP(vfetchb)(effective_addr2+(chpid/8), b2, regs);
-            chpst |= 0x80 >> (chpid % 8);
-            ARCH_DEP(vstoreb)(chpst, effective_addr2+(chpid/8), b2, regs);
+            /* Update channel path status work area */
+            work[chpid/8] |= 0x80 >> (chpid % 8);
         }
-        else
-            release_lock( &dev->lock );
+
+        /* Release the device lock */
+        release_lock(&dev->lock);
     }
+
+    /* Store channel path status word at operand address */
+    ARCH_DEP(vstorec) ( work, 32-1, effective_addr2, b2, regs );
 }
 
 
