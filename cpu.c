@@ -1,12 +1,12 @@
-/* CPU.C        (c) Copyright Roger Bowler, 1994-2010                */
+/* CPU.C        (c) Copyright Roger Bowler, 1994-2011                */
 /*              ESA/390 CPU Emulator                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2011      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2011      */
 
 // $Id$
 
@@ -32,155 +32,6 @@
 /*      Basic FP extensions support - Peter Kuschnerus           v209*/
 /*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.209  2009/01/23 11:46:20  bernard
-// copyright notice
-//
-// Revision 1.208  2009/01/09 23:25:59  ivan
-// Fix monitor code location when the monitor call occurs during the interception of a z/Arch SIE guest
-//
-// Revision 1.207  2008/12/21 02:51:58  ivan
-// Place the configuration in system check-stop state when a READ SCP INFO
-// is issued from a CPU that is not a CP Engine.
-//
-// Revision 1.206  2008/12/05 11:26:00  jj
-// Fix SIE psw update when host interrupt occurs durng guest processing
-//
-// Revision 1.205  2008/11/04 05:56:31  fish
-// Put ensure consistent create_thread ATTR usage change back in
-//
-// Revision 1.204  2008/11/03 15:31:57  rbowler
-// Back out consistent create_thread ATTR modification
-//
-// Revision 1.203  2008/10/18 09:32:20  fish
-// Ensure consistent create_thread ATTR usage
-//
-// Revision 1.202  2008/10/07 22:24:35  gsmith
-// Fix zero ilc problem after branch trace
-//
-// Revision 1.201  2008/08/13 21:21:55  gsmith
-// Fix bad guest IA after host interrupt during branch trace
-//
-// Revision 1.200  2008/04/11 14:28:15  bernard
-// Integrate regs->exrl into base Hercules code.
-//
-// Revision 1.199  2008/04/09 07:35:32  bernard
-// allign to Rogers terminal ;-)
-//
-// Revision 1.198  2008/04/08 17:12:29  bernard
-// Added execute relative long instruction
-//
-// Revision 1.197  2008/02/19 11:49:19  ivan
-// - Move setting of CPU priority after spwaning timer thread
-// - Added support for Posix 1003.1e capabilities
-//
-// Revision 1.196  2008/02/12 18:23:39  jj
-// 1. SPKA was missing protection check (PIC04) because
-//    AIA regs were not purged.
-//
-// 2. BASR with branch trace and PIC16, the pgm old was pointing
-//    2 bytes before the BASR.
-//
-// 3. TBEDR , TBDR using R1 as source, should be R2.
-//
-// 4. PR with page crossing stack (1st page invalid) and PSW real
-//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
-//    for previous stack entry descriptor before doing the load_psw.
-//
-// Revision 1.195  2007/12/10 23:12:02  gsmith
-// Tweaks to OPTION_MIPS_COUNTING processing
-//
-// Revision 1.194  2007/12/07 12:08:51  rbowler
-// Enable B9xx,EBxx opcodes in S/370 mode for ETF2 (correction)
-//
-// Revision 1.193  2007/12/02 16:22:09  rbowler
-// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
-//
-// Revision 1.192  2007/11/22 03:49:01  ivan
-// Store Monitor code DOUBLEWORD when MC invoked under z/Architecture
-// (previously only a fullword was stored)
-//
-// Revision 1.191  2007/11/18 22:18:51  rbowler
-// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
-//
-// Revision 1.190  2007/11/02 20:19:20  ivan
-// Remove longjmp in process_interrupt() when cpu is STOPPING and a store status
-// was requested - leads to a CPU in the STOPPED state that is still executing
-// instructions.
-//
-// Revision 1.189  2007/08/06 22:14:53  gsmith
-// process_interrupt returns if nothing happens
-//
-// Revision 1.188  2007/08/06 22:14:07  gsmith
-// rework CPU execution loop
-//
-// Revision 1.187  2007/08/06 22:12:49  gsmith
-// cpu thread exitjmp
-//
-// Revision 1.186  2007/08/06 22:10:47  gsmith
-// reposition process_trace for readability
-//
-// Revision 1.185  2007/06/23 00:04:05  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.184  2007/06/22 02:22:50  gsmith
-// revert config_cpu.pat due to problems in testing
-//
-// Revision 1.183  2007/06/20 03:52:19  gsmith
-// configure_cpu now returns when the CPU is fully configured
-//
-// Revision 1.182  2007/06/06 22:14:57  gsmith
-// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
-//
-// Revision 1.181  2007/04/09 23:07:42  gsmith
-// call cpu_uninit() on run_cpu exit
-//
-// Revision 1.180  2007/03/25 04:20:36  gsmith
-// Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
-//
-// Revision 1.179  2007/03/13 01:43:37  gsmith
-// Synchronize started cpu
-//
-// Revision 1.178  2007/01/16 01:45:33  gsmith
-// Tweaks to instruction stepping/tracing
-//
-// Revision 1.177  2007/01/09 23:18:21  gsmith
-// Tweaks to cpuloop
-//
-// Revision 1.176  2007/01/04 23:12:03  gsmith
-// remove thunk calls for program_interrupt
-//
-// Revision 1.175  2007/01/04 01:08:41  gsmith
-// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
-//
-// Revision 1.174  2007/01/03 14:21:41  rbowler
-// Reinstate semantics of 'g' command changed by hsccmd rev 1.197
-//
-// Revision 1.173  2006/12/30 16:15:57  gsmith
-// 2006 Dec 30 Fix cpu_init to call set_jump_pointers for all arches
-//
-// Revision 1.172  2006/12/21 22:39:38  gsmith
-// 21 Dec 2006 Range for s+, t+ - Greg Smith
-//
-// Revision 1.171  2006/12/21 01:45:01  gsmith
-// 20 Dec 2006 Fix instruction display in program interrupt - Greg Smithh
-//
-// Revision 1.170  2006/12/20 23:37:29  rbowler
-// ip_pat cpu.c rev 1.168 duplicated 2 lines from rev 1.167
-//
-// Revision 1.169  2006/12/20 10:52:08  rbowler
-// cpu.c(294) : warning C4101: 'ip' : unreferenced local variable
-//
-// Revision 1.168  2006/12/20 04:26:19  gsmith
-// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
-//
-// Revision 1.167  2006/12/17 21:54:24  rbowler
-// Display DXC in msg HHCCP014I for PIC7
-//
-// Revision 1.166  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

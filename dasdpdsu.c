@@ -1,4 +1,4 @@
-/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules DASD Utilities: PDS unloader                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -21,17 +21,6 @@
 /* working directory. If the ascii keyword is not specified then     */
 /* the members are unloaded as fixed length binary files.            */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.28  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.27  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.26  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

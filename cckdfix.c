@@ -1,4 +1,4 @@
-/* CCKDFIX.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* CCKDFIX.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*       Correct compressed CKD file.                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -6,8 +6,6 @@
 /*   Hercules.                                                       */
 
 // $Id$
-//
-// $Log$
 
 #include "hercules.h"
 int main ( int argc, char *argv[])

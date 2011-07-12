@@ -1,12 +1,12 @@
-/* IO.C         (c) Copyright Roger Bowler, 1994-2010                */
+/* IO.C         (c) Copyright Roger Bowler, 1994-2011                */
 /*              ESA/390 CPU Emulator                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2011      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2011      */
 
 // $Id$
 
@@ -35,20 +35,6 @@
 /*      I/O rate counter - Valery Pogonchenko                        */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.61  2007/06/23 00:04:14  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.60  2007/01/13 07:23:42  bernard
-// backout ccmask
-//
-// Revision 1.59  2007/01/12 15:24:21  bernard
-// ccmask phase 1
-//
-// Revision 1.58  2006/12/08 09:43:28  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 

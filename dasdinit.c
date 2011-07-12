@@ -1,4 +1,4 @@
-/* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules DASD Utilities: DASD image builder          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -43,23 +43,6 @@
 /*              Shouldn't be specified if model is specified.        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-
-// $Log$
-// Revision 1.50  2008/11/04 04:50:46  fish
-// Ensure consistent utility startup
-//
-// Revision 1.49  2007/09/30 13:30:08  rbowler
-// Revert extra blank lines inserted by rev 1.12
-//
-// Revision 1.48  2007/09/30 12:23:22  rbowler
-// Error message if DASD initialisation unsuccessful
-//
-// Revision 1.47  2007/06/23 00:04:08  ivan
-// Update copyright notices to include current year (2007)
-//
-// Revision 1.46  2006/12/08 09:43:19  jj
-// Add CVS message log
-//
 
 #include "hstdinc.h"
 #include "hercules.h"
