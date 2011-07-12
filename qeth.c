@@ -13,6 +13,7 @@
 /* This implementation is based on the S/390 Linux implementation    */
 /*                                                                   */
 /* Device module hdtqeth.dll devtype QETH (config)                   */
+/*                                                                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 /* Default parm:   iface /dev/net/tun                                */
@@ -867,11 +868,11 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                     else
                     {
                         if(ns)
-                            sbal->sbale[ns-1].flags[0] = 0x40;
+                            sbal->sbale[ns-1].flags[0] = SBAL_FLAGS0_LAST_ENTRY;
                         return;
                     }
                     if(ns)
-                        sbal->sbale[ns-1].flags[0] = 0x40;
+                        sbal->sbale[ns-1].flags[0] = SBAL_FLAGS0_LAST_ENTRY;
                 }
                 else /* Buffer not empty */
                 {
