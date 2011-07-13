@@ -709,6 +709,7 @@ noinst_HEADERS = fishhang.h     \
                  logger.h       \
                  commadpt.h     \
                  comm3705.h     \
+                 cnsllogo.h     \
                  cache.h        \
                  ecpsvm.h       \
                  memrchr.h      \

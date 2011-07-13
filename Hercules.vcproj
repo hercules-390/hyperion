@@ -601,6 +601,10 @@
 						<Filter
 							Name="Header Files"
 							>
+							<File
+								RelativePath=".\cnsllogo.h"
+								>
+							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"

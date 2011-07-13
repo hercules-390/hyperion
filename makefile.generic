@@ -171,7 +171,7 @@ dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
 dyninst_OBJ = dyninst.o
 
-HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
+HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercules.h \

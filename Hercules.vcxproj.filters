@@ -1561,6 +1561,9 @@
     <ClInclude Include="extstring.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cnsllogo.h">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc">

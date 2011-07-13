@@ -209,7 +209,7 @@ dyninst_OBJ = dyninst.o
 
 dyngui_OBJ = dyngui.o
 
-HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
+HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h ftlib.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \

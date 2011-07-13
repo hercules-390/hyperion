@@ -66,6 +66,9 @@
 
 #include "sr.h"
 
+/* Include file for the logo */
+#include "cnsllogo.h"
+
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
@@ -1204,83 +1207,6 @@ BYTE    c;                              /* Character work area       */
 #define SF_ATTR_INVISIBLE   0x0C
 
 #define SF_ATTR_MDT         0x01
-
-/*
-static char *herclogo[]={
-    " HHH          HHH   The S/370, ESA/390 and z/Architecture",
-    " HHH          HHH                 Emulator",
-    " HHH          HHH",
-    " HHH          HHH  EEEE RRR   CCC U  U L    EEEE  SSS",
-    " HHHHHHHHHHHHHHHH  E    R  R C    U  U L    E    S",
-    " HHHHHHHHHHHHHHHH  EEE  RRR  C    U  U L    EEE   SS",
-    " HHHHHHHHHHHHHHHH  E    R R  C    U  U L    E       S",
-    " HHH          HHH  EEEE R  R  CCC  UU  LLLL EEEE SSS ",
-    " HHH          HHH",
-    " HHH          HHH",
-    " HHH          HHH     My PC thinks it's a MAINFRAME",
-    "",
-    " Copyright (C) 1999-2011 Roger Bowler, Jan Jaeger, and others"};
-    */
-
-static char *herclogo[]={
-"@ALIGN NONE",
-"@SBA 0,0",
-"@SF P",
-"Hercules Version  :",
-"@SF HP",
-"$(VERSION)",
-"@NL",
-"@SF P",
-"Host name         :",
-"@SF HP",
-"$(HOSTNAME)",
-"@NL",
-"@SF P",
-"Host OS           :",
-"@SF HP",
-"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
-"@NL",
-"@SF P",
-"Host Architecture :",
-"@SF HP",
-"$(HOSTARCH)",
-"@NL",
-"@SF P",
-"Processors        :",
-"@SF HP",
-"$(HOSTNUMCPUS)",
-"@NL",
-"@SF P",
-"LPAR Name         :",
-"@SF HP",
-"$(LPARNAME)",
-"@NL",
-"@SF P",
-"Device number     :",
-"@SF HP",
-"$(CSS):$(CCUU)",
-"@NL",
-"@SF P",
-"Subchannel        :",
-"@SF HP",
-"$(SUBCHAN)",
-"@SF P",
-"@ALIGN LEFT",
-"",
-"",
-"           HHH          HHH   The S/370, ESA/390 and z/Architecture",
-"           HHH          HHH                 Emulator",
-"           HHH          HHH",
-"           HHH          HHH  EEEE RRR   CCC U  U L    EEEE  SSS",
-"           HHHHHHHHHHHHHHHH  E    R  R C    U  U L    E    S",
-"           HHHHHHHHHHHHHHHH  EEE  RRR  C    U  U L    EEE   SS",
-"           HHHHHHHHHHHHHHHH  E    R R  C    U  U L    E       S",
-"           HHH          HHH  EEEE R  R  CCC  UU  LLLL EEEE SSS",
-"           HHH          HHH",
-"           HHH          HHH",
-"           HHH          HHH     My PC thinks it's a MAINFRAME",
-"",
-"           Copyright (C) 1999-2011 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
 

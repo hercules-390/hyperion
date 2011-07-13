@@ -748,6 +748,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chain.h" />
+    <ClInclude Include="cnsllogo.h" />
     <ClInclude Include="crypto\aes.h" />
     <ClInclude Include="crypto\des.h" />
     <ClInclude Include="crypto\sha1.h" />

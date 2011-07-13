@@ -8,6 +8,8 @@ positioning orders, attributes and variable substitutions.
 
 hercules also contains a built-in logo should no suitable file be found.
 
+The built-in logo is contained in cnsllogo.h and is included in console.c.
+
 Upon startup, hercules will first look for a file named "herclogo.txt" in
 the current directory.
 
@@ -68,3 +70,4 @@ The file 'herclogo.txt' is provided in the distribution as a sample template.
 It reflects the contents of the built-in logo.
 
 Ivan Warren 3/1/2006
+Paul Gorlinsky 7/13/2011
