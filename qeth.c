@@ -12,7 +12,7 @@
 /*                                                                   */
 /* This implementation is based on the S/390 Linux implementation    */
 /*                                                                   */
-/* Device module hdtqeth.dll devtype QETH (config)                   */
+/* Device module hdtqeth                                             */
 /*                                                                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
@@ -1392,6 +1392,15 @@ int num;                                /* Number of bytes to move   */
         memset (dev->sense, 0, sizeof(dev->sense));
 
         /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+
+    case 0x14:  // XXX10100
+    /*---------------------------------------------------------------*/
+    /* SENSE COMMAND BYTE                                            */
+    /*---------------------------------------------------------------*/
+
         *unitstat = CSW_CE | CSW_DE;
         break;
 
