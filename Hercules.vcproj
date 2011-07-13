@@ -1993,6 +1993,18 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="VC2010"
+						>
+						<File
+							RelativePath=".\Hercules.vcxproj"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules.vcxproj.filters"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="other"
