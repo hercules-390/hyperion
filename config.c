@@ -38,6 +38,7 @@
 #endif // defined(OPTION_FISHIO)
 
 
+#if defined(HAVE_MLOCKALL)
 int configure_memlock(int flags)
 {
 int rc;
@@ -49,6 +50,7 @@ int rc;
 
     return rc ? errno : 0;
 }
+#endif /*defined(HAVE_MLOCKALL)*/
 
 
 static void configure_region_reloc()

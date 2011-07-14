@@ -2560,6 +2560,7 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 /* memlock - lock all hercules memory                                */
 /*-------------------------------------------------------------------*/
+#if defined(HAVE_MLOCKALL)
 int memlock_cmd(int argc, char *argv[], char *cmdline)
 {
 int rc = 0;
@@ -2584,6 +2585,7 @@ int rc = 0;
 
     return rc;
 }
+#endif /*defined(HAVE_MLOCKALL)*/
 
 
 int qstor_cmd(int argc, char *argv[], char *cmdline);

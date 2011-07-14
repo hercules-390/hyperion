@@ -748,6 +748,7 @@ AC_CHECK_FUNCS( inet_aton )
 AC_CHECK_FUNCS( fork socketpair )
 AC_CHECK_FUNCS( sysconf )
 AC_CHECK_FUNCS( mlock )
+AC_CHECK_FUNCS( mlockall )
 AC_CHECK_FUNCS( gettid )
 
 AC_CHECK_FUNCS( vsscanf,
