@@ -14,9 +14,8 @@
 
 #include "hercules.h"
 
-DLL_EXPORT SYSBLK sysblk;
 
-DLL_EXPORT GSYSINFO gsysinfo;
+DLL_EXPORT SYSBLK sysblk;
 
 
 #if defined(EXTERNALGUI)

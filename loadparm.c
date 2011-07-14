@@ -18,6 +18,7 @@
 #define _LOADPARM_C_
 
 #include "hercules.h"
+
                                           /*  H    E    R    C    U    L    E    S  */
 static const BYTE dflt_lparname[8]      = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };
 
@@ -29,6 +30,9 @@ static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0
                                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
                                           /*  Z    Z           */
 static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
+
+static GSYSINFO gsysinfo;
+
 
 // ebcdic_to_stringz_allow_return returns a null terminated string allowing
 //                                embedded spaces
