@@ -277,6 +277,7 @@ CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
+int  configure_memlock(int);
 int  configure_storage(RADR);               // amount of storage
 int  configure_xstorage(RADR);              // amount of storage
 int  configure_capping(U32 value);

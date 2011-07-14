@@ -2557,6 +2557,35 @@ BYTE c;
     return rc;
 }
 
+/*-------------------------------------------------------------------*/
+/* memlock - lock all hercules memory                                */
+/*-------------------------------------------------------------------*/
+int memlock_cmd(int argc, char *argv[], char *cmdline)
+{
+int rc = 0;
+
+    UNREFERENCED(cmdline);
+
+    if ( argc > 1 )
+    {
+        if ( CMD(argv[1],on,2)  )
+            rc = configure_memlock(TRUE);
+        else if ( CMD(argv[1],off,3) )
+            rc = configure_memlock(FALSE);
+        else
+        {
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return 0;
+        }
+
+        if(rc)
+            LOGMSG("%s error: %s\n",argv[0],strerror(rc));
+    }
+
+    return rc;
+}
+
+
 int qstor_cmd(int argc, char *argv[], char *cmdline);
 int mainsize_cmd(int argc, char *argv[], char *cmdline);
 int xpndsize_cmd(int argc, char *argv[], char *cmdline);

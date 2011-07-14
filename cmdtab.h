@@ -1479,6 +1479,7 @@ CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
 COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        delsym_cmd_desc,        delsym_cmd_help     )
 #endif
+COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
 #if defined( OPTION_COUNTING )
 COMMAND( "count",                   count_cmd,              SYSCMDNOPER,        count_cmd_desc,         NULL                )
 #endif

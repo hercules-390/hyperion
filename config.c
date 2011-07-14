@@ -38,6 +38,19 @@
 #endif // defined(OPTION_FISHIO)
 
 
+int configure_memlock(int flags)
+{
+int rc;
+
+    if(flags)
+        rc = mlockall(MCL_CURRENT | MCL_FUTURE);
+    else 
+        rc = munlockall();
+
+    return rc ? errno : 0;
+}
+
+
 static void configure_region_reloc()
 {
 DEVBLK *dev;
@@ -80,6 +93,7 @@ int i;
         }
 
 }
+
 
 /* storage configuration */
 static RADR config_allocmsize = 0;
