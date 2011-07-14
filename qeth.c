@@ -46,7 +46,7 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-// #define QETH_DEBUG
+#define QETH_DEBUG
 
 #if defined(DEBUG) && !defined(QETH_DEBUG)
  #define QETH_DEBUG
@@ -85,7 +85,7 @@ static const BYTE sense_id_bytes[] = {
     0x17, 0x32, 0x01,                   // Device Type
     0x00,
     0x40, OSA_RCD,0x00, 0x80,           // Read Configuration Data CIW
-    0x41, OSA_SII,0x00, 0x04,           // Set Interfiace Identifier CIW
+    0x41, OSA_SII,0x00, 0x04,           // Set Interface Identifier CIW
     0x42, OSA_RNI,0x00, 0x40,           // Read Node Identifier CIW
     0x43, OSA_EQ, 0x10, 0x00,           // Establish Queues CIW
     0x44, OSA_AQ, 0x00, 0x00            // Activate Queues CIW
