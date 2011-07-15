@@ -512,7 +512,7 @@ struct SCRCTL {                         /* Script control structure  */
     #define SCR_ABORTED    0x10         /* Script has been aborted   */
 };
 typedef struct SCRCTL SCRCTL;           /* typedef is easier to use  */
-static LIST_ENTRY scrlist = {0};        /* Script list anchor entry  */
+static LIST_ENTRY scrlist = {0,0};      /* Script list anchor entry  */
 static int scrid = 0;                   /* Script identification no. */
 #define SCRTHREADNAME "Script Thread"   /* Name of processing thread */
 
@@ -872,7 +872,7 @@ int     rc;                             /* (work)                    */
     for (p = stmt; isspace( *p ); p++)
         ; /* (nop; do nothing) */
 
-    /* Execute REXX script if line begins with "/*" */
+    /* Execute REXX script if line begins with "Slash '/' Asterisk '*'" */
     if (!script_abort( pCtl ) && !strncmp( p, "/*", 2 ))
     {
         char *rcmd[2] = { "exec", NULL };
@@ -903,8 +903,8 @@ int     rc;                             /* (work)                    */
         if (strncasecmp( p, "pause ", 6 ) == 0)
         {
             double pauseamt     = 0.0;    /* (secs to pause) */
-            struct timespec ts  = {0};    /* (nanosleep arg) */
-            U64 i, nsecs        =  0;     /* (nanoseconds)   */
+            struct timespec ts  = {0,0};  /* (nanosleep arg) */
+            long i, nsecs       =  0;     /* (nanoseconds)   */
 
             pauseamt = atof( p+6 );
 
@@ -915,8 +915,8 @@ int     rc;                             /* (work)                    */
                 continue; /* (go on to next statement) */
             }
 
-            nsecs = (U64) (pauseamt * 1000000000.0);
-            ts.tv_nsec = 250000000; /* 1/4th of a second */
+            nsecs = (long) (pauseamt * 1000000000.0);
+            ts.tv_nsec = 250000000l; /* 1/4th of a second */
             ts.tv_sec  = 0;
 
             if (!script_abort( pCtl ) && MLVL( VERBOSE ))
@@ -993,6 +993,8 @@ static void *script_thread( void *arg )
     int      i;                         /* (work)                    */
     TID      tid   = thread_id();
     SCRCTL*  pCtl  = NULL;
+
+    UNREFERENCED(arg);
 
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' started"

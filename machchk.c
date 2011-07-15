@@ -208,7 +208,8 @@ void machine_check_crwpend()
 U32 get_next_channel_report_word( REGS* regs )
 {
 U32 crw = 0;
-
+    
+    UNREFERENCED(regs);
     OBTAIN_CRWLOCK();
     ASSERT( sysblk.crwindex <= sysblk.crwcount );
     ASSERT( sysblk.crwcount <= sysblk.crwalloc );

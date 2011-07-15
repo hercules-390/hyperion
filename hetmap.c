@@ -589,9 +589,9 @@ main( int argc, char *argv[] )
         printf( "%-20.20s: %d\n", "Blocks", (int)totblocks );
         if ( !i_faketape )
         {
-            printf( "%-20.20s: %lu\n", "Uncompressed bytes", (U64)totubytes );
-            printf( "%-20.20s: %lu\n", "Compressed bytes", (U64)totcbytes );
-            printf( "%-20.20s: %lu\n", "Reduction", (U64)(totubytes - totcbytes) );
+            printf( "%-20.20s: %llu\n", "Uncompressed bytes", (unsigned long long)totubytes );
+            printf( "%-20.20s: %llu\n", "Compressed bytes", (unsigned long long)totcbytes );
+            printf( "%-20.20s: %llu\n", "Reduction", (unsigned long long)(totubytes - totcbytes) );
         }
     }
 

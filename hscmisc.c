@@ -822,7 +822,7 @@ static const BYTE  numerc  =  _countof( erctab );
 
         n = (size_t)  snprintf( buf, bufsz - 1,
 
-            "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%04.4X Flags:%s%s%s%s%s%s%s"
+            "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%4.4X Flags:%s%s%s%s%s%s%s"
 
             , rsc
             , rsc < numrsc ? rsctab[ rsc ] : "???"
@@ -872,9 +872,9 @@ size_t n;
 
     n = (size_t) snprintf( buf, bufsz - 1,
 
-        "IntP:%08.8X Key:%d LPM:%02.2X Flags:%X%02.2X%02.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%08.8X"
+        "IntP:%8.8X Key:%d LPM:%2.2X Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%8.8X"
 
-        , orb->intparm
+        , (u_int)orb->intparm
         , (orb->flag4 & ORB4_KEY) >> 4
         , orb->lpm
 
@@ -902,7 +902,7 @@ size_t n;
         , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
 
         , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
-        , orb->ccwaddr
+        , (u_int)orb->ccwaddr
     );
 
     if (n < bufsz)
@@ -942,7 +942,7 @@ static const char* tc[] =
 
     n = (size_t) snprintf( buf, bufsz - 1,
 
-        "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%02.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
+        "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%2.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
 
         , ( esw->scl0 & 0x80           ) ? '0' : '.'
         , ( esw->scl0 & SCL0_ESF_KEY   ) ? 'K' : '.'
@@ -1204,6 +1204,8 @@ U16     xcode;
 char    type;
 char    buf[512];
 
+    UNREFERENCED(cmdline);
+
     /* We require only one operand */
     if (argc != 1)
     {
@@ -1308,6 +1310,8 @@ int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
 
+UNREFERENCED(cmdline);
+
     /* We require only one operand */
     if (argc != 1)
     {
@@ -1373,6 +1377,8 @@ U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
 char    type;
+
+    UNREFERENCED(cmdline);
 
     /* We require only one operand */
     if (argc != 1)

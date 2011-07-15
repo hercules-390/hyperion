@@ -779,8 +779,9 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     char*       pszCfgCmd;     // Interface config command
     int         rc;
     CTLREQ      ctlreq;
-    char*       request_name;  // debugging: name of ioctl request
+
 #if defined(DEBUG) || defined(_DEBUG)
+    char*       request_name;  // debugging: name of ioctl request
     char        unknown_request[] = "Unknown (0x00000000)";
 #endif
 
