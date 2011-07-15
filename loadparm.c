@@ -100,25 +100,21 @@ static GSYSINFO gsysinfo;
     return n; \
 }
 
+
 void init_gsysinfo(void)
 {
-static int do_once = TRUE;
+    memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
 
-    if ( do_once )
-    {
-        do_once = FALSE;
-        memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
+    memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
+    memcpy(gsysinfo.manufact,  default_manufact,    sizeof(gsysinfo.manufact));
+    memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
+    memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
+    memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
 
-        memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
-        memcpy(gsysinfo.manufact,  default_manufact,    sizeof(gsysinfo.manufact));
-        memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
-        memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
-        memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
-        bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
-        bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
-    }
-    return;
+    bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
+    bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
 }
+
 
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
