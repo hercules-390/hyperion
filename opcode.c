@@ -23,6 +23,10 @@
 
 #include "feature.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE3)
