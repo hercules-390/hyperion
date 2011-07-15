@@ -1375,6 +1375,7 @@ int num;                                /* Number of bytes to move   */
         break;
 
 
+    case 0x14: // SENSE COMMAND BYTE - BASIC MODE
     case 0x04:
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */
@@ -1392,15 +1393,6 @@ int num;                                /* Number of bytes to move   */
         memset (dev->sense, 0, sizeof(dev->sense));
 
         /* Return unit status */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-
-    case 0x14:  // XXX10100
-    /*---------------------------------------------------------------*/
-    /* SENSE COMMAND BYTE                                            */
-    /*---------------------------------------------------------------*/
-
         *unitstat = CSW_CE | CSW_DE;
         break;
 
