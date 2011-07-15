@@ -1527,7 +1527,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     {
         int     argc, i;                                     /* work */
         char  **argv;                                        /* work */
-        BYTE    newfile [ sizeof(dev->filename) ];           /* work */
+        char    newfile [ sizeof(dev->filename) ];           /* work */
 
         /* Command reject if AUTOMOUNT support not enabled */
         if (0
@@ -1564,7 +1564,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (sizeof(newfile)-1);   /* (minus-1 for NULL) */
 
         /* Copy the device's new filename from guest storage */
-        str_guest_to_host( iobuf, newfile, num );
+        str_guest_to_host( iobuf, (BYTE *)newfile, num );
 
         /* Change "OFFLINE" to "*" (tape unloaded) */
         if (strcasecmp (newfile, "OFFLINE") == 0)

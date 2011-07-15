@@ -872,9 +872,10 @@ size_t n;
 
     n = (size_t) snprintf( buf, bufsz - 1,
 
-        "IntP:%8.8X Key:%d LPM:%2.2X Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%8.8X"
+        "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
+        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%2.2X%2.2X%2.2X%2.2X"
 
-        , (u_int)orb->intparm
+        , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
         , (orb->flag4 & ORB4_KEY) >> 4
         , orb->lpm
 
@@ -902,7 +903,7 @@ size_t n;
         , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
 
         , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
-        , (u_int)orb->ccwaddr
+        , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
     );
 
     if (n < bufsz)
