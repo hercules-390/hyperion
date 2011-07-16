@@ -46,7 +46,7 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-#define QETH_DEBUG
+// #define QETH_DEBUG
 
 #if defined(DEBUG) && !defined(QETH_DEBUG)
  #define QETH_DEBUG
