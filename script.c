@@ -512,7 +512,7 @@ struct SCRCTL {                         /* Script control structure  */
     #define SCR_ABORTED    0x10         /* Script has been aborted   */
 };
 typedef struct SCRCTL SCRCTL;           /* typedef is easier to use  */
-static LIST_ENTRY scrlist = {0};        /* Script list anchor entry  */
+static LIST_ENTRY scrlist = {0,0};      /* Script list anchor entry  */
 static int scrid = 0;                   /* Script identification no. */
 #define SCRTHREADNAME "Script Thread"   /* Name of processing thread */
 
@@ -902,9 +902,9 @@ int     rc;                             /* (work)                    */
         /* Special handling for 'pause' statement */
         if (strncasecmp( p, "pause ", 6 ) == 0)
         {
-            double pauseamt     = 0.0;    /* (secs to pause) */
-            struct timespec ts  = {0};    /* (nanosleep arg) */
-            U64 i, nsecs        =  0;     /* (nanoseconds)   */
+            double pauseamt     =  0.0;   /* (secs to pause) */
+            struct timespec ts  = {0,0};  /* (nanosleep arg) */
+            U64 i, nsecs        =   0;    /* (nanoseconds)   */
 
             pauseamt = atof( p+6 );
 
@@ -925,12 +925,12 @@ int     rc;                             /* (work)                    */
                 WRMSG( HHC02262, "I", pCtl->scr_id, (int)(pauseamt * 1000.0) );
             }
 
-            for (i = nsecs; i >= ts.tv_nsec && !script_abort( pCtl ); i -= ts.tv_nsec)
+            for (i = nsecs; i >= (U64) ts.tv_nsec && !script_abort( pCtl ); i -= (U64) ts.tv_nsec)
                 nanosleep( &ts, NULL );
 
             if (i && !script_abort( pCtl ))
             {
-                ts.tv_nsec = i;
+                ts.tv_nsec = (long) i;
                 nanosleep( &ts, NULL );
             }
 
