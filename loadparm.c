@@ -31,9 +31,6 @@ static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0
                                           /*  Z    Z           */
 static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
 
-static GSYSINFO gsysinfo;
-
-
 // ebcdic_to_stringz_allow_return returns a null terminated string allowing
 //                                embedded spaces
 #define ebcdic_to_stringz_allow_return(_field) \

@@ -245,6 +245,7 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 /* Global data areas in module config.c                              */
 HSYS_DLL_IMPORT SYSBLK   sysblk;                /* System control block      */
+HSYS_DLL_IMPORT GSYSINFO gsysinfo;              /* Guest System Information  */
 CCKD_DLL_IMPORT CCKDBLK  cckdblk;               /* CCKD global block         */
 
 #ifdef EXTERNALGUI
