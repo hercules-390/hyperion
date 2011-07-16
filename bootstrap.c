@@ -210,7 +210,7 @@ int main(int ac,char *av[])
 
 #include <Wincon.h>                             // (need SetConsoleMode, etc)
 
-#pragma warning (disable : 4748)
+#pragma warning (disable : 4748) // C4748:  /GS can not ... because optimizations are disabled...
 #pragma optimize( "", off )
 
 static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExceptionPtrs )
