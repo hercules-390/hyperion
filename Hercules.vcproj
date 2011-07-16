@@ -638,6 +638,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\qeth.h"
+								>
+							</File>
+							<File
 								RelativePath=".\tt32api.h"
 								>
 							</File>

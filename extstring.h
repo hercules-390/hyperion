@@ -1,14 +1,14 @@
-/*********************************************************************/
-/*                                                                   */
-/* extstring.h  (c) Mark L. Gaubatz, 1985-2011                       */
-/*              Extended string handling routines                    */
+/* EXTSTRING.H  (c) Copyright Mark L. Gaubatz, 1985-2011             */
 /*              Adapted for use by Hercules                          */
+/*              Extended string handling routines                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html)                      */
 /*   as modifications to Hercules.                                   */
 /*                                                                   */
 /*********************************************************************/
+
+// $Id$
 
 #ifndef _EXTSTRING_H_
 #define _EXTSTRING_H_

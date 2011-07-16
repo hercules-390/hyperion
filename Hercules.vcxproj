@@ -766,6 +766,7 @@
     <ClInclude Include="extstring.h" />
     <ClInclude Include="hdiagf18.h" />
     <ClInclude Include="hercifc.h" />
+    <ClInclude Include="qeth.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tuntap.h" />
     <ClInclude Include="w32ctca.h" />
