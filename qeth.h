@@ -83,6 +83,64 @@ typedef struct _OSA_MAC {
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Node Element Descriptor                                       */
+/*-------------------------------------------------------------------*/
+typedef struct _NED {
+        BYTE    code;
+#define NODE_UNUS       0x00
+#define NODE_SNEQ       0x40
+#define NODE_GNEQ       0x80
+#define NODE_NED        0xC0
+#define NODE_TOKEN      0x20
+#define NODE_SNIND      0x10
+#define NODE_SUBSN      0x08
+#define NODE_RECON      0x04
+#define NODE_EMULA      0x02
+//  union { struct {
+        BYTE    type;
+#define NODE_TUNSP      0
+#define NODE_TIODV      1
+#define NODE_TCU        2
+        BYTE    class;
+#define NODE_CUNSP      0
+#define NODE_CDASD      1
+#define NODE_CTAPE      2
+#define NODE_CURIN      3
+#define NODE_CUROT      4
+#define NODE_CPRT       5
+#define NODE_CCOMM      6
+#define NODE_CFST       7
+#define NODE_CLMT       8
+#define NODE_CCTCA      9
+#define NODE_CSWIT     10
+        BYTE    ua;
+        BYTE    devtype[6];
+        BYTE    model[3];
+        BYTE    manufact[3];
+        BYTE    plant[2];
+        union   {
+             BYTE    code[12];
+             struct  {
+                  BYTE    serial[4];
+                  BYTE    sequence[8];
+             };
+        } seq;
+        HWORD   tag;
+// }; struct { BYTE zz[31]; }; };
+} NED;
+
+#define _001730 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF0 }
+#define _001731 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF1 }
+#define _001732 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF2 }
+#define _001    { 0xF0,0xF0,0xF1 }
+#define _004    { 0xF0,0xF0,0xF4 }
+#define _HRC    { 0xC8,0xD9,0xC3 }
+#define _ZZ     { 0xE9,0xE9 }
+#define _SERIAL { 0xF0,0xF0,0xF0,0xF0,0xF0,0xF0, \
+                  0xF0,0xF0,0xF0,0xF0,0xF0,0xF0 }
+
+
+/*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
@@ -141,6 +199,9 @@ typedef struct _OSA_GRP {
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
+
+    U32   iid;                  /* Interface ID                      */
+
     int   debug;                /* Adapter in IFF_DEBUG mode         */
 
     } OSA_GRP;

@@ -79,106 +79,63 @@
 #endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 
+static const NED configuration_data[] = {
+    {   .code     = NODE_NED + NODE_SNIND,
+        .type     = NODE_TIODV,
+        .class    = NODE_CCOMM,
+        .devtype  = _001732,
+        .model    = _001,
+        .manufact = _HRC,
+        .plant    = _ZZ,
+        .seq.code = _SERIAL },
+
+    {   .code     = NODE_NED + NODE_SNIND,
+        .type     = NODE_TCU,
+        .devtype  = _001731,
+        .model    = _001,
+        .manufact = _HRC,
+        .plant    = _ZZ,
+        .seq.code = _SERIAL },
+
+    {   .code     = NODE_NED + NODE_TOKEN + NODE_SNIND,
+        .class    = NODE_CCOMM,
+        .devtype  = _001730,
+        .model    = _004,
+        .manufact = _HRC,
+        .plant    = _ZZ,
+        .seq.code = _SERIAL },
+
+    {   .code     = NODE_GNEQ }
+};
+
+
+static const NED node_data[] = {
+    {   .code     = NODE_NED,
+        .class    = NODE_CCOMM,
+        .devtype  = _001730,
+        .model    = _004,
+        .manufact = _HRC,
+        .plant    = _ZZ,
+        .seq.code = _SERIAL },
+
+    {   .code     = NODE_GNEQ }
+};
+       
+
+#define SII_SIZE 4
+
 static const BYTE sense_id_bytes[] = {
     0xFF,
     0x17, 0x31, 0x01,                   // Control Unit Type
     0x17, 0x32, 0x01,                   // Device Type
     0x00,
-    0x40, OSA_RCD,0x00, 0x80,           // Read Configuration Data CIW
-    0x41, OSA_SII,0x00, 0x04,           // Set Interface Identifier CIW
-    0x42, OSA_RNI,0x00, 0x40,           // Read Node Identifier CIW
+    0x40, OSA_RCD,0x00,                 // Read Configuration Data CIW
+                        sizeof(configuration_data),
+    0x41, OSA_SII,0x00, SII_SIZE,       // Set Interface Identifier CIW
+    0x42, OSA_RNI,0x00,                 // Read Node Identifier CIW
+                        sizeof(node_data),
     0x43, OSA_EQ, 0x10, 0x00,           // Establish Queues CIW
     0x44, OSA_AQ, 0x00, 0x00            // Activate Queues CIW
-};
-
-
-static const BYTE read_configuration_data_bytes[128] = {
-/*-------------------------------------------------------------------*/
-/* Device NED                                                        */
-/*-------------------------------------------------------------------*/
-    0xD0,                               // 0:      NED code
-    0x01,                               // 1:      Type  (X'01' = I/O Device)
-    0x06,                               // 2:      Class (X'06' = Comms)
-    0x00,                               // 3:      (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF2,      // 4-9:    Type  ('001732')
-    0xF0,0xF0,0xF1,                     // 10-12:  Model ('001')
-    0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
-    0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00,0x00,                          // 30-31: Tag (x'ccua', cc = chpid, ua=unit address)
-/*-------------------------------------------------------------------*/
-/* Control Unit NED                                                  */
-/*-------------------------------------------------------------------*/
-    0xD0,                               // 32:     NED code
-    0x02,                               // 33:     Type  (X'02' = Control Unit)
-    0x00,                               // 34:     Class (X'00' = N/A)
-    0x00,                               // 35:     (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF1,      // 36-41:  Type  ('001731')
-    0xF0,0xF0,0xF1,                     // 42-44:  Model ('001')
-    0xC8,0xD9,0xC3,                     // 45-47:  Manufacturer ('HRC' = Hercules)
-    0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00,0x00,                          // 62-63:  Tag cuaddr
-/*-------------------------------------------------------------------*/
-/* Token NED                                                         */
-/*-------------------------------------------------------------------*/
-    0xF0,                               // 64:     NED code
-    0x00,                               // 65:     Type  (X'00' = N/A)
-    0x00,                               // 66:     Class (X'00' = N/A)
-    0x00,                               // 67:     (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 68-73:  Type  ('001730')
-    0xF0,0xF0,0xF4,                     // 74-76:  Model ('004')
-    0xC8,0xD9,0xC3,                     // 77-79:  Manufacturer ('HRC' = Hercules)
-    0xE9,0xE9,                          // 80-81:  Plant of Manufacture ('ZZ' = Herc)
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 82-93:  Sequence Number
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00,0x00,                          // 94-95:  Tag cuaddr
-/*-------------------------------------------------------------------*/
-/* General NEQ                                                       */
-/*-------------------------------------------------------------------*/
-    0x80,                               // 96:     NED code
-    0x00,                               // 97:     ?
-    0x00,0x00,                          // 98-99:  ?
-    0x00,                               // 100:    ?
-    0x00,0x00,0x00,                     // 101-103:?
-    0x00,                               // 104:    ?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 105-125:?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
-    0x00,0x00                           // 126-127:?
-};
-
-
-static const BYTE read_nodeid_bytes[64] = {
-/*-------------------------------------------------------------------*/
-/* ND                                                                */
-/*-------------------------------------------------------------------*/
-    0x00,                               // 0:      ND type
-    0x00,                               // 1:      (Reserved)
-    0x06,                               // 2:      Class (X'06' = Comms)
-    0x00,                               // 3:      (Reserved)
-    0xF0,0xF0,0xF1,0xF7,0xF3,0xF0,      // 4-9:    Type  ('001730')
-    0xF0,0xF0,0xF4,                     // 10-12:  Model ('004')
-    0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
-    0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
-    0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
-    0x00,0x00,                          // 30-31:  Tag cuaddr
-/*-------------------------------------------------------------------*/
-/* NQ                                                                */
-/*-------------------------------------------------------------------*/
-    0x00,                               // 32:     NQ          
-    0x00,                               // 33:     ?
-    0x00,0x00,                          // 34-35:  ?
-    0x00,                               // 36:     ?
-    0x00,0x00,0x00,                     // 37-39:  ?
-    0x00,                               // 40:     ?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 41-61:  ?
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00, //
-    0x00,0x00                           // 62:63:  ?
 };
 
 
@@ -1419,30 +1376,34 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
+    {
+        NED *rcd = (NED*)iobuf;
 
         /* Copy configuration data from tempate */
-        memcpy (iobuf, read_configuration_data_bytes, sizeof(read_configuration_data_bytes));
+        memcpy (iobuf, configuration_data, sizeof(configuration_data));
 
         /* Insert chpid & unit address in the device ned */
-        iobuf[30] = (dev->devnum >> 8) & 0xff;
-        iobuf[31] = (dev->devnum) & 0xff;
+        STORE_HW((rcd+0)->tag,dev->devnum);
+        
+        /* Use unit address of OSA read device as control unit address */
+        STORE_HW((rcd+1)->tag,dev->group->memdev[OSA_READ_DEVICE]->devnum);
 
         /* Use unit address of OSA read device as control unit address */
-        iobuf[62] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
-        iobuf[63] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
+        STORE_HW((rcd+2)->tag,dev->group->memdev[OSA_READ_DEVICE]->devnum);
 
         /* Use unit address of OSA read device as control unit address */
-        iobuf[94] = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xff;
-        iobuf[95] = (dev->group->memdev[OSA_READ_DEVICE]->devnum) & 0xff;
+        (rcd+3)->class = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xFF;
+        (rcd+3)->ua = dev->group->memdev[OSA_READ_DEVICE]->devnum & 0xFF;
 
         /* Calculate residual byte count */
-        num = (count < sizeof(read_configuration_data_bytes) ? count : sizeof(read_configuration_data_bytes));
+        num = (count < sizeof(configuration_data) ? count : sizeof(configuration_data));
         *residual = count - num;
-        if (count < sizeof(read_configuration_data_bytes)) *more = 1;
+        if (count < sizeof(configuration_data)) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
 
     case OSA_SII:
@@ -1450,41 +1411,46 @@ int num;                                /* Number of bytes to move   */
     /* SET INTERFACE IDENTIFIER                                      */
     /*---------------------------------------------------------------*/
 // DUMP("SID",iobuf,count);
-#if 0
+    {
+        FETCH_FW(grp->iid,iobuf);
+
         /* Calculate residual byte count */
-        num = (count < 4) ? count : 4;
+        num = (count < SII_SIZE) ? count : SII_SIZE;
         *residual = count - num;
-        if (count < dev->numsense) *more = 1;
-#endif
+        if (count < SII_SIZE) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
 
     case OSA_RNI:   
     /*---------------------------------------------------------------*/
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
+    {
+        NED *rni = (NED*)iobuf;
 
         /* Copy configuration data from tempate */
-        memcpy (iobuf, read_nodeid_bytes, sizeof(read_nodeid_bytes));
+        memcpy (iobuf, node_data, sizeof(node_data));
+
+        /* Insert chpid & unit address in the device ned */
+        STORE_HW((rni+0)->tag,dev->devnum);
 
         /* Use unit address of OSA read device as control unit address */
-        iobuf[3] = (dev->devnum >> 8) & 0xff;
-
-        /* Insert chpid & unit address in the ND */
-        iobuf[30] = (dev->devnum >> 8) & 0xff;
-        iobuf[31] = (dev->devnum) & 0xff;
+        (rni+1)->class = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xFF;
+        (rni+1)->ua = dev->group->memdev[OSA_READ_DEVICE]->devnum & 0xFF;
 
         /* Calculate residual byte count */
-        num = (count < sizeof(read_nodeid_bytes) ? count : sizeof(read_configuration_data_bytes));
+        num = (count < sizeof(node_data) ? count : sizeof(node_data));
         *residual = count - num;
-        if (count < sizeof(read_nodeid_bytes)) *more = 1;
+        if (count < sizeof(node_data)) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
 
     case OSA_EQ:
