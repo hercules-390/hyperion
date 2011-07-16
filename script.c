@@ -229,14 +229,15 @@ BYTE    c;                              /* Work area for sscanf      */
 char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */
 int     errorcount = 0;
-int     shell_flg;                      /* indicate it is has a shell 
+#if defined(HAVE_REXX)
+int     shell_flg = FALSE;              /* indicate it is has a shell 
                                            path specified            */
+#endif /*defined(HAVE_REXX)*/
 
     /* Open the base configuration file */
     hostpath(fname, cfg_name, sizeof(fname));
 
     inc_level = 0;
-    shell_flg = FALSE;
 #if defined(_MSVC_)
     fopen_s( &inc_fp[inc_level], fname, "r");
 #else
