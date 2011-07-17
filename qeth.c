@@ -46,7 +46,7 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-// #define QETH_DEBUG
+#define QETH_DEBUG
 
 #if defined(DEBUG) && !defined(QETH_DEBUG)
  #define QETH_DEBUG
@@ -80,45 +80,52 @@
 
 
 static const NED configuration_data[] = {
-    {   .code     = NODE_NED + NODE_SNIND,
-        .type     = NODE_TIODV,
-        .class    = NODE_CCOMM,
-        .devtype  = _001732,
-        .model    = _001,
-        .manufact = _HRC,
-        .plant    = _ZZ,
-        .seq.code = _SERIAL },
+    { /* .code     = */ NODE_NED + NODE_SNIND,
+      /* .type     = */ NODE_TIODV,
+      /* .class    = */ NODE_CCOMM,
+      /* (.ua)     = */ 0,
+      /* .devtype  = */ _001732,
+      /* .model    = */ _001,
+      /* .manufact = */ _HRC,
+      /* .plant    = */ _ZZ,
+      /* .seq.code = */ _SERIAL },
 
-    {   .code     = NODE_NED + NODE_SNIND,
-        .type     = NODE_TCU,
-        .devtype  = _001731,
-        .model    = _001,
-        .manufact = _HRC,
-        .plant    = _ZZ,
-        .seq.code = _SERIAL },
+    { /* .code     = */ NODE_NED + NODE_SNIND,
+      /* .type     = */ NODE_TCU,
+      /* (.class)  = */ 0,
+      /* (.ua)     = */ 0,
+      /* .devtype  = */ _001731,
+      /* .model    = */ _001,
+      /* .manufact = */ _HRC,
+      /* .plant    = */ _ZZ,
+      /* .seq.code = */ _SERIAL },
 
-    {   .code     = NODE_NED + NODE_TOKEN + NODE_SNIND,
-        .class    = NODE_CCOMM,
-        .devtype  = _001730,
-        .model    = _004,
-        .manufact = _HRC,
-        .plant    = _ZZ,
-        .seq.code = _SERIAL },
+    { /* .code     = */ NODE_NED + NODE_TOKEN + NODE_SNIND,
+      /* (.type)   = */ 0,
+      /* .class    = */ NODE_CCOMM,
+      /* (.ua)     = */ 0,
+      /* .devtype  = */ _001730,
+      /* .model    = */ _004,
+      /* .manufact = */ _HRC,
+      /* .plant    = */ _ZZ,
+      /* .seq.code = */ _SERIAL },
 
-    {   .code     = NODE_GNEQ }
+    { /* .code     = */ NODE_GNEQ }
 };
 
 
 static const NED node_data[] = {
-    {   .code     = NODE_NED,
-        .class    = NODE_CCOMM,
-        .devtype  = _001730,
-        .model    = _004,
-        .manufact = _HRC,
-        .plant    = _ZZ,
-        .seq.code = _SERIAL },
+    { /* .code     = */ NODE_NED,
+      /* (.type)   = */ 0,
+      /* .class    = */ NODE_CCOMM,
+      /* (.ua)     = */ 0,
+      /* .devtype  = */ _001730,
+      /* .model    = */ _004,
+      /* .manufact = */ _HRC,
+      /* .plant    = */ _ZZ,
+      /* .seq.code = */ _SERIAL },
 
-    {   .code     = NODE_GNEQ }
+    { /* .code     = */ NODE_GNEQ }
 };
        
 
