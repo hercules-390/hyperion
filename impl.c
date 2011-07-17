@@ -364,7 +364,7 @@ int     dll_count;                      /* index into array          */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 
     /* Initialize Guest System Information */
-    init_gsysinfo();
+    get_gsysinfo();
 
 #if defined (_MSVC_)
     VERIFY( VirtualLock( &sysblk, sizeof( SYSBLK ) ) );

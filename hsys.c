@@ -17,7 +17,6 @@
 
 DLL_EXPORT SYSBLK sysblk;
 
-DLL_EXPORT GSYSINFO gsysinfo;
 
 #if defined(EXTERNALGUI)
 DLL_EXPORT int extgui = 0;

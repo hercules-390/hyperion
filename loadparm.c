@@ -31,6 +31,27 @@ static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0
                                           /*  Z    Z           */
 static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
 
+static GSYSINFO gsysinfo;
+/*                                                          defaults
+                                      = { { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // loadparm
+                                          { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 }, // lparname
+                                          { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,   // manufact
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 },
+                                          { 0xE9,0xE9,0x40,0x40 },                     // plant
+                                          { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,   // model
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 },
+                                          { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9,   // modelcapa
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 },
+                                          { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,   // modelperm
+                                            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 },
+                                          { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,   // modeltemp
+                                            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 },
+                                          { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // systype
+                                          { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // sysname
+                                          { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // sysplex
+                                        };
+*/
+
 // ebcdic_to_stringz_allow_return returns a null terminated string allowing
 //                                embedded spaces
 #define ebcdic_to_stringz_allow_return(_field) \
@@ -98,18 +119,26 @@ static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
 }
 
 
-void init_gsysinfo(void)
+GSYSINFO *get_gsysinfo(void)
 {
-    memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
+    static init_struct = TRUE;
 
-    memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
-    memcpy(gsysinfo.manufact,  default_manufact,    sizeof(gsysinfo.manufact));
-    memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
-    memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
-    memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
+    if ( init_struct )
+    {
+        init_struct = FALSE;
+        memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
 
-    bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
-    bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
+        memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
+        memcpy(gsysinfo.manufact,  default_manufact,    sizeof(gsysinfo.manufact));
+        memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
+        memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
+        memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
+
+        bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
+        bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
+    }
+
+    return( &gsysinfo );
 }
 
 
