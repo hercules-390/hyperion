@@ -1,4 +1,5 @@
 /* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2009                  */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              SCLP / MSSF loadparm                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -30,6 +31,8 @@ static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0
                                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
                                           /*  Z    Z           */
 static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
+
+static int gsysinfo_init_flg = FALSE;
 
 static GSYSINFO gsysinfo;
 /*                                                          defaults
@@ -118,14 +121,16 @@ static GSYSINFO gsysinfo;
     return n; \
 }
 
+/*-------------------------------------------------------------------*/
+/* Subroutine to initialize (when NULL dest is passed) or retrieve   */
+/* Guest System Information                                          */
+/*-------------------------------------------------------------------*/
 
-GSYSINFO *get_gsysinfo(void)
+void get_gsysinfo(GSYSINFO *dest)
 {
-    static init_struct = TRUE;
-
-    if ( init_struct )
+    if ( dest == NULL )
     {
-        init_struct = FALSE;
+        gsysinfo_init_flg = TRUE;
         memset(&gsysinfo, 0x40, sizeof(GSYSINFO));
 
         memcpy(gsysinfo.lparname,  dflt_lparname,       sizeof(gsysinfo.lparname));
@@ -137,8 +142,9 @@ GSYSINFO *get_gsysinfo(void)
         bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
         bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
     }
-
-    return( &gsysinfo );
+    else
+        memcpy( dest, &gsysinfo, sizeof(GSYSINFO) );
+    return;
 }
 
 
@@ -217,18 +223,27 @@ int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
 
 void set_loadparm(char *name)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     set_static(gsysinfo.loadparm, name);
 }
 
 
 void get_loadparm(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.loadparm, sizeof(gsysinfo.loadparm));
 }
 
 
 char *str_loadparm()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_allow_return(gsysinfo.loadparm);
 }
 
@@ -241,12 +256,18 @@ char *str_loadparm()
 
 void set_lparname(char *name)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     set_static(gsysinfo.lparname, name);
 }
 
 
 void get_lparname(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.lparname, sizeof(gsysinfo.lparname));
 }
 
@@ -254,6 +275,9 @@ void get_lparname(BYTE *dest)
 LOADPARM_DLL_IMPORT
 char *str_lparname()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.lparname);
 }
 
@@ -266,6 +290,8 @@ char *str_lparname()
 
 int set_manufacturer(char *name)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
 
     set_stsi_and_return(gsysinfo.manufact, name, default_manufact);
 }
@@ -273,12 +299,18 @@ int set_manufacturer(char *name)
 
 void get_manufacturer(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.manufact, sizeof(gsysinfo.manufact));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_manufacturer()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.manufact);
 }
 
@@ -290,18 +322,26 @@ char *str_manufacturer()
 
 int set_plant(char *name)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
 
     set_stsi_and_return(gsysinfo.plant, name, default_plant);
 }
 
 void get_plant(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.plant, sizeof(gsysinfo.plant));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_plant()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.plant);
 }
 
@@ -324,6 +364,9 @@ char *str_plant()
 
 int set_model(char *m1, char *m2, char *m3, char *m4)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     /* Model may be binary zero */
     if ( m1 != NULL && m1[0] != '*' )
     {
@@ -383,58 +426,84 @@ char **str_model()
     static char p_model[sizeof(gsysinfo.modelperm)+1];
     static char t_model[sizeof(gsysinfo.modeltemp)+1];
     static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
-    int rc;
+
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
 
     bzero(h_model,sizeof(h_model));
     bzero(c_model,sizeof(c_model));
     bzero(p_model,sizeof(p_model));
     bzero(t_model,sizeof(t_model));
 
-    rc = copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
-    rc = copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
-    rc = copy_ebcdic_to_stringz(p_model, sizeof(p_model), gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
-    rc = copy_ebcdic_to_stringz(t_model, sizeof(t_model), gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
+    (void)copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
+    (void)copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
+    (void)copy_ebcdic_to_stringz(p_model, sizeof(p_model), gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
+    (void)copy_ebcdic_to_stringz(t_model, sizeof(t_model), gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
 
     return models;
 }
 
 void get_model(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.model, sizeof(gsysinfo.model));
 }
 
 void get_modelcapa(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
 }
 
 void get_modelperm(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
 }
 
 void get_modeltemp(BYTE *dest)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dest, gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
 }
 
 char *str_modelhard()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.model);
 }
 
 char *str_modelcapa()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.modelcapa);
 }
 
 char *str_modelperm()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.modelperm);
 }
 
 char *str_modeltemp()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.modeltemp);
 }
 
@@ -447,17 +516,26 @@ char *str_modeltemp()
 
 void set_systype(BYTE *src)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(gsysinfo.systype, src, sizeof(gsysinfo.systype));
 }
 
 void get_systype(BYTE *dst)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dst, gsysinfo.systype, sizeof(gsysinfo.systype));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_systype()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.systype);
 }
 
@@ -470,17 +548,26 @@ char *str_systype()
 
 void set_sysname(BYTE *src)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(gsysinfo.sysname, src, sizeof(gsysinfo.sysname));
 }
 
 void get_sysname(BYTE *dst)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dst, gsysinfo.sysname, sizeof(gsysinfo.sysname));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_sysname()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.sysname);
 }
 
@@ -493,17 +580,26 @@ char *str_sysname()
 
 void set_sysplex(BYTE *src)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(gsysinfo.sysplex, src, sizeof(gsysinfo.sysplex));
 }
 
 void get_sysplex(BYTE *dst)
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     memcpy(dst, gsysinfo.sysplex, sizeof(gsysinfo.sysplex));
 }
 
 LOADPARM_DLL_IMPORT
 char *str_sysplex()
 {
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
     ebcdic_to_stringz_return(gsysinfo.sysplex);
 }
 

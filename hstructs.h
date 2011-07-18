@@ -377,7 +377,7 @@ struct ZPBLK {
 // #endif /*defined(FEATURE_REGION_RELOCATE)*/
 
 /*-------------------------------------------------------------------*/
-/* Guest System Information block                                    */
+/* Guest System Information block   EBCDIC DATA                      */
 /*-------------------------------------------------------------------*/
 struct GSYSINFO {
         BYTE    loadparm[8];

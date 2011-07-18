@@ -399,7 +399,7 @@ char *http_get_port();
 char *http_get_portauth();
 
 /* Functions in module loadparm.c */
-LOADPARM_DLL_IMPORT GSYSINFO *get_gsysinfo(void);
+LOADPARM_DLL_IMPORT void get_gsysinfo(GSYSINFO *gsysinfo);
 void set_loadparm(char *name);
 void get_loadparm(BYTE *dest);
 char *str_loadparm();
