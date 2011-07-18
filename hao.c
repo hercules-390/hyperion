@@ -36,6 +36,7 @@
 /*---------------------------------------------------------------------------*/
 /* local variables                                                           */
 /*---------------------------------------------------------------------------*/
+static TID      haotid;                         /* Herc Auto-Oper thread-id  */
 static LOCK     ao_lock;
 static regex_t  ao_preg[HAO_MAXRULE];
 static char    *ao_cmd[HAO_MAXRULE];
@@ -83,7 +84,7 @@ static int hao_initialize(void)
   memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
 
   /* Start message monitoring thread */
-  rc = create_thread (&sysblk.haotid, JOINABLE, hao_thread, NULL, "hao_thread");
+  rc = create_thread (&haotid, JOINABLE, hao_thread, NULL, "hao_thread");
   if(rc)
   {
     i = FALSE;
@@ -110,7 +111,7 @@ DLL_EXPORT void hao_command(char *cmd)
   char work2[HAO_WKLEN];
 
   /* initialise hao */
-  if(!sysblk.haotid && !hao_initialize())
+  if(!haotid && !hao_initialize())
       WRMSG(HHC01404, "S");
 
   /* copy and strip spaces */

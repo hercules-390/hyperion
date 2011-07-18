@@ -558,9 +558,6 @@ struct SYSBLK {
         int     panrate;                /* Panel refresh rate        */
         int     timerint;               /* microsecs timer interval  */
         char   *pantitle;               /* Alt console panel title   */
-#if defined(OPTION_HAO)
-        TID     haotid;                 /* Herc Auto-Oper thread-id  */
-#endif /* defined(OPTION_HAO) */
 #if defined( OPTION_SCSI_TAPE )
         /* Access to all SCSI fields controlled by sysblk.stape_lock */
         LOCK    stape_lock;             /* LOCK for all SCSI fields  */
