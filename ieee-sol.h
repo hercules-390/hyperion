@@ -1,4 +1,4 @@
-/* IEEE-SOL.H  (c) Copyright Jeff Savit, 2007-2009                   */
+/* IEEE-SOL.H  (c) Copyright Jeff Savit, 2007-2011                   */
 /*              Hercules IEEE floating point definitions for Solaris */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

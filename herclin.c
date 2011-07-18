@@ -1,4 +1,4 @@
-/* HERCLIN.C     (c) Copyright Roger Bowler, 2005-2009               */
+/* HERCLIN.C     (c) Copyright Roger Bowler, 2005-2011               */
 /*              Hercules Interface Control Program                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

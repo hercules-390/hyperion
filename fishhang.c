@@ -1,4 +1,4 @@
-/* FISHHANG.C   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/* FISHHANG.C   (c) Copyright "Fish" (David B. Trout), 2002-2011     */
 /*              Hercules verify/debug proper LOCK handling...        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

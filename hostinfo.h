@@ -1,5 +1,5 @@
-/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/* HOSTINFO.H   (c) Copyright TurboHercules, SAS 2010-2011           */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*            Header file contains host system information           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

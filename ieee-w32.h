@@ -1,4 +1,4 @@
-/* IEEE-W32.H  (c) Copyright Greg Smith, 2002-2009                   */
+/* IEEE-W32.H  (c) Copyright Greg Smith, 2002-2011                   */
 /*              Hercules IEEE floating point definitions for Windows */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

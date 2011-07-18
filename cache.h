@@ -1,4 +1,4 @@
-/* CACHE.H    (c)Copyright Greg Smith, 2002-2009                     */
+/* CACHE.H    (c)Copyright Greg Smith, 2002-2011                     */
 /*            Buffer Cache Manager                                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

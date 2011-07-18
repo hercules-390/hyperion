@@ -1,4 +1,4 @@
-/* XSTORE.C     (c) Copyright Jan Jaeger, 1999-2009                  */
+/* XSTORE.C     (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Expanded storage related instructions                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

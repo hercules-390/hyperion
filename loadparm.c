@@ -1,4 +1,4 @@
-/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2009                  */
+/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2011                  */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              SCLP / MSSF loadparm                                 */
 /*                                                                   */
