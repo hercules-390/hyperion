@@ -62,14 +62,12 @@ int syntax(char *pgm)
 /*-------------------------------------------------------------------*/
 /* Newline appended to message                                       */
 void snap(char *msg, void *data, int len) {
-int    x;
-
     if (msg != NULL)
         fprintf(stderr, "%s\n", msg);
     data_dump(data, len);
     if (pausesnap) {
         fprintf(stderr, MSG( HHC02601, "I" ) );
-        x = getc(stdin);
+        (void)getc(stdin);
     }
 }
 
@@ -150,7 +148,6 @@ int decomptrk(
 {
 #if defined( HAVE_LIBZ ) || defined( CCKD_BZIP2 )
 int             rc;                     /* Return code               */
-BYTE           *bufp;                   /* Buffer pointer            */
 #endif
 unsigned int    bufl;                   /* Buffer length             */
 #ifdef CCKD_BZIP2
@@ -175,7 +172,6 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
 
 #ifdef HAVE_LIBZ
     case CCKD_COMPRESS_ZLIB:
-        bufp = (BYTE *)obuf;
         memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         bufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = uncompress(&obuf[CKDDASD_TRKHDR_SIZE],
@@ -196,7 +192,6 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
 
 #ifdef CCKD_BZIP2
     case CCKD_COMPRESS_BZIP2:
-        bufp = obuf;
         memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         ubufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress (
@@ -353,7 +348,6 @@ int main (int argc, char *argv[])
 {
 char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char           *pgmpath;                /* prog path in host format  */
 char            msgbuf[512];            /* message build work area   */
 int             cckd_diag_rc = 0;       /* Program return code       */
 char           *fn;                     /* File name                 */
@@ -387,7 +381,6 @@ int             n, trk=0, l1ndx=0, l2ndx=0;
 off_t           l2taboff=0;             /* offset to assoc. L2 table */
 int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 int             heads=0;                /* Heads per cylinder        */
-int             blks;                   /* Number fba blocks         */
 off_t           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
 char            pathname[MAX_PATH];     /* file path in host format  */
@@ -399,7 +392,6 @@ char           *strtok_str = NULL;
         if ( strlen(argv[0]) == 0 )
         {
             pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
         }
         else
         {
@@ -413,13 +405,11 @@ char           *strtok_str = NULL;
 #if !defined( _MSVC_ )
             strncpy( path, argv[0], sizeof(path) );
 #endif
-            pgmpath = strdup( dirname( path  ));
         }
     }
     else
     {
-            pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
+        pgmname = strdup( UTILITY_NAME );
     }
 
     pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
@@ -556,15 +546,8 @@ char           *strtok_str = NULL;
             fprintf(stderr,
                 "\nHHC90000D DBG: %s device has %d heads/cylinder\n",
                 ckd->name, heads);
-    } else {
-        blks  = 0;
-      #if 0 /* cdevhdr is uninitialized and blks is never referenced... */
-        blks  = ((U32)(cdevhdr.cyls[0]) << 24)
-              | ((U32)(cdevhdr.cyls[2]) << 16)
-              | ((U32)(cdevhdr.cyls[1]) << 8)
-              | (U32)(cdevhdr.cyls[0]);
-      #endif
-    }
+    } 
+
 
     /*---------------------------------------------------------------*/
     /* display CDEVHDR - follows DEVHDR                              */

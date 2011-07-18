@@ -58,7 +58,6 @@ int main (int argc, char *argv[])
 {
 char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char           *pgmpath;                /* prog path in host format  */
 char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
@@ -88,7 +87,6 @@ char           *strtok_str = NULL;
         if ( strlen(argv[0]) == 0 )
         {
             pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
         }
         else
         {
@@ -102,13 +100,11 @@ char           *strtok_str = NULL;
 #if !defined( _MSVC_ )
             strncpy( path, argv[0], sizeof(path) );
 #endif
-            pgmpath = strdup( dirname( path  ));
         }
     }
     else
     {
-            pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
+        pgmname = strdup( UTILITY_NAME );
     }
 
     pgm = strtok_r( strdup(pgmname), ".", &strtok_str);

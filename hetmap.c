@@ -215,7 +215,6 @@ static SInt32   max_bytes_dsply = dmax_bytes_dsply;
 int
 main( int argc, char *argv[] )
 {
-    Boolean lProcStdLbl = FALSE;
     HETB *hetb;
     FETB *fetb;
     char *i_filename;
@@ -542,16 +541,13 @@ main( int argc, char *argv[] )
                     || memcmp ( gStdLblBuffer, "UHL", 3 ) == 0
                     || memcmp ( gStdLblBuffer, "UTL", 3 ) == 0 )
                 {
-                    if ( Print_Standard_Labels (  ) )
-                        lProcStdLbl = TRUE;
-                    else
+                    if ( !Print_Standard_Labels (  ) )
                     {
                         if ( gBlkCount <= 10 && ( gBlkCount == 1 || ( gBlkCount > 1 && lResidue > bytes_per_line ) ) )
                         {
                             gLenPrtd = ( gBlkCount == 1 ? ( gLength <= max_bytes_dsply ? gLength : max_bytes_dsply ) :
                                         ( gLength <= lResidue ? gLength : lResidue ) );
                             lResidue -= Print_Block_Data ( gLenPrtd );
-                            lProcStdLbl = FALSE;
                         }
                     }
                 }
@@ -562,7 +558,6 @@ main( int argc, char *argv[] )
                         gLenPrtd = ( gBlkCount == 1 ? ( gLength <= max_bytes_dsply ? gLength : max_bytes_dsply ) :
                                     ( gLength <= lResidue ? gLength : lResidue ) );
                         lResidue -= Print_Block_Data ( gLenPrtd );
-                        lProcStdLbl = FALSE;
                     }
                 }
             }
@@ -573,7 +568,6 @@ main( int argc, char *argv[] )
                     gLenPrtd = ( gBlkCount == 1 ? ( gLength <= max_bytes_dsply ? gLength : max_bytes_dsply ) :
                                 ( gLength <= lResidue ? gLength : lResidue ) );
                     lResidue -= Print_Block_Data ( gLenPrtd );
-                    lProcStdLbl = FALSE;
                 }
             }
 
@@ -806,8 +800,6 @@ Print_Standard_Labels (void )
                     ;                               /* (74-76) Reserved                                                 */
                     char    ebcnt[5];               /* (77-80) extended block count (blockcnt / 1000000)(EOF/EOV)       */
 
-                    UInt64  iebcnt  = 0;            /* total block count                                                */
-
                     /*       1...5...10...15...20...25...30...35...40...45...50...55...60...65...70...75...80
                      *       HDR1DSNAME----------|afvst|afs|fsq|---|-|cdate|edate||bcnt-|syscode-----|RR|ebct
                      *       {EOF}                                 n/a         fsec^
@@ -833,7 +825,6 @@ Print_Standard_Labels (void )
                     {
                         for ( i = 0; i < 4; i++ ) { if ( !isdigit( ebcnt[i] ) ) ebcnt[i] = '0'; }
                         ebcnt[4] = '\0';
-                        iebcnt = ( (UInt64)atol( ebcnt ) * 1000000 ) + (UInt64)atol( bcnt );
                     }
                     else
                         if ( atoi( lLblNum ) == 1 )

@@ -604,12 +604,10 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
 {
     int     rsz,rc;
     FILE    *ifile;
-    int     maxsize;
     unsigned char bfr[65536];
     uint16_t    rlbfr;
     struct  RECS *recs;
 
-    maxsize=65536;
     ifile=fopen(infile,"r");
     if(ifile==NULL)
     {
@@ -764,7 +762,6 @@ int process_entry(struct options *opts,char *orec,int recno)
     char    *endptr;
     int     reccount;
     size_t  filesz;
-    int     rc;
     struct  TAPE_BLOCKS *blks;
     struct  FST_BLOCK *fstb;
     struct  stat stt;
@@ -900,8 +897,8 @@ int process_entry(struct options *opts,char *orec,int recno)
         free_blocks(blks);
         return 1;
     }
-    rc=write_tape_block_data(opts,(unsigned char *)fstb,sizeof(struct FST_BLOCK));
-    rc=write_tape_blocks(opts,blks);
+    (void)write_tape_block_data(opts,(unsigned char *)fstb,sizeof(struct FST_BLOCK));
+    (void)write_tape_blocks(opts,blks);
 
 
     free(rec);
@@ -913,7 +910,6 @@ int process_entry(struct options *opts,char *orec,int recno)
 /* Process the DUMP control file */
 int process_procfile(struct options *opts)
 {
-    int     rc;
     FILE    *pfile;
     char    recbfr[65536];
     char    *rec;
@@ -930,8 +926,7 @@ int process_procfile(struct options *opts)
     {
         recno++;
         rec[strlen(rec)-1]=0;
-        rc=process_entry(opts,rec,recno);
-        if(rc!=0) 
+        if ( process_entry(opts,rec,recno) != 0 )
         {
             fprintf(stderr,"*** Entry ignored\n\n");
             errcount++;
@@ -942,25 +937,23 @@ int process_procfile(struct options *opts)
     {
         fprintf(stderr,"%d errors encountered\n",errcount);
     }
-    rc=write_tape_mark(opts);
-    rc=write_tape_mark(opts);
+    write_tape_mark(opts);
+    write_tape_mark(opts);
     return errcount?1:0;
 }
 
 /* Open the tape file for output */
 int open_tapefile(struct options *opts,int w)
 {
-    int rc;
-
     if(w)
     {
-        rc=het_open(&opts->hetfd,opts->tapefile,HETOPEN_CREATE);
-        rc=het_cntl(opts->hetfd,HETCNTL_SET|HETCNTL_COMPRESS,1);
+        het_open(&opts->hetfd,opts->tapefile,HETOPEN_CREATE);
+        het_cntl(opts->hetfd,HETCNTL_SET|HETCNTL_COMPRESS,1);
     }
     else
     {
-        rc=het_open(&opts->hetfd,opts->tapefile,HETOPEN_READONLY);
-        rc=het_cntl(opts->hetfd,HETCNTL_SET|HETCNTL_DECOMPRESS,1);
+        het_open(&opts->hetfd,opts->tapefile,HETOPEN_READONLY);
+        het_cntl(opts->hetfd,HETCNTL_SET|HETCNTL_DECOMPRESS,1);
     }
     return 0;
 }
@@ -996,7 +989,6 @@ int main(int argc,char **argv)
     struct options  opts;
     char           *pgmname;                /* prog name in host format  */
     char           *pgm;                    /* less any extension (.ext) */
-    char           *pgmpath;                /* prog path in host format  */
     char            msgbuf[512];            /* message build work area   */
     char           *strtok_str = NULL;
 
@@ -1006,7 +998,6 @@ int main(int argc,char **argv)
         if ( strlen(argv[0]) == 0 )
         {
             pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
         }
         else
         {
@@ -1020,13 +1011,11 @@ int main(int argc,char **argv)
 #if !defined( _MSVC_ )
             strncpy( path, argv[0], sizeof(path) );
 #endif
-            pgmpath = strdup( dirname( path  ));
         }
     }
     else
     {
-            pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
+        pgmname = strdup( UTILITY_NAME );
     }
 
     pgm = strtok_r( strdup(pgmname), ".", &strtok_str);

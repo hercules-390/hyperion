@@ -56,11 +56,9 @@ int main (int argc, char *argv[])
 {
 char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char           *pgmpath;                /* prog path in host format  */
 char            msgbuf[512];            /* message build work area   */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
-int             prevlen;                /* Previous block length     */
 char           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 int             fileno;                 /* Tape file number          */
@@ -80,7 +78,6 @@ char           *strtok_str = NULL;
         if ( strlen(argv[0]) == 0 )
         {
             pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
         }
         else
         {
@@ -94,13 +91,11 @@ char           *strtok_str = NULL;
 #if !defined( _MSVC_ )
             strncpy( path, argv[0], sizeof(path) );
 #endif
-            pgmpath = strdup( dirname( path  ));
         }
     }
     else
     {
-            pgmname = strdup( UTILITY_NAME );
-            pgmpath = strdup( "" );
+        pgmname = strdup( UTILITY_NAME );
     }
 
     pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
@@ -151,8 +146,6 @@ char           *strtok_str = NULL;
             }
         }
 #endif /*EXTERNALGUI*/
-        /* Save previous block length */
-        prevlen = len;
 
         /* Read a block from the tape */
         len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));

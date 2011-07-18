@@ -156,7 +156,6 @@ HDLSHD *shdent;
 DLL_EXPORT char *hdl_setpath(char *path, int flag)
 {
     char    pathname[MAX_PATH];         /* pathname conversion */
-    int     def = FALSE;
 
     if (path == NULL)
         return hdl_modpath;             /* return module path to caller */
@@ -184,8 +183,6 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
                 return hdl_modpath;
             }
         }
-        else
-            def = TRUE;
     }
     else
     {
