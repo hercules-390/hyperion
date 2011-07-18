@@ -1,4 +1,4 @@
-/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*              ESA/390 External Interrupt and Timer                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

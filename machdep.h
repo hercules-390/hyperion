@@ -1,4 +1,4 @@
-/* MACHDEP.H    (c) Copyright Greg Smith, 2001-2010                  */
+/* MACHDEP.H    (c) Copyright Greg Smith, 2001-2011                  */
 /*              Hercules machine specific code                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

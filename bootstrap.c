@@ -1,5 +1,5 @@
-/* BOOTSTRAP.C  (c) Copyright Ivan Warren, 2003-2010                 */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/* BOOTSTRAP.C  (c) Copyright Ivan Warren, 2003-2011                 */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2011     */
 /*              Hercules executable main module                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

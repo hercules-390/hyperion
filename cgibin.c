@@ -1,4 +1,4 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2010                   */
+/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2011                   */
 /*              HTTP cgi-bin routines                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

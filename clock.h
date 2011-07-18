@@ -1,4 +1,4 @@
-/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2010                  */
+/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              TOD Clock functions                                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

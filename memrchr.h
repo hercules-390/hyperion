@@ -1,4 +1,4 @@
-/* MEMRCHR.H    (c) Copyright Roger Bowler, 2006-2010                */
+/* MEMRCHR.H    (c) Copyright Roger Bowler, 2006-2011                */
 /*              Hercules Right to Left memory scan                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

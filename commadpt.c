@@ -1,4 +1,4 @@
-/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2010       */
+/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2011       */
 /*              (c) Copyright, MHP, 2007-2008 (see below)            */
 /*              Hercules Communication Line Driver                   */
 /*                                                                   */

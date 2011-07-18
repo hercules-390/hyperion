@@ -1,4 +1,4 @@
-/* LINKLIST.H   (c) Copyright Roger Bowler, 2006-2010                */
+/* LINKLIST.H   (c) Copyright Roger Bowler, 2006-2011                */
 /*              linked-list macros                                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

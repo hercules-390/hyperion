@@ -1,4 +1,4 @@
-/* HERC_GETOPT.H (c) Copyright Roger Bowler, 2006-2010               */
+/* HERC_GETOPT.H (c) Copyright Roger Bowler, 2006-2011               */
 /*              Hercules getopt interface                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

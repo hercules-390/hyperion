@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Tape Device Handler                         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

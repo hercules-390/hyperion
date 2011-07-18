@@ -1,9 +1,12 @@
+/* DYN76.C      (c) Copyright Harold Grovesteen, 2010-2011           */
+/*              Diagnose Instr for file transfers                    */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
 /* DYN76   (c) Copyright Jason Paul Winter, 2010                      */
 /*             See license_dyn76.txt for licensing                    */
-/* DYN76.C (c) Copyright Harold Grovesteen, 2010-2011                 */
-/*   Released under "The Q Public License Version 1"                  */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to   */
-/*   Hercules.                                                        */
 
 // $Id$
 

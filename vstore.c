@@ -1,4 +1,4 @@
-/* VSTORE.C     (c) Copyright Roger Bowler, 2000-2010                */
+/* VSTORE.C     (c) Copyright Roger Bowler, 2000-2011                */
 /*               ESA/390 Virtual Storage Functions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

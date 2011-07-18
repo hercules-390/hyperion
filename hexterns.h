@@ -1,4 +1,4 @@
-/* HEXTERNS.H   (c) Copyright Roger Bowler, 1999-2010                */
+/* HEXTERNS.H   (c) Copyright Roger Bowler, 1999-2011                */
 /*                    Hercules function prototypes...                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

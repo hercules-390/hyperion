@@ -1,4 +1,4 @@
-/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2010                  */
+/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              ESA/390 Machine Check Functions                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

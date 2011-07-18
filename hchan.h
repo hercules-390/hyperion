@@ -1,4 +1,4 @@
-/* HCHAN.H       (c) Copyright Ivan Warren, 2004-2010                */
+/* HCHAN.H       (c) Copyright Ivan Warren, 2004-2011                */
 /* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2010      */
 /*              Generic channel device handler                       */
 /*                                                                   */

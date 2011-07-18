@@ -1,5 +1,5 @@
-/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              ESA/390 Configuration Builder                        */
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
 /*                                                                   */

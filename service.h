@@ -1,4 +1,4 @@
-/* SERVICE.H    (c) Copyright Roger Bowler, 1999-2010                */
+/* SERVICE.H    (c) Copyright Roger Bowler, 1999-2011                */
 /*              Service Processor Architectured fields               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

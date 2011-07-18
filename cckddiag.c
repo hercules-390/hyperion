@@ -1,4 +1,4 @@
-/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*       CCKD diagnostic tool                                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

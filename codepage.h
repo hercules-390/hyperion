@@ -1,4 +1,5 @@
-/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2010                  */
+/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2011                  */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Code Page conversion                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

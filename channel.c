@@ -1,4 +1,4 @@
-/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*              ESA/390 Channel Emulator                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

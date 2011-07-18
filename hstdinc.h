@@ -1,4 +1,4 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2010                */
+/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules precompilation-eligible Header Files        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

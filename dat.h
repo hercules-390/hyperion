@@ -1,4 +1,4 @@
-/* DAT.H        (c) Copyright Roger Bowler, 1999-2010                */
+/* DAT.H        (c) Copyright Roger Bowler, 1999-2011                */
 /*              ESA/390 Dynamic Address Translation                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

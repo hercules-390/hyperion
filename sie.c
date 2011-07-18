@@ -1,4 +1,4 @@
-/* SIE.C        (c) Copyright Jan Jaeger, 1999-2010                  */
+/* SIE.C        (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Interpretive Execution                               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

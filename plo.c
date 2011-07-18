@@ -1,4 +1,4 @@
-/* PLO.C        (c) Copyright Jan Jaeger, 2000-2010                  */
+/* PLO.C        (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              Perform Locked Operation functions codes             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

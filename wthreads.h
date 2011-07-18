@@ -1,5 +1,5 @@
 /* WTHREADS.H
- *  (c) Copyright TurboHercules, SAS 2010 - All Rights Reserved
+ *  (c) Copyright TurboHercules, SAS 2010-2011 - All Rights Reserved
  *      Contains Licensed Materials - Property of TurboHercules, SAS
  */
 /*                                                                   */

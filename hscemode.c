@@ -1,5 +1,5 @@
-/* HSCEMODE.C   (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* HSCEMODE.C   (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

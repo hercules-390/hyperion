@@ -1,4 +1,4 @@
-/* SHA256.H     (c) Bernard van der Helm, 2003-2010                  */
+/* SHA256.H     (c) Bernard van der Helm, 2003-2011                  */
 /*              z/Architecture crypto instructions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

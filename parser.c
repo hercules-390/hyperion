@@ -1,4 +1,4 @@
-/* PARSER.C     (c) Copyright Roger Bowler, 1999-2010                */
+/* PARSER.C     (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Simple parameter parser                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2010                   */
+/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2011                   */
 /*              Emulated 1052 on hercules console                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

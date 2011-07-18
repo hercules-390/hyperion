@@ -1,5 +1,5 @@
 /* IEEE.C       (c) Copyright Willem Konynenberg, 2001-2003          */
-/*              (c) Copyright Roger Bowler and others, 2003-2010     */
+/*              (c) Copyright Roger Bowler and others, 2003-2011     */
 /*              Hercules Binary (IEEE) Floating Point Instructions   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

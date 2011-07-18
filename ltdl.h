@@ -1,4 +1,4 @@
-/* LTDL.H       (c) Copyright Roger Bowler, 2006-2010                */
+/* LTDL.H       (c) Copyright Roger Bowler, 2006-2011                */
 /*              Hercules system independent dlopen wrapper           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

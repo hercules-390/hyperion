@@ -1,4 +1,4 @@
-/* HISTORY.H    (c) Copyright Roger Bowler, 1999-2010                */
+/* HISTORY.H    (c) Copyright Roger Bowler, 1999-2011                */
 /*               Hercules Command History Processes                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

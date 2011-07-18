@@ -1,4 +1,4 @@
-/* HMACROS.H    (c) Copyright Roger Bowler, 1999-2010                */
+/* HMACROS.H    (c) Copyright Roger Bowler, 1999-2011                */
 /*               Hercules macros...                                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

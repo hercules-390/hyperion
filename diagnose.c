@@ -1,4 +1,4 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2010                */
+/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2011                */
 /*              ESA/390 Diagnose Functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

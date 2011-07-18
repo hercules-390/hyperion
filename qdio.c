@@ -1,4 +1,4 @@
-/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2010                  */
+/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2011                  */
 /*              Queued Direct Input Output                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

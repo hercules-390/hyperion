@@ -1,4 +1,4 @@
-/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2010                  */
+/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Service Control Element DASD I/O functions           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

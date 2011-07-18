@@ -1,11 +1,11 @@
-/* PFPO.C       (c) Copyright Roger Bowler, 2009-2010                */
+/* PFPO.C       (c) Copyright Roger Bowler, 2009-2011                */
 /*              Perform Floating Point Operation instruction         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/*              (c) Copyright Bernard van der Helm, 2009-2010        */
+/*              (c) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */ 
 
 // $Id$

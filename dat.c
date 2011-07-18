@@ -1,4 +1,4 @@
-/* DAT.C        (c) Copyright Roger Bowler, 1999-2010                */
+/* DAT.C        (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Supported DAT Functions                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

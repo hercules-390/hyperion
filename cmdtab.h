@@ -1,7 +1,7 @@
-/* CMDTAB.H     (c) Copyright Roger Bowler, 1999-2010                */
+/* CMDTAB.H     (c) Copyright Roger Bowler, 1999-2011                */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright Jan Jaeger, 2003-2009                  */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Defines all Hercules Configuration statements        */
 /*              and panel commands                                   */
 /*                                                                   */

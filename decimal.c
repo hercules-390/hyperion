@@ -1,4 +1,4 @@
-/* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2010                */
+/* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2011                */
 /*              ESA/390 Packed Decimal Routines                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

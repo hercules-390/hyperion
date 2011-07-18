@@ -1,4 +1,4 @@
-/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2010                  */
+/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2011                  */
 /*              Channel Subsystem Call                               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

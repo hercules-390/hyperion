@@ -1,5 +1,5 @@
-/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules DASD Utilities: DASD image loader           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

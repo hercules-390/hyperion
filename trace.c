@@ -1,4 +1,4 @@
-/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2010                  */
+/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              Implicit tracing functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

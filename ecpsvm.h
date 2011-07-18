@@ -1,4 +1,4 @@
-/*ECPSVM.H      (c) Copyright Roger Bowler, 2000-2010                */
+/*ECPSVM.H      (c) Copyright Roger Bowler, 2000-2011                */
 /*              Hercules ECPS:VM Support                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2010                  */
+/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Hercules Device Definitions                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/*  HTHREADS.H  (c) Copyright Roger Bowler, 1999-2010                */
+/*  HTHREADS.H  (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Threading Macros and Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

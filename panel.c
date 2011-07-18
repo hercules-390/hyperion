@@ -1,5 +1,5 @@
-/* PANEL.C      (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* PANEL.C      (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules Control Panel Commands                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

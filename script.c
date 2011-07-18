@@ -1,8 +1,8 @@
-/* SCRIPT.C     (c) Copyright Roger Bowler, 1999-2010                */
-/*              (c) Copyright Jan Jaeger,   1999-2010                */
-/*              (c) Copyright Ivan Warren, 2003-2010                 */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright TurboHercules, SAS 2010                */
+/* SCRIPT.C     (c) Copyright Roger Bowler, 1999-2011                */
+/*              (c) Copyright Jan Jaeger,   1999-2011                */
+/*              (c) Copyright Ivan Warren, 2003-2011                 */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2011     */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              ESA/390 Configuration and Script parser              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

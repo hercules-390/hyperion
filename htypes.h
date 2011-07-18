@@ -1,4 +1,4 @@
-/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2010                */
+/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Type Definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

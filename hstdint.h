@@ -1,4 +1,4 @@
-/* HSTDINT.H    (c)Copyright Roger Bowler, 2006-2010                 */
+/* HSTDINT.H    (c)Copyright Roger Bowler, 2006-2011                 */
 /*              Hercules standard integer definitions                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

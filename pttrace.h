@@ -1,4 +1,4 @@
-/* PTTRACE.H    (c) Copyright Greg Smith, 2003-2010                  */
+/* PTTRACE.H    (c) Copyright Greg Smith, 2003-2011                  */
 /*              Header file for pthreads trace debugger              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* VECTOR.C     (c) Copyright Roger Bowler, 1999-2010                */
+/* VECTOR.C     (c) Copyright Roger Bowler, 1999-2011                */
 /*              S/370 and ESA/390 Vector Operations                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

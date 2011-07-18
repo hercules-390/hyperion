@@ -1,4 +1,4 @@
-/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules Tape Device Handler for HETTAPE             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

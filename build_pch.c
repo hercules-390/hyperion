@@ -1,4 +1,4 @@
-/* BUILD_PCH  (c)Copyright Ivan Warren, 2005-2010                    */
+/* BUILD_PCH  (c)Copyright Ivan Warren, 2005-2011                    */
 /*            Dummy module for building pre-compiled header files    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

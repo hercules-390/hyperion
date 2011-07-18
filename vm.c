@@ -1,4 +1,4 @@
-/* VM.C         (c) Copyright Roger Bowler, 2000-2010                */
+/* VM.C         (c) Copyright Roger Bowler, 2000-2011                */
 /*              ESA/390 VM Diagnose calls and IUCV instruction       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
