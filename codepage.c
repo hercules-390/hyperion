@@ -1755,7 +1755,7 @@ static int export_file(char *fn, char *buf, int buflen)
 static void imp_exp_error( char *fn, char *cmd, char *tab, int err)
 {
     int     errno_i = err;
-    char   *fun = "";
+//    char   *fun = "";
     char    msgbuf[FILENAME_MAX+3];
 
 
@@ -1763,17 +1763,17 @@ static void imp_exp_error( char *fn, char *cmd, char *tab, int err)
         errno_i *= -1;
     if ( errno_i >= 1000 && errno_i <= 1999 )
     {
-        fun = "fopen()";
+//        fun = "fopen()";
         errno_i -= 1000;
     }
     else if ( errno_i >= 2000 && errno_i <= 2999 )
     {
-        fun = "fread()";
+//        fun = "fread()";
         errno_i -= 2000;
     }
     if ( errno_i >= 3000 && errno_i <= 3999 )
     {
-        fun = "fwrite()";
+//        fun = "fwrite()";
         errno_i -= 3000;
     }
 

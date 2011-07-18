@@ -1,4 +1,4 @@
-/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2010            */
+/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2011            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -49,6 +49,9 @@
 #include "opcode.h"
 #include "inline.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
 

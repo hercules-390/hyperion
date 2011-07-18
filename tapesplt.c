@@ -1,4 +1,4 @@
-/* TAPESPLT.C  (c) Copyright Jay Maynard, 2000-2010                  */
+/* TAPESPLT.C  (c) Copyright Jay Maynard, 2000-2011                  */
 /*              Split AWSTAPE format tape image                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -62,7 +62,6 @@ char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
-int             prevlen;                /* Previous block length     */
 char           *infilename;             /* -> Input file name        */
 char           *outfilename;            /* -> Current out file name  */
 int             infd = -1;              /* Input file descriptor     */
@@ -169,10 +168,6 @@ char           *strtok_str = NULL;
         /* Copy just that many files */
         for (outfilecount = 0; outfilecount < files2copy; )
         {
-
-            /* Save previous block length */
-            prevlen = len;
-
             /* Read a block from the tape */
             len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));
             if (len < 0)

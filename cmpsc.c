@@ -35,6 +35,10 @@
 #include "opcode.h"
 #include "inline.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #ifdef FEATURE_COMPRESSION
 /*============================================================================*/
 /* Common                                                                     */

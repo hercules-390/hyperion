@@ -1,4 +1,4 @@
-/*ECPSVM.C      (c) Copyright Roger Bowler, 2000-2010                */
+/*ECPSVM.C      (c) Copyright Roger Bowler, 2000-2011                */
 /*              Hercules ECPS:VM Support                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -70,12 +70,13 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "ecpsvm.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #ifdef FEATURE_ECPSVM
 

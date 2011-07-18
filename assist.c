@@ -1,4 +1,4 @@
-/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2010                */
+/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2011                */
 /*              ESA/390 MVS Assist Routines                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -29,10 +29,12 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if !defined(_ASSIST_C)
 

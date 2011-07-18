@@ -1,4 +1,4 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2007-2010                */
+/* DFP.C        (c) Copyright Roger Bowler, 2007-2011                */
 /*              Decimal Floating Point instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -21,6 +21,10 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
 #include "decimal128.h"

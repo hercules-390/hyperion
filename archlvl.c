@@ -1,4 +1,4 @@
-/* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010                     */
+/* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010-2011                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -361,9 +361,9 @@ ARCHTAB *tb;
         {
             if ( sysblk.mainsize < ONE_MEGABYTE && sysblk.arch_mode != ARCH_370 )
             {
-                int rc, m;
+                int m;
                 m = sysblk.mainsize == 0 ? FALSE : TRUE;
-                rc = configure_storage((U64)ONE_MEGABYTE);
+                configure_storage((U64)ONE_MEGABYTE);
                 if ( MLVL(VERBOSE) || m )
                     WRMSG( HHC01421, "I", "will be ", "1 Mbyte" );
             }

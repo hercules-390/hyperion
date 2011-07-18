@@ -1,4 +1,4 @@
-/* SERVICE.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* SERVICE.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*              ESA/390 Service Processor                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -40,6 +40,10 @@
 #include "opcode.h"
 #include "inline.h"
 #include "sr.h"
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if !defined(_SERVICE_C)
 

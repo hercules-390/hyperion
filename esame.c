@@ -1,4 +1,4 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2010                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              ESAME (z/Architecture) instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -31,18 +31,16 @@
 
 #if !defined(_ESAME_C_)
 #define _ESAME_C_
-
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "clock.h"
 
-
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/

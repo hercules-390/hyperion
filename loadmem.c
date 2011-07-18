@@ -1,4 +1,4 @@
-/* LOADMEM.C    (c) Copyright TurboHercules, SAS 2010                */
+/* LOADMEM.C    (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              load memory functions                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -377,6 +377,8 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                           pesdid = (reloc[2] << 8) | reloc[3];
                        }
 
+                       UNREFERENCED(resdid);  // relocation will be added later
+                       UNREFERENCED(pesdid);  // relocation will be added later
 
                        if (!(RLD_RELOC_Q || RLD_RELOC_CXD))     // Relocate all except Q/CXD-constants
                        {

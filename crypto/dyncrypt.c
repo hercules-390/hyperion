@@ -35,6 +35,10 @@
 #include "sha1.h"
 #include "sha256.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 /*----------------------------------------------------------------------------*/
 /* Sanity compile check                                                       */
 /*----------------------------------------------------------------------------*/

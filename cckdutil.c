@@ -1,4 +1,4 @@
-/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*       ESA/390 Compressed CKD Common routines                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -372,7 +372,6 @@ DLL_EXPORT int cckd_comp (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             fd;                     /* File descriptor           */
 struct stat     fst;                    /* File status buffer        */
-S64             maxsize;                /* Max cckd file size        */
 int             rc;                     /* Return code               */
 off_t           off;                    /* File offset               */
 off_t           l2area;                 /* Boundary for l2 tables    */
@@ -409,7 +408,6 @@ BYTE            buf[65536*4];           /* Buffer                    */
     if (fstat (fd, &fst) < 0)
         goto comp_fstat_error;
     gui_fprintf (stderr, "SIZE=%"I64_FMT"u\n", (U64) fst.st_size);
-    maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
 
     /*---------------------------------------------------------------
      * Read device header

@@ -1,4 +1,4 @@
-/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2010                */
+/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2011                */
 /*              Hercules CPU Emulator - Instructions N-Z             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -48,6 +48,9 @@
 #include "inline.h"
 #include "clock.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 /*-------------------------------------------------------------------*/
 /* 16   OR    - Or Register                                     [RR] */

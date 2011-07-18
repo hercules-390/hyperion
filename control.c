@@ -1,4 +1,4 @@
-/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2010                */
+/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2011                */
 /*              ESA/390 CPU Emulator                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -53,6 +53,10 @@
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 /* Temporary debug */
 extern  int     ipending_cmd(int,void *,void *);

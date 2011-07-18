@@ -1,4 +1,4 @@
-/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2010                */
+/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2011                */
 /*         Hercules CPU Emulator - Additional General Instructions   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -27,6 +27,9 @@
 #include "opcode.h"
 #include "inline.h"
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
