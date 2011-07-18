@@ -50,7 +50,7 @@
 #include "inline.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #if defined(FEATURE_HEXADECIMAL_FLOATING_POINT)

@@ -36,7 +36,7 @@
 #include "sha256.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 /*----------------------------------------------------------------------------*/

@@ -75,7 +75,7 @@
 #include "ecpsvm.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #ifdef FEATURE_ECPSVM

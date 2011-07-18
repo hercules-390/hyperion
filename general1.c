@@ -49,7 +49,7 @@
 #include "clock.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #undef DEF_INST_EXPORT

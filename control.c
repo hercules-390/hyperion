@@ -45,9 +45,7 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 #if defined(OPTION_FISHIO)
@@ -55,7 +53,7 @@
 #endif // defined(OPTION_FISHIO)
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 /* Temporary debug */

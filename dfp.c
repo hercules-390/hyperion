@@ -23,7 +23,7 @@
 #include "inline.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)

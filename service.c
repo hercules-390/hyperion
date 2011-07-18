@@ -42,7 +42,7 @@
 #include "sr.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #if !defined(_SERVICE_C)

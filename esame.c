@@ -39,7 +39,7 @@
 #include "clock.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
