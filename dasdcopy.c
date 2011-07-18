@@ -1,4 +1,4 @@
-/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*              Copy a dasd file to another dasd file                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

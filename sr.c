@@ -1,4 +1,4 @@
-/* SR.C         (c)Copyright Greg Smith, 2005-2010                   */
+/* SR.C         (c)Copyright Greg Smith, 2005-2011                   */
 /*              Suspend/Resume a Hercules session                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

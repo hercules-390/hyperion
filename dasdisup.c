@@ -1,4 +1,4 @@
-/* DASDISUP.C   (c) Copyright Roger Bowler, 1999-2010                */
+/* DASDISUP.C   (c) Copyright Roger Bowler, 1999-2011                */
 /*              Hercules DASD Utilities: IEHIOSUP                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

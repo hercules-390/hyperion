@@ -1,4 +1,4 @@
-/* DASDCAT.C    (c) Copyright Roger Bowler, 1999-2010                */
+/* DASDCAT.C    (c) Copyright Roger Bowler, 1999-2011                */
 /*              DASD "cat" functions                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
