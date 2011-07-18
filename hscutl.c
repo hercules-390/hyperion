@@ -1012,6 +1012,54 @@ DLL_EXPORT int hprintf(int s,char *fmt,...)
     return rc;
 }
 
+/* Hercules page-aligned calloc/free */
+
+DLL_EXPORT void* hpcalloc( BYTE type, size_t size )
+{
+    /* PROGRAMMING NOTE: we presume the host page size
+       will never be smaller than the guest page size */
+
+    void*      ptr        = NULL;       /* (aligned)   */
+    void*      p          = NULL;       /* (unaligned) */
+    size_t     bytes      = 0;
+    size_t     pagesize   = HPAGESIZE();
+    uintptr_t  alignmask  = ~(pagesize-1);
+
+    /* Need extra room for pointer and pagesize alignment */
+    bytes = size + sizeof(void*) + pagesize - 1;
+
+    /* Get memory already pre-initialized to binary zeroes */
+    if ((p = calloc( bytes, 1 )) != NULL)
+    {
+        /* Round up to the next host pagesize boundary
+           being careful there is room for our pointer */
+        ptr = (void*)(((uintptr_t) p + sizeof(void*) + pagesize - 1) & alignmask);
+
+        /* Save original ptr for hpcfree() just before
+           page-aligned ptr we'll be returning to them */
+        *((void**)((uintptr_t) ptr - sizeof(void*))) = p;
+
+        /* Indicate the storage has already been cleared */
+        if (HPC_MAINSTOR == type) sysblk.main_clear = 1;
+        if (HPC_XPNDSTOR == type) sysblk.xpnd_clear = 1;
+    }
+    return ptr;   /* Return page-aligned allocation */
+}
+
+DLL_EXPORT void hpcfree( BYTE type, void* ptr )
+{
+    /* Retrieve the original ptr that hpcalloc() saved
+       immediately preceding the original allocation */
+    void* p = *(void**)((uintptr_t)ptr - sizeof(void*));
+
+    /* Free the original calloc() allocated memory */
+    free( p );
+
+    /* Indicate guest storage is no longer cleared */
+    if (HPC_MAINSTOR == type) sysblk.main_clear = 0;
+    if (HPC_XPNDSTOR == type) sysblk.xpnd_clear = 0;
+}
+
 /* Posix 1003.1e capabilities support */
 
 #if defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES)

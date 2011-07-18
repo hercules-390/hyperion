@@ -97,10 +97,6 @@
   #define  fclose               w32_fclose
   #define  basename             w32_basename
   #define  dirname              w32_dirname
-  #define  getpagesize          w32_getpagesize
-  #define  mlock                w32_mlock
-  #define  munlock              w32_munlock
-  #define  valloc               w32_valloc
 #ifndef strcasestr
   #define  strcasestr           w32_strcasestr
 #endif
@@ -314,12 +310,10 @@
 /*-------------------------------------------------------------------*/
 /* Macros for allocate storage functions                             */
 /*-------------------------------------------------------------------*/
-#if defined(_MSVC_)
-  #define PVALLOC     w32_valloc
-  #define VALLOC      w32_valloc
-  #define PVFREE      w32_vfree
-  #define VFREE       w32_vfree
-#else
+#if !defined(_MSVC_)
+
+  /*       See "IMPORTANT PROGRAMMING NOTE" further below            */
+
   #if !defined(__FreeBSD__) && !defined(__APPLE__) && !defined(__SOLARIS__)
     #define PVALLOC     pvalloc
     #define PVFREE      free
@@ -332,6 +326,99 @@
     #define VFREE       free
   #endif
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Macros for storage functions:                                     */
+/*                                                                   */
+/*    HPCALLOC:    Hercules page-aligned 'calloc'. Used *ONLY*       */
+/*                 for allocating mainstor and xpndstor since it     */
+/*                 also automatically sets main_clear/xpnd_clear.    */
+/*    HPCFREE:     free the memory allocated by HPCALLOC. The        */
+/*                 main_clear/xpnd_clear is automatically reset.     */
+/*    HPAGESIZE:   Retrieves the HOST system's page size.            */
+/*    MLOCK:       locks a range of memory.                          */
+/*    MUNLOCK:     unlocks a range of memory.                        */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#define  HPC_MAINSTOR     1        /* mainstor being allocated/freed */
+#define  HPC_XPNDSTOR     2        /* xpndstor being allocated/freed */
+
+#if defined(_MSVC_)
+  #define  OPTION_CALLOC_GUESTMEM
+#else
+  #undef   OPTION_CALLOC_GUESTMEM
+#endif
+
+#if !defined( OPTION_CALLOC_GUESTMEM )
+
+  /*            ---  IMPORTANT PROGRAMMING NOTE  ---
+
+    'valloc' and 'getpagesize' are non-POSIX and both are deprecated
+    and considered obsolete on most all *nix platforms. Valloc/pvalloc
+    are also known to be buggy on many systems:
+
+        http://linux.die.net/man/2/getpagesize
+
+        "SVr4, 4.4BSD, SUSv2. In SUSv2 the getpagesize() call is
+        labeled LEGACY, and in POSIX.1-2001 it has been dropped.
+        HP-UX does not have this call."
+
+        http://linux.die.net/man/3/valloc
+
+        "The obsolete function memalign() allocates size bytes and
+        returns a pointer to the allocated memory. The memory address
+        will be a multiple of boundary, which must be a power of two."
+
+        "The obsolete function valloc() allocates size bytes and
+        returns a pointer to the allocated memory. The memory address
+        will be a multiple of the page size. It is equivalent to
+        memalign(sysconf(_SC_PAGESIZE),size)."
+
+        "... Some systems provide no way to reclaim memory allocated
+        with memalign() or valloc() (because one can only pass to
+        free() a pointer gotten from malloc(), ..."
+
+        "The function valloc() appeared in 3.0BSD. It is documented
+        as being obsolete in 4.3BSD, and as legacy in SUSv2. It does
+        not appear in POSIX.1-2001."
+
+
+               ---  USE AT YOUR OWN RISK  ---
+  */
+
+  #define      HPCALLOC(t,a)    PVALLOC(a)
+  #define      HPCFREE(t,a)     PVFREE(a)
+  #define      HPAGESIZE        getpagesize
+  #define      MLOCK            mlock
+  #define      MUNLOCK          munlock
+
+#else // defined( OPTION_CALLOC_GUESTMEM )
+
+  #define      HPCALLOC(t,a)    hpcalloc((t),(a))
+  #define      HPCFREE(t,a)     hpcfree((t),(a))
+
+  #if defined(_MSVC_)
+
+    #define    HPAGESIZE        w32_hpagesize
+    #define    MLOCK            w32_mlock
+    #define    MUNLOCK          w32_munlock
+
+  #else /* !defined(_MSVC_) */
+
+    #define    HPAGESIZE        getpagesize
+
+    #if defined(HAVE_MLOCK)
+      #define  MLOCK            mlock
+      #define  MUNLOCK          munlock
+    #else
+      #define  MLOCK            __noop
+      #define  MUNLOCK          __noop
+    #endif
+
+  #endif /* defined(_MSVC_) */
+
+#endif // !defined( OPTION_CALLOC_GUESTMEM )
 
 /*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */

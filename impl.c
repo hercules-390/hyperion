@@ -363,11 +363,10 @@ int     dll_count;                      /* index into array          */
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 
+    VERIFY( MLOCK( &sysblk, sizeof( SYSBLK )) == 0);
+
 #if defined (_MSVC_)
-    VERIFY( VirtualLock( &sysblk, sizeof( SYSBLK ) ) );
     _setmaxstdio(2048);
-#else
-    VERIFY( mlock( &sysblk, sizeof( SYSBLK ) ) == 0 );
 #endif
 
     /* Initialize EYE-CATCHERS for SYSBLK       */
