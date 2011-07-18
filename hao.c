@@ -652,14 +652,9 @@ static void hao_message(char *buf)
       /* does this rule match our message? */
       if(!regexec(&ao_preg[i], work, 1, &rm, 0))
       {
-        BYTE sysgroup;
-
         /* issue command for this rule */
         WRMSG(HHC00081, "I", i, ao_cmd[i]);
-        sysgroup = sysblk.sysgroup;
-        sysblk.sysgroup = SYSGROUP_SYSALL;
         panel_command(ao_cmd[i]);
-        sysblk.sysgroup = sysgroup;
       }
     }
   }
