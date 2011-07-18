@@ -215,7 +215,6 @@ fet_read_header( FETB *fetb, off_t blkpos,
                  U16* pprvblkl, U16* pcurblkl )
 {
 int             rc;                     /* Return code               */
-off_t           rcoff;                  /* Return code from lseek()  */
 FAKETAPE_BLKHDR fakehdr;                /* FakeTape block header     */
 char            sblklen[5];             /* work for converting hdr   */
 int             prvblkl;                /* Previous block length     */
@@ -228,8 +227,6 @@ int             xorblkl;                /* XOR check of block lens   */
     {
         return FETE_ERROR;
     }
-    else
-        rcoff = ftell( fetb->fd );
 
     /* Read the 12-ASCII-hex-character block header */
     rc = (int)fread( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fd );
@@ -348,7 +345,6 @@ fet_write_header ( FETB *fetb, off_t blkpos,
                    U16 prvblkl, U16 curblkl )
 {
 int             rc;                     /* Return code               */
-off_t           rcoff;                  /* Return code from lseek()  */
 FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
 char            sblklen[5];             /* work buffer               */
 
@@ -358,8 +354,6 @@ char            sblklen[5];             /* work buffer               */
     {
         return FETE_BADLOC;
     }
-    else
-        rcoff = ftell( fetb->fd );
 
     /* Build the 12-ASCII-hex-character block header */
     snprintf( sblklen, sizeof(sblklen), "%4.4X", prvblkl );
@@ -746,15 +740,12 @@ DLL_EXPORT int
 fet_rewind ( FETB *fetb )
 {
 int         rc;
-off_t       rcoff;
 
     rc = fseek( fetb->fd, 0L, SEEK_SET );
     if ( rc < 0 )
     {
         return FETE_ERROR;
     }
-    else
-        rcoff = ftell( fetb->fd );
 
     fetb->nxtblkpos=0;
     fetb->prvblkpos=-1;
