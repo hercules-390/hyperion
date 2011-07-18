@@ -1048,13 +1048,6 @@ int     dll_count;                      /* index into array          */
         return(1);
     }
 
-#if defined(OPTION_HAO)
-    /* Initialize the Hercules Automatic Operator */
-
-    if ( !hao_initialize() )
-        WRMSG(HHC01404, "S");
-#endif /* defined(OPTION_HAO) */
-
     /* Start up the RC file processing thread */
     rc = create_thread(&rctid,DETACHED,
                   process_rc_file,NULL,"process_rc_file");

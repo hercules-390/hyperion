@@ -45,9 +45,9 @@ static char     ao_msgbuf[LOG_DEFSIZE+1];   /* (plus+1 for NULL termination) */
 /*---------------------------------------------------------------------------*/
 /* function prototypes                                                       */
 /*---------------------------------------------------------------------------*/
-DLL_EXPORT int   hao_initialize(void);
 DLL_EXPORT void  hao_command(char *cmd);
-DLL_EXPORT void  hao_message(char *buf);
+static     int   hao_initialize(void);
+static     void  hao_message(char *buf);
 static     void  hao_clear(void);
 static     void  hao_cmd(char *arg);
 static     void  hao_cpstrp(char *dest, char *src);
@@ -62,7 +62,7 @@ static     void* hao_thread(void* dummy);
 /* This function is called at system startup by impl.c 'process_rc_file'     */
 /* It initializes all global variables.                                      */
 /*---------------------------------------------------------------------------*/
-DLL_EXPORT int hao_initialize(void)
+static int hao_initialize(void)
 {
   int i = 0;
   int rc;
@@ -108,6 +108,10 @@ DLL_EXPORT void hao_command(char *cmd)
 {
   char work[HAO_WKLEN];
   char work2[HAO_WKLEN];
+
+  /* initialise hao */
+  if(!sysblk.haotid && !hao_initialize())
+      WRMSG(HHC01404, "S");
 
   /* copy and strip spaces */
   hao_cpstrp(work, cmd);
@@ -619,7 +623,7 @@ static int hao_ignoremsg(char *msg)
 /* printed. Here we check if a rule applies to the message. If so we fire    */
 /* the command within the rule.                                              */
 /*---------------------------------------------------------------------------*/
-DLL_EXPORT void hao_message(char *buf)
+static void hao_message(char *buf)
 {
   char work[HAO_WKLEN];
   regmatch_t rm;

@@ -322,9 +322,7 @@ HPAN_DLL_IMPORT void update_maxrates_hwm(); // (update high-water-mark values)
 
 /* Functions in module hao.c (Hercules Automatic Operator) */
 #if defined(OPTION_HAO)
-HAO_DLL_IMPORT int hao_initialize(void);        /* initialize hao */
 HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
-HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 #endif /* defined(OPTION_HAO) */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
