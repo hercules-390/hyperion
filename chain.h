@@ -93,12 +93,12 @@ INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatche
         register char *a = anchor->eyecatcher;
         register char *e = eyecatcher;
         register char *limit = a + eyesize;
-        for (; a < limit && e[0]; a++, e++)
-             a[0] = e[0];
+        for (; a < limit && *e; a++, e++)
+             *a = *e;
         if (a == anchor->eyecatcher)
             raise_chain_validation_error;
         for (; a < limit; a++)
-             a[0] = ' ';
+             *a = ' ';
     }
     anchor->containersize = containersize;
     initialize_lock(&anchor->lock);
@@ -277,25 +277,25 @@ INLINE void chain(CHAIN *entry)
 #define QUEUEBLK    CHAINBLK
 #define QUEUE       CHAIN
 
-INLINE void queue_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
+INLINE void queue_init_anchor(void *container, QUEUEBLK *anchor, char *eyecatcher, const u_int containersize)
 {chain_init_anchor(container, anchor, eyecatcher, containersize);}
 
-INLINE void queue_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
+INLINE void queue_init_entry(QUEUEBLK *anchor, void *container, QUEUE *entry)
 {chain_init_entry(anchor, container, entry);}
 
-INLINE void queue(CHAIN *entry)
+INLINE void queue(QUEUE *entry)
 {chain_last(entry);}
 
-INLINE void queue_fifo(CHAIN *entry)
+INLINE void queue_fifo(QUEUE *entry)
 {chain_last(entry);}
 
-INLINE void queue_lifo(CHAIN *entry)
+INLINE void queue_lifo(QUEUE *entry)
 {chain_first(entry);}
 
-INLINE uintptr_t *dequeue_locked(CHAINBLK *anchor)
+INLINE uintptr_t *dequeue_locked(QUEUEBLK *anchor)
 {return unchain_first_locked(anchor);}
 
-INLINE uintptr_t *dequeue(CHAINBLK *anchor)
+INLINE uintptr_t *dequeue(QUEUEBLK *anchor)
 {return unchain_first(anchor);}
 
 

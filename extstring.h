@@ -71,18 +71,18 @@ INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
 {
     register char *s = string;
     register char *a = abbrev;
-    if (a[0] &&
-        s[0] &&
-        a[0] == s[0])
+    if (*a &&
+        *s &&
+        *a == *s)
     {
         for (;;)
         {
             a++;
-            if (!a[0])
+            if (!*a)
                 return (((uintptr_t)a - (uintptr_t)abbrev) >= n);
             s++;
-            if (!s[0] ||
-                a[0] != s[0])
+            if (!*s ||
+                *a != *s)
                 break;
         }
     }
@@ -93,22 +93,22 @@ INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n
 {
     register const char *s = string;
     register const char *a = abbrev;
-    if (a[0] &&
-        s[0] &&
-        (a[0] == s[0] ||
-        asciitoupper(a[0]) == asciitoupper(s[0])))
+    if (*a &&
+        *s &&
+        (*a == *s ||
+        asciitoupper(*a) == asciitoupper(*s)))
     {
         for (;;)
         {
             a++;
-            if (!a[0])
+            if (!*a)
                 return (((uintptr_t)a - (uintptr_t)abbrev) >= n);
             s++;
-            if (!s[0])
+            if (!*s)
                 break;
-            if (a[0] == s[0])
+            if (*a == *s)
                 continue;
-            if (asciitoupper(a[0]) != asciitoupper(s[0]))
+            if (asciitoupper(*a) != asciitoupper(*s))
                 break;
         }
     }
@@ -130,11 +130,11 @@ INLINE void strlower(char *result, char *string)
 {
     register char *r = result;
     register char *s = string;
-    for (; s[0]; r++, s++)
+    for (; *s; r++, s++)
     {
-        r[0] = asciitolower(s[0]);
+        *r = asciitolower(*s);
     }
-    r[0] = 0;
+    *r = 0;
     return;
 }
 
@@ -143,11 +143,11 @@ INLINE void strnlower(char *result, char *string, const u_int n)
     register char *r = result;
     register char *s = string;
     register char *limit = s + n - 1;
-    for (; s < limit && s[0]; r++, s++)
+    for (; s < limit && *s; r++, s++)
     {
-        r[0] = asciitolower(s[0]);
+        *r = asciitolower(*s);
     }
-    r[0] = 0;
+    *r = 0;
     return;
 }
 
@@ -155,11 +155,11 @@ INLINE void strupper(char *result, char *string)
 {
     register char *r = result;
     register char *s = string;
-    for (; s[0]; r++, s++)
+    for (; *s; r++, s++)
     {
-        r[0] = asciitoupper(s[0]);
+        *r = asciitoupper(*s);
     }
-    r[0] = 0;
+    *r = 0;
     return;
 }
 
@@ -168,11 +168,11 @@ INLINE void strnupper(char *result, char *string, const u_int n)
     register char *r = result;
     register char *s = string;
     register char *limit = s + n - 1;
-    for (; s < limit && s[0]; r++, s++)
+    for (; s < limit && *s; r++, s++)
     {
-        r[0] = asciitoupper(s[0]);
+        *r = asciitoupper(*s);
     }
-    r[0] = 0;
+    *r = 0;
     return;
 }
 
