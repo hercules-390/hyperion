@@ -41,7 +41,7 @@
 #include "inline.h"
 #include "sr.h"
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 5
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
