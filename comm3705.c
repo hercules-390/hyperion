@@ -1,4 +1,5 @@
-/* COMM3705.C   (c) Copyright MHP, 2007 (see below)                  */
+/* COMM3705.C   (c) Copyright Roger Bowler, 2008-2011                */
+/*              (c) Copyright MHP, 2007 (see below)                  */
 /*              Hercules 3705 communications controller              */
 /*              running NCP                                          */
 /*                                                                   */
