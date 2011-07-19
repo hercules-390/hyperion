@@ -759,7 +759,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 6
 /*
-||  SENSE BYTE 5 FOR TAPES 
+||  SENSE BYTE 6 FOR TAPES 
 */
 #define  TAPE_SNS6_3480_LO_CHAN_LOG_BLK_ID    0xFF
 
@@ -789,7 +789,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 7
 /*
-||  SENSE BYTE 5 FOR TAPES 
+||  SENSE BYTE 7 FOR TAPES 
 */
 #define  TAPE_SNS7_TAPE_SECURITY_ERASE_CMD    0x08
 #define  TAPE_SNS7_FMT_20_3480                0x20 // DRIVE AND CU ERROR INFORMATION
@@ -797,6 +797,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS7_FMT_30_3480_READ_BUF_LOG   0x30 // BUFFERED LOG DATA WHEN IDRC is installed
 #define  TAPE_SNS7_FMT_22_3480_EOV_STATS      0x22
 #define  TAPE_SNS7_FMT_23_ALT                 0x23
+#define  TAPE_SNS7_FMT_50_NTP                 0x50
 #define  TAPE_SNS7_FMT_51_NTP                 0x51
 #define  TAPE_SNS7_FMT_70_3490                0x70
 #define  TAPE_SNS7_FMT_71_3490                0x71
