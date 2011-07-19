@@ -43,12 +43,23 @@ typedef struct _sllabel
         struct
         {
             char    volser[  6 ];
+            char    access[  1 ];
+            char    vtoc[    5 ];
             char    rsvd1[  25 ];
-            char    idrc[    1 ];
-            char    rsvd2[   5 ];
             char    owner[  10 ];
-            char    rsvd3[  29 ];
+            char    rsvd2[  29 ];
         } vol;
+
+        struct
+        {
+            char    volser[  6 ];       /* VSN              */
+            char    access[  1 ];       /* always space     */
+            char    rsvd1[  13 ];       /* always spaces    */
+            char    impid[  13 ];       /* implementation ID*/
+            char    owner[  14 ];       /* usually spaces   */
+            char    rsvd2[  28 ];       /* always spaces    */
+            char    one[1      ];       /* always '1'       */
+        } avol;                         /* ANSI VOL1        */
 
         struct
         {
@@ -66,6 +77,22 @@ typedef struct _sllabel
             char    rsvd1[   3 ];
             char    blkhi[   4 ];
         } ds1;
+
+        struct
+        {
+            char    dsid[   17 ];       /* File Identifier          */
+            char    volser[  6 ];       /* VSN                      */
+            char    volseq[  4 ];       /* 0001                     */
+            char    dsseq[   4 ];       /* 0001                     */
+            char    genno[   4 ];       /* 0001                     */
+            char    verno[   2 ];       /* spaces                   */
+            char    crtdt[   6 ];       /* cyyddd                   */
+            char    expdt[   6 ];       /* cyyddd                   */
+            char    dssec[   1 ];       /* space                    */
+            char    blkcnt[  6 ];       /* 000000                   */
+            char    syscd[  13 ];       /* System Code              */
+            char    rsvd1[   7 ];       /* 0000000                  */
+        } ads1;                         /* ANSI HDR1, EOF1, EOV1    */
 
         struct
         {
@@ -108,8 +135,8 @@ typedef struct _slfmt
         struct
         {
             char    volser[  6 + 1 ];
-            char    idrc[    1 + 1 ];
-            char    owner[  10 + 1 ];
+            char    access[  1 + 1 ];
+            char    owner[  14 + 1 ];
         } vol;
 
         struct
