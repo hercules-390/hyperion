@@ -49,7 +49,7 @@ extern int   locateblk_scsitape       ( DEVBLK* dev, U32 blockid,        BYTE *u
 // Internal functions...
 
 extern void  int_scsi_rewind_unload( DEVBLK *dev, BYTE *unitstat, BYTE code );
-extern void  int_scsi_status_update( DEVBLK *dev, int mountstat_only, int forced_wait );
+extern void  int_scsi_status_update( DEVBLK *dev, int mountstat_only );
 extern int   int_write_scsimark    ( DEVBLK *dev );
 
 extern void  blockid_emulated_to_actual( DEVBLK *dev, BYTE *emu_blkid, BYTE *act_blkid );
