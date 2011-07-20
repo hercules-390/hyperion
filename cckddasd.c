@@ -169,7 +169,7 @@ int             i, j;                   /* Loop indexes              */
         return 0;
 
     /* Clear the cckdblk */
-    memset(&cckdblk, 0, sizeof(CCKDBLK));
+    bzero(&cckdblk, sizeof(CCKDBLK));
 
     /* Initialize locks and conditions */
     memcpy (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id));
@@ -266,7 +266,7 @@ int cckddasd_term ()
     destroy_condition (&cckdblk.devcond);
     destroy_condition (&cckdblk.termcond);
 
-    memset(&cckdblk, 0, sizeof(CCKDBLK));
+    bzero(&cckdblk, sizeof(CCKDBLK));
 
     return 0;
 
@@ -1376,7 +1376,7 @@ cckd_read_trk_retry:
         cckd_readahead (dev, trk);
 
     /* Clear the buffer if batch mode */
-    if (dev->batch) memset(buf, 0, maxlen);
+    if (dev->batch) bzero(buf, maxlen);
 
     /* Read the track image */
     obtain_lock (&cckd->filelock);
@@ -1432,7 +1432,7 @@ int             rc;
     obtain_lock (&cckdblk.ralock);
 
     /* Scan the cache to see if the tracks are already there */
-    memset(cckd->ralkup, 0, sizeof(cckd->ralkup));
+    bzero(cckd->ralkup, sizeof(cckd->ralkup));
     cckd->ratrk = trk;
     cache_lock(CACHE_DEVBUF);
     cache_scan(CACHE_DEVBUF, cckd_readahead_scan, dev);
@@ -2337,7 +2337,7 @@ int             sfx;                    /* File index                */
 
     cckd_trace (dev, "file[%d] read_chdr", sfx);
 
-    memset (&cckd->cdevhdr[sfx], 0, CCKDDASD_DEVHDR_SIZE);
+    bzero (&cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE);
 
     /* Read the device header */
     if (cckd_read (dev, sfx, CKDDASD_DEVHDR_SIZE, &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE) < 0)
@@ -2422,7 +2422,10 @@ int             i;                      /* Work integer              */
     len = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
     if ((cckd->l1[sfx] = cckd_malloc (dev, "l1", len)) == NULL)
         return -1;
-    memset(cckd->l1[sfx], sfx ? 0xFF : 0, len);
+    if ( sfx )
+        memset(cckd->l1[sfx], 0xFF, len);
+    else
+        bzero(cckd->l1[sfx], len);
 
     /* Read the level 1 table */
     if (cckd_read (dev, sfx, CCKD_L1TAB_POS, cckd->l1[sfx], len) < 0)
@@ -2798,7 +2801,7 @@ int             nullfmt;                /* Null track format         */
     /* Check for null table */
     if (cckd->l1[sfx][l1x] == 0)
     {
-        memset(buf, 0, CCKD_L2TAB_SIZE);
+        bzero(buf, CCKD_L2TAB_SIZE);
         if (nullfmt)
             for (i = 0; i < 256; i++)
                 buf[i].len = buf[i].size = nullfmt;
@@ -3305,7 +3308,7 @@ int             len;                    /* Length of null track      */
         rechdr->rec = r;
         rechdr->klen = 0;
         store_hw(&rechdr->dlen, 8);
-        memset (pos, 0, 8);
+        bzero( pos, 8 );
         pos += 8;
         r++;
 
@@ -3335,7 +3338,7 @@ int             len;                    /* Length of null track      */
                 rechdr->klen = 0;
                 store_hw(&rechdr->dlen, 4096);
                 r++;
-                memset(pos, 0, 4096);
+                bzero( pos, 4096 );
                 pos += 4096;
             }
         }
@@ -3347,7 +3350,7 @@ int             len;                    /* Length of null track      */
     }
     else
     {
-        memset (buf, 0, CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE);
+        bzero( buf, CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE);
         store_fw(buf+1, trk);
         len = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
     }
@@ -4006,7 +4009,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
             /* Read `from' l2 table */
             if (cckd->l1[from_sfx][i] == 0)
-                memset (&from_l2, 0, CCKD_L2TAB_SIZE);
+                bzero( &from_l2, CCKD_L2TAB_SIZE );
             else
             {
                 pos = (off_t)cckd->l1[from_sfx][i];
@@ -4016,7 +4019,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
             /* Read `to' l2 table */
             if (cckd->l1[to_sfx][i] == 0)
-                memset (&to_l2, 0, CCKD_L2TAB_SIZE);
+                bzero( &to_l2, CCKD_L2TAB_SIZE );
             else if (cckd->l1[to_sfx][i] == 0xffffffff)
                 memset (&to_l2, 0xff, CCKD_L2TAB_SIZE);
             else
@@ -4113,7 +4116,7 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Remove the old file */
     cckd_close (dev, from_sfx);
     cckd->l1[from_sfx] = cckd_free (dev, "l1", cckd->l1[from_sfx]);
-    memset (&cckd->cdevhdr[from_sfx], 0, CCKDDASD_DEVHDR_SIZE);
+    bzero( &cckd->cdevhdr[from_sfx], CCKDDASD_DEVHDR_SIZE);
     rc = unlink (cckd_sf_name (dev, from_sfx));
 
     /* adjust the stats */
@@ -5758,7 +5761,7 @@ int             n;                      /* Trace Entries Printed     */
     } while (p != cckdblk.itracep);
     if ( n == 0 )
         WRMSG(HHC00397, "I");
-    memset (i, 0, cckdblk.itracen * sizeof(CCKD_TRACE));
+    bzero(i, cckdblk.itracen * sizeof(CCKD_TRACE));
     cckdblk.itracep = i;
     cckdblk.itrace  = i;
 } /* end function cckd_print_itrace */

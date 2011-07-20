@@ -300,7 +300,7 @@ int  i;
     else
     {
 #endif /*defined(FEATURE_ESAME)*/
-        memset(regs->mainstor + tsaa1, 0, 8);
+        bzero(regs->mainstor + tsaa1, 8);
 #if defined(FEATURE_ESAME)
     }
 #endif /*defined(FEATURE_ESAME)*/
@@ -662,7 +662,7 @@ int     i;                              /* Array subscript           */
         abs = abs2;
 
     /* Store zeroes in bytes 152-159 */
-    memset (regs->mainstor+abs, 0, 8);
+    bzero (regs->mainstor+abs, 8);
 
     /* Update virtual and absolute addresses to point to byte 160 */
     lsea += 8;
@@ -675,7 +675,7 @@ int     i;                              /* Array subscript           */
 
 #if defined(FEATURE_ESAME)
     /* For ESAME, store zeroes in bytes 160-167 */
-    memset (regs->mainstor+abs, 0, 8);
+    bzero (regs->mainstor+abs, 8);
 
     /* Update virtual and absolute addresses to point to byte 168 */
     lsea += 8;
@@ -762,7 +762,7 @@ int     i;                              /* Array subscript           */
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Build the new linkage stack entry descriptor */
-    memset (&lsed2, 0, sizeof(LSED));
+    bzero (&lsed2, sizeof(LSED));
     lsed2.uet = etype & LSED_UET_ET;
     lsed2.si = lsed.si;
     rfs -= LSSE_SIZE;

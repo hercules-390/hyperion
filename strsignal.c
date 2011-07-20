@@ -314,7 +314,7 @@ init_signal_tables ()
       nbytes = num_signal_names * sizeof (char *);
       if ((sys_siglist = (const char **) malloc (nbytes)) != NULL)
     {
-      memset (sys_siglist, 0, nbytes);
+      bzero (sys_siglist, nbytes);
       sys_nsig = num_signal_names;
       for (eip = signal_table; eip -> name != NULL; eip++)
         {

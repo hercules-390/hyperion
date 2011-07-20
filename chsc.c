@@ -68,7 +68,7 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp4++)
     {
     DEVBLK *dev;
-        memset(chsc_rsp4, 0x00, sizeof(CHSC_RSP4) );
+        bzero(chsc_rsp4, sizeof(CHSC_RSP4) );
         if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
         {
             chsc_rsp4->sch_val = 1;
@@ -123,8 +123,8 @@ U16 req_len, rsp_len;
 
     STORE_HW(chsc_rsp->length,rsp_len);
 
-    memset(chsc_rsp10->general_char, 0x00, sizeof(chsc_rsp10->general_char));
-    memset(chsc_rsp10->chsc_char, 0x00, sizeof(chsc_rsp10->chsc_char));
+    bzero(chsc_rsp10->general_char, sizeof(chsc_rsp10->general_char));
+    bzero(chsc_rsp10->chsc_char, sizeof(chsc_rsp10->chsc_char));
 
     chsc_rsp10->general_char[0][0] = 0
 #if defined(FEATURE_REGION_RELOCATE)
@@ -202,7 +202,7 @@ int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp24++)
     {
     DEVBLK *dev;
-        memset(chsc_rsp24, 0x00, sizeof(CHSC_RSP24) );
+        bzero(chsc_rsp24, sizeof(CHSC_RSP24) );
         if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
             if(dev->hnd->ssqd)
                 (dev->hnd->ssqd)(dev, chsc_rsp24);

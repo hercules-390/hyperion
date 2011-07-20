@@ -209,8 +209,20 @@
 /*-------------------------------------------------------------------*/
 /* some handy array/struct macros...                                 */
 /*-------------------------------------------------------------------*/
-#ifndef   bzero
-    #define bzero(_dest,_len) memset(_dest,'\0',_len)
+#if !defined(bzero) && !defined(__bzero)
+#undef      bzero
+#undef      __bzero
+#define bzero   __bzero
+/* Let C compiler optimize; O3 optimization beats ASM source version */
+INLINE void __bzero (addr, n)
+     char *addr;
+     unsigned n;
+{
+  register char *mem = addr;
+
+  while (n-- > 0)
+    *mem++ = 0;
+}
 #endif
 
 #ifndef   _countof
@@ -805,7 +817,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     SET_THREAD_NAME(name); \
     INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
-    memset (&sysblk, 0, sizeof(SYSBLK)); \
+    bzero (&sysblk, sizeof(SYSBLK)); \
     INIT_MSGLCK \
     initialize_detach_attr (DETACHED); \
     initialize_join_attr   (JOINABLE); \

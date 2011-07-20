@@ -133,7 +133,7 @@ int inet_socket (char* spec)
 
     logdebug("inet_socket(%s)\n", spec);
 
-    memset(&sin, 0, sizeof(sin));
+    bzero(&sin, sizeof(sin));
     sin.sin_family = AF_INET;
     strlcpy(buf, spec, sizeof(buf));
     colon = strchr(buf, ':');
@@ -466,7 +466,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
         return 0;   /* (failure) */
     }
 
-    memset(bs,0,sizeof(bind_struct));
+    bzero(bs,sizeof(bind_struct));
 
     bs->fn  = fn;
     bs->arg = arg;

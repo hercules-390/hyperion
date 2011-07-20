@@ -249,7 +249,7 @@ int     d;                              /* Decimal digit or sign     */
         }
 
         /* Store sign and decimal digits from right to left */
-        memset (result, 0, 16);
+        bzero (result, 16);
         for (i = 16 - 1; d != 0 || bin != 0; i--)
         {
             result[i] = d;
@@ -358,7 +358,7 @@ BYTE   *lower;                          /* -> Lower value operand    */
 
     /* Return positive zero result if both operands are equal */
     if (rc == 0) {
-        memset (result, 0, MAX_DECIMAL_DIGITS);
+        bzero (result, MAX_DECIMAL_DIGITS);
         *count = 0;
         *sign = +1;
         return;
@@ -438,8 +438,8 @@ int     indexq, indexr, temp1, temp2;   /* Work areas for algorithm  */
 int     temp3, temp4, temp5, qtest;     /* Work areas for algorithm  */
 
     /* Clear the result fields */
-    memset (quot, 0, MAX_DECIMAL_DIGITS);
-    memset (rem, 0, MAX_DECIMAL_DIGITS);
+    bzero (quot, MAX_DECIMAL_DIGITS);
+    bzero (rem, MAX_DECIMAL_DIGITS);
 
     /* If dividend is zero then return zero quotient and remainder */
     if (count1 == 0)
@@ -607,7 +607,7 @@ int     n;                              /* Significant digit counter */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
     /* Fetch the packed decimal operand into work area */
-    memset (pack, 0, sizeof(pack));
+    bzero (pack, sizeof(pack));
     ARCH_DEP(vfetchc) (pack+sizeof(pack)-len-1, len, addr, arn, regs);
 
     /* Unpack digits into result */
@@ -1126,7 +1126,7 @@ int     carry;                          /* Carry indicator           */
     }
 
     /* Clear the result field */
-    memset (dec3, 0, MAX_DECIMAL_DIGITS);
+    bzero (dec3, MAX_DECIMAL_DIGITS);
 
     /* Perform decimal multiplication */
     for (i2 = MAX_DECIMAL_DIGITS-1; i2 >= 0; i2--)

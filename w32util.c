@@ -310,7 +310,7 @@ DLL_EXPORT int w32_ftrunc64 ( int fd, __int64 new_size )
 #define            ZEROPAD_BUFFSIZE  ( 128 * 1024 )
         BYTE zeros[ZEROPAD_BUFFSIZE];
         size_t write_amount = sizeof(zeros);
-        memset( zeros, 0, sizeof(zeros) );
+        bzero( zeros, sizeof(zeros) );
 
         do
         {
@@ -969,7 +969,7 @@ DLL_EXPORT int scandir
 
   /* Now we know how many, we can alloc & make 2nd pass to copy them */
   names = (struct dirent**)malloc(sizeof(struct dirent*) * count);
-  memset(names, 0, sizeof(*names));
+  bzero(names, sizeof(*names));
   handle = FindFirstFile(pattern, &file_data);
   if (handle == INVALID_HANDLE_VALUE)
     {
@@ -1097,7 +1097,7 @@ DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
         HANDLE          hChildProcess;
         struct rusage   child_usage;
 
-        memset( &pe32, 0, sizeof(pe32) );
+        bzero( &pe32, sizeof(pe32) );
 
         // Take a snapshot of all active processes...
 
@@ -2124,7 +2124,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 char CPUBrand[0x40];
 
                 __cpuid(CPUInfo, 0);
-                memset(CPUString, 0, sizeof(CPUString));
+                bzero(CPUString, sizeof(CPUString));
                 *((int*)CPUString) = CPUInfo[1];
                 *((int*)(CPUString+4)) = CPUInfo[3];
                 *((int*)(CPUString+8)) = CPUInfo[2];
@@ -2141,7 +2141,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 {
                     strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) );
                 }
-                memset(CPUBrand, 0, sizeof(CPUBrand));
+                bzero(CPUBrand, sizeof(CPUBrand));
 
                 __cpuid(CPUInfo, 0x80000002);
                 memcpy(CPUBrand, CPUInfo, sizeof(CPUInfo));
@@ -2726,8 +2726,8 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
         return -1;
     }
 
-    memset( &localhost_addr, 0, len   );
-    memset( &tempaddr,       0, talen );
+    bzero( &localhost_addr, len   );
+    bzero( &tempaddr,       talen );
 
     localhost_addr.sin_family       = AF_INET;
     localhost_addr.sin_port         = htons( 0 );
@@ -3843,7 +3843,7 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     char dir[_MAX_DIR];
     char *t;
 
-    memset( _dirname, '\0', MAX_PATH );          // zero for security reasons
+    bzero( _dirname, MAX_PATH );          // zero for security reasons
     _splitpath_s( path, drive, sizeof(drive), dir, sizeof(dir), NULL, 0, NULL, 0 ); // C4996
 
     /* Remove trailing slashes */

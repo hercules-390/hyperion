@@ -1134,7 +1134,7 @@ RADR    fsta;                           /* Failing storage address   */
 #if !defined(FEATURE_ESAME)
 // ZZ
     /* Set the extended logout area to zeros */
-    memset(psa->storepsw, 0, 16);
+    bzero(psa->storepsw, 16);
 #endif
 
     /* Store the machine check interrupt code at PSA+232 */
@@ -1638,7 +1638,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     }
     else
     {
-        memset (&regs, 0, sizeof(REGS));
+        bzero (&regs, sizeof(REGS));
 
         if (cpu_init (cpu, &regs, NULL))
             return NULL;
@@ -1845,7 +1845,7 @@ int display_psw (REGS *regs, char *buf, int buflen)
 {
 QWORD   qword;                            /* quadword work area      */
 
-    memset(qword, 0, sizeof(qword));
+    bzero(qword, sizeof(qword));
 
     if( regs->arch_mode != ARCH_900 )
     {
@@ -1876,7 +1876,7 @@ char *str_psw (REGS *regs, char *buf)
 {
 QWORD   qword;                            /* quadword work area      */
 
-    memset(qword, 0, sizeof(qword));
+    bzero(qword, sizeof(qword));
 
     if( regs->arch_mode != ARCH_900 )
     {

@@ -1333,7 +1333,7 @@ char            wbuf[150];
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero (dev->sense, sizeof(dev->sense));
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

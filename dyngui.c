@@ -1995,7 +1995,7 @@ void  Initialize ()
         exit(0);
     }
 
-    memset(pszInputBuff,0,nInputBuffSize);
+    bzero(pszInputBuff,nInputBuffSize);
     nInputLen = 0;
 
     // Allocate command processing buffer...
@@ -2008,7 +2008,7 @@ void  Initialize ()
         exit(0);
     }
 
-    memset(pszCommandBuff,0,nCommandBuffSize);
+    bzero(pszCommandBuff,nCommandBuffSize);
     nCommandLen = 0;
 
     // Initialize some variables...

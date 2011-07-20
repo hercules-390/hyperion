@@ -499,7 +499,7 @@ static void *http_request(int sock)
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
 
-    memset(webblk,0,sizeof(WEBBLK));
+    bzero(webblk,sizeof(WEBBLK));
     webblk->sock = sock;
 
     while (hgets(line, sizeof(line), webblk->sock))
@@ -844,7 +844,7 @@ struct timeval      timeout;            /* timeout value             */
                 (void*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
-    memset (&server, 0, sizeof(server));
+    bzero (&server, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = http_serv.httpport;

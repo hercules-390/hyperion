@@ -910,7 +910,7 @@ int     n;
     SET_AEA_MODE(regs);
 
     /* Zeroize the interruption parameters */
-    memset(STATEBK->ipa, 0, 10);
+    bzero(STATEBK->ipa, 10);
 
     if( STATEBK->c == SIE_C_INST
      || STATEBK->c == SIE_C_PGMINST

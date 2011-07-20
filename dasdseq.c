@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 
 //  Parse command line
 
-    memset(&dadsm, 0, sizeof(dadsm));           // init DADSM workarea
+    bzero(&dadsm, sizeof(dadsm));           // init DADSM workarea
     rc = parsecmd(argc, argv, &dadsm, pgm);
     if (rc) exit(rc);
 
@@ -630,7 +630,7 @@ int fbcopy(     FILE            *fout,
 
             if (tran)                   // ASCII output
             {
-                memset(pascii, 0, lrecl + 1);
+                bzero(pascii, lrecl + 1);
                 make_asciiz(pascii, lrecl + 1, buffer + offset, lrecl);
                 if (verbose > 4)
                 {
@@ -1176,7 +1176,7 @@ int getF1dscb(
 
 //  Locate dataset's F1 DSCB
 
-    memset(zdsn, 0, sizeof(zdsn));
+    bzero(zdsn, sizeof(zdsn));
     strncpy(zdsn, *pdsn, sizeof(zdsn) - 1);
     string_to_upper(zdsn);
     convert_to_ebcdic(edsn, sizeof(edsn), zdsn);

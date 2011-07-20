@@ -577,7 +577,7 @@ DEVINITTAB*     pDevInitTab;
     {
         dev->numdevchar = 64;
 
-        memset (dev->devchar, 0, sizeof(dev->devchar));
+        bzero (dev->devchar, sizeof(dev->devchar));
         memcpy (dev->devchar, dev->devid+1, 6);
 
         // Bytes 6-9: Subsystem Facilities...
@@ -626,9 +626,9 @@ DEVINITTAB*     pDevInitTab;
     dev->sstat = GMT_DR_OPEN(-1);
 #endif
     /* Clear the DPA */
-    memset (dev->pgid, 0, sizeof(dev->pgid));
+    bzero (dev->pgid, sizeof(dev->pgid));
     /* Clear Drive password - Adrian */
-    memset (dev->drvpwd, 0, sizeof(dev->drvpwd));
+    bzero (dev->drvpwd, sizeof(dev->drvpwd));
 
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
@@ -641,7 +641,7 @@ DEVINITTAB*     pDevInitTab;
 
     /* ISW */
     /* Build a 'clear' sense */
-    memset (dev->sense, 0, sizeof(dev->sense));
+    bzero (dev->sense, sizeof(dev->sense));
     dev->sns_pending = 0;
 
     // Initialize the [non-SCSI] auto-loader...

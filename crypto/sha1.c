@@ -30,8 +30,13 @@
 #include "hstdinc.h"
 #include "sha1.h"
 
+#if !defined(bcopy)
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#endif
+
+#if !defined(bzero)
 #define bzero(_dest,_len) memset(_dest,'\0',_len)
+#endif
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 

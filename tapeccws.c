@@ -773,7 +773,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            them for the next time, and then finally, reset the
            Contengent Allegiance condition... */
         memcpy (iobuf, dev->sense, num);
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero (dev->sense, sizeof(dev->sense));
         dev->sns_pending = 0;
 
         break;
@@ -1206,7 +1206,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (len);
 
         /* Clear the device sense bytes */
-        memset (iobuf, 0, num);
+        bzero( iobuf, num );
 
         /* Copy device sense bytes to channel I/O buffer */
         memcpy (iobuf, dev->sense,
@@ -2595,7 +2595,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (dev->numsense);
 
         /* Reset SENSE Data */
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero (dev->sense, sizeof(dev->sense));
         *unitstat = CSW_CE|CSW_DE;
 
         /* Copy device Buffered log data (Bunch of 0s for now) */
@@ -2711,7 +2711,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         default:
         case SPG_SET_RESIGN:
             dev->pgstat = 0;
-            memset (dev->pgid, 0, 11);  // (reset to zero)
+            bzero (dev->pgid, 11);  // (reset to zero)
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             break;
 
@@ -2822,7 +2822,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Return Media Sense data... */
 
-        memset( iobuf, 0, num );          // (init to all zeroes first)
+        bzero( iobuf, num );          // (init to all zeroes first)
 
         if (dev->tmh->tapeloaded( dev, unitstat, code ))
             iobuf[0] |= (0x01 & 0x0F);    // MSENSE_ASSOCIATED_MOUNT
@@ -2926,10 +2926,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         dev->pgstat=0;
 
         /* Reset Path group ID password */
-        memset(dev->pgid,0,11);
+        bzero(dev->pgid,11);
 
         /* Reset drive password */
-        memset(dev->drvpwd,0,sizeof(dev->drvpwd));
+        bzero(dev->drvpwd,sizeof(dev->drvpwd));
 
         /* Return unit status */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -3429,8 +3429,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
     /* Copy and translate messages... */
 
-    memset( msg1, 0, sizeof(msg1) );
-    memset( msg2, 0, sizeof(msg2) );
+    bzero( msg1, sizeof(msg1) );
+    bzero( msg2, sizeof(msg2) );
 
     msg = buf+1;
 
@@ -3666,7 +3666,7 @@ int sense_built;
 
             if (TAPE_BSENSE_STATUSONLY != ERCode)
             {
-                memset( dev->sense, 0, sizeof(dev->sense) );
+                bzero( dev->sense, sizeof(dev->sense) );
                 dev->sns_pending = 0;
             }
 
@@ -3699,7 +3699,7 @@ int sense_built;
     }
     if (!sense_built)
     {
-        memset( dev->sense, 0, sizeof(dev->sense) );
+        bzero( dev->sense, sizeof(dev->sense) );
         dev->sense[0]=SENSE_EC;
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
     }
@@ -3997,7 +3997,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
          sns4mat == TAPE_SNS7_FMT_30_3480_READ_BUF_LOG )
     {
         dev->sense[7] = sns4mat;
-        memset(&dev->sense[8],0,31-8);
+        bzero(&dev->sense[8],31-8);
     
         if ( sns4mat == TAPE_SNS7_FMT_20_3480 )
         {

@@ -91,7 +91,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
 #define INIT_REPLY_FRAME( reply, pCmdFrame )                \
                                                             \
-    memset( &(reply), 0, sizeof( reply ));                  \
+    bzero( &(reply), sizeof( reply ) );                     \
     memcpy( &(reply), (pCmdFrame), sizeof( LCSCMDHDR ));    \
     STORE_HW( (reply).bLCSCmdHdr.hwReturnCode, 0x0000 )
 
@@ -154,11 +154,11 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }
-        memset( pLCSBLK, 0, sizeof( LCSBLK ) );
+        bzero( pLCSBLK, sizeof( LCSBLK ) );
 
         for( i = 0; i < LCS_MAX_PORTS; i++ )
         {
-            memset( &pLCSBLK->Port[i], 0, sizeof ( LCSPORT ) );
+            bzero( &pLCSBLK->Port[i], sizeof ( LCSPORT ) );
 
             pLCSBLK->Port[i].bPort   = i;
             pLCSBLK->Port[i].pLCSBLK = pLCSBLK;
@@ -194,7 +194,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             // in the config file with an assumption of IP mode.
             pLCSBLK->pDevices = malloc( sizeof( LCSDEV ) );
 
-            memset( pLCSBLK->pDevices, 0, sizeof( LCSDEV ) );
+            bzero( pLCSBLK->pDevices, sizeof( LCSDEV ) );
 
             if( pLCSBLK->pszIPAddress )
                 inet_aton( pLCSBLK->pszIPAddress, &addr );
@@ -305,7 +305,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             {
                 struct tt32ctl tt32ctl;
 
-                memset( &tt32ctl, 0, sizeof(tt32ctl) );
+                bzero( &tt32ctl, sizeof(tt32ctl) );
                 strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, sizeof(tt32ctl.tt32ctl_name) );
 
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
@@ -537,7 +537,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         memcpy( pIOBuf, pDEVBLK->sense, iNum );
 
         // Clear the device sense bytes
-        memset( pDEVBLK->sense, 0, sizeof( pDEVBLK->sense ) );
+        bzero( pDEVBLK->sense, sizeof( pDEVBLK->sense ) );
 
         // Return unit status
         *pUnitStat = CSW_CE | CSW_DE;
@@ -1537,7 +1537,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         return;
     }
 
-    memset( &ifr, 0, sizeof( ifr ) );
+    bzero( &ifr, sizeof( ifr ) );
 
     strcpy( ifr.ifr_name, pLCSPORT->szNetDevName );
 
@@ -1903,9 +1903,9 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
     // Housekeeping - Cleanup Port Block
 
-    memset( pLCSPORT->MAC_Address,  0, sizeof( MAC ) );
-    memset( pLCSPORT->szNetDevName, 0, IFNAMSIZ );
-    memset( pLCSPORT->szMACAddress, 0, 32 );
+    bzero( pLCSPORT->MAC_Address,  sizeof( MAC ) );
+    bzero( pLCSPORT->szNetDevName, IFNAMSIZ );
+    bzero( pLCSPORT->szMACAddress, 32 );
 
     for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSPORT->pRoutes )
     {
@@ -2068,7 +2068,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif
 
     // Housekeeping
-    memset( &addr, 0, sizeof( struct in_addr ) );
+    bzero( &addr, sizeof( struct in_addr ) );
 
     // Set some initial defaults
 #if defined( WIN32 )
@@ -2335,7 +2335,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         pszNetAddr   = NULL;
         pszNetMask   = NULL;
 
-        memset( &addr, 0, sizeof( addr ) );
+        bzero( &addr, sizeof( addr ) );
 
         // Split the statement into keyword and first operand
         pszKeyword = strtok_r( pszStatement, " \t", &strtok_str );
@@ -2368,7 +2368,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             {
                 WRMSG(HHC00955, "E", "MAC", argv[0], "HWADD", pszOATName, szBuff );
 
-                memset( pLCSPORT->MAC_Address, 0, sizeof(MAC) );
+                bzero( pLCSPORT->MAC_Address, sizeof(MAC) );
                 return -1;
             }
 
@@ -2513,7 +2513,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             // Create new LCS Device...
 
             pLCSDev = malloc( sizeof( LCSDEV ) );
-            memset( pLCSDev, 0, sizeof( LCSDEV ) );
+            bzero( pLCSDev, sizeof( LCSDEV ) );
 
             pLCSDev->sAddr        = sDevNum;
             pLCSDev->bMode        = bMode;

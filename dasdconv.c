@@ -647,7 +647,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
+    bzero(&devhdr, CKDDASD_DEVHDR_SIZE);
     memcpy(devhdr.devid, "CKD_P370", 8);
     devhdr.heads[3] = (heads >> 24) & 0xFF;
     devhdr.heads[2] = (heads >> 16) & 0xFF;
@@ -712,7 +712,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             }
 
             /* Clear the output track image to zeroes */
-            memset (obuf, 0, trksize);
+            bzero (obuf, trksize);
 
             /* Build the output track header */
             trkhdr = (CKDDASD_TRKHDR*)obuf;

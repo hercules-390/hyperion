@@ -286,8 +286,8 @@ VMDEVTBL *vmentry;               /* -> VMDEVTBL entry found         */
 DEVBLK   *dev;                   /* -> DEVBLK                       */
 
     /* Clear vdat and rdat */
-    memset (vdat, 0x00, sizeof(*vdat));
-    memset (rdat, 0x00, sizeof(*rdat));
+    bzero (vdat, sizeof(*vdat));
+    bzero (rdat, sizeof(*rdat));
 
     /* Locate the device block */
     dev = find_device_by_devnum (0,devnum);
@@ -851,7 +851,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     release_lock (&dev->lock);
 
     /* Build the operation request block */                    /*@IWZ*/
-    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
+    bzero (&dev->orb, sizeof(ORB));                            /*@IWZ*/
     STORE_FW(dev->orb.ccwaddr, ccwaddr);                       /*@IWZ*/
     dev->orb.flag4 = ioparm.akey & ORB4_KEY;                   /*@IWZ*/
     if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)                    /*@IWZ*/
@@ -990,7 +990,7 @@ BYTE       c;                           /* Character work area       */
 
     /* Bytes 16-23 contain the userid in EBCDIC */
 #if defined( HAVE_GETLOGIN_R )
-    memset( unam, 0, sizeof(unam) );
+    bzero( unam, sizeof(unam) );
     VERIFY( getlogin_r ( unam, sizeof(unam) ) == 0 );
     puser = unam;
 #else
@@ -1541,7 +1541,7 @@ static  char timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
     }
 
     /* Build the response buffer */
-    memset (buf, 0x00, sizeof(buf));
+    bzero (buf, sizeof(buf));
     /* Bytes 0-7 contain the date as EBCDIC MM/DD/YY */
     memcpy (buf, dattim, 8);
     /* Bytes 8-15 contain the time as EBCDIC HH:MM:SS */

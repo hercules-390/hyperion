@@ -1343,7 +1343,7 @@ static void NP_update(REGS *regs)
     }
 
     /* Display the psw */
-    memset (curpsw, 0, sizeof(QWORD));
+    bzero (curpsw, sizeof(QWORD));
     copy_psw (regs, curpsw);
     if (!NPpsw_valid || memcmp(NPpsw, curpsw, sizeof(QWORD)))
     {
@@ -2000,7 +2000,7 @@ char    buf[1024];                      /* Buffer workarea           */
     get_dim (&cons_rows, &cons_cols);
 
     /* Clear the command-line buffer */
-    memset (cmdline, 0, sizeof(cmdline));
+    bzero (cmdline, sizeof(cmdline));
     cmdcols = cons_cols - CMDLINE_COL;
 
     /* Obtain storage for the keyboard buffer */
@@ -2035,7 +2035,7 @@ char    buf[1024];                      /* Buffer workarea           */
         curmsg->fg = COLOR_DEFAULT_BG;
 #if defined(OPTION_MSGHLD)
         curmsg->keep = 0;
-        memset( &curmsg->expiration, 0, sizeof(curmsg->expiration));
+        bzero( &curmsg->expiration, sizeof(curmsg->expiration));
 #endif // defined(OPTION_MSGHLD)
 #endif // defined(OPTION_MSGCLR)
     }
@@ -2531,7 +2531,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             int     idx  = 0;
                             char    psz_cmdline[(sizeof(cmdline) * 11)];
 
-                            memset(psz_cmdline, 0, sizeof(psz_cmdline));
+                            bzero(psz_cmdline, sizeof(psz_cmdline));
 
                             pt1 = psz_PF+j;
 
@@ -3150,7 +3150,7 @@ FinishShutdown:
 
         /* Obtain the PSW for target CPU */
         regs = copy_regs(sysblk.pcpu);
-        memset (curpsw, 0x00, sizeof(curpsw));
+        bzero (curpsw, sizeof(curpsw));
         copy_psw (regs, curpsw);
 
         /* Set the display update indicator if the PSW has changed

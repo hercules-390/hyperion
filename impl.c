@@ -361,7 +361,7 @@ int     dll_count;                      /* index into array          */
     }
 
     /* Clear the system configuration block */
-    memset( &sysblk, 0, sizeof( SYSBLK ) );
+    bzero( &sysblk, sizeof( SYSBLK ) );
 
     VERIFY( MLOCK( &sysblk, sizeof( SYSBLK )) == 0);
 

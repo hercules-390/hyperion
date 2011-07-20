@@ -61,12 +61,12 @@ static void obtain_w32stape_lock()
     {
         bDidInit = 1;
         initialize_lock ( &g_lock );
-        memset( g_ifds,    0x00, sizeof ( g_ifds    ) );
-        memset( g_handles, 0x00, sizeof ( g_handles ) );
-        memset( g_fnames,  0x00, sizeof ( g_fnames  ) );
-        memset( g_fstats,  0x00, sizeof ( g_fstats  ) );
+        bzero( g_ifds,    sizeof ( g_ifds    ) );
+        bzero( g_handles, sizeof ( g_handles ) );
+        bzero( g_fnames,  sizeof ( g_fnames  ) );
+        bzero( g_fstats,  sizeof ( g_fstats  ) );
         memset( g_BOTmsk,  0xFF, sizeof ( g_BOTmsk  ) );
-        memset( g_BOTbot,  0x00, sizeof ( g_BOTbot  ) );
+        bzero( g_BOTbot,  sizeof ( g_BOTbot  ) );
         bInitBusy = 0;
     }
     while (bInitBusy) Sleep(10);
@@ -253,7 +253,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
 
     // Save drive parameters for later...
 
-    memset( &g_drive_parms[ifd], 0, sizeof(TAPE_GET_DRIVE_PARAMETERS) );
+    bzero( &g_drive_parms[ifd], sizeof(TAPE_GET_DRIVE_PARAMETERS) );
     dwSizeofDriveParms = sizeof(TAPE_GET_DRIVE_PARAMETERS);
 
     do
@@ -760,7 +760,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         case MTIOCGET:  // (retrieve tape status)
         {
             struct mtget* mtget = ptr;
-            memset( mtget, 0, sizeof(*mtget) );
+            bzero( mtget, sizeof(*mtget) );
             rc = w32_internal_mtget ( hFile, pStat, mtget, ifd );
         }
         break;
@@ -768,7 +768,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         case MTIOCPOS:  // (retrieve tape position)
         {
             struct mtpos* mtpos = ptr;
-            memset( mtpos, 0, sizeof(*mtpos) );
+            bzero( mtpos, sizeof(*mtpos) );
             rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno, NULL, ifd );
         }
         break;
@@ -1101,7 +1101,7 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t if
     // Retrieve the media parameters information...
 
     dwSize = sizeof(media_parms);
-    memset( &media_parms, 0, dwSize );
+    bzero( &media_parms, dwSize );
     dwRetCode = GetTapeParameters( hFile, GET_TAPE_MEDIA_INFORMATION, &dwSize, &media_parms );
     ASSERT( sizeof(media_parms) == dwSize );
 

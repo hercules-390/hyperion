@@ -279,7 +279,7 @@ BYTE            card[81];               /* Logical record (ASCIIZ)   */
 char            pathname[MAX_PATH];     /* ofname in host path format*/
 
     /* Build the output file name */
-    memset (ofname, 0, sizeof(ofname));
+    bzero (ofname, sizeof(ofname));
     strncpy (ofname, memname, 8);
     string_to_lower (ofname);
     strcat (ofname, ".mac");

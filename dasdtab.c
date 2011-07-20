@@ -321,7 +321,7 @@ int dasd_build_ckd_devid (CKDDEV *ckd, CKDCU *cu, BYTE *devid)
 {
 int len;
 
-    memset (devid, 0, 256);
+    bzero( devid, 256 );
 
     store_fw (devid + 0, 0xFF000000 | (cu->devt << 8) | cu->model);
     store_fw (devid + 4, (ckd->devt << 16) | (ckd->model << 8) | 0x00);
@@ -374,7 +374,7 @@ int altcyls;                            /* Number alternate cyls     */
     if (cyls > ckd->cyls) altcyls = cyls - ckd->cyls;
     else altcyls = 0;
 
-    memset (devchar, 0, 64);
+    bzero (devchar, 64);
     store_hw(devchar+0, cu->devt);              // Storage control type
     devchar[2]  = cu->model;                    // CU model
     store_hw(devchar+3, ckd->devt);             // Device type
@@ -456,7 +456,7 @@ int  i;
 BYTE buf[256];
 
     /* Clear the configuration data area */
-    memset (buf, 0, 256);
+    bzero( buf, 256 );
 
     /* Bytes 0-31: NED 1  Node element descriptor for the device */
     store_fw (buf, 0xc4010100);
@@ -529,7 +529,7 @@ int  num;
 BYTE buf[44];
 
     /* Build the basic subsystem status data in the I/O area */
-    memset (buf, 0, 44);
+    bzero( buf, 44);
     buf[1] = dev->devnum & 0xFF;
     buf[2] = DEVICES_PER_SUBSYS - 1;
     store_hw (buf + 38, SSID(dev));
@@ -556,7 +556,7 @@ BYTE buf[44];
 int dasd_build_fba_devid (FBADEV *fba, BYTE *devid)
 {
 
-    memset (devid, 0, 256);
+    bzero( devid, 256 );
 
     devid[0] = 0xff;
     devid[1] = (fba->cu >> 8) & 0xff; 
@@ -575,7 +575,7 @@ int dasd_build_fba_devid (FBADEV *fba, BYTE *devid)
 int dasd_build_fba_devchar (FBADEV *fba, BYTE *devchar, int blks)
 {
 
-    memset (devchar, 0, 64);
+    bzero (devchar, 64);
 
     devchar[0]  = 0x30;                     // operation modes
     devchar[1]  = 0x08;                     // features

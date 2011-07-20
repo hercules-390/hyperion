@@ -124,7 +124,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         for (stmtlen = 0, lstarted = 0; ;)
         {
             if (stmtlen == 0)
-                memset(buf,'\0',buflen); // clear work area
+                bzero(buf,buflen); // clear work area
 
             /* Read character from configuration file */
             c = fgetc(fp);
@@ -541,7 +541,7 @@ SCRCTL* NewSCRCTL( TID tid, const char* script_name, int isrcfile )
     }
 
     /* Initialize the new entry */
-    memset( pCtl, 0, sizeof( SCRCTL ));
+    bzero( pCtl, sizeof( SCRCTL ));
     InitializeListLink( &pCtl->link );
     pCtl->scr_tid = tid; /* (may be zero) */
     pCtl->scr_name = scr_name;

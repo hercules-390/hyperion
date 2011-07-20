@@ -3371,7 +3371,7 @@ int     rc;                             /* return code from load_psw */
     memcpy( &newregs, regs, sysblk.regs_copy_len );
 
     /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
-    memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
+    bzero( &newregs.tlb.vaddr, TLBN * sizeof(DW) );
     newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
@@ -6719,7 +6719,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 1:
                 /* Basic-machine configuration */
                 sysib111 = (SYSIB111*)(m);
-                memset(sysib111, 0x00, MAX(sizeof(SYSIB111),64*4));
+                bzero(sysib111, MAX(sizeof(SYSIB111),64*4));
                 sysib111->flag1 |= SYSIB111_PFLAG;
                 get_manufacturer(sysib111->manufact);
                 get_model(sysib111->model);
@@ -6759,7 +6759,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 1:
                 /* Basic-machine Current CPU */
                 sysib121 = (SYSIB121*)(m);
-                memset(sysib121, 0x00, MAX(sizeof(SYSIB121),64*4));
+                bzero(sysib121, MAX(sizeof(SYSIB121),64*4));
                 memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
                 for(i = 0; i < 6; i++)
                     sysib121->seqc[(sizeof(sysib121->seqc) - 6) + i] =
@@ -6772,7 +6772,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 2:
                 /* Basic-machine All CPUs */
                 sysib122 = (SYSIB122*)(m);
-                memset(sysib122, 0x00, MAX(sizeof(SYSIB122),64*4));
+                bzero(sysib122, MAX(sizeof(SYSIB122),64*4));
                 sysib122->format = 1;
                 offset = (U16)(sysib122->accap - (BYTE*)sysib122);
                 STORE_HW(sysib122->accoff, offset);
@@ -6810,7 +6810,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 1:
                 /* Logical-partition Current CPU */
                 sysib221 = (SYSIB221 *)(m);
-                memset(sysib221, 0x00, MAX(sizeof(SYSIB221),64*4));
+                bzero(sysib221, MAX(sizeof(SYSIB221),64*4));
                 memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
@@ -6824,7 +6824,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 2:
                 /* Logical-partition All CPUs */
                 sysib222 = (SYSIB222 *)(m);
-                memset(sysib222, 0x00, MAX(sizeof(SYSIB222),64*4));
+                bzero(sysib222, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,1);
                 sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu,sysblk.maxcpu);
@@ -6862,7 +6862,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             case 2:
                 /* Topology information of current configuration */
                 sysib1512 = (SYSIB1512 *)(m);
-                memset(sysib1512, 0x00, sizeof(SYSIB1512));
+                bzero(sysib1512, sizeof(SYSIB1512));
 
                 // PROGRAMMING NOTE: we only support horizontal polarization,
                 // not vertical.
@@ -6887,7 +6887,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                             /* Initialize new TLE for this type */
                             if (!cpumask)
                             {
-                                memset(tlecpu, 0x00, sizeof(TLECPU));
+                                bzero(tlecpu, sizeof(TLECPU));
                                 tlecpu->nl = 0;
                                 tlecpu->flags = CPUTLE_FLAG_DEDICATED;
                                 tlecpu->cpuadorg = 0;
@@ -7177,7 +7177,7 @@ RADR    n;                              /* Real address              */
     n = APPLY_PREFIXING (n, regs->PX);
 
     /* Clear the 4K block to zeroes */
-    memset (regs->mainstor + n, 0x00, PAGEFRAME_PAGESIZE);
+    bzero (regs->mainstor + n, PAGEFRAME_PAGESIZE);
 
     /* Set condition code 0 if storage usable, 1 if unusable */
     if (STORAGE_KEY(n, regs) & STORKEY_BADFRM)

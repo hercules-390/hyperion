@@ -669,7 +669,7 @@ char           *strtok_str = NULL;      /* save last position        */
                                   (BYTE *)&dev->devchar, dev->ckdcyls);
 
     /* Clear the DPA */
-    memset(dev->pgid, 0, sizeof(dev->pgid));
+    bzero( dev->pgid, sizeof(dev->pgid) );
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -1449,7 +1449,7 @@ void ckd_build_sense ( DEVBLK *dev, BYTE sense0, BYTE sense1,
 {
 int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     /* Clear the sense bytes */
-    memset (dev->sense, 0, sizeof(dev->sense));
+    bzero( dev->sense, sizeof(dev->sense) );
 
     /* Sense bytes 0-2 are specified by caller */
     dev->sense[0] = sense0;
@@ -1940,7 +1940,7 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset (&rechdr, 0, CKDDASD_RECHDR_SIZE);
+    bzero (&rechdr, CKDDASD_RECHDR_SIZE);
     memcpy (&rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
                                 len : CKDDASD_RECHDR_SIZE);
 
@@ -1996,7 +1996,7 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset (&rechdr, 0, CKDDASD_RECHDR_SIZE);
+    bzero (&rechdr, CKDDASD_RECHDR_SIZE);
     memcpy (&rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
                                 len : CKDDASD_RECHDR_SIZE);
 
@@ -3174,7 +3174,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             case 0x00: /* Storage path status */
                 /* Prepare storage path status record */
-                memset (iobuf, 0x00, 16);
+                bzero( iobuf, 16 );
                 iobuf[0] = 0xC0; /* Storage path valid and attached */
                 iobuf[1] = 0x80; /* Logical paths configured bitmap */
                 iobuf[2] = 0x00; /* Channels enabled bitmap */
@@ -3190,7 +3190,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
 
                 /* Prepare subsystem statistics record */
-                memset (iobuf, 0x00, dev->ckdssdlen);
+                bzero( iobuf, dev->ckdssdlen );
                 iobuf[1] = dev->devnum & 0xFF;
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
@@ -3208,7 +3208,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
             case 0x0E: /* Unit address configuration */
                 /* Prepare unit address configuration record */
-                memset (iobuf, 0x00, 512);
+                bzero( iobuf, 512 );
                 /* 256 pairs (UA type, base UA) */
 
                 /* Indicate the length of subsystem data prepared */
@@ -3217,7 +3217,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             case 0x41: /* Feature codes */
                 /* Prepare feature codes record */
-                memset (iobuf, 0x00, 256);
+                bzero( iobuf, 256 );
 
                 /* Indicate the length of subsystem data prepared */
                 dev->ckdssdlen = 256;
@@ -3295,7 +3295,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             }
 
             /* Prepare subsystem data (node descriptor record) */
-            memset (iobuf, 0x00, 96);
+            bzero( iobuf, 96 );
 
             /* Bytes 0-31 contain the subsystem node descriptor */
             store_fw(&iobuf[0], 0x00000100);
@@ -5659,7 +5659,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero( dev->sense, sizeof(dev->sense) );
 
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -5818,7 +5818,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (count < 32) *more = 1;
 
         /* Build the buffered error log in the I/O area */
-        memset (iobuf, 0x00, 32);
+        bzero( iobuf, 32 );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

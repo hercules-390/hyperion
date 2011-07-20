@@ -2248,7 +2248,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         break;
 
     default:
-        memset (vbyte, 0, 4);
+        bzero(vbyte, 4);
         ARCH_DEP(vfetchc)(vbyte, icmhlen[r3], effective_addr2, b2, regs);
 
         /* If mask was 0 then we still had to fetch, according to POP.
@@ -5810,7 +5810,7 @@ int     i, j;                           /* Array subscripts          */
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the second operand and right justify */
-    memset (source, 0, sizeof(source));
+    bzero (source, sizeof(source));
     ARCH_DEP(vfetchc) ( source+31-len, len, addr2, b2, regs );
 
     /* Append an implied plus sign */
@@ -5849,7 +5849,7 @@ int     i, j;                           /* Array subscripts          */
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the second operand and right justify */
-    memset (source, 0, sizeof(source));
+    bzero (source, sizeof(source));
     ARCH_DEP(vfetchc) ( source+63-len, len, addr2, b2, regs );
 
     /* Append an implied plus sign */
@@ -7138,7 +7138,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         break;
 
     default:
-        memset (vbyte, 0, 4);
+        bzero(vbyte, 4);
         ARCH_DEP(vfetchc)(vbyte, icmylen[r3], effective_addr2, b2, regs);
 
         /* If mask was 0 then we still had to fetch, according to POP.

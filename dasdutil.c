@@ -160,7 +160,7 @@ int             lastsame = 0;
 
         if ( offset >= (U32)len ) break;
 
-        memset ( print_chars, 0, sizeof(print_chars) );
+        bzero( print_chars, sizeof(print_chars) );
         memset ( hex_chars, SPACE, sizeof(hex_chars) );
         startoff = offset;
         for (xi=0, i=0; i < 16; i++)
@@ -1205,7 +1205,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
+    bzero(&devhdr, CKDDASD_DEVHDR_SIZE);
     if (comp == 0xff)
         memcpy(devhdr.devid, "CKD_P370", 8);
     else
@@ -1236,7 +1236,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (comp != 0xff)
     {
         /* Create the compressed device header */
-        memset(&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
+        bzero(&cdevhdr, CCKDDASD_DEVHDR_SIZE);
         cdevhdr.vrm[0] = CCKD_VERSION;
         cdevhdr.vrm[1] = CCKD_RELEASE;
         cdevhdr.vrm[2] = CCKD_MODLVL;
@@ -1282,7 +1282,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         /* Create the secondary lookup table */
-        memset (&l2, 0, CCKD_L2TAB_SIZE);
+        bzero (&l2, CCKD_L2TAB_SIZE);
 
         /* Write the seondary lookup table */
         rc = write (fd, &l2, CCKD_L2TAB_SIZE);
@@ -1315,7 +1315,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             for (head = 0; head < heads; head++)
             {
                 /* Clear the track to zeroes */
-                memset (buf, 0, trksize);
+                bzero (buf, trksize);
 
                 /* Build the track header */
                 trkhdr = (CKDDASD_TRKHDR*)buf;
@@ -1438,7 +1438,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += 44;
 
                     /* track 1 record 1 data */
-                    memset (pos, 0, 96);
+                    bzero (pos, 96);
                     pos[0] = 0xf4;                            // DS4IDFMT
                     store_hw(pos + 6, 10);                    // DS4DSREC
                     pos[14] = trks > 65535 ? 0xa0 : 0;        // DS4VTOCI
@@ -1470,7 +1470,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
                     /* track 1 record 2 key */
                     memset (pos, 0x05, 4);                    // DS5KEYID
-                    memset (pos+4, 0, 40);
+                    bzero (pos+4, 40);
                     if (trks <= 65535)
                     {
                         store_hw(pos+4, 2);                   // DS5AVEXT + 00
@@ -1480,7 +1480,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += 44;
 
                     /* track 1 record 2 data */
-                    memset (pos, 0, 96);
+                    bzero (pos, 96);
                     pos[0] = 0xf5;                            // DS5FMTID
                     pos += 96;
 
@@ -1500,13 +1500,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
                         /* track 1 record 2 key */
                         memset (pos, 0x07, 4);                // DS7KEYID
-                        memset (pos+4, 0, 40);
+                        bzero (pos+4, 40);
                         store_fw(pos+4, 2);                   // DS7EXTNT + 00
                         store_fw(pos+8, trks - 1);            // DS7EXTNT + 04
                         pos += 44;
 
                         /* track 1 record 2 data */
-                        memset (pos, 0, 96);
+                        bzero (pos, 96);
                         pos[0] = 0xf7;                        // DS7FMTID
                         pos += 96;
                     }
@@ -1936,7 +1936,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         for (sectnum = 0; sectnum < sectors; sectnum++)
         {
             /* Clear the sector to zeroes */
-            memset (buf, 0, sectsz);
+            bzero (buf, sectsz);
 
             /* Sector 1 contains the volume label */
             if (!rawflag && sectnum == 1)
@@ -2050,7 +2050,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             devtype, rawflag ? "" : volser, sectors, sectsz));
 
     /* Write the device header */
-    memset (&devhdr, 0, CKDDASD_DEVHDR_SIZE);
+    bzero (&devhdr, CKDDASD_DEVHDR_SIZE);
     memcpy (&devhdr.devid, "FBA_C370", 8);
     rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc < (int)CKDDASD_DEVHDR_SIZE)
@@ -2061,7 +2061,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Write the compressed device header */
-    memset (&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
+    bzero (&cdevhdr, CCKDDASD_DEVHDR_SIZE);
     cdevhdr.vrm[0] = CCKD_VERSION;
     cdevhdr.vrm[1] = CCKD_RELEASE;
     cdevhdr.vrm[2] = CCKD_MODLVL;
@@ -2085,7 +2085,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Write the level 1 table */
     l1 = (CCKD_L1ENT *)&buf;
-    memset (l1, 0, l1tabsz);
+    bzero (l1, l1tabsz);
     l1[0] = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz;
     rc = write (fd, l1, l1tabsz);
     if (rc < l1tabsz)
@@ -2096,7 +2096,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Write the 1st level 2 table */
-    memset (&l2, 0, CCKD_L2TAB_SIZE);
+    bzero (&l2, CCKD_L2TAB_SIZE);
     l2[0].pos = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz +
                 CCKD_L2TAB_SIZE;
     rc = write (fd, &l2, CCKD_L2TAB_SIZE);
@@ -2108,7 +2108,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Write the 1st block group */
-    memset (&buf, 0, CKDDASD_DEVHDR_SIZE + CFBA_BLOCK_SIZE);
+    bzero (&buf, CKDDASD_DEVHDR_SIZE + CFBA_BLOCK_SIZE);
     if (!rawflag)
     {
         convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");

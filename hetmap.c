@@ -86,7 +86,7 @@ typedef unsigned char                   Boolean;
 /*      memset replacements
  */
 #define BLANK_OUT(a, b) { memset(a, ' ', b - 1); a[b-1] = '\0'; }
-#define ZERO_OUT(a, b)  memset(a, 0x00, b)
+#define ZERO_OUT(a, b) bzero(a, b)
 #define TERMINATE(a)    a[sizeof(a)-1] = '\0'
 
 

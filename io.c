@@ -593,7 +593,7 @@ int     i;                              /* (work)                    */
     if ( effective_addr2 & 0x0000001F )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    memset(work, 0x00, 32);
+    bzero(work, 32);
 
     /* Scan DEVBLK chain for busy devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -720,7 +720,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
         schib.scsw = dev->scsw;
     release_lock (&dev->lock);
 
-    memset (schib.moddep, 0x00, sizeof(schib.moddep));
+    bzero (schib.moddep, sizeof(schib.moddep));
 
     /* Store the subchannel information block */
     ARCH_DEP(vstorec) ( &schib, sizeof(SCHIB)-1, effective_addr2,
@@ -1011,7 +1011,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
                     | psa->caw[3];
 
     /* Build the I/O operation request block */                /*@IZW*/
-    memset (&orb, 0, sizeof(ORB));                             /*@IZW*/
+    bzero (&orb, sizeof(ORB));                                 /*@IZW*/
     orb.flag4 = ccwkey & ORB4_KEY;                             /*@IZW*/
     STORE_FW(orb.ccwaddr,ccwaddr);                             /*@IZW*/
 

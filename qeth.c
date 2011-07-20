@@ -603,7 +603,7 @@ U16 reqtype;
 U16 datadev;
 OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
 
-    memset(iear, 0x00, sizeof(OSA_IEAR));
+    bzero(iear, sizeof(OSA_IEAR));
 
     FETCH_HW(reqtype, iea->type);
 
@@ -780,7 +780,7 @@ if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
-                            memset(hdr2,0x00,sizeof(OSA_HDR2));
+                            bzero(hdr2, sizeof(OSA_HDR2));
 
                             grp->rxcnt++;
 
@@ -1025,7 +1025,7 @@ int i;
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
-        memset (grp, 0, sizeof(OSA_GRP));
+        bzero (grp, sizeof(OSA_GRP));
 
         register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
@@ -1354,7 +1354,7 @@ int num;                                /* Number of bytes to move   */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero (dev->sense, sizeof(dev->sense));
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

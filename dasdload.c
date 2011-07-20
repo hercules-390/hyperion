@@ -470,7 +470,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Clear the track buffer to zeroes */
-    memset (trkbuf, 0, trklen);
+    bzero (trkbuf, trklen);
 
     /* Build the home address in the track buffer */
     trkhdr = (CKDDASD_TRKHDR*)trkbuf;
@@ -717,7 +717,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     cif->trkmodif = 1;
 
     /* Build the IPL1 record */
-    memset (buf, 0, sizeof(buf));
+    bzero (buf, sizeof(buf));
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "IPL1");
 
@@ -744,7 +744,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     if (rc < 0) return -1;
 
     /* Build the IPL2 record */
-    memset (buf, 0, sizeof(buf));
+    bzero (buf, sizeof(buf));
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "IPL2");
 
@@ -768,7 +768,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     convert_to_ebcdic (datablk->kdarea, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+4, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+8, 6, volser);
-    memset(datablk->kdarea+15, 0, 5);
+    bzero(datablk->kdarea+15, 5);
     convert_to_ebcdic (datablk->kdarea+45, 8, "HERCULES");
     keylen = VOL1_KEYLEN;
     datalen = VOL1_DATALEN;
@@ -782,7 +782,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     /* Build the IPL text from the object file */
     if (iplfnm != NULL)
     {
-        memset (buf, 0, sizeof(buf));
+        bzero (buf, sizeof(buf));
         datalen = read_ipl_text (iplfnm, buf+12, sizeof(buf)-12);
         if (datalen < 0) return -1;
 
@@ -980,7 +980,7 @@ time_t          timeval;                /* Current time value        */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    memset (datablk, 0, blklen);
+    bzero (datablk, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1102,7 +1102,7 @@ int             tolfact;                /* Device tolerance          */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    memset (datablk, 0, blklen);
+    bzero (datablk, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1177,7 +1177,7 @@ int             blklen;                 /* Size of data block        */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    memset (datablk, 0, blklen);
+    bzero (datablk, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1381,7 +1381,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
         datablk = dscbtab[i];
 
         /* Extract the dataset name from the format 1 DSCB */
-        memset (dsnama, 0, sizeof(dsnama));
+        bzero (dsnama, sizeof(dsnama));
         f1dscb = (FORMAT1_DSCB*)(datablk->kdarea);
         if (f1dscb->ds1fmtid == 0xF1)
         {
@@ -1407,7 +1407,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     for (i = 0; i < numf0dscb; i++)
     {
         /* Add a format 0 DSCB to the track buffer */
-        memset (blankblk, 0, sizeof(blankblk));
+        bzero (blankblk, sizeof(blankblk));
         datablk = (DATABLK*)blankblk;
         rc = write_block (cif, ofname, datablk, 44, 96,
                     devtype, heads, trklen, numtrks,
@@ -1575,16 +1575,16 @@ char    hex[17];                        /* Character work areas      */
         /* Print field length and data */
         if (field > 0) XMINF (4, "\n\t\t\t\t ");
         XMINFF (4, "%04X ", len);
-        memset (hex, '\0', sizeof(hex));
-        memset (chars, '\0', sizeof(chars));
+        bzero (hex, sizeof(hex));
+        bzero (chars, sizeof(chars));
         for (i = 0, j = 0; i < len; i++, j++)
         {
             if (i > 0 && (i & 0x07) == 0)
             {
                 XMINFF (4, "%-16.16s %-8.8s\n\t\t\t\t      ",
                     hex, chars);
-                memset (hex, '\0', sizeof(hex));
-                memset (chars, '\0', sizeof(chars));
+                bzero (hex, sizeof(hex));
+                bzero (chars, sizeof(chars));
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", xbuf[bufpos+offset+i]);
@@ -1826,10 +1826,10 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
     bufrem = xreclen-10;
 
     /* Clear values to be loaded from text units */
-    memset (tudsnam, 0, sizeof(tudsnam));
-    memset (tuutiln, 0, sizeof(tuutiln));
-    memset (tudsorg, 0, sizeof(tudsorg));
-    memset (turecfm, 0, sizeof(turecfm));
+    bzero (tudsnam, sizeof(tudsnam));
+    bzero (tuutiln, sizeof(tuutiln));
+    bzero (tudsorg, sizeof(tudsorg));
+    bzero (turecfm, sizeof(turecfm));
     tulrecl = 0;
     tublksz = 0;
     tukeyln = 0;
@@ -1878,7 +1878,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
             tudirct = make_int (fieldptr[0], fieldlen[0]);
             break;
         case INMDSNAM:
-            memset (tudsnam, 0, sizeof(tudsnam));
+            bzero (tudsnam, sizeof(tudsnam));
             for (i = 0; i < tunum; i++)
             {
 #if defined( _MSVC_ )
@@ -2199,8 +2199,8 @@ char            hex[49];                /* Character work areas      */
 
         /* Print the user data */
         if (k > 0) XMINF (3, "Userdata=");
-        memset (hex, '\0', sizeof(hex));
-        memset (chars, '\0', sizeof(chars));
+        bzero (hex, sizeof(hex));
+        bzero (chars, sizeof(chars));
         for (i = 0, j = 0; i < k*2; i++, j++)
         {
             if (i == 8 || i == 32 || i == 56)
@@ -2210,8 +2210,8 @@ char            hex[49];                /* Character work areas      */
                 else
                     XMINFF (3, "%-16.16s %-16.16s %16.16s %-24.24s\n  ",
                         hex, hex+16, hex+32, chars);
-                memset (hex, '\0', sizeof(hex));
-                memset (chars, '\0', sizeof(chars));
+                bzero (hex, sizeof(hex));
+                bzero (chars, sizeof(chars));
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", dirent->pds2usrd[i]);
@@ -2948,7 +2948,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*-----------------------------------*/
     /* Initialize the volume index block */
     /*-----------------------------------*/
-    memset (datablk.kdarea, 0, keylen + datalen);
+    bzero (datablk.kdarea, keylen + datalen);
 
     /* The key field contains all X'FF' */
     memcpy (datablk.kdarea, eighthexFF, 8);
@@ -3036,7 +3036,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*---------------------------------*/
     /* Initialize the SYS1 index block */
     /*---------------------------------*/
-    memset (datablk.kdarea, 0, keylen + datalen);
+    bzero (datablk.kdarea, keylen + datalen);
 
     /* The key field contains all X'FF' */
     memcpy (datablk.kdarea, eighthexFF, 8);
@@ -3147,7 +3147,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*--------------------------------------------*/
     while (totblks > 0)
     {
-        memset (datablk.kdarea, 0, keylen + datalen);
+        bzero (datablk.kdarea, keylen + datalen);
 
         /* Write the volume index block to the output file */
         rc = write_block (cif, ofname, &datablk, keylen, datalen,
@@ -3268,7 +3268,7 @@ DATABLK         datablk;                /* Data block                */
 
     /* Initialize the DIP header record */
     diphdr = (DIPHDR*)(datablk.kdarea);
-    memset (diphdr, 0, sizeof(DIPHDR));
+    bzero (diphdr, sizeof(DIPHDR));
     diphdr->recid[0] = 0xFF;
     diphdr->recid[1] = 0xFF;
     diphdr->bcyl[0] = (outcyl >> 8) & 0xFF;
@@ -3450,7 +3450,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
             /* Adjust blksize down to next
                highest multiple of lrecl */
             blksz = (((rc-1) / lrecl) + 1) * lrecl;
-            memset (&datablk.kdarea[rc], 0, blksz - rc);
+            bzero (&datablk.kdarea[rc], blksz - rc);
         }
 
         rc = write_block (cif, ofname, &datablk, keyln, blksz - keyln,
@@ -3543,7 +3543,7 @@ DATABLK         datablk;                /* Data block                */
         keylen = 8;
         datalen = 256;
         outdblu = 14;
-        memset (datablk.kdarea, 0, keylen + datalen);
+        bzero (datablk.kdarea, keylen + datalen);
         memcpy (datablk.kdarea, eighthexFF, 8);
         datablk.kdarea[keylen] = (outdblu >> 8);
         datablk.kdarea[keylen+1] = outdblu & 0xFF;
@@ -3560,7 +3560,7 @@ DATABLK         datablk;                /* Data block                */
             if (rc < 0) return -1;
 
             /* Clear subsequent directory blocks to zero */
-            memset (datablk.kdarea, 0, keylen + datalen);
+            bzero (datablk.kdarea, keylen + datalen);
 
         } /* end for(i) */
 
@@ -3764,7 +3764,7 @@ char           *strtok_str = NULL;      /* last token                */
 
     /* Return the dataset name in EBCDIC and ASCII */
     string_to_upper (pdsnam);
-    memset (dsname, 0, 45);
+    bzero (dsname, 45);
     strncpy (dsname, pdsnam, 44);
 
     /* Set default dataset attribute values */

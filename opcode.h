@@ -2654,7 +2654,7 @@ do { \
         (_regs)->siebk->vi_who = (_who); \
         (_regs)->siebk->vi_when = (_when); \
         STORE_HW((_regs)->siebk->vi_why, (_why)); \
-        memset((_regs)->siebk->vi_zero, 0, 6); \
+        bzero((_regs)->siebk->vi_zero, 6); \
     }
 
 #if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined(_FEATURE_ZSIE))

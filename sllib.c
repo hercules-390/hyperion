@@ -806,7 +806,7 @@ sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
     /*
     || Initialize
     */
-    memset( fmt, 0, sizeof( SLFMT ) );
+    bzero( fmt, sizeof( SLFMT ) );
 
     /*
     || If label appears to be EBCDIC, convert to ASCII before processing

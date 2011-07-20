@@ -473,7 +473,7 @@ comp_restart:
     /*---------------------------------------------------------------
      * Build empty l2 tables
      *---------------------------------------------------------------*/
-    memset (&zero_l2, 0, CCKD_L2TAB_SIZE);
+    bzero( &zero_l2, CCKD_L2TAB_SIZE );
     if (cdevhdr.nullfmt != 0)
         for (i = 0; i < 256; i++)
             zero_l2[i].len = zero_l2[i].size = cdevhdr.nullfmt;
@@ -1476,7 +1476,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         hipos -= len;
     }
 
-    memset (&cdevhdr2, 0, CCKD_DEVHDR_SIZE);
+    bzero( &cdevhdr2, CCKD_DEVHDR_SIZE );
     for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
     {
         /* Calculate gap size */

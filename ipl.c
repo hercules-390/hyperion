@@ -70,11 +70,11 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                 {
                     /* Clear all the registers (AR, GPR, FPR, VR)
                        as part of the CPU CLEAR RESET operation */
-                    memset (regs->ar,0,sizeof(regs->ar));
-                    memset (regs->gr,0,sizeof(regs->gr));
-                    memset (regs->fpr,0,sizeof(regs->fpr));
+                    bzero (regs->ar,sizeof(regs->ar));
+                    bzero (regs->gr,sizeof(regs->gr));
+                    bzero (regs->fpr,sizeof(regs->fpr));
                   #if defined(_FEATURE_VECTOR_FACILITY)
-                    memset (regs->vf->vr,0,sizeof(regs->vf->vr));
+                    bzero (regs->vf->vr,sizeof(regs->vf->vr));
                   #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
                 }
             }
@@ -240,7 +240,7 @@ int rc;
     dev->pmcw.flag5 |= PMCW5_E;
 
     /* Build the operation request block */                    /*@IWZ*/
-    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
+    bzero (&dev->orb, sizeof(ORB));                        /*@IWZ*/
     dev->busy = 1;
 
     RELEASE_INTLOCK(NULL);
@@ -311,7 +311,7 @@ int rc;
     STORE_FW(regs->psa->ioid, (dev->ssid<<16)|dev->subchan);
 
     /* Store zeroes at locations 188-191 */
-    memset (regs->psa->ioparm, 0, 4);
+    bzero (regs->psa->ioparm, 4);
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Save IPL device number, cpu number and lcss */
@@ -439,12 +439,12 @@ int rc1 = 0, rc;
 
 
     /* Clear the registers */
-    memset ( &regs->psw,           0, sizeof(regs->psw)           );
-    memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
+    bzero ( &regs->psw,           sizeof(regs->psw)           );
+    bzero ( &regs->captured_zpsw, sizeof(regs->captured_zpsw) );
 #ifndef NOCHECK_AEA_ARRAY_BOUNDS
-    memset ( &regs->cr_struct,     0, sizeof(regs->cr_struct)     );
+    bzero ( &regs->cr_struct,     sizeof(regs->cr_struct)     );
 #else
-    memset ( &regs->cr,            0, sizeof(regs->cr)            );
+    bzero ( &regs->cr,            sizeof(regs->cr)            );
 #endif
     regs->fpc    = 0;
     regs->PX     = 0;
@@ -625,8 +625,8 @@ void storage_clear()
 {
     if (!sysblk.main_clear)
     {
-        if (sysblk.mainstor) memset(sysblk.mainstor,0,sysblk.mainsize);
-        if (sysblk.storkeys) memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        if (sysblk.mainstor) bzero(sysblk.mainstor,sysblk.mainsize);
+        if (sysblk.storkeys) bzero(sysblk.storkeys,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         sysblk.main_clear = 1;
     }
 }
@@ -639,7 +639,7 @@ void xstorage_clear()
     if (!sysblk.xpnd_clear)
     {
         if (sysblk.xpndstor)
-            memset(sysblk.xpndstor,0,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
+            bzero(sysblk.xpndstor,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
         sysblk.xpnd_clear = 1;
     }
 }

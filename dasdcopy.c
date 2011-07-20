@@ -379,7 +379,7 @@ char           *strtok_str = NULL;
                 rc = (idev->hnd->read)(idev, i, &unitstat);
             else
             {
-                memset (idev->buf, 0, idev->ckdtrksz);
+                bzero (idev->buf, idev->ckdtrksz);
                 rc = nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             }
         }
@@ -388,7 +388,7 @@ char           *strtok_str = NULL;
             if (i < max)
                 rc = (idev->hnd->read)(idev, i, &unitstat);
             else
-                memset (idev->buf, 0, FBA_BLKGRP_SIZE);
+                bzero (idev->buf, FBA_BLKGRP_SIZE);
                 rc = 0;
         }
         if (rc < 0)
@@ -399,7 +399,7 @@ char           *strtok_str = NULL;
             if (ckddasd)
                 nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             else
-                memset (idev->buf, 0, FBA_BLKGRP_SIZE);
+                bzero (idev->buf, FBA_BLKGRP_SIZE);
             if (!quiet)
             {
                 printf (_("  %3d%% %7d of %d"), 0, 0, n);

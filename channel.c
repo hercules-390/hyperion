@@ -658,9 +658,9 @@ int     cc;                             /* Condition code            */
         irb->scsw = dev->pciscsw;
 
         /* Clear the ESW and ECW in the IRB */
-        memset (&irb->esw, 0, sizeof(ESW));
+        bzero (&irb->esw, sizeof(ESW));
         irb->esw.lpum = 0x80;
-        memset (irb->ecw, 0, sizeof(irb->ecw));
+        bzero (irb->ecw, sizeof(irb->ecw));
 
         /* Clear the pending PCI status */
         dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
@@ -786,9 +786,9 @@ int     cc;                             /* Condition code            */
             irb->scsw = dev->attnscsw;
 
             /* Clear the ESW and ECW in the IRB */
-            memset (&irb->esw, 0, sizeof(ESW));
+            bzero (&irb->esw, sizeof(ESW));
             irb->esw.lpum = 0x80;
-            memset (irb->ecw, 0, sizeof(irb->ecw));
+            bzero (irb->ecw, sizeof(irb->ecw));
             /* Clear the pending ATTN status */
             dev->attnscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
             dev->attnscsw.flag3 &= ~(SCSW3_SC);
@@ -1218,20 +1218,20 @@ void device_reset (DEVBLK *dev)
     dev->pmcw.flag25 &= ~PMCW25_VISC;
     dev->pmcw.flag27 &= ~PMCW27_I;
 #endif
-    memset (&dev->scsw, 0, sizeof(SCSW));
-    memset (&dev->pciscsw, 0, sizeof(SCSW));
-    memset (&dev->attnscsw, 0, sizeof(SCSW));
+    bzero (&dev->scsw, sizeof(SCSW));
+    bzero (&dev->pciscsw, sizeof(SCSW));
+    bzero (&dev->attnscsw, sizeof(SCSW));
 
     dev->readpending = 0;
     dev->ckdxtdef = 0;
     dev->ckdsetfm = 0;
     dev->ckdlcount = 0;
     dev->ckdssi = 0;
-    memset (dev->sense, 0, sizeof(dev->sense));
+    bzero (dev->sense, sizeof(dev->sense));
     dev->sns_pending = 0;
-    memset (dev->pgid, 0, sizeof(dev->pgid));
+    bzero (dev->pgid, sizeof(dev->pgid));
     /* By Adrian - Reset drive password */
-    memset (dev->drvpwd, 0, sizeof(dev->drvpwd));
+    bzero (dev->drvpwd, sizeof(dev->drvpwd));
 
 #if defined(_FEATURE_IO_ASSIST)
     dev->mainstor = sysblk.mainstor;
@@ -2281,9 +2281,9 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     dev->busy = dev->startpending = 1;
 
     /* Initialize the subchannel status word */
-    memset (&dev->scsw,    0, sizeof(SCSW));
-    memset (&dev->pciscsw, 0, sizeof(SCSW));
-    memset (&dev->attnscsw, 0, sizeof(SCSW));
+    bzero (&dev->scsw,     sizeof(SCSW));
+    bzero (&dev->pciscsw,  sizeof(SCSW));
+    bzero (&dev->attnscsw, sizeof(SCSW));
     dev->scsw.flag0 = (orb->flag4 & SCSW0_KEY);                /*@IWZ*/
     if (orb->flag4 & ORB4_S) dev->scsw.flag0 |= SCSW0_S;       /*@IWZ*/
     if (orb->flag5 & ORB5_F) dev->scsw.flag1 |= SCSW1_F;       /*@IWZ*/
@@ -3347,11 +3347,11 @@ resume_suspend:
         dev->scsw.flag3 |= SCSW3_SC_ALERT;
 
     /* Build the format-1 extended status word */
-    memset (&dev->esw, 0, sizeof(ESW));
+    bzero (&dev->esw, sizeof(ESW));
     dev->esw.lpum = 0x80;
 
     /* Clear the extended control word */
-    memset (dev->ecw, 0, sizeof(dev->ecw));
+    bzero (dev->ecw, sizeof(dev->ecw));
 
     /* Return sense information if PMCW allows concurrent sense */
     if ((unitstat & CSW_UC) && (dev->pmcw.flag27 & PMCW27_S))
@@ -3361,7 +3361,7 @@ resume_suspend:
         dev->esw.erw1 = (BYTE)((dev->numsense < (int)sizeof(dev->ecw)) ?
                         dev->numsense : (int)sizeof(dev->ecw));
         memcpy (dev->ecw, dev->sense, dev->esw.erw1 & ERW1_SCNT);
-        memset (dev->sense, 0, sizeof(dev->sense));
+        bzero (dev->sense, sizeof(dev->sense));
         dev->sns_pending = 0;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/

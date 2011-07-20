@@ -356,7 +356,7 @@ S64      dreg;
     if (argc == 2)
         fn = argv[1];
 
-    memset (zeros, 0, sizeof(zeros));
+    bzero (zeros, sizeof(zeros));
 
     /* Make sure all CPUs are deconfigured or stopped */
     OBTAIN_INTLOCK(NULL);
@@ -695,7 +695,7 @@ S64      dreg;
                 WRMSG(HHC02013, "E", PTYPSTR(regs->cpuad), regs->cpuad, len);
                 goto sr_error_exit;
             }
-            memset(buf, 0, 16);
+            bzero(buf, 16);
             SR_READ_BUF(file, buf, len);
             switch (regs->arch_mode) {
 #if defined (_370)

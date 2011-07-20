@@ -178,7 +178,11 @@
 */
 
 /* Hercules adjustments */
+#if defined(bzero)
+#define zeromem(dst, len)    bzero(dst, len)
+#else
 #define zeromem(dst, len)    memset((dst), 0, (len))
+#endif
 #define XMEMCPY              memcpy
 
 /* Original code from gcm_gf_mult.c */
@@ -486,7 +490,7 @@ static void wrap_aes(BYTE *key, int keylen)
     {
       aes_encrypt(&context, key, cv);
       memcpy(buf, &key[16], 8);
-      memset(&buf[8], 0, 8);
+      zeromem(&buf[8], 8);
       for(i = 0; i < 16; i++)
         buf[i] ^= cv[i];
       aes_encrypt(&context, buf, buf);
@@ -568,7 +572,11 @@ static void wrap_dea(BYTE *key, int keylen)
 */
 
 /* Hercules adjustments */
+#if defined(bzero)
+#define zeromem(dst, len)    bzero(dst, len)
+#else
 #define zeromem(dst, len)    memset((dst), 0, (len))
+#endif
 #define XMEMCPY              memcpy
 
 /* Original code from gcm_gf_mult.c */
@@ -611,7 +619,7 @@ void power(unsigned char *a, unsigned char b)
 {
   unsigned char two[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2 };
 
-  memset(a, 0, 15);
+  zeromem(a, 15);
   a[15] = 2;
   for(b--; b; b--)
     gcm_gf_mult(a, two, a);
@@ -629,7 +637,7 @@ int main(void)
   unsigned char a[16];
   int i;
 
-  memset(a, 0, 15);
+  zeromem(a, 15);
   a[15] = 2;
   for(i = 1; i < 128 ; i++)
   {
@@ -3526,7 +3534,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
 #endif /* #ifdef OPTION_PCC_DEBUG */
   
   /* Calculate subkey */
-  memset(k, 0, 8);
+  zeromem(k, 8);
   switch(tfc)
   {
     case 1: /* dea */
@@ -3693,7 +3701,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 #endif /* #ifdef OPTION_PCC_DEBUG */
   
   /* Calculate subkeys */
-  memset(k, 0, 16);
+  zeromem(k, 16);
   aes_encrypt(&context, k, k);
   
   /* Calculate subkeys Kx and Ky */
@@ -3801,9 +3809,9 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   /* Check block sequential number (j) == 0 */
   if(!memcmp(bsn, zero, 16))
   {
-    memset(ibi, 0, 15);
+    zeromem(ibi, 15);
     ibi[15] = 128;
-    memset(xts, 0, 15);
+    zeromem(xts, 15);
     xts[15] = 1;
   }
   else
@@ -3819,7 +3827,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
     /* Intitial execution? */
     if(!ibi[15])
     {
-      memset(xts, 0, 15);
+      zeromem(xts, 15);
       xts[15] = 1;
     }
 

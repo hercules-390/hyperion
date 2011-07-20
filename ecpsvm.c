@@ -207,7 +207,7 @@ struct _ECPSVM_SASTATS
 
 #define INITPSEUDOREGS(_regs) \
     do { \
-        memset(&(_regs),0,sysblk.regs_copy_len); \
+        bzero(&(_regs),sysblk.regs_copy_len); \
         INITPSEUDOIP((_regs)); \
     } while(0)
 

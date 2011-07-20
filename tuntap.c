@@ -168,7 +168,7 @@ static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
         close(ifd[0]);
 
         /* Request hercifc to issue the TUNSETIFF ioctl */
-        memset (&ctlreq, 0, CTLREQ_SIZE);
+        bzero (&ctlreq, CTLREQ_SIZE);
         ctlreq.iCtlOp = TUNSETIFF;
         ctlreq.iProcID = fd;
         memcpy (&ctlreq.iru.ifreq, ifr, sizeof (struct ifreq));
@@ -296,7 +296,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         // Linux kernel (builtin tun device) or Windows
         struct ifreq ifr;
 
-        memset( &ifr, 0, sizeof( ifr ) );
+        bzero( &ifr, sizeof( ifr ) );
         ifr.ifr_flags = iFlags & ~(iFlags & IFF_OSOCK);
         if(*pszNetDevName)
             strcpy( ifr.ifr_name, pszNetDevName );
@@ -355,7 +355,7 @@ int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
 {
     struct ifreq        ifreq;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -379,7 +379,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     struct ifreq        ifreq;
     struct sockaddr_in* sin;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
@@ -414,7 +414,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     struct ifreq        ifreq;
     struct sockaddr_in* sin;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
@@ -449,7 +449,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
     struct ifreq        ifreq;
     struct sockaddr_in* sin;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_netmask;
 
@@ -485,7 +485,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
     struct sockaddr_in* sin;
     int                 iMTU;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
@@ -530,7 +530,7 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
     struct sockaddr*    addr;
     MAC                 mac;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     addr = (struct sockaddr*)&ifreq.ifr_hwaddr;
 
@@ -566,7 +566,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
     struct ifreq        ifreq;
     struct sockaddr_in* sin;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
@@ -597,7 +597,7 @@ int      TUNTAP_GetFlags ( char*   pszNetDevName,
     struct sockaddr_in* sin;
     int                 rc;
 
-    memset( &ifreq, 0, sizeof( struct ifreq ) );
+    bzero( &ifreq, sizeof( struct ifreq ) );
 
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
@@ -650,7 +650,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
     struct rtentry     rtentry;
     struct sockaddr_in* sin;
 
-    memset( &rtentry, 0, sizeof( struct rtentry ) );
+    bzero( &rtentry, sizeof( struct rtentry ) );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -714,7 +714,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     struct rtentry     rtentry;
     struct sockaddr_in* sin;
 
-    memset( &rtentry, 0, sizeof( struct rtentry ) );
+    bzero( &rtentry, sizeof( struct rtentry ) );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -787,7 +787,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     UNREFERENCED( fd );
 
-    memset( &ctlreq, 0, CTLREQ_SIZE );
+    bzero( &ctlreq, CTLREQ_SIZE );
 
     ctlreq.iCtlOp = iRequest;
 

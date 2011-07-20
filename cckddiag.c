@@ -160,7 +160,7 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
     UNREFERENCED(msg);
 #endif
 
-    memset(obuf, 0x00, obuflen);  /* clear output buffer             */
+    bzero(obuf, obuflen);  /* clear output buffer             */
 
     /* Uncompress the track/block image */
     switch (ibuf[0] & CCKD_COMPRESS_MASK) {
