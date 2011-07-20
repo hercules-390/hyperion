@@ -209,19 +209,27 @@
 /*-------------------------------------------------------------------*/
 /* some handy array/struct macros...                                 */
 /*-------------------------------------------------------------------*/
-#if !defined(bzero) && !defined(__bzero)
-#undef      bzero
-#undef      __bzero
-#define bzero   __bzero
+#if !defined(__hbzero__)
+#undef  bzero
+#undef  __bzero
+#define __hbzero__
+#define __bzero __hbzero
+#define bzero(_addr,_n)   __hbzero((void *)(_addr),(size_t)(_n))
 /* Let C compiler optimize; O3 optimization beats ASM source version */
-INLINE void __bzero (addr, n)
-     char *addr;
-     unsigned n;
+/* as ASM source only handles up through word alignment. References: */
+/* http://software.intel.com/en-us/articles/memcpy-performance and   */
+/* http://glibc.sourcearchive.com/documentation/2.7-10ubuntu3/sysdeps_2i386_2bzero_8c-source.html */
+/* (last referenced 2011-07-20)                                      */
+INLINE void __hbzero (addr, n)
+     void      *addr;
+     size_t     n;
 {
   register char *mem = addr;
 
   while (n-- > 0)
     *mem++ = 0;
+
+  return;
 }
 #endif
 
