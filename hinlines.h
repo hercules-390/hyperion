@@ -134,7 +134,7 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
     register void *limit;
 
     /* Let the C compiler perform special case optimization */
-    if ((x = (unsigned int)addr & 0x00000FFF))
+    if ((x = (U64)(uintptr_t)addr & 0x00000FFF))
     {
         register unsigned int a = 4096 - x;
         __optimize_clear(addr, a);
