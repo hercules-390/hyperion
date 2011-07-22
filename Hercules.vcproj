@@ -626,6 +626,10 @@
 							Name="Header Files"
 							>
 							<File
+								RelativePath=".\comm3705.h"
+								>
+							</File>
+							<File
 								RelativePath=".\commadpt.h"
 								>
 							</File>
@@ -657,6 +661,10 @@
 						<Filter
 							Name="Source Files"
 							>
+							<File
+								RelativePath=".\comm3705.c"
+								>
+							</File>
 							<File
 								RelativePath=".\commadpt.c"
 								>
@@ -1164,6 +1172,14 @@
 						</File>
 						<File
 							RelativePath=".\rexx.c"
+							>
+						</File>
+						<File
+							RelativePath=".\s37x.c"
+							>
+						</File>
+						<File
+							RelativePath=".\s37xmod.c"
 							>
 						</File>
 						<File
