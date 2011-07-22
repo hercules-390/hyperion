@@ -482,6 +482,7 @@ static  void    s37x_replace_opcode(struct s37x_inst_table_entry *tb,int code,in
         {
             zz_func old;
             old=replace_opcode(ARCH_370, tb[i].oldfun,code1,code2);
+            UNREFERENCED(old);
 //            LOGMSG("Restoring Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);
         }
     }

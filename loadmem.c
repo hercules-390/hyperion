@@ -24,7 +24,6 @@ REGS *regs;
     struct stat statbuff;               /* Buffer for file status    */
     char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
-    int     len;                        /* Number of bytes read      */
     char    pathname[MAX_PATH];         /* file in host path format  */
 
     UNREFERENCED(cmdline);
@@ -77,7 +76,7 @@ REGS *regs;
     /* Read the file into absolute storage */
     WRMSG(HHC02250, "I", fname, aaddr );
 
-    len = load_main(fname, aaddr);
+    (void)load_main(fname, aaddr);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

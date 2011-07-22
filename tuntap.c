@@ -777,7 +777,6 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
     char*       pszCfgCmd;     // Interface config command
-    int         rc;
     CTLREQ      ctlreq;
 
 #if defined(DEBUG) || defined(_DEBUG)

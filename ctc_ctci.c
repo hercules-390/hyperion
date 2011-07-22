@@ -113,15 +113,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
     int             rc = 0;             // Return code
-    int             nIFType;            // Interface type
     int             nIFFlags;           // Interface flags
     char            thread_name[32];    // CTCI_ReadThread
-
-    nIFType =               // Interface type
-        0
-        | IFF_TUN           // ("TUN", not "tap")
-        | IFF_NO_PI         // (no packet info)
-        ;
 
     nIFFlags =               // Interface flags
         0

@@ -720,6 +720,10 @@ int  eamode;
         STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw)); 
     }
 
+#if defined(FEATURE_ESAME)
+    UNREFERENCED(eamode);
+#endif
+
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
     
 } /* end function ARCH_DEP(trace_pc) */

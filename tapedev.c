@@ -1627,7 +1627,7 @@ void UpdateDisplay( DEVBLK *dev )
 void ReqAutoMount( DEVBLK *dev )
 {
     char   volser[7];
-    BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
+    BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, scratch;
     char*  lbltype;
     char*  tapemsg = "                  ";
 
@@ -1801,7 +1801,7 @@ void ReqAutoMount( DEVBLK *dev )
     /* Set some boolean flags */
     autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )    ?  TRUE  :  FALSE;
     stdlbled = ( 'S' == tapemsg[7] )                              ?  TRUE  :  FALSE;
-    ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
+//    ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
     scratch  = ( 'S' == tapemsg[0] )                              ?  TRUE  :  FALSE;
 
     lbltype = stdlbled ? "SL" : "UL";

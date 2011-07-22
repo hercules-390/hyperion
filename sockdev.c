@@ -212,7 +212,6 @@ int inet_socket (char* spec)
 /*-------------------------------------------------------------------*/
 int add_socket_devices_to_fd_set (int maxfd, fd_set* readset)
 {
-    DEVBLK* dev;
     bind_struct* bs;
     LIST_ENTRY*  pListEntry;
 
@@ -226,8 +225,6 @@ int add_socket_devices_to_fd_set (int maxfd, fd_set* readset)
 
         if (bs->sd != -1)           /* if listening for connections, */
         {
-            dev = bs->dev;
-
             FD_SET(bs->sd, readset);    /* then add file to set */
 
             if (bs->sd > maxfd)

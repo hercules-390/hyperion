@@ -1142,7 +1142,6 @@ static int commadpt_getaddr(in_addr_t *ia,char *txt)
 }
 
 static void connect_message(int sfd, int na, int flag) {
-    int rc;
     struct sockaddr_in client;
     socklen_t namelen;
     char *ipaddr;
@@ -1150,7 +1149,7 @@ static void connect_message(int sfd, int na, int flag) {
     if (!sfd)
         return;
     namelen = sizeof(client);
-    rc = getpeername (sfd, (struct sockaddr *)&client, &namelen);
+    (void)getpeername (sfd, (struct sockaddr *)&client, &namelen);
     ipaddr = inet_ntoa(client.sin_addr);
     if (flag == 0)
         MSGBUF( msgtext, "%s:%d VTAM CONNECTION ACCEPTED - NETWORK NODE= %4.4X", 
@@ -1373,8 +1372,6 @@ static void *commadpt_thread(void *vca)
     COMMADPT    *ca;            /* Work CA Control Block Pointer     */
     int devnum;                 /* device number copy for convenience*/
     int rc;                     /* return code from various rtns     */
-    int ca_shutdown;            /* Thread shutdown internal flag     */
-    int init_signaled;          /* Thread initialisation signaled    */
     char threadname[40];        /* string for WRMSG               */
 
     /*---------------------END OF DECLARES---------------------------*/
@@ -1387,11 +1384,6 @@ static void *commadpt_thread(void *vca)
 
     /* get a work copy of devnum (for messages) */
     devnum=ca->devnum;
-
-    /* reset shutdown flag */
-    ca_shutdown=0;
-
-    init_signaled=0;
 
     MSGBUF(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
@@ -1447,8 +1439,6 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     int rc;
     int pc; /* Parse code */
     int errcnt;
-    struct in_addr in_temp;
-    int etospec;        /* ETO= Specified */
     union {
         int num;
         char text[80];
@@ -1483,7 +1473,6 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->sfd=-1;
         dev->commadpt->lport=0;
         dev->commadpt->debug_sna=0;
-        etospec=0;
 
         for(i=0;i<argc;i++)
         {
@@ -1540,7 +1529,6 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
             WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
             return -1;
         }
-        in_temp.s_addr=dev->commadpt->lhost;
         dev->bufsize=256;
         dev->numsense=2;
         memset(dev->sense,0,sizeof(dev->sense));

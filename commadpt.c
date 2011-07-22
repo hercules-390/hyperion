@@ -699,19 +699,27 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     return(commadpt_connout(ca));
 }
 
-static void connect_message(int sfd, int devnum, int term) {
-    int rc;
-    struct sockaddr_in client;
-    socklen_t namelen;
-    char *ipaddr;
-    char msgtext[256];
+static void connect_message(int sfd, int devnum, int term) 
+{
+struct      sockaddr_in client;
+socklen_t   namelen;
+char       *ipaddr;
+char        msgtext[256];
+
     namelen = sizeof(client);
-    rc = getpeername (sfd, (struct sockaddr *)&client, &namelen);
+    (void)getpeername (sfd, (struct sockaddr *)&client, &namelen);
     ipaddr = inet_ntoa(client.sin_addr);
-    MSGBUF(msgtext, MSG(HHC01073,"I", ipaddr, (int)ntohs(client.sin_port), devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741"));
+
+    MSGBUF( msgtext, 
+            MSG( HHC01073, "I", ipaddr, (int)ntohs(client.sin_port), 
+                           devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741" ) );
+    
     write(sfd, msgtext, (u_int)strlen(msgtext));
     write(sfd, "\r\n", 2);
+
     WRMSG(HHC01073,"I", ipaddr, (int)ntohs(client.sin_port), devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741");
+
+    return;
 }
 
 /*-------------------------------------------------------------------*/
