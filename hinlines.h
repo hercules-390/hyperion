@@ -33,8 +33,6 @@ INLINE U64 round_to_hostpagesize(U64 n)
 
 #   if defined(__GNUC__) && defined(__SSE2__) && (__SSE2__ == 1)
 
-#define INLINE static inline
-
 INLINE void __clear_page_2K(void *addr)
 {
     unsigned char xmm_save[16];
