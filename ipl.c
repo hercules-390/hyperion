@@ -240,7 +240,7 @@ int rc;
     dev->pmcw.flag5 |= PMCW5_E;
 
     /* Build the operation request block */                    /*@IWZ*/
-    bzero (&dev->orb, sizeof(ORB));                        /*@IWZ*/
+    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
     dev->busy = 1;
 
     RELEASE_INTLOCK(NULL);
@@ -311,7 +311,7 @@ int rc;
     STORE_FW(regs->psa->ioid, (dev->ssid<<16)|dev->subchan);
 
     /* Store zeroes at locations 188-191 */
-    bzero (regs->psa->ioparm, 4);
+    memset (regs->psa->ioparm, 0, 4);
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Save IPL device number, cpu number and lcss */
@@ -439,12 +439,12 @@ int rc1 = 0, rc;
 
 
     /* Clear the registers */
-    bzero ( &regs->psw,           sizeof(regs->psw)           );
-    bzero ( &regs->captured_zpsw, sizeof(regs->captured_zpsw) );
+    memset ( &regs->psw, 0,           sizeof(regs->psw)           );
+    memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
 #ifndef NOCHECK_AEA_ARRAY_BOUNDS
-    bzero ( &regs->cr_struct,     sizeof(regs->cr_struct)     );
+    memset ( &regs->cr_struct, 0,     sizeof(regs->cr_struct)     );
 #else
-    bzero ( &regs->cr,            sizeof(regs->cr)            );
+    memset ( &regs->cr, 0,            sizeof(regs->cr)            );
 #endif
     regs->fpc    = 0;
     regs->PX     = 0;

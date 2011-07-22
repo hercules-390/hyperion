@@ -1461,7 +1461,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 1 && CMD(argv[1],clear,5) )
     {
-        bzero(IMAP_FIRST,IMAP_SIZE);
+        memset(IMAP_FIRST, 0, IMAP_SIZE);
         WRMSG(HHC02204, "I", "instruction counts", "zero");
         release_lock( &sysblk.icount_lock );
         return 0;

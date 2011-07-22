@@ -683,7 +683,7 @@ static int scedio_pending;
         if(scedio_pending)
         {
             /* Zero all fields */
-            bzero (evd_hdr, sizeof(SCCB_EVD_HDR));
+            memset (evd_hdr, 0, sizeof(SCCB_EVD_HDR));
 
             /* Set type in event header */
             evd_hdr->type = SCCB_EVD_TYPE_SCEDIO;

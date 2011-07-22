@@ -359,7 +359,7 @@ RADR    fsta = 0;
 #if !defined(FEATURE_ESAME)
 // ZZ
     /* Set the extended logout area to zeros */
-    bzero(psa->storepsw, 16);
+    memset(psa->storepsw, 0, 16);
 #endif
 
     /* Store the machine check interrupt code at PSA+232 */

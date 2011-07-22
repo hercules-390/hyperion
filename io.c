@@ -720,7 +720,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
         schib.scsw = dev->scsw;
     release_lock (&dev->lock);
 
-    bzero (schib.moddep, sizeof(schib.moddep));
+    memset (schib.moddep, 0, sizeof(schib.moddep));
 
     /* Store the subchannel information block */
     ARCH_DEP(vstorec) ( &schib, sizeof(SCHIB)-1, effective_addr2,
@@ -1011,7 +1011,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
                     | psa->caw[3];
 
     /* Build the I/O operation request block */                /*@IZW*/
-    bzero (&orb, sizeof(ORB));                                 /*@IZW*/
+    memset (&orb, 0, sizeof(ORB));                                 /*@IZW*/
     orb.flag4 = ccwkey & ORB4_KEY;                             /*@IZW*/
     STORE_FW(orb.ccwaddr,ccwaddr);                             /*@IZW*/
 

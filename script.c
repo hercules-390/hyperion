@@ -541,7 +541,7 @@ SCRCTL* NewSCRCTL( TID tid, const char* script_name, int isrcfile )
     }
 
     /* Initialize the new entry */
-    bzero( pCtl, sizeof( SCRCTL ));
+    memset( pCtl, 0, sizeof( SCRCTL ));
     InitializeListLink( &pCtl->link );
     pCtl->scr_tid = tid; /* (may be zero) */
     pCtl->scr_name = scr_name;

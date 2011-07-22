@@ -766,7 +766,7 @@ time_t tt;
         }
         if (++i >= n) i = 0;
     } while (i != pttracex);
-    bzero (pttrace, PTT_TRACE_SIZE * n);
+    memset( pttrace, 0, PTT_TRACE_SIZE * n );
     pttracex = 0;
     pttracen = n;
     return count;

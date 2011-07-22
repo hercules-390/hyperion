@@ -698,7 +698,7 @@ static inline void SetSIDInfo( DEVBLK* pDEVBLK,
 {
     BYTE* pSIDInfo = pDEVBLK->devid;
 
-    bzero( pSIDInfo, sizeof(pDEVBLK->devid) );
+    memset( pSIDInfo, 0, sizeof(pDEVBLK->devid) );
 
     *pSIDInfo++ = 0x0FF;
     *pSIDInfo++ = (BYTE)(( wCUType >> 8 ) & 0x00FF );

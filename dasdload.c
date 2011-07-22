@@ -717,7 +717,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     cif->trkmodif = 1;
 
     /* Build the IPL1 record */
-    bzero (buf, sizeof(buf));
+    memset (buf, 0, sizeof(buf));
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "IPL1");
 
@@ -744,7 +744,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     if (rc < 0) return -1;
 
     /* Build the IPL2 record */
-    bzero (buf, sizeof(buf));
+    memset (buf, 0, sizeof(buf));
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "IPL2");
 
@@ -768,7 +768,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     convert_to_ebcdic (datablk->kdarea, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+4, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+8, 6, volser);
-    bzero(datablk->kdarea+15, 5);
+    memset(datablk->kdarea+15, 0, 5);
     convert_to_ebcdic (datablk->kdarea+45, 8, "HERCULES");
     keylen = VOL1_KEYLEN;
     datalen = VOL1_DATALEN;
@@ -782,7 +782,7 @@ BYTE            buf[32768];             /* Buffer for data block     */
     /* Build the IPL text from the object file */
     if (iplfnm != NULL)
     {
-        bzero (buf, sizeof(buf));
+        memset (buf, 0, sizeof(buf));
         datalen = read_ipl_text (iplfnm, buf+12, sizeof(buf)-12);
         if (datalen < 0) return -1;
 
@@ -980,7 +980,7 @@ time_t          timeval;                /* Current time value        */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    bzero (datablk, blklen);
+    memset (datablk, 0, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1102,7 +1102,7 @@ int             tolfact;                /* Device tolerance          */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    bzero (datablk, blklen);
+    memset (datablk, 0, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1177,7 +1177,7 @@ int             blklen;                 /* Size of data block        */
     }
 
     /* Clear the data block and save its address in the DSCB array */
-    bzero (datablk, blklen);
+    memset (datablk, 0, blklen);
     dscbtab[dscbnum] = datablk;
 
     /* Point to the DSCB within the data block */
@@ -1381,7 +1381,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
         datablk = dscbtab[i];
 
         /* Extract the dataset name from the format 1 DSCB */
-        bzero (dsnama, sizeof(dsnama));
+        memset (dsnama, 0, sizeof(dsnama));
         f1dscb = (FORMAT1_DSCB*)(datablk->kdarea);
         if (f1dscb->ds1fmtid == 0xF1)
         {
@@ -1407,7 +1407,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     for (i = 0; i < numf0dscb; i++)
     {
         /* Add a format 0 DSCB to the track buffer */
-        bzero (blankblk, sizeof(blankblk));
+        memset (blankblk, 0, sizeof(blankblk));
         datablk = (DATABLK*)blankblk;
         rc = write_block (cif, ofname, datablk, 44, 96,
                     devtype, heads, trklen, numtrks,
@@ -1826,10 +1826,10 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
     bufrem = xreclen-10;
 
     /* Clear values to be loaded from text units */
-    bzero (tudsnam, sizeof(tudsnam));
-    bzero (tuutiln, sizeof(tuutiln));
-    bzero (tudsorg, sizeof(tudsorg));
-    bzero (turecfm, sizeof(turecfm));
+    memset (tudsnam, 0, sizeof(tudsnam));
+    memset (tuutiln, 0, sizeof(tuutiln));
+    memset (tudsorg, 0, sizeof(tudsorg));
+    memset (turecfm, 0, sizeof(turecfm));
     tulrecl = 0;
     tublksz = 0;
     tukeyln = 0;
@@ -1878,7 +1878,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
             tudirct = make_int (fieldptr[0], fieldlen[0]);
             break;
         case INMDSNAM:
-            bzero (tudsnam, sizeof(tudsnam));
+            memset (tudsnam, 0, sizeof(tudsnam));
             for (i = 0; i < tunum; i++)
             {
 #if defined( _MSVC_ )
@@ -2948,7 +2948,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*-----------------------------------*/
     /* Initialize the volume index block */
     /*-----------------------------------*/
-    bzero (datablk.kdarea, keylen + datalen);
+    memset (datablk.kdarea, 0, keylen + datalen);
 
     /* The key field contains all X'FF' */
     memcpy (datablk.kdarea, eighthexFF, 8);
@@ -3036,7 +3036,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*---------------------------------*/
     /* Initialize the SYS1 index block */
     /*---------------------------------*/
-    bzero (datablk.kdarea, keylen + datalen);
+    memset (datablk.kdarea, 0, keylen + datalen);
 
     /* The key field contains all X'FF' */
     memcpy (datablk.kdarea, eighthexFF, 8);
@@ -3147,7 +3147,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /*--------------------------------------------*/
     while (totblks > 0)
     {
-        bzero (datablk.kdarea, keylen + datalen);
+        memset (datablk.kdarea, 0, keylen + datalen);
 
         /* Write the volume index block to the output file */
         rc = write_block (cif, ofname, &datablk, keylen, datalen,
@@ -3268,7 +3268,7 @@ DATABLK         datablk;                /* Data block                */
 
     /* Initialize the DIP header record */
     diphdr = (DIPHDR*)(datablk.kdarea);
-    bzero (diphdr, sizeof(DIPHDR));
+    memset (diphdr, 0, sizeof(DIPHDR));
     diphdr->recid[0] = 0xFF;
     diphdr->recid[1] = 0xFF;
     diphdr->bcyl[0] = (outcyl >> 8) & 0xFF;
@@ -3450,7 +3450,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
             /* Adjust blksize down to next
                highest multiple of lrecl */
             blksz = (((rc-1) / lrecl) + 1) * lrecl;
-            bzero (&datablk.kdarea[rc], blksz - rc);
+            memset (&datablk.kdarea[rc], 0, blksz - rc);
         }
 
         rc = write_block (cif, ofname, &datablk, keyln, blksz - keyln,
@@ -3543,7 +3543,7 @@ DATABLK         datablk;                /* Data block                */
         keylen = 8;
         datalen = 256;
         outdblu = 14;
-        bzero (datablk.kdarea, keylen + datalen);
+        memset (datablk.kdarea, 0, keylen + datalen);
         memcpy (datablk.kdarea, eighthexFF, 8);
         datablk.kdarea[keylen] = (outdblu >> 8);
         datablk.kdarea[keylen+1] = outdblu & 0xFF;
@@ -3560,7 +3560,7 @@ DATABLK         datablk;                /* Data block                */
             if (rc < 0) return -1;
 
             /* Clear subsequent directory blocks to zero */
-            bzero (datablk.kdarea, keylen + datalen);
+            memset (datablk.kdarea, 0, keylen + datalen);
 
         } /* end for(i) */
 
@@ -3764,7 +3764,7 @@ char           *strtok_str = NULL;      /* last token                */
 
     /* Return the dataset name in EBCDIC and ASCII */
     string_to_upper (pdsnam);
-    bzero (dsname, 45);
+    memset (dsname, 0, 45);
     strncpy (dsname, pdsnam, 44);
 
     /* Set default dataset attribute values */

@@ -331,7 +331,7 @@ init_retry:
         dev->ckd3990 = 1;
 
     /* Clear the DPA */
-    bzero(dev->pgid, sizeof(dev->pgid));
+    memset(dev->pgid, 0, sizeof(dev->pgid));
 
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
@@ -1508,7 +1508,7 @@ int      id;                            /* Response identifier       */
 int      len;                           /* Response length           */
 
     /* Clear the header to zeroes */
-    bzero( hdr, SHRD_HDR_SIZE );
+    memset( hdr, 0, SHRD_HDR_SIZE );
 
     /* Return error if not connected */
     if (dev->fd < 0)
@@ -2001,7 +2001,7 @@ int      off;                           /* Offset into record        */
         /* Send the sense */
         SHRD_SET_HDR (hdr, 0, CSW_CE | CSW_DE, dev->devnum, id, dev->numsense);
         serverSend (dev, ix, hdr, dev->sense, dev->numsense);
-        bzero (dev->sense, sizeof(dev->sense));
+        memset (dev->sense, 0, sizeof(dev->sense));
         dev->sns_pending = 0;
         break;
 
@@ -2726,7 +2726,7 @@ char                    threadname[40];
                 (GETSET_SOCKOPT_T*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
-    bzero( &server, sizeof(server) );
+    memset( &server, 0, sizeof(server) );
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = sysblk.shrdport;
@@ -2966,7 +2966,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
             if (i[0] != '\0') WRMSG(HHC00743, "I", (char *)i);
             if (++i >= x) i = s;
         } while (i != p);
-        bzero(s, n * sizeof(SHRD_TRACE) );
+        memset(s, 0, n * sizeof(SHRD_TRACE) );
         sysblk.shrdtrace = s;
         sysblk.shrdtracep = s;
         sysblk.shrdtracex = x;

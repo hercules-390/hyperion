@@ -801,7 +801,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     SET_THREAD_NAME(name); \
     INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
-    bzero (&sysblk, sizeof(SYSBLK)); \
+    memset (&sysblk, 0, sizeof(SYSBLK)); \
     INIT_MSGLCK \
     initialize_detach_attr (DETACHED); \
     initialize_join_attr   (JOINABLE); \

@@ -851,7 +851,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     release_lock (&dev->lock);
 
     /* Build the operation request block */                    /*@IWZ*/
-    bzero (&dev->orb, sizeof(ORB));                            /*@IWZ*/
+    memset (&dev->orb, 0, sizeof(ORB));                            /*@IWZ*/
     STORE_FW(dev->orb.ccwaddr, ccwaddr);                       /*@IWZ*/
     dev->orb.flag4 = ioparm.akey & ORB4_KEY;                   /*@IWZ*/
     if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)                    /*@IWZ*/
@@ -990,7 +990,7 @@ BYTE       c;                           /* Character work area       */
 
     /* Bytes 16-23 contain the userid in EBCDIC */
 #if defined( HAVE_GETLOGIN_R )
-    bzero( unam, sizeof(unam) );
+    memset( unam, sizeof(unam) );
     VERIFY( getlogin_r ( unam, sizeof(unam) ) == 0 );
     puser = unam;
 #else

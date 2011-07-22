@@ -772,13 +772,13 @@ static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
     if(sysblk.subchan_fl==NULL)
     {
         sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        bzero(sysblk.subchan_fl,sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+        memset(sysblk.subchan_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
     }
     schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid)<<8);
     if(sysblk.subchan_fl[schw]==NULL)
     {
         sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        bzero(sysblk.subchan_fl[schw],sizeof(DEVBLK *)*256);
+        memset(sysblk.subchan_fl[schw], 0,sizeof(DEVBLK *)*256);
     }
     sysblk.subchan_fl[schw][subchan & 0xff]=dev;
 }
@@ -840,7 +840,7 @@ DEVBLK**dvpp;
             WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
-        bzero (dev, sizeof(DEVBLK));
+        memset (dev, 0, sizeof(DEVBLK));
 
         /* Initialize the device lock and conditions */
 
@@ -893,7 +893,7 @@ DEVBLK**dvpp;
     dev->mainlim = sysblk.mainsize - 1;
 
     /* Initialize the path management control word */
-    bzero (&dev->pmcw, sizeof(PMCW));
+    memset (&dev->pmcw, 0, sizeof(PMCW));
     dev->pmcw.devnum[0] = dev->devnum >> 8;
     dev->pmcw.devnum[1] = dev->devnum & 0xFF;
     dev->pmcw.lpm = 0x80;

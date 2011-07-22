@@ -57,7 +57,6 @@
 #include "sha256.h"
 
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
-#define bzero(_dest,_len) memset(_dest,'\0',_len)
 
 /*
  * UNROLLED TRANSFORM LOOP NOTE:

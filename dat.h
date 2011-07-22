@@ -1741,7 +1741,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     INVALIDATE_AIA(regs);
     if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
     {
-        bzero (&regs->tlb.vaddr, TLBN * sizeof(DW));
+        memset(&regs->tlb.vaddr, 0, TLBN * sizeof(DW) );
         regs->tlbID = 1;
     }
 #if defined(_FEATURE_SIE)
@@ -1751,7 +1751,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
         INVALIDATE_AIA(regs->guestregs);
         if (((++regs->guestregs->tlbID) & TLBID_BYTEMASK) == 0)
         {
-            bzero (&regs->guestregs->tlb.vaddr, TLBN * sizeof(DW));
+            memset(&regs->guestregs->tlb.vaddr, 0, TLBN * sizeof(DW));
             regs->guestregs->tlbID = 1;
         }
     }
@@ -1851,7 +1851,7 @@ int  i;
 
     INVALIDATE_AIA(regs);
     if (mask == 0)
-        bzero(&regs->tlb.acc, TLBN);
+        memset(&regs->tlb.acc, 0, TLBN);
     else
         for (i = 0; i < TLBN; i++)
             if ((regs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->tlbID)
@@ -1863,7 +1863,7 @@ int  i;
     {
         INVALIDATE_AIA(regs->guestregs);
         if (mask == 0)
-            bzero(&regs->guestregs->tlb.acc, TLBN);
+            memset(&regs->guestregs->tlb.acc, 0, TLBN);
         else
             for (i = 0; i < TLBN; i++)
                 if ((regs->guestregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->guestregs->tlbID)
@@ -1875,7 +1875,7 @@ int  i;
     {
         INVALIDATE_AIA(regs->hostregs);
         if (mask == 0)
-            bzero(&regs->hostregs->tlb.acc, TLBN);
+            memset(&regs->hostregs->tlb.acc, 0, TLBN);
         else
             for (i = 0; i < TLBN; i++)
                 if ((regs->hostregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->hostregs->tlbID)

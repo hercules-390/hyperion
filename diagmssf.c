@@ -337,7 +337,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Point to SPCCB data area following SPCCB header */
             spccbconfig = (SPCCB_CONFIG_INFO*)(spccb+1);
-            bzero (spccbconfig, sizeof(SPCCB_CONFIG_INFO));
+            memset (spccbconfig, 0, sizeof(SPCCB_CONFIG_INFO));
 
             /* Set main storage size in SPCCB */
             spccbconfig->totstori = sysblk.mainsize >> 20;
@@ -362,7 +362,7 @@ DEVBLK            *dev;                /* Device block pointer       */
             spccbcpu = (SPCCB_CPU_INFO*)(spccbconfig+1);
             for (i = 0; i < sysblk.maxcpu; i++, spccbcpu++)
             {
-                bzero (spccbcpu, sizeof(SPCCB_CPU_INFO));
+                memset( spccbcpu, 0, sizeof(SPCCB_CPU_INFO) );
                 spccbcpu->cpuaddr = i;
                 spccbcpu->todid = 0;
             }
@@ -386,7 +386,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Point to SPCCB data area following SPCCB header */
             spccbchp = (SPCCB_CHP_STATUS*)(spccb+1);
-            bzero (spccbchp, sizeof(SPCCB_CHP_STATUS));
+            memset( spccbchp, 0, sizeof(SPCCB_CHP_STATUS) );
 
             /* Identify CHPIDs used */
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev) {
@@ -479,7 +479,7 @@ static BYTE       physical[8] =
         /* Retrieve the TOD clock value and shift out the epoch */
         diag204tod = tod_clock(regs) << 8;
 
-        bzero(hdrinfo, sizeof(DIAG204_HDR));
+        memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
 #if defined(FEATURE_PHYSICAL_DIAG204)
         hdrinfo->flags = DIAG204_PHYSICAL_PRESENT;
@@ -490,7 +490,7 @@ static BYTE       physical[8] =
 
         /* hercules partition */
         partinfo = (DIAG204_PART*)(hdrinfo + 1);
-        bzero(partinfo, sizeof(DIAG204_PART));
+        memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 1; /* Hercules partition */
         partinfo->virtcpu = sysblk.cpus;
         get_lparname(partinfo->partname);
@@ -501,7 +501,7 @@ static BYTE       physical[8] =
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
-              bzero(cpuinfo, sizeof(DIAG204_PART_CPU));
+              memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuinfo->index=sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
@@ -522,7 +522,7 @@ static BYTE       physical[8] =
         /* lpar management */
         getrusage(RUSAGE_CHILDREN,&usage);
         partinfo = (DIAG204_PART*)cpuinfo;
-        bzero(partinfo, sizeof(DIAG204_PART));
+        memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 0; /* Physical machine */
         partinfo->virtcpu = sysblk.cpus;
         memcpy(partinfo->partname,physical,sizeof(physical));
@@ -533,7 +533,7 @@ static BYTE       physical[8] =
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
-              bzero(cpuinfo, sizeof(DIAG204_PART_CPU));
+              memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
@@ -585,7 +585,7 @@ static BYTE       physical[8] =
         /* Retrieve the TOD clock value and shift out the epoch */
         diag204tod = tod_clock(regs) << 8;
 
-        bzero(hdrxinfo, sizeof(DIAG204_X_HDR));
+        memset(hdrxinfo, 0, sizeof(DIAG204_X_HDR));
         hdrxinfo->numpart = 1;
 #if defined(FEATURE_PHYSICAL_DIAG204)
         hdrxinfo->flags = DIAG204_X_PHYSICAL_PRESENT;
@@ -597,7 +597,7 @@ static BYTE       physical[8] =
 
         /* hercules partition */
         partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
-        bzero(partxinfo, sizeof(DIAG204_PART));
+        memset(partxinfo, 0, sizeof(DIAG204_PART));
         partxinfo->partnum = 1; /* Hercules partition */
         partxinfo->virtcpu = sysblk.cpus;
         get_lparname(partxinfo->partname);
@@ -613,7 +613,7 @@ static BYTE       physical[8] =
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
-              bzero(cpuxinfo, sizeof(DIAG204_X_PART_CPU));
+              memset(cpuxinfo, 0, sizeof(DIAG204_X_PART_CPU));
               STORE_HW(cpuxinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
@@ -645,7 +645,7 @@ static BYTE       physical[8] =
 #if defined(FEATURE_PHYSICAL_DIAG204)
         /* lpar management */
         partxinfo = (DIAG204_X_PART*)cpuxinfo;
-        bzero(partxinfo, sizeof(DIAG204_X_PART));
+        memset(partxinfo, 0, sizeof(DIAG204_X_PART));
         partxinfo->partnum = 0; /* Physical machine */
         partxinfo->virtcpu = sysblk.cpus;
         memcpy(partxinfo->partname,physical,sizeof(physical));
@@ -656,7 +656,7 @@ static BYTE       physical[8] =
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
           {
-              bzero(cpuxinfo, sizeof(DIAG204_X_PART_CPU));
+              memset(cpuxinfo, 0, sizeof(DIAG204_X_PART_CPU));
               STORE_HW(cpuxinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
@@ -732,7 +732,7 @@ unsigned int      i;                   /* loop index                 */
     *p = 5;
 
     /* Clear the next 15 bytes */
-    bzero (p + 1, 15);
+    memset (p + 1, 0, 15);
 
     /* Set the 6 possible entries */
     p += 16;

@@ -670,7 +670,6 @@ char           *strtok_str = NULL;      /* save last position        */
 
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
-    bzero( dev->pgid, sizeof(dev->pgid) );
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -1450,7 +1449,7 @@ void ckd_build_sense ( DEVBLK *dev, BYTE sense0, BYTE sense1,
 {
 int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     /* Clear the sense bytes */
-    bzero( dev->sense, sizeof(dev->sense) );
+    memset( dev->sense, 0, sizeof(dev->sense) );
 
     /* Sense bytes 0-2 are specified by caller */
     dev->sense[0] = sense0;
@@ -1941,7 +1940,7 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    bzero (&rechdr, CKDDASD_RECHDR_SIZE);
+    memset(&rechdr, 0, CKDDASD_RECHDR_SIZE);
     memcpy (&rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
                                 len : CKDDASD_RECHDR_SIZE);
 
@@ -1997,8 +1996,8 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    bzero (&rechdr, CKDDASD_RECHDR_SIZE);
-    memcpy (&rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
+    memset( &rechdr, 0, CKDDASD_RECHDR_SIZE );
+    memcpy( &rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
                                 len : CKDDASD_RECHDR_SIZE);
 
     /* Extract the record number, key length and data length */
@@ -5660,7 +5659,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero( dev->sense, sizeof(dev->sense) );
+        memset( dev->sense, 0, sizeof(dev->sense) );
 
         *unitstat = CSW_CE | CSW_DE;
         break;

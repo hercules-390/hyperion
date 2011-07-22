@@ -4267,7 +4267,7 @@ int     cc = 0;                         /* Condition code            */
             if (dest1 == source1)
             {
                /* (1a) - Dest and source are the same */
-               bzero(dest1, len + 1);
+               memset(dest1, 0, len + 1);
             }
             else
             {
@@ -4375,7 +4375,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
        the interrupt is intercepted */
-    bzero(regs->exinst, 8);
+    memset(regs->exinst, 0, 8);
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch target instruction from operand address */
@@ -4428,7 +4428,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
        the interrupt is intercepted */
-    bzero(regs->exinst, 8);
+    memset(regs->exinst, 0, 8);
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch target instruction from operand address */
@@ -4542,7 +4542,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         break;
 
     default:
-        bzero(vbyte, 4);
+        memset(vbyte, 0, 4);
         ARCH_DEP(vfetchc)(vbyte, icmlen[r3], effective_addr2, b2, regs);
 
         /* If mask was 0 then we still had to fetch, according to POP.
@@ -4618,7 +4618,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    bzero (vbyte, 4);
+    memset (vbyte, 0, 4);
     ARCH_DEP(vfetchc)(vbyte, icmlen[r3], effective_addr2, b2, regs);
 
     /* If mask was 0 then we still had to fetch, according to POP.

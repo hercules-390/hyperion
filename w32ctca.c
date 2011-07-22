@@ -354,7 +354,7 @@ int  display_tt32_stats( int fd )
 
     if (!tt32_loaddll()) return -1;
 
-    bzero(&stats, sizeof(stats));
+    memset(&stats, 0, sizeof(stats));
     stats.dwStructSize = sizeof(stats);
 
     if (!  g_tt32_pfn_get_stats_ex )

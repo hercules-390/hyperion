@@ -81,7 +81,7 @@ static int hao_initialize(void)
   }
 
   /* initialize message buffer */
-  bzero(ao_msgbuf, sizeof(ao_msgbuf));
+  memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
 
   /* Start message monitoring thread */
   rc = create_thread (&haotid, JOINABLE, hao_thread, NULL, "hao_thread");

@@ -553,8 +553,8 @@ int clock_hresume(void *file)
     float f;
     char buf[SR_MAX_STRING_LENGTH];
 
-    bzero(&old, sizeof(CSR));
-    bzero(&new, sizeof(CSR));
+    memset(&old, 0, sizeof(CSR));
+    memset(&new, 0, sizeof(CSR));
     current = &new;
     universal_tod = 0;
     hw_steering = 0.0;

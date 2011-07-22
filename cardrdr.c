@@ -538,7 +538,7 @@ int     rc;                             /* Return code               */
 
     if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
     {
-        bzero(&dev->buf[rc], CARD_SIZE - rc);
+        memset(&dev->buf[rc], 0, CARD_SIZE - rc);
         rc = CARD_SIZE;
     }
     else if /* Check for End of file */
@@ -809,7 +809,7 @@ int     num;                            /* Number of bytes to move   */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero (dev->sense, sizeof(dev->sense));
+        memset (dev->sense, 0, sizeof(dev->sense));
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

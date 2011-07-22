@@ -42,8 +42,8 @@ void renew_wrapping_keys(void)
   /* lpar name (8 bytes) */
   /* lparnum (1 byte) */
   /* random number 8 bytes at the end) */
-  bzero(sysblk.wkvpaes_reg, 32);
-  bzero(sysblk.wkvpdea_reg, 24);
+  memset(sysblk.wkvpaes_reg, 0, 32);
+  memset(sysblk.wkvpdea_reg, 0, 24);
   cpuid = sysblk.cpuid;
   for(i = 0; i < 8; i++)
   {

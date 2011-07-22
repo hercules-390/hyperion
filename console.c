@@ -280,7 +280,7 @@ BYTE print_chars[17];
 
     for (offset=0; offset < len; )
     {
-        bzero(print_chars,sizeof(print_chars));
+        memset(print_chars,sizeof(print_chars));
         LOGMSG("+%4.4X  ", offset);
         for (i=0; i < 16; i++)
         {
@@ -1597,8 +1597,8 @@ char                    *logoout;
             dev->rlen3270 = 0;
             dev->keybdrem = 0;
 
-            bzero( &dev->scsw, sizeof(SCSW) );
-            bzero( &dev->pciscsw, sizeof(SCSW) );
+            memset( &dev->scsw, 0, sizeof(SCSW) );
+            memset( &dev->pciscsw, 0, sizeof(SCSW) );
             dev->busy = dev->reserved = dev->suspended =
             dev->pending = dev->pcipending = dev->attnpending = 0;
 
@@ -3362,7 +3362,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero( dev->sense, sizeof(dev->sense) );
+        memset( dev->sense, 0, sizeof(dev->sense) );
 
         /* Reset the buffer address */
         dev->pos3270 = 0;
@@ -3583,7 +3583,7 @@ BYTE    stat;                           /* Unit status               */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero( dev->sense, sizeof(dev->sense) );
+        memset( dev->sense, 0, sizeof(dev->sense) );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

@@ -473,7 +473,7 @@ SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
     }
 
     /* Zero all fields */
-    bzero (evd_hdr, evd_len);
+    memset (evd_hdr, 0, evd_len);
 
     /* Update SCCB length field if variable request */
     if (sccb->type & SCCB_TYPE_VARIABLE)
@@ -625,7 +625,7 @@ U16             residual;               /* Residual data count       */
     if (dev != NULL)
     {
         /* Zeroize the event data header */
-        bzero (evd_hdr, sizeof(SCCB_EVD_HDR));
+        memset (evd_hdr, 0, sizeof(SCCB_EVD_HDR));
 
         /* Calculate maximum data length */
         FETCH_HW(sccblen, sccb->length);
@@ -1251,7 +1251,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Point to SCCB data area following SCCB header */
         sccbscp = (SCCB_SCP_INFO*)(sccb+1);
-        bzero (sccbscp, sizeof(SCCB_SCP_INFO));
+        memset (sccbscp, 0, sizeof(SCCB_SCP_INFO));
 
         /* Set main storage size in SCCB */
         realmb = sysblk.mainsize >> 20;
@@ -1323,7 +1323,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccbcpu = (SCCB_CPU_INFO*)(sccbscp+1);
         for (i = 0; i < sysblk.maxcpu; i++, sccbcpu++)
         {
-            bzero (sccbcpu, sizeof(SCCB_CPU_INFO));
+            memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
             sccbcpu->cpa = i;
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
@@ -1389,11 +1389,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #ifdef FEATURE_S370_CHANNEL
         /* Point to SCCB data area following SCCB header */
         sccbchp = (SCCB_CHSET_INFO*)(sccb+1);
-        bzero (sccbchp, sizeof(SCCB_CHSET_INFO));
+        memset (sccbchp, 0, sizeof(SCCB_CHSET_INFO));
 #else
         /* Point to SCCB data area following SCCB header */
         sccbchp = (SCCB_CHP_INFO*)(sccb+1);
-        bzero (sccbchp, sizeof(SCCB_CHP_INFO));
+        memset (sccbchp, 0, sizeof(SCCB_CHP_INFO));
 #endif
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
@@ -1454,7 +1454,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Point to SCCB data area following SCCB header */
         sccbcsi = (SCCB_CSI_INFO*)(sccb+1);
-        bzero (sccbcsi, sizeof(SCCB_CSI_INFO));
+        memset (sccbcsi, 0, sizeof(SCCB_CSI_INFO));
 
         sccbcsi->csif[0] = 0
 #if defined(FEATURE_CANCEL_IO_FACILITY)
@@ -1738,7 +1738,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             HDC3(debug_sclp_unknown_event_mask, evd_mask, sccb, regs);
 
         /* Write the events that we support back */
-        bzero (&evd_mask->masks[2 * masklen], 2 * masklen);
+        memset (&evd_mask->masks[2 * masklen], 0, 2 * masklen);
         for (i = 0; (i < 4) && ((U32)i < masklen); i++)
         {
             evd_mask->masks[i+(2*masklen)] |= (ARCH_DEP(sclp_recv_mask) >> ((3-i)*8)) & 0xFF;

@@ -969,7 +969,7 @@ DLL_EXPORT int scandir
 
   /* Now we know how many, we can alloc & make 2nd pass to copy them */
   names = (struct dirent**)malloc(sizeof(struct dirent*) * count);
-  bzero(names, sizeof(*names));
+  memset(names, 0, sizeof(*names));
   handle = FindFirstFile(pattern, &file_data);
   if (handle == INVALID_HANDLE_VALUE)
     {
@@ -1097,7 +1097,7 @@ DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
         HANDLE          hChildProcess;
         struct rusage   child_usage;
 
-        bzero( &pe32, sizeof(pe32) );
+        memset( &pe32, 0, sizeof(pe32) );
 
         // Take a snapshot of all active processes...
 
@@ -2124,7 +2124,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 char CPUBrand[0x40];
 
                 __cpuid(CPUInfo, 0);
-                bzero(CPUString, sizeof(CPUString));
+                memset(CPUString, 0, sizeof(CPUString));
                 *((int*)CPUString) = CPUInfo[1];
                 *((int*)(CPUString+4)) = CPUInfo[3];
                 *((int*)(CPUString+8)) = CPUInfo[2];
@@ -2141,7 +2141,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                 {
                     strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) );
                 }
-                bzero(CPUBrand, sizeof(CPUBrand));
+                memset(CPUBrand, 0, sizeof(CPUBrand));
 
                 __cpuid(CPUInfo, 0x80000002);
                 memcpy(CPUBrand, CPUInfo, sizeof(CPUInfo));
@@ -2726,8 +2726,8 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
         return -1;
     }
 
-    bzero( &localhost_addr, len   );
-    bzero( &tempaddr,       talen );
+    memset( &localhost_addr, 0, len   );
+    memset( &tempaddr,       0, talen );
 
     localhost_addr.sin_family       = AF_INET;
     localhost_addr.sin_port         = htons( 0 );

@@ -1207,7 +1207,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (len);
 
         /* Clear the device sense bytes */
-        bzero( iobuf, num );
+        memset( iobuf, 0, num );
 
         /* Copy device sense bytes to channel I/O buffer */
         memcpy (iobuf, dev->sense,
@@ -2596,7 +2596,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         RESIDUAL_CALC (dev->numsense);
 
         /* Reset SENSE Data */
-        bzero (dev->sense, sizeof(dev->sense));
+        memset (dev->sense, 0, sizeof(dev->sense));
         *unitstat = CSW_CE|CSW_DE;
 
         /* Copy device Buffered log data (Bunch of 0s for now) */
@@ -2712,7 +2712,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         default:
         case SPG_SET_RESIGN:
             dev->pgstat = 0;
-            bzero (dev->pgid, 11);  // (reset to zero)
+            memset (dev->pgid, 0, 11);  // (reset to zero)
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             break;
 
@@ -2823,7 +2823,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Return Media Sense data... */
 
-        bzero( iobuf, num );          // (init to all zeroes first)
+        memset( iobuf, 0, num );          // (init to all zeroes first)
 
         if (dev->tmh->tapeloaded( dev, unitstat, code ))
             iobuf[0] |= (0x01 & 0x0F);    // MSENSE_ASSOCIATED_MOUNT
@@ -3430,8 +3430,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
     /* Copy and translate messages... */
 
-    bzero( msg1, sizeof(msg1) );
-    bzero( msg2, sizeof(msg2) );
+    memset( msg1, 0, sizeof(msg1) );
+    memset( msg2, 0, sizeof(msg2) );
 
     msg = buf+1;
 
@@ -3667,7 +3667,7 @@ int sense_built;
 
             if (TAPE_BSENSE_STATUSONLY != ERCode)
             {
-                bzero( dev->sense, sizeof(dev->sense) );
+                memset( dev->sense, 0, sizeof(dev->sense) );
                 dev->sns_pending = 0;
             }
 
@@ -3700,7 +3700,7 @@ int sense_built;
     }
     if (!sense_built)
     {
-        bzero( dev->sense, sizeof(dev->sense) );
+        memset( dev->sense, 0, sizeof(dev->sense) );
         dev->sense[0]=SENSE_EC;
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
     }

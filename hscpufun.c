@@ -381,7 +381,7 @@ int  rest_loadparm = FALSE;
         }
         else if ( CMD(argv[2], parm, 4) )
         {
-            bzero(sysblk.iplparmstring,MAXPARMSTRING);
+            memset(sysblk.iplparmstring,0,MAXPARMSTRING);
             sysblk.haveiplparm=1;
             for ( i = 3; i < argc && maxb < MAXPARMSTRING; i++ )
             {

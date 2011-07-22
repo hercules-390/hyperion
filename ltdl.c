@@ -2025,7 +2025,7 @@ presym_add_symlist (preloaded)
   tmp = LT_EMALLOC (lt_dlsymlists_t, 1);
   if (tmp)
     {
-      bzero (tmp, sizeof(lt_dlsymlists_t));
+      memset (tmp, 0, sizeof(lt_dlsymlists_t));
       tmp->syms = preloaded;
       tmp->next = preloaded_symbols;
       preloaded_symbols = tmp;
@@ -3071,7 +3071,7 @@ try_dlopen (phandle, filename)
       if (*phandle == 0)
     return 1;
 
-      bzero (*phandle, sizeof(struct lt_dlhandle_struct));
+      memset (*phandle, 0, sizeof(struct lt_dlhandle_struct));
       newhandle = *phandle;
 
       /* lt_dlclose()ing yourself is very bad!  Disallow it.  */
@@ -3326,7 +3326,7 @@ try_dlopen (phandle, filename)
 
       assert (*phandle);
 
-      bzero (*phandle, sizeof(struct lt_dlhandle_struct));
+      memset (*phandle, 0, sizeof(struct lt_dlhandle_struct));
       if (load_deplibs (*phandle, deplibs) == 0)
     {
       newhandle = *phandle;
@@ -3364,7 +3364,7 @@ try_dlopen (phandle, filename)
       goto cleanup;
     }
 
-      bzero (*phandle, sizeof (struct lt_dlhandle_struct));
+      memset (*phandle, 0, sizeof (struct lt_dlhandle_struct));
       newhandle = *phandle;
 
       /* If the module has no directory name component, try to find it

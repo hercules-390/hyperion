@@ -62,7 +62,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
     for (i = 0; i < argc; i++)
     {
-        bzero (dev, sizeof(DEVBLK));
+        memset (dev, 0, sizeof(DEVBLK));
         dev->batch = 1;
 
         /* open the file */

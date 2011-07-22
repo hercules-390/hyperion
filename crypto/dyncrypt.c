@@ -178,8 +178,8 @@
 */
 
 /* Hercules adjustments */
-#if defined(bzero)
-#define zeromem(dst, len)    bzero(dst, len)
+#if defined(memset)
+#define zeromem(dst, len)    memset(dst, len)
 #else
 #define zeromem(dst, len)    memset((dst), 0, (len))
 #endif
@@ -572,8 +572,8 @@ static void wrap_dea(BYTE *key, int keylen)
 */
 
 /* Hercules adjustments */
-#if defined(bzero)
-#define zeromem(dst, len)    bzero(dst, len)
+#if defined(memset)
+#define zeromem(dst, len)    memset(dst, len)
 #else
 #define zeromem(dst, len)    memset((dst), 0, (len))
 #endif

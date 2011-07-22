@@ -1025,7 +1025,7 @@ int i;
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
-        bzero (grp, sizeof(OSA_GRP));
+        memset (grp, 0, sizeof(OSA_GRP));
 
         register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
@@ -1354,7 +1354,7 @@ int num;                                /* Number of bytes to move   */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero (dev->sense, sizeof(dev->sense));
+        memset (dev->sense, 0, sizeof(dev->sense));
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

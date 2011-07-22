@@ -935,7 +935,7 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Prepare a block of zeroes for write padding */
-        bzero( hexzeroes, sizeof(hexzeroes) );
+        memset( hexzeroes, 0, sizeof(hexzeroes) );
 
         /* Write physical blocks of data to the device */
         while (dev->fbalcnum > 0)
@@ -1330,7 +1330,7 @@ int     repcnt;                         /* Replication count         */
         memcpy (iobuf, dev->sense, num);
 
         /* Clear the device sense bytes */
-        bzero (dev->sense, sizeof(dev->sense));
+        memset(dev->sense, 0, sizeof(dev->sense));
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1362,7 +1362,7 @@ int     repcnt;                         /* Replication count         */
         if (count < 24) *more = 1;
 
         /* Copy device identifier bytes to channel I/O buffer */
-        bzero( iobuf, num );
+        memset( iobuf, 0, num );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

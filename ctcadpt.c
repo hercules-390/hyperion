@@ -422,7 +422,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         memcpy( pIOBuf, pDEVBLK->sense, iNum );
 
         // Clear the device sense bytes
-        bzero( pDEVBLK->sense, sizeof( pDEVBLK->sense ) );
+        memset( pDEVBLK->sense, 0, sizeof( pDEVBLK->sense ) );
 
         // Return unit status
         *pUnitStat = CSW_CE | CSW_DE;
@@ -581,7 +581,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     // (might seem like overkill, and usually isn't done, but doing this
     // bind() to the local port we configure gives the other end a chance
     // at validating the connection request)
-    bzero( &(parm.addr), sizeof( parm.addr ) );
+    memset( &(parm.addr), 0, sizeof( parm.addr ) );
     parm.addr.sin_family      = AF_INET;
     parm.addr.sin_port        = htons(lport);
     parm.addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -597,7 +597,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     }
 
     // initiate a connection to the other end
-    bzero( &(parm.addr), sizeof( parm.addr ) );
+    memset( &(parm.addr), 0, sizeof( parm.addr ) );
     parm.addr.sin_family = AF_INET;
     parm.addr.sin_port   = htons(rport);
     parm.addr.sin_addr   = ipaddr;
@@ -626,7 +626,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         }
 
         // set up the listening port
-        bzero( &(parm.addr), sizeof( parm.addr ) );
+        memset( &(parm.addr), 0, sizeof( parm.addr ) );
 
         parm.addr.sin_family      = AF_INET;
         parm.addr.sin_port        = htons(lport);
@@ -908,7 +908,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     pSegment = (PCTCISEG)( pIOBuf + sizeof( CTCIHDR ) );
 
     // Initialize segment
-    bzero( pSegment, iLength + sizeof( CTCISEG ) );
+    memset( pSegment, 0, iLength + sizeof( CTCISEG ) );
 
     // Update next frame offset
     STORE_HW( pFrame->hwOffset, 
@@ -1344,9 +1344,9 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 
     for( offset = 0; offset < iLen; )
     {
-        bzero( print_ascii, sizeof( print_ascii ) );
-        bzero( print_ebcdic, sizeof( print_ebcdic ) );
-        bzero( print_line, sizeof( print_line ) );
+        memset( print_ascii, 0, sizeof( print_ascii ) );
+        memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
+        memset( print_line, 0, sizeof( print_line ) );
 
         snprintf((char *) print_line, sizeof(print_line), "+%4.4X%c ", offset, bDir );
         print_line[sizeof(print_line)-1] = '\0'; /* force null termination */

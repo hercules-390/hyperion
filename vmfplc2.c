@@ -391,7 +391,7 @@ void append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
                 tbs->current=tb;
             }
             tb->data=malloc(tbs->blksz+tbs->hdrsz);
-            bzero(tb->data,tbs->blksz+tbs->hdrsz);
+            memset(tb->data, 0, tbs->blksz+tbs->hdrsz);
             memcpy(tb->data,tbs->hdr,tbs->hdrsz);
             tb->sz=tbs->hdrsz;
         }
@@ -690,7 +690,7 @@ struct FST_BLOCK *format_fst(char *fn,char *ft,char *fm,char recfm,int lrecl,int
     struct  FST_BLOCK *fstb;
 
     fstb=malloc(sizeof(struct FST_BLOCK));
-    bzero(fstb,sizeof(struct FST_BLOCK));
+    memset(fstb, 0,sizeof(struct FST_BLOCK));
     memcpy(fstb->hdr,plch_hdr,5);
 
     memset(fstb->fst.fn,0x40,8);

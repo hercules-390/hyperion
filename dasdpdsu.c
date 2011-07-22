@@ -115,7 +115,7 @@ char           *strtok_str = NULL;
     }
 
     /* The second argument is the dataset name */
-    bzero (dsnama, sizeof(dsnama));
+    memset (dsnama, 0, sizeof(dsnama));
     strncpy (dsnama, argv[2|+i], sizeof(dsnama)-1);
     string_to_upper (dsnama);
 
@@ -248,7 +248,7 @@ char            card[81];               /* Logical record (ASCIIZ)   */
 char            pathname[MAX_PATH];     /* ofname in host format     */
 
     /* Build the output file name */
-    bzero (ofname, sizeof(ofname));
+    memset (ofname, 0, sizeof(ofname));
     strncpy (ofname, memname, 8);
     string_to_lower (ofname);
     strcat (ofname, ".mac");

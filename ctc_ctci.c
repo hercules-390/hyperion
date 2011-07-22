@@ -156,7 +156,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         return -1;
     }
 
-    bzero( pWrkCTCBLK, sizeof( CTCBLK ) );
+    memset( pWrkCTCBLK, 0, sizeof( CTCBLK ) );
 
     // Parse configuration file statement
     if( ParseArgs( pDEVBLK, pWrkCTCBLK, argc, (char**)argv ) != 0 )
@@ -240,7 +240,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     {
         struct tt32ctl tt32ctl;
 
-        bzero( &tt32ctl, sizeof(tt32ctl) );
+        memset( &tt32ctl, 0, sizeof(tt32ctl) );
         strlcpy( tt32ctl.tt32ctl_name, pDevCTCBLK->szTUNDevName, sizeof(tt32ctl.tt32ctl_name) );
 
         tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
@@ -506,7 +506,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         memcpy( pIOBuf, pDEVBLK->sense, iNum );
 
         // Clear the device sense bytes
-        bzero( pDEVBLK->sense, sizeof( pDEVBLK->sense ) );
+        memset( pDEVBLK->sense, 0, sizeof( pDEVBLK->sense ) );
 
         // Return unit status
         *pUnitStat = CSW_CE | CSW_DE;
@@ -1078,7 +1078,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
                            pCTCBLK->iFrameOffset );
 
     // Initialize segment
-    bzero( pSegment, iSize + sizeof( CTCISEG ) );
+    memset( pSegment, 0, iSize + sizeof( CTCISEG ) );
 
     // Increment offset
     pCTCBLK->iFrameOffset += (U16)(sizeof( CTCISEG ) + iSize);
@@ -1125,8 +1125,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 #endif
 
     // Housekeeping
-    bzero( &addr, sizeof( struct in_addr ) );
-    bzero( &mac, sizeof( MAC ) );
+    memset( &addr, 0, sizeof( struct in_addr ) );
+    memset( &mac, 0, sizeof( MAC ) );
 
     // Set some initial defaults
     strlcpy( pCTCBLK->szMTU,     "1500",            sizeof(pCTCBLK->szMTU) );

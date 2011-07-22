@@ -344,7 +344,7 @@ int cache_release(int ix, int i, int flag)
     buf = cacheblk[ix].cache[i].buf;
     len = cacheblk[ix].cache[i].len;
 
-    bzero (&cacheblk[ix].cache[i], sizeof(CACHE));
+    memset(&cacheblk[ix].cache[i], 0, sizeof(CACHE));
 
     if ((flag & CACHE_FREEBUF) && buf != NULL) {
         free (buf);
@@ -460,7 +460,7 @@ static int cache_destroy (int ix)
             free (cacheblk[ix].cache);
         }
     }
-    bzero(&cacheblk[ix], sizeof(CACHEBLK));
+    memset(&cacheblk[ix], 0, sizeof(CACHEBLK));
     return 0;
 }
 
@@ -569,7 +569,7 @@ static int cache_resize (int ix, int n)
         }
         cacheblk[ix].cache = cache;
         for (i = cacheblk[ix].nbr; i < cacheblk[ix].nbr +n; i++)
-            bzero(&cacheblk[ix].cache[i], sizeof(CACHE));
+            memset(&cacheblk[ix].cache[i], sizeof(CACHE));
         cacheblk[ix].nbr += n;
         cacheblk[ix].empty += n;
         cacheblk[ix].adjusts++;

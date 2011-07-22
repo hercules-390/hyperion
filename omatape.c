@@ -144,7 +144,7 @@ char           *strtok_str = NULL;      /* last token position       */
     for (filecount = 0, tdfpos = 0, stmt = 1; ; filecount++)
     {
         /* Clear the tape descriptor array entry */
-        bzero (&(tdftab[filecount]), sizeof(OMATAPE_DESC));
+        memset (&(tdftab[filecount]), 0, sizeof(OMATAPE_DESC));
 
         /* Point past the next linefeed in the TDF file */
         while (tdfpos < tdfsize && tdfbuf[tdfpos++] != '\n');

@@ -2225,7 +2225,7 @@ het_rewind( HETB *hetb )
     /*
     || Clear header for the heck of it
     */
-    bzero( &hetb->chdr, sizeof( hetb->chdr ) );
+    memset( &hetb->chdr, 0, sizeof( hetb->chdr ) );
 
     /*
     || Reset flag to force truncation if a write occurs

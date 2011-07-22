@@ -492,7 +492,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
         WRMSG(HHC01000, "E",SSID_TO_LCSS(dev->ssid),dev->devnum, buf, strerror(errno));
         return -1;
     }
-    bzero(dev->commadpt, sizeof(COMMADPT) );
+    memset(dev->commadpt, 0, sizeof(COMMADPT) );
     commadpt_ring_init(&dev->commadpt->inbfr,4096,dev->ccwtrace);
     commadpt_ring_init(&dev->commadpt->outbfr,4096,dev->ccwtrace);
     commadpt_ring_init(&dev->commadpt->pollbfr,4096,dev->ccwtrace);
@@ -1764,7 +1764,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->uctrans=FALSE;
         dev->commadpt->code_table_toebcdic   = xlate_table_ebcd_toebcdic;
         dev->commadpt->code_table_fromebcdic = xlate_table_ebcd_fromebcdic;
-        bzero(dev->commadpt->byte_skip_table, sizeof(dev->commadpt->byte_skip_table) );
+        memset(dev->commadpt->byte_skip_table, 0, sizeof(dev->commadpt->byte_skip_table) );
         etospec=0;
 
         for(i=0;i<argc;i++)
@@ -2074,7 +2074,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         in_temp.s_addr=dev->commadpt->rhost;
         dev->bufsize=256;
         dev->numsense=2;
-        bzero(dev->sense, sizeof(dev->sense));
+        memset(dev->sense, 0, sizeof(dev->sense));
 
         /* Initialise various flags & statuses */
         dev->commadpt->enabled=0;

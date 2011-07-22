@@ -55,7 +55,7 @@ char            pathname[MAX_PATH];
 //      devhdr.highcyl[0] = 0;
 //      devhdr.highcyl[1] = 0;
 
-//      bzero (&devhdr.resv, 492);
+//      memset (&devhdr.resv, 0, 492);
 
 
         /* --------------------------------------- */
@@ -111,7 +111,7 @@ char            pathname[MAX_PATH];
 //      cdevhdr.compress = CCKD_COMPRESS_BZIP2;
 //      cdevhdr.compress_parm = 5;
 
-//      bzero (&cdevhdr.resv2, 464);
+//      memset (&cdevhdr.resv2, 0, 464);
 
         lseek (fd, 0, SEEK_SET);
         write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
