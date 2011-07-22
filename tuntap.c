@@ -906,7 +906,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             dup2( STDOUT_FILENO, STDERR_FILENO );
 
             // Execute the interface configuration command
-            rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
+            (void)execlp( pszCfgCmd, pszCfgCmd, NULL );
 
             // The exec function returns only if unsuccessful
             WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
