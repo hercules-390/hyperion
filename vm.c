@@ -990,7 +990,7 @@ BYTE       c;                           /* Character work area       */
 
     /* Bytes 16-23 contain the userid in EBCDIC */
 #if defined( HAVE_GETLOGIN_R )
-    memset( unam, sizeof(unam) );
+    memset( unam, 0, sizeof(unam) );
     VERIFY( getlogin_r ( unam, sizeof(unam) ) == 0 );
     puser = unam;
 #else

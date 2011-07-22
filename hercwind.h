@@ -28,6 +28,8 @@
   #error MSVC compiler versions less than 13.0 not supported.
 #endif
 
+#pragma intrinsic( memset, memcmp, memcpy )
+
 ///////////////////////////////////////////////////////////////////////
 // The following is mostly for issuing "warning" messages since MS's
 // compiler doesn't support #warning. Instead, we must use #pragma
