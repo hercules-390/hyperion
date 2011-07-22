@@ -178,11 +178,7 @@
 */
 
 /* Hercules adjustments */
-#if defined(memset)
-#define zeromem(dst, len)    memset(dst, len)
-#else
 #define zeromem(dst, len)    memset((dst), 0, (len))
-#endif
 #define XMEMCPY              memcpy
 
 /* Original code from gcm_gf_mult.c */
