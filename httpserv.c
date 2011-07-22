@@ -756,7 +756,7 @@ char *http_root()
             char msgbuf[MAX_PATH+3];
             char *p = msgbuf;
 
-            bzero(msgbuf,sizeof(msgbuf));
+            memset(msgbuf,0,sizeof(msgbuf));
 
             hostpath(pathname, absolute_httproot_path, sizeof(pathname));
             http_serv.httproot = strdup(pathname);
@@ -967,7 +967,7 @@ int http_startup(int isconfigcalling)
     {
         if ( !http_struct_init )
         {
-            bzero(&http_serv,sizeof(HTTP_SERV));
+            memset(&http_serv,0,sizeof(HTTP_SERV));
             initialize_condition( &http_serv.http_wait_shutdown );
             initialize_lock( &http_serv.http_lock_shutdown );
             initialize_lock( &http_lock_root );
@@ -1025,7 +1025,7 @@ int http_command(int argc, char *argv[])
 
     if ( !http_struct_init )
     {
-        bzero(&http_serv,sizeof(HTTP_SERV));
+        memset(&http_serv,0,sizeof(HTTP_SERV));
         initialize_condition( &http_serv.http_wait_shutdown );
         initialize_lock( &http_serv.http_lock_shutdown );
         initialize_lock( &http_lock_root );

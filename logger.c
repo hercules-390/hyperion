@@ -673,7 +673,7 @@ int   new_hrdcpyfd = -1;
 
     if(!filename)
     {
-        bzero(logger_filename, sizeof(logger_filename));
+        memset(logger_filename, 0, sizeof(logger_filename));
 
         if(!logger_hrdcpy)
         {
@@ -708,7 +708,7 @@ int   new_hrdcpyfd = -1;
         char pathname[MAX_PATH];
         hostpath(pathname, filename, sizeof(pathname));
 
-        bzero(logger_filename, sizeof(logger_filename));
+        memset(logger_filename, 0, sizeof(logger_filename));
 
         new_hrdcpyfd = HOPEN(pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,

@@ -32,7 +32,7 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
     int     currcpu = sysblk.pcpu;
     char    cmd[32768];
 
-    bzero(cmd,sizeof(cmd));
+    memset(cmd,0,sizeof(cmd));
 
     if (argc < 2)
     {

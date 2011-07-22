@@ -56,13 +56,9 @@
 
 #include "sha256.h"
 
-#if !defined(bcopy)
-    #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
-#endif
+#define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#define bzero(_dest,_len) memset(_dest,'\0',_len)
 
-#if !defined(bzero)
-    #define bzero(_dest,_len) memset(_dest,'\0',_len)
-#endif
 /*
  * UNROLLED TRANSFORM LOOP NOTE:
  * You can define SHA2_UNROLL_TRANSFORM to use the unrolled transform
@@ -250,7 +246,7 @@ SHA256_Init(SHA256_CTX *context)
  if (context == NULL)
   return;
  bcopy(sha256_initial_hash_value, context->state, SHA256_DIGEST_LENGTH);
- bzero(context->buffer, SHA256_BLOCK_LENGTH);
+ memset(context->buffer, 0, SHA256_BLOCK_LENGTH);
  context->bitcount = 0;
 }
 
@@ -483,20 +479,20 @@ SHA256_Final(u_int8_t digest[], SHA256_CTX *context)
 
    if (usedspace <= SHA256_SHORT_BLOCK_LENGTH) {
     /* Set-up for the last transform: */
-    bzero(&context->buffer[usedspace], SHA256_SHORT_BLOCK_LENGTH - usedspace);
+    memset(&context->buffer[usedspace], 0, SHA256_SHORT_BLOCK_LENGTH - usedspace);
    } else {
     if (usedspace < SHA256_BLOCK_LENGTH) {
-     bzero(&context->buffer[usedspace], SHA256_BLOCK_LENGTH - usedspace);
+     memset(&context->buffer[usedspace], 0, SHA256_BLOCK_LENGTH - usedspace);
     }
     /* Do second-to-last transform: */
     SHA256_Transform(context, context->buffer);
 
     /* And set-up for the last transform: */
-    bzero(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
+    memset(context->buffer, 0, SHA256_SHORT_BLOCK_LENGTH);
    }
   } else {
    /* Set-up for the last transform: */
-   bzero(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
+   memset(context->buffer, 0, SHA256_SHORT_BLOCK_LENGTH);
 
    /* Begin padding with a 1 bit: */
    *context->buffer = 0x80;
@@ -517,7 +513,7 @@ SHA256_Final(u_int8_t digest[], SHA256_CTX *context)
  }
 
  /* Clean up state data: */
- bzero(context, sizeof(*context));
+ memset(context, 0, sizeof(*context));
  usedspace = 0;
 }
 
@@ -544,7 +540,7 @@ SHA512_Init(SHA512_CTX *context)
  if (context == NULL)
   return;
  bcopy(sha512_initial_hash_value, context->state, SHA512_DIGEST_LENGTH);
- bzero(context->buffer, SHA512_BLOCK_LENGTH);
+ memset(context->buffer, 0, SHA512_BLOCK_LENGTH);
  context->bitcount[0] = context->bitcount[1] =  0;
 }
 
@@ -775,20 +771,20 @@ SHA512_Last(SHA512_CTX *context)
 
   if (usedspace <= SHA512_SHORT_BLOCK_LENGTH) {
    /* Set-up for the last transform: */
-   bzero(&context->buffer[usedspace], SHA512_SHORT_BLOCK_LENGTH - usedspace);
+   memset(&context->buffer[usedspace], 0, SHA512_SHORT_BLOCK_LENGTH - usedspace);
   } else {
    if (usedspace < SHA512_BLOCK_LENGTH) {
-    bzero(&context->buffer[usedspace], SHA512_BLOCK_LENGTH - usedspace);
+    memset(&context->buffer[usedspace], 0, SHA512_BLOCK_LENGTH - usedspace);
    }
    /* Do second-to-last transform: */
    SHA512_Transform(context, context->buffer);
 
    /* And set-up for the last transform: */
-   bzero(context->buffer, SHA512_BLOCK_LENGTH - 2);
+   memset(context->buffer, 0, SHA512_BLOCK_LENGTH - 2);
   }
  } else {
   /* Prepare for final transform: */
-  bzero(context->buffer, SHA512_SHORT_BLOCK_LENGTH);
+  memset(context->buffer, 0, SHA512_SHORT_BLOCK_LENGTH);
 
   /* Begin padding with a 1 bit: */
   *context->buffer = 0x80;
@@ -821,7 +817,7 @@ SHA512_Final(u_int8_t digest[], SHA512_CTX *context)
  }
 
  /* Zero out state data */
- bzero(context, sizeof(*context));
+ memset(context, 0, sizeof(*context));
 }
 
 
@@ -832,7 +828,7 @@ SHA384_Init(SHA384_CTX *context)
  if (context == NULL)
   return;
  bcopy(sha384_initial_hash_value, context->state, SHA512_DIGEST_LENGTH);
- bzero(context->buffer, SHA384_BLOCK_LENGTH);
+ memset(context->buffer, 0, SHA384_BLOCK_LENGTH);
  context->bitcount[0] = context->bitcount[1] = 0;
 }
 
@@ -862,6 +858,6 @@ SHA384_Final(u_int8_t digest[], SHA384_CTX *context)
  }
 
  /* Zero out state data */
- bzero(context, sizeof(*context));
+ memset(context, 0, sizeof(*context));
 }
 

@@ -751,13 +751,13 @@ static void AddDevnumFastLookup(DEVBLK *dev,U16 lcss,U16 devnum)
     if(sysblk.devnum_fl==NULL)
     {
         sysblk.devnum_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        bzero(sysblk.devnum_fl,sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+        memset(sysblk.devnum_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
     }
     Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
     if(sysblk.devnum_fl[Channel]==NULL)
     {
         sysblk.devnum_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        bzero(sysblk.devnum_fl[Channel],sizeof(DEVBLK *)*256);
+        memset(sysblk.devnum_fl[Channel], 0, sizeof(DEVBLK *)*256);
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
 }

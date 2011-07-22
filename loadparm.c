@@ -139,8 +139,8 @@ void get_gsysinfo(GSYSINFO *dest)
         memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
         memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
 
-        bzero(gsysinfo.modelperm,  sizeof(gsysinfo.modelperm));
-        bzero(gsysinfo.modeltemp,  sizeof(gsysinfo.modeltemp));
+        memset(gsysinfo.modelperm, 0, sizeof(gsysinfo.modelperm));
+        memset(gsysinfo.modeltemp, 0, sizeof(gsysinfo.modeltemp));
     }
     else
         memcpy( dest, &gsysinfo, sizeof(GSYSINFO) );
@@ -160,7 +160,7 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 
     if ( name == NULL || strlen(name) == 0 )
     {
-        bzero(fld, len);
+        memset(fld, 0, len);
         return 0;
     }
 
@@ -199,7 +199,7 @@ int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
 
     if ( name == NULL || nlen == 0 || flen == 0 ) return -1;
 
-    bzero(name, nlen);
+    memset(name, 0, nlen);
     copylen = MIN(nlen-1, flen);
 
     for ( i = 0; i < copylen; i++ )
@@ -371,10 +371,10 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m1 != NULL && m1[0] != '*' )
     {
         if ( strlen(m1) == 0 )
-            bzero(gsysinfo.model,sizeof(gsysinfo.model));
+            memset(gsysinfo.model, 0, sizeof(gsysinfo.model));
         else if ( strcmp(m1, "=") == 0)
             memcpy(gsysinfo.model, dflt_model, sizeof(gsysinfo.model));
-        else if ( copy_stringz_to_ebcdic(gsysinfo.model,     sizeof(gsysinfo.model),     m1) <= 0 ) return 1;
+        else if ( copy_stringz_to_ebcdic(gsysinfo.model, sizeof(gsysinfo.model), m1) <= 0 ) return 1;
     }
     else if ( m1 == NULL )
         return 0;
@@ -395,7 +395,7 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m3 != NULL && m3[0] != '*' )
     {
         if ( strlen(m3) == 0 )
-            bzero(gsysinfo.modelperm,sizeof(gsysinfo.modelperm));
+            memset(gsysinfo.modelperm, 0, sizeof(gsysinfo.modelperm));
         else if ( strcmp(m3, "=") == 0)
             memcpy(gsysinfo.modelperm, gsysinfo.modelcapa, sizeof(gsysinfo.modelperm));
         else if ( copy_stringz_to_ebcdic(gsysinfo.modelperm, sizeof(gsysinfo.modelperm), m3) <= 0 ) return 3;
@@ -407,7 +407,7 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     if ( m4 != NULL && m4[0] != '*' )
     {
         if ( strlen(m4) == 0 )
-            bzero(gsysinfo.modeltemp,sizeof(gsysinfo.modeltemp));
+            memset(gsysinfo.modeltemp, 0, sizeof(gsysinfo.modeltemp));
         else if ( strcmp(m4, "=") == 0)
             memcpy(gsysinfo.modeltemp, gsysinfo.modelperm, sizeof(gsysinfo.modeltemp));
         else if ( copy_stringz_to_ebcdic(gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp), m4) <= 0 ) return 4;
@@ -430,10 +430,10 @@ char **str_model()
     if (gsysinfo_init_flg == FALSE )
         get_gsysinfo(NULL);
 
-    bzero(h_model,sizeof(h_model));
-    bzero(c_model,sizeof(c_model));
-    bzero(p_model,sizeof(p_model));
-    bzero(t_model,sizeof(t_model));
+    memset(h_model, 0, sizeof(h_model));
+    memset(c_model, 0, sizeof(c_model));
+    memset(p_model, 0, sizeof(p_model));
+    memset(t_model, 0, sizeof(t_model));
 
     (void)copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
     (void)copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));

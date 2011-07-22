@@ -773,7 +773,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            them for the next time, and then finally, reset the
            Contengent Allegiance condition... */
         memcpy (iobuf, dev->sense, num);
-        bzero (dev->sense, sizeof(dev->sense));
+        memset (dev->sense, 0, sizeof(dev->sense));
+
         dev->sns_pending = 0;
 
         break;
@@ -2926,10 +2927,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         dev->pgstat=0;
 
         /* Reset Path group ID password */
-        bzero(dev->pgid,11);
+        memset(dev->pgid, 0, 11);
 
         /* Reset drive password */
-        bzero(dev->drvpwd,sizeof(dev->drvpwd));
+        memset(dev->drvpwd, 0, sizeof(dev->drvpwd));
 
         /* Return unit status */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -3997,7 +3998,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
          sns4mat == TAPE_SNS7_FMT_30_3480_READ_BUF_LOG )
     {
         dev->sense[7] = sns4mat;
-        bzero(&dev->sense[8],31-8);
+        memset(&dev->sense[8], 0,31-8);
     
         if ( sns4mat == TAPE_SNS7_FMT_20_3480 )
         {

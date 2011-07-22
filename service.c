@@ -285,7 +285,6 @@ BYTE *event_msg = (BYTE*)(evd_bk+1);
     }
 
     /* Zero all fields */
-    bzero (evd_hdr, evd_len);
 
     /* Update SCCB length field if variable request */
     if (sccb->type & SCCB_TYPE_VARIABLE)
@@ -1810,7 +1809,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         xstmap = (BYTE*)(sccbxmap+1);
 
         /* Set all blocks available */
-        bzero (xstmap, xstblkinc/8);
+        memset (xstmap, 0, xstblkinc/8);
 
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;

@@ -276,7 +276,7 @@ int     msgcount = 22;
             
             sav_wrk = wrk_bufptr;
 
-            bzero(wrk_bufptr,num_bytes);
+            memset(wrk_bufptr, 0, num_bytes);
 
             while ( n < num_bytes )
             {

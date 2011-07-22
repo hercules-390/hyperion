@@ -420,7 +420,7 @@ int     rc;                         /* return code                   */
 int     cc;                         /* Condition code to return      */
 
    /* Clear the reserved BIOPL */
-   bzero(&bioplx00,sizeof(BIOPL_INIT32));
+   memset(&bioplx00,0,sizeof(BIOPL_INIT32));
 
    /* Make sure reserved fields are binary zeros                     */
    if ((memcmp(&biopl->resv1,&bioplx00,INIT32R1_LEN)!=0) ||
@@ -476,7 +476,7 @@ int     rc;                          /* return code                  */
 int     cc;                          /* condition code               */
 
    /* Clear the reserved BIOPL */
-   bzero(&bioplx00,sizeof(BIOPL_INIT64));
+   memset(&bioplx00,0,sizeof(BIOPL_INIT64));
    
    /* Make sure reserved fields are binary zeros  */
    if ((memcmp(&biopl->resv1,&bioplx00,INIT64R1_LEN)!=0) ||
@@ -776,7 +776,7 @@ struct VMBIOENV *bioenv;             /* -->allocated environement    */
 int       cc;                        /* Condition code to return     */
 
    /* Clear the reserved BIOPL */
-   bzero(&bioplx00,sizeof(BIOPL_REMOVE));
+   memset(&bioplx00,0,sizeof(BIOPL_REMOVE));
    
       
    /* Make sure reserved fields are binary zeros  */
@@ -1194,7 +1194,7 @@ IOCTL32 *asyncp;     /* Pointer to async thread's storage */
 int     rc2;
 
    /* Clear the reserved BIOPL */
-   bzero(&bioplx00,sizeof(BIOPL_IORQ32));
+   memset(&bioplx00,0,sizeof(BIOPL_IORQ32));
    
    /* Make sure reserved fields and bits are binary zeros  */
    if ((memcmp(&biopl->resv1,&bioplx00,IORQ32R1_LEN)!=0) ||
@@ -1794,7 +1794,7 @@ int     rc2;
 #endif
 
    /* Clear the reserved BIOPL */
-   bzero(&bioplx00,sizeof(BIOPL_IORQ64));
+   memset(&bioplx00,0,sizeof(BIOPL_IORQ64));
 
    /* Make sure reserved fields are binary zeros  */
    if ((memcmp(&biopl->resv1,&bioplx00,IORQ64R1_LEN)!=0) ||

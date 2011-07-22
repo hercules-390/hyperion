@@ -893,7 +893,7 @@ static void fill_text (char c, short x)
     if (x > PANEL_MAX_COLS) x = PANEL_MAX_COLS;
     len = x + 1 - cur_cons_col;
     if (len <= 0) return;
-    memset (buf, c, len);
+    memset( buf, c, len );
     buf[len] = '\0';
     draw_text (buf);
 }
@@ -926,7 +926,7 @@ void set_console_title ( char *status )
         char systype[16] = { 0 };
         char lparnam[16] = { 0 };
 
-        bzero(msgbuf,sizeof(msgbuf));
+        memset( msgbuf, 0, sizeof(msgbuf) );
 
         strlcat(systype,str_systype(),sizeof(systype));
         strlcat(sysname,str_sysname(),sizeof(sysname));
@@ -2251,13 +2251,13 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 1:                     /* IPL - 2nd part */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                bzero(NPprompt2,sizeof(NPprompt2));
+                                memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
                             sprintf (cmdline, "herc ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
-                            bzero(NPprompt2,sizeof(NPprompt2));
+                            memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 'u':                   /* Device interrupt */
@@ -2270,13 +2270,13 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 2:                     /* Device int: part 2 */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                bzero(NPprompt2,sizeof(NPprompt2));
+                                memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
                             MSGBUF( cmdline, "herc i %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
-                            bzero(NPprompt2,sizeof(NPprompt2));
+                            memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
                             break;
                         case 'n':                   /* Device Assignment */
@@ -2289,7 +2289,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 3:                     /* Device asgn: part 2 */
                             i = toupper(NPdevice) - 'A';
                             if (i < 0 || i > NPlastdev) {
-                                bzero(NPprompt2,sizeof(NPprompt2));
+                                memset(NPprompt2,0,sizeof(NPprompt2));
                                 redraw_status = 1;
                                 break;
                             }
@@ -2303,7 +2303,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
-                            bzero(NPentered,sizeof(NPentered));
+                            memset(NPentered,0,sizeof(NPentered));
                             strlcpy(NPprompt2, "New Name, or [enter] to Reload", sizeof(NPprompt2) );
                             redraw_status = 1;
                             break;
@@ -2317,7 +2317,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc quit");
-                            bzero(NPprompt1, sizeof(NPprompt1));
+                            memset(NPprompt1, 0, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         case 'T':                   /* Restart */
@@ -2330,7 +2330,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 5:                    /* Restart - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc restart");
-                            bzero(NPprompt1, sizeof(NPprompt1));
+                            memset(NPprompt1, 0, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         case 'E':                   /* Ext int */
@@ -2343,7 +2343,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 6:                    /* External - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("herc ext");
-                            bzero(NPprompt1, sizeof(NPprompt1));
+                            memset(NPprompt1, 0, sizeof(NPprompt1));
                             redraw_status = 1;
                             break;
                         default:
@@ -2356,8 +2356,8 @@ char    buf[1024];                      /* Buffer workarea           */
                         NPdataentry = 0;
                         NPaddr_valid = 0;
                         NPdata_valid = 0;
-                        bzero(NPprompt1, sizeof(NPprompt1));
-                        bzero(NPprompt2, sizeof(NPprompt2));
+                        memset(NPprompt1, 0,sizeof(NPprompt1));
+                        memset(NPprompt2, 0, sizeof(NPprompt2));
                         NPcmd = 1;
                     }
                     else
@@ -3150,7 +3150,7 @@ FinishShutdown:
 
         /* Obtain the PSW for target CPU */
         regs = copy_regs(sysblk.pcpu);
-        bzero (curpsw, sizeof(curpsw));
+        memset( curpsw, 0, sizeof(curpsw) );
         copy_psw (regs, curpsw);
 
         /* Set the display update indicator if the PSW has changed

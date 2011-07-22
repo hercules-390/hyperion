@@ -5529,7 +5529,7 @@ RADR    addr, aaddr;
 
         /* Clear Frame Control */
         if(regs->GR_L(r1) & PFMF_FMFI_CF)
-            bzero(regs->mainstor + aaddr, PAGEFRAME_PAGESIZE);
+            memset(regs->mainstor + aaddr, 0, PAGEFRAME_PAGESIZE);
 
         /* Update r2 - point to the next frame */
         if(regs->GR_L(r1) & PFMF_FMFI_FSC_1M)

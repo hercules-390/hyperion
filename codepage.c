@@ -1447,9 +1447,9 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
         }
         else
         {
-            bzero(user_h_to_g,sizeof(user_h_to_g));
+            memset(user_h_to_g, 0, sizeof(user_h_to_g));
             user_h_to_g_filled = FALSE;
-            bzero(user_g_to_h,sizeof(user_g_to_h));
+            memset(user_g_to_h, 0, sizeof(user_g_to_h));
             user_g_to_h_filled = FALSE;
             user_in_use = FALSE;
             WRMSG( HHC01479, "I" );
@@ -1492,8 +1492,8 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             WRMSG( HHC01485, "I" );
             for( o = 0; o < 256; o += 16 )
             {
-                bzero( hbuf, sizeof(hbuf) );
-                bzero( cbuf, sizeof(cbuf) );
+                memset( hbuf, 0, sizeof(hbuf) );
+                memset( cbuf, 0, sizeof(cbuf) );
 
                 for (i = 0, j = 0, k = 0; i < 16; i++)
                 {

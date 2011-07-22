@@ -529,7 +529,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
         return( strdup( text ) );
     }
 
-    bzero(buf,sizeof(buf));
+    memset(buf, 0, sizeof(buf));
 
     while(1)
     {
@@ -587,7 +587,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             /* Substitute default if specified */
                             if (inc_equals >= 0)
                             {
-                                bzero(dflt,sizeof(dflt));
+                                memset(dflt, 0, sizeof(dflt));
                                 strlcpy(dflt, &buf[inc_equals+1], sizeof(dflt));
                                 inc_envvar = dflt;
                             }
@@ -608,7 +608,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                                                  (sizeof(buf) - stmtlen) - 1,
                                                  "%s", inc_envvar );
                         }
-                        bzero(&buf[stmtlen],(sizeof(buf) - stmtlen));
+                        memset(&buf[stmtlen], 0, (sizeof(buf) - stmtlen));
 
                         /* Reset indexes */
                         inc_equals = -1;

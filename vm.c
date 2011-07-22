@@ -286,8 +286,8 @@ VMDEVTBL *vmentry;               /* -> VMDEVTBL entry found         */
 DEVBLK   *dev;                   /* -> DEVBLK                       */
 
     /* Clear vdat and rdat */
-    bzero (vdat, sizeof(*vdat));
-    bzero (rdat, sizeof(*rdat));
+    memset (vdat, 0, sizeof(*vdat));
+    memset (rdat, 0, sizeof(*rdat));
 
     /* Locate the device block */
     dev = find_device_by_devnum (0,devnum);
@@ -1541,7 +1541,7 @@ static  char timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
     }
 
     /* Build the response buffer */
-    bzero (buf, sizeof(buf));
+    memset (buf, 0, sizeof(buf));
     /* Bytes 0-7 contain the date as EBCDIC MM/DD/YY */
     memcpy (buf, dattim, 8);
     /* Bytes 8-15 contain the time as EBCDIC HH:MM:SS */

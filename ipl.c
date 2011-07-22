@@ -70,11 +70,11 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                 {
                     /* Clear all the registers (AR, GPR, FPR, VR)
                        as part of the CPU CLEAR RESET operation */
-                    bzero (regs->ar,sizeof(regs->ar));
-                    bzero (regs->gr,sizeof(regs->gr));
-                    bzero (regs->fpr,sizeof(regs->fpr));
+                    memset (regs->ar, 0, sizeof(regs->ar));
+                    memset (regs->gr, 0, sizeof(regs->gr));
+                    memset (regs->fpr, 0, sizeof(regs->fpr));
                   #if defined(_FEATURE_VECTOR_FACILITY)
-                    bzero (regs->vf->vr,sizeof(regs->vf->vr));
+                    memset (regs->vf->vr, 0, sizeof(regs->vf->vr));
                   #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
                 }
             }
@@ -276,7 +276,7 @@ int rc;
         char buf[80];
         char buf2[16];
         
-        bzero(buf,sizeof(buf));
+        memset(buf,0,sizeof(buf));
         for (i=0; i < (int)dev->numsense; i++)
         {
             MSGBUF(buf2, "%2.2X", dev->sense[i]);
@@ -625,8 +625,8 @@ void storage_clear()
 {
     if (!sysblk.main_clear)
     {
-        if (sysblk.mainstor) bzero(sysblk.mainstor,sysblk.mainsize);
-        if (sysblk.storkeys) bzero(sysblk.storkeys,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        if (sysblk.mainstor) memset(sysblk.mainstor, 0, sysblk.mainsize);
+        if (sysblk.storkeys) memset(sysblk.storkeys, 0, sysblk.mainsize / STORAGE_KEY_UNITSIZE);
         sysblk.main_clear = 1;
     }
 }
@@ -639,7 +639,8 @@ void xstorage_clear()
     if (!sysblk.xpnd_clear)
     {
         if (sysblk.xpndstor)
-            bzero(sysblk.xpndstor,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
+            memset(sysblk.xpndstor,0,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
+
         sysblk.xpnd_clear = 1;
     }
 }

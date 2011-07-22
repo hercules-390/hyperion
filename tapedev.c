@@ -1476,9 +1476,9 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
 
     BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, devclass, buflen, buffer );
 
-    bzero(buffer, buflen);
-    bzero(devparms,sizeof(devparms));
-    bzero(dispmsg,sizeof(dispmsg));
+    memset(buffer, 0, buflen);
+    memset(devparms, 0, sizeof(devparms));
+    memset(dispmsg, 0, sizeof(dispmsg));
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
@@ -1520,7 +1520,7 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
     {
         char tapepos[64];
 
-        bzero(tapepos,sizeof(tapepos));
+        memset(tapepos, 0, sizeof(tapepos));
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {

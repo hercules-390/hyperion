@@ -91,7 +91,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         struct  xsw_usage   xsu;
         char    machine[64];
 
-        bzero(machine,sizeof(machine));
+        memset(machine,0,sizeof(machine));
 
         mib[0] = CTL_HW;
 

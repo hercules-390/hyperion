@@ -470,7 +470,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Clear the track buffer to zeroes */
-    bzero (trkbuf, trklen);
+    memset (trkbuf, 0, trklen);
 
     /* Build the home address in the track buffer */
     trkhdr = (CKDDASD_TRKHDR*)trkbuf;
@@ -1575,16 +1575,16 @@ char    hex[17];                        /* Character work areas      */
         /* Print field length and data */
         if (field > 0) XMINF (4, "\n\t\t\t\t ");
         XMINFF (4, "%04X ", len);
-        bzero (hex, sizeof(hex));
-        bzero (chars, sizeof(chars));
+        memset (hex, 0, sizeof(hex));
+        memset (chars, 0, sizeof(chars));
         for (i = 0, j = 0; i < len; i++, j++)
         {
             if (i > 0 && (i & 0x07) == 0)
             {
                 XMINFF (4, "%-16.16s %-8.8s\n\t\t\t\t      ",
                     hex, chars);
-                bzero (hex, sizeof(hex));
-                bzero (chars, sizeof(chars));
+                memset (hex, 0, sizeof(hex));
+                memset (chars, 0, sizeof(chars));
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", xbuf[bufpos+offset+i]);
@@ -2199,8 +2199,8 @@ char            hex[49];                /* Character work areas      */
 
         /* Print the user data */
         if (k > 0) XMINF (3, "Userdata=");
-        bzero (hex, sizeof(hex));
-        bzero (chars, sizeof(chars));
+        memset (hex, 0, sizeof(hex));
+        memset (chars, 0, sizeof(chars));
         for (i = 0, j = 0; i < k*2; i++, j++)
         {
             if (i == 8 || i == 32 || i == 56)
@@ -2210,8 +2210,8 @@ char            hex[49];                /* Character work areas      */
                 else
                     XMINFF (3, "%-16.16s %-16.16s %16.16s %-24.24s\n  ",
                         hex, hex+16, hex+32, chars);
-                bzero (hex, sizeof(hex));
-                bzero (chars, sizeof(chars));
+                memset (hex, 0, sizeof(hex));
+                memset (chars, 0, sizeof(chars));
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", dirent->pds2usrd[i]);

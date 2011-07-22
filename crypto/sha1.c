@@ -30,13 +30,8 @@
 #include "hstdinc.h"
 #include "sha1.h"
 
-#if !defined(bcopy)
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
-#endif
-
-#if !defined(bzero)
 #define bzero(_dest,_len) memset(_dest,'\0',_len)
-#endif
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
@@ -181,10 +176,10 @@ SHA1Final(unsigned char digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 #if 0 /* We want to use this for "keyfill" */
     /* Wipe variables */
     i = 0;
-    bzero(context->buffer, 64);
-    bzero(context->state, 20);
-    bzero(context->count, 8);
-    bzero(&finalcount, 8);
+    memset(context->buffer, 0, 64);
+    memset(context->state, 0, 20);
+    memset(context->count, 0, 8);
+    memset(&finalcount, 0, 8);
 #ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
     SHA1Transform(context->state, context->buffer);
 #endif

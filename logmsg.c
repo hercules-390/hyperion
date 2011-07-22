@@ -213,7 +213,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     free(bfr);
     bfr = NULL;
 
-    bzero(prefix,sizeof(prefix));
+    memset(prefix, 0, sizeof(prefix));
 
 #ifdef OPTION_MSGLCK
     if(!sysblk.msggrp || (sysblk.msggrp && !grp))

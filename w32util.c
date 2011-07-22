@@ -310,7 +310,7 @@ DLL_EXPORT int w32_ftrunc64 ( int fd, __int64 new_size )
 #define            ZEROPAD_BUFFSIZE  ( 128 * 1024 )
         BYTE zeros[ZEROPAD_BUFFSIZE];
         size_t write_amount = sizeof(zeros);
-        bzero( zeros, sizeof(zeros) );
+        memset( zeros, 0, sizeof(zeros) );
 
         do
         {
@@ -1605,7 +1605,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
         if ( NULL != ppi )
         {
-            bzero(ppi, (size_t)size);
+            memset(ppi, 0, (size_t)size);
 
             Pwrinfo = (CNPI)GetProcAddress(LoadLibrary(TEXT("powrprof.dll")), "CallNtPowerInformation");
 
@@ -3819,7 +3819,7 @@ DLL_EXPORT char*  w32_basename( const char* path )
     char fname[_MAX_FNAME];
     char ext[_MAX_EXT];
 
-    bzero( _basename, sizeof(_basename) );      // zero for security reasons
+    memset( _basename, 0, sizeof(_basename) );      // zero for security reasons
     _splitpath_s( path, NULL, 0, NULL, 0, fname, sizeof(fname), ext, sizeof(ext) ); // C4996
 
     strlcpy( _basename, fname, sizeof( _basename ) );
@@ -3843,7 +3843,7 @@ DLL_EXPORT char*  w32_dirname( const char* path )
     char dir[_MAX_DIR];
     char *t;
 
-    bzero( _dirname, MAX_PATH );          // zero for security reasons
+    memset( _dirname, 0, MAX_PATH );          // zero for security reasons
     _splitpath_s( path, drive, sizeof(drive), dir, sizeof(dir), NULL, 0, NULL, 0 ); // C4996
 
     /* Remove trailing slashes */

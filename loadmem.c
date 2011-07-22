@@ -521,7 +521,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                 {
                     char msgbuf[4];
 
-                    bzero(msgbuf,sizeof(msgbuf));
+                    memset(msgbuf, 0, sizeof(msgbuf));
                     msgbuf[0] = guest_to_host(buf[1]);
                     msgbuf[1] = guest_to_host(buf[2]);
                     msgbuf[2] = guest_to_host(buf[3]);
@@ -541,7 +541,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                 {
                     char msgbuf[4];
 
-                    bzero(msgbuf,sizeof(msgbuf));
+                    memset(msgbuf, 0, sizeof(msgbuf));
                     msgbuf[0] = guest_to_host(buf[1]);
                     msgbuf[1] = guest_to_host(buf[2]);
                     msgbuf[2] = guest_to_host(buf[3]);

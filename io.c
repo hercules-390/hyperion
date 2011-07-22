@@ -593,7 +593,7 @@ int     i;                              /* (work)                    */
     if ( effective_addr2 & 0x0000001F )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    bzero(work, 32);
+    memset(work, 0, 32);
 
     /* Scan DEVBLK chain for busy devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)

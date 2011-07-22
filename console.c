@@ -1822,7 +1822,7 @@ char    fn[FILENAME_MAX] = { 0 };
         char altfn[FILENAME_MAX];
         char pathname[MAX_PATH];
 
-        bzero(altfn,sizeof(altfn));
+        memset(altfn, 0, sizeof(altfn));
     
         MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
 

@@ -124,7 +124,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         for (stmtlen = 0, lstarted = 0; ;)
         {
             if (stmtlen == 0)
-                bzero(buf,buflen); // clear work area
+                memset(buf, 0, buflen); // clear work area
 
             /* Read character from configuration file */
             c = fgetc(fp);

@@ -6078,9 +6078,9 @@ BYTE     unitstat, code = 0;
                         char volser[7];
                         char owner[15];
 
-                        bzero( msgbuf, sizeof(msgbuf) );
-                        bzero( volser, sizeof(volser) );
-                        bzero( owner,  sizeof(owner)  );
+                        memset( msgbuf, 0, sizeof(msgbuf) );
+                        memset( volser, 0, sizeof(volser) );
+                        memset( owner,  0, sizeof(owner)  );
 
                         strncpy( volser, (char*)&sLABEL[04],  6 );
                         strncpy( owner,  (char*)&sLABEL[37], 14 );
@@ -7066,7 +7066,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
     int rc = 0;
     char    fn[FILENAME_MAX];
 
-    bzero(fn,sizeof(fn));
+    memset(fn,0,sizeof(fn));
 
     UNREFERENCED(cmdline);
 
@@ -7092,7 +7092,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
         char altfn[FILENAME_MAX];
         char pathname[MAX_PATH];
 
-        bzero(altfn,sizeof(altfn));
+        memset(altfn,0,sizeof(altfn));
 
         MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
         hostpath(pathname,altfn,sizeof(pathname));

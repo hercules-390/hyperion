@@ -603,7 +603,7 @@ U16 reqtype;
 U16 datadev;
 OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
 
-    bzero(iear, sizeof(OSA_IEAR));
+    memset(iear, 0, sizeof(OSA_IEAR));
 
     FETCH_HW(reqtype, iea->type);
 
@@ -780,7 +780,7 @@ if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
                         if(olen > 0)
                         {
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
-                            bzero(hdr2, sizeof(OSA_HDR2));
+                            memset(hdr2, 0, sizeof(OSA_HDR2));
 
                             grp->rxcnt++;
 

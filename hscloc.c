@@ -78,7 +78,7 @@ static char *fmt_decimal( const U64 number )
     BYTE    size;
     int     i;
 
-    bzero(fmt_dec, sizeof(fmt_dec));
+    memset(fmt_dec, 0, sizeof(fmt_dec));
 
     if ( num > 0 )
     {
@@ -144,8 +144,8 @@ void fmt_line( unsigned char *tbl, char *name, int start, int length)
 
     for( o = start; o < (start+length); o += l )
     {
-        bzero( hbuf, sizeof(hbuf) );
-        bzero( cbuf, sizeof(cbuf) );
+        memset( hbuf, 0, sizeof(hbuf) );
+        memset( cbuf, 0, sizeof(cbuf) );
             
         for (i = 0, j = 0, k = 0; i < l; i++)
         {
@@ -207,7 +207,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
             {
                 char sstr[32];
 
-                bzero( sstr,sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, sysblk.blknam, sizeof(sysblk.blknam) );
 
                 MSGBUF( msgbuf, "SYSBLK header wrong; is %s, should be %s", sstr, str);
@@ -224,7 +224,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
             if ( memcmp( sysblk.blkver, str, sizeof(sysblk.blkver) ) != 0 )
             {
                 char sstr[32];
-                bzero( sstr,sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, sysblk.blkver, sizeof(sysblk.blkver) );
 
                 MSGBUF( msgbuf, "SYSBLK version wrong; is %s, should be %s", sstr, str);
@@ -243,7 +243,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
             if ( memcmp(sysblk.blkend, str, sizeof(sysblk.blkend)) != 0 )
             {
                 char sstr[32];
-                bzero( sstr, sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
 
                 memcpy( sstr, sysblk.blkend, sizeof(sysblk.blkend) );
 
@@ -356,7 +356,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             {
                 char sstr[32];
 
-                bzero( sstr, sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, sysblk.regs[cpu]->blknam, sizeof(sysblk.regs[cpu]->blknam) );
 
                 MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s", 
@@ -376,7 +376,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
                          sizeof(sysblk.regs[cpu]->blkver) ) != 0 )
             {
                 char sstr[32];
-                bzero( sstr, sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, sysblk.regs[cpu]->blkver, sizeof(sysblk.regs[cpu]->blkver) );
 
                 MSGBUF( msgbuf, "REGS[%2.2X] version wrong; is %s, should be %s", cpu, sstr, str);
@@ -389,7 +389,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             if ( memcmp(sysblk.regs[cpu]->blkend, tlr, sizeof(sysblk.regs[cpu]->blkend)) != 0 )
             {
                 char sstr[32];
-                bzero( sstr, sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
 
                 memcpy( sstr, sysblk.regs[cpu]->blkend, sizeof(sysblk.regs[cpu]->blkend) );
 
@@ -490,7 +490,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
             {
                 char sstr[32];
 
-                bzero( sstr,sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, hostinfo.blknam, sizeof(hostinfo.blknam) );
 
                 MSGBUF( msgbuf, "HOSTINFO header wrong; is %s, should be %s", sstr, str);
@@ -507,7 +507,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
             if ( memcmp( hostinfo.blkver, str, sizeof(hostinfo.blkver) ) != 0 )
             {
                 char sstr[32];
-                bzero( sstr,sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, hostinfo.blkver, sizeof(hostinfo.blkver) );
 
                 MSGBUF( msgbuf, "HOSTINFO version wrong; is %s, should be %s", sstr, str);
@@ -526,7 +526,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
             if ( memcmp(hostinfo.blkend, str, sizeof(hostinfo.blkend)) != 0 )
             {
                 char sstr[32];
-                bzero( sstr, sizeof(sstr) );
+                memset( sstr, 0, sizeof(sstr) );
 
                 memcpy( sstr, hostinfo.blkend, sizeof(hostinfo.blkend) );
 

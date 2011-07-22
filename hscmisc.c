@@ -743,7 +743,7 @@ static REGS  *copy_regs (REGS *regs)
 
     /* Perform partial copy and clear the TLB */
     memcpy(newregs, regs, sysblk.regs_copy_len);
-    bzero(&newregs->tlb.vaddr, TLBN * sizeof(DW));
+    memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
     newregs->ghostregs = 1;
     newregs->hostregs = newregs;
     newregs->guestregs = NULL;
@@ -755,7 +755,7 @@ static REGS  *copy_regs (REGS *regs)
     {
         hostregs = newregs + 1;
         memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
-        bzero(&hostregs->tlb.vaddr, TLBN * sizeof(DW));
+        memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
         hostregs->ghostregs = 1;
         hostregs->hostregs = hostregs;
         hostregs->guestregs = newregs;
@@ -1515,7 +1515,7 @@ REGS   *regs;                           /* Copied regs               */
 #endif
 
     /* Display the PSW */
-    bzero (qword, sizeof(qword));
+    memset (qword, 0, sizeof(qword));
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
