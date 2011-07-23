@@ -1263,7 +1263,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = sub_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
   }
 #define SLRgenr2(r1) \
-	  SLRgen(r1, 0) \
+  SLRgen(r1, 0) \
   SLRgen(r1, 1) \
   SLRgen(r1, 2) \
   SLRgen(r1, 3) \
@@ -1278,7 +1278,7 @@ int     r1, r2;                         /* Values of R fields        */
   SLRgen(r1, C) \
   SLRgen(r1, D) \
   SLRgen(r1, E) \
-  SLRgen(r1, F) 
+  SLRgen(r1, F)
 
 SLRgenr2(0)
 SLRgenr2(1)
@@ -1487,7 +1487,7 @@ TMgen(10)
 TMgen(08)
 TMgen(04)
 TMgen(02)
-TMgen(01)	
+TMgen(01)
 #endif /* OPTION_OPTINST */
 
 

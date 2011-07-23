@@ -255,12 +255,12 @@ typedef struct _SCCB_CPU_INFO {
 
 /* processor type macro */
 #define PTYPSTR(i) ( \
-		sysblk.ptyp[(i)] == SCCB_PTYP_CP ? "CP" : \
-		sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "CF" : \
-		sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "AP" : \
-		sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "IL" : \
-		sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "IP" : \
-		"<unknown processor type>")
+        sysblk.ptyp[(i)] == SCCB_PTYP_CP  ? "CP" :  \
+        sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "CF" :  \
+        sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "AP" :  \
+        sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "IL" :  \
+        sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "IP" :  \
+        "<unknown processor type>")
 
 /* Definitions for crypto unit identifier */
 #define SCCB_KSID_CRYPTO_UNIT_ID                        0x01
@@ -318,7 +318,7 @@ typedef struct _SCCB_EVENT_MASK {
 
 #define SCCB_EVENT_CONS_RECV_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_MSG-1))   | \
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) ) 
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) )
 #define SCCB_EVENT_CONS_SEND_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
@@ -484,7 +484,7 @@ typedef struct _SCCB_XST_MAP {
     } SCCB_XST_MAP;
 // #endif /*FEATURE_EXPANDED_STORAGE*/
 
- 
+
 // #if defined(FEATURE_SCEDIO )
 /* SCE DASD I/O Request */
 typedef struct _SCCB_SCEDIO_BK {
@@ -500,10 +500,10 @@ typedef struct _SCCB_SCEDIO_BK {
 
 typedef struct _SCCB_SCEDIOV_BK {
         BYTE    type;
-#define SCCB_SCEDIOV_TYPE_INIT     0x00  
-#define SCCB_SCEDIOV_TYPE_READ     0x01   
-#define SCCB_SCEDIOV_TYPE_CREATE   0x02 
-#define SCCB_SCEDIOV_TYPE_APPEND   0x03 
+#define SCCB_SCEDIOV_TYPE_INIT     0x00
+#define SCCB_SCEDIOV_TYPE_READ     0x01
+#define SCCB_SCEDIOV_TYPE_CREATE   0x02
+#define SCCB_SCEDIOV_TYPE_APPEND   0x03
         BYTE    flag1;
         BYTE    flag2;
         BYTE    flag3;
@@ -518,8 +518,8 @@ typedef struct _SCCB_SCEDIOV_BK {
 
 typedef struct _SCCB_SCEDIOR_BK {
         BYTE    type;
-#define SCCB_SCEDIOR_TYPE_INIT     0x00  
-#define SCCB_SCEDIOR_TYPE_READ     0x01   
+#define SCCB_SCEDIOR_TYPE_INIT     0x00
+#define SCCB_SCEDIOR_TYPE_READ     0x01
         BYTE    flag1;
         BYTE    flag2;
         BYTE    flag3;
@@ -528,7 +528,7 @@ typedef struct _SCCB_SCEDIOR_BK {
         FWORD   resv2;
         BYTE    image[8];
     } SCCB_SCEDIOR_BK;
-        
+
 // #endif /*defined(FEATURE_SCEDIO )*/
 
 #endif /*!defined(_SERVICE_H)*/

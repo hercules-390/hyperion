@@ -39,12 +39,12 @@ INLINE void __clear_page_2K(void *addr)
     register unsigned int i;
 
     asm volatile("": : :"memory");      /* barrier */
-    
+
     asm volatile("\n\t"
         "movups %%xmm0, (%0)\n\t"
         "xorps  %%xmm0, %%xmm0"
         : : "r" (xmm_save));
-    
+
     for (i = 0; i < 2048/64; i++)
         asm volatile("\n\t"
             "movntps %%xmm0,   (%0)\n\t"
@@ -52,7 +52,7 @@ INLINE void __clear_page_2K(void *addr)
             "movntps %%xmm0, 32(%0)\n\t"
             "movntps %%xmm0, 48(%0)"
             : : "r"(addr) : "memory");
-    
+
     asm volatile("\n\t"
         "sfence\n\t"
         "movups (%0), %%xmm0"
@@ -67,12 +67,12 @@ INLINE void __clear_page_4K(void *addr)
     register unsigned int i;
 
     asm volatile("": : :"memory");      /* barrier */
-    
+
     asm volatile("\n\t"
         "movups %%xmm0, (%0)\n\t"
         "xorps  %%xmm0, %%xmm0"
         : : "r" (xmm_save));
-    
+
     for (i = 0; i < ( 4096/64 ); i++)
         asm volatile("\n\t"
             "movntps %%xmm0,   (%0)\n\t"
@@ -80,7 +80,7 @@ INLINE void __clear_page_4K(void *addr)
             "movntps %%xmm0, 32(%0)\n\t"
             "movntps %%xmm0, 48(%0)"
             : : "r"(addr) : "memory");
-    
+
     asm volatile("\n\t"
         "sfence\n\t"
         "movups (%0), %%xmm0"
@@ -93,14 +93,14 @@ INLINE void __clear_page_1M(void *addr)
 {
     unsigned char xmm_save[16];
     register unsigned int i;
-    
+
     asm volatile("": : :"memory");      /* barrier */
-    
+
     asm volatile("\n\t"
         "movups %%xmm0, (%0)\n\t"
         "xorps  %%xmm0, %%xmm0"
         : : "r" (xmm_save));
-    
+
     for (i = 0; i < ( 1048576/64 ); i++)
         asm volatile("\n\t"
             "movntps %%xmm0,   (%0)\n\t"
@@ -108,7 +108,7 @@ INLINE void __clear_page_1M(void *addr)
             "movntps %%xmm0, 32(%0)\n\t"
             "movntps %%xmm0, 48(%0)"
             : : "r"(addr) : "memory");
-    
+
     asm volatile("\n\t"
         "sfence\n\t"
         "movups (%0), %%xmm0"

@@ -113,9 +113,9 @@ u_int   i, j, k;                        /* Array subscripts          */
 BYTE    workarea[17];                   /* Character String work     */
 
     k = MIN(len, sizeof(workarea)-1);
-    
+
     area[0] = '\0';
-    
+
     if (!dev->is_immed && k && addr <= dev->mainlim - k)
     {
         memcpy(workarea, dev->mainstor + addr, k);
@@ -150,7 +150,7 @@ BYTE    area[64];                       /* Data display area         */
         count = 0;
 
     format_iobuf_data( addr, area, dev, count );
-   
+
     WRMSG (HHC01315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
@@ -165,17 +165,17 @@ void display_idaw ( const DEVBLK *dev, const BYTE type, const BYTE flag, const R
 BYTE    area[64];                       /* Data display area         */
 
     format_iobuf_data( addr, area, dev, count );
-    
+
     switch(type)
     {
         case PF_IDAW1:
-            WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)addr, count, area ); 
+            WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U32)addr, count, area );
             break;
         case PF_IDAW2:
-            WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)addr, count, area ); 
+            WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, (U64)addr, count, area );
             break;
         case PF_MIDAW:
-            WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, flag, count, (U64)addr, area ); 
+            WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, flag, count, (U64)addr, area );
     }
 
 } /* end function display_idaw */
@@ -1422,7 +1422,7 @@ int     current_priority;               /* Current thread priority   */
     {
         while ((dev=sysblk.ioq) != NULL)
         {
-#ifdef _MSVC_		
+#ifdef _MSVC_
             MSGBUF( thread_name,
                 "device %4.4X thread", dev->devnum );
             thread_name[sizeof(thread_name)-1]=0;
@@ -2405,9 +2405,9 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         {
             rc = create_thread (&dev->tid, DETACHED,
                         device_thread, NULL, "idle device thread");
-	    //BHe: Changed the following if statement
+            //BHe: Changed the following if statement
             //if (rc != 0 && sysblk.devtnbr == 0)
-	    if(rc)
+            if(rc)
             {
                 WRMSG (HHC00102, "E", strerror(rc));
                 release_lock (&sysblk.ioqlock);
@@ -2423,14 +2423,14 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     else
     {
         char thread_name[32];
-	// BHe: Do we want this for every ccw?
+        // BHe: Do we want this for every ccw?
         MSGBUF(thread_name,
             "execute %4.4X ccw chain",dev->devnum);
         thread_name[sizeof(thread_name)-1]=0;
 
         /* Execute the CCW chain on a separate thread */
         rc = create_thread (&dev->tid, DETACHED, ARCH_DEP(execute_ccw_chain), dev, thread_name);
-	if (rc)
+        if (rc)
         {
             WRMSG (HHC00102, "E", strerror(rc));
             release_lock (&dev->lock);

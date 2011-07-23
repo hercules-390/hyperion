@@ -655,8 +655,8 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
         rc = create_thread( &tid, JOINABLE, CTCT_ListenThread, arg, str );
-	if(rc)
-  	   WRMSG(HHC00102, "E", strerror(rc));
+        if(rc)
+           WRMSG(HHC00102, "E", strerror(rc));
     }
     else  // successfully connected (outbound) to the other end
     {
@@ -870,7 +870,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
         if( HSO_errno == HSO_EINTR )
             return;
 
-        WRMSG(HHC00973, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename, 
+        WRMSG(HHC00973, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
               strerror( HSO_errno ) );
 
         pDEVBLK->sense[0] = SENSE_EC;
@@ -887,7 +887,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Check for other error condition
     if( iLength < 0 )
     {
-        WRMSG(HHC00973, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename, 
+        WRMSG(HHC00973, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
               strerror( HSO_errno ) );
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -911,7 +911,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     memset( pSegment, 0, iLength + sizeof( CTCISEG ) );
 
     // Update next frame offset
-    STORE_HW( pFrame->hwOffset, 
+    STORE_HW( pFrame->hwOffset,
               (U16)(iLength + sizeof( CTCIHDR ) + sizeof( CTCISEG )) );
 
     // Store segment length
@@ -924,7 +924,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     memcpy( pSegment->bData, pDEVBLK->buf, iLength );
 
     // Fix-up frame pointer and terminate block
-    pFrame = (PCTCIHDR)( pIOBuf + sizeof( CTCIHDR ) + 
+    pFrame = (PCTCIHDR)( pIOBuf + sizeof( CTCIHDR ) +
                          sizeof( CTCISEG ) + iLength );
     STORE_HW( pFrame->hwOffset, 0x0000 );
 
@@ -1357,7 +1357,7 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 
             if( offset < iLen )
             {
-                snprintf((char *) tmp, 32, "%2.2X", c ); 
+                snprintf((char *) tmp, 32, "%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
                 strlcat((char *) print_line, (char *) tmp, sizeof(print_line) );
 

@@ -19,9 +19,9 @@
 
 
 /* The blocksize of 4000 is the block size expected by VMFPLC2 */
-#define TAPE_BLOCKSIZE	4000
+#define TAPE_BLOCKSIZE          4000
 /* The last data record must have a modulo of 800 */
-#define TAPE_BLKSIZE_MODULO	800
+#define TAPE_BLKSIZE_MODULO     800
 /* NOTE : The tape blocks will always be 5 more to account */
 /*        for record headers                               */
 
@@ -76,9 +76,9 @@ struct options
     char    *cmd;
     char    *procfile;
     char    *tapefile;
-#define VMFPLC2DUMP	0
-#define VMFPLC2LOAD	1
-#define VMFPLC2SCAN	2
+#define VMFPLC2DUMP     0
+#define VMFPLC2LOAD     1
+#define VMFPLC2SCAN     2
     char    verb;
 #define OPT_FLAG_EDF    0x01
     unsigned int flags;
@@ -98,7 +98,7 @@ void host_to_guest_str(unsigned char *d,char *s)
 
 /* Generic 'usage' routine in case of incorrect */
 /* invocation.                                  */
-int	usage(char *cmd)
+int usage(char *cmd)
 {
     char    *bcmd;
 
@@ -111,7 +111,7 @@ int	usage(char *cmd)
 }
 
 /* Parse the command line */
-int	parse_parms(int ac, char **av, struct options *opts)
+int parse_parms(int ac, char **av, struct options *opts)
 {
     opts->cmd=basename(av[0]);
     if(ac<2)
@@ -204,15 +204,15 @@ char *validate_cmsfile(char *fn,char *ft,char *fm)
     int i,found;
     static char msg[1024];
 
-    if(strlen(fn)>8) 
+    if(strlen(fn)>8)
     {
         return "CMS File name too long";
     }
-    if(strlen(ft)>8) 
+    if(strlen(ft)>8)
     {
         return "CMS File type too long";
     }
-    if(strlen(fm)>2) 
+    if(strlen(fm)>2)
     {
         return "CMS File mode too long";
     }
@@ -235,7 +235,7 @@ char *validate_cmsfile(char *fn,char *ft,char *fm)
         found=0;
         for(i=0;validfmnum[i];i++)
         {
-            if(fm[1]==validfmnum[i]) 
+            if(fm[1]==validfmnum[i])
             {
                 found=1;
                 break;
@@ -380,7 +380,7 @@ void append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
             tb=malloc(sizeof(struct TAPE_BLOCK));
             tb->next=NULL;
             tb->sz=0;
-            if(tbs->first==NULL) 
+            if(tbs->first==NULL)
             {
                 tbs->first=tb;
                 tbs->current=tb;
@@ -541,9 +541,9 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
     unsigned char bfr[65536];
     struct  RECS *recs;
 
-    if(recfm=='V') 
+    if(recfm=='V')
         maxsize=65535;
-    else 
+    else
         maxsize=65536;
 
     ifile=fopen(infile,"r");
@@ -585,7 +585,7 @@ struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,s
         rsz=(int)strlen(rec)-1;
         if(recfm=='F')
         {
-            if(rsz<(*recl)) 
+            if(rsz<(*recl))
             {
                 memset(&rec[rsz],' ',(*recl)-rsz);
             }
@@ -614,7 +614,7 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
         perror(infile);
         return NULL;
     }
-    if(recfm!='V') 
+    if(recfm!='V')
     {
         fprintf(stderr,"Structured input files for output to RECFM F files not supported (yet)\n");
         return NULL; /* Structured files only for RECFM V for the time being */
@@ -624,7 +624,7 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
     {
         rsz=bswap_16(rlbfr);
         rc=(int)fread(bfr,1,rsz,ifile);
-        if(rc!=rsz) 
+        if(rc!=rsz)
         {
             fprintf(stderr,"Expected %d bytes from file %s, but only %d file read\n",rsz,infile,rc);
             return NULL;
@@ -795,13 +795,13 @@ int process_entry(struct options *opts,char *orec,int recno)
             }
         }
         ft=strtok_r(NULL," ",&strtok_str);
-        if(ft==NULL) 
+        if(ft==NULL)
         {
             msg="File type missing";
             break;
         }
         fm=strtok_r(NULL," ",&strtok_str);
-        if(fm==NULL) 
+        if(fm==NULL)
         {
             msg="File mode missing";
             break;
@@ -843,7 +843,7 @@ int process_entry(struct options *opts,char *orec,int recno)
                 msg="Logical Record Length must be between 1 and 65535";
                 break;
             }
-                
+
         }
         else
         {
@@ -861,7 +861,7 @@ int process_entry(struct options *opts,char *orec,int recno)
             msg="File format must be B (Binary) S (Structured) or T (Text)";
             break;
         }
-        infile=strtok_r(NULL,"",&strtok_str);	/* allow spaces here */
+        infile=strtok_r(NULL,"",&strtok_str);   /* allow spaces here */
         if(infile==NULL)
         {
             msg="Input file name missing";
@@ -869,7 +869,7 @@ int process_entry(struct options *opts,char *orec,int recno)
         }
         badentry=0;
     } while(0);
-    if(ignore) 
+    if(ignore)
     {
         free(rec);
         return 0;

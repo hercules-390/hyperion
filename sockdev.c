@@ -505,16 +505,16 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     {
         rc = create_thread( &sysblk.socktid, JOINABLE,
                             socket_thread, NULL, "socket_thread" );
-	if (rc)
-            {
-                WRMSG(HHC00102, "E", strerror( rc ) );
-                RemoveListEntry( &bs->bind_link );
-                close_socket(bs->sd);
-                free( bs->spec );
-                free( bs );
-                release_lock( &bind_lock );
-                return 0; /* (failure) */
-            }
+        if (rc)
+        {
+            WRMSG(HHC00102, "E", strerror( rc ) );
+            RemoveListEntry( &bs->bind_link );
+            close_socket(bs->sd);
+            free( bs->spec );
+            free( bs );
+            release_lock( &bind_lock );
+            return 0; /* (failure) */
+        }
     }
 
     SIGNAL_SOCKDEV_THREAD();
@@ -553,13 +553,13 @@ int unbind_device_ex (DEVBLK* dev, int forced)
             /* Yes. Then do so... */
             close_socket( dev->fd );
             dev->fd = -1;
-            WRMSG (HHC01044, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, 
+            WRMSG (HHC01044, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip,
                    dev->bs->clientname, dev->bs->spec);
         }
         else
         {
             /* No. Then fail the request. */
-            WRMSG (HHC01045, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip, 
+            WRMSG (HHC01045, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip,
                    dev->bs->clientname, dev->bs->spec);
             return 0;   /* (failure) */
         }

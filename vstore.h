@@ -39,7 +39,7 @@
 /*-------------------------------------------------------------------*/
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
-        s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wstoreb(_value, _addr, _arn, _regs) \
         s370_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wstore2(_value, _addr, _arn, _regs) \
@@ -49,7 +49,7 @@
 #define s370_wstore8(_value, _addr, _arn, _regs) \
         s370_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetchc(_dest, _len, _addr, _arn, _regs) \
-        s370_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        s370_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetchb(_addr, _arn, _regs) \
         s370_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s370_wfetch2(_addr, _arn, _regs) \
@@ -65,7 +65,7 @@
         s370_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
 #define s390_wstorec(_src, _len, _addr, _arn, _regs) \
-        s390_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        s390_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wstoreb(_value, _addr, _arn, _regs) \
         s390_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wstore2(_value, _addr, _arn, _regs) \
@@ -75,7 +75,7 @@
 #define s390_wstore8(_value, _addr, _arn, _regs) \
         s390_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetchc(_dest, _len, _addr, _arn, _regs) \
-        s390_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        s390_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetchb(_addr, _arn, _regs) \
         s390_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wfetch2(_addr, _arn, _regs) \
@@ -91,7 +91,7 @@
         s390_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
 #define z900_wstorec(_src, _len, _addr, _arn, _regs) \
-        z900_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        z900_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wstoreb(_value, _addr, _arn, _regs) \
         z900_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wstore2(_value, _addr, _arn, _regs) \
@@ -101,7 +101,7 @@
 #define z900_wstore8(_value, _addr, _arn, _regs) \
         z900_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetchc(_dest, _len, _addr, _arn, _regs) \
-        z900_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+        z900_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetchb(_addr, _arn, _regs) \
         z900_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define z900_wfetch2(_addr, _arn, _regs) \
@@ -175,7 +175,7 @@ int     len2;                           /* Length to end of page     */
         main1 = MADDRL(addr, len2, arn, regs, ACCTYPE_WRITE_SKP,
                       regs->psw.pkey);
         sk = regs->dat.storkey;
-        main2 = MADDRL((addr + len2) & ADDRESS_MAXWRAP(regs), 
+        main2 = MADDRL((addr + len2) & ADDRESS_MAXWRAP(regs),
                       len+1-len2, arn,
                       regs, ACCTYPE_WRITE, regs->psw.pkey);
         *sk |= (STORKEY_REF | STORKEY_CHANGE);
@@ -273,7 +273,7 @@ _VSTORE_FULL_C_STATIC void ARCH_DEP(vstore4_full)(U32 value, VADR addr,
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
-BYTE    temp[4];                        /* Copied value              */ 
+BYTE    temp[4];                        /* Copied value              */
 
     len = 0x800 - (addr & 0x7FF);
     main1 = MADDRL(addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
@@ -325,7 +325,7 @@ _VSTORE_FULL_C_STATIC void ARCH_DEP(vstore8_full)(U64 value, VADR addr,
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
-BYTE    temp[8];                        /* Copied value              */ 
+BYTE    temp[8];                        /* Copied value              */
 
     len = 0x800 - (addr & 0x7FF);
     main1 = MADDRL(addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
@@ -355,7 +355,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
         STORE_DW(mn, value);
     }
     else
-#endif	    
+#endif
     {
         /* We're not aligned. So we have to check whether we are
            crossing a page boundary. This cannot be the same
@@ -558,7 +558,7 @@ BYTE    temp[16];                       /* Copy destination          */
 
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
-#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)	
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
     if(likely(!((VADR_L)addr & 0x07)))
     {
         /* doubleword aligned fetch */
@@ -570,9 +570,9 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
         return fetch_dw(mn);
     }
     else
-#endif	    
+#endif
     {
-	    
+
         if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
         {
             /* unaligned, non-crossing doubleword fetch */

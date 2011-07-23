@@ -6238,11 +6238,11 @@ static char *ordername[] = {
         if (regs->psw.cc == 0)
             WRMSG(HHC00814, "I", log_buf, 0, "");
         else
-	{
-	    char buf[40];
-	    MSGBUF(buf, " status %8.8X", (U32) status);
+        {
+            char buf[40];
+            MSGBUF(buf, " status %8.8X", (U32) status);
             WRMSG(HHC00814, "I", log_buf, 1, buf);
-	}
+        }
     }
 
     /* Perform serialization after completing operation */

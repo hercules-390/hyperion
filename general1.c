@@ -199,7 +199,7 @@ int     r1, r2;                         /* Values of R fields        */
   ALRgen(r1, C) \
   ALRgen(r1, D) \
   ALRgen(r1, E) \
-  ALRgen(r1, F) 
+  ALRgen(r1, F)
 
 ALRgenr2(0)
 ALRgenr2(1)
@@ -730,7 +730,7 @@ VADR    effective_addr2;                /* Effective address         */
     {
 #ifdef OPTION_OPTINST
         RXXx_BC(inst, regs, b2, effective_addr2);
-#else	    
+#else
         RX_BC(inst, regs, b2, effective_addr2);
 #endif /* #ifdef OPTION_OPTINST */
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
@@ -1113,7 +1113,7 @@ VADR    effective_addr2;                /* Effective address         */
   }
 
 STgen(0)
-STgen(1) 
+STgen(1)
 STgen(2)
 STgen(3)
 STgen(4)
@@ -2471,7 +2471,7 @@ int     r1, r2;                         /* Values of R fields        */
   CLRgen(r1, C) \
   CLRgen(r1, D) \
   CLRgen(r1, E) \
-  CLRgen(r1, F) 
+  CLRgen(r1, F)
 
 CLRgenr2(0)
 CLRgenr2(1)
@@ -5152,7 +5152,7 @@ DEF_INST(D200)
 {
 int     b1, b2;                         /* Values of base fields     */
 VADR    ea1, ea2;                       /* Effective addresses       */
-BYTE    *d, *s; 
+BYTE    *d, *s;
 
     SS_LXL(inst, regs, b1, ea1, b2, ea2);
 

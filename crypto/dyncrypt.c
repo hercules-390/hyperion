@@ -186,8 +186,8 @@
 static void gcm_rightshift(unsigned char *a)
 {
   int x;
-  
-  for(x = 15; x > 0; x--) 
+
+  for(x = 15; x > 0; x--)
     a[x] = (a[x] >> 1) | ((a[x-1] << 7) & 0x80);
   a[0] >>= 1;
 }
@@ -203,11 +203,11 @@ void gcm_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 
   zeromem(Z, 16);
   XMEMCPY(V, a, 16);
-  for (x = 0; x < 128; x++) 
+  for (x = 0; x < 128; x++)
   {
-    if(b[x>>3] & mask[x&7]) 
+    if(b[x>>3] & mask[x&7])
     {
-      for(y = 0; y < 16; y++) 
+      for(y = 0; y < 16; y++)
         Z[y] ^= V[y];
     }
     z = V[15] & 0x01;
@@ -244,7 +244,7 @@ static void sha1_getcv(sha1_context *ctx, BYTE icv[20])
   int i, j;
 
   for(i = 0, j = 0; i < 5; i++)
-  { 
+  {
     icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
     icv[j++] = (ctx->state[i] & 0x00ff0000) >> 16;
     icv[j++] = (ctx->state[i] & 0x0000ff00) >> 8;
@@ -352,7 +352,7 @@ void shift_left(BYTE *dst, BYTE* src, int len)
 {
   int carry;
   int i;
-  
+
   carry = 0;
   for(i = 0; i < len; i++)
   {
@@ -381,7 +381,7 @@ static int unwrap_aes(BYTE *key, int keylen)
   aes_context context;
   BYTE cv[16];
   int i;
- 
+
   obtain_rdlock(&sysblk.wklock);
 
   /* Verify verification pattern */
@@ -398,7 +398,7 @@ static int unwrap_aes(BYTE *key, int keylen)
     {
       aes_decrypt(&context, key, key);
       break;
-    }  
+    }
     case 24:
     {
       aes_decrypt(&context, &key[8], buf);
@@ -408,7 +408,7 @@ static int unwrap_aes(BYTE *key, int keylen)
       for(i = 0; i < 8; i++)
         key[i + 16] = buf[i] ^ cv[i];
       break;
-    }  
+    }
     case 32:
     {
       memcpy(cv, key, 16);
@@ -431,7 +431,7 @@ static int unwrap_dea(BYTE *key, int keylen)
   des3_context context;
   int i;
   int j;
-  
+
   obtain_rdlock(&sysblk.wklock);
 
   /* Verify verification pattern */
@@ -447,9 +447,9 @@ static int unwrap_dea(BYTE *key, int keylen)
     /* Save cv */
     memcpy(cv, &cv[8], 8);
     memcpy(&cv[8], &key[i], 8);
-    
+
     des3_decrypt(&context, &key[i], &key[i]);
-    des3_encrypt(&context, &key[i], &key[i]);    
+    des3_encrypt(&context, &key[i], &key[i]);
     des3_decrypt(&context, &key[i], &key[i]);
     if(i)
     {
@@ -481,7 +481,7 @@ static void wrap_aes(BYTE *key, int keylen)
     {
       aes_encrypt(&context, key, key);
       break;
-    } 
+    }
     case 24:
     {
       aes_encrypt(&context, key, cv);
@@ -493,7 +493,7 @@ static void wrap_aes(BYTE *key, int keylen)
       memcpy(key, cv, 8);
       memcpy(&key[8], buf, 16);
       break;
-    }  
+    }
     case 32:
     {
       aes_encrypt(&context, key, key);
@@ -517,7 +517,7 @@ static void wrap_dea(BYTE *key, int keylen)
   obtain_rdlock(&sysblk.wklock);
   memcpy(&key[keylen], sysblk.wkvpdea_reg, 24);
   des3_set_3keys(&context, sysblk.wkdea_reg, &sysblk.wkdea_reg[8], &sysblk.wkdea_reg[16]);
-  release_rwlock(&sysblk.wklock);  
+  release_rwlock(&sysblk.wklock);
   for(i = 0; i < keylen; i += 8)
   {
     if(i)
@@ -527,7 +527,7 @@ static void wrap_dea(BYTE *key, int keylen)
         key[i + j] ^= key[i + j - 8];
     }
     des3_encrypt(&context, &key[i], &key[i]);
-    des3_decrypt(&context, &key[i], &key[i]);    
+    des3_decrypt(&context, &key[i], &key[i]);
     des3_encrypt(&context, &key[i], &key[i]);
   }
 }
@@ -580,8 +580,8 @@ static void wrap_dea(BYTE *key, int keylen)
 static void gcm_rightshift(unsigned char *a)
 {
   int x;
-  
-  for(x = 15; x > 0; x--) 
+
+  for(x = 15; x > 0; x--)
     a[x] = (a[x] >> 1) | ((a[x-1] << 7) & 0x80);
   a[0] >>= 1;
 }
@@ -597,11 +597,11 @@ void gcm_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 
   zeromem(Z, 16);
   XMEMCPY(V, a, 16);
-  for (x = 0; x < 128; x++) 
+  for (x = 0; x < 128; x++)
   {
-    if(b[x>>3] & mask[x&7]) 
+    if(b[x>>3] & mask[x&7])
     {
-      for(y = 0; y < 16; y++) 
+      for(y = 0; y < 16; y++)
         Z[y] ^= V[y];
     }
     z = V[15] & 0x01;
@@ -642,12 +642,12 @@ int main(void)
   }
   for(i = 0; i < 128; i++)
     P(exp_table[i]);
-    
+
   printf("Checking last 8 enties\n");
   for(i = 1; i < 0x100; i <<= 1)
   {
     power(a, i);
-    P(a); 
+    P(a);
   }
   return(0);
 }
@@ -829,7 +829,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
       parameter_blocklen = 20;
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
@@ -885,7 +885,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
       sha1_seticv(&sha1_ctx, parameter_block);
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
@@ -922,7 +922,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
         sha1_getcv(&sha1_ctx, parameter_block);
         break;
       }
-      
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
@@ -1069,7 +1069,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
   sha256_context sha256_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
-	  
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
   sha512_context sha512_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
@@ -1095,7 +1095,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
       parameter_blocklen = 20;
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
@@ -1114,7 +1114,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
       parameter_blocklen = 64;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
-    
+
   }
 
   /* Process intermediate message blocks */
@@ -1151,7 +1151,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
       sha1_seticv(&sha1_ctx, parameter_block);
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
@@ -1201,7 +1201,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
         sha1_process(&sha1_ctx, message_block);
         break;
       }
-      
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
@@ -1241,13 +1241,13 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
       sha1_getcv(&sha1_ctx, parameter_block);
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
       sha256_process(&sha256_ctx, message_block);
       sha256_getcv(&sha256_ctx, parameter_block);
-      break;      
+      break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
@@ -1348,7 +1348,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 24);
 #endif /* #ifdef OPTION_KM_DEBUG */
 
@@ -1384,7 +1384,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
       des3_set_3keys(&des3_ctx, parameter_block, &parameter_block[8], &parameter_block[16]);
       break;
     }
-  }   
+  }
 
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
@@ -1404,7 +1404,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
       case 1: /* dea */
       {
         if(modifier_bit)
-          des_decrypt(&des_ctx, message_block, message_block); 
+          des_decrypt(&des_ctx, message_block, message_block);
         else
           des_encrypt(&des_ctx, message_block, message_block);
         break;
@@ -1486,7 +1486,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
   parameter_blocklen = keylen;
   if(wrap)
     parameter_blocklen += 32;
-  
+
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -1601,10 +1601,10 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   parameter_blocklen = keylen + 16;
   if(wrap)
     parameter_blocklen += 32;
-  
-  /* Test writeability output chaining value */ 
+
+  /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)((GR_A(1, regs) + parameter_blocklen - 16) & ADDRESS_MAXWRAP(regs), 1, 15, ACCTYPE_WRITE, regs);
-  
+
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
   xts = &parameter_block[parameter_blocklen - 16];
@@ -1655,7 +1655,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
 
     /* Calculate output XTS */
     gcm_gf_mult(xts, two, xts);
-    
+
     /* Store the output and XTS */
     ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
     ARCH_DEP(vstorec)(xts, 15, (GR_A(1, regs) + parameter_blocklen - 16) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -1757,7 +1757,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif /* #ifdef OPTION_KMAC_DEBUG */
 
@@ -1928,7 +1928,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
 
   /* Set the cryptographic key */
   aes_set_key(&context, &parameter_block[16], keylen * 8);
-  
+
   /* Try to process the CPU-determined amount of data */
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
@@ -2043,7 +2043,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
@@ -2591,7 +2591,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
     /* Fetch a block of data and counter-value */
     ARCH_DEP(vfetchc)(message_block, 7, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
     ARCH_DEP(vfetchc)(countervalue_block, 7, GR_A(r3, regs) & ADDRESS_MAXWRAP(regs), r3, regs);
-    
+
 #ifdef OPTION_KMCTR_DEBUG
     LOGBYTE("input :", message_block, 8);
     LOGBYTE("cv    :", countervalue_block, 8);
@@ -2666,7 +2666,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
 static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
 {
   aes_context context;
-  BYTE countervalue_block[16];  
+  BYTE countervalue_block[16];
   int crypted;
   int i;
   int keylen;
@@ -2848,7 +2848,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 24], 24);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
@@ -2912,7 +2912,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
         des_encrypt(&context1, parameter_block, output_block);
         des_decrypt(&context2, output_block, output_block);
         des_encrypt(&context3, output_block, output_block);
-	break;
+        break;
       }
     }
     ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
@@ -2928,7 +2928,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
     if(modifier_bit)
     {
       /* Decipher */
-      for(i = 0; i < lcfb; i++)        
+      for(i = 0; i < lcfb; i++)
         parameter_block[i + 8 - lcfb] = message_block[i];
     }
     else
@@ -2997,7 +2997,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 
   /* Initialize values */
   lcfb = GR0_lcfb(regs);
-  
+
   /* Check special conditions */
   if(unlikely(GR_A(r2 + 1, regs) % lcfb || !lcfb || lcfb > 16))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -3026,7 +3026,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMF_DEBUG
   LOGBYTE("cv    :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], keylen);
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[parameter_blocklen - 32], 32);
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
@@ -3044,7 +3044,7 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 
   /* Set the cryptographic key */
   aes_set_key(&context, &parameter_block[16], keylen * 8);
-  
+
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
@@ -3065,12 +3065,12 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
     {
       /* Decipher */
       for(i = 0; i < lcfb; i++)
-        parameter_block[i + 16 - lcfb] = message_block[i];                  
+        parameter_block[i + 16 - lcfb] = message_block[i];
     }
     else
     {
       /* Encipher */
-      for(i = 0; i < lcfb; i++)        
+      for(i = 0; i < lcfb; i++)
         parameter_block[i + 16 - lcfb] = output_block[i];
     }
 
@@ -3178,7 +3178,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
@@ -3335,7 +3335,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMO_DEBUG
   LOGBYTE("cv    :", parameter_block, 16);
   LOGBYTE("k     :", &parameter_block[16], keylen);
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 16], 32);
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
@@ -3353,7 +3353,7 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 
   /* Set the cryptographic key */
   aes_set_key(&context, &parameter_block[16], keylen * 8);
-  
+
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
@@ -3467,7 +3467,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
       break;
     }
   }
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 24], 24);
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
@@ -3516,19 +3516,19 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   /* Place the one bit */
   if(parameter_block[0] != 64)
     parameter_block[(parameter_block[0] / 8) + 8] |= (0x80 >> (parameter_block[0] % 8));
-  
+
   /* Pad with zeroes */
   if(parameter_block[0] < 63)
-  {    
+  {
     parameter_block[(parameter_block[0] / 8) + 8] &= mask[parameter_block[0] % 8];
     for(i = (parameter_block[0] / 8) + 1; i < 8; i++)
       parameter_block[i + 8] = 0x00;
   }
-    
+
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("msg   :", &parameter_block[8], 8);
 #endif /* #ifdef OPTION_PCC_DEBUG */
-  
+
   /* Calculate subkey */
   zeromem(k, 8);
   switch(tfc)
@@ -3553,7 +3553,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
       break;
     }
   }
-  
+
   /* Calculate subkeys Kx and Ky */
   if(k[0] & 0x80)
     shift_left(k, k, 8);
@@ -3610,7 +3610,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
 
   /* Store the CMAC */
   ARCH_DEP(vstorec)(&parameter_block[8], 7, (GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, regs);
-  
+
   /* Normal completion */
   regs->psw.cc = 0;
 }
@@ -3654,7 +3654,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   LOGBYTE("msg   :", &parameter_block[8], 16);
   LOGBYTE("icv   :", &parameter_block[24], 16);
   LOGBYTE("k     :", &parameter_block[40], keylen);
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 40], 32);
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
@@ -3683,23 +3683,23 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   /* Place the one bit */
   if(parameter_block[0] != 128)
     parameter_block[(parameter_block[0] / 8) + 8] |= (0x80 >> (parameter_block[0] % 8));
-  
+
   /* Pad with zeroes */
   if(parameter_block[0] < 127)
-  {    
+  {
     parameter_block[(parameter_block[0] / 8) + 8] &= mask[parameter_block[0] % 8];
     for(i = (parameter_block[0] / 8) + 1; i < 16; i++)
       parameter_block[i + 8] = 0x00;
   }
-    
+
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("msg   :", &parameter_block[8], 16);
 #endif /* #ifdef OPTION_PCC_DEBUG */
-  
+
   /* Calculate subkeys */
   zeromem(k, 16);
   aes_encrypt(&context, k, k);
-  
+
   /* Calculate subkeys Kx and Ky */
   if(k[0] & 0x80)
     shift_left(k, k, 16);
@@ -3735,7 +3735,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 
   /* Store the CMAC */
   ARCH_DEP(vstorec)(&parameter_block[8], 15, (GR_A(1, regs) + 24) & ADDRESS_MAXWRAP(regs), 1, regs);
-  
+
   /* Normal completion */
   regs->psw.cc = 0;
 }
@@ -3782,7 +3782,7 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
 
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("k     :", parameter_block, keylen);
-  if(wrap) 
+  if(wrap)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 32);
   LOGBYTE("tweak :", tweak, 16);
   LOGBYTE("bsn   :", bsn, 16);
@@ -3870,7 +3870,7 @@ static void ARCH_DEP(pckmo_dea)(REGS *regs)
   fc = GR0_fc(regs);
   keylen = fc * 8;
   parameter_blocklen = keylen + 24;
-      
+
   /* Test writeability */
   ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
@@ -3881,10 +3881,10 @@ static void ARCH_DEP(pckmo_dea)(REGS *regs)
   LOGBYTE("key in : ", parameter_block, keylen);
   LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
 #endif /* #ifdef OPTION_PCKMO_DEBUG */
-      
+
   /* Encrypt the key and fill the wrapping key verification pattern */
   wrap_dea(parameter_block, keylen);
-        
+
   /* Store the parameterblock */
   ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -3908,7 +3908,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   fc = GR0_fc(regs);
   keylen = (fc - 16) * 8;
   parameter_blocklen = keylen + 32;
-      
+
   /* Test writeability */
   ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, parameter_blocklen - 1, ACCTYPE_WRITE, regs);
 
@@ -3919,10 +3919,10 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   LOGBYTE("key in : ", parameter_block, keylen);
   LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
 #endif /* #ifdef OPTION_PCKMO_DEBUG */
-      
+
   /* Encrypt the key and fill the wrapping key verification pattern */
   wrap_aes(parameter_block, keylen);
-        
+
   /* Store the parameterblock */
   ARCH_DEP(vstorec)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -3995,7 +3995,7 @@ DEF_INST(compute_intermediate_message_digest)
       ARCH_DEP(kimd_sha)(r1, r2, regs, 0);
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
@@ -4193,7 +4193,7 @@ DEF_INST(cipher_message)
       ARCH_DEP(km_dea)(r1, r2, regs);
       break;
     }
-    
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
@@ -4206,7 +4206,7 @@ DEF_INST(cipher_message)
       break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
-      
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
@@ -4278,7 +4278,7 @@ DEF_INST(compute_message_authentication_code)
     /**/ { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
     { 0xf0, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-  }; 
+  };
   int r1;
   int r2;
 
@@ -4428,8 +4428,8 @@ DEF_INST(cipher_message_with_chaining)
     {
       ARCH_DEP(kmc_dea)(r1, r2, regs);
       break;
-    } 
-    
+    }
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
@@ -4442,7 +4442,7 @@ DEF_INST(cipher_message_with_chaining)
       break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
-      
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
     {
@@ -4541,7 +4541,7 @@ DEF_INST(cipher_message_with_counter)
   /* Check special conditions */
   if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || !r3 || r3 & 0x01))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-  
+
   switch(GR0_fc(regs))
   {
     case 0: /* Query */
@@ -4581,7 +4581,7 @@ DEF_INST(cipher_message_with_counter)
       if(msa >= 4)
         ARCH_DEP(kmctr_aes)(r1, r2, r3, regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     default:
@@ -4661,9 +4661,9 @@ DEF_INST(cipher_message_with_cipher_feedback)
       if(msa >= 4)
         ARCH_DEP(kmf_dea)(r1, r2, regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
-      break;      
-    } 
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
     case 18: /* aes-128 */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
@@ -4674,7 +4674,7 @@ DEF_INST(cipher_message_with_cipher_feedback)
       if(msa >= 4)
         ARCH_DEP(kmf_aes)(r1, r2, regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     default:
@@ -4748,12 +4748,12 @@ DEF_INST(cipher_message_with_output_feedback)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      if(msa >= 4)	    
+      if(msa >= 4)
         ARCH_DEP(kmo_dea)(r1, r2, regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
-      break;      
-    } 
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
     case 18: /* aes-128 */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
@@ -4761,10 +4761,10 @@ DEF_INST(cipher_message_with_output_feedback)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      if(msa >= 4)	    
+      if(msa >= 4)
         ARCH_DEP(kmo_aes)(r1, r2, regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     default:
@@ -4838,12 +4838,12 @@ DEF_INST(perform_cryptographic_computation)
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
     {
-      if(msa >= 4)	    
+      if(msa >= 4)
         ARCH_DEP(pcc_cmac_dea)(regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
-    } 
+    }
     case 18: /* aes-128 */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
@@ -4851,10 +4851,10 @@ DEF_INST(perform_cryptographic_computation)
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
     {
-      if(msa >= 4)	    
+      if(msa >= 4)
         ARCH_DEP(pcc_cmac_aes)(regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     case 50: /* aes-128 */
@@ -4865,7 +4865,7 @@ DEF_INST(perform_cryptographic_computation)
       if(msa >= 4)
         ARCH_DEP(pcc_xts_aes)(regs);
       else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);	      
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
     default:
@@ -4886,7 +4886,7 @@ DEF_INST(perform_cryptographic_key_management_operation)
 {
   int fc;
   int msa;
-  BYTE query_bits[][16] = 
+  BYTE query_bits[][16] =
   {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -4944,7 +4944,7 @@ DEF_INST(perform_cryptographic_key_management_operation)
       else
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
-    }  
+    }
     case 18: /* encrypt-aes-128 */
     case 19: /* encrypt-aes-192 */
     case 20: /* encrypt-aes-256 */
@@ -4960,7 +4960,7 @@ DEF_INST(perform_cryptographic_key_management_operation)
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-  }      
+  }
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 

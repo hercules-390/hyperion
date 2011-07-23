@@ -451,7 +451,7 @@ static char *pgmintname[] = {
         if (realregs->guestregs->psw.ilc == 0
          && !realregs->guestregs->psw.zeroilc)
         {
-            sie_ilc = likely(!realregs->guestregs->execflag) ? 2 : 
+            sie_ilc = likely(!realregs->guestregs->execflag) ? 2 :
                     realregs->guestregs->exrl ? 6 : 4;
             realregs->guestregs->psw.ilc = sie_ilc;
         }
@@ -604,7 +604,7 @@ static char *pgmintname[] = {
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
        dxcstr[sizeof(dxcstr)-1] = '\0';
        WRMSG(HHC00801, "I",
-        PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2, 
+        PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2,
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
 
         /* Calculate instruction pointer */
@@ -1289,10 +1289,10 @@ int i;
         char buf[32];
 
         MSGBUF( cputyp, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
-        
+
         memcpy(regs->blknam,cputyp,strlen(cputyp)>sizeof(regs->blknam) ? sizeof(regs->blknam) : strlen(cputyp) );
         memcpy(regs->blkver,HDL_VERS_REGS,strlen(HDL_VERS_REGS));
-        
+
         MSGBUF( buf, "END%13.13s", cputyp );
         memcpy(regs->blkend, buf, strlen(buf)>sizeof(regs->blkend) ? sizeof(regs->blkend): strlen(buf) );
     }
@@ -1303,8 +1303,8 @@ int i;
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
     regs->sysblk = &sysblk;
-    /* 
-     * ISW20060125 : LINE REMOVED : This is the job of 
+    /*
+     * ISW20060125 : LINE REMOVED : This is the job of
      *               the INITIAL CPU RESET
      */
 #if 0
@@ -1619,7 +1619,7 @@ REGS    regs;
 const zz_func *current_opcode_table;
 int     aswitch;
 
-#ifdef OPTION_CAPPING 
+#ifdef OPTION_CAPPING
 register int    *caplocked = &sysblk.caplocked[cpu];
          LOCK   *caplock = &sysblk.caplock[cpu];
 #endif
@@ -1707,12 +1707,12 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         if (INTERRUPT_PENDING(&regs))
             ARCH_DEP(process_interrupt)(&regs);
 
-#ifdef OPTION_CAPPING	
+#ifdef OPTION_CAPPING
         else if (caplocked[0])
         {
             obtain_lock(caplock);
             release_lock(caplock);
-        }	    
+        }
 #endif /* #ifdef OPTION_CAPPING */
 
         ip = INSTRUCTION_FETCH(&regs, 0);
@@ -1850,7 +1850,7 @@ QWORD   qword;                            /* quadword work area      */
     if( regs->arch_mode != ARCH_900 )
     {
         copy_psw (regs, qword);
-        return(snprintf(buf, buflen-1, 
+        return(snprintf(buf, buflen-1,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]));
@@ -1858,7 +1858,7 @@ QWORD   qword;                            /* quadword work area      */
     else
     {
         copy_psw (regs, qword);
-        return(snprintf(buf, buflen-1, 
+        return(snprintf(buf, buflen-1,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],

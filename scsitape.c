@@ -512,7 +512,7 @@ struct mtop opblk;
         Reference"):
 
         STIOCQRYPOS
-        
+
         "[...] A write filemark of count 0 is always issued to
          the drive, which flushes all data from the buffers to
          the tape media. After the write filemark completes, the
@@ -1111,10 +1111,10 @@ int rc;
     if (!dev->stape_no_erg)
     {
         struct mtop opblk;
-    
+
         opblk.mt_op    = MTERASE;
         opblk.mt_count = 0;         // (zero means "short" erase-gap)
-    
+
         rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk );
 
 #if defined( _MSVC_ )
@@ -1142,7 +1142,7 @@ int rc;
 
                 opblk.mt_op    = MTERASE;
                 opblk.mt_count = 0;         // (zero means "short" erase-gap)
-            
+
                 if ( (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk )) >= 0 )
                     dev->eotwarning = 1;
             }
@@ -1594,7 +1594,7 @@ void* get_stape_status_thread( void* notused )
     SETMODE( ROOT );
     {
         if (setpriority( PRIO_PROCESS, 0, (sysblk.devprio - 10) ))
-		    WRMSG( HHC00136, "W", "setpriority()", strerror( errno ));
+            WRMSG( HHC00136, "W", "setpriority()", strerror( errno ));
     }
     SETMODE( USER );
 
@@ -1733,8 +1733,8 @@ int int_scsi_status_wait( DEVBLK* dev, int usecs )
             ))
             == 0
         );
-	    if (rc)
-	        WRMSG( HHC00102, "E", strerror( rc ));
+        if (rc)
+            WRMSG( HHC00102, "E", strerror( rc ));
     }
 
     // Add our request to its work queue if needed...
@@ -1946,8 +1946,8 @@ void create_automount_thread( DEVBLK* dev )
                 ))
                 == 0
             );
-	        if (rc)
-	            WRMSG( HHC00102, "E", strerror( rc ));
+            if (rc)
+                WRMSG( HHC00102, "E", strerror( rc ));
         }
 
         // Enable it for our drive if needed...

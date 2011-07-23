@@ -33,10 +33,10 @@ struct COMMADPT
         haltpending:1,          /* A request has been issued to halt current*/
                                 /* CCW                                      */
         bindflag:1,
-	telnet_opt:1,           /* expecting telnet option char             */
-	telnet_iac:1,           /* expecting telnet command char            */
-	telnet_int:1,           /* telnet interrupt received                */
-	hangup:1,               /* host initated shutdown                   */
+        telnet_opt:1,           /* expecting telnet option char             */
+        telnet_iac:1,           /* expecting telnet command char            */
+        telnet_int:1,           /* telnet interrupt received                */
+        hangup:1,               /* host initated shutdown                   */
         is_3270:1,              /* 0=tty 1=3270                             */
         eol_flag:1,             /* 1 = CR has been received                 */
         debug_sna:1;            /* 1 = write debug messages                 */

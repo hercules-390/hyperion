@@ -26,7 +26,7 @@
 int main(int argc, char* argv[])
 {
     int i, rc;
-	size_t k;
+    size_t k;
     char* p;
 
 #ifdef _MSVC_

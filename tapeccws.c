@@ -1004,8 +1004,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             rc = create_thread( &dummy_tid, DETACHED,
                 autoload_wait_for_tapemount_thread,
                 dev, thread_name );
-	    if (rc)
-		WRMSG(HHC00102, "E", strerror(rc));
+            if (rc)
+                WRMSG(HHC00102, "E", strerror(rc));
         }
 
         ReqAutoMount( dev );
@@ -1841,9 +1841,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if ( dev->ccwtrace || dev->ccwstep )
             WRMSG(HHC00217, "I", SSID_TO_LCSS(dev->ssid), dev->devnum
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
-		,TTYPSTR(dev->tapedevt)
-		,locblock
-                );
+                ,TTYPSTR(dev->tapedevt)
+                ,locblock
+            );
 
         /* Update display if needed */
         if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
@@ -3993,13 +3993,13 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
     /* Fill in the common sense information */
 
     if ( sns4mat == TAPE_SNS7_FMT_20_3480              ||
-         sns4mat == TAPE_SNS7_FMT_21_3480_READ_BUF_LOG || 
+         sns4mat == TAPE_SNS7_FMT_21_3480_READ_BUF_LOG ||
          sns4mat == TAPE_SNS7_FMT_22_3480_EOV_STATS    ||
          sns4mat == TAPE_SNS7_FMT_30_3480_READ_BUF_LOG )
     {
         dev->sense[7] = sns4mat;
         memset(&dev->sense[8], 0,31-8);
-    
+
         if ( sns4mat == TAPE_SNS7_FMT_20_3480 )
         {
             dev->sense[25] = 0x06;                  // IDRC Installed & Upgraded Buffer
@@ -4027,7 +4027,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         dev->sense[28] = (BYTE)( ( dev->devnum >> 12 ) & 0xFF );
         dev->sense[29] = (BYTE)( ( dev->devnum >>  4 ) & 0xFF );
 
-        dev->sense[30] = (BYTE)( dev->devnum & 0x000F ) | ( (BYTE)((BYTE)( dev->devnum & 0x000F )) << 4 );    
+        dev->sense[30] = (BYTE)( dev->devnum & 0x000F ) | ( (BYTE)((BYTE)( dev->devnum & 0x000F )) << 4 );
     }
 
     if (strcmp(dev->filename,TAPE_UNLOADED) == 0
@@ -4072,9 +4072,9 @@ void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
 
     build_sense_3480_etal( ERCode, dev, unitstat, ccwcode );
 
-/* This information is from GA32-0127-03 sections 4.2 and 4.3 
+/* This information is from GA32-0127-03 sections 4.2 and 4.3
    although it is a 3490E reference guide, the values are correct
-   for a 3590. For the 3480 and 3490 devices, these actions are 
+   for a 3590. For the 3480 and 3490 devices, these actions are
    determined by the OS. For 3590, the device through sense byte
    2 (two) tells the OS what to do.
 */
@@ -4112,8 +4112,8 @@ void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
         dev->sense[2] |= TAPE_SNS2_NTP_BRAC_10_REISSUE;
         break;
         /* Software Recovery - DEFER REISSUE */
-    case TAPE_ERA_33_LOAD_FAILURE: 
-    case TAPE_ERA_34_UNLOAD_FAILURE: 
+    case TAPE_ERA_33_LOAD_FAILURE:
+    case TAPE_ERA_34_UNLOAD_FAILURE:
     case TAPE_ERA_3A_DRIVE_SWITCHED_NOT_READY:
     case TAPE_ERA_43_DRIVE_NOT_READY:
         dev->sense[2] |= TAPE_SNS2_NTP_BRAC_11_DEFER_REISS;
@@ -4123,7 +4123,7 @@ void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
         dev->sense[2] |= TAPE_SNS2_NTP_BRAC_00_PERM_ERR;
         break;
     }
-    
+
     /* Check for OBR  */
     switch ( ERA )
     {
@@ -4156,7 +4156,7 @@ void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
     case TAPE_ERA_34_UNLOAD_FAILURE:
     case TAPE_ERA_48_UNSOL_INFORMATIONAL_DATA:
     case TAPE_ERA_4D_RESETTING_EVENT:
-    case TAPE_ERA_54_TEMP_CHNL_INTERFACE_ERROR: 
+    case TAPE_ERA_54_TEMP_CHNL_INTERFACE_ERROR:
         /* OBR - TEMP */
         dev->sense[2] |= TAPE_SNS2_NTP_LOG_CD1_TEMP_OBR;
         break;
