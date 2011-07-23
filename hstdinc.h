@@ -44,6 +44,7 @@
   #include <windows.h>
 #endif
 #ifdef _MSVC_
+  #include <xmmintrin.h>
   #include <tchar.h>
   #include <wincon.h>
   #include <conio.h>
