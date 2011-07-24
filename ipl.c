@@ -625,8 +625,8 @@ void storage_clear()
 {
     if (!sysblk.main_clear)
     {
-        if (sysblk.mainstor) memset(sysblk.mainstor, 0, sysblk.mainsize);
-        if (sysblk.storkeys) memset(sysblk.storkeys, 0, sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        if (sysblk.mainstor) clear_storage( sysblk.mainstor, sysblk.mainsize );
+        if (sysblk.storkeys) clear_storage( sysblk.storkeys, sysblk.mainsize / STORAGE_KEY_UNITSIZE );
         sysblk.main_clear = 1;
     }
 }
@@ -639,7 +639,7 @@ void xstorage_clear()
     if (!sysblk.xpnd_clear)
     {
         if (sysblk.xpndstor)
-            memset(sysblk.xpndstor,0,(size_t)sysblk.xpndsize * XSTORE_PAGESIZE);
+            clear_storage( sysblk.xpndstor, (size_t)sysblk.xpndsize * XSTORE_PAGESIZE );
 
         sysblk.xpnd_clear = 1;
     }
