@@ -20,6 +20,8 @@ INLINE U64 round_to_hostpagesize(U64 n)
 
 #if !defined(clear_io_buffer)
 
+#define clear_storage(_addr, _n)                                       \
+      __clear_io_buffer((void *)(_addr), (size_t)(_n))
 #define clear_io_buffer(_addr,_n)                                      \
       __clear_io_buffer((void *)(_addr),(size_t)(_n))
 #define clear_page(_addr)                                              \
@@ -107,7 +109,7 @@ INLINE void __clear_page( void* addr, size_t pgszmod64 )
     return;
 }
 #else /* (all others) */
-  #define  __clear_page(_addr. _pgszmod64)    memset((void*)(_addr),0, (size_t)(_pgszmod64))
+  #define  __clear_page(_addr, _pgszmod64 )    memset((void*)(_addr), 0, (size_t)(_pgszmod64))
 #endif
 
 #if defined(_GCC_SSE2_)
@@ -173,7 +175,7 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
 
 }
 #else /* (all others) */
-  #define  __clear_io_buffer(_addr,_n)  memset((void*)(_addr),(size_t)(_n))
+  #define  __clear_io_buffer(_addr, _n)  memset((void*)(_addr), 0, (size_t)(_n))
 #endif
 
 #endif /* !defined(clear_io_buffer) */
