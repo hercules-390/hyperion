@@ -23,13 +23,13 @@ INLINE U64 round_to_hostpagesize(U64 n)
 #define clear_io_buffer(_addr,_n)                                      \
       __clear_io_buffer((void *)(_addr),(size_t)(_n))
 #define clear_page(_addr)                                              \
-      __clear_page_4K((void *)(_addr))
+      __clear_page((void *)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
 #define clear_page_1M(_addr)                                           \
-      __clear_page_1M((void *)(_addr))
+      __clear_page((void *)(_addr), (size_t)( ONE_MEGABYTE  / 64 ) )
 #define clear_page_4K(_addr)                                           \
-      __clear_page_4K((void *)(_addr))
+      __clear_page((void *)(_addr), (size_t)( FOUR_KILOBYTE / 64 ) )
 #define clear_page_2K(_addr)                                           \
-      __clear_page_2K((void *)(_addr))
+      __clear_page((void *)(_addr), (size_t)( TWO_KILOBYTE  / 64 ) )
 
 #if defined(__GNUC__) && defined(__SSE2__) && (__SSE2__ == 1)
   #define _GCC_SSE2_
@@ -48,7 +48,7 @@ INLINE U64 round_to_hostpagesize(U64 n)
 
 
 #if defined(_GCC_SSE2_)
-INLINE void __clear_page_2K(void *addr)
+INLINE void __clear_page( void *addr, size_t pgszmod64 )
 {
     unsigned char xmm_save[16];
     register unsigned int i;
@@ -60,7 +60,7 @@ INLINE void __clear_page_2K(void *addr)
         "xorps  %%xmm0, %%xmm0"
         : : "r" (xmm_save));
 
-    for (i = 0; i < 2048/64; i++)
+    for (i = 0; i < pgszmod64; i++)
         asm volatile("\n\t"
             "movntps %%xmm0,   (%0)\n\t"
             "movntps %%xmm0, 16(%0)\n\t"
@@ -76,7 +76,7 @@ INLINE void __clear_page_2K(void *addr)
     return;
 }
 #elif defined (_MSVC_)
-INLINE void __clear_page_2K( void* addr )
+INLINE void __clear_page( void* addr, size_t pgszmod64 )
 {
     // Variables of type __m128 map to one of the XMM[0-7] registers
     // and are used with SSE and SSE2 instructions intrinsics defined
@@ -92,7 +92,7 @@ INLINE void __clear_page_2K( void* addr )
     _mm_xor_ps( xmm0, xmm0 );
 
     /* Clear requested page without polluting our cache */
-    for (i=0; i < 2048/64; i++, (float*) addr += 16 )
+    for (i=0; i < pgszmod64; i++, (float*) addr += 16 )
     {
         _mm_stream_ps( (float*) addr+ 0, xmm0 );
         _mm_stream_ps( (float*) addr+ 4, xmm0 );
@@ -107,113 +107,7 @@ INLINE void __clear_page_2K( void* addr )
     return;
 }
 #else /* (all others) */
-  #define  __clear_page_2K(_addr)    memset((void*)(_addr),0,2048)
-#endif
-
-#if defined(_GCC_SSE2_)
-INLINE void __clear_page_4K(void *addr)
-{
-    unsigned char xmm_save[16];
-    register unsigned int i;
-
-    asm volatile("": : :"memory");      /* barrier */
-
-    asm volatile("\n\t"
-        "movups %%xmm0, (%0)\n\t"
-        "xorps  %%xmm0, %%xmm0"
-        : : "r" (xmm_save));
-
-    for (i = 0; i < ( 4096/64 ); i++)
-        asm volatile("\n\t"
-            "movntps %%xmm0,   (%0)\n\t"
-            "movntps %%xmm0, 16(%0)\n\t"
-            "movntps %%xmm0, 32(%0)\n\t"
-            "movntps %%xmm0, 48(%0)"
-            : : "r"(addr) : "memory");
-
-    asm volatile("\n\t"
-        "sfence\n\t"
-        "movups (%0), %%xmm0"
-        : : "r" (xmm_save) : "memory");
-
-    return;
-}
-#elif defined (_MSVC_)
-INLINE void __clear_page_4K( void* addr )
-{
-    register unsigned int i;
-    __m128 xmm0;
-
-    xmm0 = _mm_setzero_ps();
-    _mm_xor_ps( xmm0, xmm0 );
-
-    for (i=0; i < 4096/64; i++, (float*) addr += 16 )
-    {
-        _mm_stream_ps( (float*) addr+ 0, xmm0 );
-        _mm_stream_ps( (float*) addr+ 4, xmm0 );
-        _mm_stream_ps( (float*) addr+ 8, xmm0 );
-        _mm_stream_ps( (float*) addr+12, xmm0 );
-    }
-
-    SFENCE();
-
-    return;
-}
-#else /* (all others) */
-  #define  __clear_page_4K(_addr)    memset((void*)(_addr),0,4096)
-#endif
-
-#if defined(_GCC_SSE2_)
-INLINE void __clear_page_1M(void *addr)
-{
-    unsigned char xmm_save[16];
-    register unsigned int i;
-
-    asm volatile("": : :"memory");      /* barrier */
-
-    asm volatile("\n\t"
-        "movups %%xmm0, (%0)\n\t"
-        "xorps  %%xmm0, %%xmm0"
-        : : "r" (xmm_save));
-
-    for (i = 0; i < ( 1048576/64 ); i++)
-        asm volatile("\n\t"
-            "movntps %%xmm0,   (%0)\n\t"
-            "movntps %%xmm0, 16(%0)\n\t"
-            "movntps %%xmm0, 32(%0)\n\t"
-            "movntps %%xmm0, 48(%0)"
-            : : "r"(addr) : "memory");
-
-    asm volatile("\n\t"
-        "sfence\n\t"
-        "movups (%0), %%xmm0"
-        : : "r" (xmm_save) : "memory");
-
-    return;
-}
-#elif defined (_MSVC_)
-INLINE void __clear_page_1M( void* addr )
-{
-    register unsigned int i;
-    __m128 xmm0;
-
-    xmm0 = _mm_setzero_ps();
-    _mm_xor_ps( xmm0, xmm0 );
-
-    for (i=0; i < 1048576/64; i++, (float*) addr += 16 )
-    {
-        _mm_stream_ps( (float*) addr+ 0, xmm0 );
-        _mm_stream_ps( (float*) addr+ 4, xmm0 );
-        _mm_stream_ps( (float*) addr+ 8, xmm0 );
-        _mm_stream_ps( (float*) addr+12, xmm0 );
-    }
-
-    SFENCE();
-
-    return;
-}
-#else
-  #define  __clear_page_1M(_addr)   memset((void*)(_addr),0,1048576)
+  #define  __clear_page(_addr. _pgszmod64)    memset((void*)(_addr),0, (size_t)(_pgszmod64))
 #endif
 
 #if defined(_GCC_SSE2_)
