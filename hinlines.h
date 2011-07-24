@@ -72,6 +72,8 @@ INLINE void __clear_page_2K(void *addr)
         "sfence\n\t"
         "movups (%0), %%xmm0"
         : : "r" (xmm_save) : "memory");
+
+    return;
 }
 #elif defined (_MSVC_)
 INLINE void __clear_page_2K( void* addr )
@@ -101,6 +103,8 @@ INLINE void __clear_page_2K( void* addr )
     /* An SFENCE guarantees that every preceding store
        is globally visible before any subsequent store. */
     SFENCE();
+
+    return;
 }
 #else /* (all others) */
   #define  __clear_page_2K(_addr)    memset((void*)(_addr),0,2048)
@@ -131,14 +135,18 @@ INLINE void __clear_page_4K(void *addr)
         "sfence\n\t"
         "movups (%0), %%xmm0"
         : : "r" (xmm_save) : "memory");
+
+    return;
 }
 #elif defined (_MSVC_)
 INLINE void __clear_page_4K( void* addr )
 {
     register unsigned int i;
     __m128 xmm0;
+
     xmm0 = _mm_setzero_ps();
     _mm_xor_ps( xmm0, xmm0 );
+
     for (i=0; i < 4096/64; i++, (float*) addr += 16 )
     {
         _mm_stream_ps( (float*) addr+ 0, xmm0 );
@@ -146,7 +154,10 @@ INLINE void __clear_page_4K( void* addr )
         _mm_stream_ps( (float*) addr+ 8, xmm0 );
         _mm_stream_ps( (float*) addr+12, xmm0 );
     }
+
     SFENCE();
+
+    return;
 }
 #else /* (all others) */
   #define  __clear_page_4K(_addr)    memset((void*)(_addr),0,4096)
@@ -177,14 +188,18 @@ INLINE void __clear_page_1M(void *addr)
         "sfence\n\t"
         "movups (%0), %%xmm0"
         : : "r" (xmm_save) : "memory");
+
+    return;
 }
 #elif defined (_MSVC_)
 INLINE void __clear_page_1M( void* addr )
 {
     register unsigned int i;
     __m128 xmm0;
+
     xmm0 = _mm_setzero_ps();
     _mm_xor_ps( xmm0, xmm0 );
+
     for (i=0; i < 1048576/64; i++, (float*) addr += 16 )
     {
         _mm_stream_ps( (float*) addr+ 0, xmm0 );
@@ -192,7 +207,10 @@ INLINE void __clear_page_1M( void* addr )
         _mm_stream_ps( (float*) addr+ 8, xmm0 );
         _mm_stream_ps( (float*) addr+12, xmm0 );
     }
+
     SFENCE();
+
+    return;
 }
 #else
   #define  __clear_page_1M(_addr)   memset((void*)(_addr),0,1048576)
@@ -206,6 +224,8 @@ INLINE void __optimize_clear(void *addr, size_t n)
     /* Let the compiler perform special case optimization */
     while (n-- > 0)
         *mem++ = 0;
+
+    return;
 }
 #else /* (all others, including _MSVC_) */
   #define __optimize_clear(p,n)     memset((p),0,(n))
@@ -221,9 +241,12 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
     if ((x = (U64)(uintptr_t)addr & 0x00000FFF))
     {
         register unsigned int a = 4096 - x;
+
         __optimize_clear( addr, a );
         if (!(n -= a))
+        {
             return;
+        }
     }
 
     /* Calculate page clear size */
@@ -237,14 +260,23 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
         do
         {
             __clear_page_4K( addr );
+#if defined(_GCC_SSE2)
+            addr += 4096;
+#else
             (BYTE*)addr += 4096;
+#endif
         }
         while (addr < limit);
     }
 
     /* Clean up any remainder */
     if (n)
+    {
         __optimize_clear( addr, n );
+    }
+
+    return;
+
 }
 #else /* (all others) */
   #define  __clear_io_buffer(_addr,_n)  memset((void*)(_addr),(size_t)(_n))
