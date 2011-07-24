@@ -153,7 +153,7 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
         /* Loop through pages */
         do
         {
-            __clear_page_4K( addr );
+            __clear_page( addr, (size_t)( FOUR_KILOBYTE / 64 ) );
 #if defined(_GCC_SSE2_)
             addr += 4096;
 #else
