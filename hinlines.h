@@ -260,7 +260,7 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
         do
         {
             __clear_page_4K( addr );
-#if defined(_GCC_SSE2)
+#if defined(_GCC_SSE2_)
             addr += 4096;
 #else
             (BYTE*)addr += 4096;
