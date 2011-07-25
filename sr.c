@@ -580,7 +580,7 @@ S64      dreg;
 
         case SR_SYS_XPNDSTOR:
             TRACE("SR: Restoring Expanded Storage...\n");
-            SR_READ_BUF(file, sysblk.xpndstor, len);
+            SR_READ_BUF(file, sysblk.xpndstor, len * 4096);
             break;
 
         case SR_SYS_IPLDEV:
