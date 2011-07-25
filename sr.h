@@ -553,7 +553,7 @@ BYTE  buf[8];
 /*********************************************************************/
 /*         sr_write_string                                           */
 /*********************************************************************/
-inline int sr_write_string (FILE* file, U32 key, char* str)
+inline int sr_write_string (FILE* file, U32 key, void* str)
 {
 size_t len = strlen(str) + 1;
 
