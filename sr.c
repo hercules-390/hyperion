@@ -175,7 +175,7 @@ BYTE     psw[16];
     SR_WRITE_VALUE (file,SR_SYS_MAINSIZE,sysblk.mainsize,sizeof(sysblk.mainsize));
     TRACE("SR: Saving MAINSTOR...\n");
     SR_WRITE_BUF   (file,SR_SYS_MAINSTOR,sysblk.mainstor,sysblk.mainsize);
-    SR_WRITE_VALUE (file,SR_SYS_SKEYSIZE,sysblk.mainsize/STORAGE_KEY_UNITSIZE,sizeof(int));
+    SR_WRITE_VALUE (file,SR_SYS_SKEYSIZE,(sysblk.mainsize/STORAGE_KEY_UNITSIZE),sizeof(U32));
     TRACE("SR: Saving Storage Keys...\n");
     SR_WRITE_BUF   (file,SR_SYS_STORKEYS,sysblk.storkeys,sysblk.mainsize/STORAGE_KEY_UNITSIZE);
     SR_WRITE_VALUE (file,SR_SYS_XPNDSIZE,sysblk.xpndsize,sizeof(sysblk.xpndsize));
@@ -521,8 +521,8 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                MSGBUF(buf1, "%dM", len / (1024*1024));
-                MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
+                MSGBUF(buf1, "%dM", (U32)(len / (1024*1024)));
+                MSGBUF(buf2, "%dM", (U32)(sysblk.mainsize / (1024*1024)));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
@@ -546,12 +546,12 @@ S64      dreg;
 
         case SR_SYS_SKEYSIZE:
             SR_READ_VALUE(file, len, &len, sizeof(len));
-            if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
+            if (len > (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE))
             {
                 char buf1[20];
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
-                MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                MSGBUF(buf2, "%d", (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
@@ -559,12 +559,12 @@ S64      dreg;
             break;
 
         case SR_SYS_STORKEYS:
-            if (len > sysblk.mainsize/STORAGE_KEY_UNITSIZE)
+            if (len > (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE))
             {
                 char buf1[20];
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
-                MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                MSGBUF(buf2, "%d", (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
