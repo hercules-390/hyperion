@@ -476,12 +476,12 @@
 
 inline int sr_write_hdr    (FILE* file, U32  key,               U32  len);
 inline int sr_write_value  (FILE* file, U32  key,    U64   val, U32  len);
-inline int sr_write_buf    (FILE* file, U32  key,    void *buf, U32  len);
+inline int sr_write_buf    (FILE* file, U32  key,    void *buf, U64  len);
 inline int sr_write_string (FILE* file, U32  key,    void *str          );
 
 inline int sr_read_hdr     (FILE* file,              U32  *key, U32 *len);
 inline int sr_read_value   (FILE* file, U32 origlen, void *p,   U32  len);
-inline int sr_read_buf     (FILE* file,              void *p,   U32  len);
+inline int sr_read_buf     (FILE* file,              void *p,   U64  len);
 inline int sr_read_string  (FILE* file,              void *p,   U32  len);
 inline int sr_read_skip    (FILE* file,                         U32  len);
 
@@ -498,7 +498,7 @@ do {if (sr_write_hdr((FILE*)(_file), (U32)(_key), (U32)(_len)) != 0) return -1; 
 do {if (sr_write_string((FILE*)(_file), (U32)(_key), (void*)(_str)) != 0) return -1; } while (0)
 
 #define SR_WRITE_BUF(        _file,        _key,          _buf,        _len) \
-do {if (sr_write_buf((FILE*)(_file), (U32)(_key), (void*)(_buf), (U32)(_len)) != 0) return -1; } while (0)
+do {if (sr_write_buf((FILE*)(_file), (U32)(_key), (void*)(_buf), (U64)(_len)) != 0) return -1; } while (0)
 
 #define SR_WRITE_VALUE(        _file,        _key,        _val,        _len) \
 do {if (sr_write_value((FILE*)(_file), (U32)(_key), (U64)(_val), (U32)(_len)) != 0) return -1; } while (0)
@@ -519,7 +519,7 @@ do {if (sr_read_skip((FILE*)(_file), (U32)(_len)) != 0) return -1; } while (0)
 do {if (sr_read_string((FILE*)(_file), (void*)(_p), (U32)(_len)) != 0) return -1; } while (0)
 
 #define SR_READ_BUF(        _file,          _p,        _len) \
-do {if (sr_read_buf((FILE*)(_file), (void*)(_p), (U32)(_len)) != 0) return -1; } while (0)
+do {if (sr_read_buf((FILE*)(_file), (void*)(_p), (U64)(_len)) != 0) return -1; } while (0)
 
 #define SR_READ_VALUE(        _file,        _suslen,          _p,        _reslen) \
 do {if (sr_read_value((FILE*)(_file), (U32)(_suslen), (void*)(_p), (U32)(_reslen)) != 0) return -1; } while (0)
@@ -579,16 +579,16 @@ size_t len = strlen(str) + 1;
 /*********************************************************************/
 /*         sr_write_buf                                              */
 /*********************************************************************/
-inline int sr_write_buf (FILE* file, U32 key, void* p, U32 len)
+inline int sr_write_buf (FILE* file, U32 key, void* p, U64 len)
 {
 U32    siz;
-U32    tot  = len;
+U64    tot  = len;
 BYTE*  buf  = p;
 
     if (sr_write_hdr(file, key, len) != 0)
         return -1;
 
-    TRACE("SR: sr_write_buf:    key=0x%8.8x, len=0x%8.8x\n", key, len);
+    TRACE("SR: sr_write_buf:    key=0x%8.8x, len=0x%16.16llx\n", key, len);
 
     while (tot)
     {
@@ -714,13 +714,13 @@ inline int sr_read_string (FILE* file, void* p, U32 len)
 /*********************************************************************/
 /*         sr_read_buf                                               */
 /*********************************************************************/
-inline int sr_read_buf (FILE* file, void* p, U32 len)
+inline int sr_read_buf (FILE* file, void* p, U64 len)
 {
 U32    siz;
-U32    tot  = len;
+U64    tot  = len;
 BYTE*  buf  = p;
 
-    TRACE("SR: sr_read_buf:                   len=0x%8.8x\n", len);
+    TRACE("SR: sr_read_buf:                   len=0x%16.16llx\n", len);
 
     while (tot)
     {
