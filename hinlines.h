@@ -48,7 +48,6 @@ INLINE U64 round_to_hostpagesize(U64 n)
   #endif
 #endif
 
-
 #if defined(_GCC_SSE2_)
 INLINE void __clear_page( void *addr, size_t pgszmod64 )
 {
@@ -156,11 +155,7 @@ INLINE void __clear_io_buffer(void *addr, size_t n)
         do
         {
             __clear_page( addr, (size_t)( FOUR_KILOBYTE / 64 ) );
-#if defined(_GCC_SSE2_)
-            addr += 4096;
-#else
-            (BYTE*)addr += 4096;
-#endif
+            addr = (BYTE*)addr + 4096;
         }
         while (addr < limit);
     }
