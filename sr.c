@@ -358,15 +358,6 @@ BYTE     psw[16];
 
     return 0;
 
-sr_write_error:
-    WRMSG(HHC02001, "E", "write()", strerror(errno));
-    goto sr_error_exit;
-sr_value_error:
-    WRMSG(HHC02020, "E");
-    goto sr_error_exit;
-sr_string_error:
-    WRMSG(HHC02021, "E");
-    goto sr_error_exit;
 sr_error_exit:
     // "SR: error processing file '%s'"
     WRMSG(HHC02004, "E", fn);
@@ -1441,20 +1432,6 @@ S64      dreg;
     TRACE("SR: Resume Complete; System Resumed.\n");
     return 0;
 
-sr_read_error:
-    WRMSG(HHC02001, "E", "read()", strerror(errno));
-    goto sr_error_exit;
-/*
-sr_seek_error:
-    WRMSG(HHC02001, "E", "lseek()", strerror(errno));
-    goto sr_error_exit;
-    */
-sr_string_error:
-    WRMSG(HHC02021, "E");
-    goto sr_error_exit;
-sr_value_error:
-    WRMSG(HHC02020, "E");
-    goto sr_error_exit;
 sr_null_regs_exit:
     // "SR: CPU key %8.8X found but no active CPU"
     WRMSG(HHC02019, "E", key);

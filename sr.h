@@ -139,6 +139,7 @@
 #define SR_ID                   "Hercules suspend/resume file"
 #define SR_MAX_STRING_LENGTH    4096
 #define SR_SKIP_CHUNKSIZE       256
+#define SR_BUF_CHUNKSIZE        (256*1024*1024)
 
 #define SR_KEY_ID_MASK          0xfff00000
 #define SR_KEY_ID               0xace00000
@@ -432,37 +433,17 @@
 #define SR_EOF                  0xacefffff
 
 #if defined (_HERCULES_SR_C)
-#define SR_WRITE_ERROR       goto sr_write_error
-#define SR_READ_ERROR        goto sr_read_error
-#define SR_SEEK_ERROR        goto sr_seek_error
-#define SR_VALUE_ERROR       goto sr_value_error
-#define SR_STRING_ERROR      goto sr_string_error
+  #define SR_WRITE_ERROR    goto  sr_write_error
+  #define SR_READ_ERROR     goto  sr_read_error
+  #define SR_SEEK_ERROR     goto  sr_seek_error
+  #define SR_VALUE_ERROR    goto  sr_value_error
+  #define SR_STRING_ERROR   goto  sr_string_error
 #else
-#define SR_WRITE_ERROR \
- do { \
-   WRMSG(HHC02001, "E", "write()", strerror(errno)); \
-   return -1; \
- } while (0)
-#define SR_READ_ERROR \
- do { \
-   WRMSG(HHC02001, "E", "read()", strerror(errno)); \
-   return -1; \
- } while (0)
-#define SR_SEEK_ERROR \
- do { \
-   WRMSG(HHC02001, "E", "lseek()", strerror(errno)); \
-   return -1; \
- } while (0)
-#define SR_VALUE_ERROR \
- do { \
-   WRMSG(HHC02020, "E"); \
-   return -1; \
- } while (0)
-#define SR_STRING_ERROR \
- do { \
-   WRMSG(HHC02021, "E"); \
-   return -1; \
- } while (0)
+  #define SR_WRITE_ERROR    do { sr_write_error_();  return -1; } while (0)
+  #define SR_READ_ERROR     do { sr_read_error_();   return -1; } while (0)
+  #define SR_SEEK_ERROR     do { sr_seek_error_();   return -1; } while (0)
+  #define SR_VALUE_ERROR    do { sr_value_error_();  return -1; } while (0)
+  #define SR_STRING_ERROR   do { sr_string_error_(); return -1; } while (0)
 #endif
 
 #ifdef HAVE_LIBZ
@@ -493,141 +474,365 @@
  fclose((_stream))
 #endif
 
-#define SR_WRITE_HDR(_file, _key, _len) \
- do { \
-   size_t _rc; \
-   BYTE _buf[8]; \
-   store_fw (_buf, (_key)); \
-   store_fw (_buf+4, (_len)); \
-   _rc = SR_WRITE(_buf, 1, 8, (_file)); \
-   if (_rc != 8) SR_WRITE_ERROR; \
- } while (0)
+inline int sr_write_hdr    (FILE* file, U32  key,               U32  len);
+inline int sr_write_value  (FILE* file, U32  key,    U64   val, U32  len);
+inline int sr_write_buf    (FILE* file, U32  key,    void *buf, U32  len);
+inline int sr_write_string (FILE* file, U32  key,    void *str          );
 
-#define SR_WRITE_STRING(_file, _key, _s) \
-do { \
-  size_t _rc; \
-  if ((int)strlen((_s)) + 1 > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
-  SR_WRITE_HDR((_file), (_key), (int)strlen((_s)) + 1); \
-  _rc = (size_t)SR_WRITE((_s), 1, (int)strlen((_s)) + 1, (_file)); \
-  if (_rc != strlen((_s)) + 1) SR_WRITE_ERROR; \
-} while (0);
+inline int sr_read_hdr     (FILE* file,              U32  *key, U32 *len);
+inline int sr_read_value   (FILE* file, U32 origlen, void *p,   U32  len);
+inline int sr_read_buf     (FILE* file,              void *p,   U32  len);
+inline int sr_read_string  (FILE* file,              void *p,   U32  len);
+inline int sr_read_skip    (FILE* file,                         U32  len);
 
-#define SR_WRITE_BUF(_file, _key, _buf, _len) \
+inline void sr_write_error_();
+inline void sr_read_error_();
+inline void sr_seek_error_();
+inline void sr_value_error_();
+inline void sr_string_error_();
+
+#define SR_WRITE_HDR(        _file,        _key,        _len) \
+do {if (sr_write_hdr((FILE*)(_file), (U32)(_key), (U32)(_len)) != 0) return -1; } while (0)
+
+#define SR_WRITE_STRING(        _file,        _key,          _str) \
+do {if (sr_write_string((FILE*)(_file), (U32)(_key), (void*)(_str)) != 0) return -1; } while (0)
+
+#define SR_WRITE_BUF(        _file,        _key,          _buf,        _len) \
+do {if (sr_write_buf((FILE*)(_file), (U32)(_key), (void*)(_buf), (U32)(_len)) != 0) return -1; } while (0)
+
+#define SR_WRITE_VALUE(        _file,        _key,        _val,        _len) \
+do {if (sr_write_value((FILE*)(_file), (U32)(_key), (U64)(_val), (U32)(_len)) != 0) return -1; } while (0)
+
+#define SR_READ_HDR( _file, _key, _len) \
 do { \
-  size_t _rc; \
-  if ((_len)) { \
-    SR_WRITE_HDR((_file), (_key), (_len)); \
-    _rc = SR_WRITE((_buf), 1, (_len), (_file)); \
-    if ((int)_rc != (int)(_len)) SR_WRITE_ERROR; \
-  } else \
-    SR_WRITE_HDR((_file), (_key), 0); \
+    U32 k, l; \
+    if (sr_read_hdr((FILE*)(_file), &k, &l) != 0) \
+        return -1; \
+    (_key) = k; \
+    (_len) = l; \
 } while (0)
 
-#define SR_WRITE_VALUE(_file, _key, _val, _len) \
-do { \
-  size_t _rc; \
-  BYTE _buf[8]; \
-  if ((_len) != 1 && (_len) != 2 && (_len) != 4 && (_len) != 8) \
-    SR_VALUE_ERROR; \
-  SR_WRITE_HDR((_file), (_key), (_len)); \
-  switch ((_len)) { \
-    case 1: _buf[0] = (_val); break; \
-    case 2: store_hw(_buf, (_val)); break; \
-    case 4: store_fw(_buf, (_val)); break; \
-    case 8: store_dw(_buf, (_val)); break; \
-  } \
-  _rc = SR_WRITE(_buf, 1, (_len), (_file)); \
-  if (_rc != (_len)) SR_WRITE_ERROR; \
-} while (0)
+#define SR_READ_SKIP(        _file,        _len) \
+do {if (sr_read_skip((FILE*)(_file), (U32)(_len)) != 0) return -1; } while (0)
 
-#define SR_READ_HDR(_file, _key, _len) \
-do { \
-  size_t _rc; \
-  BYTE _buf[8]; \
-  _rc = SR_READ(_buf, 1, 8, (_file)); \
-  if (_rc != 8) SR_READ_ERROR; \
-  (_key) = fetch_fw(_buf); \
-  (_len) = fetch_fw(_buf+4); \
-} while (0)
+#define SR_READ_STRING(        _file,          _p,        _len) \
+do {if (sr_read_string((FILE*)(_file), (void*)(_p), (U32)(_len)) != 0) return -1; } while (0)
 
-//FIXME: Workaround for problem involving gzseek
-//       and large files.  Just read the data.
-#define SR_READ_SKIP(_file, _len) \
-do { \
-  size_t _rc; \
-  size_t _l; \
-  BYTE _buf[SR_SKIP_CHUNKSIZE]; \
-  _l = (_len); \
-  while (_l) { \
-    _rc = SR_READ(_buf, 1, _l < SR_SKIP_CHUNKSIZE ? _l : SR_SKIP_CHUNKSIZE, (_file)); \
-    if (_rc == (size_t)-1) SR_READ_ERROR; \
-    _l -= _l < SR_SKIP_CHUNKSIZE ? _l : SR_SKIP_CHUNKSIZE; \
-  } \
-} while (0)
+#define SR_READ_BUF(        _file,          _p,        _len) \
+do {if (sr_read_buf((FILE*)(_file), (void*)(_p), (U32)(_len)) != 0) return -1; } while (0)
 
-#define SR_READ_STRING(_file, _p, _len) \
-do { \
-  size_t _rc; \
-  if ((_len) > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
-  _rc = SR_READ((_p), 1, (_len), (_file)); \
-  if (_rc != (_len)) SR_READ_ERROR; \
-} while (0)
-
-#define SR_READ_BUF(_file, _p, _len) \
-do { \
-  size_t _rc; \
-  _rc = SR_READ((_p), 1, (_len), (_file)); \
-  if (_rc != (_len)) SR_READ_ERROR; \
-} while (0)
-
-#define SR_READ_VALUE(_file, _len1, _p, _len2) \
-do { \
-  size_t _rc; \
-  BYTE _buf[8]; \
-  U64 _value; \
-  if ((_len1) != 1 && (_len1) != 2 && (_len1) != 4 && (_len1) != 8) \
-    SR_VALUE_ERROR; \
-  _rc = SR_READ(_buf, 1, (_len1), (_file)); \
-  if (_rc != (_len1)) SR_READ_ERROR; \
-  switch ((_len1)) { \
-    case 1: _value = _buf[0]; break; \
-    case 2: _value = fetch_hw(_buf); break; \
-    case 4: _value = fetch_fw(_buf); break; \
-    case 8: _value = fetch_dw(_buf); break; \
-    default: _value=0; break; /* To ward off gcc -Wall */ \
-  } \
-  switch ((_len2)) { \
-  case 1: \
-    { \
-      BYTE *_ptr = (void *)(_p); \
-      *_ptr = _value & 0xff; \
-      break; \
-    } \
-  case 2: \
-    { \
-      U16 *_ptr = (void *)(_p); \
-      *_ptr = _value & 0xffff; \
-      break; \
-    } \
-  case 4: \
-    { \
-      U32 *_ptr = (void *)(_p); \
-      *_ptr = _value & 0xffffffff; \
-      break; \
-    } \
-  case 8: \
-    { \
-      U64 *_ptr = (void *)(_p); \
-      *_ptr = _value; \
-      break; \
-    } \
-  } \
-} while (0)
+#define SR_READ_VALUE(        _file,        _suslen,          _p,        _reslen) \
+do {if (sr_read_value((FILE*)(_file), (U32)(_suslen), (void*)(_p), (U32)(_reslen)) != 0) return -1; } while (0)
 
 #define SR_SKIP_NULL_DEV(_dev, _file, _len) \
   if ((_dev) == NULL) { \
     SR_READ_SKIP((_file),(_len)); \
     break; \
   }
+
+/*********************************************************************/
+/*         sr_write_hdr                                              */
+/*********************************************************************/
+inline int sr_write_hdr (FILE* file, U32 key, U32 len)
+{
+BYTE  buf[8];
+
+    TRACE("SR: sr_write_hdr:    key=0x%8.8x, len=0x%8.8x\n", key, len);
+
+    store_fw (buf, key);
+    store_fw (buf+4, len);
+
+    if (SR_WRITE(buf, 1, 8, file) != 8)
+    {
+        sr_write_error_();
+        return -1;
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_write_string                                           */
+/*********************************************************************/
+inline int sr_write_string (FILE* file, U32 key, char* str)
+{
+size_t len = strlen(str) + 1;
+
+    TRACE("SR: sr_write_string: key=0x%8.8x\n", key);
+
+    if (len > SR_MAX_STRING_LENGTH)
+    {
+        sr_string_error_();
+        return -1;
+    }
+
+    if (sr_write_hdr(file, key, len) != 0)
+        return -1;
+
+    if (SR_WRITE(str, 1, len, file) != len)
+    {
+        sr_write_error_();
+        return -1;
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_write_buf                                              */
+/*********************************************************************/
+inline int sr_write_buf (FILE* file, U32 key, void* p, U32 len)
+{
+U32    siz;
+U32    tot  = len;
+BYTE*  buf  = p;
+
+    if (sr_write_hdr(file, key, len) != 0)
+        return -1;
+
+    TRACE("SR: sr_write_buf:    key=0x%8.8x, len=0x%8.8x\n", key, len);
+
+    while (tot)
+    {
+        siz = tot < SR_BUF_CHUNKSIZE ? tot : SR_BUF_CHUNKSIZE;
+
+        if (SR_WRITE(buf, 1, siz, file) != siz)
+        {
+            sr_write_error_();
+            return -1;
+        }
+        tot -= siz;
+        buf += siz;
+    }
+
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_write_value                                            */
+/*********************************************************************/
+inline int sr_write_value (FILE* file, U32 key, U64 val, U32 len)
+{
+BYTE    buf[8];
+
+    TRACE("SR: sr_write_value:  key=0x%8.8x, len=0x%8.8x, val=0x%16.16llx\n", key, len, val);
+
+    if (len != 1 && len != 2 && len != 4 && len != 8)
+    {
+        sr_value_error_();
+        return -1;
+    }
+
+    if (sr_write_hdr(file, key, len) != 0)
+        return -1;
+
+    switch (len)
+    {
+        case 1: buf[0]     =  (BYTE)val;  break;
+        case 2: store_hw (buf, (U16)val); break;
+        case 4: store_fw (buf, (U32)val); break;
+        case 8: store_dw (buf, (U64)val); break;
+    }
+
+    if (SR_WRITE(buf, 1, len, file) != len)
+    {
+        sr_write_error_();
+        return -1;
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_read_hdr                                               */
+/*********************************************************************/
+inline int sr_read_hdr (FILE* file, U32* key, U32* len)
+{
+BYTE  buf[8];
+
+    if (SR_READ(buf, 1, 8, file) != 8)
+    {
+        sr_read_error_();
+        return -1;
+    }
+
+    *key = fetch_fw (buf);
+    *len = fetch_fw (buf+4);
+
+    TRACE("SR: sr_read_hdr:   key=0x%8.8x, len=0x%8.8x\n", *key, *len);
+
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_read_skip                                              */
+/*********************************************************************/
+inline int sr_read_skip (FILE* file, U32 len)
+{
+/* FIXME: Workaround for problem involving gzseek
+          and large files.  Just read the data. */
+
+BYTE    buf[SR_SKIP_CHUNKSIZE];
+size_t  siz;
+size_t  tot;
+
+    TRACE("SR: sr_read_skip:                  len=0x%8.8x\n", len);
+
+    tot = len;
+
+    while (tot)
+    {
+        siz = tot < SR_SKIP_CHUNKSIZE ? tot : SR_SKIP_CHUNKSIZE;
+
+        if (SR_READ(buf, 1, siz, file) != siz)
+        {
+            sr_read_error_();
+            return -1;
+        }
+        tot -= siz;
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_read_string                                            */
+/*********************************************************************/
+inline int sr_read_string (FILE* file, void* p, U32 len)
+{
+    TRACE("SR: sr_read_string:                len=0x%8.8x\n", len);
+
+    if (len > SR_MAX_STRING_LENGTH)
+    {
+        sr_string_error_();
+        return -1;
+    }
+    if (SR_READ(p, 1, len, file) != len)
+    {
+        sr_read_error_();
+        return -1;
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_read_buf                                               */
+/*********************************************************************/
+inline int sr_read_buf (FILE* file, void* p, U32 len)
+{
+U32    siz;
+U32    tot  = len;
+BYTE*  buf  = p;
+
+    TRACE("SR: sr_read_buf:                   len=0x%8.8x\n", len);
+
+    while (tot)
+    {
+        siz = tot < SR_BUF_CHUNKSIZE ? tot : SR_BUF_CHUNKSIZE;
+
+        if (SR_READ(buf, 1, siz, file) != siz)
+        {
+            sr_read_error_();
+            return -1;
+        }
+        tot -= siz;
+        buf += siz;
+    }
+
+    return 0;
+}
+
+/*********************************************************************/
+/*         sr_read_value                                             */
+/*********************************************************************/
+inline int sr_read_value (FILE* file, U32 suslen, void* p, U32 reslen)
+{
+BYTE    buf[8];
+U64     value;
+
+    TRACE("SR: sr_read_value:              suslen=0x%8.8x, reslen=0x%8.8x,\n", suslen, reslen);
+
+    if (suslen != 1 && suslen != 2 && suslen != 4 && suslen != 8)
+    {
+        sr_value_error_();
+        return -1;
+    }
+
+    if (SR_READ(buf, 1, suslen, file) != suslen)
+    {
+        sr_read_error_();
+        return -1;
+    }
+
+    switch (suslen)
+    {
+        case 1:  value = buf[0];         break;
+        case 2:  value = fetch_hw (buf); break;
+        case 4:  value = fetch_fw (buf); break;
+        case 8:  value = fetch_dw (buf); break;
+        default: value = 0;              break; /* To ward off gcc -Wall */
+    }
+
+    TRACE("                           val=0x%16.16llx\n", value);
+
+    switch (reslen)
+    {
+        case 1:
+        {
+            BYTE* ptr = p;
+            *ptr = (BYTE)(value & 0xFF);
+            break;
+        }
+        case 2:
+        {
+            U16* ptr = p;
+            *ptr = (U16)(value & 0xFFFF);
+            break;
+        }
+        case 4:
+        {
+            U32* ptr = p;
+            *ptr = (U32)(value & 0xFFFFFFFF);
+            break;
+        }
+        case 8:
+        {
+            U64* ptr = p;
+            *ptr = (U64)(value & 0xFFFFFFFFFFFFFFFFULL);
+            break;
+        }
+    }
+    return 0;
+}
+
+/*********************************************************************/
+/*          sr_xxxxx_error_                                          */
+/*********************************************************************/
+
+inline void sr_write_error_()
+{
+    // "SR: error in function '%s': '%s'"
+    WRMSG(HHC02001, "E", "write()", strerror(errno));
+}
+
+inline void sr_read_error_()
+{
+    // "SR: error in function '%s': '%s'"
+    WRMSG(HHC02001, "E", "read()", strerror(errno));
+}
+
+inline void sr_seek_error_()
+{
+    // "SR: error in function '%s': '%s'"
+    WRMSG(HHC02001, "E", "lseek()", strerror(errno));
+}
+
+inline void sr_value_error_()
+{
+    // "SR: value error, incorrect length"
+    WRMSG(HHC02020, "E");
+}
+
+inline void sr_string_error_()
+{
+    // "SR: string error, incorrect length"
+    WRMSG(HHC02021, "E");
+}
 
 #endif /* !defined(_HERCULES_SR_H) */
