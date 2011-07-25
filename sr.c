@@ -17,7 +17,26 @@
 #ifdef OPTION_FISHIO
 #include "w32chan.h"
 #endif
-#include "sr.h"
+
+#define SR_DEBUG    // #define to enable TRACE stmts
+
+#if defined(DEBUG) && !defined(SR_DEBUG)
+ #define SR_DEBUG
+#endif
+
+#if defined(SR_DEBUG)
+ #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+ #include "dbgtrace.h"                   // (Fish: DEBUGGING)
+ #define  NO_SR_OPTIMIZE                 // (Fish: DEBUGGING) (MSVC only)
+#endif
+
+#if defined( _MSVC_ ) && defined( NO_SR_OPTIMIZE )
+  #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
+  #pragma warning( push )               // save current settings
+  #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
+#endif
+
+#include "sr.h"     // (must FOLLOW above enable/disable debugging macros)
 
 #if defined(WORDS_BIGENDIAN)
 BYTE ourendian = 1;
@@ -85,7 +104,10 @@ BYTE     psw[16];
         return -1;
     }
 
+    TRACE("SR: Begin Suspend Processing...\n");
+
     /* Save CPU state and stop all CPU's */
+    TRACE("SR: Stopping All CPUs...\n");
     OBTAIN_INTLOCK(NULL);
     started_mask = sysblk.started_mask;
     while (sysblk.started_mask)
@@ -106,6 +128,7 @@ BYTE     psw[16];
     RELEASE_INTLOCK(NULL);
 
     /* Wait for I/O queue to clear out */
+    TRACE("SR: Waiting for I/O Queue to clear...\n");
 #ifdef OPTION_FISHIO
     SLEEP (2);
 #else
@@ -120,12 +143,16 @@ BYTE     psw[16];
 #endif
 
     /* Wait for active I/Os to complete */
+    TRACE("SR: Waiting for Active I/Os to Complete...\n");
     for (i = 1; i < 5000; i++)
     {
         dev = sr_active_devices();
         if (dev == NULL) break;
         if (i % 500 == 0)
+        {
+            // "SR: waiting for device %04X"
             WRMSG(HHC02002, "W", dev->devnum);
+        }
         usleep (10000);
     }
     if (dev != NULL)
@@ -135,19 +162,24 @@ BYTE     psw[16];
     }
 
     /* Write header */
+    TRACE("SR: Writing File Header...\n");
     SR_WRITE_STRING(file, SR_HDR_ID, SR_ID);
     SR_WRITE_STRING(file, SR_HDR_VERSION, VERSION);
     gettimeofday(&tv, NULL); tt = tv.tv_sec;
     SR_WRITE_STRING(file, SR_HDR_DATE, ctime(&tt));
 
     /* Write system data */
+    TRACE("SR: Saving System Data...\n");
     SR_WRITE_STRING(file,SR_SYS_ARCH_NAME,arch_name[sysblk.arch_mode]);
     SR_WRITE_VALUE (file,SR_SYS_STARTED_MASK,started_mask,sizeof(started_mask));
     SR_WRITE_VALUE (file,SR_SYS_MAINSIZE,sysblk.mainsize,sizeof(sysblk.mainsize));
+    TRACE("SR: Saving MAINSTOR...\n");
     SR_WRITE_BUF   (file,SR_SYS_MAINSTOR,sysblk.mainstor,sysblk.mainsize);
     SR_WRITE_VALUE (file,SR_SYS_SKEYSIZE,sysblk.mainsize/STORAGE_KEY_UNITSIZE,sizeof(int));
+    TRACE("SR: Saving Storage Keys...\n");
     SR_WRITE_BUF   (file,SR_SYS_STORKEYS,sysblk.storkeys,sysblk.mainsize/STORAGE_KEY_UNITSIZE);
     SR_WRITE_VALUE (file,SR_SYS_XPNDSIZE,sysblk.xpndsize,sizeof(sysblk.xpndsize));
+    TRACE("SR: Saving Expanded Storage...\n");
     SR_WRITE_BUF   (file,SR_SYS_XPNDSTOR,sysblk.xpndstor,4096*sysblk.xpndsize);
     SR_WRITE_VALUE (file,SR_SYS_CPUID,sysblk.cpuid,sizeof(sysblk.cpuid));
     SR_WRITE_VALUE (file,SR_SYS_IPLDEV,sysblk.ipldev,sizeof(sysblk.ipldev));
@@ -190,11 +222,13 @@ BYTE     psw[16];
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
 
     /* Save service console state */
+    TRACE("SR: Saving Service Console State...\n");
     SR_WRITE_HDR(file, SR_SYS_SERVC, 0);
     servc_hsuspend(file);
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
 
     /* Save clock state */
+    TRACE("SR: Saving Clock State...\n");
     SR_WRITE_HDR(file, SR_SYS_CLOCK, 0);
     clock_hsuspend(file);
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
@@ -203,6 +237,9 @@ BYTE     psw[16];
     for (i = 0; i < sysblk.maxcpu; i++)
     {
         if (!IS_CPU_ONLINE(i)) continue;
+
+        TRACE("SR: Saving CPU %d Data...\n", i);
+
         regs = sysblk.regs[i];
         SR_WRITE_VALUE(file, SR_CPU, i, sizeof(i));
         SR_WRITE_VALUE(file, SR_CPU_ARCHMODE, regs->arch_mode,sizeof(regs->arch_mode));
@@ -252,6 +289,8 @@ BYTE     psw[16];
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
         if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+
+        TRACE("SR: Saving Device %4.4X...\n", dev->devnum);
 
         /* These fields must come first so the device could be attached */
         SR_WRITE_VALUE(file, SR_DEV, dev->devnum, sizeof(dev->devnum));
@@ -307,8 +346,12 @@ BYTE     psw[16];
         SR_WRITE_HDR(file, SR_DELIMITER, 0);
     }
 
+    TRACE("SR: Writing EOF\n");
+
     SR_WRITE_HDR(file, SR_EOF, 0);
     SR_CLOSE (file);
+
+    TRACE("SR: Suspend Complete; shutting down...\n");
 
     /* Shutdown */
     do_shutdown();
@@ -365,13 +408,17 @@ S64      dreg;
 
     memset (zeros, 0, sizeof(zeros));
 
+    TRACE("SR: Begin Resume Processing...\n");
+
     /* Make sure all CPUs are deconfigured or stopped */
+    TRACE("SR: Waiting for CPUs to stop...\n");
     OBTAIN_INTLOCK(NULL);
     for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
             RELEASE_INTLOCK(NULL);
+            // "SR: all processors must be stopped to resume"
             WRMSG(HHC02005, "E");
             return -1;
         }
@@ -386,6 +433,7 @@ S64      dreg;
     }
 
     /* First key must be SR_HDR_ID and string must match SR_ID */
+    TRACE("SR: Reading File Header...\n");
     SR_READ_HDR(file, key, len);
     if (key == SR_HDR_ID) SR_READ_STRING(file, buf, len);
     if (key != SR_HDR_ID || strcmp(buf, SR_ID))
@@ -396,11 +444,14 @@ S64      dreg;
     }
 
     /* Deconfigure all CPUs */
+    TRACE("SR: Deconfiguring all CPUs...\n");
     OBTAIN_INTLOCK(NULL);
     for (i = 0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i))
             deconfigure_cpu(i);
     RELEASE_INTLOCK(NULL);
+
+    TRACE("SR: Processing Resume File...\n");
 
     while (key != SR_EOF)
     {
@@ -471,12 +522,14 @@ S64      dreg;
                 MSGBUF(buf1, "%dM", len / (1024*1024));
                 MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
             break;
 
         case SR_SYS_MAINSTOR:
+            TRACE("SR: Restoring MAINSTOR...\n");
             if (len > sysblk.mainsize)
             {
                 char buf1[20];
@@ -511,9 +564,11 @@ S64      dreg;
                 MSGBUF(buf1, "%d", len);
                 MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
             }
+            TRACE("SR: Restoring Storage Keys...\n");
             SR_READ_BUF(file, sysblk.storkeys, len);
             break;
 
@@ -542,6 +597,7 @@ S64      dreg;
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);
                 goto sr_error_exit;
             }
+            TRACE("SR: Restoring Expanded Storage...\n");
             SR_READ_BUF(file, sysblk.xpndstor, len);
             break;
 
@@ -637,6 +693,7 @@ S64      dreg;
 
         case SR_SYS_CRWARRAY:
             ASSERT( sysblk.crwarray && sysblk.crwcount );
+            TRACE("SR: Restoring CRW Array...\n");
             SR_READ_BUF( file, sysblk.crwarray, sizeof(U32) * sysblk.crwcount );
             break;
 
@@ -673,17 +730,20 @@ S64      dreg;
             break;
 
         case SR_SYS_SERVC:
+            TRACE("SR: Restoring Service Console State...\n");
             rc = servc_hresume(file);
             if (rc < 0) goto sr_error_exit;
             break;
 
         case SR_SYS_CLOCK:
+            TRACE("SR: Restoring Clock State...\n");
             rc = clock_hresume(file);
             if (rc < 0) goto sr_error_exit;
             break;
 
         case SR_CPU:
             SR_READ_VALUE(file, len, &i, sizeof(i));
+            TRACE("SR: Restoring CPU %d Data...\n", i);
             if (i >= sysblk.maxcpu)
             {
                 // "SR: processor CP%02X exceeds max allowed CP%02X"
@@ -1039,6 +1099,7 @@ S64      dreg;
 
         case SR_DEV:
             SR_READ_VALUE(file, len, &devnum, sizeof(devnum));
+            TRACE("SR: Restoring Device %4.4X...\n", devnum);
             lcss=0;
             break;
 
@@ -1337,6 +1398,9 @@ S64      dreg;
 
     } /* while (key != SR_EOF) */
 
+    TRACE("SR: Resume File Processing Complete...\n");
+    TRACE("SR: Resuming Devices...\n");
+
     /* For all suspended devices, resume the `suspended' state */
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
@@ -1379,6 +1443,7 @@ S64      dreg;
     machine_check_crwpend();
 
     /* Start the CPUs */
+    TRACE("SR: Resuming CPUs...\n");
     OBTAIN_INTLOCK(NULL);
     ON_IC_IOPENDING;
     for (i = 0; i < sysblk.maxcpu; i++)
@@ -1391,6 +1456,7 @@ S64      dreg;
         }
     RELEASE_INTLOCK(NULL);
 
+    TRACE("SR: Resume Complete; System Resumed.\n");
     return 0;
 
 sr_read_error:
@@ -1417,3 +1483,8 @@ sr_error_exit:
     SR_CLOSE (file);
     return -1;
 }
+
+#if defined( _MSVC_ ) && defined( NO_SR_OPTIMIZE )
+  #pragma warning( pop )                // restore previous settings
+  #pragma optimize( "", on )            // restore previous settings
+#endif
