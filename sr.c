@@ -400,6 +400,14 @@ S64      dreg;
 
         case SR_HDR_DATE:
             SR_READ_STRING(file, buf, len);
+            if (len >= 2)
+            {
+                len -= 2;
+                while (len > 0 && isspace(buf[len]))
+                    --len;
+                buf[len+1]=0;
+            }
+            // "SR: resuming suspended file created on '%s'"
             WRMSG(HHC02007, "I", buf);
             break;
 

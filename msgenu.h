@@ -1244,7 +1244,7 @@ do { \
 #define HHC02004 "SR: error processing file '%s'"
 #define HHC02005 "SR: all processors must be stopped to resume"
 #define HHC02006 "SR: file identifier error"
-#define HHC02007 "SR: resuming suspended file '%s' created"
+#define HHC02007 "SR: resuming suspended file created on '%s'"
 #define HHC02008 "SR: archmode '%s' not supported"
 #define HHC02009 "SR: mismatch in '%s': '%s' found, '%s' expected"
 #define HHC02010 "SR: processor CP%02X exceeds max allowed CP%02X"
