@@ -2674,6 +2674,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\res40002.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\rnsbg.txt"
 						>
 					</File>
@@ -2699,6 +2703,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\stsi.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\sus40002.txt"
 						>
 					</File>
 					<File
