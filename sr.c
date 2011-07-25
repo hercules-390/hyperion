@@ -374,6 +374,8 @@ sr_error_exit:
     return -1;
 }
 
+#define SR_NULL_REGS_CHECK(_regs)  if ((_regs) == NULL) goto sr_null_regs_exit;
+
 int resume_cmd(int argc, char *argv[],char *cmdline)
 {
 char    *fn = SR_DEFAULT_FILENAME;
@@ -770,12 +772,12 @@ S64      dreg;
             break;
 
         case SR_CPU_PX:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->px, sizeof(regs->px));
             break;
 
         case SR_CPU_PSW:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             if (len != 8 && len != 16)
             {
                 // "SR: processor %s%02X invalid psw length %d"
@@ -828,7 +830,7 @@ S64      dreg;
         case SR_CPU_GR_13:
         case SR_CPU_GR_14:
         case SR_CPU_GR_15:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_GR;
             SR_READ_VALUE(file, len, &regs->gr[i], sizeof(regs->gr[0]));
             break;
@@ -849,7 +851,7 @@ S64      dreg;
         case SR_CPU_CR_13:
         case SR_CPU_CR_14:
         case SR_CPU_CR_15:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_CR;
             SR_READ_VALUE(file, len, &regs->CR(i), sizeof(regs->CR(0)));
             break;
@@ -870,7 +872,7 @@ S64      dreg;
         case SR_CPU_AR_13:
         case SR_CPU_AR_14:
         case SR_CPU_AR_15:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_AR;
             SR_READ_VALUE(file, len, &regs->ar[i], sizeof(regs->ar[0]));
             break;
@@ -907,117 +909,117 @@ S64      dreg;
         case SR_CPU_FPR_29:
         case SR_CPU_FPR_30:
         case SR_CPU_FPR_31:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_FPR;
             SR_READ_VALUE(file, len, &regs->fpr[i], sizeof(regs->fpr[0]));
             break;
 
         case SR_CPU_FPC:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->fpc, sizeof(regs->fpc));
             break;
 
         case SR_CPU_DXC:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->dxc, sizeof(regs->dxc));
             break;
 
         case SR_CPU_MC:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->mc, sizeof(regs->mc));
             break;
 
         case SR_CPU_EA:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->ea, sizeof(regs->ea));
             break;
 
         case SR_CPU_PTIMER:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &dreg, sizeof(S64));
             set_cpu_timer(regs, dreg);
             break;
 
         case SR_CPU_CLKC:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->clkc, sizeof(regs->clkc));
             break;
 
         case SR_CPU_CHANSET:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->chanset, sizeof(regs->chanset));
             break;
 
         case SR_CPU_TODPR:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->todpr, sizeof(regs->todpr));
             break;
 
         case SR_CPU_MONCLASS:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->monclass, sizeof(regs->monclass));
             break;
 
         case SR_CPU_EXCARID:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->excarid, sizeof(regs->excarid));
             break;
 
         case SR_CPU_BEAR:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->bear, sizeof(regs->bear));
             break;
 
         case SR_CPU_OPNDRID:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->opndrid, sizeof(regs->opndrid));
             break;
 
         case SR_CPU_CHECKSTOP:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->checkstop = rc;
             break;
 
         case SR_CPU_HOSTINT:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->hostint = rc;
             break;
 
         case SR_CPU_LOADSTATE:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->loadstate = rc;
             break;
 
         case SR_CPU_INVALIDATE:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->invalidate = rc;
             break;
 
         case SR_CPU_SIGPRESET:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->sigpreset = rc;
             break;
 
         case SR_CPU_SIGPIRESET:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->sigpireset = rc;
             break;
 
         case SR_CPU_INTS_STATE:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->ints_state, sizeof(regs->ints_state));
             /* Force CPU to examine the interrupt state */
             ON_IC_INTERRUPT(regs);
             break;
 
         case SR_CPU_INTS_MASK:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &regs->ints_mask, sizeof(regs->ints_mask));
             break;
 
@@ -1053,7 +1055,7 @@ S64      dreg;
         case SR_CPU_MALFCPU_29:
         case SR_CPU_MALFCPU_30:
         case SR_CPU_MALFCPU_31:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_MALFCPU;
             if (i < sysblk.maxcpu)
                 SR_READ_VALUE(file, len, &regs->malfcpu[i], sizeof(regs->malfcpu[0]));
@@ -1091,7 +1093,7 @@ S64      dreg;
         case SR_CPU_EMERCPU_29:
         case SR_CPU_EMERCPU_30:
         case SR_CPU_EMERCPU_31:
-            if (regs == NULL) goto sr_null_regs_exit;
+            SR_NULL_REGS_CHECK(regs);
             i = key - SR_CPU_EMERCPU;
             if (i < sysblk.maxcpu)
                 SR_READ_VALUE(file, len, &regs->emercpu[i], sizeof(regs->emercpu[0]));
