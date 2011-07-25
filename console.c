@@ -280,7 +280,7 @@ BYTE print_chars[17];
 
     for (offset=0; offset < len; )
     {
-        memset(print_chars,sizeof(print_chars));
+        memset(print_chars, 0, sizeof(print_chars));
         LOGMSG("+%4.4X  ", offset);
         for (i=0; i < 16; i++)
         {
