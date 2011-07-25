@@ -136,8 +136,9 @@
 
 #include "opcode.h"
 
-#define SR_ID "Hercules suspend/resume file"
-#define SR_MAX_STRING_LENGTH 4096
+#define SR_ID                   "Hercules suspend/resume file"
+#define SR_MAX_STRING_LENGTH    4096
+#define SR_SKIP_CHUNKSIZE       256
 
 #define SR_KEY_ID_MASK          0xfff00000
 #define SR_KEY_ID               0xace00000
@@ -555,12 +556,12 @@ do { \
 do { \
   size_t _rc; \
   size_t _l; \
-  BYTE _buf[256]; \
+  BYTE _buf[SR_SKIP_CHUNKSIZE]; \
   _l = (_len); \
   while (_l) { \
-    _rc = SR_READ(_buf, 1, _l < 256 ? _l : 256, (_file)); \
+    _rc = SR_READ(_buf, 1, _l < SR_SKIP_CHUNKSIZE ? _l : SR_SKIP_CHUNKSIZE, (_file)); \
     if (_rc == (size_t)-1) SR_READ_ERROR; \
-    _l -= _l < 256 ? _l : 256; \
+    _l -= _l < SR_SKIP_CHUNKSIZE ? _l : SR_SKIP_CHUNKSIZE; \
   } \
 } while (0)
 
