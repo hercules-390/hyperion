@@ -474,22 +474,22 @@
  fclose((_stream))
 #endif
 
-inline int sr_write_hdr    (FILE* file, U32  key,               U32  len);
-inline int sr_write_value  (FILE* file, U32  key,    U64   val, U32  len);
-inline int sr_write_buf    (FILE* file, U32  key,    void *buf, U64  len);
-inline int sr_write_string (FILE* file, U32  key,    void *str          );
+INLINE int sr_write_hdr    (FILE* file, U32  key,               U32  len);
+INLINE int sr_write_value  (FILE* file, U32  key,    U64   val, U32  len);
+INLINE int sr_write_buf    (FILE* file, U32  key,    void *buf, U64  len);
+INLINE int sr_write_string (FILE* file, U32  key,    void *str          );
 
-inline int sr_read_hdr     (FILE* file,              U32  *key, U32 *len);
-inline int sr_read_value   (FILE* file, U32 origlen, void *p,   U32  len);
-inline int sr_read_buf     (FILE* file,              void *p,   U64  len);
-inline int sr_read_string  (FILE* file,              void *p,   U32  len);
-inline int sr_read_skip    (FILE* file,                         U32  len);
+INLINE int sr_read_hdr     (FILE* file,              U32  *key, U32 *len);
+INLINE int sr_read_value   (FILE* file, U32 origlen, void *p,   U32  len);
+INLINE int sr_read_buf     (FILE* file,              void *p,   U64  len);
+INLINE int sr_read_string  (FILE* file,              void *p,   U32  len);
+INLINE int sr_read_skip    (FILE* file,                         U32  len);
 
-inline void sr_write_error_();
-inline void sr_read_error_();
-inline void sr_seek_error_();
-inline void sr_value_error_();
-inline void sr_string_error_();
+INLINE void sr_write_error_();
+INLINE void sr_read_error_();
+INLINE void sr_seek_error_();
+INLINE void sr_value_error_();
+INLINE void sr_string_error_();
 
 #define SR_WRITE_HDR(        _file,        _key,        _len) \
 do {if (sr_write_hdr((FILE*)(_file), (U32)(_key), (U32)(_len)) != 0) return -1; } while (0)
@@ -533,7 +533,7 @@ do {if (sr_read_value((FILE*)(_file), (U32)(_suslen), (void*)(_p), (U32)(_reslen
 /*********************************************************************/
 /*         sr_write_hdr                                              */
 /*********************************************************************/
-inline int sr_write_hdr (FILE* file, U32 key, U32 len)
+INLINE int sr_write_hdr (FILE* file, U32 key, U32 len)
 {
 BYTE  buf[8];
 
@@ -553,7 +553,7 @@ BYTE  buf[8];
 /*********************************************************************/
 /*         sr_write_string                                           */
 /*********************************************************************/
-inline int sr_write_string (FILE* file, U32 key, void* str)
+INLINE int sr_write_string (FILE* file, U32 key, void* str)
 {
 size_t len = strlen(str) + 1;
 
@@ -579,7 +579,7 @@ size_t len = strlen(str) + 1;
 /*********************************************************************/
 /*         sr_write_buf                                              */
 /*********************************************************************/
-inline int sr_write_buf (FILE* file, U32 key, void* p, U64 len)
+INLINE int sr_write_buf (FILE* file, U32 key, void* p, U64 len)
 {
 U32    siz;
 U64    tot  = len;
@@ -609,7 +609,7 @@ BYTE*  buf  = p;
 /*********************************************************************/
 /*         sr_write_value                                            */
 /*********************************************************************/
-inline int sr_write_value (FILE* file, U32 key, U64 val, U32 len)
+INLINE int sr_write_value (FILE* file, U32 key, U64 val, U32 len)
 {
 BYTE    buf[8];
 
@@ -643,7 +643,7 @@ BYTE    buf[8];
 /*********************************************************************/
 /*         sr_read_hdr                                               */
 /*********************************************************************/
-inline int sr_read_hdr (FILE* file, U32* key, U32* len)
+INLINE int sr_read_hdr (FILE* file, U32* key, U32* len)
 {
 BYTE  buf[8];
 
@@ -664,7 +664,7 @@ BYTE  buf[8];
 /*********************************************************************/
 /*         sr_read_skip                                              */
 /*********************************************************************/
-inline int sr_read_skip (FILE* file, U32 len)
+INLINE int sr_read_skip (FILE* file, U32 len)
 {
 /* FIXME: Workaround for problem involving gzseek
           and large files.  Just read the data. */
@@ -694,7 +694,7 @@ size_t  tot;
 /*********************************************************************/
 /*         sr_read_string                                            */
 /*********************************************************************/
-inline int sr_read_string (FILE* file, void* p, U32 len)
+INLINE int sr_read_string (FILE* file, void* p, U32 len)
 {
     TRACE("SR: sr_read_string:                len=0x%8.8x\n", len);
 
@@ -714,7 +714,7 @@ inline int sr_read_string (FILE* file, void* p, U32 len)
 /*********************************************************************/
 /*         sr_read_buf                                               */
 /*********************************************************************/
-inline int sr_read_buf (FILE* file, void* p, U64 len)
+INLINE int sr_read_buf (FILE* file, void* p, U64 len)
 {
 U32    siz;
 U64    tot  = len;
@@ -741,7 +741,7 @@ BYTE*  buf  = p;
 /*********************************************************************/
 /*         sr_read_value                                             */
 /*********************************************************************/
-inline int sr_read_value (FILE* file, U32 suslen, void* p, U32 reslen)
+INLINE int sr_read_value (FILE* file, U32 suslen, void* p, U32 reslen)
 {
 BYTE    buf[8];
 U64     value;
@@ -805,31 +805,31 @@ U64     value;
 /*          sr_xxxxx_error_                                          */
 /*********************************************************************/
 
-inline void sr_write_error_()
+INLINE void sr_write_error_()
 {
     // "SR: error in function '%s': '%s'"
     WRMSG(HHC02001, "E", "write()", strerror(errno));
 }
 
-inline void sr_read_error_()
+INLINE void sr_read_error_()
 {
     // "SR: error in function '%s': '%s'"
     WRMSG(HHC02001, "E", "read()", strerror(errno));
 }
 
-inline void sr_seek_error_()
+INLINE void sr_seek_error_()
 {
     // "SR: error in function '%s': '%s'"
     WRMSG(HHC02001, "E", "lseek()", strerror(errno));
 }
 
-inline void sr_value_error_()
+INLINE void sr_value_error_()
 {
     // "SR: value error, incorrect length"
     WRMSG(HHC02020, "E");
 }
 
-inline void sr_string_error_()
+INLINE void sr_string_error_()
 {
     // "SR: string error, incorrect length"
     WRMSG(HHC02021, "E");
