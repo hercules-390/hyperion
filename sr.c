@@ -18,7 +18,7 @@
 #include "w32chan.h"
 #endif
 
-#define SR_DEBUG    // #define to enable TRACE stmts
+//#define SR_DEBUG    // #define to enable TRACE stmts
 
 #if defined(DEBUG) && !defined(SR_DEBUG)
  #define SR_DEBUG

@@ -1,3 +1,4 @@
+25 Jul 2011 Fix suspend/resume MAINSTOR/XPNDSTOR bugs - Fish
 16 Jul 2011 Fix SCSI tape S613 abend issue - Fish
 13 Jul 2011 Externalized TN3270 logo cnsllogo.h - PGorlinsky
 10 Jul 2011 Relax AUTOMOUNT CCW restrictions - Fish
