@@ -524,7 +524,6 @@ S64      dreg;
                 MSGBUF(buf1, "%dM", (U32)(len / (1024*1024)));
                 MSGBUF(buf2, "%dM", (U32)(sysblk.mainsize / (1024*1024)));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
-                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -532,15 +531,6 @@ S64      dreg;
 
         case SR_SYS_MAINSTOR:
             TRACE("SR: Restoring MAINSTOR...\n");
-            if (len > sysblk.mainsize)
-            {
-                char buf1[20];
-                char buf2[20];
-                MSGBUF(buf1, "%dM", len / (1024*1024));
-                MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
-                WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
-                goto sr_error_exit;
-            }
             SR_READ_BUF(file, sysblk.mainstor, len);
             break;
 
@@ -589,16 +579,6 @@ S64      dreg;
             break;
 
         case SR_SYS_XPNDSTOR:
-            if (len > 4096*sysblk.xpndsize)
-            {
-                char buf1[20];
-                char buf2[20];
-                MSGBUF(buf1, "%dM", len / (256));
-                MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
-                // "SR: mismatch in '%s': '%s' found, '%s' expected"
-                WRMSG(HHC02009, "E", "expand size", buf1, buf2);
-                goto sr_error_exit;
-            }
             TRACE("SR: Restoring Expanded Storage...\n");
             SR_READ_BUF(file, sysblk.xpndstor, len);
             break;
