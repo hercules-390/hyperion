@@ -568,7 +568,7 @@ size_t len = strlen(str) + 1;
     if (sr_write_hdr(file, key, len) != 0)
         return -1;
 
-    if (SR_WRITE(str, 1, len, file) != len)
+    if ((size_t)SR_WRITE(str, 1, len, file) != len)
     {
         sr_write_error_();
         return -1;
@@ -594,7 +594,7 @@ BYTE*  buf  = p;
     {
         siz = tot < SR_BUF_CHUNKSIZE ? tot : SR_BUF_CHUNKSIZE;
 
-        if (SR_WRITE(buf, 1, siz, file) != siz)
+        if ((U32)SR_WRITE(buf, 1, siz, file) != siz)
         {
             sr_write_error_();
             return -1;
@@ -632,7 +632,7 @@ BYTE    buf[8];
         case 8: store_dw (buf, (U64)val); break;
     }
 
-    if (SR_WRITE(buf, 1, len, file) != len)
+    if ((U32)SR_WRITE(buf, 1, len, file) != len)
     {
         sr_write_error_();
         return -1;
@@ -681,7 +681,7 @@ size_t  tot;
     {
         siz = tot < SR_SKIP_CHUNKSIZE ? tot : SR_SKIP_CHUNKSIZE;
 
-        if (SR_READ(buf, 1, siz, file) != siz)
+        if ((size_t)SR_READ(buf, 1, siz, file) != siz)
         {
             sr_read_error_();
             return -1;
@@ -703,7 +703,7 @@ inline int sr_read_string (FILE* file, void* p, U32 len)
         sr_string_error_();
         return -1;
     }
-    if (SR_READ(p, 1, len, file) != len)
+    if ((U32)SR_READ(p, 1, len, file) != len)
     {
         sr_read_error_();
         return -1;
@@ -726,7 +726,7 @@ BYTE*  buf  = p;
     {
         siz = tot < SR_BUF_CHUNKSIZE ? tot : SR_BUF_CHUNKSIZE;
 
-        if (SR_READ(buf, 1, siz, file) != siz)
+        if ((U32)SR_READ(buf, 1, siz, file) != siz)
         {
             sr_read_error_();
             return -1;
@@ -754,7 +754,7 @@ U64     value;
         return -1;
     }
 
-    if (SR_READ(buf, 1, suslen, file) != suslen)
+    if ((U32)SR_READ(buf, 1, suslen, file) != suslen)
     {
         sr_read_error_();
         return -1;
