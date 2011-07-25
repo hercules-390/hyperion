@@ -541,17 +541,6 @@ S64      dreg;
             break;
 
         case SR_SYS_STORKEYS:
-            if (len > (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE))
-            {
-                char buf1[20];
-                char buf2[20];
-                MSGBUF(buf1, "%d", len);
-                MSGBUF(buf2, "%d", (U32)(sysblk.mainsize/STORAGE_KEY_UNITSIZE));
-                // "SR: mismatch in '%s': '%s' found, '%s' expected"
-                // "SR: mismatch in '%s': '%s' found, '%s' expected"
-                WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
-                goto sr_error_exit;
-            }
             TRACE("SR: Restoring Storage Keys...\n");
             SR_READ_BUF(file, sysblk.storkeys, len);
             break;
