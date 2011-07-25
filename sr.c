@@ -69,6 +69,7 @@ BYTE     psw[16];
 
     if (argc > 2)
     {
+        // "SR: too many arguments"
         WRMSG(HHC02000, "E");
         return -1;
     }
@@ -79,6 +80,7 @@ BYTE     psw[16];
     file = SR_OPEN (fn, "wb");
     if (file == NULL)
     {
+        // "SR: error in function '%s': '%s'"
         WRMSG(HHC02001, "E","open()",strerror(errno));
         return -1;
     }
@@ -127,7 +129,10 @@ BYTE     psw[16];
         usleep (10000);
     }
     if (dev != NULL)
+    {
+        // "SR: device %04X still busy, proceeding anyway"
         WRMSG(HHC02003, "W",dev->devnum);
+    }
 
     /* Write header */
     SR_WRITE_STRING(file, SR_HDR_ID, SR_ID);
@@ -320,6 +325,7 @@ sr_string_error:
     WRMSG(HHC02021, "E");
     goto sr_error_exit;
 sr_error_exit:
+    // "SR: error processing file '%s'"
     WRMSG(HHC02004, "E", fn);
     SR_CLOSE (file);
     return -1;
@@ -349,6 +355,7 @@ S64      dreg;
 
     if (argc > 2)
     {
+        // "SR: too many arguments"
         WRMSG(HHC02000, "E");
         return -1;
     }
@@ -373,6 +380,7 @@ S64      dreg;
     file = SR_OPEN (fn, "rb");
     if (file == NULL)
     {
+        // "SR: error in function '%s': '%s'"
         WRMSG(HHC02001, "E", "open()",strerror(errno));
         return -1;
     }
@@ -382,6 +390,7 @@ S64      dreg;
     if (key == SR_HDR_ID) SR_READ_STRING(file, buf, len);
     if (key != SR_HDR_ID || strcmp(buf, SR_ID))
     {
+        // "SR: file identifier error"
         WRMSG(HHC02006, "E");
         goto sr_error_exit;
     }
@@ -441,6 +450,7 @@ S64      dreg;
 #endif
             if (i < 0)
             {
+                // "SR: archmode '%s' not supported"
                 WRMSG(HHC02008, "E", buf);
                 goto sr_error_exit;
             }
@@ -460,6 +470,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%dM", len / (1024*1024));
                 MSGBUF(buf2, "%dM", (int)sysblk.mainsize / (1024*1024));
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "mainsize", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -486,6 +497,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
                 MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -498,6 +510,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%d", len);
                 MSGBUF(buf2, "%d", (int)sysblk.mainsize/STORAGE_KEY_UNITSIZE);
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "storkey size", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -512,6 +525,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%dM", len / (256));
                 MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -524,6 +538,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%dM", len / (256));
                 MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
+                // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);
                 goto sr_error_exit;
             }
@@ -671,6 +686,7 @@ S64      dreg;
             SR_READ_VALUE(file, len, &i, sizeof(i));
             if (i >= sysblk.maxcpu)
             {
+                // "SR: processor CP%02X exceeds max allowed CP%02X"
                 WRMSG(HHC02010, "E", i, sysblk.maxcpu-1);
                 goto sr_error_exit;
             }
@@ -678,6 +694,7 @@ S64      dreg;
             if (IS_CPU_ONLINE(i))
             {
                 RELEASE_INTLOCK(NULL);
+                // "SR: processor %s%02X already configured"
                 WRMSG(HHC02011, "E", PTYPSTR(i), i);
                 goto sr_error_exit;
             }
@@ -685,6 +702,7 @@ S64      dreg;
             RELEASE_INTLOCK(NULL);
             if (rc < 0)
             {
+                // "SR: processor %s%02X unable to configure online"
                 WRMSG(HHC02012, "E", PTYPSTR(i), i);
                 goto sr_error_exit;
             }
@@ -700,6 +718,7 @@ S64      dreg;
             if (regs == NULL) goto sr_null_regs_exit;
             if (len != 8 && len != 16)
             {
+                // "SR: processor %s%02X invalid psw length %d"
                 WRMSG(HHC02013, "E", PTYPSTR(regs->cpuad), regs->cpuad, len);
                 goto sr_error_exit;
             }
@@ -727,6 +746,7 @@ S64      dreg;
             } /* switch (regs->arch_mode) */
             if (rc != 0 && memcmp(buf, zeros, len))
             {
+                // "SR: processor %s%02X error loading psw, rc %d"
                 WRMSG(HHC02014, "E", PTYPSTR(regs->cpuad), regs->cpuad, rc);
                 goto sr_error_exit;
             }
@@ -1045,11 +1065,13 @@ S64      dreg;
             {
                 if (attach_device (lcss, devnum, buf, devargc, devargv))
                 {
+                    // "SR: %04X: device initialization failed"
                     WRMSG(HHC02015, "E", devnum);
                 }
             }
             else if (strcmp(dev->typname, buf))
             {
+                // "SR: %04X: device type mismatch; '%s' found, '%s' expected"
                 WRMSG(HHC02016, "W", devnum, buf, dev->typname);
                 dev = NULL;
             }
@@ -1065,6 +1087,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ORB))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "ORB", len, (int)sizeof(ORB));
                 goto sr_error_exit;
             }
@@ -1075,6 +1098,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(PMCW))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "PMCW", len, (int)sizeof(PMCW));
                 goto sr_error_exit;
             }
@@ -1085,6 +1109,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
@@ -1095,6 +1120,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "PCI SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
@@ -1105,6 +1131,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(SCSW))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "ATTN SCSW", len, (int)sizeof(SCSW));
                 goto sr_error_exit;
             }
@@ -1115,6 +1142,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "CSW", len, 8);
                 goto sr_error_exit;
             }
@@ -1125,6 +1153,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "PCI CSW", len, 8);
                 goto sr_error_exit;
             }
@@ -1135,6 +1164,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 8)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "ATTN CSW", len, 8);
                 goto sr_error_exit;
             }
@@ -1145,6 +1175,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != sizeof(ESW))
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "ESW", len, (int)sizeof(ESW));
                 goto sr_error_exit;
             }
@@ -1155,6 +1186,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "ECW", len, 32);
                 goto sr_error_exit;
             }
@@ -1165,6 +1197,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 32)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "Sense", len, 32);
                 goto sr_error_exit;
             }
@@ -1180,6 +1213,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 11)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "PGID", len, 11);
                 goto sr_error_exit;
             }
@@ -1191,6 +1225,7 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             if (len != 11)
             {
+                // "SR: %04X: '%s' size mismatch: %d found, %d expected"
                 WRMSG(HHC02017, "E", dev->devnum, "DRVPWD", len, 11);
                 goto sr_error_exit;
             }
@@ -1277,6 +1312,7 @@ S64      dreg;
                 char buf2[20];
                 MSGBUF(buf1, "%04X", hw);
                 MSGBUF(buf2, "%04X", dev->devtype);
+                // "SR: %04X: device type mismatch; '%s' found, '%s' expected"
                 WRMSG(HHC02016, "E", dev->devnum, buf1, buf2);
                 goto sr_error_exit;
             }
@@ -1290,6 +1326,7 @@ S64      dreg;
         default:
             if ((key & SR_KEY_ID_MASK) != SR_KEY_ID)
             {
+                // "SR: invalid key %8.8X"
                 WRMSG(HHC02018, "E", key);
                 goto sr_error_exit;
             }
@@ -1328,6 +1365,7 @@ S64      dreg;
             } /* switch (sysblk.arch_mode) */
             if (rc != 0)
             {
+                // "Error in function create_thread(): %s"
                 WRMSG(HHC00102, "E", strerror(rc));
                 goto sr_error_exit;
             }
@@ -1370,9 +1408,11 @@ sr_value_error:
     WRMSG(HHC02020, "E");
     goto sr_error_exit;
 sr_null_regs_exit:
+    // "SR: CPU key %8.8X found but no active CPU"
     WRMSG(HHC02019, "E", key);
     goto sr_error_exit;
 sr_error_exit:
+    // "SR: error processing file '%s'"
     WRMSG(HHC02004, "E", fn);
     SR_CLOSE (file);
     return -1;
