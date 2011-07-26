@@ -565,7 +565,7 @@ size_t len = strlen(str) + 1;
         return -1;
     }
 
-    if (sr_write_hdr(file, key, len) != 0)
+    if (sr_write_hdr(file, key, (U32)len) != 0)
         return -1;
 
     if ((size_t)SR_WRITE(str, 1, len, file) != len)
