@@ -569,7 +569,7 @@ static int cache_resize (int ix, int n)
         }
         cacheblk[ix].cache = cache;
         for (i = cacheblk[ix].nbr; i < cacheblk[ix].nbr +n; i++)
-            memset(&cacheblk[ix].cache[i], sizeof(CACHE));
+            memset(&cacheblk[ix].cache[i], 0, sizeof(CACHE));
         cacheblk[ix].nbr += n;
         cacheblk[ix].empty += n;
         cacheblk[ix].adjusts++;
