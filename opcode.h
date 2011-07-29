@@ -3284,6 +3284,10 @@ DEF_INST(test_pending_zone_interrupt);
 #if defined(FEATURE_QUEUED_DIRECT_IO)
 DEF_INST(signal_adapter);
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
+#if defined(FEATURE_QEBSM)
+DEF_INST(set_queue_buffer_state);
+DEF_INST(extract_queue_buffer_state);
+#endif /*defined(FEATURE_QEBSM)*/
 
 
 /* Instructions in float.c */

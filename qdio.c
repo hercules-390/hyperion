@@ -23,6 +23,8 @@
 
 #include "opcode.h"
 
+#include "qeth.h"
+
 #include "inline.h"
 
 #undef PTIO
@@ -121,6 +123,82 @@ DEVBLK *dev;                            /* -> device block           */
     release_lock (&dev->lock);
 
 }
+#if defined(FEATURE_QEBSM)
+/*-------------------------------------------------------------------*/
+/* EB8A SQBS  - Set Queue Buffer State                         [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_queue_buffer_state)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+DEVBLK  *dev;
+
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
+ 
+ARCH_DEP(display_inst) (regs, inst);
+
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+    PTIO(INF,"SQBS");
+
+    dev = find_device_by_subchan(TKN2IOID(regs->GR_G(1)));
+
+    /* Condition code 3 if subchannel does not exist,
+       is not valid, or is not enabled or is not a QDIO subchannel */
+    if (dev == NULL
+        || (dev->pmcw.flag5 & PMCW5_V) == 0
+        || (dev->pmcw.flag5 & PMCW5_E) == 0
+        || (dev->pmcw.flag4 & PMCW4_Q) == 0)
+    {
+        PTIO(ERR,"*SQBS");
+#if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
+        regs->psw.cc = 3; /* Guess */
+        return;
+    }
+
+    /* Check that device is QDIO active */
+    if ((dev->scsw.flag2 & SCSW2_Q) == 0)
+    {
+        PTIO(ERR,"*SQBS");
+        regs->psw.cc = 1;
+        return;
+    }
+
+
+/*  
+    current_pos = dev->grp->o_sliba[dev->grp->i_qpos];
+    ...
+    process queues here based using the active queue variables from grp
+*/
+
+}
+
+/*-------------------------------------------------------------------*/
+/* B99C EQBS  - Extract Queue Buffer State                     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_queue_buffer_state)
+{
+int     r1, r2, r3, m4;                 /* Register numbers          */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+
+ARCH_DEP(display_inst) (regs, inst);
+
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+//  PTIO(IO,"EQBS");
+
+LOGMSG("EQBS\n");
+}
+#endif /*defined(FEATURE_QEBSM)*/
+
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
 
 

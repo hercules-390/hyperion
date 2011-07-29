@@ -861,6 +861,12 @@ DLL_EXPORT LOCK Lock_Compare_Swap;
 #endif /*!defined(FEATURE_QUEUED_DIRECT_IO)*/
 
 
+#if !defined(FEATURE_QEBSM)
+ UNDEF_INST(set_queue_buffer_state)
+ UNDEF_INST(extract_queue_buffer_state)
+#endif /*!defined(FEATURE_QEBSM)*/
+
+
 #if !defined(FEATURE_CHANNEL_SWITCHING)
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
@@ -3702,7 +3708,7 @@ static zz_func opcode_b9xx[0x100][GEN_MAXARCH] = {
  /*B999*/ GENx37Xx390x900 (subtract_logical_borrow_register,RRE,"SLBR"),
  /*B99A*/ GENx___x___x900 (extract_primary_asn_and_instance,RRE_R1,"EPAIR"),
  /*B99B*/ GENx___x___x900 (extract_secondary_asn_and_instance,RRE_R1,"ESAIR"),
- /*B99C*/ GENx___x___x___ , /*(extract_qdio_buffer_state,?,"EQBS"),*/
+ /*B99C*/ GENx___x___x900 (extract_queue_buffer_state,RRF_RM,"EQBS"),
  /*B99D*/ GENx___x___x900 (extract_and_set_extended_authority,RRE_R1,"ESEA"),
  /*B99E*/ GENx___x___x900 (program_transfer_with_instance,RRE,"PTI"),
  /*B99F*/ GENx___x___x900 (set_secondary_asn_with_instance,RRE_R1,"SSAIR"),
@@ -4836,7 +4842,7 @@ static zz_func opcode_ebxx[0x100][GEN_MAXARCH] = {
  /*EB87*/ GENx___x___x___ ,
  /*EB88*/ GENx___x___x___ ,
  /*EB89*/ GENx___x___x___ ,
- /*EB8A*/ GENx___x___x___ , /*(set_qdio_buffer_state,?,"SQBS"),*/
+ /*EB8A*/ GENx___x___x900 (set_queue_buffer_state,RSY,"SQBS"),
  /*EB8B*/ GENx___x___x___ ,
  /*EB8C*/ GENx___x___x___ ,
  /*EB8D*/ GENx___x___x___ ,

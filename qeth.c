@@ -66,9 +66,10 @@
 #endif
 
 #if defined( QETH_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
-  #define PTT_QETH_TIMING_DEBUG     PTT
+  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3) \
+                            PTT( _class, _string, _tr1, _tr2, _tr3)
 #else
-  #define PTT_QETH_TIMING_DEBUG     __noop
+  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3)
 #endif
 
 #if defined( OPTION_DYNAMIC_LOAD )
@@ -709,7 +710,7 @@ static void process_input_queue(DEVBLK *dev)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int iq = grp->i_qpos;
 int mq = grp->i_qcnt;
-int noread = 1;
+int nobuff = 1;
 
     TRACE("Input Qpos(%d) Bpos(%d)\n",grp->i_qpos,grp->i_bpos[grp->i_qpos]);
 
@@ -773,7 +774,7 @@ if(olen > 0)
 { DUMP("INPUT TAP",buf+sizeof(OSA_HDR2),olen); }
 if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
 { TRACE("INPUT DROPPED, INVALID MAC\n"); }
-                                noread = 0;
+                                nobuff = 0;
                             } while (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)));
 
                         }
@@ -855,7 +856,7 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
             if(++iq >= grp->i_qcnt)
                 iq = 0;
 
-    if(noread)
+    if(nobuff)
     {
     char buff[4096];
     int n;
@@ -1195,10 +1196,17 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
     CHSC_RSP24 *chsc_rsp24 = (void *)desc;
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
+    
+    STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
 
     chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
     chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
+//  chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
+
+#if defined(_FEATURE_QEBSM)
+    chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
+#endif /*defined(_FEATURE_QEBSM)*/
 
     return 0;
 }
@@ -1479,11 +1487,14 @@ int num;                                /* Number of bytes to move   */
         FETCH_DW(grp->qiba,qdr->qiba);
         grp->qibk = qdr->qkey & 0xF0;
 
-        accerr = 0; // STORCHK(grp->qiba,sizeof(OSA_QIB)-1,grp->qibk,STORKEY_CHANGE,dev);
-//      {
-//      OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
-//          qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
-//      }
+        if(!(accerr = STORCHK(grp->qiba,sizeof(OSA_QIB)-1,grp->qibk,STORKEY_CHANGE,dev)))
+        {
+        OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
+            qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
+#if defined(_FEATURE_QEBSM)
+            qib->rflags |= QIB_RFLAGS_QEBSM; 
+#endif /*defined(_FEATURE_QEBSM)*/
+        }
 
         qdes = qdr->qdf0;
 

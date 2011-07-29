@@ -71,6 +71,18 @@
 #define OSA_MAXMAC              32
 
 
+/*-------------------------------------------------------------------*/
+/* Convert Subchannel Token to IO ID (LCSS & SSID)                   */
+/*-------------------------------------------------------------------*/
+#if 1  /* 1 means token != ssid, or 0 means token == ioid */
+#define TKN2IOID(_token)  (~(_token))
+#define IOID2TKN(_ioid)   (~(_ioid))
+#else
+#define TKN2IOID(_token)  (_token)
+#define IOID2TKN(_ioid)   (_ioid)
+#endif
+
+
 typedef struct _OSA_MAC {
         BYTE    addr[6];
         int     type;

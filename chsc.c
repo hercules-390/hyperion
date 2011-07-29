@@ -149,6 +149,9 @@ U16 req_len, rsp_len;
 
     chsc_rsp10->general_char[1][3] = 0
 //                                 | 0x80  /* AIF Time Delay Disablement fac*/
+#if defined(FEATURE_QEBSM)
+                                   | 0x40  /* QEBSM Available */
+#endif /*defined(FEATURE_QEBSM)*/
                                    ;
 
     chsc_rsp10->general_char[2][0] = 0
