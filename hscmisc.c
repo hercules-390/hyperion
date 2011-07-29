@@ -1912,7 +1912,7 @@ int pid, status;
         argv[3] = 0;
         execve("/bin/sh", argv, environ);
 
-        exit(127);
+        _exit(127);
     }
 
     do
