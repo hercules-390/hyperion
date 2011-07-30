@@ -1196,8 +1196,10 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
     CHSC_RSP24 *chsc_rsp24 = (void *)desc;
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
-    
+
+#if defined(_FEATURE_QEBSM)
     STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
+#endif /*defined(_FEATURE_QEBSM)*/
 
     chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
