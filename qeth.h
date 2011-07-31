@@ -374,6 +374,16 @@ typedef struct _OSA_SLSB {
                                 | SLSBE_TYPE_INPUT                  \
                                 | SLSBE_STATE_EMPTY                 \
                                 )
+#define SLSBE_INPUT_PRIMED      ( 0 \
+                                | SLSBE_OWNER_OS                    \
+                                | SLSBE_TYPE_INPUT                  \
+                                | SLSBE_STATE_PRIMED                \
+                                )
+#define SLSBE_INPUT_ACKED       ( 0 \
+                                | SLSBE_OWNER_OS                    \
+                                | SLSBE_TYPE_INPUT                  \
+                                | SLSBE_STATE_EMPTY                 \
+                                )
 #define SLSBE_INPUT_COMPLETED   ( 0 \
                                 | SLSBE_OWNER_OS                    \
                                 | SLSBE_TYPE_INPUT                  \
