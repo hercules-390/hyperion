@@ -576,10 +576,27 @@ DEF_INST(store_channel_path_status)
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
-BYTE    work[32];                       /* Work area                 */
-BYTE    lpum;                           /* Device's Last Path Used   */
 BYTE    chpid;                          /* CHPID associated w/lpum   */
-int     i;                              /* (work)                    */
+BYTE    work[32];                       /* Work area                 */
+static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
+/*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  */
+    8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, /* 0x00 */
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* 0x10 */
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x20 */
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x30 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x40 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x50 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x60 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x70 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x80 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x90 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xA0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xB0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xC0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xD0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xE0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xF0 */
+};
 
     S(inst, regs, b2, effective_addr2);
 
@@ -609,16 +626,8 @@ int     i;                              /* (work)                    */
             && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
         )
         {
-            /* Retrieve this device's last path used mask */
-            lpum = dev->pmcw.lpum;
-
-            /* Calculate PMCW chpid array index */
-            for (i=0; i < 8; i++)
-                if (lpum & (0x80 >> i))
-                    break;
-
             /* Retrieve active CHPID */
-            chpid = dev->pmcw.chpid[i];
+            chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
 
             /* Update channel path status work area */
             work[chpid/8] |= 0x80 >> (chpid % 8);
