@@ -206,10 +206,11 @@ ARCH_DEP(display_inst) (regs, inst);
         SIE_INTERCEPT(regs);
 #endif
         regs->GR_H(r3) = 1;       /* Indicate activation error in return code */
-        regs->psw.cc = 3; /* Guess */
+        regs->psw.cc = 3;         /* Guess */
         return;
     }
 
+#if 0
     /* Check that device is QDIO active */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
@@ -218,6 +219,7 @@ ARCH_DEP(display_inst) (regs, inst);
         regs->psw.cc = 1;
         return;
     }
+#endif
 
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;
@@ -353,10 +355,11 @@ ARCH_DEP(display_inst) (regs, inst);
         SIE_INTERCEPT(regs);
 #endif
         regs->GR_H(r3) = 1;    /* Indicate activation error in return code */
-        regs->psw.cc = 3; /* Guess */
+        regs->psw.cc = 3;      /* Guess */
         return;
     }
 
+#if 0
     /* Check that device is QDIO active */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
@@ -365,6 +368,7 @@ ARCH_DEP(display_inst) (regs, inst);
         regs->psw.cc = 1;
         return;
     }
+#endif
 
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;

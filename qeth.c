@@ -1021,8 +1021,6 @@ int i;
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
 
-    dev->pmcw.flag4 |= PMCW4_Q;
-
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
@@ -1103,8 +1101,8 @@ int i;
 
     if(grouped)
     {
-        // Perform group initialisation here
-
+        for(i = 0; i < OSA_GROUP_SIZE; i++)
+            dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
     }
 
     return 0;
