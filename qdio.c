@@ -53,14 +53,26 @@ DEVBLK *dev;                            /* -> device block           */
     PTIO(IO,"SIGA");
 
     /* Specification exception if invalid function code */
-    if(regs->GR_L(0) > SIGA_FC_MAX)
+    if(
+#if defined(FEATURE_QEBSM)
+       (regs->GR_L(0) & ~SIGA_TOKEN) > SIGA_FC_MAX
+#else /*!defined(FEATURE_QEBSM)*/
+        regs->GR_L(0)                > SIGA_FC_MAX
+#endif /*!defined(FEATURE_QEBSM)*/
+                                                  )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
-
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+#if defined(FEATURE_QEBSM)
+    if((regs->GR_L(0) & SIGA_TOKEN))
+        dev = find_device_by_subchan (TKN2IOID(regs->GR_G(1)));
+    else
+#endif /*defined(FEATURE_QEBSM)*/
+    {
+        /* Program check if the ssid including lcss is invalid */
+        SSID_CHECK(regs);
+        dev = find_device_by_subchan (regs->GR_L(1));
+    }
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled or is not a QDIO subchannel */
@@ -89,7 +101,13 @@ DEVBLK *dev;                            /* -> device block           */
         return;
     }
 
-    switch(regs->GR_L(0)) {
+    switch(
+#if defined(FEATURE_QEBSM)
+           regs->GR_L(0) & ~SIGA_TOKEN
+#else /*!defined(FEATURE_QEBSM)*/
+           regs->GR_L(0)
+#endif /*!defined(FEATURE_QEBSM)*/
+                                      ) {
 
     case SIGA_FC_R:
         if(dev->hnd->siga_r)
@@ -125,6 +143,8 @@ DEVBLK *dev;                            /* -> device block           */
     release_lock (&dev->lock);
 
 }
+
+
 #if defined(FEATURE_QEBSM)
 /*-------------------------------------------------------------------*/
 /* EB8A SQBS  - Set Queue Buffer State                         [RSY] */
@@ -133,7 +153,6 @@ DEF_INST(set_queue_buffer_state)
 {
 int     r1, r3;                         /* Register numbers                   */
 int     b2;                             /* effective address base             */
-BYTE    slsbkey;                        /* Storage list state blocl key       */
 BYTE    newstate;                       /* State to which buffers are changed */
 BYTE    nxtbufst;                       /* Next buffer's state                */
 U32     count;                          /* Number of buffers to set           */
@@ -241,7 +260,7 @@ ARCH_DEP(display_inst) (regs, inst);
     for ( ; count > 0; count -= 1 )
     {
         /* set the new state */
-        ARCH_DEP(wstoreb)(newstate, (VADDR)(slsba+bndx), USE_REAL_ADDR, regs);
+        ARCH_DEP(wstoreb)(newstate, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
         /* Note: this may generate an access exception */
  
         /* Update interruptable state in case next cycle has an interrupt */
@@ -251,7 +270,7 @@ ARCH_DEP(display_inst) (regs, inst);
         regs->GR_L(r3) = notset;  /* Return the number of unchanged buffers */
     }
 
-    nxtbufst = ARCH_DEP(wfetchb)((VADDR)(slsba+bndx), USE_REAL_ADDR, regs);
+    nxtbufst = ARCH_DEP(wfetchb)((VADR)(slsba+bndx), USE_REAL_ADDR, regs);
     /* Note: this too may generate an access exception */
 
     if (nxtbufst == newstate)
@@ -282,7 +301,6 @@ DEF_INST(extract_queue_buffer_state)
 int     r1, r2, r3, m4;       /* Register numbers                    */
 int     autoack;              /* flag for auto-acknowkledgement      */
 int     first;                /* True on first cycle of extract loop */
-BYTE    slsbkey;              /* Storage list state blocl key        */
 BYTE    state;                /* State extracted from first buffer   */
 BYTE    nxtbufst;             /* Next buffer's state                 */
 U32     count;                /* Number of buffers to set            */
@@ -324,8 +342,6 @@ ARCH_DEP(display_inst) (regs, inst);
     SIE_INTERCEPT(regs);
 
     PTIO(INF,"EQBS");
-
-LOGMSG("EQBS\n");
 
     qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
     bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
@@ -396,7 +412,7 @@ LOGMSG("EQBS\n");
     first = 1;            /* Indicate we are doing the first extract cycle */
     do
     {
-        nxtbufst = ARCH_DEP(wfetchb)((VADDR)(slsba+bndx), USE_REAL_ADDR, regs);
+        nxtbufst = ARCH_DEP(wfetchb)((VADR)(slsba+bndx), USE_REAL_ADDR, regs);
         if (first)
         {   /* Fetch the extracted state from the first SLSB state by index */
             regs->GR_L(r2) = (U32)nxtbufst;   /* Return the extracted state */
@@ -420,7 +436,7 @@ LOGMSG("EQBS\n");
         if (autoack && (nxtbufst == SLSBE_INPUT_PRIMED))
         {   /* Do the acknowledgement by setting the buffer state */
             ARCH_DEP(wstoreb)
-                (SLSBE_INPUT_ACKED, (VADDR)(slsba+bndx), USE_REAL_ADDR, regs);
+                (SLSBE_INPUT_ACKED, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
            /* Note: this may generate an access exception */
         }
     }
@@ -429,7 +445,7 @@ LOGMSG("EQBS\n");
     if (count == 0)
     {
         /* Look ahead to buffer state following the ones requested to be examined */
-        nxtbufst = ARCH_DEP(wfetchb)((VADDR)(slsba+bndx), USE_REAL_ADDR, regs);
+        nxtbufst = ARCH_DEP(wfetchb)((VADR)(slsba+bndx), USE_REAL_ADDR, regs);
         /* Note: this too may generate an access exception */
  
         if (nxtbufst == state)

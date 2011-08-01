@@ -2151,8 +2151,12 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define SIGA_FC_W       0               /* Initiate Output           */
 #define SIGA_FC_R       1               /* Initiate Input            */
 #define SIGA_FC_S       2               /* Synchronize               */
+#define SIGA_FC_M       3               /* Output Multiple           */
 
 #define SIGA_FC_MAX     SIGA_FC_S
+
+#define SIGA_TOKEN      0x80            /* R1 Contains Subchannel
+                                               Token instead of SSID */
 
 /* Bit definitions for floating-point-control register */
 #define FPC_MASK        0xF8000000
