@@ -240,6 +240,7 @@ ARCH_DEP(display_inst) (regs, inst);
          }
          else
          {   /* this is an invalid queue index */
+             regs->GR_H(r3) = 1;   /* Indicate activation error in return code */
              regs->psw.cc = 2;  /* guess */
              return;
          }
