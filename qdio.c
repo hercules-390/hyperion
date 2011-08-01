@@ -184,7 +184,7 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
  
-ARCH_DEP(display_inst) (regs, inst);
+// ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
 
@@ -286,7 +286,7 @@ ARCH_DEP(display_inst) (regs, inst);
     }
 
     regs->psw.cc = 0;
-ARCH_DEP(display_inst) (regs, inst);
+// ARCH_DEP(display_inst) (regs, inst);
     return;
 }
 
@@ -333,7 +333,7 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-ARCH_DEP(display_inst) (regs, inst);
+// ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
 
@@ -417,6 +417,7 @@ ARCH_DEP(display_inst) (regs, inst);
         {   /* Fetch the extracted state from the first SLSB state by index */
             regs->GR_L(r2) = (U32)nxtbufst;   /* Return the extracted state */
             state = nxtbufst;                 /* Remember the extracted state */
+            first = 0;
         }
         else
         {
@@ -426,6 +427,29 @@ ARCH_DEP(display_inst) (regs, inst);
             }
         }
 
+        if (autoack)
+        {   /* Do the acknowledgement by setting the buffer state */
+            switch(nxtbufst) {
+
+                case SLSBE_INPUT_ACKED:
+                    ARCH_DEP(wstoreb)
+                        (SLSBE_INPUT_PRIMED, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
+                    break;
+
+                case SLSBE_INPUT_COMPLETED:
+                    ARCH_DEP(wstoreb)
+                        (SLSBE_INPUT_ACKED, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
+                    break;
+
+                case SLSBE_OUTPUT_COMPLETED:
+                    ARCH_DEP(wstoreb)
+                        (SLSBE_OUTPUT_PRIMED, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
+                    break;
+
+            }
+           /* Note: this may generate an access exception */
+        }
+
         /* Update interruptable state in case next cycle has an interrupt */
         count -= 1;               /* Decrement states to be examined */
         notset -= 1;              /* One less buffers to inspect */
@@ -433,12 +457,6 @@ ARCH_DEP(display_inst) (regs, inst);
         regs->GR_L(r1) = bndx;    /* Return the next ununexamined buffer index */
         regs->GR_L(r3) = notset;  /* Return the number of unchanged buffers */
 
-        if (autoack && (nxtbufst == SLSBE_INPUT_PRIMED))
-        {   /* Do the acknowledgement by setting the buffer state */
-            ARCH_DEP(wstoreb)
-                (SLSBE_INPUT_ACKED, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
-           /* Note: this may generate an access exception */
-        }
     }
     while (count > 0);
 
@@ -463,7 +481,7 @@ ARCH_DEP(display_inst) (regs, inst);
     }
  
     regs->psw.cc = 0;
-ARCH_DEP(display_inst) (regs, inst);
+// ARCH_DEP(display_inst) (regs, inst);
     return;
 
 }
