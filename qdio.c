@@ -192,12 +192,6 @@ ARCH_DEP(display_inst) (regs, inst);
 
     PTIO(INF,"SQBS");
 
-    qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
-    bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
-    count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
-    
-    regs->GR_H(r3) = 1;           /* Indicate activation error in return code */
-
     dev = find_device_by_subchan(TKN2IOID(regs->GR_G(1)));
 
     /* Condition code 3 if subchannel does not exist,
@@ -211,6 +205,7 @@ ARCH_DEP(display_inst) (regs, inst);
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
+        regs->GR_H(r3) = 1;       /* Indicate activation error in return code */
         regs->psw.cc = 3; /* Guess */
         return;
     }
@@ -219,6 +214,7 @@ ARCH_DEP(display_inst) (regs, inst);
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         PTIO(ERR,"*SQBS");
+        regs->GR_H(r3) = 1;       /* Indicate activation error in return code */
         regs->psw.cc = 1;
         return;
     }
@@ -226,6 +222,10 @@ ARCH_DEP(display_inst) (regs, inst);
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;
 
+    qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
+    bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
+    count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
+    
     if (qndx < grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
@@ -283,15 +283,10 @@ ARCH_DEP(display_inst) (regs, inst);
     }
 
     regs->psw.cc = 0;
+ARCH_DEP(display_inst) (regs, inst);
     return;
-
-/*
-    current_pos = dev->grp->o_sliba[dev->grp->i_qpos];
-    ...
-    process queues here based using the active queue variables from grp
-*/
-
 }
+
 
 /*-------------------------------------------------------------------*/
 /* B99C EQBS  - Extract Queue Buffer State                     [RRF] */
@@ -343,14 +338,6 @@ ARCH_DEP(display_inst) (regs, inst);
 
     PTIO(INF,"EQBS");
 
-    qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
-    bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
-    /* Set auto-acknowledgement flag from operand 2, bit 0 */
-    autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
-    count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
-
-    regs->GR_H(r3) = 1;           /* Indicate activation error in return code */
-
     dev = find_device_by_subchan(TKN2IOID(regs->GR_G(1)));
 
     /* Condition code 3 if subchannel does not exist,
@@ -364,6 +351,7 @@ ARCH_DEP(display_inst) (regs, inst);
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
+        regs->GR_H(r3) = 1;    /* Indicate activation error in return code */
         regs->psw.cc = 3; /* Guess */
         return;
     }
@@ -372,12 +360,19 @@ ARCH_DEP(display_inst) (regs, inst);
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         PTIO(ERR,"*EQBS");
+        regs->GR_H(r3) = 1;    /* Indicate activation error in return code */
         regs->psw.cc = 1;
         return;
     }
 
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;
+
+    qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
+    bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
+    /* Set auto-acknowledgement flag from operand 2, bit 0 */
+    autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
+    count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
 
     if (qndx < grp->i_qcnt)
     {   /* This is an input queue */
@@ -463,6 +458,7 @@ ARCH_DEP(display_inst) (regs, inst);
     }
  
     regs->psw.cc = 0;
+ARCH_DEP(display_inst) (regs, inst);
     return;
 
 }
