@@ -552,7 +552,7 @@ S64      dreg;
             {
                 char buf1[20];
                 char buf2[20];
-                MSGBUF(buf1, "%dM", (U32)xpndsize / (256));
+                MSGBUF(buf1, "%dM", (U32)(xpndsize / (256)));
                 MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);
