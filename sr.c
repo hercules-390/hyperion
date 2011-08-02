@@ -373,6 +373,7 @@ char    *fn = SR_DEFAULT_FILENAME;
 SR_FILE *file;
 U32      key = 0, len = 0;
 U64      mainsize = 0;
+U64      xpndsize = 0;
 CPU_BITMAP started_mask = 0;
 int      i, rc = -1;
 REGS    *regs = NULL;
@@ -546,12 +547,12 @@ S64      dreg;
             break;
 
         case SR_SYS_XPNDSIZE:
-            SR_READ_VALUE(file, len, &len, sizeof(len));
-            if (len > sysblk.xpndsize)
+            SR_READ_VALUE(file, len, &xpndsize, sizeof(xpndsize));
+            if (xpndsize > sysblk.xpndsize)
             {
                 char buf1[20];
                 char buf2[20];
-                MSGBUF(buf1, "%dM", len / (256));
+                MSGBUF(buf1, "%dM", (U32)xpndsize / (256));
                 MSGBUF(buf2, "%dM", sysblk.xpndsize / (256));
                 // "SR: mismatch in '%s': '%s' found, '%s' expected"
                 WRMSG(HHC02009, "E", "expand size", buf1, buf2);
@@ -561,7 +562,7 @@ S64      dreg;
 
         case SR_SYS_XPNDSTOR:
             TRACE("SR: Restoring Expanded Storage...\n");
-            SR_READ_BUF(file, sysblk.xpndstor, len * 4096);
+            SR_READ_BUF(file, sysblk.xpndstor, xpndsize * 4096);
             break;
 
         case SR_SYS_IPLDEV:
