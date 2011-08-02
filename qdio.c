@@ -228,13 +228,13 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
     bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
     
-    if (qndx < grp->i_qcnt)
+    if ((int)qndx < grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
     else
-    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
+    {    if ((int)qndx < (grp->i_qcnt+grp->o_qcnt) && (int)qndx >= grp->i_qcnt)
          {   /* This is an output queue */
              qndx -= grp->i_qcnt;
              slsba = grp->o_slsbla[qndx];
@@ -307,7 +307,7 @@ U32     qndx;                 /* Queue index                         */
 U32     bndx;                 /* SLSB buffer state index             */
 U64     slsba;                /* Storage list state block address    */
 BYTE    slsbkey;              /* Storage list state blocl key        */
-VADR    effective_addr2;      /* effective address                   */
+VADR    effective_addr2 = 0;  /* effective address                   */
 DEVBLK  *dev;                 /* Data device DEVBLK                  */
 OSA_GRP *grp;                 /* OSA Group device structure          */
 
@@ -379,13 +379,13 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
 
-    if (qndx < grp->i_qcnt)
+    if ((int)qndx < grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
     else 
-    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
+    {    if ((int)qndx < (grp->i_qcnt+grp->o_qcnt) && (int)qndx >= grp->i_qcnt)
          {   /* This is an output queue */
              qndx -= grp->i_qcnt;
              slsba = grp->o_slsbla[qndx];
