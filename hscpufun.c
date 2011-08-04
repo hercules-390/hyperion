@@ -330,12 +330,16 @@ int sysclear_cmd(int ac,char *av[],char *cmdline)
 
 /*-------------------------------------------------------------------*/
 /* ipl function                                                      */
+/* Format: 
+ *      ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxx ] [clear]
+*/
 /*-------------------------------------------------------------------*/
-int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
+int ipl_cmd2(int argc, char *argv[], char *cmdline, int clr_prm)
 {
 BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
 int  i;
+int  clear = clr_prm;                   /* Called with Clear option  */
 #if defined(OPTION_IPLPARM)
 int j;
 size_t  maxb;
@@ -372,7 +376,11 @@ int  rest_loadparm = FALSE;
     maxb=0;
     if ( argc > 2 )
     {
-        if ( CMD( argv[2], loadparm, 4) )
+        if ( CMD( argv[2], clear, 2 ) )
+        {
+            clear = 1;
+        }
+        else if ( CMD( argv[2], loadparm, 4 ) )
         {
             strlcpy( save_loadparm, str_loadparm(), sizeof(save_loadparm) );
             rest_loadparm = TRUE;

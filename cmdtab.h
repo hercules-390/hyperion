@@ -545,11 +545,11 @@
   "real machine.\n"
 
 #define ipending_cmd_desc       "Display pending interrupts"
-#define ipl_cmd_desc            "IPL Normal from device xxxx"
+#define ipl_cmd_desc            "IPL from device or file"
 #define ipl_cmd_help            \
                                 \
-  "Format: \"ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxxxxxxxxx]\"\n"      \
-  "\n"                                                                           \
+  "Format: \"ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxxxxxxxxx] [clear]\""\
+  "\n\n"                                                                         \
   "Performs the Initial Program Load manual control function. If the\n"          \
   "first operand 'xxxx' is a 1- to 4-digit hexadecimal number, a\n"              \
   "CCW-type IPL is initiated from the indicated device number, and\n"            \
@@ -564,12 +564,15 @@
   "the IPL command processor. The string will be loaded into the\n"              \
   "low-order 32 bits of the general purpose registers (4 characters per\n"       \
   "register for up to 64 bytes). The PARM option behaves similarly to\n"         \
-  "the VM IPL command.\n"
+  "the VM IPL command.\n"                                                        \
+  "\n"                                                                           \
+  "An optional 'clear' keyword will initiate a Load Clear manual control\n"      \
+  "function, prior to starting an IPL.\n"
 
-#define iplc_cmd_desc           "IPL Clear from device xxxx"
+#define iplc_cmd_desc           "Command deprecated - use IPL with clear option"
 #define iplc_cmd_help           \
                                 \
-  "Performs the Load Clear manual control function. See \"ipl\".\n"
+  "This command is deprecated. Use \"ipl\" with clear option specified instead.\n"
 
 #define k_cmd_desc              "Display cckd internal trace"
 #define kd_cmd_desc             "Short form of 'msghld clear'"
