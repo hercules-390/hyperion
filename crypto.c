@@ -12,8 +12,6 @@
 
 #define _CRYPTO_C_
 
-
-#define FEATURE_MESSAGE_SECURITY_ASSIST
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
 
 /*----------------------------------------------------------------------------*/
@@ -26,10 +24,9 @@
 /*----------------------------------------------------------------------------*/
 void renew_wrapping_keys(void)
 {
-  int i;
-  BYTE lparname[8];
-  U64 cpuid;
-  BYTE byte;
+  int   i;
+  BYTE  lparname[8];
+  U64   cpuid;
 
   srandom((unsigned)(time(0)));
 
@@ -62,9 +59,7 @@ void renew_wrapping_keys(void)
   sysblk.wkvpdea_reg[16] = sysblk.lparnum;
   for(i = 0; i < 8; i++)
   {
-    byte = random() & 0xff;
-    sysblk.wkvpaes_reg[31 - i] = byte & 0xff;
-    sysblk.wkvpdea_reg[23 - i] = byte & 0xff;
+    sysblk.wkvpaes_reg[31 - i] = sysblk.wkvpdea_reg[23 - i] = random() & 0xff;
   }
   release_rwlock(&sysblk.wklock);
 
