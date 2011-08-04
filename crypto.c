@@ -12,6 +12,8 @@
 
 #define _CRYPTO_C_
 
+
+#define FEATURE_MESSAGE_SECURITY_ASSIST
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
 
 /*----------------------------------------------------------------------------*/
@@ -29,13 +31,15 @@ void renew_wrapping_keys(void)
   U64 cpuid;
   BYTE byte;
 
+  srandom((unsigned)(time(0)));
+
   for(i = 0; i < 0x100; i++)
-    srandom(random() * host_tod()); /* Randomize related to time */
+    srandom((unsigned)((int)random() * (int)(host_tod()&0xFFFFFFFF))); /* Randomize related to time */
   obtain_wrlock(&sysblk.wklock);
   for(i = 0; i < 32; i++)
-    sysblk.wkaes_reg[i] = random();
+    sysblk.wkaes_reg[i] = random()&0xFF;
   for(i = 0; i < 24; i++)
-    sysblk.wkdea_reg[i] = random();
+    sysblk.wkdea_reg[i] = random()&0xFF;
 
   /* We set the verification pattern to */
   /* cpuid (8 bytes) */
@@ -47,8 +51,8 @@ void renew_wrapping_keys(void)
   cpuid = sysblk.cpuid;
   for(i = 0; i < 8; i++)
   {
-    sysblk.wkvpaes_reg[7 - i] = cpuid;
-    sysblk.wkvpdea_reg[7 - i] = cpuid;
+    sysblk.wkvpaes_reg[7 - i] = cpuid & 0xff;
+    sysblk.wkvpdea_reg[7 - i] = cpuid & 0xff;
     cpuid >>= 8;
   }
   get_lparname(lparname);
@@ -58,9 +62,9 @@ void renew_wrapping_keys(void)
   sysblk.wkvpdea_reg[16] = sysblk.lparnum;
   for(i = 0; i < 8; i++)
   {
-    byte = random();
-    sysblk.wkvpaes_reg[31 - i] = byte;
-    sysblk.wkvpdea_reg[23 - i] = byte;
+    byte = random() & 0xff;
+    sysblk.wkvpaes_reg[31 - i] = byte & 0xff;
+    sysblk.wkvpdea_reg[23 - i] = byte & 0xff;
   }
   release_rwlock(&sysblk.wklock);
 
