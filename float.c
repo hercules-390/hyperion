@@ -475,7 +475,7 @@ static inline void store_lf( LONG_FLOAT *fl, U32 *fpr )
     fpr[0] = ((U32)fl->sign << 31)
            | ((U32)fl->expo << 24)
            | (fl->long_fract >> 32);
-    fpr[1] = fl->long_fract;
+    fpr[1] = fl->long_fract & 0xffffffff;
 
 } /* end function store_lf */
 
@@ -516,7 +516,7 @@ static inline void store_ef( EXTENDED_FLOAT *fl, U32 *fpr )
            | (fl->ls_fract >> 56);
     fpr[FPREX] = ((U32)fl->sign << 31)
                | ((fl->ls_fract >> 32) & 0x00FFFFFF);
-    fpr[FPREX+1] = fl->ls_fract;
+    fpr[FPREX+1] = fl->ls_fract & 0xffffffff;
 
     if ( fpr[0]
     || fpr[1]
@@ -2097,7 +2097,7 @@ U32     v;
 
         wk += ((fl->long_fract & 0x00000000FFFFFFFFULL) * (mul_fl->long_fract >> 32));
         wk += ((fl->long_fract >> 32) * (mul_fl->long_fract & 0x00000000FFFFFFFFULL));
-        v = wk;
+        v = wk & 0xffffffff;
 
         fl->long_fract = (wk >> 32) + ((fl->long_fract >> 32) * (mul_fl->long_fract >> 32));
 
@@ -4314,7 +4314,7 @@ U64     dreg;                           /* Double word workarea      */
 
     /* Update register contents */
     regs->fpr[i1] = dreg >> 32;
-    regs->fpr[i1+1] = dreg;
+    regs->fpr[i1+1] = dreg & 0xffffffff;
 }
 
 

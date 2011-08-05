@@ -274,7 +274,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
     effective_addr1 += l1;
     effective_addr2 += l2;
     sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-    dbyte = (sbyte << 4) | (sbyte >> 4);
+    dbyte = ( (sbyte << 4) | (sbyte >> 4) ) & 0xff;
     ARCH_DEP(vstoreb) ( dbyte, effective_addr1, b1, regs );
 
     /* Process remaining bytes from right to left */
@@ -290,7 +290,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
             {
                 effective_addr2 &= ADDRESS_MAXWRAP(regs);
                 sbyte = ARCH_DEP(vfetchb) ( --effective_addr2, b2, regs );
-                dbyte |= sbyte << 4;
+                dbyte |= (sbyte << 4) & 0xff;
             }
         }
         else
@@ -1800,7 +1800,7 @@ BYTE    lbyte;                          /* Left result byte of pair  */
     effective_addr1 += l1;
     effective_addr2 += l2;
     sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-    rbyte = (sbyte << 4) | (sbyte >> 4);
+    rbyte = ((sbyte << 4) | (sbyte >> 4)) & 0xff;
     ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
 
     /* Process remaining bytes from right to left */

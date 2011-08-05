@@ -5721,7 +5721,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
     /* Move low digit of source byte to high digit of destination */
     dbyte &= 0x0F;
-    dbyte |= sbyte << 4;
+    dbyte |= ( sbyte << 4 ) & 0xff;
     ARCH_DEP(vstoreb) ( dbyte, effective_addr1--, b1, regs );
 
     /* Process remaining bytes from right to left */
@@ -5739,7 +5739,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
             sbyte = 0x00;
 
         /* Move low digit to destination high digit */
-        dbyte |= sbyte << 4;
+        dbyte |= ( sbyte << 4 ) & 0xff;
         effective_addr1 &= ADDRESS_MAXWRAP(regs);
         ARCH_DEP(vstoreb) ( dbyte, effective_addr1--, b1, regs );
 
