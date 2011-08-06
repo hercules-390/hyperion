@@ -11,44 +11,18 @@
 /* Default features                                                  */
 /*   All existing features MUST be #undef-ed here.                   */
 /*-------------------------------------------------------------------*/
-
-#if !defined(OPTION_370_MODE) && !defined(NO_370_MODE)
 #define OPTION_370_MODE                 /* Generate S/370 support    */
-#endif
-
-#if !defined(OPTION_370_EXTENSION) && !defined(NO_370_EXTENSION)
-#define OPTION_370_EXTENSION            /* S/370 backport of S/390 & z/arch */
-#endif
-
-#if !defined(OPTION_390_MODE) && !defined(NO_390_MODE)
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
-#endif
-
-#if !defined(OPTION_900_MODE) && !defined(NO_900_MODE)
 #define OPTION_900_MODE                 /* Generate ESAME support    */
-#endif
-
-#if !defined(OPTION_LPP_RESTRICT) && !defined(NO_LPP_RESTRICT)
 #define OPTION_LPP_RESTRICT             /* Disable Licensed Software */
-#endif
-
-#if !defined(OPTION_SMP) && !defined(NO_SMP)
 #define OPTION_SMP                      /* Enable SMP support        */
-#endif
-
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
-
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
-
-#if !defined(OPTION_MIPS_COUNTING) && !defined(NO_MIPS_COUNTING)
 #define OPTION_MIPS_COUNTING            /* Display MIPS on ctl panel */
-#endif
-
 #define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
-
 #ifdef _MSVC_                           /*        (Windows)          */
 #define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
 #define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
@@ -58,15 +32,12 @@
 #define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
 #define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
 #endif
-
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
-
 #undef  OPTION_NO_INLINE_DAT            /* Performance option        */
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
-
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
@@ -78,6 +49,7 @@
 #define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
+#define OPTION_370_EXTENSION            /* S/370 backport of S/390 &z*/
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
@@ -87,64 +59,39 @@
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
-
 #ifndef FISH_HANG
-  #ifndef OPTION_WTHREADS
-    #define OPTION_PTTRACE              /* Pthreads tracing          */
-  #endif
+#ifndef OPTION_WTHREADS
+#define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
-
+#endif
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
-
-#if !defined(OPTION_CMDSER) && !defined(NO_CMDSER)
-    #define NO_CMDSER                   /* Serialise all commands    */
-#endif
-
+//#define OPTION_CMDSER                   /* Serialise all commands    */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Colored messages          */
 #define OPTION_MSGHLD                   /* Sticky messages           */
 #define OPTION_MSGLCK                   /* Lock during msg write     */
-
-#if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
-#define NO_SCP_MSG_PREFIX               /* Prefix scp msg with HHC*  */
-#endif
-
-#if !defined(OPTION_WINDOWS_HOST_FILENAMES) && !defined(NO_WINDOWS_HOST_FILENAMES)
-#define  NO_WINDOWS_HOST_FILENAMES      /* Format files for display
-                                           in native host format
-                                           slashes                   */
-#endif
-
-#if !defined(OPTION_SHUTDOWN_CONFIRMATION) && !defined(NO_SHUTDOWN_CONFIRMATION)
-#define  NO_SHUTDOWN_CONFIRMATION       /* Confirm quit and ssd cmds */
-#endif
-
-#if !defined(OPTION_LOCK_CONFIG_FILE) && !defined(NO_LOCK_CONFIG_FILE)
-#define  NO_LOCK_CONFIG_FILE            /* Keep Configuration file
-                                           locked during execution   */
-#endif
-
+//#define OPTION_SCP_MSG_PREFIX         /* Prefix scp msg with HHC*  */
+//#define  OPTION_WINDOWS_HOST_FILENAMES/* Format files for display  
+//                                         in native host format       
+//                                         slashes                   */
+//#define  OPTION_SHUTDOWN_CONFIRMATION /* Confirm quit and ssd cmds */
+//#define  OPTION_LOCK_CONFIG_FILE      /* Keep Configuration file 
+//                                         locked during execution   */
 #define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
+//#define  OPTION_BUILTIN_SYMBOLS       /* Internal Symbols Defined  */
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #undef  OPTION_SHOWDVOL1                /* showdvol1 support         */
-
-#if !defined(OPTION_BUILTIN_SYMBOLS) && !defined(NO_BUILTIN_SYMBOLS)
-#define  NO_BUILTIN_SYMBOLS             /* Internal Symbols Defined  */
-#endif
 
 #if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
 #endif
-
 #if defined(OPTION_DYNAMIC_LOAD)
   #define OPTION_DYNAMIC_RESOLVE_REXX   /* Dynamically load REXX     */
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
 #endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
-
 #if (CKD_MAXFILES > 35)
   #error CKD_MAXFILES can not exceed design limit of 35
 #endif
