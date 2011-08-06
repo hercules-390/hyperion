@@ -1255,20 +1255,56 @@ REGS *regs;
 char buf[512];
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Processor %s%02X: processor is not %s"
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
+    if (argc > 1)
+    {
+        U64   reg_value;
+        int   reg_num, afp = (regs->CR(0) & CR0_AFP) ? TRUE : FALSE;
+        BYTE  equal_sign, c;
+
+        if (argc > 2)
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+
+        if (0
+            || sscanf( argv[1], "%d%c%"I64_FMT"x%c", &reg_num, &equal_sign, &reg_value, &c ) != 3
+            || reg_num < 0
+            || (afp && reg_num > 15)
+            || (!afp && reg_num > 6)
+            || (!afp && (reg_num & 1))  /* (must be even numbered: 0,2,4,6) */
+            || '=' != equal_sign
+        )
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+
+        if (afp) reg_num <<= 1; /* (double) */
+        regs->fpr[reg_num]   = (U32) (reg_value >> 32);
+        regs->fpr[reg_num+1] = (U32) (reg_value & 0xFFFFFFFFULL);
+    }
+
+    /* Format registers display into buffer 'buf' */
     display_fregs (regs, buf, sizeof(buf), "HHC02270I ");
+
+    /* Now display the formatted 'buf' text */
     WRMSG(HHC02270, "I", "Floating point registers");
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
@@ -1286,19 +1322,46 @@ int fpc_cmd(int argc, char *argv[], char *cmdline)
 REGS *regs;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Processor %s%02X: processor is not %s"
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
+    if (argc > 1)
+    {
+        BYTE  c;
+        U64   reg_value;
+
+        if (argc > 2)
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+
+        if (0
+            || sscanf( argv[1], "%"I64_FMT"x%c", &reg_value, &c ) != 1
+            || reg_value > UINT_MAX
+        )
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Invalid argument '%s'%s"
+            WRMSG(HHC02205, "E", argv[1], "");
+            return 0;
+        }
+
+        regs->fpc = (U32) (reg_value & 0xFFFFFFFFULL);
+    }
+
+    // "Floating point control register: %08"I32_FMT"X"
     WRMSG(HHC02276, "I", regs->fpc);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
