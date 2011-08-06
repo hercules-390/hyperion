@@ -819,7 +819,7 @@ void  UpdateCPUStatus ()
         {
             gui_fprintf( fStatusStream,
 
-                "MIPS=%2.1d.%2.2d\n"
+                "MIPS=%4d.%2.2d\n"
 
                 , *mipsrate / 1000000
                 ,(*mipsrate % 1000000) / 10000
@@ -832,7 +832,7 @@ void  UpdateCPUStatus ()
         {
             gui_fprintf( fStatusStream,
 
-                "SIOS=%5d\n"
+                "SIOS=%4d\n"
 
                 ,*siosrate
             );
