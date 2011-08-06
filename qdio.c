@@ -228,13 +228,13 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
     bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
     
-    if ((int)qndx < grp->i_qcnt)
+    if (qndx < grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
     else
-    {    if ((int)qndx < (grp->i_qcnt+grp->o_qcnt) && (int)qndx >= grp->i_qcnt)
+    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
          {   /* This is an output queue */
              qndx -= grp->i_qcnt;
              slsba = grp->o_slsbla[qndx];
@@ -379,13 +379,13 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
 
-    if ((int)qndx < grp->i_qcnt)
+    if (qndx < grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
     else 
-    {    if ((int)qndx < (grp->i_qcnt+grp->o_qcnt) && (int)qndx >= grp->i_qcnt)
+    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
          {   /* This is an output queue */
              qndx -= grp->i_qcnt;
              slsba = grp->o_slsbla[qndx];
