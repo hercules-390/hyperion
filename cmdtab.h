@@ -428,8 +428,22 @@
   "Load a fcb image\n"
 
 #define fish_hang_cmd_desc      "(deprecated; use 'hangrpt' instead)"
-#define fpc_cmd_desc            "Display floating point control register"
-#define fpr_cmd_desc            "Display floating point registers"
+#define fpc_cmd_desc            "Display or alter floating point control register"
+#define fpc_cmd_help            \
+                                \
+  "Format: \"fpc [xxxxxxxxxxxxxxxx]\" where 'xxxxxxxxxxxxxxxx' is the\n"         \
+  "register value in hexadecimal (1-8 hex digits). Enter \"fpc\" by itself\n"    \
+  "to display the register value without altering it.\n"
+
+#define fpr_cmd_desc            "Display or alter floating point registers"
+#define fpr_cmd_help            \
+                                \
+  "Format: \"fpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the register number\n"    \
+  "(0 to 15 or 0, 2, 4 or 6 depending on the Control Register 0 AFP bit) and\n"  \
+  "'xxxxxxxxxxxxxxxx' is the register value in hexadecimal (1-16 hex digits\n"   \
+  "for 64-bit registers). Enter \"fpr\" by itself to display the register\n"     \
+  "values without altering them.\n"
+
 #define g_cmd_desc              "Turn off instruction stepping and start all CPUs"
 #define gpr_cmd_desc            "Display or alter general purpose registers"
 #define gpr_cmd_help            \
@@ -1330,8 +1344,8 @@ COMMAND( "cr",                      cr_cmd,                 SYSCMDNOPER,        
 COMMAND( "cscript",                 cscript_cmd,            SYSCMDNOPER,        cscript_cmd_desc,       cscript_cmd_help    )
 COMMAND( "ctc",                     ctc_cmd,                SYSCMDNOPER,        ctc_cmd_desc,           ctc_cmd_help        )
 COMMAND( "ds",                      ds_cmd,                 SYSCMDNOPER,        ds_cmd_desc,            NULL                )
-COMMAND( "fpc",                     fpc_cmd,                SYSCMDNOPER,        fpc_cmd_desc,           NULL                )
-COMMAND( "fpr",                     fpr_cmd,                SYSCMDNOPER,        fpr_cmd_desc,           NULL                )
+COMMAND( "fpc",                     fpc_cmd,                SYSCMDNOPER,        fpc_cmd_desc,           fpc_cmd_help        )
+COMMAND( "fpr",                     fpr_cmd,                SYSCMDNOPER,        fpr_cmd_desc,           fpr_cmd_help        )
 COMMAND( "g",                       g_cmd,                  SYSCMDNOPER,        g_cmd_desc,             NULL                )
 COMMAND( "gpr",                     gpr_cmd,                SYSCMDNOPER,        gpr_cmd_desc,           gpr_cmd_help        )
 COMMAND( "herclogo",                herclogo_cmd,           SYSCMDNOPER,        herclogo_cmd_desc,      herclogo_cmd_help   )

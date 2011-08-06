@@ -1067,7 +1067,7 @@ size_t  n;
 /*      acctype Type of access (ACCTYPE_INSTFETCH, ACCTYPE_READ,     */
 /*              or ACCTYPE_LRA)                                      */
 /* Output:                                                           */
-/*      aaptr   Points to word in which abs address is returned      */
+/*      raptr   Points to word in which abs address is returned      */
 /*      siptr   Points to word to receive indication of which        */
 /*              STD or ASCE was used to perform the translation      */
 /* Return value:                                                     */
