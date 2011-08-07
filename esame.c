@@ -974,8 +974,14 @@ U64     old;                            /* Old value                 */
 
     old = CSWAP64 (regs->GR_G(r1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r1+1)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     if (regs->psw.cc == 0)
     {
@@ -2282,7 +2288,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_relative_on_index_high_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
 
@@ -2313,7 +2319,7 @@ S64     i,j;                            /* Integer workareas         */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_relative_on_index_low_or_equal_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
 
@@ -2344,7 +2350,7 @@ S64     i,j;                            /* Integer workareas         */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_index_high_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
@@ -2376,7 +2382,7 @@ S64     i, j;                           /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_index_low_or_equal_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
@@ -2408,7 +2414,7 @@ S64     i, j;                           /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_and_swap_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 BYTE   *main2;                          /* mainstor address          */
@@ -2427,8 +2433,14 @@ U64     old;                            /* old value                 */
     /* Get old value */
     old = CSWAP64(regs->GR_G(r1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -2460,7 +2472,7 @@ U64     old;                            /* old value                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_double_and_swap_long)
 {
-register int     r1, r3;                /* Register numbers          */
+int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 BYTE   *main2;                          /* mainstor address          */
@@ -2482,10 +2494,16 @@ U64     old1, old2;                     /* old value                 */
     old1 = CSWAP64(regs->GR_G(r1));
     old2 = CSWAP64(regs->GR_G(r1+1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg16 (&old1, &old2,
                               CSWAP64(regs->GR_G(r3)), CSWAP64(regs->GR_G(r3+1)),
                               main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -2518,8 +2536,8 @@ U64     old1, old2;                     /* old value                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_count_long)
 {
-register int     r1;                    /* Value of R field          */
-register int     b2;                    /* Base of effective addr    */
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     RXY_B(inst, regs, r1, b2, effective_addr2);
@@ -2540,7 +2558,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_count_long_register)
 {
-register int     r1, r2;                /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
     RRE_B(inst, regs, r1, r2);
@@ -2565,7 +2583,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_long_register)
 {
-register int     r1, r2;                /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 
     RRE0(inst, regs, r1, r2);
 
@@ -2603,7 +2621,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_long)
 {
-register int     r1;                    /* Values of R fields        */
+int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
@@ -5031,7 +5049,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
         if(SIE_MODE(regs))
         {
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-
+ 
             if(regs->sie_pref)
             {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
@@ -5074,10 +5092,10 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                         if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
                                                 regs->hostregs, ACCTYPE_PTE))
                             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-
+    
                         /* Convert real address to absolute address */
                         rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
-
+    
                         /* For ESA/390 the RCP byte entry is at offset 1 in a
                            four byte entry directly beyond the page table,
                            for ESAME mode, this entry is eight bytes long */
@@ -6881,8 +6899,14 @@ U32     old;                            /* old value                 */
     /* Get old value */
     old = CSWAP32(regs->GR_L(r1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -6936,8 +6960,14 @@ U64     old, new;                       /* old, new values           */
     old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
     new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, new, main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -8461,7 +8491,7 @@ U64     effective_addr2;                /* Effective address         */
     if (FACILITY_ENABLED(CPU_MEAS_COUNTER,regs) ||
         FACILITY_ENABLED(CPU_MEAS_SAMPLNG,regs) )
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
-
+ 
 } /* end DEF_INST(load_program_parameter) */
 #endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */
 

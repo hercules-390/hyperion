@@ -689,13 +689,13 @@ DEF_INST(branch_on_condition_register)
             PERFORM_CHKPT_SYNC (regs);
         }
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
-        /* Perform serialization without checkpoint synchronization
+        /* Perform serialization without checkpoint synchronization 
            the mask is B'1110' and R2 is register 0 */
         else if (inst[1] == 0xE0)
         {
             PERFORM_SERIALIZATION (regs);
         }
-#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/     
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
@@ -2070,8 +2070,14 @@ U32     old;                            /* old value                 */
 
     old = CSWAP32(regs->GR_L(r1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -2128,8 +2134,14 @@ U64     old, new;                       /* old, new values           */
     old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
     new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, new, main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -5023,10 +5035,10 @@ CREG    n;                              /* Work                      */
 
         px = regs->PX;
         SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
-
+        
         /* Point to PSA in main storage */
         psa = (void*)(regs->mainstor + px);
-
+ 
         /* Set the main storage reference bit */
         STORAGE_KEY(px, regs) |= STORKEY_REF;
 
@@ -5067,12 +5079,12 @@ CREG    n;                              /* Work                      */
                         {
                             /* Convert real address to absolute address */
                             cew = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
-
+    
                             /* Ensure absolute address is available */
                             if (!(unavailable = (cew >= regs->mainlim )))
                             {
                                 SIE_TRANSLATE(&cew, ACCTYPE_WRITE, regs);
-
+    
                                 /* Update both counters */
                                 FETCH_W(fwc, cew + regs->mainstor);
                                 fwc++;
@@ -5088,7 +5100,7 @@ CREG    n;                              /* Work                      */
                 }
             }
         }
-
+    
         /* Update the Enhance Monitor Exception Counter if the array could not be updated */
         if(unavailable)
         {
@@ -5098,7 +5110,7 @@ CREG    n;                              /* Work                      */
             STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
             STORE_W(psa->ec,ec);
         }
-
+              
         return;
 
     }

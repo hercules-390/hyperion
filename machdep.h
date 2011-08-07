@@ -720,16 +720,12 @@ U32  *ptr4, val4, old4, new4;
   #define store_dw(_p, _v) store_dw_noswap((_p), CSWAP64((_v)))
 #endif
 
-
 /*-------------------------------------------------------------------
  * cmpxchg1
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg1
 static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
  BYTE code;
- 
- obtain_lock(&Lock_Compare_Swap);
- 
  if (*old == *(BYTE *)ptr)
  {
      *(BYTE *)ptr = new;
@@ -740,9 +736,6 @@ static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
      *old = *(BYTE *)ptr;
      code = 1;
  }
- 
- release_lock(&Lock_Compare_Swap);
-
  return code;
 }
 #endif
@@ -753,9 +746,6 @@ static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
 #ifndef cmpxchg4
 static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
  BYTE code;
-
- obtain_lock(&Lock_Compare_Swap);
-
  if (*old == *(U32 *)ptr)
  {
      *(U32 *)ptr = new;
@@ -766,9 +756,6 @@ static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
      *old = *(U32 *)ptr;
      code = 1;
  }
-
- release_lock(&Lock_Compare_Swap);
-
  return code;
 }
 #endif
@@ -779,9 +766,6 @@ static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
 #ifndef cmpxchg8
 static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
  BYTE code;
-
- obtain_lock(&Lock_Compare_Swap);
-
  if (*old == *(U64 *)ptr)
  {
      *(U64 *)ptr = new;
@@ -792,9 +776,6 @@ static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
      *old = *(U64 *)ptr;
      code = 1;
  }
-
- release_lock(&Lock_Compare_Swap);
-
  return code;
 }
 #endif
@@ -805,9 +786,6 @@ static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
 #ifndef cmpxchg16
 static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
  int code;
-
- obtain_lock(&Lock_Compare_Swap);
-
  if (*old1 == *(U64 *)ptr && *old2 == *((U64 *)ptr + 1))
  {
      *(U64 *)ptr = new1;
@@ -820,9 +798,6 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
      *old2 = *((U64 *)ptr + 1);
      code = 1;
  }
-
- release_lock(&Lock_Compare_Swap);
-
  return code;
 }
 #endif

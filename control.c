@@ -732,8 +732,14 @@ U32     old;                            /* old value                 */
 
     old = CSWAP32 (regs->GR_L(r1));
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     if (regs->psw.cc == 0)
     {
@@ -3116,10 +3122,10 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         {
             /* since ASN trace might be made already, need to save
                current CR12 and use newcr12 for this second entry */
-            if (!newcr12)
+            if (!newcr12) 
                 newcr12 = regs->CR(12);
             savecr12 = regs->CR(12);
-            regs->CR(12) = newcr12;
+            regs->CR(12) = newcr12; 
             newcr12 = ARCH_DEP(trace_ms) (0, 0, regs);
             regs->CR(12) = savecr12;
         }
@@ -5585,7 +5591,7 @@ static char *ordername[] = {
         return;
     }
 
-    /* Issuing Sense to an offline CPU that is >= hicpu
+    /* Issuing Sense to an offline CPU that is >= hicpu 
        now not considered unusual especially since
        we have increased the default max CPU number to 8 */
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
@@ -5602,7 +5608,7 @@ static char *ordername[] = {
     if ((order > LOG_SIGPORDER && order != SIGP_SENSE_RUNNING_STATE)
         || !IS_CPU_ONLINE(cpad))
     {
-        log_sigp = MSGBUF( log_buf,
+        log_sigp = MSGBUF( log_buf,  
                 "%s%02X: SIGP %-32s (%2.2X) %s%02X, PARM "F_GREG,
                 PTYPSTR(regs->cpuad), regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?
@@ -6646,7 +6652,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
     /* Return with cc3 if selector codes invalid */
     /*
-      Func-
+      Func-          
       tion  Selec- Selec-
       Code  tor 1  tor 2  Information Requested about
       ----  -----  -----  ----------------------------
@@ -6948,7 +6954,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         logmsg("+%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X *%s*\n",
                 i,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],
-                m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],s);
+                m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],s); 
     }
 #endif /*DEBUG_STSI*/
 
@@ -7247,7 +7253,7 @@ BYTE    akey;                           /* Access key                */
         /* Translate to real address - eventually using an access
            register if the guest is in XC mode */
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                                b1>0 &&
+                                b1>0 && 
                                   MULTIPLE_CONTROLLED_DATA_SPACE(regs) ?
                                     b1 : USE_PRIMARY_SPACE,
                                 regs->hostregs, ACCTYPE_SIE))

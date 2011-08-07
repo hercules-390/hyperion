@@ -1410,12 +1410,18 @@ BYTE    old;                            /* Old value                 */
     /* Get operand absolute address */
     main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
     /* Get old value */
     old = *main2;
 
     /* Attempt to exchange the values */
     while (cmpxchg1(&old, 255, main2));
     regs->psw.cc = old >> 7;
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

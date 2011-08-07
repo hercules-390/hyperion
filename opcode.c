@@ -47,8 +47,6 @@
 
 #include "opcode.h"
 
-DLL_EXPORT LOCK Lock_Compare_Swap;
-
 #define UNDEF_INST(_x) \
  static DEF_INST(_x) { ARCH_DEP(operation_exception) \
         (inst,regs); }
