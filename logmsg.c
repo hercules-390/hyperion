@@ -304,7 +304,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 /* Log message: Normal routing (panel or buffer, as appropriate)     */
 /* was logmsg; replaced with macro logmsg                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void log_msg(char *msg,...)
+DLL_EXPORT void logmsg(char *msg,...)
 {
     char   *bfr =   NULL;
     int     rc;
