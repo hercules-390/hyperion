@@ -36,17 +36,18 @@
 /* All floating-point numbers can be put in one of these categories.  */
 enum
   {
-    FP_NAN,
-# define FP_NAN FP_NAN
-    FP_INFINITE,
-# define FP_INFINITE FP_INFINITE
-    FP_ZERO,
-# define FP_ZERO FP_ZERO
-    FP_SUBNORMAL,
-# define FP_SUBNORMAL FP_SUBNORMAL
-    FP_NORMAL
-# define FP_NORMAL FP_NORMAL
+    FP_NAN,             /* 0 */
+    FP_INFINITE,        /* 1 */
+    FP_ZERO,            /* 2 */
+    FP_SUBNORMAL,       /* 3 */
+    FP_NORMAL           /* 4 */
   };
+
+#define FP_NAN          FP_NAN
+#define FP_INFINITE     FP_INFINITE
+#define FP_ZERO         FP_ZERO
+#define FP_SUBNORMAL    FP_SUBNORMAL
+#define FP_NORMAL       FP_NORMAL
 
 /* Type representing floating-point environment.  This function corresponds
    to the layout of the block written by the `fstenv'.  */
@@ -78,18 +79,19 @@ fenv_t;
    of the appropriate bits in the FPU control word.  */
 enum
   {
-    FE_INVALID = 0x01,
-#define FE_INVALID  FE_INVALID
-    __FE_DENORM = 0x02,
-    FE_DIVBYZERO = 0x04,
-#define FE_DIVBYZERO    FE_DIVBYZERO
-    FE_OVERFLOW = 0x08,
-#define FE_OVERFLOW FE_OVERFLOW
-    FE_UNDERFLOW = 0x10,
-#define FE_UNDERFLOW    FE_UNDERFLOW
-    FE_INEXACT = 0x20
-#define FE_INEXACT  FE_INEXACT
+    FE_INVALID      =   0x01,
+  __FE_DENORM       =   0x02,
+    FE_DIVBYZERO    =   0x04,
+    FE_OVERFLOW     =   0x08,
+    FE_UNDERFLOW    =   0x10,
+    FE_INEXACT      =   0x20
   };
+
+#define FE_INVALID      FE_INVALID
+#define FE_DIVBYZERO    FE_DIVBYZERO
+#define FE_OVERFLOW     FE_OVERFLOW
+#define FE_UNDERFLOW    FE_UNDERFLOW
+#define FE_INEXACT      FE_INEXACT
 
 #define FE_ALL_EXCEPT \
     (FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
