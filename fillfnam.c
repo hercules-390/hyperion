@@ -214,7 +214,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
     {
       /* display all alternatives */
       for (i = 0; i< n; i++)
-         LOGMSG("%s\n", namelist[i]->d_name);
+         logmsg("%s\n", namelist[i]->d_name);
     }
     /* free everything */
     free(buff);

@@ -1244,7 +1244,7 @@ BYTE    storkey;
     if ( !ECMODE(&regs->psw) )
         regs->GR_LHLCL(r1) &= 0xF8;
 
-//  /*debug*/LOGMSG("ISK storage block %8.8X key %2.2X\n",
+//  /*debug*/logmsg("ISK storage block %8.8X key %2.2X\n",
 //                  regs->GR_L(r2), regs->GR_L(r1) & 0xFE);
 
 }
@@ -4536,7 +4536,7 @@ U64     dreg;                           /* Clock value               */
 
     RETURN_INTCHECK(regs);
 
-//  /*debug*/LOGMSG("Set TOD clock=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set TOD clock=%16.16" I64_FMT "X\n", dreg);
 
 }
 
@@ -4565,7 +4565,7 @@ U64     dreg;                           /* Clock value               */
     /* Fetch clock comparator value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
-//  /*debug*/LOGMSG("Set clock comparator=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set clock comparator=%16.16" I64_FMT "X\n", dreg);
 
     dreg >>= 8;
 
@@ -4643,7 +4643,7 @@ S64     dreg;                           /* Timer value               */
 
     RELEASE_INTLOCK(regs);
 
-//  /*debug*/LOGMSG("Set CPU timer=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set CPU timer=%16.16" I64_FMT "X\n", dreg);
 
     RETURN_INTCHECK(regs);
 }
@@ -5078,7 +5078,7 @@ RADR    n;                              /* Absolute storage addr     */
 
     STORKEY_INVALIDATE(regs, n);
 
-//  /*debug*/LOGMSG("SSK storage block %8.8X key %2.2X\n",
+//  /*debug*/logmsg("SSK storage block %8.8X key %2.2X\n",
 //  /*debug*/       regs->GR_L(r2), regs->GR_LHLCL(r1) & 0xFE);
 
 } /* end DEF_INST(set_storage_key) */
@@ -6311,7 +6311,7 @@ U64     dreg;                           /* Clock value               */
     /* Store clock comparator value at operand location */
     ARCH_DEP(vstore8) ((dreg << 8), effective_addr2, b2, regs );
 
-//  /*debug*/LOGMSG("Store clock comparator=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Store clock comparator=%16.16" I64_FMT "X\n", dreg);
 
     RETURN_INTCHECK(regs);
 }
@@ -6501,7 +6501,7 @@ S64     dreg;                           /* Double word workarea      */
     /* Store CPU timer value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-//  /*debug*/LOGMSG("Store CPU timer=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Store CPU timer=%16.16" I64_FMT "X\n", dreg);
 
     RETURN_INTCHECK(regs);
 }
@@ -6601,7 +6601,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     PTT(PTT_CL_INF,"STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 
 #if defined(DEBUG_STSI)
-    LOGMSG("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",
+    logmsg("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",
             (regs->GR_L(0) & STSI_GPR0_FC_MASK) >> 28,
             regs->GR_L(0) & STSI_GPR0_SEL1_MASK,
             regs->GR_L(1) & STSI_GPR1_SEL2_MASK,
@@ -6618,7 +6618,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     {
         PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
-        LOGMSG("control.c: STSI cc=3 function code invalid\n");
+        logmsg("control.c: STSI cc=3 function code invalid\n");
 #endif /*DEBUG_STSI*/
         regs->psw.cc = 3;
         return;
@@ -6634,7 +6634,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     {
         regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
 #ifdef DEBUG_STSI
-        LOGMSG("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
+        logmsg("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
 #endif /*DEBUG_STSI*/
         regs->psw.cc = 0;
         return;
@@ -6696,7 +6696,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     {
         PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
-        LOGMSG("control.c: STSI cc=3 selector codes invalid\n");
+        logmsg("control.c: STSI cc=3 selector codes invalid\n");
 #endif /*DEBUG_STSI*/
         regs->psw.cc = 3;
         return;
@@ -6937,7 +6937,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
 #ifdef DEBUG_STSI
     /* Display results of STSI */
-    LOGMSG("control.c: STSI cc=%d\n", regs->psw.cc);
+    logmsg("control.c: STSI cc=%d\n", regs->psw.cc);
     for (i=0; i<256; i+=16, m+=16) {
         BYTE c, s[17]; int j;
         for (j=0; j<16; j++) {
@@ -6945,7 +6945,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             s[j] = isprint(c) ? c : '.';
         }
         s[j] = '\0';
-        LOGMSG("+%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+        logmsg("+%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X *%s*\n",
                 i,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],
                 m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],s);

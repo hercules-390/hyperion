@@ -837,7 +837,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that the frame offset is valid
     if( sOffset < sizeof( CTCIHDR ) || sOffset > sCount )
     {
-        LOGMSG( _("CTC101W %4.4X: Write buffer contains invalid "
+        logmsg( _("CTC101W %4.4X: Write buffer contains invalid "
                   "frame offset %u\n"),
                 pDEVBLK->devnum, sOffset );
 

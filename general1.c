@@ -4451,9 +4451,9 @@ BYTE   *ip;                             /* -> executed instruction   */
         n += sprintf (buf+n, " INST=%2.2X%2.2X", ip[0], ip[1]);
         if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", ip[2], ip[3]);
         if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", ip[4], ip[5]);
-        LOGMSG ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
+        logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
         DISASM_INSTRUCTION(ip,buf);
-        LOGMSG ("%s\n", buf);
+        logmsg ("%s\n", buf);
     }
 #endif
 
@@ -5270,7 +5270,7 @@ int     orglen1;                        /* Original dest length      */
             SET_GR_A(r2, regs,addr2);
             regs->psw.cc = 3;
 #if 0
-            LOGMSG (_("MVCL destructive overlap: "));
+            logmsg (_("MVCL destructive overlap: "));
             ARCH_DEP(display_inst) (regs, inst);
 #endif
             return;

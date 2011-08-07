@@ -427,7 +427,7 @@
 /*-------------------------------------------------------------------*/
 /* Macro for Debugging / Tracing...                                  */
 /*-------------------------------------------------------------------*/
-#define LOGMSG log_msg
+#define logmsg log_msg
 
 #define MLVL( _lvl) \
     (sysblk.msglvl & (MLVL_ ## _lvl))

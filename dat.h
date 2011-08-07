@@ -1135,7 +1135,7 @@ U16     sx, px;                         /* Segment and page index,
     /* Extract the private space bit from the ASCE */
     regs->dat.pvtaddr = ((regs->dat.asd & (ASCE_P|ASCE_R)) != 0);
 
-//  LOGMSG("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
+//  logmsg("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
@@ -1152,7 +1152,7 @@ U16     sx, px;                         /* Segment and page index,
         /* If ASCE indicates a real-space then real addr = virtual addr */
         if (regs->dat.asd & ASCE_R)
         {
-//      LOGMSG("asce type = real\n");
+//      logmsg("asce type = real\n");
 
             /* Translation specification exception if LKPG for a real-space */
             if(acctype & ACC_PTE)
@@ -1223,7 +1223,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              LOGMSG("r1te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r1te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-first translation exception if the bit 58 of
                    the region-first table entry is set (region invalid) */
@@ -1277,7 +1277,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              LOGMSG("r2te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r2te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-second translation exception if the bit 58 of
                    the region-second table entry is set (region invalid) */
@@ -1331,7 +1331,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              LOGMSG("r3te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r3te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-third translation exception if the bit 58 of
                    the region-third table entry is set (region invalid) */
@@ -1384,7 +1384,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch segment table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             ste = ARCH_DEP(fetch_doubleword_absolute) (sto, regs);
-//          LOGMSG("ste:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",sto,ste);
+//          logmsg("ste:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",sto,ste);
 
             /* Segment translation exception if segment invalid */
             if (ste & ZSEGTAB_I)
@@ -1414,7 +1414,7 @@ U16     sx, px;                         /* Segment and page index,
                 if (unlikely(acctype & ACC_LPTEA))
                 {
                     regs->dat.raddr = sto | (regs->dat.protect ? 0x04 : 0);
-//                  LOGMSG("raddr:%16.16" I64_FMT "X cc=2\n",regs->dat.raddr);
+//                  logmsg("raddr:%16.16" I64_FMT "X cc=2\n",regs->dat.raddr);
                     regs->dat.xcode = 0;
                     cc = 2;
                     return cc;
@@ -1426,7 +1426,7 @@ U16     sx, px;                         /* Segment and page index,
                 /* Fake 4K PFRA for TLB purposes */
                 regs->dat.rpfra = ((ste & ZSEGTAB_SFAA) | (vaddr & ~ZSEGTAB_SFAA)) & PAGEFRAME_PAGEMASK;
 
-//              LOGMSG("raddr:%16.16" I64_FMT "X cc=0\n",regs->dat.raddr);
+//              logmsg("raddr:%16.16" I64_FMT "X cc=0\n",regs->dat.raddr);
 
                 /* [3.11.4.2] Place the translated address in the TLB */
                 if (!(acctype & ACC_NOTLB))
@@ -1479,7 +1479,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch the page table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             pte = ARCH_DEP(fetch_doubleword_absolute) (pto, regs);
-//          LOGMSG("pte:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",pto,pte);
+//          logmsg("pte:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",pto,pte);
 
             /* Page translation exception if page invalid */
             if (pte & ZPGETAB_I)
@@ -1529,19 +1529,19 @@ U16     sx, px;                         /* Segment and page index,
 /* Conditions which always cause program check, except
    when performing translation for the control panel */
 address_excp:
-//    LOGMSG("dat.c: addressing exception: %8.8X %8.8X %4.4X %8.8X\n",
+//    logmsg("dat.c: addressing exception: %8.8X %8.8X %4.4X %8.8X\n",
 //        regs->CR(0),regs->dat.asd,pte,vaddr);
     regs->dat.xcode = PGM_ADDRESSING_EXCEPTION;
     goto tran_prog_check;
 
 tran_spec_excp:
 #if defined(FEATURE_ESAME)
-//    LOGMSG("dat.c: translation specification exception...\n");
-//    LOGMSG("       pte = %16.16" I64_FMT "X, ste = %16.16" I64_FMT "X, rte=%16.16" I64_FMT "X\n",
+//    logmsg("dat.c: translation specification exception...\n");
+//    logmsg("       pte = %16.16" I64_FMT "X, ste = %16.16" I64_FMT "X, rte=%16.16" I64_FMT "X\n",
 //        pte, ste, rte);
 #else
-//    LOGMSG("dat.c: translation specification exception...\n");
-//    LOGMSG("       cr0=%8.8X ste=%8.8X pte=%4.4X vaddr=%8.8X\n",
+//    logmsg("dat.c: translation specification exception...\n");
+//    logmsg("       cr0=%8.8X ste=%8.8X pte=%4.4X vaddr=%8.8X\n",
 //        regs->CR(0),ste,pte,vaddr);
 #endif
     regs->dat.xcode = PGM_TRANSLATION_SPECIFICATION_EXCEPTION;
@@ -1596,8 +1596,8 @@ page_tran_length:
 #endif /*!defined(FEATURE_ESAME)*/
 
 seg_tran_length:
-//  LOGMSG("dat.c: segment translation exception due to segment length\n");
-//  LOGMSG("       cr0=" F_RADR " sto=" F_RADR "\n",regs->CR(0),sto);
+//  logmsg("dat.c: segment translation exception due to segment length\n");
+//  logmsg("       cr0=" F_RADR " sto=" F_RADR "\n",regs->CR(0),sto);
     regs->dat.xcode = PGM_SEGMENT_TRANSLATION_EXCEPTION;
     regs->dat.raddr = sto;
     cc = 3;
@@ -1646,7 +1646,7 @@ reg_third_invalid:
     goto reg_third_excp;
 
 asce_type_excp:
-//  LOGMSG("rfx = %4.4X, rsx %4.4X, rtx = %4.4X, tt = %1.1X\n",
+//  logmsg("rfx = %4.4X, rsx %4.4X, rtx = %4.4X, tt = %1.1X\n",
 //      rfx, rsx, rtx, tt);
     regs->dat.xcode = PGM_ASCE_TYPE_EXCEPTION;
     cc = 4;
@@ -2034,7 +2034,7 @@ RADR    pfra;
 
         /* Set the page invalid bit in the page table entry,
            again subject to storage protection mechansims */
-// /*debug*/ LOGMSG("dat.c: IPTE issued for entry %4.4X at %8.8X...\n"
+// /*debug*/ logmsg("dat.c: IPTE issued for entry %4.4X at %8.8X...\n"
 //                  "       page table %8.8X, page index %8.8X, cr0 %8.8X\n",
 //                  pte, raddr, regs->GR_L(r1), regs->GR_L(r2), regs->CR(0));
         if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_2K)

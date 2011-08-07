@@ -345,7 +345,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey2 = regs->mainstor[xpkeya];
 
-/*DEBUG LOGMSG("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
+/*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
                   pte2,xpkey2,xpblk2,akey2);  */
 
             }
@@ -441,7 +441,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey1 = regs->mainstor[xpkeya];
 
-/*DEBUG  LOGMSG("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
+/*DEBUG  logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
                   pte1,xpkey1,xpblk1,akey1);  */
             }
             else

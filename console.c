@@ -239,27 +239,27 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 #define DEBUG_LVL        0
 
 #if DEBUG_LVL == 0
-  #define TNSDEBUG1      1 ? ((void)0) : LOGMSG
-  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
-  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG1      1 ? ((void)0) : logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 1
-  #define TNSDEBUG1      LOGMSG
-  #define TNSDEBUG2      1 ? ((void)0) : LOGMSG
-  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 2
-  #define TNSDEBUG1      LOGMSG
-  #define TNSDEBUG2      LOGMSG
-  #define TNSDEBUG3      1 ? ((void)0) : LOGMSG
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 3
-  #define TNSDEBUG1      LOGMSG
-  #define TNSDEBUG2      LOGMSG
-  #define TNSDEBUG3      LOGMSG
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      logmsg
 #endif
 
-#define TNSERROR        LOGMSG
+#define TNSERROR        logmsg
 
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
@@ -281,26 +281,26 @@ BYTE print_chars[17];
     for (offset=0; offset < len; )
     {
         memset(print_chars, 0, sizeof(print_chars));
-        LOGMSG("+%4.4X  ", offset);
+        logmsg("+%4.4X  ", offset);
         for (i=0; i < 16; i++)
         {
             c = *addr++;
             if (offset < len) {
-                LOGMSG("%2.2X", c);
+                logmsg("%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
                 c = guest_to_host(c);
                 if (isprint(c)) print_chars[i] = c;
             }
             else {
-                LOGMSG("  ");
+                logmsg("  ");
             }
             offset++;
             if ((offset & 3) == 0) {
-                LOGMSG(" ");
+                logmsg(" ");
             }
         } /* end for(i) */
-        LOGMSG(" %s\n", print_chars);
+        logmsg(" %s\n", print_chars);
     } /* end for(offset) */
 
 } /* end function packet_trace */
@@ -2913,7 +2913,7 @@ int     woff;                           /* Current offset in buffer  */
         /* Exit if desired screen position has been reached */
         if (wpos >= pos)
         {
-//          LOGMSG (_("console: Pos %4.4X reached at %4.4X\n"),
+//          logmsg (_("console: Pos %4.4X reached at %4.4X\n"),
 //                  wpos, woff);
 
 #ifdef FIX_QWS_BUG_FOR_MCS_CONSOLES
@@ -2929,7 +2929,7 @@ int     woff;                           /* Current offset in buffer  */
                 && buf[woff+6] == O3270_SFE)
             {
                 woff += 8;
-//              LOGMSG (_("console: Pos %4.4X adjusted to %4.4X\n"),
+//              logmsg (_("console: Pos %4.4X adjusted to %4.4X\n"),
 //                      wpos, woff);
         }
 #endif /*FIX_QWS_BUG_FOR_MCS_CONSOLES*/

@@ -631,7 +631,7 @@ S32 vtimer=0;
     }
     if(itimer != regs->old_timer)
     {
-// ZZ       LOGMSG(_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
+// ZZ       logmsg(_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
         set_int_timer(regs, itimer);
     }
     else
@@ -645,7 +645,7 @@ S32 vtimer=0;
         FETCH_FW(vtimer, regs->ecps_vtmrpt);
         if(vtimer != regs->ecps_oldtmr)
         {
-// ZZ       LOGMSG(_("ECPS vtimer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->ecps_vtimer);
+// ZZ       logmsg(_("ECPS vtimer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->ecps_vtimer);
             set_ecps_vtimer(regs, itimer);
         }
         else

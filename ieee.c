@@ -566,7 +566,7 @@ void ebfpston(struct ebfp *op)
         op->v = ldexpl(h + l, op->exp - 16383);
         break;
     }
-    //LOGMSG("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
+    //logmsg("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpston(struct lbfp *op)
@@ -619,7 +619,7 @@ void lbfpston(struct lbfp *op)
         op->v = ldexp(t, op->exp - 1023);
         break;
     }
-    //LOGMSG("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpston(struct sbfp *op)
@@ -672,7 +672,7 @@ void sbfpston(struct sbfp *op)
         op->v = ldexpf(t, op->exp - 127);
         break;
     }
-    //LOGMSG("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
 }
 
 /*
@@ -705,7 +705,7 @@ void ebfpntos(struct ebfp *op)
         op->fractl = (U64)fmodl(ldexp(fabsl(f), 113), pow(2, 64));
         break;
     }
-    //LOGMSG("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
+    //logmsg("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpntos(struct lbfp *op)
@@ -734,7 +734,7 @@ void lbfpntos(struct lbfp *op)
         op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFULL;
         break;
     }
-    //LOGMSG("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpntos(struct sbfp *op)
@@ -763,7 +763,7 @@ void sbfpntos(struct sbfp *op)
         op->fract = (U32)ldexp(fabsf(f), 24) & 0x7FFFFF;
         break;
     }
-    //LOGMSG("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
 }
 
 /*
@@ -782,7 +782,7 @@ static void get_lbfp(struct lbfp *op, U32 *fpr)
     op->sign = (fpr[0] & 0x80000000) != 0;
     op->exp = (fpr[0] & 0x7FF00000) >> 20;
     op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
-    //LOGMSG("lget r=%8.8x%8.8x exp=%d fract=%" I64_FMT "x\n", fpr[0], fpr[1], op->exp, op->fract);
+    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%" I64_FMT "x\n", fpr[0], fpr[1], op->exp, op->fract);
 }
 #endif  /* !defined(_IEEE_C) */
 
@@ -795,7 +795,7 @@ static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
     op->sign = (v & 0x8000000000000000ULL) != 0;
     op->exp = (v & 0x7FF0000000000000ULL) >> 52;
     op->fract = v & 0x000FFFFFFFFFFFFFULL;
-    //LOGMSG("lfetch m=%16.16" I64_FMT "x exp=%d fract=%" I64_FMT "x\n", v, op->exp, op->fract);
+    //logmsg("lfetch m=%16.16" I64_FMT "x exp=%d fract=%" I64_FMT "x\n", v, op->exp, op->fract);
 }
 
 #if !defined(_IEEE_C)
@@ -804,7 +804,7 @@ static void get_sbfp(struct sbfp *op, U32 *fpr)
     op->sign = (*fpr & 0x80000000) != 0;
     op->exp = (*fpr & 0x7F800000) >> 23;
     op->fract = *fpr & 0x007FFFFF;
-    //LOGMSG("sget r=%8.8x exp=%d fract=%x\n", *fpr, op->exp, op->fract);
+    //logmsg("sget r=%8.8x exp=%d fract=%x\n", *fpr, op->exp, op->fract);
 }
 #endif  /* !defined(_IEEE_C) */
 
@@ -817,7 +817,7 @@ static void vfetch_sbfp(struct sbfp *op, VADR addr, int arn, REGS *regs)
     op->sign = (v & 0x80000000) != 0;
     op->exp = (v & 0x7F800000) >> 23;
     op->fract = v & 0x007FFFFF;
-    //LOGMSG("sfetch m=%8.8x exp=%d fract=%x\n", v, op->exp, op->fract);
+    //logmsg("sfetch m=%8.8x exp=%d fract=%x\n", v, op->exp, op->fract);
 }
 
 #if !defined(_IEEE_C)
@@ -836,13 +836,13 @@ static void put_lbfp(struct lbfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<20) | (op->fract>>32);
     fpr[1] = op->fract & 0xFFFFFFFF;
-    //LOGMSG("lput exp=%d fract=%" I64_FMT "x r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
+    //logmsg("lput exp=%d fract=%" I64_FMT "x r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
 }
 
 static void put_sbfp(struct sbfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
-    //LOGMSG("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
+    //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
 
 /*
@@ -960,7 +960,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
         cc = op->sign ? 1 : 2;
         break;
     case FP_NORMAL:
-        //LOGMSG("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"I64_FMT"x\n",
+        //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"I64_FMT"x\n",
         //        op->exp, op->exp, op->fract);
         /* Insert an implied 1. in front of the 52 bit binary
            fraction and lengthen the result to 56 bits */
@@ -970,7 +970,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
            adjusted by 1 to move the point before the 56 bit fraction */
         exp = op->exp - 1023 + 1;
 
-        //LOGMSG("ieee: adjusted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
+        //logmsg("ieee: adjusted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
         /* Shift the fraction right one bit at a time until
            the binary exponent becomes a multiple of 4 */
         while (exp & 3)
@@ -978,7 +978,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
             exp++;
             fract >>= 1;
         }
-        //LOGMSG("ieee:  shifted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
+        //logmsg("ieee:  shifted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
 
         /* Convert the binary exponent into a hexadecimal exponent
            by dropping the last two bits (which are now zero) */
@@ -1141,7 +1141,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
     struct lbfp op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("THDR r1=%d r2=%d\n", r1, r2);
+    //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Load lbfp operand from R2 register */
@@ -1166,7 +1166,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     struct lbfp lbfp_op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("THDER r1=%d r2=%d\n", r1, r2);
+    //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
     /* Load sbfp operand from R2 register */
@@ -1194,7 +1194,7 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
     struct lbfp op1;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("TBDR r1=%d r2=%d\n", r1, r2);
+    //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
@@ -1217,7 +1217,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     U64 fract;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("TBEDR r1=%d r2=%d\n", r1, r2);
+    //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
@@ -1330,7 +1330,7 @@ DEF_INST(add_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("AXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("AXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1429,7 +1429,7 @@ DEF_INST(add_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("ADBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("ADBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1455,7 +1455,7 @@ DEF_INST(add_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("ADB r1=%d b2=%d\n", r1, b2);
+    //logmsg("ADB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1553,7 +1553,7 @@ DEF_INST(add_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("AEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("AEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1579,7 +1579,7 @@ DEF_INST(add_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("AEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("AEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1659,7 +1659,7 @@ DEF_INST(compare_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1738,7 +1738,7 @@ DEF_INST(compare_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1762,7 +1762,7 @@ DEF_INST(compare_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("CDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("CDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1840,7 +1840,7 @@ DEF_INST(compare_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1864,7 +1864,7 @@ DEF_INST(compare_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("CEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("CEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1887,7 +1887,7 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("KXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("KXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1911,7 +1911,7 @@ DEF_INST(compare_and_signal_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("KDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("KDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1935,7 +1935,7 @@ DEF_INST(compare_and_signal_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("KDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("KDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1958,7 +1958,7 @@ DEF_INST(compare_and_signal_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("KEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("KEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -1982,7 +1982,7 @@ DEF_INST(compare_and_signal_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("KEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("KEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -2005,7 +2005,7 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
     S32 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CXFBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CXFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -2032,7 +2032,7 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     S32 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CDFBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CDFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     op2 = regs->GR_L(r2);
@@ -2057,7 +2057,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     S32 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CEFBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CEFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     op2 = regs->GR_L(r2);
@@ -2083,7 +2083,7 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     S64 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CXGBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CXGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -2112,7 +2112,7 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     S64 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CDGBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CDGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     op2 = regs->GR_G(r2);
@@ -2139,7 +2139,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     S64 op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("CEGBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CEGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     op2 = regs->GR_G(r2);
@@ -2166,7 +2166,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CFXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CFXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -2232,7 +2232,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CFDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CFDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2297,7 +2297,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CFEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CFEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2362,7 +2362,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CGXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CGXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -2430,7 +2430,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CGDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CGDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2497,7 +2497,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     int pgm_check;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("CGEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("CGEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2776,7 +2776,7 @@ DEF_INST(divide_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("DXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("DXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -2878,7 +2878,7 @@ DEF_INST(divide_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("DDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("DDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -2904,7 +2904,7 @@ DEF_INST(divide_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("DDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("DDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -3005,7 +3005,7 @@ DEF_INST(divide_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("DEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("DEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -3031,7 +3031,7 @@ DEF_INST(divide_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("DEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("DEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -3057,7 +3057,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
     int pgm_check = 0;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LTXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LTXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3097,7 +3097,7 @@ DEF_INST(load_and_test_bfp_long_reg)
     int pgm_check = 0;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LTDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LTDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -3136,7 +3136,7 @@ DEF_INST(load_and_test_bfp_short_reg)
     int pgm_check = 0;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LTEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LTEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -3174,7 +3174,7 @@ DEF_INST(load_fp_int_bfp_short_reg)
     struct sbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("FIEBR r1=%d, r2=%d\n", r1, r2);
+    //logmsg("FIEBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -3199,7 +3199,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
     struct lbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("FIDBR r1=%d, r2=%d\n", r1, r2);
+    //logmsg("FIDBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -3224,7 +3224,7 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     struct ebfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //LOGMSG("FIXBR r1=%d, r2=%d\n", r1, r2);
+    //logmsg("FIXBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -3256,7 +3256,7 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
     struct sbfp op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LDEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LDEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
@@ -3277,7 +3277,7 @@ DEF_INST(load_lengthened_bfp_short_to_long)
     struct sbfp op2;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("LDEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("LDEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     vfetch_sbfp(&op2, effective_addr2, b2, regs);
@@ -3297,7 +3297,7 @@ DEF_INST(load_lengthened_bfp_long_to_ext_reg)
     struct lbfp op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LXDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3319,7 +3319,7 @@ DEF_INST(load_lengthened_bfp_long_to_ext)
     struct lbfp op2;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("LXDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("LXDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3340,7 +3340,7 @@ DEF_INST(load_lengthened_bfp_short_to_ext_reg)
     struct sbfp op2;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LXEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LXEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3362,7 +3362,7 @@ DEF_INST(load_lengthened_bfp_short_to_ext)
     struct sbfp op2;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("LXEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("LXEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3382,7 +3382,7 @@ DEF_INST(load_negative_bfp_ext_reg)
     struct ebfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LNXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LNXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3414,7 +3414,7 @@ DEF_INST(load_negative_bfp_long_reg)
     struct lbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LNDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LNDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -3445,7 +3445,7 @@ DEF_INST(load_negative_bfp_short_reg)
     struct sbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LNEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LNEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -3476,7 +3476,7 @@ DEF_INST(load_complement_bfp_ext_reg)
     struct ebfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LCXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LCXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3508,7 +3508,7 @@ DEF_INST(load_complement_bfp_long_reg)
     struct lbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LCDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LCDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -3539,7 +3539,7 @@ DEF_INST(load_complement_bfp_short_reg)
     struct sbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LCEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LCEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -3570,7 +3570,7 @@ DEF_INST(load_positive_bfp_ext_reg)
     struct ebfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LPXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LPXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3602,7 +3602,7 @@ DEF_INST(load_positive_bfp_long_reg)
     struct lbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LPDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LPDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -3633,7 +3633,7 @@ DEF_INST(load_positive_bfp_short_reg)
     struct sbfp op;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LPEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LPEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -3666,7 +3666,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LEDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LEDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
@@ -3714,7 +3714,7 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LDXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LDXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3763,7 +3763,7 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("LEXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("LEXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3886,7 +3886,7 @@ DEF_INST(multiply_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("MXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("MXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3913,7 +3913,7 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("MXDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("MXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3944,7 +3944,7 @@ DEF_INST(multiply_bfp_long_to_ext)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("MXDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("MXDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -4048,7 +4048,7 @@ DEF_INST(multiply_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("MDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("MDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4074,7 +4074,7 @@ DEF_INST(multiply_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("MDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("MDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4100,7 +4100,7 @@ DEF_INST(multiply_bfp_short_to_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("MDEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("MDEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4130,7 +4130,7 @@ DEF_INST(multiply_bfp_short_to_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("MDEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("MDEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4233,7 +4233,7 @@ DEF_INST(multiply_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("MEEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("MEEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4259,7 +4259,7 @@ DEF_INST(multiply_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("MEEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("MEEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4284,7 +4284,7 @@ DEF_INST(multiply_add_bfp_long_reg)
     int pgm_check;
 
     RRF_R(inst, regs, r1, r2, r3);
-    //LOGMSG("MADBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    //logmsg("MADBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4312,7 +4312,7 @@ DEF_INST(multiply_add_bfp_long)
     int pgm_check;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
-    //LOGMSG("MADB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    //logmsg("MADB r1=%d r3=%d b2=%d\n", r1, r3, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4339,7 +4339,7 @@ DEF_INST(multiply_add_bfp_short_reg)
     int pgm_check;
 
     RRF_R(inst, regs, r1, r2, r3);
-    //LOGMSG("MAEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    //logmsg("MAEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4367,7 +4367,7 @@ DEF_INST(multiply_add_bfp_short)
     int pgm_check;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
-    //LOGMSG("MAEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    //logmsg("MAEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4394,7 +4394,7 @@ DEF_INST(multiply_subtract_bfp_long_reg)
     int pgm_check;
 
     RRF_R(inst, regs, r1, r2, r3);
-    //LOGMSG("MSDBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    //logmsg("MSDBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4423,7 +4423,7 @@ DEF_INST(multiply_subtract_bfp_long)
     int pgm_check;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
-    //LOGMSG("MSDB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    //logmsg("MSDB r1=%d r3=%d b2=%d\n", r1, r3, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4451,7 +4451,7 @@ DEF_INST(multiply_subtract_bfp_short_reg)
     int pgm_check;
 
     RRF_R(inst, regs, r1, r2, r3);
-    //LOGMSG("MSEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    //logmsg("MSEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4480,7 +4480,7 @@ DEF_INST(multiply_subtract_bfp_short)
     int pgm_check;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
-    //LOGMSG("MSEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    //logmsg("MSEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4548,7 +4548,7 @@ DEF_INST(squareroot_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SQXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SQXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -4602,7 +4602,7 @@ DEF_INST(squareroot_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SQDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SQDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -4627,7 +4627,7 @@ DEF_INST(squareroot_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("SQDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("SQDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     vfetch_lbfp(&op, effective_addr2, b2, regs);
@@ -4680,7 +4680,7 @@ DEF_INST(squareroot_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SQEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SQEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -4705,7 +4705,7 @@ DEF_INST(squareroot_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("SQEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("SQEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     vfetch_sbfp(&op, effective_addr2, b2, regs);
@@ -4734,7 +4734,7 @@ DEF_INST(subtract_bfp_ext_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SXBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -4761,7 +4761,7 @@ DEF_INST(subtract_bfp_long_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SDBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4788,7 +4788,7 @@ DEF_INST(subtract_bfp_long)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("SDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("SDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4814,7 +4814,7 @@ DEF_INST(subtract_bfp_short_reg)
     int pgm_check;
 
     RRE(inst, regs, r1, r2);
-    //LOGMSG("SEBR r1=%d r2=%d\n", r1, r2);
+    //logmsg("SEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4841,7 +4841,7 @@ DEF_INST(subtract_bfp_short)
     int pgm_check;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //LOGMSG("SEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("SEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
@@ -4871,7 +4871,7 @@ DEF_INST(test_data_class_bfp_short)
     // parse instruction
     RXE(inst, regs, r1, b2, effective_addr2);
 
-    //LOGMSG("TCEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("TCEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     // retrieve first operand.
@@ -4913,7 +4913,7 @@ DEF_INST(test_data_class_bfp_long)
     // parse instruction
     RXE(inst, regs, r1, b2, effective_addr2);
 
-    //LOGMSG("TCDB r1=%d b2=%d\n", r1, b2);
+    //logmsg("TCDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
     // retrieve first operand.
@@ -4955,7 +4955,7 @@ DEF_INST(test_data_class_bfp_ext)
     // parse instruction
     RXE(inst, regs, r1, b2, effective_addr2);
 
-    //LOGMSG("TCXB r1=%d b2=%d\n", r1, b2);
+    //logmsg("TCXB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -5021,7 +5021,7 @@ DEF_INST(divide_integer_bfp_long_reg)
     int pgm_check;
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
-    //LOGMSG("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    //logmsg("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
     BFPINST_CHECK(regs);
     if (r1 == r2 || r2 == r3 || r1 == r3) {
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5078,7 +5078,7 @@ DEF_INST(divide_integer_bfp_short_reg)
     int pgm_check;
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
-    //LOGMSG("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    //logmsg("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
     BFPINST_CHECK(regs);
     if (r1 == r2 || r2 == r3 || r1 == r3) {
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);

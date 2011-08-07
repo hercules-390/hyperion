@@ -1,4 +1,4 @@
-/* LOGMSG.C     (c) Copyright Ivan Warren, 2003-2011                 */
+/* logmsg.C     (c) Copyright Ivan Warren, 2003-2011                 */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*               logmsg frontend routing                             */
 /*                                                                   */
@@ -286,7 +286,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
     }
 
     if ( errmsg && !MLVL(DEBUG) )
-        LOGMSG("HHC00007" "I" " " HHC00007 "\n", function, file, line);
+        logmsg("HHC00007" "I" " " HHC00007 "\n", function, file, line);
 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);
@@ -302,7 +302,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
 /*-------------------------------------------------------------------*/
 /* Log message: Normal routing (panel or buffer, as appropriate)     */
-/* was logmsg; replaced with macro LOGMSG                            */
+/* was logmsg; replaced with macro logmsg                            */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void log_msg(char *msg,...)
 {

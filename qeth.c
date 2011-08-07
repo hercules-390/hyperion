@@ -192,14 +192,14 @@ static inline void DUMP(char* name, void* ptr, int len)
 {
 int i;
 
-    LOGMSG(_("DATA: %4.4X %s"), len, name);
+    logmsg(_("DATA: %4.4X %s"), len, name);
     for(i = 0; i < len; i++)
     {
         if(!(i & 15))
-            LOGMSG(_("\n%4.4X:"), i);
-        LOGMSG(_(" %2.2X"), ((BYTE*)ptr)[i]);
+            logmsg(_("\n%4.4X:"), i);
+        logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
     }
-    LOGMSG(_("\n"));
+    logmsg(_("\n"));
 }
 #else
  #define DUMP(_name, _ptr, _len)
@@ -1095,7 +1095,7 @@ int i;
             continue;
         }
         else
-            LOGMSG(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
+            logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
 
     }
 

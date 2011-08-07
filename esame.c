@@ -5622,7 +5622,7 @@ int     cc;                             /* Condition code            */
     }
 
 #if 0
-    LOGMSG ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
+    logmsg ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
             regs->facility_list[0],
             regs->facility_list[1],
             regs->facility_list[2],

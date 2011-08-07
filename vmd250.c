@@ -1014,35 +1014,35 @@ int     cc;                            /* condition code             */
 #if 0
     if (sizeof(BIOPL) != 64)
     {
-            LOGMSG("BIOPL size not 64: %d\n",sizeof(BIOPL));
+            logmsg("BIOPL size not 64: %d\n",sizeof(BIOPL));
     }
     if (sizeof(BIOPL_INIT32) != 64)
     {
-            LOGMSG("BIOPL_INIT32 size not 64: %d\n",sizeof(BIOPL_INIT32));
+            logmsg("BIOPL_INIT32 size not 64: %d\n",sizeof(BIOPL_INIT32));
     }
     if (sizeof(BIOPL_INIT64) != 64)
     {
-            LOGMSG("BIOPL_INIT64 size not 64: %d\n",sizeof(BIOPL_INIT64));
+            logmsg("BIOPL_INIT64 size not 64: %d\n",sizeof(BIOPL_INIT64));
     }
     if (sizeof(BIOPL_IORQ32) != 64)
     {
-            LOGMSG("BIOPL_IORQ32 size not 64: %d\n",sizeof(BIOPL_IORQ32));
+            logmsg("BIOPL_IORQ32 size not 64: %d\n",sizeof(BIOPL_IORQ32));
     }
     if (sizeof(BIOPL_REMOVE) != 64)
     {
-            LOGMSG("BIOPL_REMOVE size not 64: %d\n",sizeof(BIOPL_REMOVE));
+            logmsg("BIOPL_REMOVE size not 64: %d\n",sizeof(BIOPL_REMOVE));
     }
     if (sizeof(BIOPL_IORQ64) != 64)
     {
-            LOGMSG("BIOPL_IORQ64 size not 64: %d\n",sizeof(BIOPL_IORQ64));
+            logmsg("BIOPL_IORQ64 size not 64: %d\n",sizeof(BIOPL_IORQ64));
     }
     if (sizeof(BIOE32) != 16)
     {
-            LOGMSG("BIOE32 size not 16: %d\n",sizeof(BIOE32));
+            logmsg("BIOE32 size not 16: %d\n",sizeof(BIOE32));
     }
     if (sizeof(BIOE64) != 24)
     {
-            LOGMSG("BIOE64 size not 24: %d\n",sizeof(BIOE64));
+            logmsg("BIOE64 size not 24: %d\n",sizeof(BIOE64));
     }
 #endif
 
@@ -1638,7 +1638,7 @@ RADR   bufend;    /* Last byte read or written                 */
    
 
 #if 0
-   LOGMSG(_("(d250_list32) BIOE's processed: %d\n"),block);
+   logmsg(_("(d250_list32) BIOE's processed: %d\n"),block);
 #endif
    
    /* Restore device to guest ownership */
@@ -1790,7 +1790,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
 int     rc2;
 
 #if 0
-   LOGMSG("(d250_iorq64) Entered\n");
+   logmsg("(d250_iorq64) Entered\n");
 #endif
 
    /* Clear the reserved BIOPL */
@@ -1825,7 +1825,7 @@ int     rc2;
    /* Fetch the block count from the BIOPL */
    FETCH_FW(ioctl.blkcount,&biopl->blkcount);
 #if 0
-   LOGMSG("(d250_iorq64) ioctl.blkcount=%d,\n",
+   logmsg("(d250_iorq64) ioctl.blkcount=%d,\n",
            ioctl.blkcount);
 #endif
    
@@ -1839,7 +1839,7 @@ int     rc2;
    /* Fetch the address of the BIO entry list from the BIOPL */
    FETCH_DW(ioctl.listaddr,&biopl->bioeladr);
 #if 0
-   LOGMSG (_("(d250_iorq64) ioctl.listaddr=%16.16X,\n"),
+   logmsg (_("(d250_iorq64) ioctl.listaddr=%16.16X,\n"),
            ioctl.listaddr);
 #endif
 
@@ -2213,7 +2213,7 @@ RADR   bufend;    /* Last byte read or written                 */
    
 #if 0
    /* remove after testing */
-   LOGMSG(_("(d250_list64) BIOE's processed: %d\n"),block);
+   logmsg(_("(d250_list64) BIOE's processed: %d\n"),block);
 #endif
    
    /* Restore device to guest ownership */

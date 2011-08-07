@@ -456,10 +456,10 @@ static int  BeginWait
         // need to back out what we previously did just above).
 
 #ifdef FISH_HANG
-        LOGMSG("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
+        logmsg("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
             ,pszFile ,nLine ,rc );
 #else
-        LOGMSG("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
+        logmsg("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
             ,rc );
 #endif
         pFT_COND_VAR->nNumWaiting--;    // (de-register wait request)
@@ -595,10 +595,10 @@ static int  WaitForTransmission
     // would in all likelihood!)...
 
 #ifdef FISH_HANG
-    LOGMSG ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
+    logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
         ,pszFile ,nLine ,dwWaitRetCode ,dwWaitRetCode );
 #else
-    LOGMSG ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
+    logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
         ,dwWaitRetCode ,dwWaitRetCode );
 #endif
 
@@ -772,10 +772,10 @@ static int  ReturnFromWait
         // Just log the fact that something went wrong and return. <shrug>
 
 #ifdef FISH_HANG
-        LOGMSG("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
+        logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
             ,pszFile ,nLine ,rc );
 #else
-        LOGMSG("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
+        logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
             ,rc );
 #endif
 
@@ -1001,9 +1001,9 @@ int  fthread_create
     if ( !pCallTheirThreadParms )
     {
 #ifdef FISH_HANG
-        LOGMSG("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
 #else
-        LOGMSG("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
+        logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
 #endif
         return RC(ENOMEM);      // (out of memory)
     }
@@ -1014,9 +1014,9 @@ int  fthread_create
     if ( !pFTHREAD )
     {
 #ifdef FISH_HANG
-        LOGMSG("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
 #else
-        LOGMSG("fthread_create: malloc(FTHREAD) failed\n");
+        logmsg("fthread_create: malloc(FTHREAD) failed\n");
 #endif
         free ( pCallTheirThreadParms );
         return RC(ENOMEM);      // (out of memory)
@@ -1044,9 +1044,9 @@ int  fthread_create
     {
         UnlockThreadsList();
 #ifdef FISH_HANG
-        LOGMSG("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
 #else
-        LOGMSG("fthread_create: MyCreateThread failed\n");
+        logmsg("fthread_create: MyCreateThread failed\n");
 #endif
         free ( pCallTheirThreadParms );
         free ( pFTHREAD );

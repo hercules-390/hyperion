@@ -193,7 +193,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ LOGMSG (_("External interrupt: Malfuction Alert from CPU %d\n"),
+// /*debug*/ logmsg (_("External interrupt: Malfuction Alert from CPU %d\n"),
 // /*debug*/    cpuad);
 
         /* Reset the indicator for the CPU which was found */
@@ -233,7 +233,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ LOGMSG (_("External interrupt: Emergency Signal from CPU %d\n"),
+// /*debug*/ logmsg (_("External interrupt: Emergency Signal from CPU %d\n"),
 // /*debug*/    cpuad);
 
         /* Reset the indicator for the CPU which was found */
@@ -262,7 +262,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if external call is pending */
     if (OPEN_IC_EXTCALL(regs))
     {
-//  /*debug*/LOGMSG (_("External interrupt: External Call from CPU %d\n"),
+//  /*debug*/logmsg (_("External interrupt: External Call from CPU %d\n"),
 //  /*debug*/       regs->extccpu);
 
         /* Reset external call pending */
@@ -378,7 +378,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
 #if 0
                /* Store the 64-bit interrupt parameter */
-               LOGMSG (_("Saving 64-bit Block I/O interrupt parm at "
+               logmsg (_("Saving 64-bit Block I/O interrupt parm at "
                          "%16.16X: %16.16X\n"),
                          servpadr,
                          sysblk.bioparm

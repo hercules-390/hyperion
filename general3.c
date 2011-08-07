@@ -1372,7 +1372,7 @@ int     ai, li, ti;                     /* Operand address subfields */
     /* Address bits 56-59 contain the Attribute Indication (AI) */
     ai = (effective_addr2 >> 4) & 0xF;
 
-    //LOGMSG ("ECAG ai=%d li=%d ti=%d\n", ai, li, ti);
+    //logmsg ("ECAG ai=%d li=%d ti=%d\n", ai, li, ti);
 
     /* If reserved bits 40-55 are not zero then set r1 to all ones */
     if ((effective_addr2 & 0xFFFF00) != 0)

@@ -336,7 +336,7 @@ U32   code;
     /* Diagnose 0A4: Synchronous I/O (Standard CMS Blocksize)        */
     /*---------------------------------------------------------------*/
         regs->psw.cc = ARCH_DEP(syncblk_io) (r1, r2, regs);
-//      LOGMSG ("Diagnose X\'0A4\': CC=%d, R15=%8.8X\n",      /*debug*/
+//      logmsg ("Diagnose X\'0A4\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
 
@@ -345,7 +345,7 @@ U32   code;
     /* Diagnose 0A8: Synchronous General I/O                         */
     /*---------------------------------------------------------------*/
         regs->psw.cc = ARCH_DEP(syncgen_io) (r1, r2, regs);
-//      LOGMSG ("Diagnose X\'0A8\': CC=%d, R15=%8.8X\n",      /*debug*/
+//      logmsg ("Diagnose X\'0A8\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
 
