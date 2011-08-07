@@ -693,7 +693,8 @@ void ebfpntos(struct ebfp *op)
         ebfpzero(op, signbit(op->v));
         break;
     case FP_SUBNORMAL:
-        /* This may need special handling, but I don't know
+        /* WARNING:
+         * This may need special handling, but I don't know
          * exactly how yet.  I suspect I need to do something
          * to deal with the different implied unit bit.
          */
@@ -723,7 +724,8 @@ void lbfpntos(struct lbfp *op)
         lbfpzero(op, signbit(op->v));
         break;
     case FP_SUBNORMAL:
-        /* This may need special handling, but I don't know
+        /* WARNING:
+         * This may need special handling, but I don't know
          * exactly how yet.  I suspect I need to do something
          * to deal with the different implied unit bit.
          */
@@ -752,7 +754,8 @@ void sbfpntos(struct sbfp *op)
         sbfpzero(op, signbit(op->v));
         break;
     case FP_SUBNORMAL:
-        /* This may need special handling, but I don't
+        /* WARNING:
+         * This may need special handling, but I don't
          * exactly how yet.  I suspect I need to do something
          * to deal with the different implied unit bit.
          */
