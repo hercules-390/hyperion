@@ -1162,23 +1162,22 @@ BYTE    c;                              /* Character work area       */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, char *buf, size_t bufl,
-                                    int ar, int acctype, char *hdr)
+                                    int ar, int acctype, char *hdr, U16* xcode)
 {
 RADR    raddr;                          /* Real address              */
 int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
 
     n = snprintf (buf, bufl-1, "%s%c:"F_VADR":", hdr, 
                  ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
-    xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
+    *xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
-    if (xcode == 0)
+    if (*xcode == 0)
     {
         n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
     }
     else
-        n += snprintf (buf+n,bufl-n-1," Translation exception %4.4hX",xcode);
+        n += snprintf (buf+n,bufl-n-1," Translation exception %4.4hX",*xcode);
 
     return n;
 
@@ -1461,9 +1460,18 @@ char    type;
                 n += snprintf (buf+n, sizeof(buf)-n-1, " R:"F_RADR, raddr);
             WRMSG(HHC02291, "I", buf);
         }
-        ARCH_DEP(display_virt) (regs, vaddr, buf, sizeof(buf), arn, ACCTYPE_LRA, "");
+        ARCH_DEP(display_virt) (regs, vaddr, buf, sizeof(buf), arn, ACCTYPE_LRA, "", &xcode);
         WRMSG(HHC02291, "I", buf);
-        vaddr += 16;
+        if (xcode)
+        {
+            /* Skip ahead to next 2K page boundary */
+            vaddr +=         0x800;
+            vaddr &= ~((VADR)0x7FF);
+        }
+        else
+        {
+            vaddr += 16;
+        }
     } /* end for(i) */
 
 } /* end function alter_display_virt */
@@ -1479,6 +1487,7 @@ BYTE    opcode;                         /* Instruction operation code*/
 int     ilc;                            /* Instruction length        */
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
+U16     xcode = 0;                      /* Exception code            */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 char    buf[2048];                      /* Message buffer            */
@@ -1664,7 +1673,7 @@ REGS   *regs;                           /* Copied regs               */
     {
         if(REAL_MODE(&regs->psw))
             ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), USE_REAL_ADDR,
-                                                ACCTYPE_READ, "");
+                                                ACCTYPE_READ, "", &xcode);
         else
             ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), b1,
                                 (opcode == 0x44 
@@ -1673,7 +1682,7 @@ REGS   *regs;                           /* Copied regs               */
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
-                                                  ACCTYPE_READ),"");
+                                                  ACCTYPE_READ),"", &xcode);
         if ( !(sysblk.emsg & EMSG_TEXT) )
             n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
 
@@ -1695,10 +1704,10 @@ REGS   *regs;                           /* Copied regs               */
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
             ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), USE_REAL_ADDR,
-                                                ACCTYPE_READ, "");
+                                                ACCTYPE_READ, "", &xcode);
         else
             ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), b2,
-                                        ACCTYPE_READ, "");
+                                        ACCTYPE_READ, "", &xcode);
 
         if ( !(sysblk.emsg & EMSG_TEXT) )
             n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
