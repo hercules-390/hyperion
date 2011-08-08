@@ -1056,7 +1056,7 @@
   "may also contain \"script\" commands, but the system ensures that no\n"       \
   "more than " MSTRING( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n\n"  \
                                                                                  \
-  "Enter the command without no arguments to list all running scripts.\n"
+  "Enter the command with no arguments to list all running scripts.\n"
 
 #define scsimount_cmd_desc      "Automatic SCSI tape mounts"
 #define scsimount_cmd_help      \
