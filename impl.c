@@ -293,11 +293,6 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     UNREFERENCED(dummy);
 
-    /* Wait for panel thread to engage */
-
-    while (!sysblk.panel_init)
-        usleep( 10 * 1000 );
-
     /* Obtain the name of the hercules.rc file or default */
 
     if (!(rcname = getenv("HERCULES_RC")))
@@ -306,7 +301,15 @@ char    pathname[MAX_PATH];             /* (work)                    */
         is_default_rc = 1;
     }
 
+    if(!strcasecmp(rcname,"None"))
+        return NULL;
+
     hostpath(pathname, rcname, sizeof(pathname));
+
+    /* Wait for panel thread to engage */
+// ZZ FIXME:THIS NEED TO GO
+    while (!sysblk.panel_init)
+        usleep( 10 * 1000 );
 
     /* Run the script processor for this file */
 
@@ -822,6 +825,10 @@ int     dll_count;                      /* index into array          */
         } /* end switch(c) */
     } /* end while */
 
+    /* Treat filename None as special */
+    if(!strcasecmp(cfgfile,"None"))
+        cfgfile = NULL;
+
     if (optind < argc)
         arg_error = 1;
 
@@ -975,25 +982,16 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-    /* attempt to get lock on config file */
-    hostpath(pathname, cfgfile, sizeof(pathname));
+    if(cfgfile)
+    {
+        /* attempt to get lock on config file */
+        hostpath(pathname, cfgfile, sizeof(pathname));
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
 
-    /* Test that we can get a read the file */
+        /* Test that we can get a read the file */
 
-    if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
-    {
-        if ( errno == EACCES )
-        {
-            WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
-            delayed_exit(-1);
-            return(1);
-        }
-    }
-    else
-    {
-        if ( lseek(fd_cfg, 0L, 2) < 0 )
+        if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
         {
             if ( errno == EACCES )
             {
@@ -1002,11 +1000,23 @@ int     dll_count;                      /* index into array          */
                 return(1);
             }
         }
-        close( fd_cfg );
-    }
+        else
+        {
+            if ( lseek(fd_cfg, 0L, 2) < 0 )
+            {
+                if ( errno == EACCES )
+                {
+                    WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
+                    delayed_exit(-1);
+                    return(1);
+                }
+            }
+            close( fd_cfg );
+        }
 
-    /* File was not lock, therefore we can proceed */
+        /* File was not lock, therefore we can proceed */
 #endif // OPTION_LOCK_CONFIG_FILE
+    }
 
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
@@ -1049,39 +1059,43 @@ int     dll_count;                      /* index into array          */
     if (rc)
         WRMSG(HHC00102, "E", strerror(rc));
 
+
 #if defined( OPTION_LOCK_CONFIG_FILE )
-    if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
+    if(cfgfile)
     {
-        WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
-        delayed_exit(-1);
-        return(1);
-    }
-    else
-    {
-#if defined( _MSVC_ )
-        if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
+        if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
         {
-            int rc = errno;
-            WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
+            WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
             delayed_exit(-1);
             return(1);
         }
-#else
-        fl_cfg.l_type = F_RDLCK;
-        fl_cfg.l_whence = SEEK_SET;
-        fl_cfg.l_start = 0;
-        fl_cfg.l_len = 1;
-
-        if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 )
+        else
         {
-            if (errno == EACCES || errno == EAGAIN)
+#if defined( _MSVC_ )
+            if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
             {
-                WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
+                int rc = errno;
+                WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
                 delayed_exit(-1);
                 return(1);
             }
-        }
+#else
+            fl_cfg.l_type = F_RDLCK;
+            fl_cfg.l_whence = SEEK_SET;
+            fl_cfg.l_start = 0;
+            fl_cfg.l_len = 1;
+
+            if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 )
+            {
+                if (errno == EACCES || errno == EAGAIN)
+                {
+                    WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
+                    delayed_exit(-1);
+                    return(1);
+                }
+            }
 #endif
+        }
     }
 #endif // OPTION_LOCK_CONFIG_FILE
 
@@ -1116,7 +1130,8 @@ int     dll_count;                      /* index into array          */
     //  -----------------------------------------------------
 
 #if defined( OPTION_LOCK_CONFIG_FILE )
-    close( fd_cfg );            // release config file lock
+    if(cfgfile)
+        close( fd_cfg );            // release config file lock
 #endif //    OPTION_LOCK_CONFIG_FILE
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)

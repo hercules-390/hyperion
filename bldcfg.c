@@ -142,7 +142,7 @@ int     devtmax;                        /* Max number device threads */
     g_numcpu = 0;
     g_maxcpu = 0;
 
-    if ((process_config(hercules_cnf)))
+    if (hercules_cnf && (process_config(hercules_cnf)))
         return -1;
 
     /* If MAXCPU is not specified in the configuration file,
