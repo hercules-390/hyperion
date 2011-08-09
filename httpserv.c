@@ -336,7 +336,7 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv; cv = cv->next)
-        logmsg(_("cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
+        LOGMSG(_("cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
           cv, cv->name, cv->value, cv->type);
 }
 #endif

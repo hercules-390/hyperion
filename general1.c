@@ -689,13 +689,13 @@ DEF_INST(branch_on_condition_register)
             PERFORM_CHKPT_SYNC (regs);
         }
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)            /*810*/
-        /* Perform serialization without checkpoint synchronization 
+        /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
         else if (inst[1] == 0xE0)
         {
             PERFORM_SERIALIZATION (regs);
         }
-#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/     
+#endif /*defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)*/
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
@@ -4463,9 +4463,9 @@ BYTE   *ip;                             /* -> executed instruction   */
         n += sprintf (buf+n, " INST=%2.2X%2.2X", ip[0], ip[1]);
         if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", ip[2], ip[3]);
         if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", ip[4], ip[5]);
-        logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
+        LOGMSG ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
         DISASM_INSTRUCTION(ip,buf);
-        logmsg ("%s\n", buf);
+        LOGMSG ("%s\n", buf);
     }
 #endif
 
@@ -5035,10 +5035,10 @@ CREG    n;                              /* Work                      */
 
         px = regs->PX;
         SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
-        
+
         /* Point to PSA in main storage */
         psa = (void*)(regs->mainstor + px);
- 
+
         /* Set the main storage reference bit */
         STORAGE_KEY(px, regs) |= STORKEY_REF;
 
@@ -5079,12 +5079,12 @@ CREG    n;                              /* Work                      */
                         {
                             /* Convert real address to absolute address */
                             cew = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
-    
+
                             /* Ensure absolute address is available */
                             if (!(unavailable = (cew >= regs->mainlim )))
                             {
                                 SIE_TRANSLATE(&cew, ACCTYPE_WRITE, regs);
-    
+
                                 /* Update both counters */
                                 FETCH_W(fwc, cew + regs->mainstor);
                                 fwc++;
@@ -5100,7 +5100,7 @@ CREG    n;                              /* Work                      */
                 }
             }
         }
-    
+
         /* Update the Enhance Monitor Exception Counter if the array could not be updated */
         if(unavailable)
         {
@@ -5110,7 +5110,7 @@ CREG    n;                              /* Work                      */
             STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
             STORE_W(psa->ec,ec);
         }
-              
+
         return;
 
     }
@@ -5282,7 +5282,7 @@ int     orglen1;                        /* Original dest length      */
             SET_GR_A(r2, regs,addr2);
             regs->psw.cc = 3;
 #if 0
-            logmsg (_("MVCL destructive overlap: "));
+            LOGMSG(_("MVCL destructive overlap: "));
             ARCH_DEP(display_inst) (regs, inst);
 #endif
             return;

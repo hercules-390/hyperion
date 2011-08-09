@@ -772,6 +772,11 @@
   "  dasd    DASD related messages\n"                                            \
   "  comm    Communications related messages\n"                                  \
   "  ur      Unit Record related messages\n"                                     \
+  "  scsi    SCSI related messages\n"                                            \
+  "  ctca    CTCA, LCS related messages\n"                                       \
+  "  graf    Graphics (3270) related messages\n"                                 \
+  "  thread  Threading related messages\n"                                       \
+  "  channel Channel related messages\n"                                         \
   "  verbose Display messages during configuration file processing\n"            \
   "  terse   Turn off verbose"
 
@@ -846,6 +851,15 @@
   "                               wait state\n"
 
 #define pgmprdos_cmd_desc       "Set LPP license setting"
+#define pgmprdos_cmd_help       \
+  "Format: \"pgmprdos restricted | licensed\"\n\n"                               \
+  "Note: It is YOUR responsibility to comply with the terms of the license for\n"\
+  "      the operating system you intend to run on Hercules. If you specify\n"   \
+  "      LICENSED and run a licensed operating system in violation of that\n"    \
+  "      license, then don't come after the Hercules developers when the vendor\n"\
+  "      sends his lawyers after you.\n"
+
+
 #define pgmtrace_cmd_desc       "Trace program interrupts"
 #define pgmtrace_cmd_help       \
                                 \
@@ -1524,7 +1538,7 @@ COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        
 COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        iodelay_cmd_desc,       iodelay_cmd_help    )
 #endif
 #if defined( OPTION_LPP_RESTRICT )
-COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      NULL                )
+COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      pgmprdos_cmd_help   )
 #else
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       NULL,                   NULL                )
 #endif

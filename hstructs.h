@@ -800,17 +800,22 @@ struct SYSBLK {
         int     msggrp;                 /* msg group writing active  */
         LOCK    msglock;                /* lock for writemsg         */
 #endif
-        int     msglvl;                 /* Message level             */
-#define MLVL_COMM    0x01
-#define MLVL_UR      0x02
-#define MLVL_DASD    0x04
-#define MLVL_TAPE    0x08
-#define MLVL_NORMAL  0x10
-#define MLVL_VERBOSE 0x20
-#define MLVL_DEBUG   0x80               /* bits */
-#define MLVL_DEVICES 0x0f
-#define MLVL_NONE    0x00
-#define MLVL_ANY     0xff
+        unsigned int msglvl;                 /* Message level             */
+#define MLVL_COMM    0x00000001
+#define MLVL_UR      0x00000002
+#define MLVL_DASD    0x00000004
+#define MLVL_TAPE    0x00000008
+#define MLVL_GRAF    0x00000010
+#define MLVL_CTCA    0x00000020
+#define MLVL_SCSI    0x00008000
+#define MLVL_CHANNEL 0x00010000
+#define MLVL_THREADS 0x00020000
+#define MLVL_NORMAL  0x20000000
+#define MLVL_VERBOSE 0x40000000
+#define MLVL_DEBUG   0x80000000             /* bits */
+#define MLVL_DEVICES 0x0000ffff
+#define MLVL_NONE    0x00000000
+#define MLVL_ANY     0xffffffff
 #if defined(_DEBUG) || defined(DEBUG)
   #define  DEFAULT_MLVL     MLVL_ANY
 #else

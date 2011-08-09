@@ -59,7 +59,7 @@
   #if defined( _MSVC_ )
     #define TRACE(...) do { \
         /* Write to both places */  \
-        logmsg(__VA_ARGS__); \
+        LOGMSG(__VA_ARGS__); \
         if (IsDebuggerPresent())    \
           DebuggerTrace (__VA_ARGS__); \
       } while (0)
@@ -71,7 +71,7 @@
         } \
       } while(0)
   #else /* !defined( _MSVC_ ) */
-    #define TRACE logmsg
+    #define TRACE LOGMSG
     #define ASSERT(a) do { \
         if (!(a)) { \
           TRACE("HHC91999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \

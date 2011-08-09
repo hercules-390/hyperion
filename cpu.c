@@ -499,7 +499,7 @@ static char *pgmintname[] = {
         ) )
     {
 #if defined(SIE_DEBUG)
-        logmsg(_("program_int() passing to guest code=%4.4X\n"),pcode);
+        LOGMSG(_("program_int() passing to guest code=%4.4X\n"),pcode);
 #endif /*defined(SIE_DEBUG)*/
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;

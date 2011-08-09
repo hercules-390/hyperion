@@ -40,7 +40,7 @@ END_FINAL_SECTION
 
 HDL_REGISTER_SECTION;
 {
-    logmsg("the S/370 Extension module requires the OPTION_S370_EXTENSION build option\n");
+    LOGMSG("the S/370 Extension module requires the OPTION_S370_EXTENSION build option\n");
     return -1;
 }
 END_REGISTER_SECTION

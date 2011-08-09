@@ -220,7 +220,7 @@ BYTE    c;                              /* Print character           */
 #ifdef OPTION_SCP_MSG_PREFIX
                 WRCMSG ("<pnl,color(green,black)>", HHC00001, "I", str);
 #else
-                logmsg ("<pnl,color(green,black)>%s\n", str);
+                LOGMSG ("<pnl,color(green,black)>%s\n", str);
 #endif /* OPTION_SCP_MSG_PREFIX */
                 str = strtok_r (NULL, "\n", &strtok_str);
             }

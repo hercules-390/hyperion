@@ -76,7 +76,7 @@ while (nleft > 0)
 }  /* end of do while */
 
  /*  if (nleft != 0)
-      logmsg (_("BOB123 read_socket:  Read of %d bytes requested, %d bytes actually read\n"),
+      LOGMSG (_("BOB123 read_socket:  Read of %d bytes requested, %d bytes actually read\n"),
                     nbytes, nbytes - nleft);*/
 
 return (nbytes - nleft);

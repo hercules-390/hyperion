@@ -186,7 +186,7 @@ U16     options;                     /* supplied options             */
 #if 0
     if (sizeof(CPB) != 16)
     {
-            logmsg("CPB size not 8: %d\n",sizeof(CPB));
+        LOGMSG("CPB size not 8: %d\n",sizeof(CPB));
     }
 #endif
 

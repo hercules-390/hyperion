@@ -185,7 +185,7 @@ int  winthread_create
 
     if ( !pWINTHREAD )
     {
-        logmsg("winthread_create: malloc(WINTHREAD) failed\n");
+        LOGMSG("winthread_create: malloc(WINTHREAD) failed\n");
         return RC(ENOMEM);      // (out of memory)
     }
 
@@ -222,7 +222,7 @@ int  winthread_create
 // We won't need the list, unlock the list, send log message and free up resources
 
         release_lock ( &WinThreadListLock );
-        logmsg("fthread_create: MyCreateThread failed\n");
+        LOGMSG("fthread_create: MyCreateThread failed\n");
         if ( pWINTHREAD->pszWinThreadName != NULL )
             free( pWINTHREAD->pszWinThreadName );
         free ( pWINTHREAD );
@@ -574,7 +574,7 @@ void DBGInitializeConditionVariable( const char* src, int line, const char* fun,
 {
     char    msgbuf[256];
     
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") InitializeConditionVariable(%p) Entered",
                 basename(src), line, fun, thread_id(), pcond );
@@ -583,7 +583,7 @@ void DBGInitializeConditionVariable( const char* src, int line, const char* fun,
     
     InitializeConditionVariable( pcond);
 
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") InitializeConditionVariable(%p) Exited",
                 basename(src), line, fun, thread_id(), pcond );
@@ -599,7 +599,7 @@ int DBGwinthread_cond_destroy( const char* src, int line, const char* fun, PCOND
     int rc;
     char    msgbuf[256];
     
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") winthread_cond_destroy(%p) Entered",
                 basename(src), line, fun, thread_id(), pcond );
@@ -608,7 +608,7 @@ int DBGwinthread_cond_destroy( const char* src, int line, const char* fun, PCOND
 
     rc = winthread_cond_destroy( pcond );
  
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") winthread_cond_destroy(%p) Exited rc = %d",
                 basename(src), line, fun, thread_id(), pcond, rc );
@@ -623,7 +623,7 @@ void DBGWakeConditionVariable( const char* src, int line, const char* fun, PCOND
 {
     char    msgbuf[256];
     
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeConditionVariable(%p) Entered",
                 basename(src), line, fun, thread_id(), pcond );
@@ -632,7 +632,7 @@ void DBGWakeConditionVariable( const char* src, int line, const char* fun, PCOND
 
     WakeConditionVariable( pcond );
 
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeConditionVariable(%p) Exited",
                 basename(src), line, fun, thread_id(), pcond );
@@ -647,7 +647,7 @@ void DBGWakeAllConditionVariable( const char* src, int line, const char* fun, PC
 {
     char    msgbuf[256];
 
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeAllConditionVariable(%p) Entered",
                 basename(src), line, fun, thread_id(), pcond );
@@ -656,7 +656,7 @@ void DBGWakeAllConditionVariable( const char* src, int line, const char* fun, PC
 
     WakeAllConditionVariable( pcond );
 
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") WakeAllConditionVariable(%p) Exited",
                 basename(src), line, fun, thread_id(), pcond );
@@ -673,7 +673,7 @@ int DBGSleepConditionVariableCS( const char* src, int line, const char* fun,
     int rc;
     char    msgbuf[256];
     
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") SleepConditionVariableCS(%p, %p, %lu) Entered",
                 basename(src), line, fun, thread_id(), pcond, plk, wtime );
@@ -682,7 +682,7 @@ int DBGSleepConditionVariableCS( const char* src, int line, const char* fun,
     
     rc = (int)SleepConditionVariableCS( pcond, plk, wtime );
     
-    if ( MLVL(DEBUG) && check_mod(basename(src)) )
+    if ( MLVL(DEBUG) && MLVL(THREADS) && check_mod(basename(src)) )
     {
         MSGBUF( msgbuf, "%-10.10s %5d %-30.30s tid("TIDPAT") SleepConditionVariableCS(%p, %p, %lu) Exited RC = %d",
                 basename(src), line, fun, thread_id(), pcond, plk, wtime, rc );

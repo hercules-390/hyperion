@@ -926,7 +926,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             first = last = -1;
         }
 
-// /*DEBUG*/logmsg( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
+// /*DEBUG*/LOGMSG( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
 // /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
 // /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
 //

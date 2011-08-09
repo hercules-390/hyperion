@@ -113,7 +113,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     srand( (unsigned int) time( NULL ));
 
     /* Create the test threads */
-    logmsg("*** $test command: creating threads...\n");
+    LOGMSG("*** $test command: creating threads...\n");
     for (i=0; i < NUM_THREADS; i++)
     {
         secs = 1 + rand() % MAX_WAIT_SECS;
@@ -130,12 +130,12 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     }
 
     /* Wait for all threads to exit */
-    logmsg("*** $test command: waiting for threads to exit...\n");
+    LOGMSG("*** $test command: waiting for threads to exit...\n");
     for (i=0; i < NUM_THREADS; i++)
         if (tids[i])
             join_thread( tids[i], NULL );
 
-    logmsg("*** $test command: test complete.\n");
+    LOGMSG("*** $test command: test complete.\n");
     return 0;
 }
 
@@ -153,9 +153,9 @@ void* test_thread( void* parg)
     sched_yield();
 
     /* Do nanosleep for the specified number of seconds */
-    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    LOGMSG("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
     rc = nanosleep( &ts, NULL );
-    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+    LOGMSG("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
 
     return NULL;
 }
@@ -2580,7 +2580,7 @@ int rc = 0;
         }
 
         if(rc)
-            logmsg("%s error: %s\n",argv[0],strerror(rc));
+            LOGMSG("%s error: %s\n",argv[0],strerror(rc));
     }
 
     return rc;
@@ -7396,6 +7396,46 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
             {
                 msglvl |= MLVL_DEBUG;
             }
+            else if ( strabbrev("NOTHREADS", check, 5) || strabbrev("-THREADS", check, 4) )
+            {
+                msglvl &= ~MLVL_THREADS;
+            }
+            else if ( strabbrev("THREADS", check, 3) || strabbrev("+THREADS", check, 4) )
+            {
+                msglvl |= MLVL_THREADS;
+            }
+            else if ( strabbrev("NOCHANNEL", check, 6) || strabbrev("-CHANNEL", check, 5) )
+            {
+                msglvl &= ~MLVL_CHANNEL;
+            }
+            else if ( strabbrev("CHANNEL", check, 4) || strabbrev("+CHANNEL", check, 5) )
+            {
+                msglvl |= MLVL_CHANNEL;
+            }
+            else if ( strabbrev("NOSCSI", check, 6) || strabbrev("-SCSI", check, 5) )
+            {
+                msglvl &= ~MLVL_SCSI;
+            }
+            else if ( strabbrev("SCSI", check, 4) || strabbrev("+SCSI", check, 5) )
+            {
+                msglvl |= MLVL_TAPE;
+            }
+            else if ( strabbrev("NOGRAF", check, 6) || strabbrev("-GRAF", check, 5) )
+            {
+                msglvl &= ~MLVL_GRAF;
+            }
+            else if ( strabbrev("GRAF", check, 4) || strabbrev("+GRAF", check, 5) )
+            {
+                msglvl |= MLVL_GRAF;
+            }
+            else if ( strabbrev("NOCTCA", check, 6) || strabbrev("-CTCA", check, 5) )
+            {
+                msglvl &= ~MLVL_CTCA;
+            }
+            else if ( strabbrev("CTCA", check, 4) || strabbrev("+CTCA", check, 5) )
+            {
+                msglvl |= MLVL_CTCA;
+            }
             else if ( strabbrev("NOTAPE", check, 6) || strabbrev("-TAPE", check, 5) )
             {
                 msglvl &= ~MLVL_TAPE;
@@ -7456,6 +7496,11 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
     if (MLVL( DASD    )) strlcat( msgbuf, "dasd ",    sizeof( msgbuf ));
     if (MLVL( UR      )) strlcat( msgbuf, "ur ",      sizeof( msgbuf ));
     if (MLVL( COMM    )) strlcat( msgbuf, "comm ",    sizeof( msgbuf ));
+    if (MLVL( CTCA    )) strlcat( msgbuf, "ctca ",    sizeof( msgbuf ));
+    if (MLVL( GRAF    )) strlcat( msgbuf, "graf ",    sizeof( msgbuf ));
+    if (MLVL( SCSI    )) strlcat( msgbuf, "scsi ",    sizeof( msgbuf ));
+    if (MLVL( THREADS )) strlcat( msgbuf, "threads ", sizeof( msgbuf ));
+    if (MLVL( CHANNEL )) strlcat( msgbuf, "channel ", sizeof( msgbuf ));
 
     if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
         msgbuf[(int)strlen(msgbuf) - 1] = '\0';

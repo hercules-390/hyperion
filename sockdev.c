@@ -26,9 +26,9 @@
 // #define DEBUG_SOCKDEV
 
 #ifdef DEBUG_SOCKDEV
-    #define logdebug    logmsg
+    #define logdebug    LOGMSG
 #else
-    #define logdebug    1 ? ((void)0) : logmsg
+    #define logdebug    1 ? ((void)0) : LOGMSG
 #endif
 
 /*-------------------------------------------------------------------*/

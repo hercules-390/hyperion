@@ -53,7 +53,7 @@ extern int logger_syslogfd[2];
 #define  MLVL_DEBUG_PRINTF_PATTERN "%-" MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "." MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "s %" MSTRING( MLVL_DEBUG_LINE_FIELD_WIDTH ) "d "
 
 /* Logging functions in logmsg.c */
-LOG_DLL_IMPORT void logmsg(char *,...);
+LOG_DLL_IMPORT void log_msg(char *,...);
 LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
 LOG_DLL_IMPORT int skippnlpfx(const char** ppsz);
 
