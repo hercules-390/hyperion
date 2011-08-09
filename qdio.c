@@ -35,7 +35,7 @@
 
 #if defined(_MSVC_)
 #pragma warning(disable:4018)               // until signed/unsigned mismatch fixed by developers
-#pragma message("QDIO.C - Warning C4018 is disabled pending signed/unsigned mismatch fix") 
+#pragma message("QDIO.C - Warning C4018 is disabled pending signed/unsigned mismatch fix")
 #endif
 
 #if defined(FEATURE_QUEUED_DIRECT_IO)
@@ -160,6 +160,7 @@ int     r1, r3;                         /* Register numbers                   */
 int     b2;                             /* effective address base             */
 BYTE    newstate;                       /* State to which buffers are changed */
 BYTE    nxtbufst;                       /* Next buffer's state                */
+U32     queues;                         /* Total number of queues             */
 U32     count;                          /* Number of buffers to set           */
 U32     notset;                         /* Number of buffers not set          */
 U32     qndx;                           /* Queue index                        */
@@ -188,7 +189,7 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
- 
+
 // ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
@@ -232,25 +233,24 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
     qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
     bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
-    
-    if (qndx < grp->i_qcnt)
+
+    queues = (U32)(grp->i_qcnt + grp->o_qcnt);  /* Calculate number of queues */
+
+    if ( (qndx >= queues) || (bndx > 127) )
+    {
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    }
+
+    if (qndx < (U32)grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
     else
-    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
-         {   /* This is an output queue */
-             qndx -= grp->i_qcnt;
-             slsba = grp->o_slsbla[qndx];
-             slsbkey = grp->o_slsblk[qndx];
-         }
-         else
-         {   /* this is an invalid queue index */
-             regs->GR_H(r3) = 1;   /* Indicate activation error in return code */
-             regs->psw.cc = 2;  /* guess */
-             return;
-         }
+    {   /* This is an output queue */
+        qndx -= (U32)grp->i_qcnt;
+        slsba = grp->o_slsbla[qndx];
+        slsbkey = grp->o_slsblk[qndx];
     }
 
     newstate = effective_addr2 & 0xFF;
@@ -264,13 +264,13 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
                              The low-order bit is assumed to indicate an error
                              has occurred.
                           */
- 
+
     for ( ; count > 0; count -= 1 )
     {
         /* set the new state */
         ARCH_DEP(wstoreb)(newstate, (VADR)(slsba+bndx), USE_REAL_ADDR, regs);
         /* Note: this may generate an access exception */
- 
+
         /* Update interruptable state in case next cycle has an interrupt */
         notset -= 1;              /* One less buffers to set */
         bndx = (bndx + 1) & 0x7F; /* calculate the next buffer index and wrap */
@@ -304,8 +304,9 @@ DEF_INST(extract_queue_buffer_state)
 int     r1, r2, r3, m4;       /* Register numbers                    */
 int     autoack;              /* flag for auto-acknowkledgement      */
 int     first;                /* True on first cycle of extract loop */
-BYTE    state;                /* State extracted from first buffer   */
+BYTE    state = 0;            /* State extracted from first buffer   */
 BYTE    nxtbufst;             /* Next buffer's state                 */
+U32     queues;               /* Total number of queues              */
 U32     count;                /* Number of buffers to set            */
 U32     notset;               /* Number of buffers not set           */
 U32     qndx;                 /* Queue index                         */
@@ -319,10 +320,10 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
 /*   Register Usage:
 
           --------------Input-------------    -------------Output--------------
-    
+
           Bits 0-31      Bits 32-63           Bits 0-31      Bits 32-63
-    
-   r1     Queue Index    Buffer index         unchanged      first buffer index 
+
+   r1     Queue Index    Buffer index         unchanged      first buffer index
                                                              whose state differs
                                                              from the first buffer
 
@@ -332,7 +333,7 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
                          change                              examined
 
    m4     reserved                            reserved
-   
+
    R1     Bits 0-63: Suchannel token                    unchanged
 */
 
@@ -384,23 +385,23 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
 
-    if (qndx < grp->i_qcnt)
+    queues = (U32)(grp->i_qcnt + grp->o_qcnt);  /* Calculate number of queues */
+
+    if ( (qndx >= queues) || (bndx > 127) )
+    {
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    }
+
+    if (qndx < (U32)grp->i_qcnt)
     {   /* This is an input queue */
         slsba = grp->i_slsbla[qndx];
         slsbkey = grp->i_slsblk[qndx];
     }
-    else 
-    {    if (qndx < (grp->i_qcnt+grp->o_qcnt) && qndx >= grp->i_qcnt)
-         {   /* This is an output queue */
-             qndx -= grp->i_qcnt;
-             slsba = grp->o_slsbla[qndx];
-             slsbkey = grp->o_slsblk[qndx];
-         }
-         else
-         {   /* this is an invalid queue index */
-             regs->psw.cc = 2;  /* guess */
-             return;
-         }
+    else
+    {   /* This is an output queue */
+        qndx -= (U32)grp->i_qcnt;
+        slsba = grp->o_slsbla[qndx];
+        slsbkey = grp->o_slsblk[qndx];
     }
 
     if (count > 128)
@@ -470,7 +471,7 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
         /* Look ahead to buffer state following the ones requested to be examined */
         nxtbufst = ARCH_DEP(wfetchb)((VADR)(slsba+bndx), USE_REAL_ADDR, regs);
         /* Note: this too may generate an access exception */
- 
+
         if (nxtbufst == state)
         {
             regs->GR_H(r3) = 0;  /* All buffers processed and next is the same */
@@ -484,7 +485,7 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     {
         regs->GR_H(r3) = 96;     /* not all buffers processed */
     }
- 
+
     regs->psw.cc = 0;
 // ARCH_DEP(display_inst) (regs, inst);
     return;
