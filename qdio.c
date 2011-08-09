@@ -33,11 +33,6 @@
  #define PTIO(_class, _name) \
  PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
 
-#if defined(_MSVC_)
-#pragma warning(disable:4018)               // until signed/unsigned mismatch fixed by developers
-#pragma message("QDIO.C - Warning C4018 is disabled pending signed/unsigned mismatch fix")
-#endif
-
 #if defined(FEATURE_QUEUED_DIRECT_IO)
 
 /*-------------------------------------------------------------------*/
