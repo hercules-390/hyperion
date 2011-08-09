@@ -35,6 +35,7 @@
 
 #if defined(_MSVC_)
 #pragma warning(disable:4018)               // until signed/unsigned mismatch fixed by developers
+#pragma message("QDIO.C - Warning C4018 is disabled pending signed/unsigned mismatch fix") 
 #endif
 
 #if defined(FEATURE_QUEUED_DIRECT_IO)
