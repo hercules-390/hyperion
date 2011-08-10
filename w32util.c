@@ -3909,17 +3909,30 @@ DLL_EXPORT int w32_munlock( void* addr, size_t len )
 }
 
 // Hercules low-level file open...
+// SH_SECURE: Sets secure mode (shared read, exclusive write access).
 DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 {
-    int pmode = 0;
+    int pmode   = _S_IREAD | _S_IWRITE;
+    int sh_flg  = _SH_DENYWR;
+    int fh      = -1;
+    errno_t err;
+
     if (oflag & O_CREAT)
     {
         va_list vargs;
         va_start( vargs, oflag );
         pmode = va_arg( vargs, int );
     }
-    // SH_SECURE: Sets secure mode (shared read, exclusive write access).
-    return _sopen( path, oflag, _SH_SECURE, pmode );
+
+    err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
+
+    if ( MLVL( DEBUG ) && err != 0 )
+    {
+        char msgbuf[MAX_PATH * 2];
+        MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) ); 
+        LOGMSG(MSG(HHC90000, "D", msgbuf));
+    }
+    return fh;
 }
 
 #endif // defined( _MSVC_ )
