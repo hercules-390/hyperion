@@ -992,13 +992,20 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     if (i != SCSITAPE_FMTENTRY)         /* If not SCSI tape...       */
 #endif
     {
-        int i2 = gettapetype_bydata( dev ); // Get type based on data..
+        if ( !strcasecmp( dev->filename, TAPE_UNLOADED ) )
+        {
+            i = DEFAULT_FMTENTRY;
+        }
+        else
+        {
+            int i2 = gettapetype_bydata( dev ); // Get type based on data..
 
-        if (i2 >= 0 &&                      // If valid type by data, AND
-           (i2 != AWSTAPE_FMTENTRY ||       // *not* AWS by data (or if it
-            i  != HETTAPE_FMTENTRY)         // is, if it's not HET by name)..
-        )
-            i = i2;                         // ..Use type based on data.
+            if (i2 >= 0 &&                      // If valid type by data, AND
+                ( i2 != AWSTAPE_FMTENTRY ||     // *not* AWS by data (or if it
+                  i  != HETTAPE_FMTENTRY )      // is, if it's not HET by name)..
+               )
+                i = i2;                         // ..Use type based on data.
+        }
     }
 
     /* If file type still unknown, use a reasonable default value... */
@@ -1044,7 +1051,7 @@ PARSER  ptab  [] =
     { "maxsize",    "%s" },
     { "maxsizeK",   "%d" },
     { "maxsizeM",   "%d" },
-    { "eotmargin",  "%d" },
+    { "eotmargin",  "%s" },
     { "strictsize", "%d" },
     { "readonly",   "%d" },
     { "ro",         NULL },
@@ -1301,9 +1308,10 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             else
             {
-                int rc      = 0;
-                U64 maxsize = 0;
-                BYTE    f = ' ', c = '\0';
+                int     rc      = 0;
+                U64     maxsize = 0;
+                BYTE    f       = '\0';
+                BYTE    c       = '\0';
 
                 rc = sscanf(res.str, "%"I64_FMT"u%c%c", &maxsize, &f, &c);
                 if ( rc < 1 || rc > 2 )
@@ -1311,8 +1319,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                     WRMSG( HHC01451, "E", res.str, "maxsize" );
                     optrc = -1;
                 }
-
-                if ( rc == 2 )
+                else if ( rc == 2 )
                 {
                     switch (toupper(f))
                     {
@@ -1336,9 +1343,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                             optrc = -1;
                             break;
                     }
+                    if ( optrc != -1 )
+                        dev->tdparms.maxsize = maxsize;
                 }
-
-                dev->tdparms.maxsize = maxsize;
+                else
+                    dev->tdparms.maxsize = maxsize;
             }
             break;
 
@@ -1361,7 +1370,48 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_EOTMARGIN:
-            dev->eotmargin=res.num;
+            {
+                int     rc          = 0;
+                U64     eotmargin   = 0;
+                BYTE    f           = '\0';
+                BYTE    c           = '\0';
+
+                rc = sscanf(res.str, "%"I64_FMT"u%c%c", &eotmargin, &f, &c);
+                if ( rc < 1 || rc > 2 )
+                {
+                    WRMSG( HHC01451, "E", res.str, "eotmargin" );
+                    optrc = -1;
+                }
+                else if ( rc == 2 )
+                {
+                    switch (toupper(f))
+                    {
+                        case 'K':
+                            eotmargin <<= SHIFT_KIBIBYTE;
+                            break;
+                        case 'M':
+                            eotmargin <<= SHIFT_MEBIBYTE;
+                            break;
+                        case 'G':
+                            eotmargin <<= SHIFT_GIBIBYTE;
+                            break;
+#if SIZEOF_SIZE_T >= 8
+                        case 'T':
+                            eotmargin <<= SHIFT_TEBIBYTE;
+                            break;
+#endif
+                        default:
+                            WRMSG( HHC01451, "E", res.str, "eotmargin" );
+                            eotmargin = 0;
+                            optrc = -1;
+                            break;
+                    }
+                    if ( optrc != -1 )
+                        dev->eotmargin = eotmargin;
+                }
+                else
+                    dev->eotmargin = eotmargin;
+            }
             break;
 
         case TDPARM_STRICTSIZE:
@@ -1512,13 +1562,18 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
     char devparms[ MAX_PATH+1 + 128 ];
-    char dispmsg [ 256 ];
+    char dispmsg [ 256 ];    
+    char fmt_mem [ 128 ];    // Max of 21 bytes used for U64
+    char fmt_eot [ 128 ];    // Max of 21 bytes used for U64
+
 
     BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, devclass, buflen, buffer );
 
     memset(buffer, 0, buflen);
     memset(devparms, 0, sizeof(devparms));
     memset(dispmsg, 0, sizeof(dispmsg));
+    memset(fmt_mem, 0, sizeof(fmt_mem));
+    memset(fmt_eot, 0, sizeof(fmt_eot));
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
@@ -1532,6 +1587,41 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
         strlcat( devparms, " noautomount", sizeof(devparms));
 
 #endif /* OPTION_TAPE_AUTOMOUNT */
+
+#if defined(OPTION_SCSI_TAPE)
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+#endif
+    {
+        const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
+        u_int   i = 0;
+
+        U64 mem = (U64)dev->tdparms.maxsize;
+
+        if (mem)
+        {
+            for (i = 0; i < sizeof(suffix); i++)
+            {
+                if (mem & 0x3FF)
+                    break;
+                mem >>= 10;
+            }
+        }
+        MSGBUF( fmt_mem, " maxsize=%"I64_FMT"u%c", mem, suffix[i]);
+
+        mem = (U64)dev->eotmargin;
+
+        i = 0;
+        if (mem)
+        {
+            for (i = 0; i < sizeof(suffix); i++)
+            {
+                if (mem & 0x3FF)
+                    break;
+                mem >>= 10;
+            }
+        }
+        MSGBUF( fmt_eot, " eotmargin=%"I64_FMT"u%c", mem, suffix[i]);
+    }
 
     if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
     {
@@ -1549,11 +1639,12 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
-        snprintf(buffer, buflen, "%s%s%s IO[%" I64_FMT "u]",
+        snprintf(buffer, buflen, "%s%s%s IO[%" I64_FMT "u]%s%s deonirq=%c",
             devparms,
             dev->tdparms.displayfeat ? ", Display: " : "",
             dev->tdparms.displayfeat ?    dispmsg    : "",
-            dev->excps );
+            dev->excps,
+            fmt_mem, fmt_eot, dev->tdparms.deonirq == 0 ? 'N' : 'Y' );
         buffer[buflen-1] = '\0';
     }
     else // (filename was specified)

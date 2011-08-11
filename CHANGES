@@ -1,4 +1,5 @@
-11 Aug 2011 Modify maxsize to accept 'K', 'M', 'G', 'T' designations 
+11 Aug 2011 Modify maxsize/eotmargin to accept 'K', 'M', 'G', 'T' designations 
+            Correct file open on '*' unloaded filename - P. Gorlinsky
 25 Jul 2011 Fix suspend/resume MAINSTOR/XPNDSTOR bugs - Fish
 16 Jul 2011 Fix SCSI tape S613 abend issue - Fish
 13 Jul 2011 Externalized TN3270 logo cnsllogo.h - PGorlinsky

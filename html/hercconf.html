@@ -2668,11 +2668,13 @@ and how they are used.
             Note: "T" is not available on all platforms.
             <p>
 
-        <dt><code>EOTMARGIN</code>=<em>n</em>
+        <dt><code>EOTMARGIN</code>=<em>n[s]</em>
         <dd><p>
             Specifies the number of bytes remaining before reaching <em>maxsize</em>
             at which point the tape device will signal the presence of the "End of Tape"
             marker (reflector), thus allowing the program to switch to the next tape.
+	    <p>
+            Value is either n = bytes, or ns where s is either a K, M, G, or T multiplier.  
             <p>
 
         <dt><code>READONLY</code>=<em>n</em>
