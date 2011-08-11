@@ -1041,7 +1041,7 @@ PARSER  ptab  [] =
     { "method",     "%d" },
     { "level",      "%d" },
     { "chunksize",  "%d" },
-    { "maxsize",    "%d" },
+    { "maxsize",    "%s" },
     { "maxsizeK",   "%d" },
     { "maxsizeM",   "%d" },
     { "eotmargin",  "%d" },
@@ -1299,7 +1299,47 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.maxsize=res.num;
+            else
+            {
+                int rc      = 0;
+                U64 maxsize = 0;
+                BYTE    f = ' ', c = '\0';
+
+                rc = sscanf(res.str, "%"I64_FMT"u%c%c", &maxsize, &f, &c);
+                if ( rc < 1 || rc > 2 )
+                {
+                    WRMSG( HHC01451, "E", res.str, "maxsize" );
+                    optrc = -1;
+                }
+
+                if ( rc == 2 )
+                {
+                    switch (toupper(f))
+                    {
+                        case 'K':
+                            maxsize <<= SHIFT_KIBIBYTE;
+                            break;
+                        case 'M':
+                            maxsize <<= SHIFT_MEBIBYTE;
+                            break;
+                        case 'G':
+                            maxsize <<= SHIFT_GIBIBYTE;
+                            break;
+#if SIZEOF_SIZE_T >= 8
+                        case 'T':
+                            maxsize <<= SHIFT_TEBIBYTE;
+                            break;
+#endif
+                        default:
+                            WRMSG( HHC01451, "E", res.str, "maxsize" );
+                            maxsize = 0;
+                            optrc = -1;
+                            break;
+                    }
+                }
+
+                dev->tdparms.maxsize = maxsize;
+            }
             break;
 
         case TDPARM_MAXSIZEK:

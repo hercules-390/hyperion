@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
-<HTML>
-<HEAD><TITLE>
-Hercules Version 3: Configuration File</TITLE>
-<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
-</HEAD>
-<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
-      VLINK="#008040" ALINK="#000000">
+<html>
+<head><title>
+Hercules Version 3: Configuration File</title>
+<link rel="Stylesheet" type="text/css" href="hercules.css"/>
+</head>
+<body bgcolor="#ffffcc" text="#000000" link="#0000A0"
+      vlink="#008040" alink="#000000">
 <h1>Hercules Version 3: Configuration File</h1>
 <p>
 This page describes the configuration file for the Hercules S/370,
@@ -2656,12 +2656,16 @@ and how they are used.
 
     <blockquote>
         <dl>
-        <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
+        <dt><code>MAXSIZE</code>=<i>n[s]</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
              &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
         <dd><p>
             Specifies the maximum size (in bytes, Kilobytes or Megabytes)
-            that the emulated file is allowed to grow to. Specifying zero
-            for this parameter means "unlimited" (i.e. there is no limit).
+            that the emulated file is allowed to grow to.
+            <p>
+            Or, nnns where s is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES 
+            <p>
+            Specifying zero for this parameter means "unlimited" (i.e. there is no limit).
+            Note: "T" is not available on all platforms.
             <p>
 
         <dt><code>EOTMARGIN</code>=<em>n</em>
@@ -3598,5 +3602,5 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="images/back.gif" border=0 alt="back"></a>
 </center>
 <p class="lastupd">Last updated $Date$ $Revision$</p>
-</BODY>
-</HTML>
+</body>
+</html>
