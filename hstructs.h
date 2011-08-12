@@ -1255,23 +1255,9 @@ struct DEVBLK {                         /* Device configuration block*/
           u_int deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
           u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
-          u_int auto_create:1;          /* Create Tape if needed     */
-          u_int mnt_req_type:2;         /* default to SL labels      */
-          u_int SL_tape_mounted:1;      /* Tape is SL labeled        */
-          u_int AL_tape_mounted:1;      /* Tape is AL labeled        */
           U16   chksize;                /* Chunk size                */
           off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
-          enum  type_loader loader;     /* Loader Operation          */
-          u_int ldr_req_remount:1;      /* Initiate Remount request  */
-          u_int scr_tape_list:1;        /* Volume contains scrlist   */
-          char *pszACLfilename;         /* Pointer to FQ filename for
-                                           ACL AUTO mode options     */
-          char *psACLvolsers;           /* pointer to ACL volser buf */
-          char *psACLvolser;            /* pointer to cur ACL volser */
-          u_int uiACLvolsers;           /* length of ACL volser buf  */
-          char  pszIL_VOLSER[7];         /* Internal Label of Tape    */
-
         }       tdparms;                /* HET device parms          */
 
         off_t   eotmargin;              /* Amount of space left before
