@@ -434,73 +434,112 @@ DLL_EXPORT void log_write(int panel,char *msg)
     char   *ptr;
     size_t  pl;
     char   *pszMSG;
+    char   *pLeft, *pRight;
+    int     nLeft;
 
-    pl = strlen(msg) + 1 + 20;
+    if ( msg == NULL || strlen(msg) == 0 )
+        return;
+
+    pLeft = msg;
+    nLeft = (int)strlen(msg);
+
+#if defined( OPTION_MSGCLR )
+    /* strip color part of message */
+    /* Remove "<pnl,..." color string if it exists */
+    if ( 1
+        && nLeft > 5
+        && strncasecmp( pLeft, "<pnl", 4 ) == 0
+        && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
+       )
+    {
+        pLeft++;
+        nLeft -= (int)(pLeft - (char*)msg);
+    }
+#endif // defined( OPTION_MSGCLR )
+
+    // Route print to stdout if running as a utility
+    if ( sysblk.arch_mode == 4095 )
+    {
+        printf( "%s", pLeft );
+        return;
+    }
+
+    pl = strlen(msg) * 2;
     ptr = malloc( pl );
+
+    ASSERT( ptr != NULL );
 
     if ( ptr == NULL )
         pszMSG = msg;
     else
     {
-        if ( sysblk.emsg & EMSG_TS && strncasecmp( msg, "<pnl", 4 ) )
+        struct timeval  now;
+        time_t          tt;
+        char            hhmmss[10];
+
+        gettimeofday( &now, NULL ); tt = now.tv_sec;
+        strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
+
+            ptr[0] = '\0';
+        if ( sysblk.emsg & EMSG_TS && !SNCMP( msg, "<pnl", 4 ) )
         {
-            struct timeval  now;
-            time_t          tt;
-            char            hhmmss[10];
-
-            gettimeofday( &now, NULL ); tt = now.tv_sec;
-            strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
-
             strlcpy( ptr, hhmmss, pl);
             strlcat( ptr, msg,    pl);
             pszMSG = ptr;
+        }
+        else if ( sysblk.emsg & EMSG_TS && SNCMP( msg, "<pnl", 4 ) )
+        {
+            pRight = strchr( msg, '>' );
+            pRight++;
+            if ( strlen(pRight) > 10 && ( SNCMP(pRight, "HHC", 3) || SNCMP(&pRight[17], "HHC", 3) ) )
+            {
+                memset(ptr, 0, sizeof(ptr));
+                strlcpy( ptr, msg, (pRight-msg)+1 );
+                strlcat( ptr, hhmmss, pl );
+                strlcat( ptr, pRight, pl );
+                pszMSG = ptr;
+            }
+            else 
+                pszMSG = msg;
         }
         else
             pszMSG = msg;
     }
 
     log_route_init();
-    if(panel==1)
+
+    if ( panel == 1 )
     {
         write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
-        if ( ptr != NULL ) free(ptr);
-        return;
     }
-    obtain_lock(&log_route_lock);
-    slot=log_route_search(thread_id());
-    release_lock(&log_route_lock);
-    if(slot<0 || panel>0)
+    else
     {
-        write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
-        if(slot<0)
+        obtain_lock(&log_route_lock);
+        slot = log_route_search(thread_id());
+        release_lock(&log_route_lock);
+
+        if ( panel == 2 )
         {
-            if ( ptr != NULL ) free(ptr);
-            return;
+            write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
+            if (nLeft && slot >= 0)
+            {
+                log_routes[slot].w(log_routes[slot].u,pLeft);
+            }
+        }
+        else if ( slot < 0 )
+        {
+            write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
+        }
+        else
+        {
+            if (nLeft)
+            {
+                log_routes[slot].w(log_routes[slot].u,pLeft);
+            }
         }
     }
 
     if ( ptr != NULL ) free(ptr);
-
-    /* strip color part of message */
-    {
-        char* pLeft = msg;
-        int   nLeft = (int)strlen(msg);
-#if defined( OPTION_MSGCLR )
-    /* Remove "<pnl,..." color string if it exists */
-        if ( 1
-             && nLeft > 5
-             && strncasecmp( pLeft, "<pnl", 4 ) == 0
-             && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
-           )
-        {
-            pLeft++;
-            nLeft -= (int)(pLeft - (char*)msg);
-        }
-
-#endif // defined( OPTION_MSGCLR )
-        if (nLeft)
-            log_routes[slot].w(log_routes[slot].u,pLeft);
-    }
     return;
 }
 

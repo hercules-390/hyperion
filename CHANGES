@@ -1,3 +1,4 @@
+12 Aug 2011 Add logmsg() support for utilities. - P. Gorlinsky
 11 Aug 2011 Modify maxsize/eotmargin to accept 'K', 'M', 'G', 'T' designations 
             Correct file open on '*' unloaded filename - P. Gorlinsky
 25 Jul 2011 Fix suspend/resume MAINSTOR/XPNDSTOR bugs - Fish
