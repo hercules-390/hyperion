@@ -113,7 +113,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     srand( (unsigned int) time( NULL ));
 
     /* Create the test threads */
-    LOGMSG("*** $test command: creating threads...\n");
+    logmsg("*** $test command: creating threads...\n");
     for (i=0; i < NUM_THREADS; i++)
     {
         secs = 1 + rand() % MAX_WAIT_SECS;
@@ -130,12 +130,12 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     }
 
     /* Wait for all threads to exit */
-    LOGMSG("*** $test command: waiting for threads to exit...\n");
+    logmsg("*** $test command: waiting for threads to exit...\n");
     for (i=0; i < NUM_THREADS; i++)
         if (tids[i])
             join_thread( tids[i], NULL );
 
-    LOGMSG("*** $test command: test complete.\n");
+    logmsg("*** $test command: test complete.\n");
     return 0;
 }
 
@@ -153,9 +153,9 @@ void* test_thread( void* parg)
     sched_yield();
 
     /* Do nanosleep for the specified number of seconds */
-    LOGMSG("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
     rc = nanosleep( &ts, NULL );
-    LOGMSG("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
 
     return NULL;
 }
@@ -2580,7 +2580,7 @@ int rc = 0;
         }
 
         if(rc)
-            LOGMSG("%s error: %s\n",argv[0],strerror(rc));
+            logmsg("%s error: %s\n",argv[0],strerror(rc));
     }
 
     return rc;

@@ -73,12 +73,12 @@ LONG APIENTRY hExitHnd( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock )
             switch( Subfunction ) {
 
                 case RXSIOSAY:
-                    LOGMSG("%s\n",RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string));
+                    logmsg("%s\n",RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string));
                     return RXEXIT_HANDLED;
                     break;
              
                 case RXSIOTRC:
-                    LOGMSG("%s\n",RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
+                    logmsg("%s\n",RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
                     return RXEXIT_HANDLED;
                     break;
 

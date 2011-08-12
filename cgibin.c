@@ -1244,7 +1244,7 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
 
     // Ensure command and response is visible on Hercules console panel
 
-    LOGMSG( "%s", response );
+    logmsg( "%s", response );
 
     free (response);
 }

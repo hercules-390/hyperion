@@ -739,19 +739,19 @@ U16 evd_len;
 U16 sysa_len;
 BYTE *sysa_data;
 int i;
-    LOGMSG(_("SYSA write:"));
+    logmsg(_("SYSA write:"));
     FETCH_HW(evd_len,evd_hdr->totlen);
     sysa_data = (BYTE*)(evd_hdr+1);
     sysa_len = evd_len - sizeof(SCCB_EVD_HDR);
     for(i = 0; i < sysa_len; i++)
     {
         if(!(i & 15))
-            LOGMSG("\n          %4.4X:", i);
-        LOGMSG(" %2.2X", sysa_data[i]);
+            logmsg("\n          %4.4X:", i);
+        logmsg(" %2.2X", sysa_data[i]);
     }
 
     if(i & 15)
-        LOGMSG("\n");
+        logmsg("\n");
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
@@ -772,7 +772,7 @@ SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
     UNREFERENCED(sccb);
     UNREFERENCED(evd_hdr);
 
-    LOGMSG(_("VT220 poll\n"));
+    logmsg(_("VT220 poll\n"));
 }
 #endif /*defined(_FEATURE_INTEGRATED_ASCII_CONSOLE)*/
 
@@ -1543,18 +1543,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         else
                           WRCMSG("<pnl,color(lightred,black),keep>", HHC00001, "I", message);
     #else
-                            LOGMSG("<pnl,color(lightyellow,black),keep>%s\n", message);
+                            logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
                           else
-                            LOGMSG("<pnl,color(green,black)>%s\n", message);
+                            logmsg("<pnl,color(green,black)>%s\n", message);
                         }
                         else
-                          LOGMSG("<pnl,color(lightred,black),keep>%s\n", message);
+                          logmsg("<pnl,color(lightred,black),keep>%s\n", message);
     #endif /* OPTION_SCP_MSG_PREFIX */
 #else
     #ifdef OPTION_SCP_MSG_PREFIX
                         WRMSG(HHC00001, "I", message);
     #else
-                        LOGMSG("%s\n",message);
+                        logmsg("%s\n",message);
     #endif /* OPTION_SCP_MSG_PREFIX */
 #endif
                     }

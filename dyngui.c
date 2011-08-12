@@ -503,7 +503,7 @@ NotSpecialGUICommand:
 
     if ('*' == pszCommand[0] || '#' == pszCommand[0])
     {
-        LOGMSG("%s\n",pszCommand);      // (log comment to console)
+        logmsg("%s\n",pszCommand);      // (log comment to console)
         return NULL;                    // (and otherwise ignore it)
     }
 

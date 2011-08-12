@@ -3058,10 +3058,10 @@ int  xdigit;                       /* digit lost by addend shifting */
 
     /* Convert separate high/low fractions to contiguous U128 */
 #if FLOAT_DEBUG
-    LOGMSG (_("Prod Frac: %16.16llX %16.16llX\n"),
+    logmsg (_("Prod Frac: %16.16llX %16.16llX\n"),
                prod_fl->ms_fract, prod_fl->ls_fract);
 
-    LOGMSG (_("Adnd Frac: %16.16llX %16.16llX\n"),
+    logmsg (_("Adnd Frac: %16.16llX %16.16llX\n"),
                add_fl->ms_fract, add_fl->ls_fract);
 #endif
 
@@ -3108,7 +3108,7 @@ int  xdigit;                       /* digit lost by addend shifting */
         }
     }
 #if FLOAT_DEBUG
-    LOGMSG (_("Shft Frac: %16.16llX %16.16llX\n"),
+    logmsg (_("Shft Frac: %16.16llX %16.16llX\n"),
                add_fl->ms_fract, add_fl->ls_fract);
 #endif
 
@@ -3153,7 +3153,7 @@ int  xdigit;                       /* digit lost by addend shifting */
                sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
                         (U64)0, (U64)1);
 #if FLOAT_DEBUG
-               LOGMSG (_("Barw Frac: %16.16llX %16.16llX\n"),
+               logmsg (_("Barw Frac: %16.16llX %16.16llX\n"),
                       result_fl->ms_fract, result_fl->ls_fract);
 #endif
                /* Due to participation of right shifted digits           */
@@ -3165,7 +3165,7 @@ int  xdigit;                       /* digit lost by addend shifting */
            sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
                     add_fl->ms_fract, add_fl->ls_fract);
 #if FLOAT_DEBUG
-           LOGMSG (_("P-A  Frac: %16.16llX %16.16llX\n"),
+           logmsg (_("P-A  Frac: %16.16llX %16.16llX\n"),
                       result_fl->ms_fract, result_fl->ls_fract);
 #endif
            /* result sign already set to product sign above as default */
@@ -3181,14 +3181,14 @@ int  xdigit;                       /* digit lost by addend shifting */
            sub_U128(result_fl->ms_fract, result_fl->ls_fract, 
                     prod_fl->ms_fract, prod_fl->ls_fract);
 #if FLOAT_DEBUG
-           LOGMSG (_("A-P  Frac: %16.16llX %16.16llX\n"),
+           logmsg (_("A-P  Frac: %16.16llX %16.16llX\n"),
                       result_fl->ms_fract, result_fl->ls_fract);
 #endif
            result_fl->sign = add_fl->sign;
         }
     }
 #if FLOAT_DEBUG
-    LOGMSG (_("Resl Frac: %16.16llX %16.16llX\n"),
+    logmsg (_("Resl Frac: %16.16llX %16.16llX\n"),
                result_fl->ms_fract, result_fl->ls_fract);
 #endif
 

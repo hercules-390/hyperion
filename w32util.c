@@ -3546,7 +3546,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         if (pPipedProcessCtl->nStrLen)
         {
             pPipedProcessCtl->pszBuffer[ pPipedProcessCtl->nStrLen ] = 0;  // (null terminate)
-            LOGMSG( "%s\n", pPipedProcessCtl->pszBuffer );
+            logmsg( "%s\n", pPipedProcessCtl->pszBuffer );
         }
 
         // Free resources...
@@ -3697,7 +3697,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
 
         if (!pPipedProcessCtl)
         {
-            LOGMSG("%s\n",pbeg);    // send all child's msgs to Herc console
+            logmsg("%s\n",pbeg);    // send all child's msgs to Herc console
         }
         else
         {
@@ -3930,7 +3930,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     {
         char msgbuf[MAX_PATH * 2];
         MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) ); 
-        LOGMSG(MSG(HHC90000, "D", msgbuf));
+        logmsg(MSG(HHC90000, "D", msgbuf));
     }
     return fh;
 }

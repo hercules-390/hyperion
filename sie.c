@@ -270,7 +270,7 @@ U64     dreg;
     PERFORM_CHKPT_SYNC (regs);
 
 #if defined(SIE_DEBUG)
-    LOGMSG(_("SIE: state descriptor " F_RADR "\n"),effective_addr2);
+    logmsg(_("SIE: state descriptor " F_RADR "\n"),effective_addr2);
     ARCH_DEP(display_inst) (regs, regs->instinvalid ? NULL : regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
@@ -400,7 +400,7 @@ U64     dreg;
 
 
 #if defined(SIE_DEBUG)
-        LOGMSG(_("SIE: zone %d: mso=" F_RADR " msl=" F_RADR "\n"),
+        logmsg(_("SIE: zone %d: mso=" F_RADR " msl=" F_RADR "\n"),
             STATEBK->zone, mso, msl);
 #endif /*defined(SIE_DEBUG)*/
 
@@ -782,7 +782,7 @@ int     n;
 #endif /*defined(OPTION_PTTRACE)*/
 
 #if defined(SIE_DEBUG)
-    LOGMSG(_("SIE: interception code %d\n"),code);
+    logmsg(_("SIE: interception code %d\n"),code);
     ARCH_DEP(display_inst) (GUESTREGS,
                             GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
 #endif /*defined(SIE_DEBUG)*/

@@ -292,7 +292,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     if ( spccb_absolute_addr > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-//  /*debug*/LOGMSG("MSSF call %8.8X SPCCB=%8.8X\n",
+//  /*debug*/logmsg("MSSF call %8.8X SPCCB=%8.8X\n",
 //  /*debug*/       mssf_command, spccb_absolute_addr);
 
     /* Point to Service Processor Command Control Block */

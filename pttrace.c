@@ -343,7 +343,7 @@ U64 s;
         result = pthread_mutex_lock(mutex);
         s = host_tod() - s;
         if (result == EDEADLK)
-            LOGMSG("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
     }
     else
         s = 0;
@@ -386,7 +386,7 @@ U64 s;
         result = pthread_rwlock_rdlock(rwlock);
         s = host_tod() - s;
         if (result == EDEADLK)
-            LOGMSG("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
     }
     else
         s = 0;
@@ -406,7 +406,7 @@ U64 s;
         result = pthread_rwlock_wrlock(rwlock);
         s = host_tod() - s;
         if (result == EDEADLK)
-            LOGMSG("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
     }
     else
         s = 0;
@@ -546,7 +546,7 @@ int result;
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
     if (result == EDEADLK)
-        LOGMSG("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+        logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
     PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
@@ -743,7 +743,7 @@ time_t tt;
                     MSGBUF(result, "%8.8x", pttrace[i].result);
                 else
                     MSGBUF(result, "%d", pttrace[i].result);
-            LOGMSG
+            logmsg
             (
                 "%-18s "                           // File name
                 "%s.%6.6ld "                       // Time of day (HH:MM:SS.usecs)
