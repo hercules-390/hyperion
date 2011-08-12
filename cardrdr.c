@@ -432,7 +432,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     }
 
     /* Intervention required if device has no file name */
-    if (dev->filename[0] == '\0')
+    if (dev->filename[0] == '\0' || ( strlen(dev->filename) == 1 && dev->filename[0] == '*') )
     {
         if(dev->rdreof)
         {
