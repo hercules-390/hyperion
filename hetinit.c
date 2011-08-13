@@ -35,7 +35,7 @@
 static void
 usage( char *name )
 {
-    printf( MSG( HHC02729, "I", name ) );
+    WRMSG( HHC02729, "I", name );
 }
 
 /*
@@ -204,7 +204,7 @@ main( int argc, char *argv[] )
         rc = fet_open( &fetb, o_filename, FETOPEN_CREATE );
         if ( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "fet_open()", fet_error( rc ) ) );
+            WRMSG( HHC00075, "E", "fet_open()", fet_error( rc ) );
             goto exit;
         }
 
@@ -214,14 +214,14 @@ main( int argc, char *argv[] )
         rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
+            WRMSG( HHC00075, "E", "het_open()", het_error( rc ) );
             goto exit;
         }
    
         rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+            WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -231,7 +231,7 @@ main( int argc, char *argv[] )
         rc = sl_vol1( &lab, o_volser, o_owner );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "sl_vol1()", sl_error( rc ) ) );
+            WRMSG( HHC00075, "E", "sl_vol1()", sl_error( rc ) );
             goto exit;
         }
 
@@ -242,16 +242,16 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                printf( MSG( HHC00075, "E", "fet_write() for VOL1", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_write() for VOL1", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) );
             goto exit;
         }
 
         rc = sl_hdr1( &lab, SL_INITDSN, NULL, 0, 0, NULL, 0 );
         if( rc < 0 )
         {
-            printf( MSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) ) );
+            WRMSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) );
             goto exit;
         }
         
@@ -262,9 +262,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                printf( MSG( HHC00075, "E", "fet_write() for HDR1", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_write() for HDR1", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) );
             goto exit;
         }
 
@@ -278,9 +278,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
             goto exit;
         }
     }
@@ -292,9 +292,9 @@ main( int argc, char *argv[] )
     if( rc < 0 )
     {
         if ( o_faketape )
-            printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+            WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
         else
-            printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+            WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
         goto exit;
     }
 

@@ -67,7 +67,7 @@ usage( char *name )
 #else
     char *bufbz = "";
 #endif
-    printf( MSG( HHC02730, "I", name, bufbz ) );
+    WRMSG( HHC02730, "I", name, bufbz );
 }
 
 /*
@@ -99,20 +99,20 @@ closetapes( int rc )
             rc = remove( o_sname );
             if ( rc < 0 )
             {
-                printf ( MSG( HHC02745, "I", o_sname ) );
+                WRMSG( HHC02745, "I", o_sname );
             }
             else
             {
                 rc = rename( o_dname, o_sname );
                 if ( rc < 0 )
-                    printf ( MSG( HHC02744, "I", o_dname, o_sname ) );
+                    WRMSG( HHC02744, "I", o_dname, o_sname );
             }
         }
         else
         {
             rc = remove( o_dname );
             if ( rc < 0 )
-                printf ( MSG( HHC02745, "I", o_dname ) );
+                WRMSG( HHC02745, "I", o_dname );
         }
     }
 
@@ -166,9 +166,9 @@ copytape( void )
             if( rc < 0 )
             {
                 if ( o_faketape )
-                    printf( MSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) ) );
+                    WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
                 else
-                    printf( MSG( HHC00075, "E", "het_tapemark()", het_error( rc ) ) );
+                    WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
                 break;
             }
             continue;
@@ -177,9 +177,9 @@ copytape( void )
         if( rc < 0 )
         {
             if ( i_faketape )
-                printf( MSG( HHC00075, "E", "fet_read()", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_read()", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_read()", het_error( rc ) );
             break;
         }
 
@@ -190,9 +190,9 @@ copytape( void )
         if( rc < 0 )
         {
             if ( o_faketape )
-                printf( MSG( HHC00075, "E", "fet_write()", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_write()", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_write()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_write()", het_error( rc ) );
             break;
         }
     }
@@ -221,7 +221,7 @@ opentapes( void )
     if( rc < 0 )
     {
         if ( o_verbose )
-            printf( MSG( HHC02720, "E", o_sname, rc, het_error( rc ) ) );
+            WRMSG( HHC02720, "E", o_sname, rc, het_error( rc ) );
         goto exit;
     }
 
@@ -238,20 +238,20 @@ opentapes( void )
     if( rc < 0 )
     {
         if ( o_verbose )
-            printf( MSG( HHC02720, "E", o_dname, rc, het_error( rc ) ) );
+            WRMSG( HHC02720, "E", o_dname, rc, het_error( rc ) );
         goto exit;
     }
 
     if ( !i_faketape )
     {
         if ( o_verbose )
-            printf( MSG( HHC02755, "I", "decompress", yesno( o_decompress ) ) );
+            WRMSG( HHC02755, "I", "decompress", yesno( o_decompress ) );
 
         rc = het_cntl( s_hetb, HETCNTL_SET | HETCNTL_DECOMPRESS, o_decompress );
         if( rc < 0 )
         {
             if ( o_verbose )
-                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -259,13 +259,13 @@ opentapes( void )
     if ( !o_faketape )
     {
         if ( o_verbose )
-        printf( MSG( HHC02755, "I", "compress", yesno( o_compress ) ) );
+            WRMSG( HHC02755, "I", "compress", yesno( o_compress ) );
 
         rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
         if( rc < 0 )
         {
             if ( o_verbose )
-                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -273,14 +273,14 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_method );
-            printf( MSG( HHC02755, "I", "method", msgbuf ) );
+            WRMSG( HHC02755, "I", "method", msgbuf );
         }
 
         rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_METHOD, o_method );
         if( rc < 0 )
         {
             if ( o_verbose )
-                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -288,14 +288,14 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_level );
-            printf( MSG( HHC02755, "I", "level", msgbuf ) );
+            WRMSG( HHC02755, "I", "level", msgbuf );
         }
 
         rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_LEVEL, o_level );
         if( rc < 0 )
         {
             if ( o_verbose )
-                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -303,14 +303,14 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_chunksize );
-            printf( MSG( HHC02755, "I", "chunksize", msgbuf ) );
+            WRMSG( HHC02755, "I", "chunksize", msgbuf );
         }
 
         rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE, o_chunksize );
         if( rc < 0 )
         {
             if ( o_verbose )
-                printf( MSG( HHC00075, "E", "het_cntl()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -320,22 +320,22 @@ opentapes( void )
         char msgbuf[128];
 
         MSGBUF( msgbuf, "Source             : %s", o_sname );
-        printf( MSG( HHC02757, "I", msgbuf ) );
+        WRMSG( HHC02757, "I", msgbuf );
         MSGBUF( msgbuf, "Destination        : %s", o_dname );
-        printf( MSG( HHC02757, "I", msgbuf ) );
+        WRMSG( HHC02757, "I", msgbuf );
         if ( !i_faketape )
         {
             MSGBUF( msgbuf, "Decompress source  : %s", yesno( het_cntl( s_hetb, HETCNTL_DECOMPRESS, 0 ) ) );
-            printf( MSG( HHC02757, "I", msgbuf ) );
+            WRMSG( HHC02757, "I", msgbuf );
         }
         if ( !o_faketape )
         {
             MSGBUF( msgbuf, "Compress dest      : %s", yesno( het_cntl( d_hetb, HETCNTL_COMPRESS, 0 ) ) );
-            printf( MSG( HHC02757, "I", msgbuf ) );
+            WRMSG( HHC02757, "I", msgbuf );
             MSGBUF( msgbuf, "Compression method : %d", het_cntl( d_hetb, HETCNTL_METHOD, 0 ) );
-            printf( MSG( HHC02757, "I", msgbuf ) );
+            WRMSG( HHC02757, "I", msgbuf );
             MSGBUF( msgbuf, "Compression level  : %d", het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
-            printf( MSG( HHC02757, "I", msgbuf ) );
+            WRMSG( HHC02757, "I", msgbuf );
         }
     }
 
@@ -484,14 +484,14 @@ main( int argc, char *argv[] )
     rc = opentapes();
     if( rc < 0 )
     {
-        printf( MSG( HHC02756, "E", "opening", het_error( rc ) ) );
+        WRMSG( HHC02756, "E", "opening", het_error( rc ) );
     }
     else
     {
         rc = copytape();
         if( rc < 0 )
         {
-            printf( MSG( HHC02756, "E", "copying", het_error( rc ) ) );
+            WRMSG( HHC02756, "E", "copying", het_error( rc ) );
         }
     }
 

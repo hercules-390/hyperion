@@ -200,8 +200,8 @@ merge( SLLABEL *lab )
     /*
     || Print DCB attributes
     */
-    printf( "DCB Attributes used:\n" );
-    printf( "  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d\n",
+    logmsg( "DCB Attributes used:\n" );
+    logmsg( "  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d\n",
         valfm[ i ].recfm,
         opts.lrecl,
         opts.blksize );
@@ -396,9 +396,9 @@ get_sl( SLLABEL *lab )
     else
     {
         if ( opts.faketape )
-            printf( MSG( HHC00075, "E", "fet_read()", fet_error( rc ) ) );
+            WRMSG( HHC00075, "E", "fet_read()", fet_error( rc ) );
         else
-            printf( MSG( HHC00075, "E", "het_read()", het_error( rc ) ) );
+            WRMSG( HHC00075, "E", "het_read()", het_error( rc ) );
     }
 
     return( -1 );
@@ -444,7 +444,7 @@ getfile( FILE *outf )
                 MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
                     opts.faketape ? "f" : "h",
                     opts.fileno ); 
-                printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
+                WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
         }
@@ -457,7 +457,7 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_isvol( &lab, 1 ) )
         {
-            printf( MSG( HHC02753, "E", "VOL1" ) );
+            WRMSG( HHC02753, "E", "VOL1" );
             return( -1 );
         }
 
@@ -484,7 +484,7 @@ getfile( FILE *outf )
                 MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
                     opts.faketape ? "f" : "h",
                     opts.fileno ); 
-                printf( MSG( HHC00075, "E", msgbuf, het_error( rc ) ) );
+                WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
         }
@@ -495,7 +495,7 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 1 ) )
         {
-            printf( MSG( HHC02753, "E", "HDR1" ) );
+            WRMSG( HHC02753, "E", "HDR1" );
             return( -1 );
         }
 
@@ -503,7 +503,7 @@ getfile( FILE *outf )
         || Make the label more managable
         */
         sl_fmtlab( &fmt, &lab );
-        printf( MSG( HHC02754, "E", fmt.slds1.dsid ) ); 
+        WRMSG( HHC02754, "E", fmt.slds1.dsid ); 
     
         /*
         || Get the HDR2 label.
@@ -511,7 +511,7 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 2 ) )
         {
-            printf( MSG( HHC02753, "E", "HDR2" ) );
+            WRMSG( HHC02753, "E", "HDR2" );
             return( -1 );
         }
     
@@ -530,9 +530,9 @@ getfile( FILE *outf )
         if( rc < 0 )
         {
             if ( opts.faketape )
-                printf( MSG( HHC00075, "E", "fet_fsf()", fet_error( rc ) ) );
+                WRMSG( HHC00075, "E", "fet_fsf()", fet_error( rc ) );
             else
-                printf( MSG( HHC00075, "E", "het_fsf()", het_error( rc ) ) );
+                WRMSG( HHC00075, "E", "het_fsf()", het_error( rc ) );
             return( rc );
         }
     }
@@ -649,7 +649,7 @@ getfile( FILE *outf )
 void
 usage( char *name )
 {
-    printf( MSG( HHC02728, "I", name ) );
+    logmsg( MSG( HHC02728, "I", name ) );
 }
 
 /*
@@ -753,7 +753,7 @@ main( int argc, char *argv[] )
     if(argc < 3)
     {
         if ( argc > 1 )
-            printf ( MSG( HHC02446, "E" ) );
+            WRMSG( HHC02446, "E" );
         usage( pgm );
         exit( 1 );
     }
@@ -776,7 +776,7 @@ main( int argc, char *argv[] )
     {
         char msgbuf[20];
         MSGBUF( msgbuf, "%d", opts.fileno );
-        printf( MSG( HHC02205, "E", msgbuf, "; file number must be within the range of 1 to 9999" ) );
+        WRMSG( HHC02205, "E", msgbuf, "; file number must be within the range of 1 to 9999" );
         exit( 1 );
     }
 
@@ -787,7 +787,7 @@ main( int argc, char *argv[] )
     {
         if( argc != 6 )
         {
-            printf( MSG( HHC02750, "E" ) );
+            WRMSG( HHC02750, "E" );
             exit( 1 );
         }
     }
@@ -849,7 +849,7 @@ main( int argc, char *argv[] )
                     strcat( msgbuf2, msgbuf3 );
                 }
             }
-            printf( "%s", msgbuf );
+            logmsg( "%s", msgbuf );
             exit( 1 );
         }
 
@@ -864,7 +864,7 @@ main( int argc, char *argv[] )
         opts.blksize = atoi( argv[ optind + 5 ] );
         if( opts.blksize == 0 )
         {
-            printf( MSG( HHC02205, "E", "0", "; block size can't be zero" ) );
+            WRMSG( HHC02205, "E", "0", "; block size can't be zero" );
             exit( 1 );
         }
     }
@@ -910,9 +910,9 @@ main( int argc, char *argv[] )
     else
     {
         if ( opts.faketape )
-            printf( MSG( HHC00075, "E", "fet_open()", fet_error( rc ) ) );
+            WRMSG( HHC00075, "E", "fet_open()", fet_error( rc ) );
         else
-            printf( MSG( HHC00075, "E", "het_open()", het_error( rc ) ) );
+            WRMSG( HHC00075, "E", "het_open()", het_error( rc ) );
     }
 
     /*
