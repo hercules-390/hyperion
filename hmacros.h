@@ -814,7 +814,26 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     initialize_join_attr   (JOINABLE); \
     set_codepage(NULL); \
     init_hostinfo( &hostinfo ); \
-    if ( get_symbol( "HERCULES_UTIL_MSGLVL" ) != NULL ) sysblk.msglvl = MLVL_ANY;\
+    do \
+    { \
+        char *msglvl = (char *)get_symbol( "HERCULES_UTIL_MSGLVL" );\
+        if ( msglvl != NULL ) \
+        { \
+            sysblk.emsg = EMSG_ON; \
+            if ( strcasestr(msglvl, "all") ) \
+                sysblk.msglvl |= MLVL_ANY; \
+            if ( strcasestr(msglvl, "debug") ) \
+                sysblk.msglvl |= MLVL_DEBUG | MLVL_DEVICES; \
+            if ( strcasestr(msglvl, "verbose") )\
+                sysblk.msglvl |= MLVL_VERBOSE; \
+            if ( strcasestr(msglvl, "tape") ) \
+                sysblk.msglvl |= MLVL_TAPE; \
+            if ( strcasestr(msglvl, "dasd") ) \
+                sysblk.msglvl |= MLVL_DASD; \
+            if ( strcasestr(msglvl, "time") ) \
+                sysblk.emsg |= EMSG_TS; \
+        } \
+    } while(0); \
   } while (0)
 
 /*-------------------------------------------------------------------*/
