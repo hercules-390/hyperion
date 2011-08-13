@@ -808,7 +808,6 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
     memset (&sysblk, 0, sizeof(SYSBLK)); \
-    sysblk.arch_mode = 4095; \
     INIT_MSGLCK \
     initialize_detach_attr (DETACHED); \
     initialize_join_attr   (JOINABLE); \

@@ -457,8 +457,8 @@ DLL_EXPORT void log_write(int panel,char *msg)
     }
 #endif // defined( OPTION_MSGCLR )
 
-    // Route print to stdout if running as a utility
-    if ( sysblk.arch_mode == 4095 )
+    // Route logmsg to stdout if the logpipe has not been initialised
+    if(!logger_syslogfd[LOG_WRITE])
     {
         printf( "%s", pLeft );
         return;
