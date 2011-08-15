@@ -123,7 +123,7 @@ static void sigterm_handler (int signo)
 /*-------------------------------------------------------------------*/
 /* Signal handler for Windows signals                                */
 /*-------------------------------------------------------------------*/
-BOOL WINAPI console_ctrl_handler (DWORD signo)
+static BOOL WINAPI console_ctrl_handler (DWORD signo)
 {
     int i;
 
@@ -285,7 +285,7 @@ DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
 /* Process .RC file thread                                           */
 /*-------------------------------------------------------------------*/
 
-void* process_rc_file (void* dummy)
+static void* process_rc_file (void* dummy)
 {
 char   *rcname;                         /* hercules.rc name pointer  */
 int     is_default_rc  = 0;             /* 1 == default name used    */

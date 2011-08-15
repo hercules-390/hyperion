@@ -106,7 +106,7 @@ do { \
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
-void format_iobuf_data( const RADR addr, BYTE *area, const DEVBLK *dev, const u_int len)          /*@IWZ*/
+static void format_iobuf_data( const RADR addr, BYTE *area, const DEVBLK *dev, const u_int len)          /*@IWZ*/
 {
 BYTE   *a;                              /* -> Byte in main storage   */
 u_int   i, j, k;                        /* Array subscripts          */
@@ -142,7 +142,7 @@ BYTE    workarea[17];                   /* Character String work     */
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL COMMAND WORD AND DATA                             */
 /*-------------------------------------------------------------------*/
-void display_ccw ( const DEVBLK *dev, const BYTE ccw[], const U32 addr, U32 count, const U8 flags )
+static void display_ccw ( const DEVBLK *dev, const BYTE ccw[], const U32 addr, U32 count, const U8 flags )
 {
 BYTE    area[64];                       /* Data display area         */
 
@@ -160,7 +160,7 @@ BYTE    area[64];                       /* Data display area         */
 /*-------------------------------------------------------------------*/
 /* DISPLAY IDAW AND DATA                                             */
 /*-------------------------------------------------------------------*/
-void display_idaw ( const DEVBLK *dev, const BYTE type, const BYTE flag, const RADR addr, const U16 count )
+static void display_idaw ( const DEVBLK *dev, const BYTE type, const BYTE flag, const RADR addr, const U16 count )
 {
 BYTE    area[64];                       /* Data display area         */
 
@@ -183,7 +183,7 @@ BYTE    area[64];                       /* Data display area         */
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL STATUS WORD                                       */
 /*-------------------------------------------------------------------*/
-void display_csw (const DEVBLK *dev, const BYTE csw[])
+static void display_csw (const DEVBLK *dev, const BYTE csw[])
 {
     WRMSG (HHC01316, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             csw[4], csw[5], csw[6], csw[7],
@@ -194,7 +194,7 @@ void display_csw (const DEVBLK *dev, const BYTE csw[])
 /*-------------------------------------------------------------------*/
 /* DISPLAY SUBCHANNEL STATUS WORD                                    */
 /*-------------------------------------------------------------------*/
-void display_scsw ( const DEVBLK *dev, const SCSW scsw)
+static void display_scsw ( const DEVBLK *dev, const SCSW scsw)
 {
     WRMSG (HHC01317, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
@@ -1187,7 +1187,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
 /*                                                                   */
 /*   Caller holds `intlock'                                          */
 /*-------------------------------------------------------------------*/
-void device_reset (DEVBLK *dev)
+static void device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
 

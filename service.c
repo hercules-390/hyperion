@@ -102,7 +102,7 @@ void sclp_attention(U16 type)
 }
 
 
-void sclp_attn_thread(U16 *type)
+static void sclp_attn_thread(U16 *type)
 {
 
     OBTAIN_INTLOCK(NULL);
@@ -126,7 +126,7 @@ void sclp_attn_thread(U16 *type)
 }
 
 
-void sclp_attn_async(U16 type)
+static void sclp_attn_async(U16 type)
 {
     int rc;
 
@@ -331,7 +331,7 @@ BYTE *event_msg = (BYTE*)(evd_bk+1);
 }
 
 
-void sclp_cpident(SCCB_HEADER *sccb)
+static void sclp_cpident(SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
 SCCB_CPI_BK  *cpi_bk  = (SCCB_CPI_BK*)(evd_hdr + 1);
@@ -515,7 +515,7 @@ SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
 /*      Reason and response codes are set in the SCCB                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void sclp_sysg_write(SCCB_HEADER *sccb)
+static void sclp_sysg_write(SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 U16             evd_len;                /* SCCB event data length    */
@@ -608,7 +608,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
 /*      Data, reason and response codes are set in the SCCB          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void sclp_sysg_poll(SCCB_HEADER *sccb)
+static void sclp_sysg_poll(SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 U16             sccblen;                /* SCCB total length         */
@@ -732,7 +732,7 @@ void sclp_sysg_attention()
 
 
 #if defined(_FEATURE_INTEGRATED_ASCII_CONSOLE)
-int sclp_sysa_write(SCCB_HEADER *sccb)
+static int sclp_sysa_write(SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 U16 evd_len;
@@ -765,7 +765,7 @@ int i;
     return 0; // write ok
 }
 
-int sclp_sysa_poll(SCCB_HEADER *sccb)
+static int sclp_sysa_poll(SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 

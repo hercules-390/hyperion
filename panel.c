@@ -440,7 +440,7 @@ int get_color(char *string, short *color)
 /*  keep            keeps message on screen until removed            */
 /*  nokeep          default - does not keep message                  */
 /*-------------------------------------------------------------------*/
-void colormsg(PANMSG *p)
+static void colormsg(PANMSG *p)
 {
   int  i = 0;           // current message text index
   int  len;             // length of color-name token
@@ -744,7 +744,7 @@ static void get_dim (int *y, int *x)
 #endif // defined(WIN32) && !defined( _MSVC_ )
 }
 
-int get_keepnum_by_row( int row )
+static int get_keepnum_by_row( int row )
 {
     // PROGRAMMING NOTE: right now all of our kept messages are
     // always placed at the very top of the screen (starting on

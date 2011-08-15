@@ -335,27 +335,27 @@ typedef struct _IOCTL64 {
 /* Internal Architecture Independent Function Prototypes             */
 /*-------------------------------------------------------------------*/
 /* Initialization Functions */
-int  d250_init32(DEVBLK *, int *, BIOPL_INIT32 *, REGS *);
-int  d250_init64(DEVBLK *, int *, BIOPL_INIT64 *, REGS *);
-struct VMBIOENV* d250_init(DEVBLK *, U32, S64, int *, int *);
+static int  d250_init32(DEVBLK *, int *, BIOPL_INIT32 *, REGS *);
+static int  d250_init64(DEVBLK *, int *, BIOPL_INIT64 *, REGS *);
+static struct VMBIOENV* d250_init(DEVBLK *, U32, S64, int *, int *);
 
 /* Input/Output Request Functions */
-void d250_preserve(DEVBLK *);
-void d250_restore(DEVBLK *);
-int d250_read(DEVBLK *, S64, S32, void *);
-int d250_write(DEVBLK *, S64, S32, void *);
+static void d250_preserve(DEVBLK *);
+static void d250_restore(DEVBLK *);
+static int d250_read(DEVBLK *, S64, S32, void *);
+static int d250_write(DEVBLK *, S64, S32, void *);
 /* Note: some I/O request functions are architecture dependent */
 
 /* Removal Function */
-int  d250_remove(DEVBLK *, int *, BIOPL_REMOVE *, REGS *);
+static int  d250_remove(DEVBLK *, int *, BIOPL_REMOVE *, REGS *);
 
 /* Asynchronous Interrupt Generation */
-void d250_bio_interrupt(DEVBLK *, U64 intparm, BYTE status, BYTE code);
+static void d250_bio_interrupt(DEVBLK *, U64 intparm, BYTE status, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /*  Trigger Block I/O External Interrupt                             */
 /*-------------------------------------------------------------------*/
-void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
+static void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
 {
 
    OBTAIN_INTLOCK(NULL);
@@ -405,7 +405,7 @@ void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subcode)
 /*-------------------------------------------------------------------*/
 /*  Initialize Environment - 32-bit Addressing                       */
 /*-------------------------------------------------------------------*/
-int  d250_init32(DEVBLK *dev, int *diag_rc, BIOPL_INIT32 *biopl, 
+static int  d250_init32(DEVBLK *dev, int *diag_rc, BIOPL_INIT32 *biopl, 
                  REGS *regs)
 {
 BIOPL_INIT32   bioplx00;             /* Use to check reserved fields */
@@ -461,7 +461,7 @@ int     cc;                         /* Condition code to return      */
 /*-------------------------------------------------------------------*/
 /*  Initialize Environment - 64-bit Addressing                       */
 /*-------------------------------------------------------------------*/
-int d250_init64(DEVBLK *dev, int *diag_rc, BIOPL_INIT64 *biopl,
+static int d250_init64(DEVBLK *dev, int *diag_rc, BIOPL_INIT64 *biopl,
                 REGS *regs)
 {
 BIOPL_INIT64   bioplx00;             /* Use to check reserved fields */
@@ -517,7 +517,7 @@ int     cc;                          /* condition code               */
 /*-------------------------------------------------------------------*/
 /*  Initialize Environment - Addressing Independent                  */
 /*-------------------------------------------------------------------*/
-struct VMBIOENV* d250_init(DEVBLK *dev, U32 blksize, S64 offset,
+static struct VMBIOENV* d250_init(DEVBLK *dev, U32 blksize, S64 offset,
                     int *cc, int *rc )
 {
 int      isCKD;         /* Flag for CKD device                       */
@@ -692,7 +692,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
 /* the drivers use a pointer for where sense is stored rather than */
 /* assume the device block.  This is deferred for a possible future*/
 /* enhancement.                                                    */
-void d250_preserve(DEVBLK *dev)
+static void d250_preserve(DEVBLK *dev)
 {
     /* Note: this logic comes from the beginning of */
     /* channel.c ARCH_DEP(execute_ccw_chain)        */
@@ -741,7 +741,7 @@ void d250_preserve(DEVBLK *dev)
 /* Restore Device Status                                             */
 /*-------------------------------------------------------------------*/
 /* WARNING: This function MUST not be called with the device lock held */
-void d250_restore(DEVBLK *dev)
+static void d250_restore(DEVBLK *dev)
 {
     obtain_lock(&dev->lock);
     if (dev->hnd->release)
@@ -769,7 +769,7 @@ void d250_restore(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /*  Environment Remove - Any Addressing                              */
 /*-------------------------------------------------------------------*/
-int d250_remove(DEVBLK *dev, int *rc, BIOPL_REMOVE * biopl, REGS *regs)
+static int d250_remove(DEVBLK *dev, int *rc, BIOPL_REMOVE * biopl, REGS *regs)
 {
 BIOPL_REMOVE bioplx00;               /* Use to check reserved fields */
 struct VMBIOENV *bioenv;             /* -->allocated environement    */
@@ -835,7 +835,7 @@ int       cc;                        /* Condition code to return     */
 /*-------------------------------------------------------------------*/
 /*  Device Independent Read Block                                    */
 /*-------------------------------------------------------------------*/
-int d250_read(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
+static int d250_read(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 {
 BYTE unitstat;     /* Device unit status */
 U16  residual;     /* Residual byte count */
@@ -901,7 +901,7 @@ U16  residual;     /* Residual byte count */
 /*-------------------------------------------------------------------*/
 /*  Device Independent Write Block                                   */
 /*-------------------------------------------------------------------*/
-int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
+static int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 {
 BYTE unitstat;     /* Device unit status */
 U16  residual;     /* Residual byte count */
@@ -973,14 +973,14 @@ U16  residual;     /* Residual byte count */
 /* Internal Architecture Dependent Function Prototypes               */
 /*-------------------------------------------------------------------*/
 /* Input/Output Request Functions */
-int   ARCH_DEP(d250_iorq32)(DEVBLK *, int *, BIOPL_IORQ32 *, REGS *);
-int   ARCH_DEP(d250_list32)(IOCTL32 *, int);
-U16   ARCH_DEP(d250_addrck)(RADR, RADR, int, BYTE, REGS *);
+static int   ARCH_DEP(d250_iorq32)(DEVBLK *, int *, BIOPL_IORQ32 *, REGS *);
+static int   ARCH_DEP(d250_list32)(IOCTL32 *, int);
+static U16   ARCH_DEP(d250_addrck)(RADR, RADR, int, BYTE, REGS *);
 
 #if defined(FEATURE_ESAME)
-int   ARCH_DEP(d250_iorq64)(DEVBLK *, int *, BIOPL_IORQ64 *, REGS *);
+static int   ARCH_DEP(d250_iorq64)(DEVBLK *, int *, BIOPL_IORQ64 *, REGS *);
 /* void *ARCH_DEP(d250_async64)(void *); */
-int   ARCH_DEP(d250_list64)(IOCTL64 *, int);
+static int   ARCH_DEP(d250_list64)(IOCTL64 *, int);
 #endif /* defined(FEATURE_ESAME) */
 
 /*-------------------------------------------------------------------*/
@@ -1180,7 +1180,7 @@ BYTE    psc;       /* List processing status code   */
 /*-------------------------------------------------------------------*/
 /*  Input/Output Request - 32-bit Addressing                         */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(d250_iorq32)(DEVBLK *dev, int *rc, BIOPL_IORQ32 *biopl, 
+static int ARCH_DEP(d250_iorq32)(DEVBLK *dev, int *rc, BIOPL_IORQ32 *biopl, 
                 REGS *regs)
 {
 BIOPL_IORQ32   bioplx00;  /* Used to check reserved fields */
@@ -1365,7 +1365,7 @@ int     rc2;
 /*-------------------------------------------------------------------*/
 /*  Input/Outut 32-bit List Processor - Sychronicity Independent     */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(d250_list32)(IOCTL32* ioctl, int async)
+static int ARCH_DEP(d250_list32)(IOCTL32* ioctl, int async)
 /* WARNING: Device Block lock must be released before returning */
 {
 BIOE32 bioe;      /* 32-bit BIOE fetched from absolute storage */
@@ -1677,7 +1677,7 @@ RADR   bufend;    /* Last byte read or written                 */
 /*-------------------------------------------------------------------*/
 /*  Absolue Address Checking without Reference and Change Recording  */
 /*-------------------------------------------------------------------*/
-U16 ARCH_DEP(d250_addrck)
+static U16 ARCH_DEP(d250_addrck)
             (RADR beg, RADR end, int acctype, BYTE key, REGS *regs)
 /* Note: inline.h and vstore.c functions are not used because they      */
 /* will generate program exceptions automatically.  DIAGNOSE X'250' in  */
@@ -1756,7 +1756,7 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
 /*-------------------------------------------------------------------*/
 /*  Asynchronous Input/Output 64-bit Driver Thread                   */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(d250_async64)(void *ctl)
+static void ARCH_DEP(d250_async64)(void *ctl)
 {
 IOCTL64 *ioctl;    /* 64-bit IO request controls  */
 BYTE     psc;      /* List processing status code */
@@ -1776,7 +1776,7 @@ BYTE     psc;      /* List processing status code */
 /*-------------------------------------------------------------------*/
 /*  Input/Output Request - 64-bit Addressing                         */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(d250_iorq64)(DEVBLK *dev, int *rc, BIOPL_IORQ64 *biopl, 
+static int ARCH_DEP(d250_iorq64)(DEVBLK *dev, int *rc, BIOPL_IORQ64 *biopl, 
              REGS *regs)
 {
 BIOPL_IORQ64   bioplx00;   /* Used to check reserved fields */
@@ -1955,7 +1955,7 @@ int     rc2;
 /*-------------------------------------------------------------------*/
 /*  Input/Outut 64-bit List Processor - Sychronicity Independent     */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(d250_list64)(IOCTL64* ioctl, int async)
+static int ARCH_DEP(d250_list64)(IOCTL64* ioctl, int async)
 /* WARNING: Device Block lock must be released before returning */
 {
 BIOE64 bioe;      /* 32-bit BIOE fetched from absolute storage */

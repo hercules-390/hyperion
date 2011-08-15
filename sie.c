@@ -45,10 +45,10 @@
 
 #define _SIE_C
 
-int s370_run_sie (REGS *regs);
-int s390_run_sie (REGS *regs);
+static int s370_run_sie (REGS *regs);
+static int s390_run_sie (REGS *regs);
 #if defined(_900)
-int z900_run_sie (REGS *regs);
+static int z900_run_sie (REGS *regs);
 #endif /*defined(_900)*/
 static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
     {
@@ -980,7 +980,7 @@ int     n;
 
 #if defined(_FEATURE_SIE)
 /* Execute guest instructions */
-int ARCH_DEP(run_sie) (REGS *regs)
+static int ARCH_DEP(run_sie) (REGS *regs)
 {
     int i;
     int   icode;    /* SIE longjmp intercept code      */

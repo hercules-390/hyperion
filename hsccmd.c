@@ -87,7 +87,28 @@ static void fcb_dump( DEVBLK*, char *, unsigned int );
 /*-------------------------------------------------------------------*/
 /* $test command - do something or other                             */
 /*-------------------------------------------------------------------*/
-void* test_thread(void* parg);      /* (forward reference) */
+
+/* $test command helper thread */
+static void* test_thread( void* parg)
+{
+    TID tid = thread_id();          /* thread identity */
+    int rc, secs = (int) parg;      /* how long to wait */
+    struct timespec ts;             /* nanosleep argument */
+
+    ts.tv_sec  = secs;
+    ts.tv_nsec = 0;
+
+    /* Introduce Heisenberg */
+    sched_yield();
+
+    /* Do nanosleep for the specified number of seconds */
+    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    rc = nanosleep( &ts, NULL );
+    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+
+    return NULL;
+}
+
 
 #define  NUM_THREADS    10
 #define  MAX_WAIT_SECS  6
@@ -137,27 +158,6 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     logmsg("*** $test command: test complete.\n");
     return 0;
-}
-
-/* $test command helper thread */
-void* test_thread( void* parg)
-{
-    TID tid = thread_id();          /* thread identity */
-    int rc, secs = (int) parg;      /* how long to wait */
-    struct timespec ts;             /* nanosleep argument */
-
-    ts.tv_sec  = secs;
-    ts.tv_nsec = 0;
-
-    /* Introduce Heisenberg */
-    sched_yield();
-
-    /* Do nanosleep for the specified number of seconds */
-    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
-    rc = nanosleep( &ts, NULL );
-    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
-
-    return NULL;
 }
 
 /* ---------------------- (end $test command) ---------------------- */

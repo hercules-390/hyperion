@@ -55,7 +55,7 @@
 
 #if defined(OPTION_DYNAMIC_LOAD) && defined(FEATURE_HERCULES_DIAGCALLS)
 
-void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
+static void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
 {
 char name[32+1];
 char entry[64];
@@ -103,7 +103,7 @@ static char *prefix[] = {
 /*---------------------------------------------------------------------------*/
 /* Within diagnose 0x308 (re-ipl) a thread is started with the next code.    */
 /*---------------------------------------------------------------------------*/
-void *stop_cpus_and_ipl(int *ipltype)
+static void *stop_cpus_and_ipl(int *ipltype)
 {
   int i;
   char iplcmd[256];

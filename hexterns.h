@@ -265,11 +265,8 @@ void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
 CONF_DLL_IMPORT REGS *devregs(DEVBLK *dev);
-DEVBLK *get_devblk (U16 lcss, U16 devnum);
-void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
         char *addargv[]);
-int  detach_subchan (U16 lcss, U16 subchan, U16 devnum);
 int  detach_device (U16 lcss, U16 devnum);
 int  define_device (U16 lcss, U16 olddev, U16 newdev);
 CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
@@ -398,7 +395,6 @@ char *http_get_port();
 char *http_get_portauth();
 
 /* Functions in module loadparm.c */
-LOADPARM_DLL_IMPORT void get_gsysinfo(GSYSINFO *gsysinfo);
 void set_loadparm(char *name);
 void get_loadparm(BYTE *dest);
 char *str_loadparm();

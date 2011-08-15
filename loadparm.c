@@ -126,7 +126,7 @@ static GSYSINFO gsysinfo;
 /* Guest System Information                                          */
 /*-------------------------------------------------------------------*/
 
-void get_gsysinfo(GSYSINFO *dest)
+static void get_gsysinfo(GSYSINFO *dest)
 {
     if ( dest == NULL )
     {
@@ -151,7 +151,7 @@ void get_gsysinfo(GSYSINFO *dest)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A STRINGZ TO A FIXED-LENGTH EBCDIC FIELD       */
 /*-------------------------------------------------------------------*/
-int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
+static int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 {
     size_t  i;
     size_t  copylen;
@@ -191,7 +191,7 @@ int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO COPY A FIXED-LENGTH EBCDIC FIELD TO A STRINGZ       */
 /*-------------------------------------------------------------------*/
-int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
+static int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t flen)
 {
     size_t  i;
     size_t  copylen;

@@ -36,7 +36,7 @@
 
 #if defined(FEATURE_CHSC)
 
-int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
     U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 
@@ -97,7 +97,7 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 }
 
 
-int ARCH_DEP(chsc_get_css_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+static int ARCH_DEP(chsc_get_css_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 CHSC_RSP10 *chsc_rsp10;
 U16 req_len, rsp_len;
@@ -173,7 +173,7 @@ U16 req_len, rsp_len;
 }
 
 
-int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+static int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
     U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 
@@ -225,7 +225,7 @@ int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 }
 
 
-int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+static int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
     U16 req_len, rsp_len, facility;
 

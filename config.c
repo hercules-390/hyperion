@@ -363,6 +363,306 @@ int was_locked = sysblk.xpndstor_locked;
     return rc;
 }
 
+
+#if defined(OPTION_FAST_DEVLOOKUP)
+/* 4 next functions used for fast device lookup cache management */
+static void AddDevnumFastLookup(DEVBLK *dev,U16 lcss,U16 devnum)
+{
+    unsigned int Channel;
+    if(sysblk.devnum_fl==NULL)
+    {
+        sysblk.devnum_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+        memset(sysblk.devnum_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+    }
+    Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
+    if(sysblk.devnum_fl[Channel]==NULL)
+    {
+        sysblk.devnum_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
+        memset(sysblk.devnum_fl[Channel], 0, sizeof(DEVBLK *)*256);
+    }
+    sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
+}
+
+
+static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
+{
+    unsigned int schw;
+#if 0
+    logmsg(_("DEBUG : ASFL Adding %d\n"),subchan);
+#endif
+    if(sysblk.subchan_fl==NULL)
+    {
+        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+        memset(sysblk.subchan_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+    }
+    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid)<<8);
+    if(sysblk.subchan_fl[schw]==NULL)
+    {
+        sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
+        memset(sysblk.subchan_fl[schw], 0,sizeof(DEVBLK *)*256);
+    }
+    sysblk.subchan_fl[schw][subchan & 0xff]=dev;
+}
+
+
+static void DelDevnumFastLookup(U16 lcss,U16 devnum)
+{
+    unsigned int Channel;
+    if(sysblk.devnum_fl==NULL)
+    {
+        return;
+    }
+    Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
+    if(sysblk.devnum_fl[Channel]==NULL)
+    {
+        return;
+    }
+    sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
+}
+
+
+static void DelSubchanFastLookup(U16 ssid, U16 subchan)
+{
+    unsigned int schw;
+#if 0
+    logmsg(_("DEBUG : DSFL Removing %d\n"),subchan);
+#endif
+    if(sysblk.subchan_fl==NULL)
+    {
+        return;
+    }
+    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid) << 8);
+    if(sysblk.subchan_fl[schw]==NULL)
+    {
+        return;
+    }
+    sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
+}
+#endif
+
+
+static
+DEVBLK *get_devblk(U16 lcss, U16 devnum)
+{
+DEVBLK *dev;
+DEVBLK**dvpp;
+
+    if(lcss >= FEATURE_LCSS_MAX)
+        lcss = 0;
+
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        if (!(dev->allocated) && dev->ssid == LCSS_TO_SSID(lcss)) break;
+
+    if(!dev)
+    {
+        if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
+        {
+            char buf[64];
+            MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
+            WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
+            return NULL;
+        }
+        memset (dev, 0, sizeof(DEVBLK));
+
+        /* Initialize the device lock and conditions */
+
+        initialize_lock      ( &dev->lock               );
+        initialize_condition ( &dev->resumecond         );
+        initialize_condition ( &dev->iocond             );
+#if defined(OPTION_SCSI_TAPE)
+        initialize_condition ( &dev->stape_sstat_cond   );
+        InitializeListLink   ( &dev->stape_statrq.link  );
+        InitializeListLink   ( &dev->stape_mntdrq.link  );
+        dev->stape_statrq.dev = dev;
+        dev->stape_mntdrq.dev = dev;
+        dev->sstat            = GMT_DR_OPEN(-1);
+#endif
+        /* Search for the last device block on the chain */
+        for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
+            dvpp = &((*dvpp)->nextdev));
+
+        /* Add the new device block to the end of the chain */
+        *dvpp = dev;
+
+        dev->ssid = LCSS_TO_SSID(lcss);
+        dev->subchan = sysblk.highsubchan[lcss]++;
+    }
+
+    /* Initialize the device block */
+    obtain_lock (&dev->lock);
+
+    dev->group = NULL;
+    dev->member = 0;
+
+    dev->cpuprio = sysblk.cpuprio;
+    dev->devprio = sysblk.devprio;
+    dev->hnd = NULL;
+    dev->devnum = devnum;
+    dev->chanset = lcss;
+    dev->fd = -1;
+    dev->syncio = 0;
+    dev->ioint.dev = dev;
+    dev->ioint.pending = 1;
+    dev->pciioint.dev = dev;
+    dev->pciioint.pcipending = 1;
+    dev->attnioint.dev = dev;
+    dev->attnioint.attnpending = 1;
+    dev->oslinux = sysblk.pgminttr == OS_LINUX;
+
+    /* Initialize storage view */
+    dev->mainstor = sysblk.mainstor;
+    dev->storkeys = sysblk.storkeys;
+    dev->mainlim = sysblk.mainsize - 1;
+
+    /* Initialize the path management control word */
+    memset (&dev->pmcw, 0, sizeof(PMCW));
+    dev->pmcw.devnum[0] = dev->devnum >> 8;
+    dev->pmcw.devnum[1] = dev->devnum & 0xFF;
+    dev->pmcw.lpm = 0x80;
+    dev->pmcw.pim = 0x80;
+    dev->pmcw.pom = 0xFF;
+    dev->pmcw.pam = 0x80;
+    dev->pmcw.chpid[0] = dev->devnum >> 8;
+
+#if defined(OPTION_SHARED_DEVICES)
+    dev->shrdwait = -1;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
+
+#ifdef EXTERNALGUI
+    if ( !dev->pGUIStat )
+    {
+         dev->pGUIStat = malloc( sizeof(GUISTAT) );
+         dev->pGUIStat->pszOldStatStr = dev->pGUIStat->szStatStrBuff1;
+         dev->pGUIStat->pszNewStatStr = dev->pGUIStat->szStatStrBuff2;
+        *dev->pGUIStat->pszOldStatStr = 0;
+        *dev->pGUIStat->pszNewStatStr = 0;
+    }
+#endif /*EXTERNALGUI*/
+
+    /* Mark device valid */
+    dev->pmcw.flag5 |= PMCW5_V;
+    dev->allocated = 1;
+
+    return dev;
+}
+
+
+static
+void ret_devblk(DEVBLK *dev)
+{
+    /* Mark device invalid */
+    dev->allocated = 0;
+    dev->pmcw.flag5 &= ~PMCW5_V; // compat ZZ deprecated
+    release_lock(&dev->lock);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to delete a device configuration block                   */
+/*-------------------------------------------------------------------*/
+static int detach_devblk (DEVBLK *dev)
+{
+int     i;                              /* Loop index                */
+    
+    /* Obtain the device lock */
+    obtain_lock(&dev->lock);
+
+#if defined(OPTION_FAST_DEVLOOKUP)
+    DelSubchanFastLookup(dev->ssid, dev->subchan);
+    if(dev->pmcw.flag5 & PMCW5_V)
+        DelDevnumFastLookup(SSID_TO_LCSS(dev->ssid),dev->devnum);
+#endif
+
+    /* Close file or socket */
+    if ((dev->fd > 2) || dev->console)
+        /* Call the device close handler */
+        (dev->hnd->close)(dev);
+
+    if ( dev->pszVaultPath != NULL )
+    {
+        free( dev->pszVaultPath );
+        dev->pszVaultPath = NULL;
+    }
+
+    for (i = 0; i < dev->argc; i++)
+        if (dev->argv[i])
+            free(dev->argv[i]);
+    if (dev->argv)
+        free(dev->argv);
+
+    free(dev->typname);
+
+    // detach all devices in group
+    if(dev->group)
+    {
+    int i;
+
+        dev->group->memdev[dev->member] = NULL;
+
+        if(dev->group->members)
+        {
+            dev->group->members = 0;
+
+            for(i = 0; i < dev->group->acount; i++)
+            {
+                if(dev->group->memdev[i] && dev->group->memdev[i]->allocated)
+                {
+                    detach_devblk(dev->group->memdev[i]);
+                }
+            }
+
+            free(dev->group);
+        }
+
+        dev->group = NULL;
+    }
+
+    ret_devblk(dev);
+
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
+    /* Build Channel Report */
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif
+        build_detach_chrpt( dev );
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
+    return 0;
+} /* end function detach_devblk */
+
+
+/*-------------------------------------------------------------------*/
+/* Function to delete a device configuration block by subchannel     */
+/*-------------------------------------------------------------------*/
+static int detach_subchan (U16 lcss, U16 subchan, U16 devnum)
+{
+DEVBLK *dev;                            /* -> Device block           */
+int    rc;
+char   str[64];
+    /* Find the device block */
+    dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
+
+    MSGBUF( str, "subchannel %1d:%04X", lcss, subchan);
+
+    if (dev == NULL)
+    {
+        WRMSG (HHC01464, "E", lcss, devnum, str);
+        return 1;
+    }
+
+    obtain_lock(&sysblk.config);
+
+    rc = detach_devblk( dev );
+
+    release_lock(&sysblk.config);
+
+    if(!rc)
+        WRMSG (HHC01465, "I", lcss, devnum, str);
+
+    return rc;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Function to terminate all CPUs and devices                        */
 /*-------------------------------------------------------------------*/
@@ -743,196 +1043,6 @@ int cpu;
     return 0;
 }
 
-/* 4 next functions used for fast device lookup cache management */
-#if defined(OPTION_FAST_DEVLOOKUP)
-static void AddDevnumFastLookup(DEVBLK *dev,U16 lcss,U16 devnum)
-{
-    unsigned int Channel;
-    if(sysblk.devnum_fl==NULL)
-    {
-        sysblk.devnum_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        memset(sysblk.devnum_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-    }
-    Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
-    if(sysblk.devnum_fl[Channel]==NULL)
-    {
-        sysblk.devnum_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        memset(sysblk.devnum_fl[Channel], 0, sizeof(DEVBLK *)*256);
-    }
-    sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
-}
-
-
-static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
-{
-    unsigned int schw;
-#if 0
-    logmsg(_("DEBUG : ASFL Adding %d\n"),subchan);
-#endif
-    if(sysblk.subchan_fl==NULL)
-    {
-        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        memset(sysblk.subchan_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-    }
-    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid)<<8);
-    if(sysblk.subchan_fl[schw]==NULL)
-    {
-        sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        memset(sysblk.subchan_fl[schw], 0,sizeof(DEVBLK *)*256);
-    }
-    sysblk.subchan_fl[schw][subchan & 0xff]=dev;
-}
-
-
-static void DelDevnumFastLookup(U16 lcss,U16 devnum)
-{
-    unsigned int Channel;
-    if(sysblk.devnum_fl==NULL)
-    {
-        return;
-    }
-    Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
-    if(sysblk.devnum_fl[Channel]==NULL)
-    {
-        return;
-    }
-    sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
-}
-
-
-static void DelSubchanFastLookup(U16 ssid, U16 subchan)
-{
-    unsigned int schw;
-#if 0
-    logmsg(_("DEBUG : DSFL Removing %d\n"),subchan);
-#endif
-    if(sysblk.subchan_fl==NULL)
-    {
-        return;
-    }
-    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid) << 8);
-    if(sysblk.subchan_fl[schw]==NULL)
-    {
-        return;
-    }
-    sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
-}
-#endif
-
-
-DEVBLK *get_devblk(U16 lcss, U16 devnum)
-{
-DEVBLK *dev;
-DEVBLK**dvpp;
-
-    if(lcss >= FEATURE_LCSS_MAX)
-        lcss = 0;
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (!(dev->allocated) && dev->ssid == LCSS_TO_SSID(lcss)) break;
-
-    if(!dev)
-    {
-        if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
-        {
-            char buf[64];
-            MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
-            WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
-            return NULL;
-        }
-        memset (dev, 0, sizeof(DEVBLK));
-
-        /* Initialize the device lock and conditions */
-
-        initialize_lock      ( &dev->lock               );
-        initialize_condition ( &dev->resumecond         );
-        initialize_condition ( &dev->iocond             );
-#if defined(OPTION_SCSI_TAPE)
-        initialize_condition ( &dev->stape_sstat_cond   );
-        InitializeListLink   ( &dev->stape_statrq.link  );
-        InitializeListLink   ( &dev->stape_mntdrq.link  );
-        dev->stape_statrq.dev = dev;
-        dev->stape_mntdrq.dev = dev;
-        dev->sstat            = GMT_DR_OPEN(-1);
-#endif
-        /* Search for the last device block on the chain */
-        for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
-            dvpp = &((*dvpp)->nextdev));
-
-        /* Add the new device block to the end of the chain */
-        *dvpp = dev;
-
-        dev->ssid = LCSS_TO_SSID(lcss);
-        dev->subchan = sysblk.highsubchan[lcss]++;
-    }
-
-    /* Initialize the device block */
-    obtain_lock (&dev->lock);
-
-    dev->group = NULL;
-    dev->member = 0;
-
-    dev->cpuprio = sysblk.cpuprio;
-    dev->devprio = sysblk.devprio;
-    dev->hnd = NULL;
-    dev->devnum = devnum;
-    dev->chanset = lcss;
-    dev->fd = -1;
-    dev->syncio = 0;
-    dev->ioint.dev = dev;
-    dev->ioint.pending = 1;
-    dev->pciioint.dev = dev;
-    dev->pciioint.pcipending = 1;
-    dev->attnioint.dev = dev;
-    dev->attnioint.attnpending = 1;
-    dev->oslinux = sysblk.pgminttr == OS_LINUX;
-
-    /* Initialize storage view */
-    dev->mainstor = sysblk.mainstor;
-    dev->storkeys = sysblk.storkeys;
-    dev->mainlim = sysblk.mainsize - 1;
-
-    /* Initialize the path management control word */
-    memset (&dev->pmcw, 0, sizeof(PMCW));
-    dev->pmcw.devnum[0] = dev->devnum >> 8;
-    dev->pmcw.devnum[1] = dev->devnum & 0xFF;
-    dev->pmcw.lpm = 0x80;
-    dev->pmcw.pim = 0x80;
-    dev->pmcw.pom = 0xFF;
-    dev->pmcw.pam = 0x80;
-    dev->pmcw.chpid[0] = dev->devnum >> 8;
-
-#if defined(OPTION_SHARED_DEVICES)
-    dev->shrdwait = -1;
-#endif /*defined(OPTION_SHARED_DEVICES)*/
-
-#ifdef EXTERNALGUI
-    if ( !dev->pGUIStat )
-    {
-         dev->pGUIStat = malloc( sizeof(GUISTAT) );
-         dev->pGUIStat->pszOldStatStr = dev->pGUIStat->szStatStrBuff1;
-         dev->pGUIStat->pszNewStatStr = dev->pGUIStat->szStatStrBuff2;
-        *dev->pGUIStat->pszOldStatStr = 0;
-        *dev->pGUIStat->pszNewStatStr = 0;
-    }
-#endif /*EXTERNALGUI*/
-
-    /* Mark device valid */
-    dev->pmcw.flag5 |= PMCW5_V;
-    dev->allocated = 1;
-
-    return dev;
-}
-
-
-void ret_devblk(DEVBLK *dev)
-{
-    /* Mark device invalid */
-    dev->allocated = 0;
-    dev->pmcw.flag5 &= ~PMCW5_V; // compat ZZ deprecated
-    release_lock(&dev->lock);
-}
-
 
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
@@ -1049,112 +1159,6 @@ int     i;                              /* Loop index                */
     release_lock(&sysblk.config);
     return 0;
 } /* end function attach_device */
-
-
-/*-------------------------------------------------------------------*/
-/* Function to delete a device configuration block                   */
-/*-------------------------------------------------------------------*/
-static int detach_devblk (DEVBLK *dev)
-{
-int     i;                              /* Loop index                */
-    
-    /* Obtain the device lock */
-    obtain_lock(&dev->lock);
-
-#if defined(OPTION_FAST_DEVLOOKUP)
-    DelSubchanFastLookup(dev->ssid, dev->subchan);
-    if(dev->pmcw.flag5 & PMCW5_V)
-        DelDevnumFastLookup(SSID_TO_LCSS(dev->ssid),dev->devnum);
-#endif
-
-    /* Close file or socket */
-    if ((dev->fd > 2) || dev->console)
-        /* Call the device close handler */
-        (dev->hnd->close)(dev);
-
-    if ( dev->pszVaultPath != NULL )
-    {
-        free( dev->pszVaultPath );
-        dev->pszVaultPath = NULL;
-    }
-
-    for (i = 0; i < dev->argc; i++)
-        if (dev->argv[i])
-            free(dev->argv[i]);
-    if (dev->argv)
-        free(dev->argv);
-
-    free(dev->typname);
-
-    // detach all devices in group
-    if(dev->group)
-    {
-    int i;
-
-        dev->group->memdev[dev->member] = NULL;
-
-        if(dev->group->members)
-        {
-            dev->group->members = 0;
-
-            for(i = 0; i < dev->group->acount; i++)
-            {
-                if(dev->group->memdev[i] && dev->group->memdev[i]->allocated)
-                {
-                    detach_devblk(dev->group->memdev[i]);
-                }
-            }
-
-            free(dev->group);
-        }
-
-        dev->group = NULL;
-    }
-
-    ret_devblk(dev);
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Build Channel Report */
-#if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
-#endif
-        build_detach_chrpt( dev );
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
-
-    return 0;
-} /* end function detach_devblk */
-
-
-/*-------------------------------------------------------------------*/
-/* Function to delete a device configuration block by subchannel     */
-/*-------------------------------------------------------------------*/
-int detach_subchan (U16 lcss, U16 subchan, U16 devnum)
-{
-DEVBLK *dev;                            /* -> Device block           */
-int    rc;
-char   str[64];
-    /* Find the device block */
-    dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
-
-    MSGBUF( str, "subchannel %1d:%04X", lcss, subchan);
-
-    if (dev == NULL)
-    {
-        WRMSG (HHC01464, "E", lcss, devnum, str);
-        return 1;
-    }
-
-    obtain_lock(&sysblk.config);
-
-    rc = detach_devblk( dev );
-
-    release_lock(&sysblk.config);
-
-    if(!rc)
-        WRMSG (HHC01465, "I", lcss, devnum, str);
-
-    return rc;
-}
 
 
 /*-------------------------------------------------------------------*/
