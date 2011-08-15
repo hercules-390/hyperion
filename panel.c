@@ -3200,9 +3200,10 @@ FinishShutdown:
 
                 /* Unkeep kept messages if needed */
                 expire_kept_msgs(0);
+                i = 0;
 #if defined(OPTION_MSGHLD)
                 /* Draw kept messages first */
-                for (i=0, p=keptmsgs; i < (SCROLL_LINES + numkept) && p; i++, p = p->next)
+                for (p=keptmsgs; i < (SCROLL_LINES + numkept) && p; i++, p = p->next)
                 {
                     set_pos (i+1, 1);
 #if defined(OPTION_MSGCLR)
