@@ -527,7 +527,7 @@ int     dll_count;                      /* index into array          */
 
 #if defined(_FEATURE_SYSTEM_CONSOLE)
     /* set default for scpecho to FALSE */
-    sysblk.scpecho = FALSE;
+    sysblk.scpecho = TRUE;
 
     /* set fault for scpimply to FALSE */
     sysblk.scpimply = FALSE;
