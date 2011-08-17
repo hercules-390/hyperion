@@ -1049,7 +1049,7 @@
   "Format: \"scpecho [ on | off ]\"\n"                                           \
   "When scpecho is set ON, scp commands entered on the console are\n"            \
   "echoed to console and recording in command history.\n"                        \
-  "The default is off. When scpecho is entered without any options,\n"           \
+  "The default is on. When scpecho is entered without any options,\n"            \
   "the current state is displayed. This is to help manage passwords\n"           \
   "sent to the scp from being displayed and journaled.\n"
 
