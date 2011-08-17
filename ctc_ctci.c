@@ -187,11 +187,11 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
     SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
 
-    pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[0]->devunique.ctca_dev.ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[0]->devunique.ctca_dev.ctcxmode = 1;
 
-    pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[1]->devunique.ctca_dev.ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[1]->devunique.ctca_dev.ctcxmode = 1;
 
     pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
     pDevCTCBLK->iMaxFrameBufferSize = sizeof(pDevCTCBLK->bFrameBuffer);
@@ -199,16 +199,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     initialize_lock( &pDevCTCBLK->Lock );
     initialize_lock( &pDevCTCBLK->EventLock );
     initialize_condition( &pDevCTCBLK->Event );
-
-    // Give both Herc devices a reasonable name...
-
-    strlcpy( pDevCTCBLK->pDEVBLK[0]->filename,
-             pDevCTCBLK->szTUNCharName,
-     sizeof( pDevCTCBLK->pDEVBLK[0]->filename ) );
-
-    strlcpy( pDevCTCBLK->pDEVBLK[1]->filename,
-             pDevCTCBLK->szTUNCharName,
-     sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
 
     rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
                                  IFF_TUN | IFF_NO_PI,
@@ -359,7 +349,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     else if( ( bCode & 0x0F ) == 0x0C )
         bOpCode = 0x0C;
     else if( ( bCode & 0x03 ) == 0x01 )
-        bOpCode = pDEVBLK->ctcxmode ? ( bCode & 0x83 ) : 0x01;
+        bOpCode = pDEVBLK->devunique.ctca_dev.ctcxmode ? ( bCode & 0x83 ) : 0x01;
     else if( ( bCode & 0x1F ) == 0x14 )
         bOpCode = 0x14;
     else if( ( bCode & 0x47 ) == 0x03 )
@@ -428,7 +418,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->ctcxmode == 0 )
+        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -437,7 +427,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Reset extended mode and return normal status
-        pDEVBLK->ctcxmode = 0;
+        pDEVBLK->devunique.ctca_dev.ctcxmode = 0;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -449,7 +439,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // SET EXTENDED MODE
         // -----------------------------------------------------------
 
-        pDEVBLK->ctcxmode = 1;
+        pDEVBLK->devunique.ctca_dev.ctcxmode = 1;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -479,7 +469,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
       // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->ctcxmode == 0 )
+        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;

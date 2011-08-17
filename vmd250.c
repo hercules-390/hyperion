@@ -589,15 +589,15 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    {
       /* Number of standard blocks is based upon number of primary */
       /* cylinders                                                 */
-      numblks=(dev->ckdtab->cyls * dev->ckdtab->heads * seccyl); 
-      if (dev->ckdrdonly)
+      numblks=(dev->devunique.dasd_dev.ckdtab->cyls * dev->devunique.dasd_dev.ckdtab->heads * seccyl); 
+      if (dev->devunique.dasd_dev.ckdrdonly)
       {
          isRO = 1;
       }
    }
    else
    {  
-      numblks=(dev->fbanumblk*dev->fbablksiz)/blksize;
+      numblks=(dev->devunique.dasd_dev.fbanumblk*dev->devunique.dasd_dev.fbablksiz)/blksize;
       /* FBA devices are never read only */
    }
 

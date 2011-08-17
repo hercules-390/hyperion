@@ -461,7 +461,7 @@ BYTE buf[256];
     /* Bytes 0-31: NED 1  Node element descriptor for the device */
     store_fw (buf, 0xc4010100);
     sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ000000000001",
-                        dev->ckdtab->devt, dev->ckdtab->model);
+                        dev->devunique.dasd_dev.ckdtab->devt, dev->devunique.dasd_dev.ckdtab->model);
     for (i = 4; i < 30; i++)
         buf[i] = host_to_guest(buf[i]);
     store_hw(buf + 30, 0x0300);
@@ -469,7 +469,7 @@ BYTE buf[256];
     /* Bytes 32-63: NED 2  Node element descriptor for the string */
     store_fw (buf + 32, 0xc4000000);
     sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000001",
-                        dev->ckdtab->devt, dev->ckdtab->model);
+                        dev->devunique.dasd_dev.ckdtab->devt, dev->devunique.dasd_dev.ckdtab->model);
     for (i = 36; i < 62; i++)
         buf[i] = host_to_guest(buf[i]);
     store_hw (buf + 62, 0x0300);
@@ -477,7 +477,7 @@ BYTE buf[256];
     /* Bytes 64-95: NED 3  Node element descriptor for the storage director */
     store_fw (buf + 64, 0xd4020000);
     sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000001",
-                        dev->ckdcu->devt, dev->ckdcu->model);
+                        dev->devunique.dasd_dev.ckdcu->devt, dev->devunique.dasd_dev.ckdcu->model);
     for (i = 68; i < 94; i++)
         buf[i] = host_to_guest(buf[i]);
     store_hw (buf + 94, 0x0300);
@@ -485,7 +485,7 @@ BYTE buf[256];
     /* Bytes 96-127: NED 4  Node element descriptor for the subsystem */
     store_fw (buf + 96, 0xF0000001);
     sprintf ((char *)&buf[100], "  %4.4X   HRCZZ000000000001",
-                        dev->ckdcu->devt);
+                        dev->devunique.dasd_dev.ckdcu->devt);
     for (i = 100; i < 126; i++)
         buf[i] = host_to_guest(buf[i]);
     store_hw (buf + 126, 0x0300);
@@ -536,7 +536,7 @@ BYTE buf[44];
     num = 40;
 
     /* Build an additional 4 bytes of data for the 3990-6 */
-    if (MODEL6(dev->ckdcu)) 
+    if (MODEL6(dev->devunique.dasd_dev.ckdcu)) 
     {
         buf[0] = 0x01;            /* Set 3990-6 enhanced flag */
         num = 44;                   

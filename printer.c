@@ -82,9 +82,9 @@ do { \
         dev->bufoff = 0; \
         dev->bufres = BUFF_SIZE; \
     } /* end if(!data-chained) */ \
-    if ( dev->index > 1 ) \
+    if ( dev->devunique.cprt_dev.index > 1 ) \
     { \
-        for (i = 1; i < dev->index; i++) \
+        for (i = 1; i < dev->devunique.cprt_dev.index; i++) \
         { \
             dev->buf[dev->bufoff] = SPACE ; \
             dev->bufoff++; \
@@ -98,7 +98,7 @@ do { \
     for (i = 0; i < num; i++) \
     { \
         c = guest_to_host(iobuf[i]); \
-        if (dev->fold) c = toupper(c); \
+        if (dev->devunique.cprt_dev.fold) c = toupper(c); \
         if (c == 0) c = SPACE; \
         dev->buf[dev->bufoff] = c; \
         dev->bufoff++; \
@@ -113,7 +113,7 @@ do { \
         /* Write print line */ \
         write_buffer (dev, (char *)dev->buf, i, unitstat); \
         if (*unitstat != 0) return; \
-        if ( dev->crlf ) \
+        if ( dev->devunique.cprt_dev.crlf ) \
         { \
             write_buffer (dev, "\r", 1, unitstat); \
             if (*unitstat != 0) return; \
@@ -125,24 +125,24 @@ do { \
 #define SKIP_TO_CHAN() \
 do { \
     havechan = 0; \
-    for ( i = 0; i <= dev->lpp; i++ ) \
+    for ( i = 0; i <= dev->devunique.cprt_dev.lpp; i++ ) \
     { \
-        line = 1 + ( dev->currline + i ) - dev->lpp * ( ( dev->currline + i ) / dev->lpp ) ; \
-        if ( dev->fcb[line] != chan )  \
+        line = 1 + ( dev->devunique.cprt_dev.currline + i ) - dev->devunique.cprt_dev.lpp * ( ( dev->devunique.cprt_dev.currline + i ) / dev->devunique.cprt_dev.lpp ) ; \
+        if ( dev->devunique.cprt_dev.fcb[line] != chan )  \
             continue ; \
         havechan = 1 ; \
-        dev->destline = line ; \
+        dev->devunique.cprt_dev.destline = line ; \
         break ; \
     } \
     if ( havechan == 1 ) \
     { \
-        if ( dev->destline <= dev->currline ) \
+        if ( dev->devunique.cprt_dev.destline <= dev->devunique.cprt_dev.currline ) \
         { \
             write_buffer (dev, "\f", 1, unitstat); \
             if (*unitstat != 0) return ; \
-            dev->currline = 1 ; \
+            dev->devunique.cprt_dev.currline = 1 ; \
         } \
-        for ( ; dev->currline < dev->destline ; dev->currline++ ) \
+        for ( ; dev->devunique.cprt_dev.currline < dev->devunique.cprt_dev.destline ; dev->devunique.cprt_dev.currline++ ) \
         { \
             write_buffer (dev, "\n", 1, unitstat); \
             if (*unitstat != 0) return; \
@@ -152,7 +152,7 @@ do { \
     } \
     /* channel not found */ \
     { \
-        if ( dev->nofcbcheck ) \
+        if ( dev->devunique.cprt_dev.nofcbcheck ) \
         { \
             if ( ( code & 0x02 ) != 0 ) \
             { \
@@ -180,12 +180,13 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
     char wrk[16];
     char sep[1];
     sep[0] = '=';
-    snprintf(buf, buflen-1, "LOADED lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
-    for (i = 1; i <= dev->lpp; i++)
+    snprintf(buf, buflen-1, "LOADED lpi=%d index=%d lpp=%d fcb", 
+                            dev->devunique.cprt_dev.lpi, dev->devunique.cprt_dev.index, dev->devunique.cprt_dev.lpp );
+    for (i = 1; i <= dev->devunique.cprt_dev.lpp; i++)
     {
-        if (dev->fcb[i] != 0)
+        if (dev->devunique.cprt_dev.fcb[i] != 0)
         {
-            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
+            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->devunique.cprt_dev.fcb[i]);
             sep[0] = ',' ;
             if (strlen(buf) + strlen(wrk) >= buflen - 4)
             {
@@ -342,44 +343,44 @@ int   sockdev = 0;                     /* 1 == is socket device     */
 
     /* Initialize device dependent fields */
     dev->fd = -1;
-    dev->diaggate = 0;
-    dev->fold = 0;
-    dev->crlf = 0;
-    dev->stopdev = FALSE;
-    dev->notrunc = 0;
-    dev->ispiped = (dev->filename[0] == '|');
+    dev->devunique.cprt_dev.diaggate = 0;
+    dev->devunique.cprt_dev.fold = 0;
+    dev->devunique.cprt_dev.crlf = 0;
+    dev->devunique.cprt_dev.stopdev = FALSE;
+    dev->devunique.cprt_dev.notrunc = 0;
+    dev->devunique.cprt_dev.ispiped = (dev->filename[0] == '|');
 
 
     /* initialize the new fields for FCB+ support */
-    dev->fcbsupp = 1;
-    dev->rawcc = 0;
-    dev->nofcbcheck = 0;
-    dev->ccpend = 0;
+    dev->devunique.cprt_dev.fcbsupp = 1;
+    dev->devunique.cprt_dev.rawcc = 0;
+    dev->devunique.cprt_dev.nofcbcheck = 0;
+    dev->devunique.cprt_dev.ccpend = 0;
 
-    dev->prevline = 1;
-    dev->currline = 1;
-    dev->destline = 1;
+    dev->devunique.cprt_dev.prevline = 1;
+    dev->devunique.cprt_dev.currline = 1;
+    dev->devunique.cprt_dev.destline = 1;
 
-    dev->optbrowse = 1;
+    dev->devunique.cprt_dev.optbrowse = 1;
 
-    dev->lpi = 6;
-    dev->index = 0;
-    dev->ffchan = 1;
-    for (i = 0; i < FCBSIZE; i++)  dev->fcb[i] = 0;
+    dev->devunique.cprt_dev.lpi = 6;
+    dev->devunique.cprt_dev.index = 0;
+    dev->devunique.cprt_dev.ffchan = 1;
+    for (i = 0; i < FCBSIZE; i++)  dev->devunique.cprt_dev.fcb[i] = 0;
     for (i = 1; i <= 12; i++ )
     {
         if ( FCBMASK[i] != 0 )
-            dev->fcb[FCBMASK[i]] = i;
+            dev->devunique.cprt_dev.fcb[FCBMASK[i]] = i;
     }
-    dev->lpp = FCBMASK[0] ;
-    dev->fcbisdef = 0 ;
+    dev->devunique.cprt_dev.lpp = FCBMASK[0] ;
+    dev->devunique.cprt_dev.fcbisdef = 0 ;
 
     /* Process the driver arguments */
     for (iarg = 1; iarg < argc; iarg++)
     {
         if (strcasecmp(argv[iarg], "crlf") == 0)
         {
-            dev->crlf = 1;
+            dev->devunique.cprt_dev.crlf = 1;
             continue;
         }
 
@@ -388,7 +389,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
            The file name is the socket_spec (host:port)
            to listen for connections on.
         */
-        if (!dev->ispiped && strcasecmp(argv[iarg], "sockdev") == 0)
+        if (!dev->devunique.cprt_dev.ispiped && strcasecmp(argv[iarg], "sockdev") == 0)
         {
             sockdev = 1;
             continue;
@@ -396,38 +397,38 @@ int   sockdev = 0;                     /* 1 == is socket device     */
 
         if (strcasecmp(argv[iarg], "noclear") == 0)
         {
-            dev->notrunc = 1;
+            dev->devunique.cprt_dev.notrunc = 1;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "rawcc") == 0)
         {
-            dev->rawcc = 1;
-            dev->optbrowse = 0;
+            dev->devunique.cprt_dev.rawcc = 1;
+            dev->devunique.cprt_dev.optbrowse = 0;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "nofcbcheck") == 0)
         {
-            dev->nofcbcheck = 1;
+            dev->devunique.cprt_dev.nofcbcheck = 1;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "fcbcheck") == 0)
         {
-            dev->nofcbcheck = 0;
+            dev->devunique.cprt_dev.nofcbcheck = 0;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "optbrowse") == 0)
         {
-            dev->optbrowse = 1;
+            dev->devunique.cprt_dev.optbrowse = 1;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "optprint") == 0)
         {
-            dev->optbrowse = 0;
+            dev->devunique.cprt_dev.optbrowse = 0;
             continue;
         }
 
@@ -435,8 +436,9 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             ptr = argv[iarg]+4;
             errno = 0;
-            dev->lpi = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->lpi != 6 && dev->lpi != 8 ) )
+            dev->devunique.cprt_dev.lpi = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || 
+                ( dev->devunique.cprt_dev.lpi != 6 && dev->devunique.cprt_dev.lpi != 8 ) )
             {
                 j = ptr - argv[iarg] ;
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
@@ -454,8 +456,9 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             }
             ptr = argv[iarg]+6;
             errno = 0;
-            dev->index = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->index < 0 || dev->index > 15) )
+            dev->devunique.cprt_dev.index = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 || 
+                ( dev->devunique.cprt_dev.index < 0 || dev->devunique.cprt_dev.index > 15) )
             {
                 j = ptr - argv[iarg] ;
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
@@ -468,8 +471,8 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             ptr = argv[iarg]+4;
             errno = 0;
-            dev->lpp = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->lpp > FCBSIZE)
+            dev->devunique.cprt_dev.lpp = (int) strtoul(ptr,&nxt,10) ;
+            if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->devunique.cprt_dev.lpp > FCBSIZE)
             {
                 j = ptr - argv[iarg] ;
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
@@ -495,7 +498,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
 
         if (strncasecmp("fcb=", argv[iarg], 4) == 0)
         {
-            for (line = 0 ; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
+            for (line = 0 ; line <= FCBSIZE; line++)  dev->devunique.cprt_dev.fcb[line] = 0;
             /* check for simple mode */
             if ( strstr(argv[iarg],":") )
             {
@@ -505,7 +508,8 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                 {
                     errno = 0;
                     line = (int) strtoul(ptr,&nxt,10) ;
-                    if (errno != 0 || *nxt != ':' || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
+                    if (errno != 0 || *nxt != ':' || nxt == ptr || 
+                        line > dev->devunique.cprt_dev.lpp || dev->devunique.cprt_dev.fcb[line] != 0 )
                     {
                         j = ptr - argv[iarg] ;
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
@@ -521,7 +525,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
-                    dev->fcb[line] = chan;
+                    dev->devunique.cprt_dev.fcb[line] = chan;
                     if ( nxt == 0 )
                         break ;
                     ptr = nxt + 1;
@@ -537,7 +541,8 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                 {
                     errno = 0;
                     line = (int) strtoul(ptr,&nxt,10) ;
-                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
+                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || 
+                        line > dev->devunique.cprt_dev.lpp || dev->devunique.cprt_dev.fcb[line] != 0 )
                     {
                         j = ptr - argv[iarg] ;
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
@@ -550,7 +555,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
-                    dev->fcb[line] = chan;
+                    dev->devunique.cprt_dev.fcb[line] = chan;
                     if ( nxt == 0 )
                         break ;
                     ptr = nxt + 1;
@@ -571,19 +576,19 @@ int   sockdev = 0;                     /* 1 == is socket device     */
     }
 
     /* Check for incompatible options */
-    if (dev->rawcc && dev->optbrowse)
+    if (dev->devunique.cprt_dev.rawcc && dev->devunique.cprt_dev.optbrowse)
     {
         WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "rawcc/optbrowse");
         return -1;
     }
 
-    if (sockdev && dev->crlf)
+    if (sockdev && dev->devunique.cprt_dev.crlf)
     {
         WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/crlf");
         return -1;
     }
 
-    if (sockdev && dev->notrunc)
+    if (sockdev && dev->devunique.cprt_dev.notrunc)
     {
         WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/noclear");
         return -1;
@@ -633,12 +638,13 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
 
     snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s IO[%" I64_FMT "u]",
                  dev->filename,
-                (dev->bs         ? " sockdev"      : ""),
-                (dev->crlf       ? " crlf"         : ""),
-                (dev->notrunc    ? " noclear"      : ""),
-                (dev->rawcc      ? " rawcc"        : dev->optbrowse  ? " brwse"    : " print"),
-                (dev->nofcbcheck ? " nofcbck"   : " fcbck"),
-                (dev->stopdev    ? " (stopped)"    : ""),
+                (dev->bs                            ? " sockdev"      : ""),
+                (dev->devunique.cprt_dev.crlf       ? " crlf"         : ""),
+                (dev->devunique.cprt_dev.notrunc    ? " noclear"      : ""),
+                (dev->devunique.cprt_dev.rawcc      ? " rawcc"        : 
+                 dev->devunique.cprt_dev.optbrowse  ? " brwse"        : " print"),
+                (dev->devunique.cprt_dev.nofcbcheck ? " nofcbck"      : " fcbck"),
+                (dev->devunique.cprt_dev.stopdev    ? " (stopped)"    : ""),
                 dev->excps );
 
 } /* end function printer_query_device */
@@ -657,7 +663,7 @@ int             rc;                     /* Return code               */
 #endif
 
     /* Regular open if 1st char of filename is not vertical bar */
-    if (!dev->ispiped)
+    if (!dev->devunique.cprt_dev.ispiped)
     {
         int fd;
 
@@ -667,7 +673,7 @@ int             rc;                     /* Return code               */
 
         /* Normal printer */
         open_flags = O_BINARY | O_WRONLY | O_CREAT /* | O_SYNC */;
-        if (dev->notrunc != 1)
+        if (dev->devunique.cprt_dev.notrunc != 1)
         {
             open_flags |= O_TRUNC;
         }
@@ -698,7 +704,7 @@ int             rc;                     /* Return code               */
 
     /* Log start of child process */
     WRMSG (HHC01106, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, pid);
-    dev->ptpcpid = pid;
+    dev->devunique.cprt_dev.ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
 
@@ -844,19 +850,19 @@ int fd = dev->fd;
         return 0;
 
     dev->fd      = -1;
-    dev->stopdev =  FALSE;
+    dev->devunique.cprt_dev.stopdev =  FALSE;
 
     /* Close the device file */
-    if ( dev->ispiped )
+    if ( dev->devunique.cprt_dev.ispiped )
     {
 #if !defined( _MSVC_ )
         close_pipe (fd);
 #else /* defined( _MSVC_ ) */
         close (fd);
         /* Log end of child process */
-        WRMSG (HHC01107, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ptpcpid);
+        WRMSG (HHC01107, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devunique.cprt_dev.ptpcpid);
 #endif /* defined( _MSVC_ ) */
-        dev->ptpcpid = 0;
+        dev->devunique.cprt_dev.ptpcpid = 0;
     }
     else
     {
@@ -895,7 +901,7 @@ char            wbuf[150];
     /* Reset flags at start of CCW chain */
     if (chained == 0)
     {
-        dev->diaggate = 0;
+        dev->devunique.cprt_dev.diaggate = 0;
     }
 
     /* Open the device file if necessary */
@@ -904,7 +910,7 @@ char            wbuf[150];
     else
     {
         /* If printer stopped, return intervention required */
-        if (dev->stopdev && !IS_CCW_SENSE(code))
+        if (dev->devunique.cprt_dev.stopdev && !IS_CCW_SENSE(code))
             rc = -1;
         else
             rc = 0;
@@ -939,7 +945,7 @@ char            wbuf[150];
     case 0xD1: /* Write and Skip to Channel 10   */
     case 0xD9: /* Write and Skip to Channel 11   */
     case 0xE1: /* Write and Skip to Channel 12   */
-        if (dev->rawcc)
+        if (dev->devunique.cprt_dev.rawcc)
         {
             sprintf(hex,"%02x",code);
             write_buffer(dev, hex, 2, unitstat);
@@ -951,9 +957,9 @@ char            wbuf[150];
             return;
         }
 
-        if ( dev->optbrowse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0) )
+        if ( dev->devunique.cprt_dev.optbrowse && dev->devunique.cprt_dev.ccpend && ((chained & CCW_FLAGS_CD) == 0) )
         {
-            dev->ccpend = 0;
+            dev->devunique.cprt_dev.ccpend = 0;
             /* dev->currline++; */
             write_buffer(dev, "\n", 1, unitstat);
             if (*unitstat != 0) return;
@@ -966,9 +972,9 @@ char            wbuf[150];
                 coun = code / 8 ;
                 if ( coun == 0 )
                 {
-                    if ( dev->optbrowse )
+                    if ( dev->devunique.cprt_dev.optbrowse )
                     {
-                        dev->ccpend = 1;
+                        dev->devunique.cprt_dev.ccpend = 1;
                         *unitstat = 0;
                     }
                     else
@@ -978,8 +984,8 @@ char            wbuf[150];
                     return;
                 }
 
-                dev->ccpend = 0 ;
-                dev->currline += coun;
+                dev->devunique.cprt_dev.ccpend = 0 ;
+                dev->devunique.cprt_dev.currline += coun;
                 write_buffer(dev, nls, coun, unitstat);
                 if (*unitstat == 0)
                     *unitstat = CSW_CE | CSW_DE;
@@ -988,9 +994,9 @@ char            wbuf[150];
             else  /*code >  0x80*/ /* chan control */
             {
                 /*
-                if ( dev->optbrowse )
+                if ( dev->devunique.cprt_dev.optbrowse )
                 {
-                    dev->currline++;
+                    dev->devunique.cprt_dev.currline++;
                     write_buffer(dev, "\n", 1, unitstat);
                     if (*unitstat != 0) return;
                 }
@@ -1032,12 +1038,12 @@ char            wbuf[150];
     case 0xD3: /*           Skip to Channel 10   */
     case 0xDB: /*           Skip to Channel 11   */
     case 0xE3: /*           Skip to Channel 12   */
-        if (dev->rawcc)
+        if (dev->devunique.cprt_dev.rawcc)
         {
             sprintf(hex,"%02x",code);
             write_buffer(dev, hex, 2, unitstat);
             if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
+            eor = (dev->devunique.cprt_dev.crlf) ? "\r\n" : "\n";
             write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
@@ -1047,8 +1053,8 @@ char            wbuf[150];
         if    ( code <= 0x80 ) /* line control */
         {
             coun = code / 8 ;
-            dev->ccpend = 0 ;
-            dev->currline += coun;
+            dev->devunique.cprt_dev.ccpend = 0 ;
+            dev->devunique.cprt_dev.currline += coun;
             write_buffer(dev, nls, coun, unitstat);
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
@@ -1057,11 +1063,11 @@ char            wbuf[150];
         else  /*code >  0x80*/ /* chan control */
         {
             /*
-            if ( dev->optbrowse && dev->ccpend)
+            if ( dev->devunique.cprt_dev.optbrowse && dev->devunique.cprt_dev.ccpend)
             {
                 coun = 1 ;
-                dev->ccpend = 0 ;
-                dev->currline += coun;
+                dev->devunique.cprt_dev.ccpend = 0 ;
+                dev->devunique.cprt_dev.currline += coun;
                 write_buffer(dev, nls, coun, unitstat);
                 if (*unitstat != 0) return;
             }
@@ -1078,7 +1084,7 @@ char            wbuf[150];
     /*---------------------------------------------------------------*/
     /* LOAD FORMS CONTROL BUFFER                                     */
     /*---------------------------------------------------------------*/
-        if (dev->rawcc)
+        if (dev->devunique.cprt_dev.rawcc)
         {
             sprintf(hex,"%02x",code);
             write_buffer(dev, hex, 2, unitstat);
@@ -1091,7 +1097,7 @@ char            wbuf[150];
             } /* end for(i) */
             write_buffer(dev, (char *)dev->buf, i*2, unitstat);
             if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
+            eor = (dev->devunique.cprt_dev.crlf) ? "\r\n" : "\n";
             write_buffer(dev, eor, (int)strlen(eor), unitstat);
             if (*unitstat != 0) return;
         }
@@ -1100,26 +1106,26 @@ char            wbuf[150];
             int i = 0;
             int j = 1;
             int more = 1 ;
-            for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;
+            for (i = 0; i <= FCBSIZE; i++) dev->devunique.cprt_dev.fcb[i] = 0;
 
-            dev->lpi = 6;
-            dev->index = 0;
+            dev->devunique.cprt_dev.lpi = 6;
+            dev->devunique.cprt_dev.index = 0;
             if (iobuf[0] & 0xc0)
             {
                 /* First byte is a print position index */
                 if ((iobuf[0] & 0xc0) == 0x80)
                     /* Indexing right */
-                    dev->index = iobuf[0] & 0x1f;
+                    dev->devunique.cprt_dev.index = iobuf[0] & 0x1f;
                 else
                     /* Indexing left */
-                    dev->index = - (iobuf[0] & 0x1f);
+                    dev->devunique.cprt_dev.index = - (iobuf[0] & 0x1f);
                 i = 1;
             }
 
             for ( ; i < count && j <= FCBSIZE && more ; i++, j++)
             {
-                dev->fcb[i] = iobuf[i] & 0x0f;
-                if (dev->fcb[j] > 12)
+                dev->devunique.cprt_dev.fcb[i] = iobuf[i] & 0x0f;
+                if (dev->devunique.cprt_dev.fcb[j] > 12)
                 {
                     *residual = count - i;
                     *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1132,7 +1138,7 @@ char            wbuf[150];
                     /* Flag bit is on */
                     if (j == 1)
                         /* Flag bit in first byte means eight lines per inch */
-                        dev->lpi = 8;
+                        dev->devunique.cprt_dev.lpi = 8;
                     else
                         more = 0;
                 }
@@ -1146,7 +1152,7 @@ char            wbuf[150];
                 return;
             }
             *residual = count - i;
-            dev->lpp = j - 1;
+            dev->devunique.cprt_dev.lpp = j - 1;
 
             fcb_dump(dev, wbuf, 150);
             WRMSG(HHC02210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, wbuf );
@@ -1161,7 +1167,7 @@ char            wbuf[150];
     /* DIAGNOSTIC CHECK READ                                         */
     /*---------------------------------------------------------------*/
         /* If not 1403, reject if not preceded by DIAGNOSTIC GATE */
-        if (dev->devtype != 0x1403 && dev->diaggate == 0)
+        if (dev->devtype != 0x1403 && dev->devunique.cprt_dev.diaggate == 0)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1187,7 +1193,7 @@ char            wbuf[150];
         }
 
         /* Set diagnostic gate flag */
-        dev->diaggate = 1;
+        dev->devunique.cprt_dev.diaggate = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1198,7 +1204,7 @@ char            wbuf[150];
     /* DIAGNOSTIC READ UCS BUFFER                                    */
     /*---------------------------------------------------------------*/
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
-        if (dev->devtype == 0x1403 || dev->diaggate == 0)
+        if (dev->devtype == 0x1403 || dev->devunique.cprt_dev.diaggate == 0)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1214,7 +1220,7 @@ char            wbuf[150];
     /* DIAGNOSTIC READ fcb                                           */
     /*---------------------------------------------------------------*/
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
-        if (dev->devtype == 0x1403 || dev->diaggate == 0)
+        if (dev->devtype == 0x1403 || dev->devunique.cprt_dev.diaggate == 0)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1229,7 +1235,7 @@ char            wbuf[150];
     /*---------------------------------------------------------------*/
     /* UNFOLD                                                        */
     /*---------------------------------------------------------------*/
-        dev->fold = 0;
+        dev->devunique.cprt_dev.fold = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -1237,7 +1243,7 @@ char            wbuf[150];
     /*---------------------------------------------------------------*/
     /* FOLD                                                          */
     /*---------------------------------------------------------------*/
-        dev->fold = 1;
+        dev->devunique.cprt_dev.fold = 1;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -1293,7 +1299,7 @@ char            wbuf[150];
         }
 
         /* Set fold indicator and return normal status */
-        dev->fold = 1;
+        dev->devunique.cprt_dev.fold = 1;
     /*
         *residual = 0;
     */
@@ -1313,7 +1319,7 @@ char            wbuf[150];
         }
 
         /* Reset fold indicator and return normal status */
-        dev->fold = 0;
+        dev->devunique.cprt_dev.fold = 0;
     /*
         *residual = 0;
     */

@@ -206,9 +206,9 @@ char   *strtok_str = NULL;              /* save last position        */
         }
 
         /* Set block size, device origin, and device size in blocks */
-        dev->fbablksiz = 512;
-        dev->fbaorigin = 0;
-        dev->fbanumblk = ((U32)(cdevhdr.cyls[3]) << 24)
+        dev->devunique.dasd_dev.fbablksiz = 512;
+        dev->devunique.dasd_dev.fbaorigin = 0;
+        dev->devunique.dasd_dev.fbanumblk = ((U32)(cdevhdr.cyls[3]) << 24)
                        | ((U32)(cdevhdr.cyls[2]) << 16)
                        | ((U32)(cdevhdr.cyls[1]) << 8)
                        |  (U32)(cdevhdr.cyls[0]);
@@ -225,17 +225,17 @@ char   *strtok_str = NULL;              /* save last position        */
             {
                 if ('\"' == argv[i][3]) argv[i]++;
                 hostpath(pathname, argv[i]+3, sizeof(pathname));
-                dev->dasdsfn = strdup(pathname);
-                if (dev->dasdsfn)
+                dev->devunique.dasd_dev.dasdsfn = strdup(pathname);
+                if (dev->devunique.dasd_dev.dasdsfn)
                 {
                     /* Set the pointer to the suffix character */
-                    dev->dasdsfx = strrchr (dev->dasdsfn, PATHSEPC);
-                    if (dev->dasdsfx == NULL)
-                        dev->dasdsfx = dev->dasdsfn + 1;
-                    dev->dasdsfx = strchr (dev->dasdsfx, '.');
-                    if (dev->dasdsfx == NULL)
-                        dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
-                    dev->dasdsfx--;
+                    dev->devunique.dasd_dev.dasdsfx = strrchr (dev->devunique.dasd_dev.dasdsfn, PATHSEPC);
+                    if (dev->devunique.dasd_dev.dasdsfx == NULL)
+                        dev->devunique.dasd_dev.dasdsfx = dev->devunique.dasd_dev.dasdsfn + 1;
+                    dev->devunique.dasd_dev.dasdsfx = strchr (dev->devunique.dasd_dev.dasdsfx, '.');
+                    if (dev->devunique.dasd_dev.dasdsfx == NULL)
+                        dev->devunique.dasd_dev.dasdsfx = dev->devunique.dasd_dev.dasdsfn + strlen(dev->devunique.dasd_dev.dasdsfn);
+                    dev->devunique.dasd_dev.dasdsfx--;
                 }
                 continue;
             }
@@ -287,9 +287,9 @@ char   *strtok_str = NULL;              /* save last position        */
                 dev->fd = -1;
                 return -1;
             }
-            dev->fbablksiz = 512;
-            dev->fbaorigin = 0;
-            dev->fbanumblk = statbuf.st_size;
+            dev->devunique.dasd_dev.fbablksiz = 512;
+            dev->devunique.dasd_dev.fbaorigin = 0;
+            dev->devunique.dasd_dev.fbanumblk = statbuf.st_size;
             if (!dev->quiet)
                 WRMSG (HHC00504, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         }
@@ -297,51 +297,51 @@ char   *strtok_str = NULL;              /* save last position        */
 #endif // defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
         {
             /* Set block size, device origin, and device size in blocks */
-            dev->fbablksiz = 512;
-            dev->fbaorigin = 0;
-            dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
+            dev->devunique.dasd_dev.fbablksiz = 512;
+            dev->devunique.dasd_dev.fbaorigin = 0;
+            dev->devunique.dasd_dev.fbanumblk = statbuf.st_size / dev->devunique.dasd_dev.fbablksiz;
         }
 
         /* The second argument is the device origin block number */
         if (argc >= 2)
         {
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
-             || startblk >= dev->fbanumblk)
+             || startblk >= dev->devunique.dasd_dev.fbanumblk)
             {
                 WRMSG (HHC00505, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
             }
-            dev->fbaorigin = (off_t)startblk;
-            dev->fbanumblk -= startblk;
+            dev->devunique.dasd_dev.fbaorigin = (off_t)startblk;
+            dev->devunique.dasd_dev.fbanumblk -= startblk;
         }
 
         /* The third argument is the device block count */
         if (argc >= 3 && strcmp(argv[2],"*") != 0)
         {
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
-             || numblks > dev->fbanumblk)
+             || numblks > dev->devunique.dasd_dev.fbanumblk)
             {
                 WRMSG (HHC00506, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
             }
-            dev->fbanumblk = numblks;
+            dev->devunique.dasd_dev.fbanumblk = numblks;
         }
     }
-    dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
+    dev->devunique.dasd_dev.fbaend = (dev->devunique.dasd_dev.fbaorigin + dev->devunique.dasd_dev.fbanumblk) * dev->devunique.dasd_dev.fbablksiz;
 
     if (!dev->quiet)
-        WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
+        WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.fbaorigin, dev->devunique.dasd_dev.fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
 
     /* Locate the FBA dasd table entry */
-    dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
-    if (dev->fbatab == NULL)
+    dev->devunique.dasd_dev.fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->devunique.dasd_dev.fbanumblk);
+    if (dev->devunique.dasd_dev.fbatab == NULL)
     {
         WRMSG (HHC00508, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devtype);
         close (dev->fd);
@@ -350,14 +350,14 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Build the devid area */
-    dev->numdevid = dasd_build_fba_devid (dev->fbatab,(BYTE *)&dev->devid);
+    dev->numdevid = dasd_build_fba_devid (dev->devunique.dasd_dev.fbatab,(BYTE *)&dev->devid);
 
     /* Build the devchar area */
-    dev->numdevchar = dasd_build_fba_devchar (dev->fbatab,
-                                 (BYTE *)&dev->devchar,dev->fbanumblk);
+    dev->numdevchar = dasd_build_fba_devchar (dev->devunique.dasd_dev.fbatab,
+                                 (BYTE *)&dev->devchar,dev->devunique.dasd_dev.fbanumblk);
 
     /* Initialize current blkgrp and cache entry */
-    dev->bufcur = dev->cache = -1;
+    dev->bufcur = dev->devunique.dasd_dev.cache = -1;
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -387,26 +387,26 @@ void fbadasd_query_device (DEVBLK *dev, char **devclass,
         MSGBUF( devname, "%s", dev->filename );
         break;
     case SHOWDVOL1_YES:
-        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
+        MSGBUF( devname, "%-6.6s %s", dev->devunique.dasd_dev.dasdvol, dev->filename );
         break;
     case SHOWDVOL1_ONLY:
-        MSGBUF( devname, "%-6.6s", dev->dasdvol );
+        MSGBUF( devname, "%-6.6s", dev->devunique.dasd_dev.dasdvol );
         break;
     }
 
-    cckd = dev->cckd_ext;
+    cckd = dev->devunique.dasd_dev.cckd_ext;
     if (!cckd)
     {
         snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] IO[%"I64_FMT"u]",
                   devname,
-                  dev->fbaorigin, dev->fbanumblk,
+                  dev->devunique.dasd_dev.fbaorigin, dev->devunique.dasd_dev.fbanumblk,
                   dev->excps);
     }
     else
     {
         snprintf( buffer, buflen-1, "%s [%"I64_FMT"d,%d] [%d sfs] IO[%"I64_FMT"u]",
                   devname,
-                  dev->fbaorigin, dev->fbanumblk,
+                  dev->devunique.dasd_dev.fbaorigin, dev->devunique.dasd_dev.fbanumblk,
                   cckd->sfn,
                   dev->excps);
     }
@@ -421,8 +421,8 @@ static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp * FBA_BLKGRP_SIZE;
-    if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
-        return (int)(dev->fbaend - offset);
+    if (dev->devunique.dasd_dev.fbaend - offset < FBA_BLKGRP_SIZE)
+        return (int)(dev->devunique.dasd_dev.fbaend - offset);
     else
         return FBA_BLKGRP_SIZE;
 }
@@ -440,8 +440,8 @@ int     bufoff;                         /* Buffer offset             */
 int     copylen;                        /* Length left to copy       */
 
     /* Command reject if referencing outside the volume */
-    if (dev->fbarba < dev->fbaorigin * dev->fbablksiz
-     || dev->fbarba + len > dev->fbaend)
+    if (dev->devunique.dasd_dev.fbarba < dev->devunique.dasd_dev.fbaorigin * dev->devunique.dasd_dev.fbablksiz
+     || dev->devunique.dasd_dev.fbarba + len > dev->devunique.dasd_dev.fbaend)
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -449,12 +449,12 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    blkgrp = dev->devunique.dasd_dev.fbarba / FBA_BLKGRP_SIZE;
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
 
-    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    off = dev->devunique.dasd_dev.fbarba % FBA_BLKGRP_SIZE;
     blklen = dev->buflen - off;
 
     /* Initialize target buffer offset and length to copy */
@@ -493,7 +493,7 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Update the rba */
-    dev->fbarba += len;
+    dev->devunique.dasd_dev.fbarba += len;
 
     return len;
 } /* end function fba_read */
@@ -511,8 +511,8 @@ int     bufoff;                         /* Source buffer offset      */
 int     copylen;                        /* Length left to copy       */
 
     /* Command reject if referencing outside the volume */
-    if (dev->fbarba < dev->fbaorigin * dev->fbablksiz
-     || dev->fbarba + len > dev->fbaend)
+    if (dev->devunique.dasd_dev.fbarba < dev->devunique.dasd_dev.fbaorigin * dev->devunique.dasd_dev.fbablksiz
+     || dev->devunique.dasd_dev.fbarba + len > dev->devunique.dasd_dev.fbaend)
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -520,12 +520,12 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    blkgrp = dev->devunique.dasd_dev.fbarba / FBA_BLKGRP_SIZE;
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
 
-    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    off = dev->devunique.dasd_dev.fbarba % FBA_BLKGRP_SIZE;
     blklen = dev->buflen - off;
 
     /* Initialize source buffer offset and length to copy */
@@ -559,7 +559,7 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Update the rba */
-    dev->fbarba += len;
+    dev->devunique.dasd_dev.fbarba += len;
 
     return len;
 } /* end function fba_write */
@@ -601,10 +601,10 @@ off_t           offset;                 /* File offsets              */
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
-            cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
+            cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~FBA_CACHE_ACTIVE, 0);
             cache_unlock(CACHE_DEVBUF);
             dev->bufupdlo = dev->bufupdhi = 0;
-            dev->bufcur = dev->cache = -1;
+            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
             return -1;
         }
 
@@ -618,10 +618,10 @@ off_t           offset;                 /* File offsets              */
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
-            cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
+            cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~FBA_CACHE_ACTIVE, 0);
             cache_unlock(CACHE_DEVBUF);
             dev->bufupdlo = dev->bufupdhi = 0;
-            dev->bufcur = dev->cache = -1;
+            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
             return -1;
         }
 
@@ -631,9 +631,9 @@ off_t           offset;                 /* File offsets              */
     cache_lock (CACHE_DEVBUF);
 
     /* Make the previous cache entry inactive */
-    if (dev->cache >= 0)
-        cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
-    dev->bufcur = dev->cache = -1;
+    if (dev->devunique.dasd_dev.cache >= 0)
+        cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~FBA_CACHE_ACTIVE, 0);
+    dev->bufcur = dev->devunique.dasd_dev.cache = -1;
 
     /* Return on special case when called by the close handler */
     if (blkgrp < 0)
@@ -656,14 +656,14 @@ fba_read_blkgrp_retry:
 
         logdevtr (dev, MSG(HHC00516, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, i));
 
-        dev->cachehits++;
-        dev->cache = i;
-        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+        dev->devunique.dasd_dev.cachehits++;
+        dev->devunique.dasd_dev.cache = i;
+        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
         dev->bufcur = blkgrp;
         dev->bufoff = 0;
         dev->bufoffhi = fba_blkgrp_len (dev, blkgrp);
         dev->buflen = fba_blkgrp_len (dev, blkgrp);
-        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
+        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
         return 0;
     }
 
@@ -679,7 +679,7 @@ fba_read_blkgrp_retry:
     if (o < 0)
     {
         logdevtr (dev, MSG(HHC00517, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp));
-        dev->cachewaits++;
+        dev->devunique.dasd_dev.cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
@@ -687,7 +687,7 @@ fba_read_blkgrp_retry:
     /* Cache miss */
     logdevtr (dev, MSG(HHC00518, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, o));
 
-    dev->cachemisses++;
+    dev->devunique.dasd_dev.cachemisses++;
 
     /* Make this cache entry active */
     cache_setkey (CACHE_DEVBUF, o, FBA_CACHE_SETKEY(dev->devnum, blkgrp));
@@ -731,13 +731,13 @@ fba_read_blkgrp_retry:
         return -1;
     }
 
-    dev->cache = o;
-    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+    dev->devunique.dasd_dev.cache = o;
+    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
     dev->bufcur = blkgrp;
     dev->bufoff = 0;
     dev->bufoffhi = fba_blkgrp_len (dev, blkgrp);
     dev->buflen = fba_blkgrp_len (dev, blkgrp);
-    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
+    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
 
     return 0;
 
@@ -758,7 +758,7 @@ int             rc;                     /* Return code               */
         rc = (dev->hnd->read) (dev, blkgrp, unitstat);
         if (rc < 0)
         {
-            dev->bufcur = dev->cache = -1;
+            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
             return -1;
         }
     }
@@ -838,7 +838,7 @@ BYTE            unitstat;
 static
 int fbadasd_used (DEVBLK *dev)
 {
-    return dev->fbanumblk;
+    return dev->devunique.dasd_dev.fbanumblk;
 }
 
 /*-------------------------------------------------------------------*/
@@ -856,7 +856,7 @@ int     repcnt;                         /* Replication count         */
 
     /* Reset extent flag at start of CCW chain */
     if (chained == 0)
-        dev->fbaxtdef = 0;
+        dev->devunique.dasd_dev.fbaxtdef = 0;
 
     /* Process depending on CCW opcode */
     switch (code) {
@@ -874,13 +874,13 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Zeroize the file mask and set extent for entire device */
-        dev->fbamask = 0;
-        dev->fbaxblkn = 0;
-        dev->fbaxfirst = 0;
-        dev->fbaxlast = dev->fbanumblk - 1;
+        dev->devunique.dasd_dev.fbamask = 0;
+        dev->devunique.dasd_dev.fbaxblkn = 0;
+        dev->devunique.dasd_dev.fbaxfirst = 0;
+        dev->devunique.dasd_dev.fbaxlast = dev->devunique.dasd_dev.fbanumblk - 1;
 
         /* Seek to start of block zero */
-        dev->fbarba = dev->fbaorigin * dev->fbablksiz;
+        dev->devunique.dasd_dev.fbarba = dev->devunique.dasd_dev.fbaorigin * dev->devunique.dasd_dev.fbablksiz;
 
         /* Overrun if data chaining */
         if ((flags & CCW_FLAGS_CD))
@@ -891,16 +891,16 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Calculate number of bytes to read and set residual count */
-        num = (count < dev->fbablksiz) ? count : dev->fbablksiz;
+        num = (count < dev->devunique.dasd_dev.fbablksiz) ? count : dev->devunique.dasd_dev.fbablksiz;
         *residual = count - num;
-        if (count < dev->fbablksiz) *more = 1;
+        if (count < dev->devunique.dasd_dev.fbablksiz) *more = 1;
 
         /* Read physical block into channel buffer */
         rc = fba_read (dev, iobuf, num, unitstat);
         if (rc < num) break;
 
         /* Set extent defined flag */
-        dev->fbaxtdef = 1;
+        dev->devunique.dasd_dev.fbaxtdef = 1;
 
         /* Set normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -926,8 +926,8 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Reject if locate command did not specify write operation */
-        if ((dev->fbaoper & FBAOPER_CODE) != FBAOPER_WRITE
-            && (dev->fbaoper & FBAOPER_CODE) != FBAOPER_WRTVRFY)
+        if ((dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) != FBAOPER_WRITE
+            && (dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) != FBAOPER_WRTVRFY)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -938,14 +938,14 @@ int     repcnt;                         /* Replication count         */
         memset( hexzeroes, 0, sizeof(hexzeroes) );
 
         /* Write physical blocks of data to the device */
-        while (dev->fbalcnum > 0)
+        while (dev->devunique.dasd_dev.fbalcnum > 0)
         {
             /* Exit if data chaining and this CCW is exhausted */
             if ((flags & CCW_FLAGS_CD) && count == 0)
                 break;
 
             /* Overrun if data chaining within a physical block */
-            if ((flags & CCW_FLAGS_CD) && count < dev->fbablksiz)
+            if ((flags & CCW_FLAGS_CD) && count < dev->devunique.dasd_dev.fbablksiz)
             {
                 dev->sense[0] = SENSE_OR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -953,8 +953,8 @@ int     repcnt;                         /* Replication count         */
             }
 
             /* Calculate number of bytes to write */
-            num = (count < dev->fbablksiz) ? count : dev->fbablksiz;
-            if (num < dev->fbablksiz) *more = 1;
+            num = (count < dev->devunique.dasd_dev.fbablksiz) ? count : dev->devunique.dasd_dev.fbablksiz;
+            if (num < dev->devunique.dasd_dev.fbablksiz) *more = 1;
 
             /* Write physical block from channel buffer */
             if (num > 0)
@@ -964,9 +964,9 @@ int     repcnt;                         /* Replication count         */
             }
 
             /* Fill remainder of block with zeroes */
-            if (num < dev->fbablksiz)
+            if (num < dev->devunique.dasd_dev.fbablksiz)
             {
-                rem = dev->fbablksiz - num;
+                rem = dev->devunique.dasd_dev.fbablksiz - num;
                 rc = fba_write (dev, hexzeroes, rem, unitstat);
                 if (rc < rem) break;
             }
@@ -974,13 +974,13 @@ int     repcnt;                         /* Replication count         */
             /* Prepare to write next block */
             count -= num;
             iobuf += num;
-            dev->fbalcnum--;
+            dev->devunique.dasd_dev.fbalcnum--;
 
         } /* end while */
 
         /* Set residual byte count */
         *residual = count;
-        if (dev->fbalcnum > 0) *more = 1;
+        if (dev->devunique.dasd_dev.fbalcnum > 0) *more = 1;
 
         /* Set ending status */
         *unitstat |= CSW_CE | CSW_DE;
@@ -1000,8 +1000,8 @@ int     repcnt;                         /* Replication count         */
 
         /* Reject if locate command did not specify read operation */
         if (prevcode != 0x02
-            && (dev->fbaoper & FBAOPER_CODE) != FBAOPER_READ
-            && (dev->fbaoper & FBAOPER_CODE) != FBAOPER_READREP)
+            && (dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) != FBAOPER_READ
+            && (dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) != FBAOPER_READREP)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1009,10 +1009,10 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Read physical blocks of data from device */
-        while (dev->fbalcnum > 0 && count > 0)
+        while (dev->devunique.dasd_dev.fbalcnum > 0 && count > 0)
         {
             /* Overrun if data chaining within a physical block */
-            if ((flags & CCW_FLAGS_CD) && count < dev->fbablksiz)
+            if ((flags & CCW_FLAGS_CD) && count < dev->devunique.dasd_dev.fbablksiz)
             {
                 dev->sense[0] = SENSE_OR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1020,8 +1020,8 @@ int     repcnt;                         /* Replication count         */
             }
 
             /* Calculate number of bytes to read */
-            num = (count < dev->fbablksiz) ? count : dev->fbablksiz;
-            if (num < dev->fbablksiz) *more = 1;
+            num = (count < dev->devunique.dasd_dev.fbablksiz) ? count : dev->devunique.dasd_dev.fbablksiz;
+            if (num < dev->devunique.dasd_dev.fbablksiz) *more = 1;
 
             /* Read physical block into channel buffer */
             rc = fba_read (dev, iobuf, num, unitstat);
@@ -1030,13 +1030,13 @@ int     repcnt;                         /* Replication count         */
             /* Prepare to read next block */
             count -= num;
             iobuf += num;
-            dev->fbalcnum--;
+            dev->devunique.dasd_dev.fbalcnum--;
 
         } /* end while */
 
         /* Set residual byte count */
         *residual = count;
-        if (dev->fbalcnum > 0) *more = 1;
+        if (dev->devunique.dasd_dev.fbalcnum > 0) *more = 1;
 
         /* Set ending status */
         *unitstat |= CSW_CE | CSW_DE;
@@ -1060,7 +1060,7 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* LOCATE must be preceded by DEFINE EXTENT or READ IPL */
-        if (dev->fbaxtdef == 0)
+        if (dev->devunique.dasd_dev.fbaxtdef == 0)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1068,8 +1068,8 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Save and validate the operation byte */
-        dev->fbaoper = iobuf[0];
-        if (dev->fbaoper & FBAOPER_RESV)
+        dev->devunique.dasd_dev.fbaoper = iobuf[0];
+        if (dev->devunique.dasd_dev.fbaoper & FBAOPER_RESV)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1077,25 +1077,25 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Validate and process operation code */
-        if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_WRITE
-            || (dev->fbaoper & FBAOPER_CODE) == FBAOPER_WRTVRFY)
+        if ((dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_WRITE
+            || (dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_WRTVRFY)
         {
             /* Reject command if file mask inhibits all writes */
-            if ((dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHWRT)
+            if ((dev->devunique.dasd_dev.fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHWRT)
             {
                 dev->sense[0] = SENSE_CR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
         }
-        else if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_READ
-                || (dev->fbaoper & FBAOPER_CODE) == FBAOPER_READREP)
+        else if ((dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_READ
+                || (dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_READREP)
         {
         }
-        else if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_FMTDEFC)
+        else if ((dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_FMTDEFC)
         {
             /* Reject command if file mask inhibits format writes */
-            if ((dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHFMT)
+            if ((dev->devunique.dasd_dev.fbamask & FBAMASK_CTL) == FBAMASK_CTL_INHFMT)
             {
                 dev->sense[0] = SENSE_CR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1113,18 +1113,18 @@ int     repcnt;                         /* Replication count         */
         repcnt = iobuf[1];
 
         /* Bytes 2-3 contain the block count */
-        dev->fbalcnum = fetch_hw(iobuf + 2);
+        dev->devunique.dasd_dev.fbalcnum = fetch_hw(iobuf + 2);
 
         /* Bytes 4-7 contain the displacement of the first block
            relative to the start of the dataset */
-        dev->fbalcblk = fetch_fw(iobuf + 4);
+        dev->devunique.dasd_dev.fbalcblk = fetch_fw(iobuf + 4);
 
         /* Verify that the block count is non-zero, and that
            the starting and ending blocks fall within the extent */
-        if (   dev->fbalcnum == 0
-            || dev->fbalcnum >  dev->fbaxlast + 1
-            || dev->fbalcblk <  dev->fbaxfirst
-            || dev->fbalcblk >  dev->fbaxlast + 1 - dev->fbalcnum)
+        if (   dev->devunique.dasd_dev.fbalcnum == 0
+            || dev->devunique.dasd_dev.fbalcnum >  dev->devunique.dasd_dev.fbaxlast + 1
+            || dev->devunique.dasd_dev.fbalcblk <  dev->devunique.dasd_dev.fbaxfirst
+            || dev->devunique.dasd_dev.fbalcblk >  dev->devunique.dasd_dev.fbaxlast + 1 - dev->devunique.dasd_dev.fbalcnum)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1133,9 +1133,9 @@ int     repcnt;                         /* Replication count         */
 
         /* For replicated data, verify that the replication count
            is non-zero and is a multiple of the block count */
-        if ((dev->fbaoper & FBAOPER_CODE) == FBAOPER_READREP)
+        if ((dev->devunique.dasd_dev.fbaoper & FBAOPER_CODE) == FBAOPER_READREP)
         {
-            if (repcnt == 0 || repcnt % dev->fbalcnum != 0)
+            if (repcnt == 0 || repcnt % dev->devunique.dasd_dev.fbalcnum != 0)
             {
                 dev->sense[0] = SENSE_CR;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1144,13 +1144,13 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Position device to start of block */
-        dev->fbarba = (dev->fbaorigin
-                     + dev->fbaxblkn
-                     + dev->fbalcblk - dev->fbaxfirst
-                      ) * dev->fbablksiz;
+        dev->devunique.dasd_dev.fbarba = (dev->devunique.dasd_dev.fbaorigin
+                     + dev->devunique.dasd_dev.fbaxblkn
+                     + dev->devunique.dasd_dev.fbalcblk - dev->devunique.dasd_dev.fbaxfirst
+                      ) * dev->devunique.dasd_dev.fbablksiz;
 
         logdevtr (dev, MSG(HHC00520, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            dev->fbarba, dev->fbarba));
+                            dev->devunique.dasd_dev.fbarba, dev->devunique.dasd_dev.fbarba));
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1174,7 +1174,7 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Reject if extent previously defined in this CCW chain */
-        if (dev->fbaxtdef)
+        if (dev->devunique.dasd_dev.fbaxtdef)
         {
             WRMSG(HHC00510, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
             dev->sense[0] = SENSE_CR;
@@ -1183,11 +1183,11 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Save and validate the file mask */
-        dev->fbamask = iobuf[0];
-        if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
-            || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
+        dev->devunique.dasd_dev.fbamask = iobuf[0];
+        if ((dev->devunique.dasd_dev.fbamask & (FBAMASK_RESV | FBAMASK_CE))
+            || (dev->devunique.dasd_dev.fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            WRMSG(HHC00511, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbamask);
+            WRMSG(HHC00511, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1206,31 +1206,31 @@ int     repcnt;                         /* Replication count         */
 
         /* Bytes 4-7 contain the block number of the first block
            of the extent relative to the start of the device */
-        dev->fbaxblkn = fetch_fw(iobuf + 4);
+        dev->devunique.dasd_dev.fbaxblkn = fetch_fw(iobuf + 4);
 
         /* Bytes 8-11 contain the block number of the first block
            of the extent relative to the start of the dataset */
-        dev->fbaxfirst = fetch_fw(iobuf + 8);
+        dev->devunique.dasd_dev.fbaxfirst = fetch_fw(iobuf + 8);
 
         /* Bytes 12-15 contain the block number of the last block
            of the extent relative to the start of the dataset */
-        dev->fbaxlast = fetch_fw(iobuf + 12);
+        dev->devunique.dasd_dev.fbaxlast = fetch_fw(iobuf + 12);
 
         /* Validate the extent description by checking that the
            ending block is not less than the starting block and
            that the ending block does not exceed the device size */
-        if (dev->fbaxlast < dev->fbaxfirst
-         || dev->fbaxblkn > (U32)dev->fbanumblk
-         || dev->fbaxlast - dev->fbaxfirst >= dev->fbanumblk - dev->fbaxblkn)
+        if (dev->devunique.dasd_dev.fbaxlast < dev->devunique.dasd_dev.fbaxfirst
+         || dev->devunique.dasd_dev.fbaxblkn > (U32)dev->devunique.dasd_dev.fbanumblk
+         || dev->devunique.dasd_dev.fbaxlast - dev->devunique.dasd_dev.fbaxfirst >= dev->devunique.dasd_dev.fbanumblk - dev->devunique.dasd_dev.fbaxblkn)
         {
-            WRMSG(HHC00512, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaxfirst, dev->fbaxlast, dev->fbaxblkn, dev->fbanumblk);
+            WRMSG(HHC00512, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.fbaxfirst, dev->devunique.dasd_dev.fbaxlast, dev->devunique.dasd_dev.fbaxblkn, dev->devunique.dasd_dev.fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
 
         /* Set extent defined flag and return normal status */
-        dev->fbaxtdef = 1;
+        dev->devunique.dasd_dev.fbaxtdef = 1;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -1254,7 +1254,7 @@ int     repcnt;                         /* Replication count         */
     /* DEVICE RELEASE                                                */
     /*---------------------------------------------------------------*/
         /* Reject if extent previously defined in this CCW chain */
-        if (dev->fbaxtdef)
+        if (dev->devunique.dasd_dev.fbaxtdef)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1275,7 +1275,7 @@ int     repcnt;                         /* Replication count         */
     /* DEVICE RESERVE                                                */
     /*---------------------------------------------------------------*/
         /* Reject if extent previously defined in this CCW chain */
-        if (dev->fbaxtdef)
+        if (dev->devunique.dasd_dev.fbaxtdef)
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1392,7 +1392,7 @@ int     sector;       /* First sector being read                     */
 
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;
-    if (sector >= dev->fbanumblk)
+    if (sector >= dev->devunique.dasd_dev.fbanumblk)
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1400,7 +1400,7 @@ int     sector;       /* First sector being read                     */
     }
 
     /* Seek to start of desired block */
-    dev->fbarba = ( dev->fbaorigin + sector ) * dev->fbablksiz;
+    dev->devunique.dasd_dev.fbarba = ( dev->devunique.dasd_dev.fbaorigin + sector ) * dev->devunique.dasd_dev.fbablksiz;
 
     /* Read block into I/O buffer */
     rc = fba_read (dev, iobuf, blksize, unitstat);
@@ -1432,7 +1432,7 @@ U64     rba;          /* Large file size offset                      */
 
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;
-    if (sector >= dev->fbanumblk || sector < 0 )
+    if (sector >= dev->devunique.dasd_dev.fbanumblk || sector < 0 )
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1440,7 +1440,7 @@ U64     rba;          /* Large file size offset                      */
     }
 
     /* Seek to start of desired block */
-    dev->fbarba = (off_t)(( dev->fbaorigin + sector ) * dev->fbablksiz);
+    dev->devunique.dasd_dev.fbarba = (off_t)(( dev->devunique.dasd_dev.fbaorigin + sector ) * dev->devunique.dasd_dev.fbablksiz);
 
     /* Read block into I/O buffer */
     rc = fba_write (dev, iobuf, blksize, unitstat);
@@ -1469,10 +1469,10 @@ int     blkfactor;                      /* Number of device blocks
                                            per logical block         */
 
     /* Calculate the blocking factor */
-    blkfactor = blksize / dev->fbablksiz;
+    blkfactor = blksize / dev->devunique.dasd_dev.fbablksiz;
 
     /* Unit check if block number is invalid */
-    if (blknum * blkfactor >= dev->fbanumblk)
+    if (blknum * blkfactor >= dev->devunique.dasd_dev.fbanumblk)
     {
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1480,7 +1480,7 @@ int     blkfactor;                      /* Number of device blocks
     }
 
     /* Seek to start of desired block */
-    dev->fbarba = dev->fbaorigin * dev->fbablksiz;
+    dev->devunique.dasd_dev.fbarba = dev->devunique.dasd_dev.fbaorigin * dev->devunique.dasd_dev.fbablksiz;
 
     /* Process depending on operation type */
     switch (type) {
@@ -1533,19 +1533,19 @@ int fbadasd_hsuspend(DEVBLK *dev, void *file) {
         SR_WRITE_VALUE(file, SR_DEV_FBA_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
         SR_WRITE_VALUE(file, SR_DEV_FBA_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
     }
-    SR_WRITE_VALUE(file, SR_DEV_FBA_ORIGIN, dev->fbaorigin, sizeof(dev->fbaorigin));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_NUMBLK, dev->fbanumblk, sizeof(dev->fbanumblk));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_RBA, dev->fbarba, sizeof(dev->fbarba));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_END, dev->fbaend, sizeof(dev->fbaend));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXBLKN, dev->fbaxblkn, sizeof(dev->fbaxblkn));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXFIRST, dev->fbaxfirst, sizeof(dev->fbaxfirst));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXLAST, dev->fbaxlast, sizeof(dev->fbaxlast));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_LCBLK, dev->fbalcblk, sizeof(dev->fbalcblk));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_LCNUM, dev->fbalcnum, sizeof(dev->fbalcnum));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_BLKSIZ, dev->fbablksiz, sizeof(dev->fbablksiz));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_XTDEF, dev->fbaxtdef, 1);
-    SR_WRITE_VALUE(file, SR_DEV_FBA_OPER, dev->fbaoper, sizeof(dev->fbaoper));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_MASK, dev->fbamask, sizeof(dev->fbamask));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_ORIGIN, dev->devunique.dasd_dev.fbaorigin, sizeof(dev->devunique.dasd_dev.fbaorigin));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_NUMBLK, dev->devunique.dasd_dev.fbanumblk, sizeof(dev->devunique.dasd_dev.fbanumblk));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_RBA, dev->devunique.dasd_dev.fbarba, sizeof(dev->devunique.dasd_dev.fbarba));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_END, dev->devunique.dasd_dev.fbaend, sizeof(dev->devunique.dasd_dev.fbaend));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXBLKN, dev->devunique.dasd_dev.fbaxblkn, sizeof(dev->devunique.dasd_dev.fbaxblkn));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXFIRST, dev->devunique.dasd_dev.fbaxfirst, sizeof(dev->devunique.dasd_dev.fbaxfirst));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXLAST, dev->devunique.dasd_dev.fbaxlast, sizeof(dev->devunique.dasd_dev.fbaxlast));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_LCBLK, dev->devunique.dasd_dev.fbalcblk, sizeof(dev->devunique.dasd_dev.fbalcblk));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_LCNUM, dev->devunique.dasd_dev.fbalcnum, sizeof(dev->devunique.dasd_dev.fbalcnum));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_BLKSIZ, dev->devunique.dasd_dev.fbablksiz, sizeof(dev->devunique.dasd_dev.fbablksiz));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_XTDEF, dev->devunique.dasd_dev.fbaxtdef, 1);
+    SR_WRITE_VALUE(file, SR_DEV_FBA_OPER, dev->devunique.dasd_dev.fbaoper, sizeof(dev->devunique.dasd_dev.fbaoper));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_MASK, dev->devunique.dasd_dev.fbamask, sizeof(dev->devunique.dasd_dev.fbamask));
     return 0;
 }
 
@@ -1571,58 +1571,58 @@ BYTE byte;
             break;
         case SR_DEV_FBA_ORIGIN:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if ((off_t)rc != dev->fbaorigin)
+            if ((off_t)rc != dev->devunique.dasd_dev.fbaorigin)
             {
-                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, (int)dev->fbaorigin);
+                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, (int)dev->devunique.dasd_dev.fbaorigin);
                 return -1;
             }
             break;
         case SR_DEV_FBA_NUMBLK:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if ((int)rc != dev->fbanumblk)
+            if ((int)rc != dev->devunique.dasd_dev.fbanumblk)
             {
-                WRMSG(HHC00514, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbanumblk);
+                WRMSG(HHC00514, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->devunique.dasd_dev.fbanumblk);
                 return -1;
             }
             break;
         case SR_DEV_FBA_RBA:
-            SR_READ_VALUE(file, len, &dev->fbarba, sizeof(dev->fbarba));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbarba, sizeof(dev->devunique.dasd_dev.fbarba));
             break;
         case SR_DEV_FBA_END:
-            SR_READ_VALUE(file, len, &dev->fbaend, sizeof(dev->fbaend));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbaend, sizeof(dev->devunique.dasd_dev.fbaend));
             break;
         case SR_DEV_FBA_DXBLKN:
-            SR_READ_VALUE(file, len, &dev->fbaxblkn, sizeof(dev->fbaxblkn));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbaxblkn, sizeof(dev->devunique.dasd_dev.fbaxblkn));
             break;
         case SR_DEV_FBA_DXFIRST:
-            SR_READ_VALUE(file, len, &dev->fbaxfirst, sizeof(dev->fbaxfirst));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbaxfirst, sizeof(dev->devunique.dasd_dev.fbaxfirst));
             break;
         case SR_DEV_FBA_DXLAST:
-            SR_READ_VALUE(file, len, &dev->fbaxlast, sizeof(dev->fbaxlast));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbaxlast, sizeof(dev->devunique.dasd_dev.fbaxlast));
             break;
         case SR_DEV_FBA_LCBLK:
-            SR_READ_VALUE(file, len, &dev->fbalcblk, sizeof(dev->fbalcblk));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbalcblk, sizeof(dev->devunique.dasd_dev.fbalcblk));
             break;
         case SR_DEV_FBA_LCNUM:
-            SR_READ_VALUE(file, len, &dev->fbalcnum, sizeof(dev->fbalcnum));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbalcnum, sizeof(dev->devunique.dasd_dev.fbalcnum));
             break;
         case SR_DEV_FBA_BLKSIZ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if ((int)rc != dev->fbablksiz)
+            if ((int)rc != dev->devunique.dasd_dev.fbablksiz)
             {
-                WRMSG(HHC00515, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbablksiz);
+                WRMSG(HHC00515, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->devunique.dasd_dev.fbablksiz);
                 return -1;
             }
             break;
         case SR_DEV_FBA_XTDEF:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->fbaxtdef = rc;
+            dev->devunique.dasd_dev.fbaxtdef = rc;
             break;
         case SR_DEV_FBA_OPER:
-            SR_READ_VALUE(file, len, &dev->fbaoper, sizeof(dev->fbaoper));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbaoper, sizeof(dev->devunique.dasd_dev.fbaoper));
             break;
         case SR_DEV_FBA_MASK:
-            SR_READ_VALUE(file, len, &dev->fbamask, sizeof(dev->fbamask));
+            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.fbamask, sizeof(dev->devunique.dasd_dev.fbamask));
             break;
         default:
             SR_READ_SKIP(file, len);

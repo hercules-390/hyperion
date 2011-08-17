@@ -359,22 +359,22 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
             rdat->rdevfeat |= DRF_RSRL;
          if (dev->numsense==24)
             rdat->rdevfeat |= DRF_EXTSNS;
-         if (dev->ckdtab->sectors)
+         if (dev->devunique.dasd_dev.ckdtab->sectors)
             rdat->rdevfeat |= DRF_RPS;
          if (dev->devtype == 0x3340)
          {
-            if (dev->ckdtab->model==0x01)
+            if (dev->devunique.dasd_dev.ckdtab->model==0x01)
                rdat->rdevfeat |= DRF_35M;
             else
                rdat->rdevfeat |= DRF_70M;
          }
          if ( dev->devtype == 0x3380  && code == 0x24)
-            rdat->rdevmodl = (dev->ckdtab->model & 0x0F) | (dev->ckdcu->model & 0xF0);
+            rdat->rdevmodl = (dev->devunique.dasd_dev.ckdtab->model & 0x0F) | (dev->devunique.dasd_dev.ckdcu->model & 0xF0);
          else
-            rdat->rdevmodl = dev->ckdtab->model;
+            rdat->rdevmodl = dev->devunique.dasd_dev.ckdtab->model;
          break;
      case DC_FBA:
-         rdat->rdevmodl = dev->fbatab->model;
+         rdat->rdevmodl = dev->devunique.dasd_dev.fbatab->model;
          break;
      case DC_TERM:
          if (dev->devtype==0x3215)
@@ -1336,9 +1336,9 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
              case 0x3340:
              case 0x3350:
                   /* Set non-keyed overhead */
-                  STORE_HW(&vrdc.vrdcrdc[0x18],dev->ckdtab->f2);
+                  STORE_HW(&vrdc.vrdcrdc[0x18],dev->devunique.dasd_dev.ckdtab->f2);
                   /* Set keyed overhead */
-                  STORE_HW(&vrdc.vrdcrdc[0x1A],dev->ckdtab->f1);
+                  STORE_HW(&vrdc.vrdcrdc[0x1A],dev->devunique.dasd_dev.ckdtab->f1);
              /* Note: for all other DASD devices these fields contain bytes 24-27 of the RDC */
         }
         /* Set Control Unit ID */

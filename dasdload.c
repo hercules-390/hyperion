@@ -542,7 +542,7 @@ int             rc;                     /* Return code               */
     *usedv = 0;
 
     /* Read the next track */
-    if (*cyl < (int)cif->devblk.ckdcyls)
+    if (*cyl < (int)cif->devblk.devunique.dasd_dev.ckdcyls)
     {
         rc = read_track (cif, *cyl, *head);
         if (rc < 0) return -1;

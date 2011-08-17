@@ -470,12 +470,12 @@ DEVBLK**dvpp;
         initialize_condition ( &dev->resumecond         );
         initialize_condition ( &dev->iocond             );
 #if defined(OPTION_SCSI_TAPE)
-        initialize_condition ( &dev->stape_sstat_cond   );
-        InitializeListLink   ( &dev->stape_statrq.link  );
-        InitializeListLink   ( &dev->stape_mntdrq.link  );
-        dev->stape_statrq.dev = dev;
-        dev->stape_mntdrq.dev = dev;
-        dev->sstat            = GMT_DR_OPEN(-1);
+        initialize_condition ( &dev->devunique.tape_dev.stape_sstat_cond   );
+        InitializeListLink   ( &dev->devunique.tape_dev.stape_statrq.link  );
+        InitializeListLink   ( &dev->devunique.tape_dev.stape_mntdrq.link  );
+        dev->devunique.tape_dev.stape_statrq.dev = dev;
+        dev->devunique.tape_dev.stape_mntdrq.dev = dev;
+        dev->devunique.tape_dev.sstat            = GMT_DR_OPEN(-1);
 #endif
         /* Search for the last device block on the chain */
         for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
@@ -525,7 +525,7 @@ DEVBLK**dvpp;
     dev->pmcw.chpid[0] = dev->devnum >> 8;
 
 #if defined(OPTION_SHARED_DEVICES)
-    dev->shrdwait = -1;
+    dev->shrd_dev.shrdwait = -1;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #ifdef EXTERNALGUI
@@ -578,17 +578,14 @@ int     i;                              /* Loop index                */
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 
-    if ( dev->pszVaultPath != NULL )
-    {
-        free( dev->pszVaultPath );
-        dev->pszVaultPath = NULL;
-    }
-
     for (i = 0; i < dev->argc; i++)
         if (dev->argv[i])
             free(dev->argv[i]);
     if (dev->argv)
+    {
         free(dev->argv);
+        dev->argv = NULL;
+    }
 
     free(dev->typname);
 

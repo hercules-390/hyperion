@@ -849,7 +849,7 @@ int     eor = 0;                        /* 1=End of record received  */
        then discard it before reading more data */
     if (dev->readpending)
     {
-        dev->rlen3270 = 0;
+        dev->devunique.cons_dev.rlen3270 = 0;
         dev->readpending = 0;
     }
 
@@ -889,13 +889,13 @@ int     eor = 0;                        /* 1=End of record received  */
     TNSDEBUG1("console: DBG034: data IS available; attempting recv...\n");
 
     /* Receive bytes from client */
-    rc = recv (dev->fd, dev->buf + dev->rlen3270,
-               BUFLEN_3270 - dev->rlen3270, 0);
+    rc = recv (dev->fd, dev->buf + dev->devunique.cons_dev.rlen3270,
+               BUFLEN_3270 - dev->devunique.cons_dev.rlen3270, 0);
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
             WRMSG(HHC01090, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
-                  inet_ntoa(dev->ipaddr), dev->devtype);
+                  inet_ntoa(dev->devunique.cons_dev.ipaddr), dev->devtype);
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -905,34 +905,34 @@ int     eor = 0;                        /* 1=End of record received  */
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
         WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
-              inet_ntoa(dev->ipaddr), dev->devtype);
+              inet_ntoa(dev->devunique.cons_dev.ipaddr), dev->devtype);
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
 
     /* Update number of bytes in receive buffer */
-    dev->rlen3270 += rc;
+    dev->devunique.cons_dev.rlen3270 += rc;
 
     /* Check whether Attn indicator was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == BRK)
+    if (dev->devunique.cons_dev.rlen3270 >= 2
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 2] == IAC
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 1] == BRK)
         eor = 1;
 
     /* Check whether SysRq indicator was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == IP)
+    if (dev->devunique.cons_dev.rlen3270 >= 2
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 2] == IAC
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 1] == IP)
         eor = 1;
 
     /* Check whether end of record marker was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == EOR_MARK)
+    if (dev->devunique.cons_dev.rlen3270 >= 2
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 2] == IAC
+        && dev->buf[dev->devunique.cons_dev.rlen3270 - 1] == EOR_MARK)
         eor = 1;
 
     /* If record is incomplete, test for buffer full */
-    if (eor == 0 && dev->rlen3270 >= BUFLEN_3270)
+    if (eor == 0 && dev->devunique.cons_dev.rlen3270 >= BUFLEN_3270)
     {
         TNSDEBUG1("console: DBG010: 3270 buffer overflow\n");
         dev->sense[0] = SENSE_DC;
@@ -945,14 +945,14 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* Trace the complete 3270 data packet */
     TNSDEBUG2("console: DBG011: Packet received length=%d\n",
-            dev->rlen3270);
-    packet_trace (dev->buf, dev->rlen3270);
+            dev->devunique.cons_dev.rlen3270);
+    packet_trace (dev->buf, dev->devunique.cons_dev.rlen3270);
 
     /* Strip off the telnet EOR marker */
-    dev->rlen3270 -= 2;
+    dev->devunique.cons_dev.rlen3270 -= 2;
 
     /* Remove any embedded IAC commands */
-    dev->rlen3270 = remove_iac (dev->buf, dev->rlen3270);
+    dev->devunique.cons_dev.rlen3270 = remove_iac (dev->buf, dev->devunique.cons_dev.rlen3270);
 
     /* Set the read pending indicator and return attention status */
     dev->readpending = 1;
@@ -987,7 +987,7 @@ BYTE            buf[32];                /* tn3270 write buffer       */
 
     /* Clear the inbound buffer of any unsolicited
        data accumulated by the connection thread */
-    dev->rlen3270 = 0;
+    dev->devunique.cons_dev.rlen3270 = 0;
     dev->readpending = 0;
 
     /* Construct a 3270 read command in the outbound buffer */
@@ -1008,10 +1008,10 @@ BYTE            buf[32];                /* tn3270 write buffer       */
 
     /* Receive response data from the client */
     do {
-        len = dev->rlen3270;
+        len = dev->devunique.cons_dev.rlen3270;
         rc = recv_3270_data (dev);
         TNSDEBUG2("console: DBG012: read buffer: %d bytes received\n",
-                dev->rlen3270 - len);
+                dev->devunique.cons_dev.rlen3270 - len);
     } while(rc == 0);
 
     /* Close the connection if an error occurred */
@@ -1070,7 +1070,7 @@ BYTE    c;                              /* Character work area       */
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
         WRMSG(HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 
-              inet_ntoa(dev->ipaddr), dev->devtype);
+              inet_ntoa(dev->devunique.cons_dev.ipaddr), dev->devtype);
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1085,79 +1085,79 @@ BYTE    c;                              /* Character work area       */
         /* Decrement keyboard buffer pointer if backspace received */
         if (buf[i] == 0x08)
         {
-            if (dev->keybdrem > 0) dev->keybdrem--;
+            if (dev->devunique.cons_dev.keybdrem > 0) dev->devunique.cons_dev.keybdrem--;
             continue;
         }
 
         /* Return unit exception if control-C received */
         if (buf[i] == 0x03)
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             return (CSW_ATTN | CSW_UX);
         }
 
         /* Return unit check if buffer is full */
-        if (dev->keybdrem >= BUFLEN_1052)
+        if (dev->devunique.cons_dev.keybdrem >= BUFLEN_1052)
         {
             TNSDEBUG1("console: DBG014: Console keyboard buffer overflow\n");
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             dev->sense[0] = SENSE_EC;
             return (CSW_ATTN | CSW_UC);
         }
 
         /* Copy character to keyboard buffer */
-        dev->buf[dev->keybdrem++] = buf[i];
+        dev->buf[dev->devunique.cons_dev.keybdrem++] = buf[i];
 
         /* Decrement keyboard buffer pointer if telnet
            erase character sequence received */
-        if (dev->keybdrem >= 2
-            && dev->buf[dev->keybdrem - 2] == IAC
-            && dev->buf[dev->keybdrem - 1] == EC)
+        if (dev->devunique.cons_dev.keybdrem >= 2
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 2] == IAC
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 1] == EC)
         {
-            dev->keybdrem -= 2;
-            if (dev->keybdrem > 0) dev->keybdrem--;
+            dev->devunique.cons_dev.keybdrem -= 2;
+            if (dev->devunique.cons_dev.keybdrem > 0) dev->devunique.cons_dev.keybdrem--;
             continue;
         }
 
         /* Zeroize keyboard buffer pointer if telnet
            erase line sequence received */
-        if (dev->keybdrem >= 2
-            && dev->buf[dev->keybdrem - 2] == IAC
-            && dev->buf[dev->keybdrem - 1] == EL)
+        if (dev->devunique.cons_dev.keybdrem >= 2
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 2] == IAC
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 1] == EL)
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             continue;
         }
 
         /* Zeroize keyboard buffer pointer if telnet
            carriage return sequence received */
-        if (dev->keybdrem >= 2
-            && dev->buf[dev->keybdrem - 2] == '\r'
-            && dev->buf[dev->keybdrem - 1] == '\0')
+        if (dev->devunique.cons_dev.keybdrem >= 2
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 2] == '\r'
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 1] == '\0')
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             continue;
         }
 
         /* Return unit exception if telnet break sequence received */
-        if (dev->keybdrem >= 2
-            && dev->buf[dev->keybdrem - 2] == IAC
-            && (dev->buf[dev->keybdrem - 1] == BRK
-                || dev->buf[dev->keybdrem - 1] == IP))
+        if (dev->devunique.cons_dev.keybdrem >= 2
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 2] == IAC
+            && (dev->buf[dev->devunique.cons_dev.keybdrem - 1] == BRK
+                || dev->buf[dev->devunique.cons_dev.keybdrem - 1] == IP))
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             return (CSW_ATTN | CSW_UX);
         }
 
         /* Return unit check with overrun if telnet CRLF
            sequence received and more data follows the CRLF */
-        if (dev->keybdrem >= 2
-            && dev->buf[dev->keybdrem - 2] == '\r'
-            && dev->buf[dev->keybdrem - 1] == '\n'
+        if (dev->devunique.cons_dev.keybdrem >= 2
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 2] == '\r'
+            && dev->buf[dev->devunique.cons_dev.keybdrem - 1] == '\n'
             && i < num - 1)
         {
             TNSDEBUG1("console: DBG015: Console keyboard buffer overrun\n");
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
             dev->sense[0] = SENSE_OR;
             return (CSW_ATTN | CSW_UC);
         }
@@ -1165,21 +1165,21 @@ BYTE    c;                              /* Character work area       */
     } /* end for(i) */
 
     /* Return zero status if CRLF was not yet received */
-    if (dev->keybdrem < 2
-        || dev->buf[dev->keybdrem - 2] != '\r'
-        || dev->buf[dev->keybdrem - 1] != '\n')
+    if (dev->devunique.cons_dev.keybdrem < 2
+        || dev->buf[dev->devunique.cons_dev.keybdrem - 2] != '\r'
+        || dev->buf[dev->devunique.cons_dev.keybdrem - 1] != '\n')
         return 0;
 
     /* Trace the complete keyboard data packet */
     TNSDEBUG2("console: DBG016: Packet received length=%d\n",
-            dev->keybdrem);
-    packet_trace (dev->buf, dev->keybdrem);
+            dev->devunique.cons_dev.keybdrem);
+    packet_trace (dev->buf, dev->devunique.cons_dev.keybdrem);
 
     /* Strip off the CRLF sequence */
-    dev->keybdrem -= 2;
+    dev->devunique.cons_dev.keybdrem -= 2;
 
     /* Translate the keyboard buffer to EBCDIC */
-    for (i = 0; i < dev->keybdrem; i++)
+    for (i = 0; i < dev->devunique.cons_dev.keybdrem; i++)
     {
         c = dev->buf[i];
         dev->buf[i] = (isprint(c) ? host_to_guest(c) : SPACE);
@@ -1187,8 +1187,8 @@ BYTE    c;                              /* Character work area       */
 
     /* Trace the EBCDIC input data */
     TNSDEBUG2("console: DBG017: Input data line length=%d\n",
-            dev->keybdrem);
-    packet_trace (dev->buf, dev->keybdrem);
+            dev->devunique.cons_dev.keybdrem);
+    packet_trace (dev->buf, dev->devunique.cons_dev.keybdrem);
 
     /* Return attention status */
     return (CSW_ATTN);
@@ -1561,9 +1561,9 @@ char                    *logoout;
         /* Loop if no specific device number was requested, and
            either a group was requested OR the device is in a group,
            and the device group does not match the requested group */
-        if (devnum==0xFFFF && (group[0] || dev->filename[0]))
+        if (devnum==0xFFFF && (group[0] || dev->devunique.cons_dev.szgroupip[0]))
         {
-            if (strncasecmp(group,dev->filename,16)!=0)
+            if (strncasecmp(group,dev->devunique.cons_dev.szgroupip,strlen(group))!=0)
             {
                 continue;
             }
@@ -1576,7 +1576,7 @@ char                    *logoout;
         if (dev->connected == 0)
         {
             /* Check ipaddr mask to see if client allowed on this device */
-            if ( (client.sin_addr.s_addr & dev->acc_ipmask) != dev->acc_ipaddr )
+            if ( (client.sin_addr.s_addr & dev->devunique.cons_dev.acc_ipmask) != dev->devunique.cons_dev.acc_ipaddr )
             {
                 release_lock (&dev->lock);
                 if ( 0xFFFF == devnum )  /* If they did NOT request a spe- */
@@ -1588,14 +1588,14 @@ char                    *logoout;
             /* Claim this device for the client */
             dev->connected = 1;
             dev->fd = csock;
-            dev->ipaddr = client.sin_addr;
-            dev->mod3270 = model;
-            dev->eab3270 = (extended == 'Y' ? 1 : 0);
+            dev->devunique.cons_dev.ipaddr = client.sin_addr;
+            dev->devunique.cons_dev.mod3270 = model;
+            dev->devunique.cons_dev.eab3270 = (extended == 'Y' ? 1 : 0);
 
             /* Reset the console device */
             dev->readpending = 0;
-            dev->rlen3270 = 0;
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.rlen3270 = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
 
             memset( &dev->scsw, 0, sizeof(SCSW) );
             memset( &dev->pciscsw, 0, sizeof(SCSW) );
@@ -2112,7 +2112,7 @@ BYTE                   unitstat;        /* Status after receive data */
                 }
 
                 /* Indicate that data is available at the device */
-                if(dev->rlen3270)
+                if(dev->devunique.cons_dev.rlen3270)
                     dev->readpending = 1;
 
                 /* Release the device lock */
@@ -2304,9 +2304,9 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     }
     dev->numdevid = 7;
 
-    dev->filename[0] = 0;
-    dev->acc_ipaddr = 0;
-    dev->acc_ipmask = 0;
+    dev->devunique.cons_dev.szgroupip[0] = 0;
+    dev->devunique.cons_dev.acc_ipaddr = 0;
+    dev->devunique.cons_dev.acc_ipmask = 0;
 
     if (argc > 0)   // group name?
     {
@@ -2333,7 +2333,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                      
                 if ( rc == 0 && isalpha( r[0] ))
                 {
-                    strlcpy(dev->filename,r,sizeof(dev->filename));
+                    strlcpy(dev->devunique.cons_dev.szgroupip,r,sizeof(dev->devunique.cons_dev.szgroupip));
                 }
                 else
                 {
@@ -2351,7 +2351,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         argc--; ac++;
         if (argc > 0)   // ip address?
         {
-            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
+            if ((dev->devunique.cons_dev.acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
                 WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                       "IP address", argv[ac]);
@@ -2362,7 +2362,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 argc--; ac++;
                 if (argc > 0)   // ip addr mask?
                 {
-                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
+                    if ((dev->devunique.cons_dev.acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
                         WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
                               "mask value", argv[ac]);
@@ -2381,7 +2381,7 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 }
                 else
                 {
-                    dev->acc_ipmask = (in_addr_t)(-1);
+                    dev->devunique.cons_dev.acc_ipmask = (in_addr_t)(-1);
                 }
             }
         }
@@ -2412,24 +2412,24 @@ loc3270_query_device (DEVBLK *dev, char **devclass,
     if (dev->connected)
     {
         snprintf (buffer, buflen, "%s IO[%" I64_FMT "u]",
-            inet_ntoa(dev->ipaddr), dev->excps );
+            inet_ntoa(dev->devunique.cons_dev.ipaddr), dev->excps );
         buffer[buflen-1] = '\0';
     }
     else
     {
         char  acc[64];
 
-        if (dev->acc_ipaddr || dev->acc_ipmask)
+        if (dev->devunique.cons_dev.acc_ipaddr || dev->devunique.cons_dev.acc_ipmask)
         {
             char  ip   [32];
             char  mask [32];
             struct in_addr  xxxx;
 
-            xxxx.s_addr = dev->acc_ipaddr;
+            xxxx.s_addr = dev->devunique.cons_dev.acc_ipaddr;
 
             MSGBUF( ip, "%s", inet_ntoa( xxxx ));
 
-            xxxx.s_addr = dev->acc_ipmask;
+            xxxx.s_addr = dev->devunique.cons_dev.acc_ipmask;
 
             MSGBUF( mask, "%s", inet_ntoa( xxxx ));
 
@@ -2438,11 +2438,11 @@ loc3270_query_device (DEVBLK *dev, char **devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (dev->devunique.cons_dev.szgroupip[0])
         {
             snprintf(buffer, buflen,
                 "GROUP=%s%s%s IO[%" I64_FMT "u]",
-                dev->filename, acc[0] ? " " : "", acc, dev->excps );
+                dev->devunique.cons_dev.szgroupip, acc[0] ? " " : "", acc, dev->excps );
             buffer[buflen-1] = '\0';
         }
         else
@@ -2503,13 +2503,13 @@ loc3270_hsuspend(DEVBLK *dev, void *file)
     BYTE buf[BUFLEN_3270];
 
     if (!dev->connected) return 0;
-    SR_WRITE_VALUE(file, SR_DEV_3270_POS, dev->pos3270, sizeof(dev->pos3270));
-    SR_WRITE_VALUE(file, SR_DEV_3270_EWA, dev->ewa3270, 1);
+    SR_WRITE_VALUE(file, SR_DEV_3270_POS, dev->devunique.cons_dev.pos3270, sizeof(dev->devunique.cons_dev.pos3270));
+    SR_WRITE_VALUE(file, SR_DEV_3270_EWA, dev->devunique.cons_dev.ewa3270, 1);
     obtain_lock(&dev->lock);
     rc = solicit_3270_data (dev, R3270_RB);
-    if (rc == 0 && dev->rlen3270 > 0 && dev->rlen3270 <= BUFLEN_3270)
+    if (rc == 0 && dev->devunique.cons_dev.rlen3270 > 0 && dev->devunique.cons_dev.rlen3270 <= BUFLEN_3270)
     {
-        len = dev->rlen3270;
+        len = dev->devunique.cons_dev.rlen3270;
         memcpy (buf, dev->buf, len);
     }
     else
@@ -2537,7 +2537,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             break;
         case SR_DEV_3270_EWA:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->ewa3270 = (u_int)rc;
+            dev->devunique.cons_dev.ewa3270 = (u_int)rc;
             break;
         case SR_DEV_3270_BUF:
             rbuflen = len;
@@ -2570,7 +2570,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
 
         /* Construct buffer to send to the 3270 */
         len = 0;
-        buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
+        buf[len++] = dev->devunique.cons_dev.ewa3270 ? R3270_EWA : R3270_EW;
         buf[len++] = 0xC2;
         memcpy (&buf[len], &rbuf[3], rbuflen - 3);
         len += rbuflen - 3;
@@ -2589,7 +2589,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
         /* Restore the 3270 screen */
         rc = send_packet(dev->fd, buf, (int)len, "3270 data");
 
-        dev->pos3270 = (int)pos;
+        dev->devunique.cons_dev.pos3270 = (int)pos;
 
         release_lock(&dev->lock);
     }
@@ -2618,13 +2618,13 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->numsense = 1;
 
     /* Initialize device dependent fields */
-    dev->keybdrem = 0;
+    dev->devunique.cons_dev.keybdrem = 0;
 
     /* Set length of print buffer */
     dev->bufsize = BUFLEN_1052;
 
     /* Assume we want to prompt */
-    dev->prompt1052 = 1;
+    dev->devunique.cons_dev.prompt1052 = 1;
 
     /* Is there an argument? */
     if (argc > 0)
@@ -2632,7 +2632,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         /* Look at the argument and set noprompt flag if specified. */
         if (strcasecmp(argv[ac], "noprompt") == 0)
         {
-            dev->prompt1052 = 0;
+            dev->devunique.cons_dev.prompt1052 = 0;
             ac++; argc--;
         }
         // (else it's a group name...)
@@ -2651,9 +2651,9 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
 
-    dev->filename[0] = 0;
-    dev->acc_ipaddr = 0;
-    dev->acc_ipmask = 0;
+    dev->devunique.cons_dev.szgroupip[0] = 0;
+    dev->devunique.cons_dev.acc_ipaddr = 0;
+    dev->devunique.cons_dev.acc_ipmask = 0;
 
     if (argc > 0)   // group name?
     {
@@ -2661,12 +2661,12 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             ;   // NOP (not really a group name; an '*' is
                 // simply used as an argument place holder)
         else
-            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
+            strlcpy(dev->devunique.cons_dev.szgroupip,argv[ac],sizeof(dev->devunique.cons_dev.szgroupip));
 
         argc--; ac++;
         if (argc > 0)   // ip address?
         {
-            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
+            if ((dev->devunique.cons_dev.acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
             {
                 WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
                 return -1;
@@ -2676,7 +2676,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 argc--; ac++;
                 if (argc > 0)   // ip addr mask?
                 {
-                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
+                    if ((dev->devunique.cons_dev.acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
                         WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
                         return -1;
@@ -2692,7 +2692,7 @@ constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                     }
                 }
                 else
-                    dev->acc_ipmask = (in_addr_t)(-1);
+                    dev->devunique.cons_dev.acc_ipmask = (in_addr_t)(-1);
             }
         }
     }
@@ -2713,8 +2713,8 @@ constty_query_device (DEVBLK *dev, char **devclass,
     if (dev->connected)
     {
         snprintf (buffer, buflen, "%s%s IO[%" I64_FMT "u]",
-            inet_ntoa(dev->ipaddr),
-            dev->prompt1052 ? "" : " noprompt",
+            inet_ntoa(dev->devunique.cons_dev.ipaddr),
+            dev->devunique.cons_dev.prompt1052 ? "" : " noprompt",
             dev->excps );
         buffer[buflen-1] = '\0';
     }
@@ -2722,17 +2722,17 @@ constty_query_device (DEVBLK *dev, char **devclass,
     {
         char  acc[64];
 
-        if (dev->acc_ipaddr || dev->acc_ipmask)
+        if (dev->devunique.cons_dev.acc_ipaddr || dev->devunique.cons_dev.acc_ipmask)
         {
             char  ip   [32];
             char  mask [32];
             struct in_addr  xxxx;
 
-            xxxx.s_addr = dev->acc_ipaddr;
+            xxxx.s_addr = dev->devunique.cons_dev.acc_ipaddr;
 
             MSGBUF( ip, "%s", inet_ntoa( xxxx ));
 
-            xxxx.s_addr = dev->acc_ipmask;
+            xxxx.s_addr = dev->devunique.cons_dev.acc_ipmask;
 
             MSGBUF( mask, "%s", inet_ntoa( xxxx ));
 
@@ -2741,12 +2741,12 @@ constty_query_device (DEVBLK *dev, char **devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (dev->devunique.cons_dev.szgroupip[0])
         {
             snprintf(buffer, buflen,
                 "GROUP=%s%s%s%s IO[%" I64_FMT "u]",
-                dev->filename,
-                !dev->prompt1052 ? " noprompt" : "",
+                dev->devunique.cons_dev.szgroupip,
+                !dev->devunique.cons_dev.prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
                 dev->excps );
             buffer[buflen-1] = '\0';
@@ -2755,7 +2755,7 @@ constty_query_device (DEVBLK *dev, char **devclass,
         {
             if (acc[0])
             {
-                if (!dev->prompt1052)
+                if (!dev->devunique.cons_dev.prompt1052)
                 {
                     snprintf(buffer, buflen, "noprompt %s IO[%" I64_FMT "u]", 
                                              acc, dev->excps );
@@ -2769,7 +2769,7 @@ constty_query_device (DEVBLK *dev, char **devclass,
             }
             else
             {
-                if (!dev->prompt1052)
+                if (!dev->devunique.cons_dev.prompt1052)
                 {
                     snprintf( buffer, buflen, "noprompt IO[%" I64_FMT "u]", dev->excps );
                     buffer[buflen-1] = '\0';
@@ -2994,7 +2994,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
 
     /* Clear the current screen position at start of CCW chain */
     if (!chained)
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
 
     /* Unit check with intervention required if no client connected */
     if (!dev->connected && !IS_CCW_SENSE(code))
@@ -3013,7 +3013,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
         /* Reset the buffer address */
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
 
         *unitstat = CSW_CE | CSW_DE;
         break;
@@ -3027,7 +3027,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /* SELECT                                                        */
     /*---------------------------------------------------------------*/
         /* Reset the buffer address */
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
 
     /*
         *residual = 0;
@@ -3039,7 +3039,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
     /* ERASE ALL UNPROTECTED                                         */
     /*---------------------------------------------------------------*/
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
         cmd = R3270_EAU;
         goto write;
 
@@ -3054,18 +3054,18 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
     /* ERASE/WRITE                                                   */
     /*---------------------------------------------------------------*/
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
         cmd = R3270_EW;
-        dev->ewa3270 = 0;
+        dev->devunique.cons_dev.ewa3270 = 0;
         goto write;
 
     case L3270_EWA:
     /*---------------------------------------------------------------*/
     /* ERASE/WRITE ALTERNATE                                         */
     /*---------------------------------------------------------------*/
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
         cmd = R3270_EWA;
-        dev->ewa3270 = 1;
+        dev->devunique.cons_dev.ewa3270 = 1;
         goto write;
 
     case L3270_WSF:
@@ -3073,9 +3073,9 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /* WRITE STRUCTURED FIELD                                        */
     /*---------------------------------------------------------------*/
         /* Process WSF command if device has extended attributes */
-        if (dev->eab3270)
+        if (dev->devunique.cons_dev.eab3270)
         {
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
         cmd = R3270_WSF;
             goto write;
         }
@@ -3111,7 +3111,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                the current buffer address */
             if(chained
               && cmd == R3270_WRT
-              && dev->pos3270 != 0
+              && dev->devunique.cons_dev.pos3270 != 0
               && iobuf[1] != O3270_SBA
               && iobuf[1] != O3270_RA
               && iobuf[1] != O3270_EUA)
@@ -3120,15 +3120,15 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 buf[len++] = *iobuf++; num--;
                 /* Insert the SBA order */
                 buf[len++] = O3270_SBA;
-                if(dev->pos3270 < 4096)
+                if(dev->devunique.cons_dev.pos3270 < 4096)
                 {
-                    buf[len++] = sba_code[dev->pos3270 >> 6];
-                    buf[len++] = sba_code[dev->pos3270 & 0x3F];
+                    buf[len++] = sba_code[dev->devunique.cons_dev.pos3270 >> 6];
+                    buf[len++] = sba_code[dev->devunique.cons_dev.pos3270 & 0x3F];
                 }
                 else
                 {
-                    buf[len++] = dev->pos3270 >> 8;
-                    buf[len++] = dev->pos3270 & 0xFF;
+                    buf[len++] = dev->devunique.cons_dev.pos3270 >> 8;
+                    buf[len++] = dev->devunique.cons_dev.pos3270 & 0xFF;
                 }
             } /* if(iobuf[0] != SBA, RA or EUA) */
 
@@ -3137,12 +3137,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                from another write or read, this does not apply for the
                write structured field command */
             if(cmd != R3270_WSF)
-                get_screen_pos (&dev->pos3270, iobuf+1, num-1);
+                get_screen_pos (&dev->devunique.cons_dev.pos3270, iobuf+1, num-1);
 
         } /* if(!data_chained) */
         else /* if(data_chained) */
             if(cmd != R3270_WSF)
-                get_screen_pos (&dev->pos3270, iobuf, num);
+                get_screen_pos (&dev->devunique.cons_dev.pos3270, iobuf, num);
 
         /* Copy data from channel buffer to device buffer */
         memcpy (buf + len, iobuf, num);
@@ -3196,23 +3196,23 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
             aid = 1;
 
             /* Save the AID of the current inbound transmission */
-            dev->aid3270 = dev->buf[0];
-            if(dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+            dev->devunique.cons_dev.aid3270 = dev->buf[0];
+            if(dev->devunique.cons_dev.pos3270 != 0 && dev->devunique.cons_dev.aid3270 != SF3270_AID)
             {
                 /* Find offset in buffer of current screen position */
-                off = find_buffer_pos (dev->buf, dev->rlen3270,
-                                        dev->pos3270);
+                off = find_buffer_pos (dev->buf, dev->devunique.cons_dev.rlen3270,
+                                        dev->devunique.cons_dev.pos3270);
 
                 /* Shift out unwanted characters from buffer */
-                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                num = (dev->devunique.cons_dev.rlen3270 > off ? dev->devunique.cons_dev.rlen3270 - off : 0);
                 memmove (dev->buf + 3, dev->buf + off, num);
-                dev->rlen3270 = 3 + num;
+                dev->devunique.cons_dev.rlen3270 = 3 + num;
             }
 
         } /* end if(!CCW_FLAGS_CD) */
 
         /* Calculate number of bytes to move and residual byte count */
-        len = dev->rlen3270;
+        len = dev->devunique.cons_dev.rlen3270;
         num = (count < len) ? count : len;
         *residual = count - num;
         if (count < len) *more = 1;
@@ -3220,12 +3220,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         /* Save the screen position at completion of the read.
            This is necessary in case a Read Buffer command is chained
            from another write or read. */
-        if(dev->aid3270 != SF3270_AID)
+        if(dev->devunique.cons_dev.aid3270 != SF3270_AID)
         {
             if(aid)
-                get_screen_pos(&dev->pos3270, dev->buf+3, num-3);
+                get_screen_pos(&dev->devunique.cons_dev.pos3270, dev->buf+3, num-3);
             else
-                get_screen_pos(&dev->pos3270, dev->buf, num);
+                get_screen_pos(&dev->devunique.cons_dev.pos3270, dev->buf, num);
         }
 
         /* Indicate that the AID bytes have been skipped */
@@ -3239,11 +3239,11 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         if ((flags & CCW_FLAGS_CD) && len > count)
         {
             memmove (dev->buf, dev->buf + count, len - count);
-            dev->rlen3270 = len - count;
+            dev->devunique.cons_dev.rlen3270 = len - count;
         }
         else
         {
-            dev->rlen3270 = 0;
+            dev->devunique.cons_dev.rlen3270 = 0;
             dev->readpending = 0;
         }
 
@@ -3287,23 +3287,23 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
             /* Set AID in buffer flag */
             aid = 1;
 
-            dev->aid3270 = dev->buf[0];
-            if(dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+            dev->devunique.cons_dev.aid3270 = dev->buf[0];
+            if(dev->devunique.cons_dev.pos3270 != 0 && dev->devunique.cons_dev.aid3270 != SF3270_AID)
             {
                 /* Find offset in buffer of current screen position */
-                off = find_buffer_pos (dev->buf, dev->rlen3270,
-                                        dev->pos3270);
+                off = find_buffer_pos (dev->buf, dev->devunique.cons_dev.rlen3270,
+                                        dev->devunique.cons_dev.pos3270);
 
                 /* Shift out unwanted characters from buffer */
-                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                num = (dev->devunique.cons_dev.rlen3270 > off ? dev->devunique.cons_dev.rlen3270 - off : 0);
                 memmove (dev->buf + 3, dev->buf + off, num);
-                dev->rlen3270 = 3 + num;
+                dev->devunique.cons_dev.rlen3270 = 3 + num;
             }
 
         } /* end if(!CCW_FLAGS_CD) */
 
         /* Calculate number of bytes to move and residual byte count */
-        len = dev->rlen3270;
+        len = dev->devunique.cons_dev.rlen3270;
         num = (count < len) ? count : len;
         *residual = count - num;
         if (count < len) *more = 1;
@@ -3311,12 +3311,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         /* Save the screen position at completion of the read.
            This is necessary in case a Read Buffer command is chained
            from another write or read. */
-        if(dev->aid3270 != SF3270_AID)
+        if(dev->devunique.cons_dev.aid3270 != SF3270_AID)
         {
             if(aid)
-                get_screen_pos(&dev->pos3270, dev->buf+3, num-3);
+                get_screen_pos(&dev->devunique.cons_dev.pos3270, dev->buf+3, num-3);
             else
-                get_screen_pos(&dev->pos3270, dev->buf, num);
+                get_screen_pos(&dev->devunique.cons_dev.pos3270, dev->buf, num);
         }
 
         /* Indicate that the AID bytes have been skipped */
@@ -3330,11 +3330,11 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         if ((flags & CCW_FLAGS_CD) && len > count)
         {
             memmove (dev->buf, dev->buf + count, len - count);
-            dev->rlen3270 = len - count;
+            dev->devunique.cons_dev.rlen3270 = len - count;
         }
         else
         {
-            dev->rlen3270 = 0;
+            dev->devunique.cons_dev.rlen3270 = 0;
             dev->readpending = 0;
         }
 
@@ -3365,7 +3365,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         memset( dev->sense, 0, sizeof(dev->sense) );
 
         /* Reset the buffer address */
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3384,7 +3384,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         memcpy (iobuf, dev->devid, num);
 
         /* Reset the buffer address */
-        dev->pos3270 = 0;
+        dev->devunique.cons_dev.pos3270 = 0;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3496,10 +3496,10 @@ BYTE    stat;                           /* Unit status               */
     /*---------------------------------------------------------------*/
 
         /* Solicit console input if no data in the device buffer */
-        if (!dev->keybdrem)
+        if (!dev->devunique.cons_dev.keybdrem)
         {
             /* Display prompting message on console if allowed */
-            if (dev->prompt1052)
+            if (dev->devunique.cons_dev.prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
                         MSG(HHC01026, "A", SSID_TO_LCSS(dev->ssid), dev->devnum));
@@ -3517,7 +3517,7 @@ BYTE    stat;                           /* Unit status               */
             /* Accumulate client input data into device buffer */
             while (1) {
 
-                /* Receive client data and increment dev->keybdrem */
+                /* Receive client data and increment dev->devunique.cons_dev.keybdrem */
                 stat = recv_1052_data (dev);
 
                 /* Exit if error or end of line */
@@ -3536,7 +3536,7 @@ BYTE    stat;                           /* Unit status               */
         }
 
         /* Calculate number of bytes to move and residual byte count */
-        len = dev->keybdrem;
+        len = dev->devunique.cons_dev.keybdrem;
         num = (count < len) ? count : len;
         *residual = count - num;
         if (count < len) *more = 1;
@@ -3548,11 +3548,11 @@ BYTE    stat;                           /* Unit status               */
         if ((flags & CCW_FLAGS_CD) && len > count)
         {
             memmove (dev->buf, dev->buf + count, len - count);
-            dev->keybdrem = len - count;
+            dev->devunique.cons_dev.keybdrem = len - count;
         }
         else
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
         }
 
         /* Return normal status */

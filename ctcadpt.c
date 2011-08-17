@@ -263,7 +263,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     else if( ( bCode & 0x0F ) == 0x0C )
         bOpCode = 0x0C;
     else if( ( bCode & 0x03 ) == 0x01 )
-        bOpCode = pDEVBLK->ctcxmode ? ( bCode & 0x83 ) : 0x01;
+        bOpCode = pDEVBLK->devunique.ctca_dev.ctcxmode ? ( bCode & 0x83 ) : 0x01;
     else if( ( bCode & 0x1F ) == 0x14 )
         bOpCode = 0x14;
     else if( ( bCode & 0x47 ) == 0x03 )
@@ -289,7 +289,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Write data and set unit status and residual byte count
-        switch( pDEVBLK->ctctype )
+        switch( pDEVBLK->devunique.ctca_dev.ctctype )
         {
         case CTC_CTCT:
             CTCT_Write( pDEVBLK, sCount, pIOBuf, pUnitStat, pResidual );
@@ -317,7 +317,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
 
         // Read data and set unit status and residual byte count
-        switch( pDEVBLK->ctctype )
+        switch( pDEVBLK->devunique.ctca_dev.ctctype )
         {
         case CTC_CTCT:
             CTCT_Read( pDEVBLK, sCount, pIOBuf, pUnitStat, pResidual, pMore );
@@ -351,7 +351,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->ctcxmode == 0 )
+        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -360,7 +360,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Reset extended mode and return normal status
-        pDEVBLK->ctcxmode = 0;
+        pDEVBLK->devunique.ctca_dev.ctcxmode = 0;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -372,7 +372,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // SET EXTENDED MODE
         // -----------------------------------------------------------
 
-        pDEVBLK->ctcxmode = 1;
+        pDEVBLK->devunique.ctca_dev.ctcxmode = 1;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -402,7 +402,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
       // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->ctcxmode == 0 )
+        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -491,7 +491,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     dev->excps = 0;
 
-    dev->ctctype = CTC_CTCT;
+    dev->devunique.ctca_dev.ctctype = CTC_CTCT;
 
     SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
 
@@ -1106,13 +1106,13 @@ U16 lcss;
 
     /* Set the control unit type */
     /* Linux/390 currently only supports 3088 model 2 CTCA and ESCON */
-    dev->ctctype = CTC_VMNET;
+    dev->devunique.ctca_dev.ctctype = CTC_VMNET;
 
     SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
 
     /* Initialize the device dependent fields */
-    dev->ctcpos = 0;
-    dev->ctcrem = 0;
+    dev->devunique.ctca_dev.ctcpos = 0;
+    dev->devunique.ctca_dev.ctcrem = 0;
 
     /* Set length of buffer */
     /* This size guarantees we can write a full iobuf of 65536
@@ -1178,7 +1178,7 @@ int len = 0, rem;
 
 static int bufgetc(DEVBLK *dev, int blocking)
 {
-BYTE *bufp = dev->buf + dev->ctcpos, *bufend = bufp + dev->ctcrem;
+BYTE *bufp = dev->buf + dev->devunique.ctca_dev.ctcpos, *bufend = bufp + dev->devunique.ctca_dev.ctcrem;
 int n;
 
     if (bufp >= bufend) {
@@ -1198,14 +1198,14 @@ int n;
                 SLEEP(2);
             }
         } while (n <= 0);
-        dev->ctcrem = n;
+        dev->devunique.ctca_dev.ctcrem = n;
         bufend = &dev->buf[n];
-        dev->ctclastpos = dev->ctclastrem = dev->ctcpos = 0;
+        dev->devunique.ctca_dev.ctclastpos = dev->devunique.ctca_dev.ctclastrem = dev->devunique.ctca_dev.ctcpos = 0;
         bufp = dev->buf;
     }
 
-    dev->ctcpos++;
-    dev->ctcrem--;
+    dev->devunique.ctca_dev.ctcpos++;
+    dev->devunique.ctca_dev.ctcrem--;
 
     return *bufp;
 }
@@ -1240,8 +1240,8 @@ int             c;                      /* next byte to process      */
 int             len = 8;                /* length of block           */
 int             lastlen = 2;            /* block length at last pckt */
 
-    dev->ctclastpos = dev->ctcpos;
-    dev->ctclastrem = dev->ctcrem;
+    dev->devunique.ctca_dev.ctclastpos = dev->devunique.ctca_dev.ctcpos;
+    dev->devunique.ctca_dev.ctclastrem = dev->devunique.ctca_dev.ctcrem;
 
     while (1) {
         c = bufgetc(dev, lastlen == 2);
@@ -1252,8 +1252,8 @@ int             lastlen = 2;            /* block length at last pckt */
 
             setblkheader (iobuf, lastlen);
 
-            dev->ctcpos = dev->ctclastpos;
-            dev->ctcrem = dev->ctclastrem;
+            dev->devunique.ctca_dev.ctcpos = dev->devunique.ctca_dev.ctclastpos;
+            dev->devunique.ctca_dev.ctcrem = dev->devunique.ctca_dev.ctclastrem;
 
             *unitstat = CSW_CE | CSW_DE | (c == -2 ? CSW_UX : 0);
 
@@ -1266,8 +1266,8 @@ int             lastlen = 2;            /* block length at last pckt */
 
                 setpktheader (iobuf, lastlen, len-lastlen);
 
-                dev->ctclastpos = dev->ctcpos;
-                dev->ctclastrem = dev->ctcrem;
+                dev->devunique.ctca_dev.ctclastpos = dev->devunique.ctca_dev.ctcpos;
+                dev->devunique.ctca_dev.ctclastrem = dev->devunique.ctca_dev.ctcrem;
                 lastlen = len;
 
                 len += 6;
@@ -1282,8 +1282,8 @@ int             lastlen = 2;            /* block length at last pckt */
 
                 setblkheader (iobuf, lastlen);
 
-                dev->ctcpos = dev->ctclastpos;
-                dev->ctcrem = dev->ctclastrem;
+                dev->devunique.ctca_dev.ctcpos = dev->devunique.ctca_dev.ctclastpos;
+                dev->devunique.ctca_dev.ctcrem = dev->devunique.ctca_dev.ctclastrem;
 
                 *unitstat = CSW_CE | CSW_DE | (c == -2 ? CSW_UX : 0);
 
@@ -1306,8 +1306,8 @@ int             lastlen = 2;            /* block length at last pckt */
 
                 setblkheader (iobuf, lastlen);
 
-                dev->ctcpos = dev->ctclastpos;
-                dev->ctcrem = dev->ctclastrem;
+                dev->devunique.ctca_dev.ctcpos = dev->devunique.ctca_dev.ctclastpos;
+                dev->devunique.ctca_dev.ctcrem = dev->devunique.ctca_dev.ctclastrem;
 
                 *unitstat = CSW_CE | CSW_DE | (c == -2 ? CSW_UX : 0);
 

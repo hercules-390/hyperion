@@ -492,12 +492,12 @@ DEVINITTAB*     pDevInitTab;
     /* Close current tape */
     if(dev->fd>=0)
     {
-        dev->tmh->close(dev);
+        dev->devunique.tape_dev.tmh->close(dev);
         dev->fd=-1;
     }
 
     autoload_close(dev);
-    dev->tdparms.displayfeat=0;
+    dev->devunique.tape_dev.tdparms.displayfeat=0;
 
     /* reset excps count */
     dev->excps = 0;
@@ -612,18 +612,18 @@ DEVINITTAB*     pDevInitTab;
     /* Initialize other fields */
 //  dev->numdevid            = pDevInitTab->numdevid;   // (handled above)
     dev->numsense            = pDevInitTab->numsense;
-    dev->tdparms.displayfeat = pDevInitTab->displayfeat;
+    dev->devunique.tape_dev.tdparms.displayfeat = pDevInitTab->displayfeat;
 
-    dev->fenced              = 0;   // (always, initially)
-    dev->SIC_active          = 0;   // (always, initially)
-    dev->SIC_supported       = 0;   // (until we're sure)
-    dev->forced_logging      = 0;   // (always, initially)
+    dev->devunique.tape_dev.fenced              = 0;   // (always, initially)
+    dev->devunique.tape_dev.SIC_active          = 0;   // (always, initially)
+    dev->devunique.tape_dev.SIC_supported       = 0;   // (until we're sure)
+    dev->devunique.tape_dev.forced_logging      = 0;   // (always, initially)
 #if defined( OPTION_TAPE_AUTOMOUNT )
-    dev->noautomount         = 0;   // (always, initially)
+    dev->devunique.tape_dev.noautomount         = 0;   // (always, initially)
 #endif
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
-    dev->sstat = GMT_DR_OPEN(-1);
+    dev->devunique.tape_dev.sstat = GMT_DR_OPEN(-1);
 #endif
     /* Clear the DPA */
     memset (dev->pgid, 0, sizeof(dev->pgid));
@@ -650,7 +650,7 @@ DEVINITTAB*     pDevInitTab;
     // what type of tape device we're dealing with (SCSI (non-virtual)
     // or non-SCSI (virtual)) since 'mountnewtape' hasn't been called
     // yet (which is the function that determines which media handler
-    // should be used and is the one that initializes dev->tapedevt)
+    // should be used and is the one that initializes dev->devunique.tape_dev.tapedevt)
 
     // The only thing we know (or WILL know once 'autoload_init'
     // is called) is whether or not there was a [non-SCSI] auto-
@@ -659,7 +659,7 @@ DEVINITTAB*     pDevInitTab;
     autoload_init( dev, argc, argv );
 
     // Was an auto-loader defined for this device?
-    if ( !dev->als )
+    if ( !dev->devunique.tape_dev.als )
     {
         // No. Just mount whatever tape there is (if any)...
         rc = mountnewtape( dev, argc, argv );
@@ -672,21 +672,21 @@ DEVINITTAB*     pDevInitTab;
             // If that doesn't work, try subsequent slots...
             while
             (
-                dev->als
+                dev->devunique.tape_dev.als
                 &&
                 (rc = autoload_mount_next( dev )) != 0
             )
             {
                 ;  // (nop; just go on to next slot)
             }
-            rc = dev->als ? rc : -1;
+            rc = dev->devunique.tape_dev.als ? rc : -1;
         }
     }
 
     if (dev->devchar[8] & 0x08)     // SIC supported?
-        dev->SIC_supported = 1;     // remember that fact
+        dev->devunique.tape_dev.SIC_supported = 1;     // remember that fact
 
-    if (dev->tapedevt == TAPEDEVT_SCSITAPE)
+    if (dev->devunique.tape_dev.tapedevt == TAPEDEVT_SCSITAPE)
         dev->syncio = 0;  // (SCSI i/o too slow; causes Machine checks)
     else
         dev->syncio = 2;  // (aws/het/etc are fast; syncio likely safe)
@@ -702,16 +702,16 @@ DEVINITTAB*     pDevInitTab;
 int tapedev_close_device ( DEVBLK *dev )
 {
     autoload_close(dev);
-    dev->tmh->close(dev);
+    dev->devunique.tape_dev.tmh->close(dev);
     ASSERT( dev->fd < 0 );
 
-    dev->curfilen  = 1;
-    dev->nxtblkpos = 0;
-    dev->prvblkpos = -1;
-    dev->curblkrem = 0;
-    dev->curbufoff = 0;
-    dev->blockid   = 0;
-    dev->fenced = 0;
+    dev->devunique.tape_dev.curfilen  = 1;
+    dev->devunique.tape_dev.nxtblkpos = 0;
+    dev->devunique.tape_dev.prvblkpos = -1;
+    dev->devunique.tape_dev.curblkrem = 0;
+    dev->devunique.tape_dev.curbufoff = 0;
+    dev->devunique.tape_dev.blockid   = 0;
+    dev->devunique.tape_dev.fenced = 0;
 
     return 0;
 } /* end function tapedev_close_device */
@@ -833,7 +833,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
-            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regcomp()", errbfr);
+            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), "regcomp()", errbfr);
             return -1;
         }
 
@@ -843,7 +843,7 @@ int gettapetype_byname (DEVBLK *dev)
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
             // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
-            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regexec()", errbfr);
+            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), "regexec()", errbfr);
             return -1;
         }
 
@@ -896,9 +896,9 @@ int gettapetype_byname (DEVBLK *dev)
     )
     {
         if (strncasecmp( dev->filename+5, "st", 2 ) == 0)
-            dev->stape_close_rewinds = 1; // (rewind at close)
+            dev->devunique.tape_dev.stape_close_rewinds = 1; // (rewind at close)
         else
-            dev->stape_close_rewinds = 0; // (otherwise don't)
+            dev->devunique.tape_dev.stape_close_rewinds = 0; // (otherwise don't)
 
         return SCSITAPE_FMTENTRY;
     }
@@ -1015,19 +1015,19 @@ int gettapetype (DEVBLK *dev, char **short_descr)
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
         {
             // "%1d:%04X Tape file '%s', type '%s': format type is not determinable, presumed '%s'"
-            WRMSG(HHC00220, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), fmttab[i].short_descr );
+            WRMSG(HHC00220, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), fmttab[i].short_descr );
         }
     }
 
-    dev->tapedevt = fmttab[i].fmtcode;
-    dev->tmh      = fmttab[i].tmh;
+    dev->devunique.tape_dev.tapedevt = fmttab[i].fmtcode;
+    dev->devunique.tape_dev.tmh      = fmttab[i].tmh;
     descr         = fmttab[i].descr;
     *short_descr  = fmttab[i].short_descr;
 
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
     {
         // "%1d:%04X Tape file '%s', type '%s': format type '%s'"
-        WRMSG(HHC00221, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), descr);
+        WRMSG(HHC00221, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), descr);
     }
 
     return 0;   // (success)
@@ -1139,12 +1139,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         BYTE    str[ 80 ];              /* Parser results            */
     } res;                              /* Parser results            */
 
-
     /* Release the previous OMA descriptor array if allocated */
-    if (dev->omadesc != NULL)
+    if (dev->devunique.tape_dev.omadesc != NULL)
     {
-        free (dev->omadesc);
-        dev->omadesc = NULL;
+        free (dev->devunique.tape_dev.omadesc);
+        dev->devunique.tape_dev.omadesc = NULL;
     }
 
     /* The first argument is the file name */
@@ -1160,49 +1159,49 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     VERIFY( gettapetype( dev, &short_descr ) == 0 );
 
     /* (sanity check) */
-    ASSERT(dev->tapedevt != TAPEDEVT_UNKNOWN);
-    ASSERT(dev->tmh != NULL);
+    ASSERT(dev->devunique.tape_dev.tapedevt != TAPEDEVT_UNKNOWN);
+    ASSERT(dev->devunique.tape_dev.tmh != NULL);
     ASSERT(short_descr != NULL);
     MSGBUF(msg, "not valid for %s", short_descr);
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
 #if defined(OPTION_SCSI_TAPE)
-    dev->sstat             = GMT_DR_OPEN(-1);
+    dev->devunique.tape_dev.sstat             = GMT_DR_OPEN(-1);
 #endif
-    dev->omadesc           = NULL;
-    dev->omafiles          = 0;
-    dev->curfilen          = 1;
-    dev->nxtblkpos         = 0;
-    dev->prvblkpos         = -1;
-    dev->curblkrem         = 0;
-    dev->curbufoff         = 0;
-    dev->readonly          = 0;
-    dev->hetb              = NULL;
-    dev->tdparms.compress  = HETDFLT_COMPRESS;
-    dev->tdparms.method    = HETDFLT_METHOD;
-    dev->tdparms.level     = HETDFLT_LEVEL;
-    dev->tdparms.chksize   = HETDFLT_CHKSIZE;
-    dev->tdparms.maxsize   = 0;        // no max size     (default)
-    dev->eotmargin         = 128*1024; // 128K EOT margin (default)
-    dev->tdparms.logical_readonly = 0; // read/write      (default)
+    dev->devunique.tape_dev.omadesc           = NULL;
+    dev->devunique.tape_dev.omafiles          = 0;
+    dev->devunique.tape_dev.curfilen          = 1;
+    dev->devunique.tape_dev.nxtblkpos         = 0;
+    dev->devunique.tape_dev.prvblkpos         = -1;
+    dev->devunique.tape_dev.curblkrem         = 0;
+    dev->devunique.tape_dev.curbufoff         = 0;
+    dev->devunique.tape_dev.readonly          = 0;
+    dev->devunique.tape_dev.hetb              = NULL;
+    dev->devunique.tape_dev.tdparms.compress  = HETDFLT_COMPRESS;
+    dev->devunique.tape_dev.tdparms.method    = HETDFLT_METHOD;
+    dev->devunique.tape_dev.tdparms.level     = HETDFLT_LEVEL;
+    dev->devunique.tape_dev.tdparms.chksize   = HETDFLT_CHKSIZE;
+    dev->devunique.tape_dev.tdparms.maxsize   = 0;        // no max size     (default)
+    dev->devunique.tape_dev.eotmargin         = 128*1024; // 128K EOT margin (default)
+    dev->devunique.tape_dev.tdparms.logical_readonly = 0; // read/write      (default)
 #if defined( OPTION_TAPE_AUTOMOUNT )
-    dev->noautomount       = 0;
+    dev->devunique.tape_dev.noautomount       = 0;
 #endif
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's support Erase Gap and use 32-bit blockids.
 
-    if (TAPEDEVT_SCSITAPE == dev->tapedevt
+    if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
         &&     0x3590     == dev->devtype)
     {
-        dev->stape_no_erg   = 0;        // (default for 3590 SCSI)
-        dev->stape_blkid_32 = 1;        // (default for 3590 SCSI)
+        dev->devunique.tape_dev.stape_no_erg   = 0;        // (default for 3590 SCSI)
+        dev->devunique.tape_dev.stape_blkid_32 = 1;        // (default for 3590 SCSI)
     }
 #endif
 
 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-#define  _HHC00223E() WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], msg)
+#define  _HHC00223E() WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], msg)
 
     /* Process remaining options */
     rc = 0;
@@ -1213,40 +1212,40 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         {
         case TDPARM_NONE:
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "unrecognized");
+            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], "unrecognized");
             optrc = -1;
             break;
 
         case TDPARM_AWSTAPE:
             if (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || TAPEDEVT_FAKETAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
+                || TAPEDEVT_FAKETAPE == dev->devunique.tape_dev.tapedevt
             )
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.compress = FALSE;
-            dev->tdparms.chksize = 4096;
+            dev->devunique.tape_dev.tdparms.compress = FALSE;
+            dev->devunique.tape_dev.tdparms.chksize = 4096;
             break;
 
         case TDPARM_IDRC:
         case TDPARM_COMPRESS:
             if (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || TAPEDEVT_FAKETAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
+                || TAPEDEVT_FAKETAPE == dev->devunique.tape_dev.tapedevt
             )
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.compress = (res.num ? TRUE : FALSE);
+            dev->devunique.tape_dev.tdparms.compress = (res.num ? TRUE : FALSE);
             break;
 
         case TDPARM_METHOD:
             if (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || TAPEDEVT_FAKETAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
+                || TAPEDEVT_FAKETAPE == dev->devunique.tape_dev.tapedevt
             )
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
@@ -1255,17 +1254,17 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "method out of range");
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], "method out of range");
                 optrc = -1;
                 break;
             }
-            dev->tdparms.method = res.num;
+            dev->devunique.tape_dev.tdparms.method = res.num;
             break;
 
         case TDPARM_LEVEL:
             if (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || TAPEDEVT_FAKETAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
+                || TAPEDEVT_FAKETAPE == dev->devunique.tape_dev.tapedevt
             )
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
@@ -1274,17 +1273,17 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "level out of range");
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], "level out of range");
                 optrc = -1;
                 break;
             }
-            dev->tdparms.level = res.num;
+            dev->devunique.tape_dev.tdparms.level = res.num;
             break;
 
         case TDPARM_CHKSIZE:
             if (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || TAPEDEVT_FAKETAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
+                || TAPEDEVT_FAKETAPE == dev->devunique.tape_dev.tapedevt
             )
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
@@ -1293,15 +1292,15 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "chunksize out of range");
+                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], "chunksize out of range");
                 optrc = -1;
                 break;
             }
-            dev->tdparms.chksize = res.num;
+            dev->devunique.tape_dev.tdparms.chksize = res.num;
             break;
 
         case TDPARM_MAXSIZE:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
@@ -1344,29 +1343,29 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                             break;
                     }
                     if ( optrc != -1 )
-                        dev->tdparms.maxsize = maxsize;
+                        dev->devunique.tape_dev.tdparms.maxsize = maxsize;
                 }
                 else
-                    dev->tdparms.maxsize = maxsize;
+                    dev->devunique.tape_dev.tdparms.maxsize = maxsize;
             }
             break;
 
         case TDPARM_MAXSIZEK:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.maxsize=res.num*1024;
+            dev->devunique.tape_dev.tdparms.maxsize=res.num*1024;
             break;
 
         case TDPARM_MAXSIZEM:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.maxsize=res.num*1024*1024;
+            dev->devunique.tape_dev.tdparms.maxsize=res.num*1024*1024;
             break;
 
         case TDPARM_EOTMARGIN:
@@ -1407,69 +1406,69 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                             break;
                     }
                     if ( optrc != -1 )
-                        dev->eotmargin = eotmargin;
+                        dev->devunique.tape_dev.eotmargin = eotmargin;
                 }
                 else
-                    dev->eotmargin = eotmargin;
+                    dev->devunique.tape_dev.eotmargin = eotmargin;
             }
             break;
 
         case TDPARM_STRICTSIZE:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.strictsize=res.num;
+            dev->devunique.tape_dev.tdparms.strictsize=res.num;
             break;
 
         case TDPARM_READONLY:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
+            dev->devunique.tape_dev.tdparms.logical_readonly=(res.num ? 1 : 0 );
             break;
 
         case TDPARM_RO:
         case TDPARM_NORING:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.logical_readonly=1;
+            dev->devunique.tape_dev.tdparms.logical_readonly=1;
             break;
 
         case TDPARM_RW:
         case TDPARM_RING:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.logical_readonly=0;
+            dev->devunique.tape_dev.tdparms.logical_readonly=0;
             break;
 
         case TDPARM_DEONIRQ:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->tdparms.deonirq=(res.num ? 1 : 0 );
+            dev->devunique.tape_dev.tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
 
         case TDPARM_NOAUTOMOUNT:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->noautomount = 1;
+            dev->devunique.tape_dev.noautomount = 1;
             break;
 
 #endif /* OPTION_TAPE_AUTOMOUNT */
@@ -1477,36 +1476,36 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 #if defined(OPTION_SCSI_TAPE)
         case TDPARM_BLKID22:
         case TDPARM_BLKID24:
-            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->stape_blkid_32 = 0;
+            dev->devunique.tape_dev.stape_blkid_32 = 0;
             break;
 
         case TDPARM_BLKID32:
-            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->stape_blkid_32 = 1;
+            dev->devunique.tape_dev.stape_blkid_32 = 1;
             break;
 
         case TDPARM_NOERG:
-            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            if (TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
                 _HHC00223E(); optrc = -1; break;
             }
-            dev->stape_no_erg = 1;
+            dev->devunique.tape_dev.stape_no_erg = 1;
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "parse error");
+            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i], "parse error");
             optrc = -1;
             break;
 
@@ -1517,7 +1516,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         else
         {
             // "%1d:%04X Tape file '%s', type '%s': option '%s' accepted"
-            WRMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
+            WRMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), argv[i]);
         }
 
     } // end for (i = 1; i < argc; i++)
@@ -1526,27 +1525,27 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         return -1;
 
     /* Adjust the display if necessary */
-    if(dev->tdparms.displayfeat)
+    if(dev->devunique.tape_dev.tdparms.displayfeat)
     {
         if(strcmp(dev->filename,TAPE_UNLOADED)==0)
         {
             /* NO tape is loaded */
-            if(TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype)
+            if(TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype)
             {
                 /* A new tape SHOULD be mounted */
-                dev->tapedisptype   = TAPEDISPTYP_MOUNT;
-                dev->tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
-                strlcpy( dev->tapemsg1, dev->tapemsg2, sizeof(dev->tapemsg1) );
+                dev->devunique.tape_dev.tapedisptype   = TAPEDISPTYP_MOUNT;
+                dev->devunique.tape_dev.tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
+                strlcpy( dev->devunique.tape_dev.tapemsg1, dev->devunique.tape_dev.tapemsg2, sizeof(dev->devunique.tape_dev.tapemsg1) );
             }
-            else if(TAPEDISPTYP_UNMOUNT == dev->tapedisptype)
+            else if(TAPEDISPTYP_UNMOUNT == dev->devunique.tape_dev.tapedisptype)
             {
-                dev->tapedisptype = TAPEDISPTYP_IDLE;
+                dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
             }
         }
         else
         {
             /* A tape IS already loaded */
-            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
         }
     }
     UpdateDisplay(dev);
@@ -1561,7 +1560,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 /*-------------------------------------------------------------------*/
 void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
-    char devparms[ MAX_PATH+1 + 128 ];
+    char devparms[ PATH_MAX + 1 + 128 ];
     char dispmsg [ 256 ];    
     char fmt_mem [ 128 ];    // Max of 21 bytes used for U64
     char fmt_eot [ 128 ];    // Max of 21 bytes used for U64
@@ -1583,19 +1582,19 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
 
-    if (dev->noautomount)
+    if (dev->devunique.tape_dev.noautomount)
         strlcat( devparms, " noautomount", sizeof(devparms));
 
 #endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined(OPTION_SCSI_TAPE)
-    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+    if ( TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt )
 #endif
     {
         const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
         u_int   i = 0;
 
-        U64 mem = (U64)dev->tdparms.maxsize;
+        U64 mem = (U64)dev->devunique.tape_dev.tdparms.maxsize;
 
         if (mem)
         {
@@ -1608,7 +1607,7 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
         }
         MSGBUF( fmt_mem, " maxsize=%"I64_FMT"u%c", mem, suffix[i]);
 
-        mem = (U64)dev->eotmargin;
+        mem = (U64)dev->devunique.tape_dev.eotmargin;
 
         i = 0;
         if (mem)
@@ -1626,25 +1625,25 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
     if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
     {
 #if defined(OPTION_SCSI_TAPE)
-        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+        if ( TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt )
         {
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
+                if (!dev->devunique.tape_dev.stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
             }
             else // emulating 3480, 3490
             {
-                if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+                if ( dev->devunique.tape_dev.stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
             }
-            if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
+            if ( dev->devunique.tape_dev.stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
         snprintf(buffer, buflen, "%s%s%s IO[%" I64_FMT "u]%s%s deonirq=%c",
             devparms,
-            dev->tdparms.displayfeat ? ", Display: " : "",
-            dev->tdparms.displayfeat ?    dispmsg    : "",
+            dev->devunique.tape_dev.tdparms.displayfeat ? ", Display: " : "",
+            dev->devunique.tape_dev.tdparms.displayfeat ?    dispmsg    : "",
             dev->excps,
-            fmt_mem, fmt_eot, dev->tdparms.deonirq == 0 ? 'N' : 'Y' );
+            fmt_mem, fmt_eot, dev->devunique.tape_dev.tdparms.deonirq == 0 ? 'N' : 'Y' );
         buffer[buflen-1] = '\0';
     }
     else // (filename was specified)
@@ -1653,39 +1652,39 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
 
         memset(tapepos, 0, sizeof(tapepos));
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+        if ( TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt )
         {
-            MSGBUF( tapepos, "[%d:%08"I64_FMT"X] ", dev->curfilen, dev->nxtblkpos );
+            MSGBUF( tapepos, "[%d:%08"I64_FMT"X] ", dev->devunique.tape_dev.curfilen, dev->devunique.tape_dev.nxtblkpos );
         }
 #if defined(OPTION_SCSI_TAPE)
         else // (this is a SCSI tape drive)
         {
             if (STS_BOT( dev ))
             {
-                dev->eotwarning = 0;
+                dev->devunique.tape_dev.eotwarning = 0;
                 strlcat(tapepos,"*BOT* ",sizeof(tapepos));
             }
 
             // If tape has a display, then GetDisplayMsg already
             // appended *FP* for us. Otherwise we need to do it.
 
-            if ( !dev->tdparms.displayfeat )
+            if ( !dev->devunique.tape_dev.tdparms.displayfeat )
                 if (STS_WR_PROT( dev ))
                     strlcat(tapepos,"*FP* ",sizeof(tapepos));
 
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
+                if (!dev->devunique.tape_dev.stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
             }
             else // emulating 3480, 3490
             {
-                if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+                if ( dev->devunique.tape_dev.stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
             }
-            if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
+            if ( dev->devunique.tape_dev.stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt
+        if ( TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt
 #if defined(OPTION_SCSI_TAPE)
             || STS_MOUNTED(dev)
 #endif
@@ -1694,22 +1693,22 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 
             snprintf( buffer, buflen, "%s%s %s%s%s IO[%" I64_FMT "u]",
-                devparms, (dev->readonly ? " ro" : ""),
+                devparms, (dev->devunique.tape_dev.readonly ? " ro" : ""),
                 tapepos,
-                dev->tdparms.displayfeat ? "Display: " : "",
-                dev->tdparms.displayfeat ?  dispmsg    : "",
+                dev->devunique.tape_dev.tdparms.displayfeat ? "Display: " : "",
+                dev->devunique.tape_dev.tdparms.displayfeat ?  dispmsg    : "",
                 dev->excps );
             buffer[buflen-1] = '\0';
         }
-        else /* ( TAPEDEVT_SCSITAPE == dev->tapedevt && STS_NOT_MOUNTED(dev) ) */
+        else /* ( TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt && STS_NOT_MOUNTED(dev) ) */
         {
             // UNmounted SCSI tape...
 
             snprintf( buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%" I64_FMT "u]",
-                devparms, (dev->readonly ? " ro" : ""),
+                devparms, (dev->devunique.tape_dev.readonly ? " ro" : ""),
                 dev->fd < 0              ?   "closed; "  : "",
-                dev->tdparms.displayfeat ? ", Display: " : "",
-                dev->tdparms.displayfeat ?    dispmsg    : "",
+                dev->devunique.tape_dev.tdparms.displayfeat ? ", Display: " : "",
+                dev->devunique.tape_dev.tdparms.displayfeat ?    dispmsg    : "",
                 dev->excps );
             buffer[buflen-1] = '\0';
         }
@@ -1725,28 +1724,28 @@ void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buff
 /*-------------------------------------------------------------------*/
 void UpdateDisplay( DEVBLK *dev )
 {
-    if ( dev->tdparms.displayfeat )
+    if ( dev->devunique.tape_dev.tdparms.displayfeat )
     {
         char msgbfr[256];
 
         GetDisplayMsg( dev, msgbfr, sizeof(msgbfr) );
 
-        if ( dev->prev_tapemsg )
+        if ( dev->devunique.tape_dev.prev_tapemsg )
         {
-            if ( strcmp( msgbfr, dev->prev_tapemsg ) == 0 )
+            if ( strcmp( msgbfr, dev->devunique.tape_dev.prev_tapemsg ) == 0 )
                 return;
-            free( dev->prev_tapemsg );
-            dev->prev_tapemsg = NULL;
+            free( dev->devunique.tape_dev.prev_tapemsg );
+            dev->devunique.tape_dev.prev_tapemsg = NULL;
         }
 
-        dev->prev_tapemsg = strdup( msgbfr );
+        dev->devunique.tape_dev.prev_tapemsg = strdup( msgbfr );
 
         // "%1d:%04X Tape file '%s', type '%s': display '%s'"
-        WRMSG(HHC00224, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), msgbfr );
+        WRMSG(HHC00224, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
     else
-        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             int_scsi_status_update( dev, 1 );
 #endif
 }
@@ -1836,14 +1835,14 @@ void ReqAutoMount( DEVBLK *dev )
         sensebkup=malloc(dev->numsense);
         memcpy(sensebkup,dev->sense,dev->numsense);
 
-        dev->tmh->open( dev, &unitstat, code );
+        dev->devunique.tape_dev.tmh->open( dev, &unitstat, code );
 
         /* Restore pending sense */
         memcpy(dev->sense,sensebkup,dev->numsense);
         free(sensebkup);
 
 #if defined(OPTION_SCSI_TAPE)
-        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
         {
             // PROGRAMMING NOTE: it's important to do TWO refreshes here
             // to cause the auto-mount thread to get created. Doing only
@@ -1855,34 +1854,34 @@ void ReqAutoMount( DEVBLK *dev )
             gen_parms.dev     = dev;
 
             // (refresh potentially stale status)
-            VERIFY( dev->tmh->generic( &gen_parms ) == 0 );
+            VERIFY( dev->devunique.tape_dev.tmh->generic( &gen_parms ) == 0 );
 
             // (force auto-mount thread creation)
-            VERIFY( dev->tmh->generic( &gen_parms ) == 0 );
+            VERIFY( dev->devunique.tape_dev.tmh->generic( &gen_parms ) == 0 );
         }
 #endif /* defined(OPTION_SCSI_TAPE) */
     }
 
     /* Disabled when [non-SCSI] ACL in use */
-    if ( dev->als )
+    if ( dev->devunique.tape_dev.als )
         return;
 
     /* Do we actually have any work to do? */
-    if ( !( dev->tapedispflags & TAPEDISPFLG_REQAUTOMNT ) )
+    if ( !( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_REQAUTOMNT ) )
         return;     // (nothing to do!)
 
     /* Reset work flag */
-    dev->tapedispflags &= ~TAPEDISPFLG_REQAUTOMNT;
+    dev->devunique.tape_dev.tapedispflags &= ~TAPEDISPFLG_REQAUTOMNT;
 
     /* If the drive doesn't have a display,
        then it can't have an auto-loader either */
-    if ( !dev->tdparms.displayfeat )
+    if ( !dev->devunique.tape_dev.tdparms.displayfeat )
         return;
 
     /* Determine if mount or unmount request
        and get pointer to correct message */
 
-    tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 ) ? TRUE : FALSE;
+    tapeloaded = dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ) ? TRUE : FALSE;
 
     mountreq   = FALSE;     // (default)
     unmountreq = FALSE;     // (default)
@@ -1895,12 +1894,12 @@ void ReqAutoMount( DEVBLK *dev )
         // unmount request or,
         // unmountmount request and not message2-only flag?
 
-        if (' ' != *(tapemsg = dev->tapemsg1) &&
+        if (' ' != *(tapemsg = dev->devunique.tape_dev.tapemsg1) &&
             (0
-                || TAPEDISPTYP_UNMOUNT == dev->tapedisptype
+                || TAPEDISPTYP_UNMOUNT == dev->devunique.tape_dev.tapedisptype
                 || (1
-                    && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-                    && !(dev->tapedispflags & TAPEDISPFLG_MESSAGE2)
+                    && TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype
+                    && !(dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_MESSAGE2)
                    )
             )
         )
@@ -1915,13 +1914,13 @@ void ReqAutoMount( DEVBLK *dev )
 
         if (
         (1
-            && TAPEDISPTYP_MOUNT == dev->tapedisptype
-            && ' ' != *(tapemsg = dev->tapemsg1)
+            && TAPEDISPTYP_MOUNT == dev->devunique.tape_dev.tapedisptype
+            && ' ' != *(tapemsg = dev->devunique.tape_dev.tapemsg1)
         )
         ||
         (1
-            && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-            && ' ' != *(tapemsg = dev->tapemsg2)
+            && TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype
+            && ' ' != *(tapemsg = dev->devunique.tape_dev.tapemsg2)
         ))
             mountreq = TRUE;
     }
@@ -1930,7 +1929,7 @@ void ReqAutoMount( DEVBLK *dev )
     strncpy( volser, tapemsg+1, 6 ); volser[6]=0;
 
     /* Set some boolean flags */
-    autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )    ?  TRUE  :  FALSE;
+    autoload = ( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_AUTOLOADER )    ?  TRUE  :  FALSE;
     stdlbled = ( 'S' == tapemsg[7] )                              ?  TRUE  :  FALSE;
 //    ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
     scratch  = ( 'S' == tapemsg[0] )                              ?  TRUE  :  FALSE;
@@ -1968,13 +1967,13 @@ void ReqAutoMount( DEVBLK *dev )
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
             WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
+                            TTYPSTR(dev->devunique.tape_dev.tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
         if ( mountreq )
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
             WRMSG(HHC00227, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
+                            TTYPSTR(dev->devunique.tape_dev.tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
     }
 
@@ -1990,11 +1989,11 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 {
     msgbfr[0]=0;
 
-    if ( !dev->tdparms.displayfeat )
+    if ( !dev->devunique.tape_dev.tdparms.displayfeat )
     {
         // (drive doesn't have a display)
 #if defined(OPTION_SCSI_TAPE)
-        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             int_scsi_status_update( dev, 1 );
 #endif
         return;
@@ -2011,14 +2010,14 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 
         strlcpy( msgbfr, "\"", lenbfr );
 
-        if ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
+        if ( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_ALTERNATE )
         {
             char  msg1[9];
             char  msg2[9];
 
-            strlcpy ( msg1,   dev->tapemsg1, sizeof(msg1) );
+            strlcpy ( msg1,   dev->devunique.tape_dev.tapemsg1, sizeof(msg1) );
             strlcat ( msg1,   "        ",    sizeof(msg1) );
-            strlcpy ( msg2,   dev->tapemsg2, sizeof(msg2) );
+            strlcpy ( msg2,   dev->devunique.tape_dev.tapemsg2, sizeof(msg2) );
             strlcat ( msg2,   "        ",    sizeof(msg2) );
 
             strlcat ( msgbfr, msg1,             lenbfr );
@@ -2029,18 +2028,18 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
         }
         else
         {
-            if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-                strlcat( msgbfr, dev->tapemsg2, lenbfr );
+            if ( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_MESSAGE2 )
+                strlcat( msgbfr, dev->devunique.tape_dev.tapemsg2, lenbfr );
             else
-                strlcat( msgbfr, dev->tapemsg1, lenbfr );
+                strlcat( msgbfr, dev->devunique.tape_dev.tapemsg1, lenbfr );
 
             strlcat ( msgbfr, "\"",          lenbfr );
 
-            if ( dev->tapedispflags & TAPEDISPFLG_BLINKING )
+            if ( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_BLINKING )
                 strlcat ( msgbfr, " (blinking)", lenbfr );
         }
 
-        if ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )
+        if ( dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_AUTOLOADER )
             strlcat( msgbfr, " (AUTOLOADER)", lenbfr );
 
         return;
@@ -2053,83 +2052,83 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
     // First, build the system message, then move it into
     // the caller's buffer...
 
-    strlcpy( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+    strlcpy( dev->devunique.tape_dev.tapesysmsg, "\"", sizeof(dev->devunique.tape_dev.tapesysmsg) );
 
-    switch ( dev->tapedisptype )
+    switch ( dev->devunique.tape_dev.tapedisptype )
     {
     case TAPEDISPTYP_IDLE:
     case TAPEDISPTYP_WAITACT:
     default:
         // Blank display if no tape loaded...
-        if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
+        if ( !dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ) )
         {
-            strlcat( dev->tapesysmsg, "        ", sizeof(dev->tapesysmsg) );
+            strlcat( dev->devunique.tape_dev.tapesysmsg, "        ", sizeof(dev->devunique.tape_dev.tapesysmsg) );
             break;
         }
 
         // " NT RDY " if tape IS loaded, but not ready...
         // (IBM docs say " NT RDY " means "Loaded but not ready")
 
-        ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
+        ASSERT( dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ) );
 
         if (0
             || dev->fd < 0
 #if defined(OPTION_SCSI_TAPE)
             || (1
-                && TAPEDEVT_SCSITAPE == dev->tapedevt
+                && TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
                 && !STS_ONLINE( dev )
                )
 #endif
         )
         {
-            strlcat( dev->tapesysmsg, " NT RDY ", sizeof(dev->tapesysmsg) );
+            strlcat( dev->devunique.tape_dev.tapesysmsg, " NT RDY ", sizeof(dev->devunique.tape_dev.tapesysmsg) );
             break;
         }
 
         // Otherwise tape is loaded and ready  -->  "READY"
 
-        ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
+        ASSERT( dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ) );
 
-        strlcat ( dev->tapesysmsg, " READY  ", sizeof(dev->tapesysmsg) );
-        strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+        strlcat ( dev->devunique.tape_dev.tapesysmsg, " READY  ", sizeof(dev->devunique.tape_dev.tapesysmsg) );
+        strlcat( dev->devunique.tape_dev.tapesysmsg, "\"", sizeof(dev->devunique.tape_dev.tapesysmsg) );
 
         if (0
-            || dev->readonly
+            || dev->devunique.tape_dev.readonly
 #if defined(OPTION_SCSI_TAPE)
             || (1
-                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
+                &&  TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
                 &&  STS_WR_PROT( dev )
                )
 #endif
         )
             // (append "file protect" indicator)
-            strlcat ( dev->tapesysmsg, " *FP*", sizeof(dev->tapesysmsg) );
+            strlcat ( dev->devunique.tape_dev.tapesysmsg, " *FP*", sizeof(dev->devunique.tape_dev.tapesysmsg) );
 
         // Copy system message to caller's buffer
-        strlcpy( msgbfr, dev->tapesysmsg, lenbfr );
+        strlcpy( msgbfr, dev->devunique.tape_dev.tapesysmsg, lenbfr );
         return;
 
     case TAPEDISPTYP_ERASING:
-        strlcat ( dev->tapesysmsg, " ERASING", sizeof(dev->tapesysmsg) );
+        strlcat ( dev->devunique.tape_dev.tapesysmsg, " ERASING", sizeof(dev->devunique.tape_dev.tapesysmsg) );
         break;
 
     case TAPEDISPTYP_REWINDING:
-        strlcat ( dev->tapesysmsg, "REWINDNG", sizeof(dev->tapesysmsg) );
+        strlcat ( dev->devunique.tape_dev.tapesysmsg, "REWINDNG", sizeof(dev->devunique.tape_dev.tapesysmsg) );
         break;
 
     case TAPEDISPTYP_UNLOADING:
-        strlcat ( dev->tapesysmsg, "UNLOADNG", sizeof(dev->tapesysmsg) );
+        strlcat ( dev->devunique.tape_dev.tapesysmsg, "UNLOADNG", sizeof(dev->devunique.tape_dev.tapesysmsg) );
         break;
 
     case TAPEDISPTYP_CLEAN:
-        strlcat ( dev->tapesysmsg, "*CLEAN  ", sizeof(dev->tapesysmsg) );
+        strlcat ( dev->devunique.tape_dev.tapesysmsg, "*CLEAN  ", sizeof(dev->devunique.tape_dev.tapesysmsg) );
         break;
     }
 
-    strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+    strlcat( dev->devunique.tape_dev.tapesysmsg, "\"", sizeof(dev->devunique.tape_dev.tapesysmsg) );
 
     // Copy system message to caller's buffer
-    strlcpy( msgbfr, dev->tapesysmsg, lenbfr );
+    strlcpy( msgbfr, dev->devunique.tape_dev.tapesysmsg, lenbfr );
 
 } /* end function GetDisplayMsg */
 
@@ -2147,18 +2146,18 @@ int ldpt=0;
     if ( dev->fd >= 0 )
     {
         /* Set load point indicator if tape is at load point */
-        switch (dev->tapedevt)
+        switch (dev->devunique.tape_dev.tapedevt)
         {
         default:
         case TAPEDEVT_AWSTAPE:
-            if (dev->nxtblkpos==0)
+            if (dev->devunique.tape_dev.nxtblkpos==0)
             {
                 ldpt=1;
             }
             break;
 
         case TAPEDEVT_HETTAPE:
-            if (dev->hetb->cblk == 0)
+            if (dev->devunique.tape_dev.hetb->cblk == 0)
             {
                 ldpt=1;
             }
@@ -2169,23 +2168,23 @@ int ldpt=0;
             int_scsi_status_update( dev, 0 );
             if ( STS_BOT( dev ) )
             {
-                dev->eotwarning = 0;
+                dev->devunique.tape_dev.eotwarning = 0;
                 ldpt=1;
             }
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         case TAPEDEVT_OMATAPE:
-            if (dev->nxtblkpos == 0 && dev->curfilen == 1)
+            if (dev->devunique.tape_dev.nxtblkpos == 0 && dev->devunique.tape_dev.curfilen == 1)
             {
                 ldpt=1;
             }
             break;
-        } /* end switch(dev->tapedevt) */
+        } /* end switch(dev->devunique.tape_dev.tapedevt) */
     }
     else // ( dev->fd < 0 )
     {
-        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+        if ( TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt )
             ldpt=0; /* (tape cannot possibly be at loadpoint
                         if the device cannot even be opened!) */
         else if ( strcmp( dev->filename, TAPE_UNLOADED ) != 0 )
@@ -2268,27 +2267,27 @@ void autoload_close(DEVBLK *dev)
 {
 int i;
 
-    if(dev->al_argv!=NULL)
+    if(dev->devunique.tape_dev.al_argv!=NULL)
     {
-        for(i=0;i<dev->al_argc;i++)
+        for(i=0;i<dev->devunique.tape_dev.al_argc;i++)
         {
-            free(dev->al_argv[i]);
-            dev->al_argv[i]=NULL;
+            free(dev->devunique.tape_dev.al_argv[i]);
+            dev->devunique.tape_dev.al_argv[i]=NULL;
         }
-        free(dev->al_argv);
-        dev->al_argv=NULL;
-        dev->al_argc=0;
+        free(dev->devunique.tape_dev.al_argv);
+        dev->devunique.tape_dev.al_argv=NULL;
+        dev->devunique.tape_dev.al_argc=0;
     }
-    dev->al_argc=0;
-    if(dev->als!=NULL)
+    dev->devunique.tape_dev.al_argc=0;
+    if(dev->devunique.tape_dev.als!=NULL)
     {
-        for(i=0;i<dev->alss;i++)
+        for(i=0;i<dev->devunique.tape_dev.alss;i++)
         {
             autoload_clean_entry(dev,i);
         }
-        free(dev->als);
-        dev->als=NULL;
-        dev->alss=0;
+        free(dev->devunique.tape_dev.als);
+        dev->devunique.tape_dev.als=NULL;
+        dev->devunique.tape_dev.alss=0;
     }
 } /* end function autoload_close */
 
@@ -2303,16 +2302,16 @@ void autoload_clean_entry(DEVBLK *dev,int ix)
 {
 int i;
 
-    for(i=0;i<dev->als[ix].argc;i++)
+    for(i=0;i<dev->devunique.tape_dev.als[ix].argc;i++)
     {
-        free(dev->als[ix].argv[i]);
-        dev->als[ix].argv[i]=NULL;
+        free(dev->devunique.tape_dev.als[ix].argv[i]);
+        dev->devunique.tape_dev.als[ix].argv[i]=NULL;
     }
-    dev->als[ix].argc=0;
-    if(dev->als[ix].filename!=NULL)
+    dev->devunique.tape_dev.als[ix].argc=0;
+    if(dev->devunique.tape_dev.als[ix].filename!=NULL)
     {
-        free(dev->als[ix].filename);
-        dev->als[ix].filename=NULL;
+        free(dev->devunique.tape_dev.als[ix].filename);
+        dev->devunique.tape_dev.als[ix].filename=NULL;
     }
 } /* end function autoload_clean_entry */
 
@@ -2328,22 +2327,22 @@ void autoload_global_parms( DEVBLK *dev, int argc, char *argv[] )
 int i;
 char *p;
 
-    if (!dev->al_argv)
+    if (!dev->devunique.tape_dev.al_argv)
     {
-        dev->al_argv = calloc( AUTOLOADER_MAX, sizeof(char*));
-        dev->al_argc = 0;
-        if (!dev->al_argv) return;
+        dev->devunique.tape_dev.al_argv = calloc( AUTOLOADER_MAX, sizeof(char*));
+        dev->devunique.tape_dev.al_argc = 0;
+        if (!dev->devunique.tape_dev.al_argv) return;
     }
 
-    for (i=1; i < argc && dev->al_argc < AUTOLOADER_MAX; ++i)
+    for (i=1; i < argc && dev->devunique.tape_dev.al_argc < AUTOLOADER_MAX; ++i)
     {
         p = (char*) strdup( argv[i] );
         if (!p) return;
 
         // "Tape autoloader: adding '%s' value '%s'"
         WRMSG(HHC00229, "I", "global parm", p);
-        dev->al_argv[ dev->al_argc ] = p;
-        dev->al_argc++;
+        dev->devunique.tape_dev.al_argv[ dev->devunique.tape_dev.al_argc ] = p;
+        dev->devunique.tape_dev.al_argc++;
     }
 
 } /* end function autoload_global_parms */
@@ -2359,21 +2358,21 @@ void autoload_tape_entry( DEVBLK *dev, int argc, char *argv[] )
 int                i;
 TAPEAUTOLOADENTRY  tae;
 
-    if (dev->alss >= AUTOLOADER_MAX)
+    if (dev->devunique.tape_dev.alss >= AUTOLOADER_MAX)
         return;
 
-    if (!dev->als)
+    if (!dev->devunique.tape_dev.als)
     {
-        dev->als  = calloc( 1, sizeof(tae) );
-        dev->alss = 0;
-        if (!dev->als) return;
+        dev->devunique.tape_dev.als  = calloc( 1, sizeof(tae) );
+        dev->devunique.tape_dev.alss = 0;
+        if (!dev->devunique.tape_dev.als) return;
     }
     else
     {
         TAPEAUTOLOADENTRY *als = (TAPEAUTOLOADENTRY*)
-            realloc( dev->als, (dev->alss + 1) * sizeof(tae) );
+            realloc( dev->devunique.tape_dev.als, (dev->devunique.tape_dev.alss + 1) * sizeof(tae) );
         if (!als) return;
-        dev->als = als;
+        dev->devunique.tape_dev.als = als;
     }
 
     tae.argc = 0;
@@ -2401,8 +2400,8 @@ TAPEAUTOLOADENTRY  tae;
         }
     }
 
-    memcpy( &dev->als[ dev->alss ], &tae, sizeof(tae) );
-    dev->alss++;
+    memcpy( &dev->devunique.tape_dev.als[ dev->devunique.tape_dev.alss ], &tae, sizeof(tae) );
+    dev->devunique.tape_dev.alss++;
 
 } /* end function autoload_tape_entry */
 
@@ -2419,7 +2418,7 @@ DEVBLK  *dev  =  (DEVBLK*) db;
     {
         while
         (
-            dev->als
+            dev->devunique.tape_dev.als
             &&
             (rc = autoload_mount_next( dev )) != 0
         )
@@ -2445,7 +2444,7 @@ DEVBLK  *dev  =  (DEVBLK*) db;
 /*-------------------------------------------------------------------*/
 int autoload_mount_first(DEVBLK *dev)
 {
-    dev->alsix=0;
+    dev->devunique.tape_dev.alsix=0;
     return(autoload_mount_tape(dev,0));
 }
 
@@ -2459,13 +2458,13 @@ int autoload_mount_first(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 int autoload_mount_next(DEVBLK *dev)
 {
-    if(dev->alsix>=dev->alss)
+    if(dev->devunique.tape_dev.alsix>=dev->devunique.tape_dev.alss)
     {
         autoload_close(dev);
         return -1;
     }
-    dev->alsix++;
-    return(autoload_mount_tape(dev,dev->alsix));
+    dev->devunique.tape_dev.alsix++;
+    return(autoload_mount_tape(dev,dev->devunique.tape_dev.alsix));
 }
 
 
@@ -2480,23 +2479,23 @@ int autoload_mount_tape( DEVBLK *dev, int alix )
 int     argc, i, rc;
 char  **argv;
 
-    if (alix >= dev->alss)
+    if (alix >= dev->devunique.tape_dev.alss)
         return -1;
 
-    argc = 1 + dev->al_argc + dev->als[ alix ].argc;
+    argc = 1 + dev->devunique.tape_dev.al_argc + dev->devunique.tape_dev.als[ alix ].argc;
     argv = calloc( argc, sizeof(BYTE*) );
     if (!argv) return -1;
-    argv[0] = dev->als[ alix ].filename;
+    argv[0] = dev->devunique.tape_dev.als[ alix ].filename;
 
-    for (i=0, argc=1; i < dev->al_argc; i++, argc++)
+    for (i=0, argc=1; i < dev->devunique.tape_dev.al_argc; i++, argc++)
     {
-        argv[ argc ] = strdup( dev->al_argv[i] );
+        argv[ argc ] = strdup( dev->devunique.tape_dev.al_argv[i] );
         if (!argv[ argc ]) break;
     }
 
-    for (i=0; i < dev->als[ alix ].argc; i++, argc++)
+    for (i=0; i < dev->devunique.tape_dev.als[ alix ].argc; i++, argc++)
     {
-        argv[ argc ] = strdup( dev->als[ alix ].argv[i] );
+        argv[ argc ] = strdup( dev->devunique.tape_dev.als[ alix ].argv[i] );
         if (!argv[ argc ]) break;
     }
 
@@ -2573,19 +2572,19 @@ int readblkid_virtual ( DEVBLK* dev, BYTE* logical, BYTE* physical )
     {
         // Full 32-bit block-id...
 
-        blockid[0] = (dev->blockid >> 24) & 0xFF;
-        blockid[1] = (dev->blockid >> 16) & 0xFF;
-        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-        blockid[3] = (dev->blockid      ) & 0xFF;
+        blockid[0] = (dev->devunique.tape_dev.blockid >> 24) & 0xFF;
+        blockid[1] = (dev->devunique.tape_dev.blockid >> 16) & 0xFF;
+        blockid[2] = (dev->devunique.tape_dev.blockid >> 8 ) & 0xFF;
+        blockid[3] = (dev->devunique.tape_dev.blockid      ) & 0xFF;
     }
     else // (3480 et. al)
     {
         // "22-bit" block-id...
 
         blockid[0] = 0x01;  // ("wrap" value)
-        blockid[1] = (dev->blockid >> 16) & 0x3F;
-        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-        blockid[3] = (dev->blockid      ) & 0xFF;
+        blockid[1] = (dev->devunique.tape_dev.blockid >> 16) & 0x3F;
+        blockid[2] = (dev->devunique.tape_dev.blockid >> 8 ) & 0xFF;
+        blockid[3] = (dev->devunique.tape_dev.blockid      ) & 0xFF;
     }
 
     // NOTE: For virtual tape devices, we return the same value
@@ -2610,19 +2609,19 @@ int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
     /* Do it the hard way: rewind to load-point and then
        keep doing fsb, fsb, fsb... until we find our block
     */
-    if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
+    if ((rc = dev->devunique.tape_dev.tmh->rewind( dev, unitstat, code)) >= 0)
     {
         /* Reset position counters to start of file */
 
-        dev->curfilen   =  1;
-        dev->nxtblkpos  =  0;
-        dev->prvblkpos  = -1;
-        dev->blockid    =  0;
+        dev->devunique.tape_dev.curfilen   =  1;
+        dev->devunique.tape_dev.nxtblkpos  =  0;
+        dev->devunique.tape_dev.prvblkpos  = -1;
+        dev->devunique.tape_dev.blockid    =  0;
 
         /* Do it the hard way */
 
-        while ( dev->blockid < blockid && ( rc >= 0 ) )
-            rc = dev->tmh->fsb( dev, unitstat, code );
+        while ( dev->devunique.tape_dev.blockid < blockid && ( rc >= 0 ) )
+            rc = dev->devunique.tape_dev.tmh->fsb( dev, unitstat, code );
     }
 
     return rc;

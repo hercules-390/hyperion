@@ -260,7 +260,7 @@ int i;
 static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th, DEVBLK *rdev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_TH  *th = (OSA_TH*)rdev->qrspbf;
+OSA_TH  *th = (OSA_TH*)rdev->devunique.qdio_dev.qrspbf;
 OSA_RRH *rrh;
 OSA_PH  *ph;
 U16 offset;
@@ -590,7 +590,7 @@ U32 ackseq;
     /* end switch(rrh->type) */
 
     // Set Response
-    rdev->qrspsz = rqsize;
+    rdev->devunique.qdio_dev.qrspsz = rqsize;
 }
 /* end osa_adapter_cmd */
 
@@ -602,7 +602,7 @@ static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea, DEVBLK *rdev)
 {
 U16 reqtype;
 U16 datadev;
-OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
+OSA_IEAR *iear = (OSA_IEAR*)rdev->devunique.qdio_dev.qrspbf;
 
     memset(iear, 0, sizeof(OSA_IEAR));
 
@@ -615,17 +615,17 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         if(!IS_OSA_READ_DEVICE(dev))
         {
             TRACE(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
             TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -633,7 +633,7 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
@@ -642,17 +642,17 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         if(!IS_OSA_WRITE_DEVICE(dev))
         {
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
         {
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -660,17 +660,17 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qidxstate = OSA_IDX_STATE_ACTIVE;
+            dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
     default:
         TRACE(_("QETH: IDX ACTIVATE Invalid Request %4.4x for %s device %4.4x\n"),reqtype,osa_devtyp[dev->member],dev->devnum);
-        dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+        dev->devunique.qdio_dev.qidxstate = OSA_IDX_STATE_INACTIVE;
         break;
     }
 
-    rdev->qrspsz = sizeof(OSA_IEAR);
+    rdev->devunique.qdio_dev.qrspsz = sizeof(OSA_IEAR);
 }
 
 
@@ -1048,8 +1048,8 @@ int i;
         grp = dev->group->grp_data;
 
     /* Allocate reponse buffer */
-    dev->qrspbf = malloc(RSP_BUFSZ);
-    dev->qrspsz = 0;
+    dev->devunique.qdio_dev.qrspbf = malloc(RSP_BUFSZ);
+    dev->devunique.qdio_dev.qrspsz = 0;
 
     // process all command line options here
     for(i = 0; i < argc; i++)
@@ -1134,7 +1134,7 @@ char qdiostat[80] = {0};
     snprintf( buffer, buflen-1, "QDIO %s %s%sIO[%" I64_FMT "u]"
         , (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete"
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""
+        , (dev->devunique.qdio_dev.qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""
         , dev->excps
     );
 
@@ -1176,10 +1176,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         dev->group->grp_data = NULL;
     }
 
-    if(dev->qrspbf)
+    if(dev->devunique.qdio_dev.qrspbf)
     {
-        free(dev->qrspbf);
-        dev->qrspbf = NULL;
+        free(dev->devunique.qdio_dev.qrspbf);
+        dev->devunique.qdio_dev.qrspbf = NULL;
     }
 
     return 0;
@@ -1251,11 +1251,11 @@ int num;                                /* Number of bytes to move   */
 
     /* Device block of device to which response is sent */
     DEVBLK *rdev = (IS_OSA_WRITE_DEVICE(dev)
-                  && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
-                  && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
+                  && (dev->devunique.qdio_dev.qidxstate == OSA_IDX_STATE_ACTIVE)
+                  && (dev->group->memdev[OSA_READ_DEVICE]->devunique.qdio_dev.qidxstate == OSA_IDX_STATE_ACTIVE))
                  ? dev->group->memdev[OSA_READ_DEVICE] : dev;
 
-        if(!rdev->qrspsz)
+        if(!rdev->devunique.qdio_dev.qrspsz)
         {
             FETCH_HW(ddc,hdr->ddc);
 
@@ -1295,23 +1295,23 @@ int num;                                /* Number of bytes to move   */
         int rd_size = 0;
 
         obtain_lock(&grp->qlock);
-        if(dev->qrspsz)
+        if(dev->devunique.qdio_dev.qrspsz)
         {
-            rd_size = dev->qrspsz;
-            memcpy(iobuf,dev->qrspbf,rd_size);
-            dev->qrspsz = 0;
+            rd_size = dev->devunique.qdio_dev.qrspsz;
+            memcpy(iobuf,dev->devunique.qdio_dev.qrspbf,rd_size);
+            dev->devunique.qdio_dev.qrspsz = 0;
         }
         else
         {
             if(IS_OSA_READ_DEVICE(dev)
-              && (dev->qidxstate == OSA_IDX_STATE_ACTIVE))
+              && (dev->devunique.qdio_dev.qidxstate == OSA_IDX_STATE_ACTIVE))
             {
                 wait_condition(&grp->qcond, &grp->qlock);
-                if(dev->qrspsz)
+                if(dev->devunique.qdio_dev.qrspsz)
                 {
-                    rd_size = dev->qrspsz;
-                    memcpy(iobuf,dev->qrspbf,rd_size);
-                    dev->qrspsz = 0;
+                    rd_size = dev->devunique.qdio_dev.qrspsz;
+                    memcpy(iobuf,dev->devunique.qdio_dev.qrspbf,rd_size);
+                    dev->devunique.qdio_dev.qrspsz = 0;
                 }
             }
         }
@@ -1473,7 +1473,7 @@ int num;                                /* Number of bytes to move   */
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
     {
-        OSA_QDR *qdr = (OSA_QDR*)dev->qrspbf;
+        OSA_QDR *qdr = (OSA_QDR*)dev->devunique.qdio_dev.qrspbf;
         OSA_QDES0 *qdes;
         int accerr;
         int i;

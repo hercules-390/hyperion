@@ -82,13 +82,13 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->numsense = 1;
 
     /* Initialize device dependent fields */
-    dev->keybdrem = 0;
+    dev->devunique.cons_dev.keybdrem = 0;
 
     /* Set length of print buffer */
     dev->bufsize = BUFLEN_1052;
 
     /* Assume we want to prompt */
-    dev->prompt1052 = 1;
+    dev->devunique.cons_dev.prompt1052 = 1;
 
     /* Default command character is "/" */
     strlcpy(dev->filename,"/",sizeof(dev->filename));
@@ -99,7 +99,7 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         /* Look at the argument and set noprompt flag if specified. */
         if (strcasecmp(argv[ac], "noprompt") == 0)
         {
-            dev->prompt1052 = 0;
+            dev->devunique.cons_dev.prompt1052 = 0;
             ac++; argc--;
         }
         else
@@ -135,7 +135,7 @@ con1052_query_device (DEVBLK *dev, char **devclass,
     snprintf(buffer, buflen-1,
         "*syscons cmdpref(%s)%s IO[%" I64_FMT "u]",
         dev->filename,
-        !dev->prompt1052 ? " noprompt" : "",
+        !dev->devunique.cons_dev.prompt1052 ? " noprompt" : "",
         dev->excps );
 
 } /* end function con1052_query_device */
@@ -244,10 +244,10 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
 
         /* Solicit console input if no data in the device buffer */
-        if (!dev->keybdrem)
+        if (!dev->devunique.cons_dev.keybdrem)
         {
             /* Display prompting message on console if allowed */
-            if (dev->prompt1052)
+            if (dev->devunique.cons_dev.prompt1052)
                 WRCMSG ("<pnl,color(lightyellow,black)>", HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
@@ -258,7 +258,7 @@ BYTE    c;                              /* Print character           */
         }
 
         /* Calculate number of bytes to move and residual byte count */
-        len = dev->keybdrem;
+        len = dev->devunique.cons_dev.keybdrem;
         num = (count < len) ? count : len;
         *residual = count - num;
         if (count < len) *more = 1;
@@ -270,11 +270,11 @@ BYTE    c;                              /* Print character           */
         if ((flags & CCW_FLAGS_CD) && len > count)
         {
             memmove (dev->buf, dev->buf + count, len - count);
-            dev->keybdrem = len - count;
+            dev->devunique.cons_dev.keybdrem = len - count;
         }
         else
         {
-            dev->keybdrem = 0;
+            dev->devunique.cons_dev.keybdrem = 0;
         }
 
         /* Return normal status */
@@ -389,7 +389,7 @@ int  i;
                         dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
-            dev->keybdrem = dev->buflen = i;
+            dev->devunique.cons_dev.keybdrem = dev->buflen = i;
             obtain_lock(&dev->lock);
             if(dev->iowaiters)
             {

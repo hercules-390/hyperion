@@ -897,18 +897,18 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
 
-    if ( !dev->stopdev )
+    if ( !dev->devunique.cprt_dev.stopdev )
     {
         WRMSG(HHC02211, "E", lcss, devnum );
         return -1;
     }
 
-    wlpi = dev->lpi;
-    windex = dev->index;
-    wlpp = dev->lpp;
-    wffchan = dev->ffchan;
+    wlpi = dev->devunique.cprt_dev.lpi;
+    windex = dev->devunique.cprt_dev.index;
+    wlpp = dev->devunique.cprt_dev.lpp;
+    wffchan = dev->devunique.cprt_dev.ffchan;
     for (line = 0; line <= FCBSIZE; line++)
-        wfcb[line] = dev->fcb[line];
+        wfcb[line] = dev->devunique.cprt_dev.fcb[line];
 
     for (iarg = 2; iarg < argc; iarg++)
     {
@@ -1051,12 +1051,12 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     }
 
     /* It's all ok, copy it to the dev block */
-    dev->lpi = wlpi;
-    dev->index = windex ;
-    dev->lpp = wlpp;
-    dev->ffchan = wffchan;
+    dev->devunique.cprt_dev.lpi = wlpi;
+    dev->devunique.cprt_dev.index = windex ;
+    dev->devunique.cprt_dev.lpp = wlpp;
+    dev->devunique.cprt_dev.ffchan = wffchan;
     for (line = 0; line <= FCBSIZE; line++)
-        dev->fcb[line] = wfcb[line];
+        dev->devunique.cprt_dev.fcb[line] = wfcb[line];
 
     fcb_dump(dev, wbuf, sizeof(wbuf));
     WRMSG(HHC02210, "I", lcss, devnum, wbuf );
@@ -1069,12 +1069,12 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
     char wrk[16];
     char sep[1];
     sep[0] = '=';
-    snprintf( buf, buflen-1, "lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
-    for (i = 1; i <= dev->lpp; i++)
+    snprintf( buf, buflen-1, "lpi=%d index=%d lpp=%d fcb", dev->devunique.cprt_dev.lpi, dev->devunique.cprt_dev.index, dev->devunique.cprt_dev.lpp );
+    for (i = 1; i <= dev->devunique.cprt_dev.lpp; i++)
     {
-        if (dev->fcb[i] != 0)
+        if (dev->devunique.cprt_dev.fcb[i] != 0)
         {
-            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
+            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->devunique.cprt_dev.fcb[i]);
             sep[0] = ',' ;
             if (strlen(buf) + strlen(wrk) >= buflen - 4)
             {
@@ -1124,20 +1124,54 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         {
             (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-            if ( CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
+            if ( CMD(devclass,PRT,3) )
             {
-                if(dev->stopdev == TRUE)
+                if(dev->devunique.cprt_dev.stopdev == TRUE)
                 {
                     /* un-stop the unit record device and raise attention interrupt */
                     /* PRINTER or PUNCH */
 
-                    stopdev = dev->stopdev;
+                    stopdev = dev->devunique.cprt_dev.stopdev;
 
-                    dev->stopdev = FALSE;
+                    dev->devunique.cprt_dev.stopdev = FALSE;
 
                     rc = device_attention (dev, CSW_DE);
 
-                    if (rc) dev->stopdev = stopdev;
+                    if (rc) dev->devunique.cprt_dev.stopdev = stopdev;
+
+                    switch (rc) {
+                    case 0: WRMSG(HHC02212, "I", lcss,devnum);
+                        break;
+                    case 1: WRMSG(HHC02213, "E", lcss, devnum, ": busy or interrupt pending");
+                        break;
+                    case 2: WRMSG(HHC02213, "E", lcss, devnum, ": attention request rejected");
+                        break;
+                    case 3: WRMSG(HHC02213, "E", lcss, devnum, ": subchannel not enabled");
+                        break;
+                    }
+
+                    if ( rc != 0 )
+                        rc = -1;
+                }
+                else
+                {
+                    WRMSG(HHC02213, "W", lcss, devnum, ": already started");
+                }
+            }
+            else if ( CMD(devclass,PCH,3) )
+            {
+                if(dev->devunique.cpch_dev.stopdev == TRUE)
+                {
+                    /* un-stop the unit record device and raise attention interrupt */
+                    /* PUNCH */
+
+                    stopdev = dev->devunique.cpch_dev.stopdev;
+
+                    dev->devunique.cpch_dev.stopdev = FALSE;
+
+                    rc = device_attention (dev, CSW_DE);
+
+                    if (rc) dev->devunique.cpch_dev.stopdev = stopdev;
 
                     switch (rc) {
                     case 0: WRMSG(HHC02212, "I", lcss,devnum);
@@ -1244,9 +1278,15 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         {
             (dev->hnd->query)(dev, &devclass, 0, NULL);
 
-            if (CMD(devclass,PRT,3) || CMD(devclass,PCH,3) )
+            if ( CMD(devclass,PRT,3) )
             {
-                dev->stopdev = TRUE;
+                dev->devunique.cpch_dev.stopdev = TRUE;
+
+                WRMSG(HHC02214, "I", lcss, devnum );
+            }
+            else if ( CMD(devclass,PCH,3) )
+            {
+                dev->devunique.cpch_dev.stopdev = TRUE;
 
                 WRMSG(HHC02214, "I", lcss, devnum );
             }
@@ -1882,7 +1922,7 @@ static void try_scsi_refresh( DEVBLK* dev )
     gen_parms.action  = GENTMH_SCSI_ACTION_UPDATE_STATUS;
     gen_parms.dev     = dev;
 
-    VERIFY( dev->tmh->generic( &gen_parms ) == 0 ); // (maybe update status)
+    VERIFY( dev->devunique.tape_dev.tmh->generic( &gen_parms ) == 0 ); // (maybe update status)
     usleep(10*1000);                                // (let thread start/end)
 }
 
@@ -1953,62 +1993,62 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
     for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
     {
-        if ( !dev->allocated || TAPEDEVT_SCSITAPE != dev->tapedevt )
+        if ( !dev->allocated || TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt )
             continue;  // (not an active SCSI tape device; skip)
 
         try_scsi_refresh( dev );    // (see comments in function)
 
         MSGBUF( buf,
             "thread %s active for drive %u:%4.4X = %s"
-            ,dev->stape_mntdrq.link.Flink ? "IS" : "is NOT"
+            ,dev->devunique.tape_dev.stape_mntdrq.link.Flink ? "IS" : "is NOT"
             ,SSID_TO_LCSS(dev->ssid)
             ,dev->devnum
             ,dev->filename
         );
         WRMSG(HHC02275, "I", buf);
 
-        if (!dev->tdparms.displayfeat)
+        if (!dev->devunique.tape_dev.tdparms.displayfeat)
             continue;
 
         mountreq   = FALSE;     // (default)
         unmountreq = FALSE;     // (default)
 
         if (0
-            || TAPEDISPTYP_MOUNT       == dev->tapedisptype
-            || TAPEDISPTYP_UNMOUNT     == dev->tapedisptype
-            || TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+            || TAPEDISPTYP_MOUNT       == dev->devunique.tape_dev.tapedisptype
+            || TAPEDISPTYP_UNMOUNT     == dev->devunique.tape_dev.tapedisptype
+            || TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype
         )
         {
-            tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
+            tapeloaded = dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 );
 
-            if ( TAPEDISPTYP_MOUNT == dev->tapedisptype && !tapeloaded )
+            if ( TAPEDISPTYP_MOUNT == dev->devunique.tape_dev.tapedisptype && !tapeloaded )
             {
                 mountreq   = TRUE;
                 unmountreq = FALSE;
-                tapemsg = dev->tapemsg1;
+                tapemsg = dev->devunique.tape_dev.tapemsg1;
             }
-            else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype && tapeloaded )
+            else if ( TAPEDISPTYP_UNMOUNT == dev->devunique.tape_dev.tapedisptype && tapeloaded )
             {
                 unmountreq = TRUE;
                 mountreq   = FALSE;
-                tapemsg = dev->tapemsg1;
+                tapemsg = dev->devunique.tape_dev.tapemsg1;
             }
-            else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
+            else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype )
             {
                 if (tapeloaded)
                 {
-                    if ( !(dev->tapedispflags & TAPEDISPFLG_MESSAGE2) )
+                    if ( !(dev->devunique.tape_dev.tapedispflags & TAPEDISPFLG_MESSAGE2) )
                     {
                         unmountreq = TRUE;
                         mountreq   = FALSE;
-                        tapemsg = dev->tapemsg1;
+                        tapemsg = dev->devunique.tape_dev.tapemsg1;
                     }
                 }
                 else // (!tapeloaded)
                 {
                     mountreq   = TRUE;
                     unmountreq = FALSE;
-                    tapemsg = dev->tapemsg2;
+                    tapemsg = dev->devunique.tape_dev.tapemsg2;
                 }
             }
         }
@@ -2126,11 +2166,11 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             if (0
                 || !dev->allocated
                 || 0x3088 != dev->devtype
-                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+                || (CTC_CTCI != dev->devunique.ctca_dev.ctctype && CTC_LCS != dev->devunique.ctca_dev.ctctype)
             )
                 continue;
 
-            if (CTC_CTCI == dev->ctctype)
+            if (CTC_CTCI == dev->devunique.ctca_dev.ctctype)
             {
                 pCTCBLK = dev->dev_data;
                 pCTCBLK->fDebug = onoff;
@@ -2159,7 +2199,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
         pDEVGRP = dev->group;
 
-        if (CTC_CTCI == dev->ctctype)
+        if (CTC_CTCI == dev->devunique.ctca_dev.ctctype)
         {
             for (i=0; i < pDEVGRP->acount; i++)
             {
@@ -2168,7 +2208,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pCTCBLK->fDebug = onoff;
             }
         }
-        else if (CTC_LCS == dev->ctctype)
+        else if (CTC_LCS == dev->devunique.ctca_dev.ctctype)
         {
             for (i=0; i < pDEVGRP->acount; i++)
             {
@@ -2188,7 +2228,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
           char buf[128];
           MSGBUF( buf, "%s for %s device %1d:%04X pair",
                   onoff ? "on" : "off",
-                  CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
+                  CTC_LCS == dev->devunique.ctca_dev.ctctype ? "LCS" : "CTCI",
                   lcss, devnum );
           WRMSG(HHC02204, "I", "CTC debug", buf);
         }
@@ -2245,8 +2285,8 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
                 || strcasecmp( devclass, "CTCA" ) != 0
                 || strcmp( dev->typname, "8232" ) == 0
                 || (1
-                    && CTC_CTCI != dev->ctctype
-                    && CTC_LCS  != dev->ctctype
+                    && CTC_CTCI != dev->devunique.ctca_dev.ctctype
+                    && CTC_LCS  != dev->devunique.ctca_dev.ctctype
                    )
                )
         )
@@ -4969,7 +5009,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         /* Call device handler's query definition function */
 
 #if defined(OPTION_SCSI_TAPE)
-        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
             try_scsi_refresh( dev );  // (see comments in function)
 #endif
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
@@ -5083,7 +5123,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         {
             if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
                 continue;
-            if (!dev->ckdcyls)
+            if (!dev->devunique.dasd_dev.ckdcyls)
                 continue;
 
             if (nDevCount < MAX_DEVLIST_DEVICES)
@@ -5714,7 +5754,7 @@ int     rc;
     /* device name can be `*' meaning all cckd devices */
     if (strcmp (devascii, "*") == 0)
     {
-        for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+        for (dev=sysblk.firstdev; dev && !dev->devunique.dasd_dev.cckd_ext; dev=dev->nextdev);
             /* nothing */
         if (!dev)
         {
@@ -5732,7 +5772,7 @@ int     rc;
             rc = devnotfound_msg(lcss,devnum);
             return rc;
         }
-        if (dev->cckd_ext == NULL)
+        if (dev->devunique.dasd_dev.cckd_ext == NULL)
         {
             WRMSG(HHC02209, "E", lcss, devnum, "cckd device" );
             return -1;
@@ -5779,7 +5819,7 @@ int     rc;
     {
         if (dev)
         {
-            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            CCKDDASD_EXT *cckd = dev->devunique.dasd_dev.cckd_ext;
             cckd->sfmerge = flag == 1;
             cckd->sfforce = flag == 2;
         }
@@ -5794,7 +5834,7 @@ int     rc;
     {
         if (dev)
         {
-            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            CCKDDASD_EXT *cckd = dev->devunique.dasd_dev.cckd_ext;
             cckd->sflevel = level;
         }
         else
@@ -5959,8 +5999,8 @@ BYTE     unitstat, code = 0;
 
     }
 
-    ASSERT( dev->tmh && dev->tmh->tapeloaded );
-    if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
+    ASSERT( dev->devunique.tape_dev.tmh && dev->devunique.tape_dev.tmh->tapeloaded );
+    if ( !dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ) )
     {
         release_lock (&dev->lock);
         WRMSG(HHC02298, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
@@ -5976,11 +6016,11 @@ BYTE     unitstat, code = 0;
         }
         else
         {
-            rc = dev->tmh->rewind( dev, &unitstat, code);
+            rc = dev->devunique.tape_dev.tmh->rewind( dev, &unitstat, code);
 
             if ( rc == 0 )
             {
-                dev->eotwarning = 0;
+                dev->devunique.tape_dev.eotwarning = 0;
             }
         }
     }
@@ -5988,7 +6028,7 @@ BYTE     unitstat, code = 0;
     {
         for ( ; count >= 1; count-- )
         {
-            rc = dev->tmh->fsf( dev, &unitstat, code);
+            rc = dev->devunique.tape_dev.tmh->fsf( dev, &unitstat, code);
 
             if ( rc < 0 )
             {
@@ -6000,7 +6040,7 @@ BYTE     unitstat, code = 0;
     {
         for ( ; count >= 1; count-- )
         {
-            rc = dev->tmh->bsf( dev, &unitstat, code);
+            rc = dev->devunique.tape_dev.tmh->bsf( dev, &unitstat, code);
 
             if ( rc < 0 )
             {
@@ -6012,7 +6052,7 @@ BYTE     unitstat, code = 0;
     {
         for ( ; count >= 1; count-- )
         {
-            rc = dev->tmh->fsb( dev, &unitstat, code);
+            rc = dev->devunique.tape_dev.tmh->fsb( dev, &unitstat, code);
 
             if ( rc <= 0 )
             {
@@ -6024,7 +6064,7 @@ BYTE     unitstat, code = 0;
     {
         for ( ; count >= 1; count-- )
         {
-            rc = dev->tmh->bsb( dev, &unitstat, code);
+            rc = dev->devunique.tape_dev.tmh->bsb( dev, &unitstat, code);
 
             if ( rc < 0 )
             {
@@ -6034,12 +6074,12 @@ BYTE     unitstat, code = 0;
     }
     else if ( CMD(argv[2],asf,3) )
     {
-        rc = dev->tmh->rewind( dev, &unitstat, code);
+        rc = dev->devunique.tape_dev.tmh->rewind( dev, &unitstat, code);
         if ( rc == 0 )
         {
             for ( ; count > 1; count-- )
             {
-                rc = dev->tmh->fsf( dev, &unitstat, code);
+                rc = dev->devunique.tape_dev.tmh->fsf( dev, &unitstat, code);
 
                 if ( rc < 0 )
                 {
@@ -6057,11 +6097,11 @@ BYTE     unitstat, code = 0;
         }
         else
         {
-            if ( dev->blockid == 0 )
+            if ( dev->devunique.tape_dev.blockid == 0 )
             {
                 BYTE    sLABEL[65536];
 
-                rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
+                rc = dev->devunique.tape_dev.tmh->read( dev, sLABEL, &unitstat, code );
 
                 if ( rc == 80 )
                 {
@@ -6103,7 +6143,7 @@ BYTE     unitstat, code = 0;
                     WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 }
 
-                rc = dev->tmh->rewind( dev, &unitstat, code);
+                rc = dev->devunique.tape_dev.tmh->rewind( dev, &unitstat, code);
             }
             else
             {
@@ -6114,7 +6154,7 @@ BYTE     unitstat, code = 0;
     }
     else if ( CMD(argv[2],wtm,3) )
     {
-        if ( dev->readonly || dev->tdparms.logical_readonly )
+        if ( dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly )
         {
             WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
             msg = FALSE;
@@ -6123,11 +6163,11 @@ BYTE     unitstat, code = 0;
         {
             for ( ; count >= 1; count-- )
             {
-                rc = dev->tmh->wtm( dev, &unitstat, code);
+                rc = dev->devunique.tape_dev.tmh->wtm( dev, &unitstat, code);
 
                 if ( rc >= 0 )
                 {
-                    dev->curfilen++;
+                    dev->devunique.tape_dev.curfilen++;
                 }
                 else
                 {
@@ -6135,7 +6175,7 @@ BYTE     unitstat, code = 0;
                 }
             }
 
-            dev->tmh->sync( dev, &unitstat, code );
+            dev->devunique.tape_dev.tmh->sync( dev, &unitstat, code );
         }
     }
     else if ( CMD(argv[2],dse,3) )
@@ -6147,16 +6187,16 @@ BYTE     unitstat, code = 0;
         }
         else
         {
-            if ( dev->readonly || dev->tdparms.logical_readonly )
+            if ( dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly )
             {
                 WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
                 msg = FALSE;
             }
             else
             {
-                rc = dev->tmh->dse( dev, &unitstat, code);
+                rc = dev->devunique.tape_dev.tmh->dse( dev, &unitstat, code);
 
-                dev->tmh->sync( dev, &unitstat, code );
+                dev->devunique.tape_dev.tmh->sync( dev, &unitstat, code );
             }
         }
     }
@@ -6177,8 +6217,8 @@ BYTE     unitstat, code = 0;
 
     release_lock (&dev->lock);
 
-    WRMSG( HHC02802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->curfilen );
-    WRMSG( HHC02803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->blockid  );
+    WRMSG( HHC02802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devunique.tape_dev.curfilen );
+    WRMSG( HHC02803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devunique.tape_dev.blockid  );
 
     return 0;
 }
@@ -6257,13 +6297,13 @@ char   **save_argv = NULL;
         if (1
             && strcmp(devclass,"TAPE") == 0
             && (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt
                 || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
                )
         )
         {
-            ASSERT( dev->tmh && dev->tmh->tapeloaded );
-            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
+            ASSERT( dev->devunique.tape_dev.tmh && dev->devunique.tape_dev.tmh->tapeloaded );
+            if (dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 ))
             {
                 release_lock (&dev->lock);
                 WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);

@@ -288,8 +288,8 @@ char           *strtok_str = NULL;      /* last token position       */
     tdftab[filecount].format='E';
 
     /* Save the file count and TDF array pointer in the device block */
-    dev->omafiles = filecount+1;
-    dev->omadesc = tdftab;
+    dev->devunique.tape_dev.omafiles = filecount+1;
+    dev->devunique.tape_dev.omadesc = tdftab;
 
     /* Release the TDF file buffer and exit */
     free (tdfbuf);
@@ -319,7 +319,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
      }
 
     /* Read the OMA descriptor file if necessary */
-    if (dev->omadesc == NULL)
+    if (dev->devunique.tape_dev.omadesc == NULL)
     {
         rc = read_omadesc (dev);
         if (rc < 0)
@@ -327,10 +327,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
             return -1;
         }
-        dev->blockid = 0;
+        dev->devunique.tape_dev.blockid = 0;
     }
 
-    dev->fenced = 0;
+    dev->devunique.tape_dev.fenced = 0;
 
     /* Unit exception if beyond end of tape */
     /* ISW: CHANGED PROCESSING - RETURN UNDEFINITE Tape Marks  */
@@ -338,7 +338,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*              an EOT Condition                           */
     /*              This is ensured by the TDF reading routine */
 #if 0
-    if (dev->curfilen >= dev->omafiles)
+    if (dev->devunique.tape_dev.curfilen >= dev->devunique.tape_dev.omafiles)
     {
         WRITEMSG (HHC00000E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
 
@@ -346,16 +346,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         return -1;
     }
 #else
-    if(dev->curfilen>dev->omafiles)
+    if(dev->devunique.tape_dev.curfilen>dev->devunique.tape_dev.omafiles)
     {
-        dev->curfilen=dev->omafiles;
+        dev->devunique.tape_dev.curfilen=dev->devunique.tape_dev.omafiles;
         return(0);
     }
 #endif
 
     /* Point to the current file entry in the OMA descriptor table */
-    omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += (dev->curfilen-1);
+    omadesc = (OMATAPE_DESC*)(dev->devunique.tape_dev.omadesc);
+    omadesc += (dev->devunique.tape_dev.curfilen-1);
     if(omadesc->format=='X')
     {
         return 0;
@@ -385,7 +385,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* OMA tapes are always read-only */
-    dev->readonly = 1;
+    dev->devunique.tape_dev.readonly = 1;
 
     /* Store the file descriptor in the device block */
     dev->fd = fd;
@@ -501,23 +501,23 @@ S32             prvhdro;                /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Read the 16-byte block header */
-    blkpos = dev->nxtblkpos;
+    blkpos = dev->devunique.tape_dev.nxtblkpos;
     rc = readhdr_omaheaders (dev, omadesc, blkpos, &curblkl,
                             &prvhdro, &nxthdro, unitstat,code);
     if (rc < 0) return -1;
 
     /* Update the offsets of the next and previous blocks */
-    dev->nxtblkpos = nxthdro;
-    dev->prvblkpos = blkpos;
+    dev->devunique.tape_dev.nxtblkpos = nxthdro;
+    dev->devunique.tape_dev.prvblkpos = blkpos;
 
     /* Increment file number and return zero if tapemark */
     if (curblkl == -1)
     {
         close (dev->fd);
         dev->fd = -1;
-        dev->curfilen++;
-        dev->nxtblkpos = 0;
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.curfilen++;
+        dev->devunique.tape_dev.nxtblkpos = 0;
+        dev->devunique.tape_dev.prvblkpos = -1;
         return 0;
     }
 
@@ -567,7 +567,7 @@ int             blklen;                 /* Block length              */
 long            blkpos;                 /* Offset of block in file   */
 
     /* Initialize current block position */
-    blkpos = dev->nxtblkpos;
+    blkpos = dev->devunique.tape_dev.nxtblkpos;
 
     /* Seek to new current block position */
     rcoff = lseek (dev->fd, blkpos, SEEK_SET);
@@ -599,15 +599,15 @@ long            blkpos;                 /* Offset of block in file   */
     {
         close (dev->fd);
         dev->fd = -1;
-        dev->curfilen++;
-        dev->nxtblkpos = 0;
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.curfilen++;
+        dev->devunique.tape_dev.nxtblkpos = 0;
+        dev->devunique.tape_dev.prvblkpos = -1;
         return 0;
     }
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos + blklen;
-    dev->prvblkpos = blkpos;
+    dev->devunique.tape_dev.nxtblkpos = blkpos + blklen;
+    dev->devunique.tape_dev.prvblkpos = blkpos;
 
     /* Return block length, or zero to indicate tapemark */
     return blklen;
@@ -637,7 +637,7 @@ long            blkpos;                 /* Offset of block in file   */
 BYTE            c;                      /* Character work area       */
 
     /* Initialize current block position */
-    blkpos = dev->nxtblkpos;
+    blkpos = dev->devunique.tape_dev.nxtblkpos;
 
     /* Seek to new current block position */
     rcoff = lseek (dev->fd, blkpos, SEEK_SET);
@@ -690,9 +690,9 @@ BYTE            c;                      /* Character work area       */
     {
         close (dev->fd);
         dev->fd = -1;
-        dev->curfilen++;
-        dev->nxtblkpos = 0;
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.curfilen++;
+        dev->devunique.tape_dev.nxtblkpos = 0;
+        dev->devunique.tape_dev.prvblkpos = -1;
         return 0;
     }
 
@@ -727,8 +727,8 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos + num;
-    dev->prvblkpos = blkpos;
+    dev->devunique.tape_dev.nxtblkpos = blkpos + num;
+    dev->devunique.tape_dev.prvblkpos = blkpos;
 
     /* Return block length */
     return pos;
@@ -752,8 +752,8 @@ int read_omatape (DEVBLK *dev,
 {
 int len;
 OMATAPE_DESC *omadesc;
-    omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += (dev->curfilen-1);
+    omadesc = (OMATAPE_DESC*)(dev->devunique.tape_dev.omadesc);
+    omadesc += (dev->devunique.tape_dev.curfilen-1);
 
     switch (omadesc->format)
     {
@@ -769,7 +769,7 @@ OMATAPE_DESC *omadesc;
         break;
     case 'X':
         len=0;
-        dev->curfilen++;
+        dev->devunique.tape_dev.curfilen++;
         break;
     case 'E':
         len=0;
@@ -777,7 +777,7 @@ OMATAPE_DESC *omadesc;
     } /* end switch(omadesc->format) */
 
     if (len >= 0)
-        dev->blockid++;
+        dev->devunique.tape_dev.blockid++;
 
     return len;
 }
@@ -800,11 +800,11 @@ int fsf_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
     if (dev->fd >= 0)
         close (dev->fd);
     dev->fd = -1;
-    dev->nxtblkpos = 0;
-    dev->prvblkpos = -1;
+    dev->devunique.tape_dev.nxtblkpos = 0;
+    dev->devunique.tape_dev.prvblkpos = -1;
 
     /* Increment the current file number */
-    dev->curfilen++;
+    dev->devunique.tape_dev.curfilen++;
 
     /* Return normal status */
     return 0;
@@ -831,7 +831,7 @@ S32             prvhdro;                /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Initialize current block position */
-    blkpos = dev->nxtblkpos;
+    blkpos = dev->devunique.tape_dev.nxtblkpos;
 
     /* Read the 16-byte block header */
     rc = readhdr_omaheaders (dev, omadesc, blkpos, &curblkl,
@@ -845,19 +845,19 @@ S32             nxthdro;                /* Offset of next header     */
         if (dev->fd >= 0)
             close (dev->fd);
         dev->fd = -1;
-        dev->nxtblkpos = 0;
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.nxtblkpos = 0;
+        dev->devunique.tape_dev.prvblkpos = -1;
 
         /* Increment the file number */
-        dev->curfilen++;
+        dev->devunique.tape_dev.curfilen++;
 
         /* Return zero to indicate tapemark */
         return 0;
     }
 
     /* Update the offsets of the next and previous blocks */
-    dev->nxtblkpos = nxthdro;
-    dev->prvblkpos = blkpos;
+    dev->devunique.tape_dev.nxtblkpos = nxthdro;
+    dev->devunique.tape_dev.prvblkpos = blkpos;
 
     /* Return block length */
     return curblkl;
@@ -882,7 +882,7 @@ off_t           blkpos;                 /* Offset of current block   */
 int             curblkl;                /* Length of current block   */
 
     /* Initialize current block position */
-    blkpos = dev->nxtblkpos;
+    blkpos = dev->devunique.tape_dev.nxtblkpos;
 
     /* Seek to end of file to determine file size */
     eofpos = lseek (dev->fd, 0, SEEK_END);
@@ -904,11 +904,11 @@ int             curblkl;                /* Length of current block   */
         if (dev->fd >= 0)
             close (dev->fd);
         dev->fd = -1;
-        dev->nxtblkpos = 0;
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.nxtblkpos = 0;
+        dev->devunique.tape_dev.prvblkpos = -1;
 
         /* Increment the file number */
-        dev->curfilen++;
+        dev->devunique.tape_dev.curfilen++;
 
         /* Return zero to indicate tapemark */
         return 0;
@@ -920,8 +920,8 @@ int             curblkl;                /* Length of current block   */
         curblkl = omadesc->blklen;
 
     /* Update the offsets of the next and previous blocks */
-    dev->nxtblkpos = (long)(blkpos + curblkl);
-    dev->prvblkpos = (long)(blkpos);
+    dev->devunique.tape_dev.nxtblkpos = (long)(blkpos + curblkl);
+    dev->devunique.tape_dev.prvblkpos = (long)(blkpos);
 
     /* Return block length */
     return curblkl;
@@ -941,8 +941,8 @@ int             rc;                     /* Return code               */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 
     /* Point to the current file entry in the OMA descriptor table */
-    omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += (dev->curfilen-1);
+    omadesc = (OMATAPE_DESC*)(dev->devunique.tape_dev.omadesc);
+    omadesc += (dev->devunique.tape_dev.curfilen-1);
 
     /* Forward space block depending on OMA file type */
     switch (omadesc->format)
@@ -959,7 +959,7 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
         break;
     } /* end switch(omadesc->format) */
 
-    if (rc >= 0) dev->blockid++;
+    if (rc >= 0) dev->devunique.tape_dev.blockid++;
 
     return rc;
 
@@ -988,22 +988,22 @@ S32             nxthdro;                /* Offset of next header     */
     if (dev->fd >= 0)
         close (dev->fd);
     dev->fd = -1;
-    dev->nxtblkpos = 0;
-    dev->prvblkpos = -1;
+    dev->devunique.tape_dev.nxtblkpos = 0;
+    dev->devunique.tape_dev.prvblkpos = -1;
 
     /* Exit with tape at load point if currently on first file */
-    if (dev->curfilen <= 1)
+    if (dev->devunique.tape_dev.curfilen <= 1)
     {
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
 
     /* Decrement current file number */
-    dev->curfilen--;
+    dev->devunique.tape_dev.curfilen--;
 
     /* Point to the current file entry in the OMA descriptor table */
-    omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += (dev->curfilen-1);
+    omadesc = (OMATAPE_DESC*)(dev->devunique.tape_dev.omadesc);
+    omadesc += (dev->devunique.tape_dev.curfilen-1);
 
     /* Open the new current file */
     rc = open_omatape (dev, unitstat,code);
@@ -1027,8 +1027,8 @@ S32             nxthdro;                /* Offset of next header     */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return -1;
     }
-    dev->nxtblkpos = pos;
-    dev->prvblkpos = -1;
+    dev->devunique.tape_dev.nxtblkpos = pos;
+    dev->devunique.tape_dev.prvblkpos = -1;
 
     /* Determine the offset of the previous block */
     switch (omadesc->format)
@@ -1039,17 +1039,17 @@ S32             nxthdro;                /* Offset of next header     */
         rc = readhdr_omaheaders (dev, omadesc, pos, &curblkl,
                                 &prvhdro, &nxthdro, unitstat,code);
         if (rc < 0) return -1;
-        dev->prvblkpos = prvhdro;
+        dev->devunique.tape_dev.prvblkpos = prvhdro;
         break;
     case 'F':
         /* For OMA fixed block files, calculate the previous block
            offset allowing for a possible short final block */
         pos = (pos + omadesc->blklen - 1) / omadesc->blklen;
-        dev->prvblkpos = (pos > 0 ? (pos - 1) * omadesc->blklen : -1);
+        dev->devunique.tape_dev.prvblkpos = (pos > 0 ? (pos - 1) * omadesc->blklen : -1);
         break;
     case 'T':
         /* For OMA ASCII text files, the previous block is unknown */
-        dev->prvblkpos = -1;
+        dev->devunique.tape_dev.prvblkpos = -1;
         break;
     } /* end switch(omadesc->format) */
 
@@ -1082,14 +1082,14 @@ S32             prvhdro = 0;            /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Point to the current file entry in the OMA descriptor table */
-    omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += (dev->curfilen-1);
+    omadesc = (OMATAPE_DESC*)(dev->devunique.tape_dev.omadesc);
+    omadesc += (dev->devunique.tape_dev.curfilen-1);
 
     /* Backspace file if current position is at start of file */
-    if (dev->nxtblkpos == 0)
+    if (dev->devunique.tape_dev.nxtblkpos == 0)
     {
         /* Unit check if already at start of tape */
-        if (dev->curfilen <= 1)
+        if (dev->devunique.tape_dev.curfilen <= 1)
         {
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
             return -1;
@@ -1099,21 +1099,21 @@ S32             nxthdro;                /* Offset of next header     */
         rc = bsf_omatape (dev, unitstat,code);
         if (rc < 0) return -1;
 
-        dev->blockid--;
+        dev->devunique.tape_dev.blockid--;
 
         /* Return zero to indicate tapemark detected */
         return 0;
     }
 
     /* Unit check if previous block position is unknown */
-    if (dev->prvblkpos < 0)
+    if (dev->devunique.tape_dev.prvblkpos < 0)
     {
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
 
     /* Backspace to previous block position */
-    blkpos = dev->prvblkpos;
+    blkpos = dev->devunique.tape_dev.prvblkpos;
 
     /* Determine new previous block position */
     switch (omadesc->format)
@@ -1140,10 +1140,10 @@ S32             nxthdro;                /* Offset of next header     */
     } /* end switch(omadesc->format) */
 
     /* Update the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos;
-    dev->prvblkpos = prvhdro;
+    dev->devunique.tape_dev.nxtblkpos = blkpos;
+    dev->devunique.tape_dev.prvblkpos = prvhdro;
 
-    dev->blockid--;
+    dev->devunique.tape_dev.blockid--;
 
     /* Return +1 to indicate backspace successful */
     return +1;
@@ -1163,19 +1163,19 @@ void close_omatape2(DEVBLK *dev)
         close (dev->fd);
     }
     dev->fd=-1;
-    if (dev->omadesc != NULL)
+    if (dev->devunique.tape_dev.omadesc != NULL)
     {
-        free (dev->omadesc);
-        dev->omadesc = NULL;
+        free (dev->devunique.tape_dev.omadesc);
+        dev->devunique.tape_dev.omadesc = NULL;
     }
 
     /* Reset the device dependent fields */
-    dev->nxtblkpos=0;
-    dev->prvblkpos=-1;
-    dev->curfilen=1;
-    dev->blockid=0;
-    dev->fenced = 0;
-    dev->omafiles = 0;
+    dev->devunique.tape_dev.nxtblkpos=0;
+    dev->devunique.tape_dev.prvblkpos=-1;
+    dev->devunique.tape_dev.curfilen=1;
+    dev->devunique.tape_dev.blockid=0;
+    dev->devunique.tape_dev.fenced = 0;
+    dev->devunique.tape_dev.omafiles = 0;
     return;
 }
 
@@ -1190,8 +1190,8 @@ void close_omatape(DEVBLK *dev)
 {
     close_omatape2(dev);
     strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
-    dev->blockid = 0;
-    dev->fenced = 0;
+    dev->devunique.tape_dev.blockid = 0;
+    dev->devunique.tape_dev.fenced = 0;
     return;
 }
 
@@ -1205,6 +1205,6 @@ int rewind_omatape(DEVBLK *dev,BYTE *unitstat,BYTE code)
     UNREFERENCED(unitstat);
     UNREFERENCED(code);
     close_omatape2(dev);
-    dev->fenced = 0;
+    dev->devunique.tape_dev.fenced = 0;
     return 0;
 }

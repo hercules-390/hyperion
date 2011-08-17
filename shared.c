@@ -67,7 +67,7 @@ int shared_update_notify (DEVBLK *dev, int block)
 int      i, j;                          /* Indexes                   */
 
     /* Return if no remotes are connected */
-    if (dev->shrdconn == 0)
+    if (dev->shrd_dev.shrdconn == 0)
         return 0;
 
     for (i = 0; i < SHARED_MAX_SYS; i++)
@@ -75,24 +75,25 @@ int      i, j;                          /* Indexes                   */
 
         /* Ignore the entry if it doesn't exist or if it's ours
            our if it's already maxed out */
-        if (dev->shrd[i] == NULL || dev->shrd[i]->id == dev->ioactive
-         || dev->shrd[i]->purgen < 0)
+        if (dev->shrd_dev.shrd[i] == NULL 
+         || dev->shrd_dev.shrd[i]->id == dev->ioactive
+         || dev->shrd_dev.shrd[i]->purgen < 0)
             continue;
 
         /* Check if the block is already entered */
-        for (j = 0; j < dev->shrd[i]->purgen; j++)
-            if (fetch_fw(dev->shrd[i]->purge[j]) == (U32)block) break;
+        for (j = 0; j < dev->shrd_dev.shrd[i]->purgen; j++)
+            if (fetch_fw(dev->shrd_dev.shrd[i]->purge[j]) == (U32)block) break;
 
         /* Add the block if it's not already there */
-        if (j >= dev->shrd[i]->purgen)
+        if (j >= dev->shrd_dev.shrd[i]->purgen)
         {
-            if (dev->shrd[i]->purgen >= SHARED_PURGE_MAX)
-                dev->shrd[i]->purgen = -1;
+            if (dev->shrd_dev.shrd[i]->purgen >= SHARED_PURGE_MAX)
+                dev->shrd_dev.shrd[i]->purgen = -1;
             else
-                store_fw (dev->shrd[i]->purge[dev->shrd[i]->purgen++],
+                store_fw (dev->shrd_dev.shrd[i]->purge[dev->shrd_dev.shrd[i]->purgen++],
                           block);
            shrdtrc(dev,"notify %d added for id=%d, n=%d\n",
-                   block, dev->shrd[i]->id, dev->shrd[i]->purgen);
+                   block, dev->shrd_dev.shrd[i]->id, dev->shrd_dev.shrd[i]->purgen);
         }
 
     } /* for each possible remote system */
@@ -156,25 +157,27 @@ char    *strtok_str = NULL;             /* last position             */
         {
             if ( (he = gethostbyname (ipname)) == NULL )
                 return -1;
-            memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
+            memcpy(&dev->rmt_dev.rmtaddr,
+                   he->h_addr_list[0],
+                   sizeof(dev->rmt_dev.rmtaddr));
         }
 
         if (port && strlen(port))
         {
-            if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
+            if (sscanf(port, "%hu%c", &dev->rmt_dev.rmtport, &c) != 1)
                 return -1;
         }
         else
-            dev->rmtport = SHARED_DEFAULT_PORT;
+            dev->rmt_dev.rmtport = SHARED_DEFAULT_PORT;
 
         if (rmtnum && strlen(rmtnum))
         {
             if (strlen (rmtnum) > 4
-             || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 1)
+             || sscanf (rmtnum, "%hx%c", &dev->rmt_dev.rmtnum, &c) != 1)
                 return -1;
         }
         else
-            dev->rmtnum = dev->devnum;
+            dev->rmt_dev.rmtnum = dev->devnum;
 
         /* Process the remaining arguments */
         for (i = 1; i < argc; i++)
@@ -183,14 +186,14 @@ char    *strtok_str = NULL;             /* last position             */
                 strcasecmp ("rdonly",   argv[i]) == 0 ||
                 strcasecmp ("ro",       argv[i]) == 0)
             {
-                dev->ckdrdonly = 1;
+                dev->devunique.dasd_dev.ckdrdonly = 1;
                 continue;
             }
             if (strcasecmp ("fakewrite", argv[i]) == 0 ||
                 strcasecmp ("fakewrt",   argv[i]) == 0 ||
                 strcasecmp ("fw",        argv[i]) == 0)
             {
-                dev->ckdfakewr = 1;
+                dev->devunique.dasd_dev.ckdfakewr = 1;
                 continue;
             }
             if (strlen (argv[i]) > 3
@@ -207,9 +210,9 @@ char    *strtok_str = NULL;             /* last position             */
             {
                 kw = strtok_r (argv[i], "=", &strtok_str );
                 op = strtok_r (NULL, " \t", &strtok_str );
-                dev->rmtcomp = atoi (op);
-                if (dev->rmtcomp < 0 || dev->rmtcomp > 9)
-                    dev->rmtcomp = 0;
+                dev->rmt_dev.rmtcomp = atoi (op);
+                if (dev->rmt_dev.rmtcomp < 0 || dev->rmt_dev.rmtcomp > 9)
+                    dev->rmt_dev.rmtcomp = 0;
                 continue;
             }
 #endif
@@ -219,12 +222,12 @@ char    *strtok_str = NULL;             /* last position             */
     }
 
     /* Set suported compression */
-    dev->rmtcomps = 0;
+    dev->rmt_dev.rmtcomps = 0;
 #ifdef HAVE_LIBZ
-    dev->rmtcomps |= SHRD_LIBZ;
+    dev->rmt_dev.rmtcomps |= SHRD_LIBZ;
 #endif
 #ifdef CCKD_BZIP2
-    dev->rmtcomps |= SHRD_BZIP2;
+    dev->rmt_dev.rmtcomps |= SHRD_BZIP2;
 #endif
 
     /* Update the device handler vector */
@@ -246,8 +249,8 @@ init_retry:
     /* Return if unable to connect */
     if (rc < 0) return 0;
 
-    dev->ckdnumfd = 1;
-    dev->ckdfd[0] = dev->fd;
+    dev->devunique.dasd_dev.ckdnumfd = 1;
+    dev->devunique.dasd_dev.ckdfd[0] = dev->fd;
 
     /* Get the number of cylinders */
     rc = clientRequest (dev, cyls, 4, SHRD_QUERY, SHRD_CKDCYLS, NULL, NULL);
@@ -258,7 +261,7 @@ init_retry:
         WRMSG (HHC00702, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
-    dev->ckdcyls = fetch_fw (cyls);
+    dev->devunique.dasd_dev.ckdcyls = fetch_fw (cyls);
 
     /* Get the device characteristics */
     rc = clientRequest (dev, dev->devchar, sizeof(dev->devchar),
@@ -273,18 +276,19 @@ init_retry:
     dev->numdevchar = rc;
 
     /* Get number of heads from devchar */
-    dev->ckdheads = fetch_hw (dev->devchar + 14);
+    dev->devunique.dasd_dev.ckdheads = fetch_hw (dev->devchar + 14);
 
     /* Calculate number of tracks */
-    dev->ckdtrks = dev->ckdcyls * dev->ckdheads;
-    dev->ckdhitrk[0] = dev->ckdtrks;
+    dev->devunique.dasd_dev.ckdtrks = dev->devunique.dasd_dev.ckdcyls * dev->devunique.dasd_dev.ckdheads;
+    dev->devunique.dasd_dev.ckdhitrk[0] = dev->devunique.dasd_dev.ckdtrks;
 
     /* Check the device type */
     if (dev->devtype == 0)
         dev->devtype = fetch_hw (dev->devchar + 3);
     else if (dev->devtype != fetch_hw (dev->devchar + 3))
     {
-        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
+        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+               dev->rmt_dev.rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
     }
 
@@ -301,34 +305,34 @@ init_retry:
     dev->numdevid = rc;
 
     /* Indicate no active track */
-    dev->cache = dev->bufcur = -1;
+    dev->devunique.dasd_dev.cache = dev->bufcur = -1;
     dev->buf = NULL;
 
     /* Set number of sense bytes */
     dev->numsense = 32;
 
     /* Locate the CKD dasd table entry */
-    dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
-    if (dev->ckdtab == NULL)
+    dev->devunique.dasd_dev.ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->devunique.dasd_dev.ckdcyls);
+    if (dev->devunique.dasd_dev.ckdtab == NULL)
     {
         WRMSG (HHC00706, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
         return -1;
     }
 
     /* Set the track size */
-    dev->ckdtrksz = (dev->ckdtab->r1 + 511) & ~511;
+    dev->devunique.dasd_dev.ckdtrksz = (dev->devunique.dasd_dev.ckdtab->r1 + 511) & ~511;
 
     /* Locate the CKD control unit dasd table entry */
-    dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
-    if (dev->ckdcu == NULL)
+    dev->devunique.dasd_dev.ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->devunique.dasd_dev.ckdtab->cu, 0, 0);
+    if (dev->devunique.dasd_dev.ckdcu == NULL)
     {
-        WRMSG (HHC00707, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, cu ? cu : dev->ckdtab->cu);
+        WRMSG (HHC00707, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, cu ? cu : dev->devunique.dasd_dev.ckdtab->cu);
         return -1;
     }
 
     /* Set flag bit if 3990 controller */
-    if (dev->ckdcu->devt == 0x3990)
-        dev->ckd3990 = 1;
+    if (dev->devunique.dasd_dev.ckdcu->devt == 0x3990)
+        dev->devunique.dasd_dev.ckd3990 = 1;
 
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
@@ -342,8 +346,8 @@ init_retry:
 
     /* Log the device geometry */
     if (!dev->batch)
-    WRMSG (HHC00708, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
-            dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
+    WRMSG (HHC00708, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcyls,
+            dev->devunique.dasd_dev.ckdheads, dev->devunique.dasd_dev.ckdtrks, dev->devunique.dasd_dev.ckdtrksz);
 
     dev->connecting = 0;
 
@@ -421,24 +425,24 @@ char    *strtok_str = NULL;             /* last token                */
 
         if ( (he = gethostbyname (ipname)) == NULL )
             return -1;
-        memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
+        memcpy(&dev->rmt_dev.rmtaddr, he->h_addr_list[0], sizeof(dev->rmt_dev.rmtaddr));
 
         if (port)
         {
-            if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
+            if (sscanf(port, "%hu%c", &dev->rmt_dev.rmtport, &c) != 1)
                 return -1;
         }
         else
-            dev->rmtport = SHARED_DEFAULT_PORT;
+            dev->rmt_dev.rmtport = SHARED_DEFAULT_PORT;
 
         if (rmtnum)
         {
             if (strlen (rmtnum) > 4
-             || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 0)
+             || sscanf (rmtnum, "%hx%c", &dev->rmt_dev.rmtnum, &c) != 0)
                 return -1;
         }
         else
-            dev->rmtnum = dev->devnum;
+            dev->rmt_dev.rmtnum = dev->devnum;
 
         /* Process the remaining arguments */
         for (i = 1; i < argc; i++)
@@ -449,9 +453,9 @@ char    *strtok_str = NULL;             /* last token                */
             {
                 kw = strtok_r (argv[i], "=", &strtok_str );
                 op = strtok_r (NULL, " \t", &strtok_str );
-                dev->rmtcomp = atoi (op);
-                if (dev->rmtcomp < 0 || dev->rmtcomp > 9)
-                    dev->rmtcomp = 0;
+                dev->rmt_dev.rmtcomp = atoi (op);
+                if (dev->rmt_dev.rmtcomp < 0 || dev->rmt_dev.rmtcomp > 9)
+                    dev->rmt_dev.rmtcomp = 0;
                 continue;
             }
 #endif
@@ -461,12 +465,12 @@ char    *strtok_str = NULL;             /* last token                */
     }
 
     /* Set suported compression */
-    dev->rmtcomps = 0;
+    dev->rmt_dev.rmtcomps = 0;
 #ifdef HAVE_LIBZ
-    dev->rmtcomps |= SHRD_LIBZ;
+    dev->rmt_dev.rmtcomps |= SHRD_LIBZ;
 #endif
 #ifdef CCKD_BZIP2
-    dev->rmtcomps |= SHRD_BZIP2;
+    dev->rmt_dev.rmtcomps |= SHRD_BZIP2;
 #endif
 
     /* Update the device handler vector */
@@ -497,7 +501,7 @@ init_retry:
         WRMSG (HHC00709, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
-    dev->fbaorigin = fetch_fw (origin);
+    dev->devunique.dasd_dev.fbaorigin = fetch_fw (origin);
 
     /* Get the number of blocks */
     rc = clientRequest (dev, numblks, 4, SHRD_QUERY, SHRD_FBANUMBLK, NULL, NULL);
@@ -508,7 +512,7 @@ init_retry:
         WRMSG (HHC00710, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
-    dev->fbanumblk = fetch_fw (numblks);
+    dev->devunique.dasd_dev.fbanumblk = fetch_fw (numblks);
 
     /* Get the block size */
     rc = clientRequest (dev, blksiz, 4, SHRD_QUERY, SHRD_FBABLKSIZ, NULL, NULL);
@@ -519,8 +523,8 @@ init_retry:
         WRMSG (HHC00711, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
-    dev->fbablksiz = fetch_fw (blksiz);
-    dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
+    dev->devunique.dasd_dev.fbablksiz = fetch_fw (blksiz);
+    dev->devunique.dasd_dev.fbaend = (dev->devunique.dasd_dev.fbaorigin + dev->devunique.dasd_dev.fbanumblk) * dev->devunique.dasd_dev.fbablksiz;
 
     /* Get the device id */
     rc = clientRequest (dev, dev->devid, sizeof(dev->devid),
@@ -537,7 +541,7 @@ init_retry:
     /* Check the device type */
     if (dev->devtype != fetch_hw (dev->devid + 4))
     {
-        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
+        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmt_dev.rmtnum, fetch_hw (dev->devid + 4));
         return -1;
     }
 
@@ -554,15 +558,15 @@ init_retry:
     dev->numdevchar = rc;
 
     /* Indicate no active track */
-    dev->cache = dev->bufcur = -1;
+    dev->devunique.dasd_dev.cache = dev->bufcur = -1;
     dev->buf = NULL;
 
     /* Set number of sense bytes */
     dev->numsense = 32;
 
     /* Locate the FBA dasd table entry */
-    dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
-    if (dev->fbatab == NULL)
+    dev->devunique.dasd_dev.fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->devunique.dasd_dev.fbanumblk);
+    if (dev->devunique.dasd_dev.fbatab == NULL)
     {
         WRMSG (HHC00706, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
         return -1;
@@ -572,7 +576,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    WRMSG (HHC00712, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (int)dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00712, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (int)dev->devunique.dasd_dev.fbaorigin, dev->devunique.dasd_dev.fbanumblk);
 
     dev->connecting = 0;
 
@@ -609,7 +613,7 @@ int      trk;                           /* Cache track number        */
 int      code;                          /* Response code             */
 BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
 
-    shrdtrc(dev,"start cur %d cache %d\n",dev->bufcur,dev->cache);
+    shrdtrc(dev,"start cur %d cache %d\n",dev->bufcur,dev->devunique.dasd_dev.cache);
 
     /* Send the START request */
     rc = clientRequest (dev, buf, sizeof(buf),
@@ -618,7 +622,7 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
     {
         WRMSG(HHC00713, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         clientPurge (dev, 0, NULL);
-        dev->cache = dev->bufcur = -1;
+        dev->devunique.dasd_dev.cache = dev->bufcur = -1;
         dev->buf = NULL;
         return;
     }
@@ -631,15 +635,15 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
     }
 
     /* Make previous active entry active again */
-    if (dev->cache >= 0)
+    if (dev->devunique.dasd_dev.cache >= 0)
     {
         cache_lock (CACHE_DEVBUF);
-        SHRD_CACHE_GETKEY (dev->cache, devnum, trk);
+        SHRD_CACHE_GETKEY (dev->devunique.dasd_dev.cache, devnum, trk);
         if (dev->devnum == devnum && dev->bufcur == trk)
-            cache_setflag(CACHE_DEVBUF, dev->cache, ~0, SHRD_CACHE_ACTIVE);
+            cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~0, SHRD_CACHE_ACTIVE);
         else
         {
-            dev->cache = dev->bufcur = -1;
+            dev->devunique.dasd_dev.cache = dev->bufcur = -1;
             dev->buf = NULL;
         }
         cache_unlock (CACHE_DEVBUF);
@@ -653,7 +657,7 @@ static void shared_end (DEVBLK *dev)
 {
 int      rc;                            /* Return code               */
 
-    shrdtrc(dev,"end cur %d cache %d\n",dev->bufcur,dev->cache);
+    shrdtrc(dev,"end cur %d cache %d\n",dev->bufcur,dev->devunique.dasd_dev.cache);
 
     /* Write the previous active entry if it was updated */
     if (dev->bufupd)
@@ -661,10 +665,10 @@ int      rc;                            /* Return code               */
     dev->bufupd = 0;
 
     /* Mark the active entry inactive */
-    if (dev->cache >= 0)
+    if (dev->devunique.dasd_dev.cache >= 0)
     {
         cache_lock (CACHE_DEVBUF);
-        cache_setflag (CACHE_DEVBUF, dev->cache, ~SHRD_CACHE_ACTIVE, 0);
+        cache_setflag (CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~SHRD_CACHE_ACTIVE, 0);
         cache_unlock (CACHE_DEVBUF);
     }
 
@@ -674,7 +678,7 @@ int      rc;                            /* Return code               */
     {
         WRMSG(HHC00714, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         clientPurge (dev, 0, NULL);
-        dev->cache = dev->bufcur = -1;
+        dev->devunique.dasd_dev.cache = dev->bufcur = -1;
         dev->buf = NULL;
         return;
     }
@@ -700,10 +704,10 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
     *unitstat = 0;
 
     /* Return if reading the same track image */
-    if (trk == dev->bufcur && dev->cache >= 0)
+    if (trk == dev->bufcur && dev->devunique.dasd_dev.cache >= 0)
     {
         dev->bufoff = 0;
-        dev->bufoffhi = dev->ckdtrksz;
+        dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
         return 0;
     }
 
@@ -716,14 +720,14 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
 
     /* Reset buffer offsets */
     dev->bufoff = 0;
-    dev->bufoffhi = dev->ckdtrksz;
+    dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
 
     cache_lock (CACHE_DEVBUF);
 
     /* Inactivate the previous image */
-    if (dev->cache >= 0)
-        cache_setflag (CACHE_DEVBUF, dev->cache, ~SHRD_CACHE_ACTIVE, 0);
-    dev->cache = dev->bufcur = -1;
+    if (dev->devunique.dasd_dev.cache >= 0)
+        cache_setflag (CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~SHRD_CACHE_ACTIVE, 0);
+    dev->devunique.dasd_dev.cache = dev->bufcur = -1;
 
 cache_retry:
 
@@ -735,15 +739,15 @@ cache_retry:
     {
         cache_setflag (CACHE_DEVBUF, cache, ~0, SHRD_CACHE_ACTIVE);
         cache_unlock (CACHE_DEVBUF);
-        dev->cachehits++;
-        dev->cache = cache;
+        dev->devunique.dasd_dev.cachehits++;
+        dev->devunique.dasd_dev.cache = cache;
         dev->buf = cache_getbuf (CACHE_DEVBUF, cache, 0);
         dev->bufcur = trk;
         dev->bufoff = 0;
-        dev->bufoffhi = dev->ckdtrksz;
+        dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
         dev->buflen = shared_ckd_trklen (dev, dev->buf);
         dev->bufsize = cache_getlen (CACHE_DEVBUF, cache);
-        shrdtrc(dev,"ckd_read trk %d cache hit %d\n",trk,dev->cache);
+        shrdtrc(dev,"ckd_read trk %d cache hit %d\n",trk,dev->devunique.dasd_dev.cache);
         return 0;
     }
 
@@ -751,25 +755,25 @@ cache_retry:
     if (lru < 0)
     {
         shrdtrc(dev,"ckd_read trk %d cache wait\n",trk);
-        dev->cachewaits++;
+        dev->devunique.dasd_dev.cachewaits++;
         cache_wait (CACHE_DEVBUF);
         goto cache_retry;
     }
 
     /* Process cache miss */
-    shrdtrc(dev,"ckd_read trk %d cache miss %d\n",trk,dev->cache);
-    dev->cachemisses++;
+    shrdtrc(dev,"ckd_read trk %d cache miss %d\n",trk,dev->devunique.dasd_dev.cache);
+    dev->devunique.dasd_dev.cachemisses++;
     cache_setflag (CACHE_DEVBUF, lru, 0, SHRD_CACHE_ACTIVE|DEVBUF_TYPE_SCKD);
     cache_setkey (CACHE_DEVBUF, lru, SHRD_CACHE_SETKEY(dev->devnum, trk));
     cache_setage (CACHE_DEVBUF, lru);
-    buf = cache_getbuf (CACHE_DEVBUF, lru, dev->ckdtrksz);
+    buf = cache_getbuf (CACHE_DEVBUF, lru, dev->devunique.dasd_dev.ckdtrksz);
 
     cache_unlock (CACHE_DEVBUF);
 
 read_retry:
 
     /* Send the read request for the track to the remote host */
-    SHRD_SET_HDR (hdr, SHRD_READ, 0, dev->rmtnum, dev->rmtid, 4);
+    SHRD_SET_HDR (hdr, SHRD_READ, 0, dev->rmt_dev.rmtnum, dev->rmt_dev.rmtid, 4);
     store_fw (hdr + SHRD_HDR_SIZE, trk);
     rc = clientSend (dev, hdr, NULL, 0);
     if (rc < 0)
@@ -781,7 +785,7 @@ read_retry:
     }
 
     /* Read the track from the remote host */
-    rc = clientRecv (dev, hdr, buf, dev->ckdtrksz);
+    rc = clientRecv (dev, hdr, buf, dev->devunique.dasd_dev.ckdtrksz);
     SHRD_GET_HDR (hdr, code, *unitstat, devnum, id, len);
     if (rc < 0 || code & SHRD_ERROR)
     {
@@ -798,11 +802,11 @@ read_retry:
                       SHRD_SENSE, 0, NULL, NULL);
 
     /* Read complete */
-    dev->cache = lru;
+    dev->devunique.dasd_dev.cache = lru;
     dev->buf = cache_getbuf (CACHE_DEVBUF, lru, 0);
     dev->bufcur = trk;
     dev->bufoff = 0;
-    dev->bufoffhi = dev->ckdtrksz;
+    dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
     dev->buflen = shared_ckd_trklen (dev, dev->buf);
     dev->bufsize = cache_getlen (CACHE_DEVBUF, lru);
     dev->buf[0] = 0;
@@ -819,11 +823,11 @@ static int shared_ckd_write (DEVBLK *dev, int trk, int off,
 int      rc;                            /* Return code               */
 
     /* Immediately return if fake writing */
-    if (dev->ckdfakewr)
+    if (dev->devunique.dasd_dev.ckdfakewr)
         return len;
 
     /* Error if opened read-only */
-    if (dev->ckdrdonly)
+    if (dev->devunique.dasd_dev.ckdrdonly)
     {
         ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
                         FORMAT_1, MESSAGE_0);
@@ -839,7 +843,7 @@ int      rc;                            /* Return code               */
         rc = (dev->hnd->read) (dev, trk, unitstat);
         if (rc < 0)
         {
-            dev->bufcur = dev->cache = -1;
+            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
             return -1;
         }
     }
@@ -885,14 +889,14 @@ int             sz;                     /* Size so far               */
         sz += CKDDASD_RECHDR_SIZE +
                 buf[sz+5] +
                 (buf[sz+6] << 8) + buf[sz+7];
-        if (sz > dev->ckdtrksz - 8) break;
+        if (sz > dev->devunique.dasd_dev.ckdtrksz - 8) break;
     }
 
     /* add length for end-of-track indicator */
     sz += CKDDASD_RECHDR_SIZE;
 
-    if (sz > dev->ckdtrksz)
-        sz = dev->ckdtrksz;
+    if (sz > dev->devunique.dasd_dev.ckdtrksz)
+        sz = dev->devunique.dasd_dev.ckdtrksz;
 
     return sz;
 }
@@ -931,9 +935,9 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
     cache_lock (CACHE_DEVBUF);
 
     /* Make the previous cache entry inactive */
-    if (dev->cache >= 0)
-        cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
-    dev->bufcur = dev->cache = -1;
+    if (dev->devunique.dasd_dev.cache >= 0)
+        cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~FBA_CACHE_ACTIVE, 0);
+    dev->bufcur = dev->devunique.dasd_dev.cache = -1;
 
 cache_retry:
 
@@ -943,18 +947,18 @@ cache_retry:
     /* Cache hit */
     if (i >= 0)
     {
-        cache_setflag(CACHE_DEVBUF, dev->cache, ~0, FBA_CACHE_ACTIVE);
-        cache_setage(CACHE_DEVBUF, dev->cache);
+        cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~0, FBA_CACHE_ACTIVE);
+        cache_setage(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
         cache_unlock(CACHE_DEVBUF);
-        dev->cachehits++;
-        dev->cache = i;
-        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+        dev->devunique.dasd_dev.cachehits++;
+        dev->devunique.dasd_dev.cache = i;
+        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
         dev->bufcur = blkgrp;
         dev->bufoff = 0;
         dev->bufoffhi = shared_fba_blkgrp_len (dev, blkgrp);
         dev->buflen = shared_fba_blkgrp_len (dev, blkgrp);
-        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
-        shrdtrc(dev,"fba_read blkgrp %d cache hit %d\n",blkgrp,dev->cache);
+        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
+        shrdtrc(dev,"fba_read blkgrp %d cache hit %d\n",blkgrp,dev->devunique.dasd_dev.cache);
         return 0;
     }
 
@@ -962,14 +966,14 @@ cache_retry:
     if (o < 0)
     {
         shrdtrc(dev,"fba_read blkgrp %d cache wait\n",blkgrp);
-        dev->cachewaits++;
+        dev->devunique.dasd_dev.cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto cache_retry;
     }
 
     /* Cache miss */
-    shrdtrc(dev,"fba_read blkgrp %d cache miss %d\n",blkgrp,dev->cache);
-    dev->cachemisses++;
+    shrdtrc(dev,"fba_read blkgrp %d cache miss %d\n",blkgrp,dev->devunique.dasd_dev.cache);
+    dev->devunique.dasd_dev.cachemisses++;
     cache_setflag(CACHE_DEVBUF, o, 0, FBA_CACHE_ACTIVE|DEVBUF_TYPE_SFBA);
     cache_setkey (CACHE_DEVBUF, o, FBA_CACHE_SETKEY(dev->devnum, blkgrp));
     cache_setage (CACHE_DEVBUF, o);
@@ -1008,14 +1012,14 @@ read_retry:
         clientRequest (dev, dev->sense, dev->numsense,
                       SHRD_SENSE, 0, NULL, NULL);
 
-    dev->cache = o;
-    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+    dev->devunique.dasd_dev.cache = o;
+    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
     dev->buf[0] = 0;
     dev->bufcur = blkgrp;
     dev->bufoff = 0;
     dev->bufoffhi = shared_fba_blkgrp_len (dev, blkgrp);
     dev->buflen = shared_fba_blkgrp_len (dev, blkgrp);
-    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
+    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
 
     return 0;
 }
@@ -1033,7 +1037,7 @@ int             rc;                     /* Return code               */
     {
         rc = (dev->hnd->read) (dev, blkgrp, unitstat);
         if (rc < 0) {
-            dev->bufcur = dev->cache = -1;
+            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
             return -1;
         }
     }
@@ -1066,8 +1070,8 @@ static int shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp * FBA_BLKGRP_SIZE;
-    if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
-        return (int)(dev->fbaend - offset);
+    if (dev->devunique.dasd_dev.fbaend - offset < FBA_BLKGRP_SIZE)
+        return (int)(dev->devunique.dasd_dev.fbaend - offset);
     else
         return FBA_BLKGRP_SIZE;
 }
@@ -1149,7 +1153,7 @@ write_retry:
 
     /* The write request contains a 2 byte offset and 4 byte id,
        followed by the data */
-    SHRD_SET_HDR (hdr, SHRD_WRITE, 0, dev->rmtnum, dev->rmtid, len + 6);
+    SHRD_SET_HDR (hdr, SHRD_WRITE, 0, dev->rmt_dev.rmtnum, dev->rmt_dev.rmtid, len + 6);
     store_hw (hdr + SHRD_HDR_SIZE, dev->bufupdlo);
     store_fw (hdr + SHRD_HDR_SIZE + 2, block);
 
@@ -1184,8 +1188,8 @@ write_retry:
 static void clientPurge (DEVBLK *dev, int n, void *buf)
 {
     cache_lock(CACHE_DEVBUF);
-    dev->rmtpurgen = n;
-    dev->rmtpurge = (FWORD *)buf;
+    dev->rmt_dev.rmtpurgen = n;
+    dev->rmt_dev.rmtpurge = (FWORD *)buf;
     cache_scan (CACHE_DEVBUF, clientPurgescan, dev);
     cache_unlock(CACHE_DEVBUF);
 }
@@ -1200,15 +1204,15 @@ DEVBLK         *dev = data;             /* -> device block           */
     SHRD_CACHE_GETKEY(i, devnum, trk);
     if (devnum == dev->devnum)
     {
-        if (dev->rmtpurgen == 0) {
+        if (dev->rmt_dev.rmtpurgen == 0) {
             cache_release (ix, i, 0);
             shrdtrc(dev,"purge %d\n",trk);
         }
         else
         {
-            for (p = 0; p < dev->rmtpurgen; p++)
+            for (p = 0; p < dev->rmt_dev.rmtpurgen; p++)
             {
-                if (trk == (int)fetch_fw (dev->rmtpurge[p]))
+                if (trk == (int)fetch_fw (dev->rmt_dev.rmtpurge[p]))
                 {
                     shrdtrc(dev,"purge %d\n",trk);
                     cache_release (ix, i, 0);
@@ -1246,9 +1250,9 @@ HWORD              comp;                /* Returned compression parm */
         if (dev->localhost)
         {
 #if defined( HAVE_SYS_UN_H )
-            dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
+            dev->fd = dev->devunique.dasd_dev.ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
 #else // !defined( HAVE_SYS_UN_H )
-            dev->fd = dev->ckdfd[0] = -1;
+            dev->fd = dev->devunique.dasd_dev.ckdfd[0] = -1;
 #endif // defined( HAVE_SYS_UN_H )
             if (dev->fd < 0)
             {
@@ -1264,21 +1268,21 @@ HWORD              comp;                /* Returned compression parm */
         }
         else
         {
-            dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
+            dev->fd = dev->devunique.dasd_dev.ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
             if (dev->fd < 0)
             {
                 WRMSG (HHC00720, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socket()", strerror(HSO_errno));
                 return -1;
             }
             iserver.sin_family      = AF_INET;
-            iserver.sin_port        = htons(dev->rmtport);
-            memcpy(&iserver.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
+            iserver.sin_port        = htons(dev->rmt_dev.rmtport);
+            memcpy(&iserver.sin_addr.s_addr,&dev->rmt_dev.rmtaddr,sizeof(struct in_addr));
             server = (struct sockaddr *)&iserver;
             len = sizeof(iserver);
         }
 
         /* Connect to the server */
-        store_hw (id, dev->rmtid);
+        store_hw (id, dev->rmt_dev.rmtid);
         rc = connect (dev->fd, server, len);
         shrdtrc(dev,"connect rc=%d errno=%d\n",rc, HSO_errno);
         if (rc >= 0)
@@ -1291,8 +1295,8 @@ HWORD              comp;                /* Returned compression parm */
             rc = clientRequest (dev, id, 2, SHRD_CONNECT, flag, NULL, &flag);
             if (rc >= 0)
             {
-                dev->rmtid = fetch_hw (id);
-                dev->rmtrel = flag & 0x0f;
+                dev->rmt_dev.rmtid = fetch_hw (id);
+                dev->rmt_dev.rmtrel = flag & 0x0f;
             }
 
             /*
@@ -1307,12 +1311,12 @@ HWORD              comp;                /* Returned compression parm */
              * the data for us if we support the compression algorithm.
              */
 
-            if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps))
+            if (rc >= 0 && (dev->rmt_dev.rmtcomp || dev->rmt_dev.rmtcomps))
             {
                 rc = clientRequest (dev, comp, 2, SHRD_COMPRESS,
-                           (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL);
+                           (dev->rmt_dev.rmtcomps << 4) | dev->rmt_dev.rmtcomp, NULL, NULL);
                 if (rc >= 0)
-                    dev->rmtcomp = fetch_hw (comp);
+                    dev->rmt_dev.rmtcomp = fetch_hw (comp);
             }
 
         }
@@ -1354,9 +1358,9 @@ BYTE     temp[256];                     /* Temporary buffer          */
 retry :
 
     /* Send the request */
-    SHRD_SET_HDR(hdr, cmd, flags, dev->rmtnum, dev->rmtid, 0);
+    SHRD_SET_HDR(hdr, cmd, flags, dev->rmt_dev.rmtnum, dev->rmt_dev.rmtid, 0);
     shrdtrc(dev,"client_request %2.2x %2.2x %2.2x %d\n",
-            cmd,flags,dev->rmtnum,dev->rmtid);
+            cmd,flags,dev->rmt_dev.rmtnum,dev->rmt_dev.rmtid);
     rc = clientSend (dev, hdr, NULL, 0);
     if (rc < 0) return rc;
 
@@ -1433,7 +1437,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
 #ifdef HAVE_LIBZ
     /* Compress the buf */
-    if (dev->rmtcomp != 0
+    if (dev->rmt_dev.rmtcomp != 0
      && flag == 0 && off <= SHRD_COMP_MAX_OFF
      && buflen >= SHARED_COMPRESS_MINLEN)
     {
@@ -1441,7 +1445,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         newlen = 65536 - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
-                        buf, buflen, dev->rmtcomp);
+                        buf, buflen, dev->rmt_dev.rmtcomp);
         if (rc == Z_OK && (int)newlen < buflen)
         {
             cmd |= SHRD_COMP;
@@ -1703,7 +1707,7 @@ int      off;                           /* Offset into record        */
     shrdtrc(dev,"server_request [%d] %2.2x %2.2x %2.2x %d %d\n",
              ix, cmd, flag, devnum, id, len);
 
-    dev->shrd[ix]->time = time (NULL);
+    dev->shrd_dev.shrd[ix]->time = time (NULL);
 
     switch (cmd) {
 
@@ -1720,7 +1724,7 @@ int      off;                           /* Offset into record        */
                          "shared version mismatch");
             break;
         }
-        dev->shrd[ix]->release = flag & 0x0f;
+        dev->shrd_dev.shrd[ix]->release = flag & 0x0f;
         SHRD_SET_HDR (hdr, 0, (SHARED_VERSION << 4) | SHARED_RELEASE, dev->devnum, id, 2);
         store_hw (buf, id);
         serverSend (dev, ix, hdr, buf, 2);
@@ -1729,7 +1733,7 @@ int      off;                           /* Offset into record        */
     case SHRD_DISCONNECT:
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
         serverSend (dev, ix, hdr, NULL, 0);
-        dev->shrd[ix]->disconnect = 1;
+        dev->shrd_dev.shrd[ix]->disconnect = 1;
 
         obtain_lock (&dev->lock);
 
@@ -1773,7 +1777,7 @@ int      off;                           /* Offset into record        */
                 break;
             }
 
-            dev->shrd[ix]->waiting = 1;
+            dev->shrd_dev.shrd[ix]->waiting = 1;
 
             /* Wait while the device is busy by the local system */
             while (dev->ioactive == DEV_SYS_LOCAL && !dev->suspended)
@@ -1790,7 +1794,7 @@ int      off;                           /* Offset into record        */
                 break;
             }
 
-            dev->shrd[ix]->waiting = 0;
+            dev->shrd_dev.shrd[ix]->waiting = 0;
         }
 
         /* Make this system active on the device */
@@ -1809,22 +1813,22 @@ int      off;                           /* Offset into record        */
             (dev->hnd->resume) (dev);
 
         /* Get the purge list */
-        if (dev->shrd[ix]->purgen == 0)
+        if (dev->shrd_dev.shrd[ix]->purgen == 0)
             code = len = 0;
         else
         {
             code = SHRD_PURGE;
-            if (dev->shrd[ix]->purgen < 0)
+            if (dev->shrd_dev.shrd[ix]->purgen < 0)
                 len = 0;
             else
-                len = 4 * dev->shrd[ix]->purgen;
+                len = 4 * dev->shrd_dev.shrd[ix]->purgen;
         }
 
         /* Send the response */
         SHRD_SET_HDR (hdr, code, 0, dev->devnum, id, len);
-        rc = serverSend (dev, ix, hdr, (BYTE *)dev->shrd[ix]->purge, len);
+        rc = serverSend (dev, ix, hdr, (BYTE *)dev->shrd_dev.shrd[ix]->purge, len);
         if (rc >= 0)
-            dev->shrd[ix]->purgen = 0;
+            dev->shrd_dev.shrd[ix]->purgen = 0;
         break;
 
     case SHRD_END:
@@ -1862,8 +1866,8 @@ int      off;                           /* Offset into record        */
 
             /* Reset any `waiting' bits */
             for (i = 0; i < SHARED_MAX_SYS; i++)
-                if (dev->shrd[i])
-                    dev->shrd[i]->waiting = 0;
+                if (dev->shrd_dev.shrd[i])
+                    dev->shrd_dev.shrd[i]->waiting = 0;
 
             /* Notify any waiters */
             if (dev->iowaiters)
@@ -1936,8 +1940,8 @@ int      off;                           /* Offset into record        */
         }
 
         /* Set the compressions client is willing to accept */
-        dev->comps = dev->shrd[ix]->comps;
-        dev->comp = dev->compoff = 0;
+        dev->devunique.dasd_dev.comps = dev->shrd_dev.shrd[ix]->comps;
+        dev->devunique.dasd_dev.comp = dev->devunique.dasd_dev.compoff = 0;
 
         /* Call the I/O read exit */
         rcd = (int)fetch_fw (buf);
@@ -1949,12 +1953,12 @@ int      off;                           /* Offset into record        */
             code = SHRD_IOERR;
         else
         {
-            code = dev->comp ? SHRD_COMP : 0;
-            flag = (dev->comp << 4) | dev->compoff;
+            code = dev->devunique.dasd_dev.comp ? SHRD_COMP : 0;
+            flag = (dev->devunique.dasd_dev.comp << 4) | dev->devunique.dasd_dev.compoff;
         }
 
         /* Reset compression stuff */
-        dev->comps = dev->comp = dev->compoff = 0;
+        dev->devunique.dasd_dev.comps = dev->devunique.dasd_dev.comp = dev->devunique.dasd_dev.compoff = 0;
 
         SHRD_SET_HDR (hdr, code, flag, dev->devnum, id, dev->buflen);
         serverSend (dev, ix, hdr, dev->buf, dev->buflen);
@@ -2029,25 +2033,25 @@ int      off;                           /* Offset into record        */
             break;
 
         case SHRD_CKDCYLS:
-            store_fw (buf, dev->ckdcyls);
+            store_fw (buf, dev->devunique.dasd_dev.ckdcyls);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBAORIGIN:
-            store_fw (buf, dev->fbaorigin);
+            store_fw (buf, dev->devunique.dasd_dev.fbaorigin);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBANUMBLK:
-            store_fw (buf, dev->fbanumblk);
+            store_fw (buf, dev->devunique.dasd_dev.fbanumblk);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBABLKSIZ:
-            store_fw (buf, dev->fbablksiz);
+            store_fw (buf, dev->devunique.dasd_dev.fbablksiz);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
@@ -2061,12 +2065,12 @@ int      off;                           /* Offset into record        */
 
     case SHRD_COMPRESS:
 #ifdef HAVE_LIBZ
-        dev->shrd[ix]->comp = (flag & 0x0f);
-        store_hw (buf, dev->shrd[ix]->comp);
+        dev->shrd_dev.shrd[ix]->comp = (flag & 0x0f);
+        store_hw (buf, dev->shrd_dev.shrd[ix]->comp);
 #else
         store_hw (buf, 0);
 #endif
-        dev->shrd[ix]->comps = (flag & 0xf0) >> 4;
+        dev->shrd_dev.shrd[ix]->comps = (flag & 0xf0) >> 4;
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 2);
         serverSend (dev, ix, hdr, buf, 2);
         break;
@@ -2088,9 +2092,9 @@ int      i;                             /* Loop index                */
     if (avail) *avail = -1;
     for (i = 0; i < SHARED_MAX_SYS; i++)
     {
-        if (dev->shrd[i])
+        if (dev->shrd_dev.shrd[i])
         {
-            if (dev->shrd[i]->id == id)
+            if (dev->shrd_dev.shrd[i]->id == id)
                 return i;
         }
         else if (avail && *avail < 0)
@@ -2108,15 +2112,15 @@ int      i;                             /* Loop index                */
 int      id;                            /* Identifier                */
 
     do {
-        dev->shrdid += 1;
-        dev->shrdid &= 0xffff;
-        if (dev->shrdid == DEV_SYS_LOCAL
-         || dev->shrdid == DEV_SYS_NONE)
-            dev->shrdid = 1;
-        id = dev->shrdid;
+        dev->shrd_dev.shrdid += 1;
+        dev->shrd_dev.shrdid &= 0xffff;
+        if (dev->shrd_dev.shrdid == DEV_SYS_LOCAL
+         || dev->shrd_dev.shrdid == DEV_SYS_NONE)
+            dev->shrd_dev.shrdid = 1;
+        id = dev->shrd_dev.shrdid;
 
         for (i = 0; i < SHARED_MAX_SYS; i++)
-            if (dev->shrd[i] && dev->shrd[i]->id == id)
+            if (dev->shrd_dev.shrd[i] && dev->shrd_dev.shrd[i]->id == id)
                 break;
 
     } while (i < SHARED_MAX_SYS);
@@ -2140,7 +2144,7 @@ BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
         len = SHARED_MAX_MSGLEN;
 
     SHRD_SET_HDR (hdr, code, status, dev ? dev->devnum : 0,
-                  ix < 0 ? 0 : dev->shrd[ix]->id, (U16)len);
+                  ix < 0 ? 0 : dev->shrd_dev.shrd[ix]->id, (U16)len);
 
     shrdtrc(dev,"server_error %2.2x %2.2x: %s\n", code, status, msg);
 
@@ -2189,7 +2193,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     /* Get socket number; if `ix' < 0 we don't have a device yet */
     if (ix >= 0)
-        sock = dev->shrd[ix]->fd;
+        sock = dev->shrd_dev.shrd[ix]->fd;
     else
     {
         sock = -ix;
@@ -2201,7 +2205,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
 #ifdef HAVE_LIBZ
     /* Compress the buf */
-    if (ix >= 0 && dev->shrd[ix]->comp != 0
+    if (ix >= 0 && dev->shrd_dev.shrd[ix]->comp != 0
      && code == SHRD_OK && status == 0
      && hdrlen - SHRD_HDR_SIZE <= SHRD_COMP_MAX_OFF
      && buflen >= SHARED_COMPRESS_MINLEN)
@@ -2212,7 +2216,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         newlen = sizeof(cbuf) - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
-                        buf, buflen, dev->shrd[ix]->comp);
+                        buf, buflen, dev->shrd_dev.shrd[ix]->comp);
         if (rc == Z_OK && (int)newlen < buflen)
         {
             /* Setup to use the compressed buffer */
@@ -2242,7 +2246,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     if (rc < 0)
     {
         WRMSG(HHC00729, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, id, strerror(HSO_errno));
-        dev->shrd[ix]->disconnect = 1;
+        dev->shrd_dev.shrd[ix]->disconnect = 1;
     }
 
     return rc;
@@ -2254,8 +2258,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
  *-------------------------------------------------------------------*/
 static int serverDisconnectable (DEVBLK *dev, int ix) {
 
-    if (dev->shrd[ix]->waiting || dev->shrd[ix]->pending
-     || dev->ioactive == dev->shrd[ix]->id)
+    if (dev->shrd_dev.shrd[ix]->waiting || dev->shrd_dev.shrd[ix]->pending
+     || dev->ioactive == dev->shrd_dev.shrd[ix]->id)
         return 0;
     else
         return 1;
@@ -2269,7 +2273,7 @@ static void serverDisconnect (DEVBLK *dev, int ix) {
 int id;                                 /* Client identifier         */
 int i;                                  /* Loop index                */
 
-    id = dev->shrd[ix]->id;
+    id = dev->shrd_dev.shrd[ix]->id;
 
 //FIXME: Handle a disconnected busy client better
 //       Perhaps a disconnect timeout value... this will
@@ -2291,8 +2295,8 @@ int i;                                  /* Loop index                */
 
         /* Reset any `waiting' bits */
         for (i = 0; i < SHARED_MAX_SYS; i++)
-            if (dev->shrd[i])
-                dev->shrd[i]->waiting = 0;
+            if (dev->shrd_dev.shrd[i])
+                dev->shrd_dev.shrd[i]->waiting = 0;
 
         /* Make the device available */
         if (dev->suspended) {
@@ -2310,15 +2314,15 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->iocond);
     }
 
-    WRMSG(HHC00731, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, id);
+    WRMSG(HHC00731, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd_dev.shrd[ix]->ipaddr, id);
 
     /* Release the SHRD block */
-    close_socket (dev->shrd[ix]->fd);
-    free (dev->shrd[ix]->ipaddr);
-    free (dev->shrd[ix]);
-    dev->shrd[ix] = NULL;
+    close_socket (dev->shrd_dev.shrd[ix]->fd);
+    free (dev->shrd_dev.shrd[ix]->ipaddr);
+    free (dev->shrd_dev.shrd[ix]);
+    dev->shrd_dev.shrd[ix] = NULL;
 
-    dev->shrdconn--;
+    dev->shrd_dev.shrdconn--;
 } /* serverDisconnect */
 
 /*-------------------------------------------------------------------
@@ -2435,10 +2439,10 @@ char            threadname[40];
     }
 
     /* Obtain SHRD block */
-    dev->shrd[ix] = calloc (sizeof(SHRD), 1);
+    dev->shrd_dev.shrd[ix] = calloc (sizeof(SHRD), 1);
 
     /* Error if not obtained */
-    if (dev->shrd[ix] == NULL)
+    if (dev->shrd_dev.shrd[ix] == NULL)
     {
         release_lock (&dev->lock);
         serverError (NULL, -csock, SHRD_ERROR_NOMEM, cmd,
@@ -2448,36 +2452,36 @@ char            threadname[40];
     }
 
     /* Initialize the SHRD block */
-    dev->shrd[ix]->pending = 1;
-    dev->shrd[ix]->havehdr = 1;
+    dev->shrd_dev.shrd[ix]->pending = 1;
+    dev->shrd_dev.shrd[ix]->havehdr = 1;
     if (id == 0) id = serverId (dev);
-    dev->shrd[ix]->id = id;
-    dev->shrd[ix]->fd = csock;
-    dev->shrd[ix]->ipaddr = strdup(ipaddr);
-    dev->shrd[ix]->time = time (NULL);
-    dev->shrd[ix]->purgen = -1;
-    dev->shrdconn++;
-    SHRD_SET_HDR (dev->shrd[ix]->hdr, cmd, flag, devnum, id, len);
+    dev->shrd_dev.shrd[ix]->id = id;
+    dev->shrd_dev.shrd[ix]->fd = csock;
+    dev->shrd_dev.shrd[ix]->ipaddr = strdup(ipaddr);
+    dev->shrd_dev.shrd[ix]->time = time (NULL);
+    dev->shrd_dev.shrd[ix]->purgen = -1;
+    dev->shrd_dev.shrdconn++;
+    SHRD_SET_HDR (dev->shrd_dev.shrd[ix]->hdr, cmd, flag, devnum, id, len);
 
     WRMSG (HHC00733, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ipaddr, id);
 
     /* Return if device thread already active */
-    if (dev->shrdtid)
+    if (dev->shrd_dev.shrdtid)
     {
-        if (dev->shrdwait)
+        if (dev->shrd_dev.shrdwait)
         {
-            signal_thread (dev->shrdtid, SIGUSR2);
+            signal_thread (dev->shrd_dev.shrdtid, SIGUSR2);
         }
         release_lock (&dev->lock);
         return NULL;
     }
-    dev->shrdtid = thread_id();
+    dev->shrd_dev.shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
     MSGBUF(threadname, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
     WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
 
-    while (dev->shrdconn)
+    while (dev->shrd_dev.shrdconn)
     {
         FD_ZERO (&selset);
         maxfd = -1;
@@ -2487,32 +2491,32 @@ char            threadname[40];
 
         for (ix = 0; ix < SHARED_MAX_SYS; ix++)
         {
-            if (dev->shrd[ix])
+            if (dev->shrd_dev.shrd[ix])
             {
                 /* Exit loop if pending and not waiting */
-                if (dev->shrd[ix]->pending && !dev->shrd[ix]->waiting)
+                if (dev->shrd_dev.shrd[ix]->pending && !dev->shrd_dev.shrd[ix]->waiting)
                     break;
 
                 /* Disconnect if not a valid socket */
-                if ( !socket_is_socket( dev->shrd[ix]->fd ) )
-                    dev->shrd[ix]->disconnect = 1;
+                if ( !socket_is_socket( dev->shrd_dev.shrd[ix]->fd ) )
+                    dev->shrd_dev.shrd[ix]->disconnect = 1;
 
                 /* See if the connection can be timed out */
-                else if (now - dev->shrd[ix]->time > SHARED_TIMEOUT
+                else if (now - dev->shrd_dev.shrd[ix]->time > SHARED_TIMEOUT
                  && serverDisconnectable (dev, ix))
-                    dev->shrd[ix]->disconnect = 1;
+                    dev->shrd_dev.shrd[ix]->disconnect = 1;
 
                 /* Disconnect if the disconnect bit is set */
-                if (dev->shrd[ix]->disconnect)
+                if (dev->shrd_dev.shrd[ix]->disconnect)
                     serverDisconnect (dev, ix);
 
                 /* Otherwise set the fd if not waiting */
-                else if (!dev->shrd[ix]->waiting)
+                else if (!dev->shrd_dev.shrd[ix]->waiting)
                 {
-                    FD_SET (dev->shrd[ix]->fd, &selset);
-                    if (dev->shrd[ix]->fd >= maxfd)
-                        maxfd = dev->shrd[ix]->fd + 1;
-                    shrdtrc(dev,"select   set %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+                    FD_SET (dev->shrd_dev.shrd[ix]->fd, &selset);
+                    if (dev->shrd_dev.shrd[ix]->fd >= maxfd)
+                        maxfd = dev->shrd_dev.shrd[ix]->fd + 1;
+                    shrdtrc(dev,"select   set %d id=%d\n",dev->shrd_dev.shrd[ix]->fd,dev->shrd_dev.shrd[ix]->id);
                 }
             }
 
@@ -2529,9 +2533,9 @@ char            threadname[40];
             wait.tv_usec = 0;
             release_lock (&dev->lock);
 
-            dev->shrdwait = 1;
+            dev->shrd_dev.shrdwait = 1;
             rc = select ( maxfd, &selset, NULL, NULL, &wait );
-            dev->shrdwait = 0;
+            dev->shrd_dev.shrdwait = 0;
 
             obtain_lock (&dev->lock);
 
@@ -2549,11 +2553,11 @@ char            threadname[40];
             /* Find any pending requests */
             for (ix = 0; ix < SHARED_MAX_SYS; ix++)
             {
-                if (dev->shrd[ix]
-                 && FD_ISSET(dev->shrd[ix]->fd, &selset))
+                if (dev->shrd_dev.shrd[ix]
+                 && FD_ISSET(dev->shrd_dev.shrd[ix]->fd, &selset))
                 {
-                    dev->shrd[ix]->pending = 1;
-                    shrdtrc(dev,"select isset %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+                    dev->shrd_dev.shrd[ix]->pending = 1;
+                    shrdtrc(dev,"select isset %d id=%d\n",dev->shrd_dev.shrd[ix]->fd,dev->shrd_dev.shrd[ix]->id);
                 }
             }
             continue;
@@ -2562,23 +2566,24 @@ char            threadname[40];
         /* Found a pending request */
         release_lock (&dev->lock);
 
-        shrdtrc(dev,"select ready %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+        shrdtrc(dev,"select ready %d id=%d\n",dev->shrd_dev.shrd[ix]->fd,dev->shrd_dev.shrd[ix]->id);
 
-        if (dev->shrd[ix]->havehdr)
+        if (dev->shrd_dev.shrd[ix]->havehdr)
         {
             /* Copy the saved start/resume packet */
-            memcpy (hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE);
-            dev->shrd[ix]->havehdr = dev->shrd[ix]->waiting = 0;
+            memcpy (hdr, dev->shrd_dev.shrd[ix]->hdr, SHRD_HDR_SIZE);
+            dev->shrd_dev.shrd[ix]->havehdr = dev->shrd_dev.shrd[ix]->waiting = 0;
         }
         else
         {
             /* Read the request packet */
-            rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
+            rc = recvData (dev->shrd_dev.shrd[ix]->fd, hdr, buf, 65536, 1);
             if (rc < 0)
             {
-                WRMSG(HHC00734, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
-                dev->shrd[ix]->disconnect = 1;
-                dev->shrd[ix]->pending = 0;
+                WRMSG(HHC00734, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                      dev->shrd_dev.shrd[ix]->ipaddr, dev->shrd_dev.shrd[ix]->id);
+                dev->shrd_dev.shrd[ix]->disconnect = 1;
+                dev->shrd_dev.shrd[ix]->pending = 0;
                 obtain_lock (&dev->lock);
                 continue;
             }
@@ -2594,16 +2599,16 @@ char            threadname[40];
            system.  We only need to save the header because the data
            is ignored for start/resume.
         */
-        if (dev->shrd[ix]->waiting)
+        if (dev->shrd_dev.shrd[ix]->waiting)
         {
-            memcpy (dev->shrd[ix]->hdr, hdr, SHRD_HDR_SIZE);
-            dev->shrd[ix]->havehdr = 1;
+            memcpy (dev->shrd_dev.shrd[ix]->hdr, hdr, SHRD_HDR_SIZE);
+            dev->shrd_dev.shrd[ix]->havehdr = 1;
         }
         else
-            dev->shrd[ix]->pending = 0;
+            dev->shrd_dev.shrd[ix]->pending = 0;
     }
 
-    dev->shrdtid = 0;
+    dev->shrd_dev.shrdtid = 0;
     release_lock (&dev->lock);
 
     WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);

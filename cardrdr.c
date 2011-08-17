@@ -63,13 +63,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     dev->fd = -1;
     dev->fh = NULL;
-    dev->multifile = 0;
-    dev->ebcdic = 0;
-    dev->ascii = 0;
-    dev->trunc = 0;
-    dev->cardpos = 0;
-    dev->cardrem = 0;
-    dev->autopad = 0;
+    dev->devunique.crdr_dev.multifile = 0;
+    dev->devunique.crdr_dev.ebcdic = 0;
+    dev->devunique.crdr_dev.ascii = 0;
+    dev->devunique.crdr_dev.trunc = 0;
+    dev->devunique.crdr_dev.cardpos = 0;
+    dev->devunique.crdr_dev.cardrem = 0;
+    dev->devunique.crdr_dev.autopad = 0;
 
     dev->excps = 0;
 
@@ -78,11 +78,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     fc = 0;
 
-    if (dev->more_files) free (dev->more_files);
+    if (dev->devunique.crdr_dev.more_files) free (dev->devunique.crdr_dev.more_files);
 
-    dev->more_files = malloc(sizeof(char*) * (fc + 1));
+    dev->devunique.crdr_dev.more_files = malloc(sizeof(char*) * (fc + 1));
 
-    if (!dev->more_files)
+    if (!dev->devunique.crdr_dev.more_files)
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)(sizeof(char) * (fc + 1)) );
@@ -90,7 +90,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         return -1;
     }
 
-    dev->more_files[fc] = NULL;
+    dev->devunique.crdr_dev.more_files[fc] = NULL;
 
     /* Process the driver arguments starting with the SECOND
        argument. (The FIRST argument is the filename and is
@@ -114,7 +114,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "multifile") == 0)
         {
-            dev->multifile = 1;
+            dev->devunique.crdr_dev.multifile = 1;
             continue;
         }
 
@@ -123,7 +123,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "eof") == 0)
         {
-            dev->rdreof = 1;
+            dev->devunique.crdr_dev.rdreof = 1;
             continue;
         }
 
@@ -132,7 +132,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "intrq") == 0)
         {
-            dev->rdreof = 0;
+            dev->devunique.crdr_dev.rdreof = 0;
             continue;
         }
 
@@ -142,7 +142,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "ebcdic") == 0)
         {
-            dev->ebcdic = 1;
+            dev->devunique.crdr_dev.ebcdic = 1;
             continue;
         }
 
@@ -152,7 +152,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "ascii") == 0)
         {
-            dev->ascii = 1;
+            dev->devunique.crdr_dev.ascii = 1;
             continue;
         }
 
@@ -165,7 +165,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "trunc") == 0)
         {
-            dev->trunc = 1;
+            dev->devunique.crdr_dev.trunc = 1;
             continue;
         }
 
@@ -176,7 +176,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         if (strcasecmp(argv[i], "autopad") == 0)
         {
-            dev->autopad = 1;
+            dev->devunique.crdr_dev.autopad = 1;
             continue;
         }
 
@@ -194,23 +194,23 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             return -1;
         }
         hostpath(pathname, argv[i], sizeof(pathname));
-        dev->more_files[fc++] = strdup(pathname);
-        dev->more_files = realloc(dev->more_files, sizeof(char*) * (fc + 1));
+        dev->devunique.crdr_dev.more_files[fc++] = strdup(pathname);
+        dev->devunique.crdr_dev.more_files = realloc(dev->devunique.crdr_dev.more_files, sizeof(char*) * (fc + 1));
 
-        if (!dev->more_files)
+        if (!dev->devunique.crdr_dev.more_files)
         {
             WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()", strerror(errno));
             return -1;
         }
 
-        dev->more_files[fc] = NULL;
+        dev->devunique.crdr_dev.more_files[fc] = NULL;
     }
 
-    dev->current_file = dev->more_files;
+    dev->devunique.crdr_dev.current_file = dev->devunique.crdr_dev.more_files;
 
     /* Check for conflicting arguments */
 
-    if (dev->ebcdic && dev->ascii)
+    if (dev->devunique.crdr_dev.ebcdic && dev->devunique.crdr_dev.ascii)
     {
         WRMSG (HHC01202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
@@ -232,17 +232,17 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         //  Since you can't "rewind" a socket, we must therefore default
         // to one of them.
 
-        if (!dev->ebcdic && !dev->ascii)
+        if (!dev->devunique.crdr_dev.ebcdic && !dev->devunique.crdr_dev.ascii)
         {
             WRMSG (HHC01204, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            dev->ascii = 1;
+            dev->devunique.crdr_dev.ascii = 1;
         }
     }
 
-    if (dev->multifile && !fc)
+    if (dev->devunique.crdr_dev.multifile && !fc)
     {
         WRMSG (HHC01205, "W", SSID_TO_LCSS(dev->ssid), dev->devnum);
-        dev->multifile = 0;
+        dev->devunique.crdr_dev.multifile = 0;
     }
 
     /* The first argument is the file name */
@@ -303,6 +303,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     // If socket device, create a listening socket
     // to accept connections on.
 
+    ASSERT( dev->filename != NULL );
+
     if (sockdev && !bind_device(dev,dev->filename))
     {
         // (error message already issued)
@@ -323,12 +325,13 @@ static void cardrdr_query_device (DEVBLK *dev, char **devclass,
     snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s%s IO[%" I64_FMT "u]",
         ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),
         (dev->bs ?                    " sockdev"   : ""),
-        (dev->multifile ?             " multifile" : ""),
-        (dev->ascii ?                 " ascii"     : ""),
-        (dev->ebcdic ?                " ebcdic"    : ""),
-        (dev->autopad ?               " autopad"   : ""),
-        ((dev->ascii && dev->trunc) ? " trunc"     : ""),
-        (dev->rdreof ?                " eof"       : " intrq"),
+        (dev->devunique.crdr_dev.multifile ?             " multifile" : ""),
+        (dev->devunique.crdr_dev.ascii ?                 " ascii"     : ""),
+        (dev->devunique.crdr_dev.ebcdic ?                " ebcdic"    : ""),
+        (dev->devunique.crdr_dev.autopad ?               " autopad"   : ""),
+        ((dev->devunique.crdr_dev.ascii && 
+          dev->devunique.crdr_dev.trunc) ?               " trunc"     : ""),
+        (dev->devunique.crdr_dev.rdreof ?                " eof"       : " intrq"),
         dev->excps );
 
 } /* end function cardrdr_query_device */
@@ -378,19 +381,19 @@ static int clear_cardrdr ( DEVBLK *dev )
     dev->filename[0] = '\0';
 
     /* If next file is available, open it */
-    if (dev->current_file && *(dev->current_file))
+    if (dev->devunique.crdr_dev.current_file && *(dev->devunique.crdr_dev.current_file))
     {
-        hostpath(dev->filename, *(dev->current_file++), sizeof(dev->filename));
+        hostpath(dev->filename, *(dev->devunique.crdr_dev.current_file++), sizeof(dev->filename));
     }
     else
     {
         /* Reset the device dependent flags */
-        dev->multifile = 0;
-        dev->ascii = 0;
-        dev->ebcdic = 0;
-//      dev->rdreof = 0;
-        dev->trunc = 0;
-        dev->autopad = 0;
+        dev->devunique.crdr_dev.multifile = 0;
+        dev->devunique.crdr_dev.ascii = 0;
+        dev->devunique.crdr_dev.ebcdic = 0;
+//      dev->devunique.crdr_dev.rdreof = 0;
+        dev->devunique.crdr_dev.trunc = 0;
+        dev->devunique.crdr_dev.autopad = 0;
     }
 
     return 0;
@@ -417,7 +420,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
         if (dev->fd == -1)
         {
-            if(dev->rdreof)
+            if(dev->devunique.crdr_dev.rdreof)
             {
                 *unitstat=CSW_CE|CSW_DE|CSW_UX;
                 return -1;
@@ -434,7 +437,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     /* Intervention required if device has no file name */
     if (dev->filename[0] == '\0' || ( strlen(dev->filename) == 1 && dev->filename[0] == '*') )
     {
-        if(dev->rdreof)
+        if(dev->devunique.crdr_dev.rdreof)
         {
             *unitstat=CSW_CE|CSW_DE|CSW_UX;
             return -1;
@@ -464,7 +467,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
     /* If neither EBCDIC nor ASCII was specified, attempt to
        detect the format by inspecting the first 160 bytes */
-    if (dev->ebcdic == 0 && dev->ascii == 0)
+    if (dev->devunique.crdr_dev.ebcdic == 0 && dev->devunique.crdr_dev.ascii == 0)
     {
         /* Read first 160 bytes of file into the buffer */
         len = (int)fread(buf, 1, sizeof(buf), dev->fh);
@@ -486,14 +489,14 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
         /* Assume ASCII format if first 160 bytes contain only ASCII
            characters, carriage return, line feed, tab, or EOF */
-        for (i = 0, dev->ascii = 1; i < len && buf[i] != '\x1A'; i++)
+        for (i = 0, dev->devunique.crdr_dev.ascii = 1; i < len && buf[i] != '\x1A'; i++)
         {
             if ((buf[i] < 0x20 || buf[i] > 0x7F)
                 && buf[i] != '\r' && buf[i] != '\n'
                 && buf[i] != '\t')
             {
-                dev->ascii = 0;
-                dev->ebcdic = 1;
+                dev->devunique.crdr_dev.ascii = 0;
+                dev->devunique.crdr_dev.ebcdic = 1;
                 break;
             }
         } /* end for(i) */
@@ -536,7 +539,7 @@ int     rc;                             /* Return code               */
     else
         rc = (int)fread(dev->buf, 1, CARD_SIZE, dev->fh);
 
-    if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
+    if ((rc > 0) && (rc < CARD_SIZE) && dev->devunique.crdr_dev.autopad)
     {
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
         rc = CARD_SIZE;
@@ -548,7 +551,7 @@ int     rc;                             /* Return code               */
     )
     {
         /* Return unit exception or intervention required */
-        if (dev->rdreof)
+        if (dev->devunique.crdr_dev.rdreof)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         }
@@ -625,7 +628,7 @@ BYTE    c = 0;                          /* Input character           */
             if (i > 0) break;
 
             /* Return unit exception or intervention required */
-            if (dev->rdreof)
+            if (dev->devunique.crdr_dev.rdreof)
             {
                 *unitstat = CSW_CE | CSW_DE | CSW_UX;
             }
@@ -677,7 +680,7 @@ BYTE    c = 0;                          /* Input character           */
         if (i >= CARD_SIZE)
         {
             /* Ignore excess characters if trunc option specified */
-            if (dev->trunc) continue;
+            if (dev->devunique.crdr_dev.trunc) continue;
 
             WRMSG (HHC01207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
 
@@ -738,14 +741,14 @@ int     num;                            /* Number of bytes to move   */
             for (;;)
             {
                 /* Read ASCII or EBCDIC card image */
-                if (dev->ascii)
+                if (dev->devunique.crdr_dev.ascii)
                         rc = read_ascii (dev, unitstat);
                 else
                         rc = read_ebcdic (dev, unitstat);
 
                 if (0
                         || rc != -2
-                        || !dev->multifile
+                        || !dev->devunique.crdr_dev.multifile
                         || open_cardrdr (dev, unitstat) != 0
                         )
                 break;
@@ -755,22 +758,22 @@ int     num;                            /* Number of bytes to move   */
             if (rc) break;
 
             /* Initialize number of bytes in current card */
-            dev->cardpos = 0;
-            dev->cardrem = CARD_SIZE;
+            dev->devunique.crdr_dev.cardpos = 0;
+            dev->devunique.crdr_dev.cardrem = CARD_SIZE;
 
         } /* end if(!data-chained) */
 
         /* Calculate number of bytes to read and set residual count */
-        num = (count < dev->cardrem) ? count : dev->cardrem;
+        num = (count < dev->devunique.crdr_dev.cardrem) ? count : dev->devunique.crdr_dev.cardrem;
         *residual = count - num;
-        if (count < dev->cardrem) *more = 1;
+        if (count < dev->devunique.crdr_dev.cardrem) *more = 1;
 
         /* Copy data from card image buffer into channel buffer */
-        memcpy (iobuf, dev->buf + dev->cardpos, num);
+        memcpy (iobuf, dev->buf + dev->devunique.crdr_dev.cardpos, num);
 
         /* Update number of bytes remaining in card image buffer */
-        dev->cardpos += num;
-        dev->cardrem -= num;
+        dev->devunique.crdr_dev.cardpos += num;
+        dev->devunique.crdr_dev.cardrem -= num;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
