@@ -203,6 +203,9 @@ U64     total_sios;                     /* Total SIO rate            */
         /* Update TOD clock */
         update_tod_clock();
 
+// This MIPS counting needs to move to something like panel too 
+// - there is no need to recalculate statistics every timer pop 
+// - this makes the timer too heavvy for no reason
 #ifdef OPTION_MIPS_COUNTING
         now = host_tod();
         diff = now - then;
