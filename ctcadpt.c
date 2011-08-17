@@ -666,8 +666,17 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     // for cosmetics, since we are successfully connected or serving,
     // fill in some details for the panel.
-    snprintf( dev->filename, sizeof(dev->filename), "%s:%s", remaddr, remotep );
-    dev->filename[sizeof(dev->filename)-1] = '\0';
+    {
+        char pathname[PATH_MAX];
+
+        if ( dev->filename != NULL )
+        {
+            free(dev->filename);
+            dev->filename = NULL;
+        }
+        MSGBUF( pathname, "%s:%s", remaddr, remotep );
+        dev->filename = strdup( pathname );
+    }
     return 0;
 }
 
@@ -976,7 +985,7 @@ static void*  CTCT_ListenThread( void* argp )
                  inet_ntoa( parm.addr.sin_addr ),
                  ntohs( parm.addr.sin_port ) );
 
-        if( strcmp( str, parm.dev->filename ) != 0 )
+        if( parm.dev->filename == NULL || strcmp( str, parm.dev->filename ) != 0 )
         {
             WRMSG(HHC00974, "E", SSID_TO_LCSS(parm.dev->ssid), parm.dev->devnum,
                     parm.dev->filename, str);
@@ -1102,7 +1111,12 @@ U16 lcss;
         if (start_vmnet(dev, xdev, argc - 1, &argv[1]))
             return -1;
     }
-    strlcpy(dev->filename, "vmnet", sizeof(dev->filename) );
+    if ( dev->filename != NULL )
+    {
+        free(dev->filename);
+        dev->filename = NULL;
+    }
+    dev->filename = strdup( "vmnet" );
 
     /* Set the control unit type */
     /* Linux/390 currently only supports 3088 model 2 CTCA and ESCON */

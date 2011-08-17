@@ -123,7 +123,7 @@ int inet_socket (char* spec)
 {
     /* We need a copy of the path to overwrite a ':' with '\0' */
 
-    char buf[sizeof(((DEVBLK*)0)->filename)];
+    char buf[PATH_MAX+1];
     char* colon;
     char* node;
     char* service;

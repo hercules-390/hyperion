@@ -614,6 +614,13 @@ int     i;                              /* Loop index                */
         dev->group = NULL;
     }
 
+    // free filename space
+    if ( dev->filename != NULL )
+    {
+        free(dev->filename);
+        dev->filename = NULL;
+    }
+
     ret_devblk(dev);
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM

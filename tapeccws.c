@@ -1529,7 +1529,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     {
         int     argc, i;                                     /* work */
         char  **argv;                                        /* work */
-        char    newfile [ sizeof(dev->filename) ];           /* work */
+        char    newfile [ PATH_MAX ];                        /* work */
 
         /* Command reject if AUTOMOUNT support not enabled */
         if (0
@@ -3207,7 +3207,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             RESIDUAL_CALC ((int)strlen(dev->filename));
 
             /* Copy device filename to guest storage */
-            str_host_to_guest( (const BYTE*)dev->filename, iobuf, num );
+            if ( dev->filename != NULL )
+                str_host_to_guest( (const BYTE*)dev->filename, iobuf, num );
+            else
+                str_host_to_guest( "", iobuf, num );
 
             /* Return normal status */
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);

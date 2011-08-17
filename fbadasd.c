@@ -74,7 +74,7 @@ int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
-char    pathname[MAX_PATH];             /* file path in host format  */
+char    pathname[PATH_MAX];             /* file path in host format  */
 char   *strtok_str = NULL;              /* save last position        */
 
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
@@ -84,14 +84,28 @@ char   *strtok_str = NULL;              /* save last position        */
     dev->excps = 0;
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
+    if (argc == 0 || strlen(argv[0]) >= sizeof(pathname))
     {
         WRMSG (HHC00500, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    hostpath(pathname, argv[0], sizeof(pathname) );
+
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup(pathname);
+
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01460, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
+    }
 
 #if defined( OPTION_SHOWDVOL1 )
     /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */

@@ -1189,7 +1189,13 @@ void close_omatape2(DEVBLK *dev)
 void close_omatape(DEVBLK *dev)
 {
     close_omatape2(dev);
-    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
+    if ( dev->filename != NULL )
+    {
+        free(dev->filename);
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup( TAPE_UNLOADED );
     dev->devunique.tape_dev.blockid = 0;
     dev->devunique.tape_dev.fenced = 0;
     return;

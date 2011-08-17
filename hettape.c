@@ -91,7 +91,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     dev->filename, "het", "het_open()", msgbuf );
         }
 
-        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );;
+        if ( dev->filename != NULL )
+        {
+            free( dev->filename );
+            dev->filename = NULL;
+        }
+
+        dev->filename = strdup( TAPE_UNLOADED );
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }
@@ -127,8 +133,15 @@ void close_het (DEVBLK *dev)
     het_close (&dev->devunique.tape_dev.hetb);
 
     /* Reinitialize the DEV fields */
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup( TAPE_UNLOADED );
+    
     dev->fd = -1;
-    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     dev->devunique.tape_dev.blockid = 0;
     dev->devunique.tape_dev.fenced = 0;
 

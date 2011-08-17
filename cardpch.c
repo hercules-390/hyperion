@@ -51,6 +51,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
+char    pathname[PATH_MAX];
 int     i;                              /* Array subscript           */
 
     /* The first argument is the file name */
@@ -60,14 +61,27 @@ int     i;                              /* Array subscript           */
         return -1;
     }
 
-    if (strlen(argv[0]) >= sizeof(dev->filename))
+    if ( strlen(argv[0]) >= sizeof(pathname) )
     {
-        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (int)sizeof(dev->filename) - 1);
+        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (int)sizeof(pathname) );
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    hostpath(pathname, argv[0], sizeof(pathname));
+
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup(pathname);
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
+    }
 
     /* Initialize device dependent fields */
     dev->fd = -1;

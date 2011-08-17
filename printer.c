@@ -321,6 +321,7 @@ int   iarg,i,j;                        /* some Array subscripts      */
 char *ptr;
 char *nxt;
 int   sockdev = 0;                     /* 1 == is socket device     */
+char  pathname[PATH_MAX+1];
 
     dev->excps = 0;
 
@@ -329,14 +330,28 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         return -1; // (error msg already issued)
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
+    if (argc == 0 || strlen(argv[0]) >= sizeof(pathname) )
     {
         WRMSG (HHC01101, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    hostpath(pathname, argv[0], sizeof(pathname) );
+
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup(pathname);
+
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01460, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
+    }
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3211;

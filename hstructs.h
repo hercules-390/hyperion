@@ -960,7 +960,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
-        char    filename[PATH_MAX+1];   /* filename (plus poss "|")  */
+        char   *filename;               /* filename (plus poss "|")  */
 
         /*  device i/o fields...                                     */
 
@@ -1164,7 +1164,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 BYTE    aid3270;                /* Current input AID value   */
                 BYTE    mod3270;                /* 3270 model number         */
                 BYTE    szgroupip[16];          /* str of IP GRP MASK        */
-//              BYTE    szCmdPrefix[2];         /* Command Prefix Character  */
+                BYTE    szCmdPrefix[2];         /* Command Prefix Character  */
             } cons_dev;
 
             struct _crdr_dev            /*Device dependent fields for cardrdr*/

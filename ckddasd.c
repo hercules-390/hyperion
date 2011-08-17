@@ -224,14 +224,14 @@ char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            pathname[PATH_MAX];     /* file path in host format  */
-char            filename[FILENAME_MAX]; /* work area for display     */
+char            filename[PATH_MAX+2];   /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
+    if (argc == 0 || strlen(argv[0]) >= sizeof(pathname) )
     {
         WRMSG (HHC00400, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
@@ -241,7 +241,21 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->excps = 0;
 
     /* Save the file name in the device block */
-    hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    hostpath(pathname, argv[0], sizeof(pathname) );
+
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
+    dev->filename = strdup(pathname);
+
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01460, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
+    }
 
     if (strchr(dev->filename, SPACE) == NULL)
     {

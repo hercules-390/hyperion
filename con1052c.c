@@ -91,7 +91,7 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->devunique.cons_dev.prompt1052 = 1;
 
     /* Default command character is "/" */
-    strlcpy(dev->filename,"/",sizeof(dev->filename));
+    strlcpy(dev->devunique.cons_dev.szCmdPrefix,"/",sizeof(dev->devunique.cons_dev.szCmdPrefix));
 
     /* Is there an argument? */
     if (argc > 0)
@@ -103,7 +103,8 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             ac++; argc--;
         }
         else
-            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
+            strlcpy(dev->devunique.cons_dev.szCmdPrefix,argv[ac],sizeof(dev->devunique.cons_dev.szCmdPrefix));
+// ZZ:FIX ME this needs to error if length is not 1
     }
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
@@ -134,7 +135,7 @@ con1052_query_device (DEVBLK *dev, char **devclass,
 
     snprintf(buffer, buflen-1,
         "*syscons cmdpref(%s)%s IO[%" I64_FMT "u]",
-        dev->filename,
+        dev->devunique.cons_dev.szCmdPrefix,
         !dev->devunique.cons_dev.prompt1052 ? " noprompt" : "",
         dev->excps );
 
@@ -382,11 +383,11 @@ int  i;
     {
         if(dev->allocated
           && dev->hnd == &con1052_device_hndinfo
-          && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
+          && !strncasecmp(cmd,dev->devunique.cons_dev.szCmdPrefix,strlen(dev->devunique.cons_dev.szCmdPrefix)) )
         {
-            input = cmd + strlen(dev->filename);
+            input = cmd + strlen(dev->devunique.cons_dev.szCmdPrefix);
             WRCMSG ("<pnl,color(lightyellow,black)>", HHC00008, "I", 
-                        dev->filename, cmd+strlen(dev->filename) );
+                        dev->devunique.cons_dev.szCmdPrefix, cmd+strlen(dev->devunique.cons_dev.szCmdPrefix) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
             dev->devunique.cons_dev.keybdrem = dev->buflen = i;

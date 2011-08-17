@@ -46,7 +46,7 @@ static int cardrdr_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     i;                              /* Array subscript           */
 int     fc;                             /* File counter              */
-char    pathname[MAX_PATH];             /* file path in host format  */
+char    pathname[PATH_MAX];             /* file path in host format  */
 
     int sockdev = 0;
 
@@ -182,9 +182,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
         // add additional file arguments
 
-        if (strlen(argv[i]) >= sizeof(dev->filename))
+        if (strlen(argv[i]) >= sizeof(pathname))
         {
-            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], (unsigned int)sizeof(pathname) );
             return -1;
         }
 
@@ -247,24 +247,27 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* The first argument is the file name */
 
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
+
     if (argc > 0)
     {
         /* Check for valid file name */
 
-        if (strlen(argv[0]) >= sizeof(dev->filename))
+        if (strlen(argv[0]) >= sizeof(pathname))
         {
-            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(dev->filename)-1);
+            WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (unsigned int)sizeof(pathname) );
             return -1;
         }
 
         if (!sockdev)
         {
             /* Check for specification of no file mounted on reader */
-            if (argv[0][0] == '*')
-            {
-                dev->filename[0] = '\0';
-            }
-            else if (access(argv[0], R_OK | F_OK) != 0)
+            if ( !(argv[0][0] == '*' && argv[0][0] == '\0') &&
+                 (access(argv[0], R_OK | F_OK) != 0) )
             {
                 WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "access()", strerror(errno));
                 return -1;
@@ -272,11 +275,18 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 
         /* Save the file name in the device block */
-        hostpath(dev->filename, argv[0], sizeof(dev->filename));
+        hostpath(pathname, argv[0], sizeof(pathname));
+        dev->filename = strdup(pathname);
     }
     else
     {
-        dev->filename[0] = '\0';
+        dev->filename = strdup("");
+    }
+
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
     }
 
     /* Set size of i/o buffer */
@@ -372,21 +382,29 @@ static int cardrdr_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 static int clear_cardrdr ( DEVBLK *dev )
 {
+    char pathname[PATH_MAX];
+
     /* Close the card image file */
     if (cardrdr_close_device(dev) != 0) return -1;
 
     if (dev->bs) return 0;
 
     /* Clear the file name */
-    dev->filename[0] = '\0';
+    if ( dev->filename != NULL )
+    {
+        free( dev->filename );
+        dev->filename = NULL;
+    }
 
     /* If next file is available, open it */
     if (dev->devunique.crdr_dev.current_file && *(dev->devunique.crdr_dev.current_file))
     {
-        hostpath(dev->filename, *(dev->devunique.crdr_dev.current_file++), sizeof(dev->filename));
+        hostpath(pathname, *(dev->devunique.crdr_dev.current_file++), sizeof(pathname));
+        dev->filename = strdup(pathname);
     }
     else
     {
+        dev->filename = strdup("");
         /* Reset the device dependent flags */
         dev->devunique.crdr_dev.multifile = 0;
         dev->devunique.crdr_dev.ascii = 0;
@@ -394,6 +412,13 @@ static int clear_cardrdr ( DEVBLK *dev )
 //      dev->devunique.crdr_dev.rdreof = 0;
         dev->devunique.crdr_dev.trunc = 0;
         dev->devunique.crdr_dev.autopad = 0;
+    }
+
+    if ( dev->filename == NULL )
+    {
+        char buf[PATH_MAX+8];
+        MSGBUF(buf, "strdup(%s)", pathname);
+        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
     }
 
     return 0;
@@ -435,7 +460,8 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     }
 
     /* Intervention required if device has no file name */
-    if (dev->filename[0] == '\0' || ( strlen(dev->filename) == 1 && dev->filename[0] == '*') )
+    if ( dev->filename == NULL || dev->filename[0] == '\0' 
+                               || ( strlen(dev->filename) == 1 && dev->filename[0] == '*') )
     {
         if(dev->devunique.crdr_dev.rdreof)
         {
@@ -800,7 +826,8 @@ int     num;                            /* Number of bytes to move   */
         /* Put an IR sense - so that an unsolicited sense can see the intreq */
         if(dev->sense[0]==0)
         {
-            if(dev->filename[0]==0x00 ||
+            if( dev->filename == NULL  ||
+                dev->filename[0]==0x00 ||
                     (dev->bs && dev->fd==-1))
             {
                 dev->sense[0] = SENSE_IR;

@@ -926,7 +926,7 @@ int gettapetype_byname (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 int gettapetype_bydata (DEVBLK *dev)
 {
-    char        pathname[MAX_PATH];     /* file path in host format  */
+    char        pathname[PATH_MAX];     /* file path in host format  */
     int         rc;                     /* various rtns return codes */
 
     /* Try to determine the type based on actual file contents */
@@ -1138,6 +1138,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         U32     num;                    /* Parser results            */
         BYTE    str[ 80 ];              /* Parser results            */
     } res;                              /* Parser results            */
+    char        pathname[PATH_MAX];     /* Work area for filename    */
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->devunique.tape_dev.omadesc != NULL)
@@ -1146,13 +1147,31 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         dev->devunique.tape_dev.omadesc = NULL;
     }
 
+    /* Release the previous filename if allocated */
+    if (dev->filename != NULL)
+    {
+        free (dev->filename);
+        dev->filename = NULL;
+    }
+
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
-        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
+    if (argc == 0 || strlen(argv[0]) >= sizeof(pathname) )
+    {
+        dev->filename = strdup(TAPE_UNLOADED);
+        WRMSG (HHC00200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        return -1;
+    }
     else
     {
         /* Save the file name in the device block */
-        hostpath(dev->filename, argv[0], sizeof(dev->filename));
+        hostpath(pathname, argv[0], sizeof(pathname));
+        dev->filename = strdup(pathname);
+    }
+
+    if ( dev->filename == NULL )
+    {
+        WRMSG (HHC01460, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
+        return -1;
     }
 
     /* Determine tape device type... */
