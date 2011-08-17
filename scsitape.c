@@ -816,8 +816,8 @@ struct mtget starting_mtget;
 
         /* (passed over tapemark?) */
         if (1
-            && dev->mtget.mt_fileno == (starting_mtget.mt_fileno - 1)
-            && dev->mtget.mt_blkno == -1
+            && dev->devunique.tape_dev.mtget.mt_fileno == (starting_mtget.mt_fileno - 1)
+            && dev->devunique.tape_dev.mtget.mt_blkno == -1
         )
 #endif // defined( _MSVC_ )
         {

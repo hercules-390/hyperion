@@ -1261,7 +1261,7 @@ HWORD              comp;                /* Returned compression parm */
             }
 #if defined( HAVE_SYS_UN_H )
             userver.sun_family = AF_UNIX;
-            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
+            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmt_dev.rmtport);
             server = (struct sockaddr *)&userver;
             len = sizeof(userver);
 #endif // !defined( HAVE_SYS_UN_H )

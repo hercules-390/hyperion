@@ -894,7 +894,7 @@ int pending = 0;
 #if !defined(NO_SIGABEND_HANDLER)
             else
             {
-                if( dev->ctctype )
+                if( dev->devunique.ctca_dev.ctctype )
                     signal_thread(dev->tid, SIGUSR2);
             }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -1054,7 +1054,7 @@ int pending = 0;
 #if !defined(NO_SIGABEND_HANDLER)
         else
         {
-            if( dev->ctctype && dev->tid)
+            if( dev->devunique.ctca_dev.ctctype && dev->tid)
                 signal_thread(dev->tid, SIGUSR2);
         }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/

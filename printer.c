@@ -783,7 +783,7 @@ int             rc;                     /* Return code               */
 
     /* Save pipe write descriptor in the device block */
     dev->fd = pipefd[1];
-    dev->ptpcpid = pid;
+    dev->devunique.cprt_dev.ptpcpid = pid;
 
 #endif /* defined( _MSVC_ ) */
 
