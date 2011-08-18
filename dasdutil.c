@@ -532,7 +532,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Initialize the devblk */
     dev = &cif->devblk;
-    if ((omode & O_RDWR) == 0) dev->devunique.dasd_dev.ckdrdonly = 1;
+    if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
     dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
@@ -666,7 +666,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     cif->fd = dev->fd;
 
     /* Extract the number of heads and the track size */
-    cif->heads = dev->devunique.dasd_dev.ckdheads;
+    cif->heads = dev->ckdheads;
     cif->trksz = ((U32)(devhdr.trksize[3]) << 24)
                 | ((U32)(devhdr.trksize[2]) << 16)
                 | ((U32)(devhdr.trksize[1]) << 8)
@@ -766,7 +766,7 @@ int             argc=0;                 /*  device open              */
 
     /* Initialize the devblk */
     dev = &cif->devblk;
-    if ((omode & O_RDWR) == 0) dev->devunique.dasd_dev.ckdrdonly = 1;
+    if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
     dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
@@ -812,8 +812,8 @@ int             argc=0;                 /*  device open              */
     cif->fd = dev->fd;
 
     /* Extract the number of sectors and the sector size */
-    cif->heads = dev->devunique.dasd_dev.fbanumblk;
-    cif->trksz = dev->devunique.dasd_dev.fbablksiz;
+    cif->heads = dev->fbanumblk;
+    cif->trksz = dev->fbablksiz;
     if (verbose)
     {
        fprintf (stdout, MSG(HHC00454, "I", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, fname,
@@ -1020,7 +1020,7 @@ int             c, d1, d2, x;           /* 23xx/3330/3350 factors    */
 int             f1, f2, f3, f4, f5, f6; /* 3380/3390/9345 factors    */
 int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 
-    ckd = cif->devblk.devunique.dasd_dev.ckdtab;
+    ckd = cif->devblk.ckdtab;
     trklen = ckd->len;
     maxlen = ckd->r1;
     heads = ckd->heads;

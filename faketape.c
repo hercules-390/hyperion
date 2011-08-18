@@ -43,16 +43,10 @@ void close_faketape (DEVBLK *dev)
         WRMSG (HHC00201, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fake");
         close(dev->fd);
     }
-    if (dev->filename != NULL)
-    {
-        free( dev->filename );
-        dev->filename = NULL;
-    }
-
-    dev->filename = strdup( TAPE_UNLOADED );
+    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     dev->fd=-1;
-    dev->devunique.tape_dev.blockid = 0;
-    dev->devunique.tape_dev.fenced = 0;
+    dev->blockid = 0;
+    dev->fenced = 0;
     return;
 }
 
@@ -69,11 +63,11 @@ int rewind_faketape (DEVBLK *dev,BYTE *unitstat,BYTE code)
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
         return -1;
     }
-    dev->devunique.tape_dev.nxtblkpos=0;
-    dev->devunique.tape_dev.prvblkpos=-1;
-    dev->devunique.tape_dev.curfilen=1;
-    dev->devunique.tape_dev.blockid=0;
-    dev->devunique.tape_dev.fenced = 0;
+    dev->nxtblkpos=0;
+    dev->prvblkpos=-1;
+    dev->curfilen=1;
+    dev->blockid=0;
+    dev->fenced = 0;
     return 0;
 }
 
@@ -83,22 +77,22 @@ int rewind_faketape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 /*-------------------------------------------------------------------*/
 int passedeot_faketape (DEVBLK *dev)
 {
-    if(dev->devunique.tape_dev.nxtblkpos==0)
+    if(dev->nxtblkpos==0)
     {
-        dev->devunique.tape_dev.eotwarning = 0;
+        dev->eotwarning = 0;
         return 0;
     }
-    if(dev->devunique.tape_dev.tdparms.maxsize==0)
+    if(dev->tdparms.maxsize==0)
     {
-        dev->devunique.tape_dev.eotwarning = 0;
+        dev->eotwarning = 0;
         return 0;
     }
-    if(dev->devunique.tape_dev.nxtblkpos + dev->devunique.tape_dev.eotmargin > dev->devunique.tape_dev.tdparms.maxsize)
+    if(dev->nxtblkpos + dev->eotmargin > dev->tdparms.maxsize)
     {
-        dev->devunique.tape_dev.eotwarning = 1;
+        dev->eotwarning = 1;
         return 1;
     }
-    dev->devunique.tape_dev.eotwarning = 0;
+    dev->eotwarning = 0;
     return 0;
 }
 
@@ -126,7 +120,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the FAKETAPE file */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    if(!dev->devunique.tape_dev.tdparms.logical_readonly)
+    if(!dev->tdparms.logical_readonly)
     {
         rc = HOPEN( pathname, O_RDWR | O_BINARY,
                              S_IRUSR | S_IWUSR | S_IRGRP );
@@ -157,9 +151,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* If file is read-only, attempt to open again */
-    if (dev->devunique.tape_dev.tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
+    if (dev->tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
     {
-        dev->devunique.tape_dev.readonly = 1;
+        dev->readonly = 1;
         rc = HOPEN (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
@@ -168,13 +162,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fake", "open()", strerror(errno));
 
-        if ( dev->filename != NULL )
-        {
-            free( dev->filename );
-            dev->filename = NULL;
-        }
-
-        dev->filename = strdup( TAPE_UNLOADED );
+        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }
@@ -290,7 +278,7 @@ off_t           blkpos;                 /* Offset of block header    */
 U16             curblkl;                /* Current block length      */
 
     /* Initialize current block position */
-    blkpos = dev->devunique.tape_dev.nxtblkpos;
+    blkpos = dev->nxtblkpos;
 
     /* Read the block header to obtain the current block length */
     rc = readhdr_faketape (dev, blkpos, NULL, &curblkl, unitstat,code);
@@ -341,16 +329,16 @@ U16             curblkl;                /* Current block length      */
     }
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->devunique.tape_dev.prvblkpos = dev->devunique.tape_dev.nxtblkpos;
-    dev->devunique.tape_dev.nxtblkpos = blkpos;
+    dev->prvblkpos = dev->nxtblkpos;
+    dev->nxtblkpos = blkpos;
 
     /* Increment the block number */
-    dev->devunique.tape_dev.blockid++;
+    dev->blockid++;
 
     /* Increment file number and return zero if tapemark was read */
     if (curblkl == 0)
     {
-        dev->devunique.tape_dev.curfilen++;
+        dev->curfilen++;
         return 0; /* UX will be set by caller */
     }
 
@@ -431,18 +419,18 @@ off_t           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
-    blkpos = dev->devunique.tape_dev.nxtblkpos;
+    blkpos = dev->nxtblkpos;
     prvblkl = 0;
 
     /* Determine previous block length if not at start of tape */
-    if (dev->devunique.tape_dev.nxtblkpos > 0)
+    if (dev->nxtblkpos > 0)
     {
         /* Retrieve the previous block length */
-        rc = readhdr_faketape (dev, dev->devunique.tape_dev.prvblkpos, NULL, &prvblkl, unitstat,code);
+        rc = readhdr_faketape (dev, dev->prvblkpos, NULL, &prvblkl, unitstat,code);
         if (rc < 0) return -1;
 
         /* Recalculate the offset of the next block */
-        blkpos = dev->devunique.tape_dev.prvblkpos + sizeof(FAKETAPE_BLKHDR) + prvblkl;
+        blkpos = dev->prvblkpos + sizeof(FAKETAPE_BLKHDR) + prvblkl;
     }
 
     /* Reposition file to the new block header */
@@ -457,9 +445,9 @@ U16             prvblkl;                /* Length of previous block  */
         return -1;
     }
     /* ISW: Determine if we are passed maxsize */
-    if(dev->devunique.tape_dev.tdparms.maxsize>0)
+    if(dev->tdparms.maxsize>0)
     {
-        if((off_t)(dev->devunique.tape_dev.nxtblkpos+blklen+sizeof(FAKETAPE_BLKHDR)) > dev->devunique.tape_dev.tdparms.maxsize)
+        if((off_t)(dev->nxtblkpos+blklen+sizeof(FAKETAPE_BLKHDR)) > dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
@@ -472,8 +460,8 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc < 0) return -1; /* (error message already issued) */
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->devunique.tape_dev.nxtblkpos = blkpos + sizeof(FAKETAPE_BLKHDR) + blklen;
-    dev->devunique.tape_dev.prvblkpos = blkpos;
+    dev->nxtblkpos = blkpos + sizeof(FAKETAPE_BLKHDR) + blklen;
+    dev->prvblkpos = blkpos;
 
     /* Write the data block */
     rc = write (dev->fd, buf, blklen);
@@ -493,10 +481,10 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Increment the block number */
-    dev->devunique.tape_dev.blockid++;
+    dev->blockid++;
 
     /* Set new physical EOF */
-    do rc = ftruncate( dev->fd, dev->devunique.tape_dev.nxtblkpos );
+    do rc = ftruncate( dev->fd, dev->nxtblkpos );
     while (EINTR == rc);
 
     if (rc != 0)
@@ -528,18 +516,18 @@ off_t           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
-    blkpos = dev->devunique.tape_dev.nxtblkpos;
+    blkpos = dev->nxtblkpos;
     prvblkl = 0;
 
     /* Determine previous block length if not at start of tape */
-    if (dev->devunique.tape_dev.nxtblkpos > 0)
+    if (dev->nxtblkpos > 0)
     {
         /* Retrieve the previous block length */
-        rc = readhdr_faketape (dev, dev->devunique.tape_dev.prvblkpos, NULL, &prvblkl, unitstat,code);
+        rc = readhdr_faketape (dev, dev->prvblkpos, NULL, &prvblkl, unitstat,code);
         if (rc < 0) return -1;
 
         /* Recalculate the offset of the next block */
-        blkpos = dev->devunique.tape_dev.prvblkpos + sizeof(FAKETAPE_BLKHDR) + prvblkl;
+        blkpos = dev->prvblkpos + sizeof(FAKETAPE_BLKHDR) + prvblkl;
     }
 
     /* Reposition file to the new block header */
@@ -553,9 +541,9 @@ U16             prvblkl;                /* Length of previous block  */
         return -1;
     }
     /* ISW: Determine if we are passed maxsize */
-    if(dev->devunique.tape_dev.tdparms.maxsize>0)
+    if(dev->tdparms.maxsize>0)
     {
-        if((off_t)(dev->devunique.tape_dev.nxtblkpos+sizeof(FAKETAPE_BLKHDR)) > dev->devunique.tape_dev.tdparms.maxsize)
+        if((off_t)(dev->nxtblkpos+sizeof(FAKETAPE_BLKHDR)) > dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
@@ -568,14 +556,14 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc < 0) return -1; /* (error message already issued) */
 
     /* Increment the block number */
-    dev->devunique.tape_dev.blockid++;
+    dev->blockid++;
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->devunique.tape_dev.nxtblkpos = blkpos + sizeof(FAKETAPE_BLKHDR);
-    dev->devunique.tape_dev.prvblkpos = blkpos;
+    dev->nxtblkpos = blkpos + sizeof(FAKETAPE_BLKHDR);
+    dev->prvblkpos = blkpos;
 
     /* Set new physical EOF */
-    do rc = ftruncate( dev->fd, dev->devunique.tape_dev.nxtblkpos );
+    do rc = ftruncate( dev->fd, dev->nxtblkpos );
     while (EINTR == rc);
 
     if (rc != 0)
@@ -602,7 +590,7 @@ U16             prvblkl;                /* Length of previous block  */
 int sync_faketape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
     /* Unit check if tape is write-protected */
-    if (dev->devunique.tape_dev.readonly)
+    if (dev->readonly)
     {
         build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
         return -1;
@@ -638,7 +626,7 @@ off_t           blkpos;                 /* Offset of block header    */
 U16             blklen;                 /* Block length              */
 
     /* Initialize current block position */
-    blkpos = dev->devunique.tape_dev.nxtblkpos;
+    blkpos = dev->nxtblkpos;
 
     /* Read the block header to obtain the current block length */
     rc = readhdr_faketape (dev, blkpos, NULL, &blklen, unitstat,code);
@@ -648,15 +636,15 @@ U16             blklen;                 /* Block length              */
     blkpos += sizeof(FAKETAPE_BLKHDR) + blklen;
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->devunique.tape_dev.prvblkpos = dev->devunique.tape_dev.nxtblkpos;
-    dev->devunique.tape_dev.nxtblkpos = blkpos;
+    dev->prvblkpos = dev->nxtblkpos;
+    dev->nxtblkpos = blkpos;
 
     /* Increment current file number if tapemark was skipped */
     if (blklen == 0)
-        dev->devunique.tape_dev.curfilen++;
+        dev->curfilen++;
 
     /* Increment the block number */
-    dev->devunique.tape_dev.blockid++;
+    dev->blockid++;
 
     /* Return block length or zero if tapemark */
     return blklen;
@@ -679,29 +667,29 @@ U16             prvblkl;                /* Length of previous block  */
 off_t           blkpos;                 /* Offset of block header    */
 
     /* Unit check if already at start of tape */
-    if (dev->devunique.tape_dev.nxtblkpos == 0)
+    if (dev->nxtblkpos == 0)
     {
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
 
     /* Backspace to previous block position */
-    blkpos = dev->devunique.tape_dev.prvblkpos;
+    blkpos = dev->prvblkpos;
 
     /* Read the block header to obtain the block lengths */
     rc = readhdr_faketape (dev, blkpos, &prvblkl, &curblkl, unitstat,code);
     if (rc < 0) return -1; /* (error message already issued) */
 
     /* Calculate the offset of the previous block */
-    dev->devunique.tape_dev.prvblkpos = blkpos - sizeof(FAKETAPE_BLKHDR) - prvblkl;
-    dev->devunique.tape_dev.nxtblkpos = blkpos;
+    dev->prvblkpos = blkpos - sizeof(FAKETAPE_BLKHDR) - prvblkl;
+    dev->nxtblkpos = blkpos;
 
     /* Decrement current file number if backspaced over tapemark */
     if (curblkl == 0)
-        dev->devunique.tape_dev.curfilen--;
+        dev->curfilen--;
 
     /* Decrement the block number */
-    dev->devunique.tape_dev.blockid--;
+    dev->blockid--;
 
     /* Return block length or zero if tapemark */
     return curblkl;
@@ -756,7 +744,7 @@ int             rc;                     /* Return code               */
     while (1)
     {
         /* Exit if now at start of tape */
-        if (dev->devunique.tape_dev.nxtblkpos == 0)
+        if (dev->nxtblkpos == 0)
         {
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
             return -1;

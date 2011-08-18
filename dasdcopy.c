@@ -301,7 +301,7 @@ char           *strtok_str = NULL;
     /* Calculate the number of tracks or blocks to copy */
     if (ckddasd)
     {
-        if (cyls < 0) cyls = idev->devunique.dasd_dev.ckdcyls;
+        if (cyls < 0) cyls = idev->ckdcyls;
         else if (cyls == 0) cyls = (idev->hnd->used)(idev);
         ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, 0);
         if (ckd == NULL)
@@ -312,14 +312,14 @@ char           *strtok_str = NULL;
             return -1;
         }
         if (cyls <= ckd->cyls && alt) cyls = ckd->cyls + ckd->altcyls;
-        n = cyls * idev->devunique.dasd_dev.ckdheads;
-        max = idev->devunique.dasd_dev.ckdtrks;
+        n = cyls * idev->ckdheads;
+        max = idev->ckdtrks;
         if (max < n && out == CCKD) n = max;
     }
     else
     {
-        fba_bytes_remaining = idev->devunique.dasd_dev.fbanumblk * idev->devunique.dasd_dev.fbablksiz;
-        if (blks < 0) blks = idev->devunique.dasd_dev.fbanumblk;
+        fba_bytes_remaining = idev->fbanumblk * idev->fbablksiz;
+        if (blks < 0) blks = idev->fbanumblk;
         else if (blks == 0) blks = (idev->hnd->used)(idev);
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, 0);
         if (fba == NULL)
@@ -329,7 +329,7 @@ char           *strtok_str = NULL;
             return -1;
         }
         n = blks;
-        max = idev->devunique.dasd_dev.fbanumblk;
+        max = idev->fbanumblk;
         if (max < n && out == CFBA) n = max;
         n = (n + FBA_BLKS_PER_GRP - 1) / FBA_BLKS_PER_GRP;
         max = (max + FBA_BLKS_PER_GRP - 1) / FBA_BLKS_PER_GRP;
@@ -337,7 +337,7 @@ char           *strtok_str = NULL;
 
     /* Create the output file */
     if (ckddasd)
-        rc = create_ckd(ofile, idev->devtype, idev->devunique.dasd_dev.ckdheads,
+        rc = create_ckd(ofile, idev->devtype, idev->ckdheads,
                         ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt, 0);
     else
         rc = create_fba(ofile, idev->devtype, fba->size,
@@ -379,8 +379,8 @@ char           *strtok_str = NULL;
                 rc = (idev->hnd->read)(idev, i, &unitstat);
             else
             {
-                memset (idev->buf, 0, idev->devunique.dasd_dev.ckdtrksz);
-                rc = nulltrk(idev->buf, i, idev->devunique.dasd_dev.ckdheads, nullfmt);
+                memset (idev->buf, 0, idev->ckdtrksz);
+                rc = nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             }
         }
         else
@@ -397,7 +397,7 @@ char           *strtok_str = NULL;
                      ifile, ckddasd ? "track" : "block", i, unitstat,
                      ckddasd ? "track" : "block"));
             if (ckddasd)
-                nulltrk(idev->buf, i, idev->devunique.dasd_dev.ckdheads, nullfmt);
+                nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             else
                 memset (idev->buf, 0, FBA_BLKGRP_SIZE);
             if (!quiet)
@@ -411,7 +411,7 @@ char           *strtok_str = NULL;
         if (ckddasd)
         {
             rc = (odev->hnd->write)(odev, i, 0, idev->buf,
-                      idev->devunique.dasd_dev.ckdtrksz, &unitstat);
+                      idev->ckdtrksz, &unitstat);
         }
         else
         {

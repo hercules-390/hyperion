@@ -441,9 +441,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
     {
-        dev->devunique.tape_dev.supvr_inhibit = 0;         /* (reset to default mode)   */
-        dev->devunique.tape_dev.write_immed   = 0;         /* (reset to default mode)   */
-        dev->devunique.tape_dev.tapssdlen     = 0;         /* (clear all subsys data)   */
+        dev->supvr_inhibit = 0;         /* (reset to default mode)   */
+        dev->write_immed   = 0;         /* (reset to default mode)   */
+        dev->tapssdlen     = 0;         /* (clear all subsys data)   */
     }
 
     /* If this is a data-chained READ, then return any data remaining
@@ -456,12 +456,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
         else
         {
-            memmove (iobuf, iobuf + dev->devunique.tape_dev.curbufoff,
-                            dev->devunique.tape_dev.curblkrem);
+            memmove (iobuf, iobuf + dev->curbufoff, dev->curblkrem);
         }
-        RESIDUAL_CALC (dev->devunique.tape_dev.curblkrem);
-        dev->devunique.tape_dev.curblkrem -= num;
-        dev->devunique.tape_dev.curbufoff = num;
+        RESIDUAL_CALC (dev->curblkrem);
+        dev->curblkrem -= num;
+        dev->curbufoff = num;
         *unitstat = CSW_CE | CSW_DE;
         return;
     }
@@ -470,7 +469,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     if ((flags & CCW_FLAGS_CD) &&
         !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
-        WRMSG(HHC00212, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), code);
+        WRMSG(HHC00212, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), code);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         return;
     }
@@ -479,7 +478,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
        if the previous one was a Perform Subsystem Function command
        that prepared some subsystem data for subsequent reading
     */
-    if (0x77 == prevcode && dev->devunique.tape_dev.tapssdlen && 0x3E != code)
+    if (0x77 == prevcode && dev->tapssdlen && 0x3E != code)
     {
         build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
         return;
@@ -509,7 +508,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         case 3:     /* Valid - But is a NO-OP (return CE+DE now) */
 
             /* Command reject if the volume is currently fenced */
-            if (dev->devunique.tape_dev.fenced)
+            if (dev->fenced)
             {
                 build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
                 return;
@@ -521,14 +520,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         case 4:     /* Valid, But is a NO-OP (for virtual tapes) */
 
             /* Command reject if the volume is currently fenced */
-            if (dev->devunique.tape_dev.fenced)
+            if (dev->fenced)
             {
                 build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
                 return;
             }
 
             /* If non-virtual (SCSI) then further processing required */
-            if (dev->devunique.tape_dev.tapedevt == TAPEDEVT_SCSITAPE)
+            if (dev->tapedevt == TAPEDEVT_SCSITAPE)
                 break;
 
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -542,7 +541,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* Verify a tape is loaded if that is required for this CCW... */
 
     if ((1 == drc || 5 == drc) &&                               // (tape MUST be loaded?)
-        (dev->fd < 0 || TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt))    // (no tape loaded or non-virtual?)
+        (dev->fd < 0 || TAPEDEVT_SCSITAPE == dev->tapedevt))    // (no tape loaded or non-virtual?)
     {
         *residual = count;
 
@@ -556,7 +555,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Open the device file if necessary */
         if (dev->fd < 0)
         {
-            rc = dev->devunique.tape_dev.tmh->open( dev, unitstat, code );
+            rc = dev->tmh->open( dev, unitstat, code );
 
             if (rc < 0)     /* Did open fail? */
             {
@@ -565,7 +564,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Error if tape is not loaded */
-        if (!dev->devunique.tape_dev.tmh->tapeloaded( dev, unitstat, code ))
+        if (!dev->tmh->tapeloaded( dev, unitstat, code ))
         {
             build_senseX (TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code);
             return;
@@ -618,23 +617,23 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x01:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Unit check if tape is write-protected */
-        if (dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly)
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -642,15 +641,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Write a block to the tape according to device type */
-        if ((rc = dev->devunique.tape_dev.tmh->write( dev, iobuf, count, unitstat, code)) < 0)
+        if ((rc = dev->tmh->write( dev, iobuf, count, unitstat, code)) < 0)
             break;      // (error)
 
         *residual = 0;
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !dev->devunique.tape_dev.write_immed
-            || (rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0
+            || !dev->write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
@@ -697,16 +696,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x02:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -715,15 +714,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Read a block from the tape according to device type */
         /* Exit with unit check status if read error condition */
-        if ((len = dev->devunique.tape_dev.tmh->read( dev, iobuf, unitstat, code)) < 0)
+        if ((len = dev->tmh->read( dev, iobuf, unitstat, code)) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
         RESIDUAL_CALC (len);
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.tape_dev.curblkrem = len - num;
-        dev->devunique.tape_dev.curbufoff = num;
+        dev->curblkrem = len - num;
+        dev->curbufoff = num;
 
         /* Exit with unit exception status if tapemark was read */
         if (len == 0)
@@ -740,7 +739,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x03:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
@@ -795,10 +794,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x07:
     {
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_IDLE    == dev->devunique.tape_dev.tapedisptype ||
-             TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_REWINDING;
+            dev->tapedisptype = TAPEDISPTYP_REWINDING;
             UpdateDisplay( dev );
         }
 
@@ -806,24 +805,24 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the rewind */
-        rc = dev->devunique.tape_dev.tmh->rewind( dev, unitstat, code);
+        rc = dev->tmh->rewind( dev, unitstat, code);
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_REWINDING == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_REWINDING == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
         /* Check for error */
         if (rc < 0)
         {
-            dev->devunique.tape_dev.fenced = 1;
+            dev->fenced = 1;
             break;
         }
 
-        dev->devunique.tape_dev.eotwarning = 0;
-        dev->devunique.tape_dev.fenced = 0;
+        dev->eotwarning = 0;
+        dev->fenced = 0;
 
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
@@ -885,15 +884,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x0C:
     {
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
         /* Backspace to previous block according to device type */
         /* Exit with unit check status if error condition */
-        if ((rc = dev->devunique.tape_dev.tmh->bsb( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;      // (error)
 
         /* Exit with unit exception status if tapemark was sensed */
@@ -911,19 +910,19 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            we just backspaced over, and exit with unit check status
            on any read error condition
         */
-        if ((len = dev->devunique.tape_dev.tmh->read( dev, iobuf, unitstat, code )) < 0)
+        if ((len = dev->tmh->read( dev, iobuf, unitstat, code )) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
         RESIDUAL_CALC (len);
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.tape_dev.curblkrem = len - num;
-        dev->devunique.tape_dev.curbufoff = num;
+        dev->curblkrem = len - num;
+        dev->curbufoff = num;
 
         /* Backspace to previous block according to device type,
            and exit with unit check status if error condition */
-        if ((rc = dev->devunique.tape_dev.tmh->bsb( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;      // (error)
 
         /* Set normal status */
@@ -938,24 +937,24 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x0F:
     {
         /* Update matrix display if needed */
-        if ( dev->devunique.tape_dev.tdparms.displayfeat )
+        if ( dev->tdparms.displayfeat )
         {
-            if ( TAPEDISPTYP_UMOUNTMOUNT == dev->devunique.tape_dev.tapedisptype )
+            if ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
             {
-                dev->devunique.tape_dev.tapedisptype   = TAPEDISPTYP_MOUNT;
-                dev->devunique.tape_dev.tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
-                strlcpy( dev->devunique.tape_dev.tapemsg1, dev->devunique.tape_dev.tapemsg2, sizeof(dev->devunique.tape_dev.tapemsg1) );
+                dev->tapedisptype   = TAPEDISPTYP_MOUNT;
+                dev->tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
+                strlcpy( dev->tapemsg1, dev->tapemsg2, sizeof(dev->tapemsg1) );
             }
-            else if ( TAPEDISPTYP_UNMOUNT == dev->devunique.tape_dev.tapedisptype )
+            else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype )
             {
-                dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+                dev->tapedisptype = TAPEDISPTYP_IDLE;
             }
         }
 
-        if ( TAPEDISPTYP_IDLE    == dev->devunique.tape_dev.tapedisptype ||
-             TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_UNLOADING;
+            dev->tapedisptype = TAPEDISPTYP_UNLOADING;
             UpdateDisplay( dev );
         }
 
@@ -964,37 +963,37 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Do the Rewind-Unload */
 #if defined(OPTION_SCSI_TAPE)
-        if ( TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt )
+        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
             int_scsi_rewind_unload( dev, unitstat, code );
         else
 #endif
         {
-            dev->devunique.tape_dev.tmh->close(dev);
+            dev->tmh->close(dev);
             *unitstat=0;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_UNLOADING == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_UNLOADING == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
         if ((*unitstat & CSW_UC) != 0)      // (did it work?)
             break;                          // (no it didn't)
 
-        dev->devunique.tape_dev.curfilen = 1;
-        dev->devunique.tape_dev.nxtblkpos = 0;
-        dev->devunique.tape_dev.prvblkpos = -1;
-        dev->devunique.tape_dev.eotwarning = 0;
-//      dev->devunique.tape_dev.fenced = 0;        // (handler already did this)
+        dev->curfilen = 1;
+        dev->nxtblkpos = 0;
+        dev->prvblkpos = -1;
+        dev->eotwarning = 0;
+//      dev->fenced = 0;        // (handler already did this)
 
         /* Update matrix display */
         UpdateDisplay( dev );
 
         build_senseX(TAPE_BSENSE_RUN_SUCCESS,dev,unitstat,code);
 
-        if ( dev->devunique.tape_dev.als )
+        if ( dev->als )
         {
             TID dummy_tid;
             char thread_name[64];
@@ -1034,7 +1033,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
@@ -1056,13 +1055,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         // Perform flush/sync; exit on error...
-        if ((rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) < 0)
             break;      // (i/o error)
 
         // Flush complete. Our buffer is now empty. Tell them that.
         RESIDUAL_CALC (0);
-        dev->devunique.tape_dev.curblkrem = 0;
-        dev->devunique.tape_dev.curbufoff = 0;
+        dev->curblkrem = 0;
+        dev->curbufoff = 0;
         break;
     }
 
@@ -1072,23 +1071,23 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x17:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Unit check if tape is write-protected */
-        if (dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly)
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1096,13 +1095,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the ERG; exit if error */
-        if ((rc = dev->devunique.tape_dev.tmh->erg( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->erg( dev, unitstat, code )) < 0)
             break;      // (error)
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !dev->devunique.tape_dev.write_immed
-            || (rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0
+            || !dev->write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
@@ -1115,23 +1114,23 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x1F:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Unit check if tape is write-protected */
-        if (dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly)
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1139,15 +1138,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the WTM; exit if error */
-        if ((rc = dev->devunique.tape_dev.tmh->wtm(dev,unitstat,code)) < 0)
+        if ((rc = dev->tmh->wtm(dev,unitstat,code)) < 0)
             break;      // (error)
 
-        dev->devunique.tape_dev.curfilen++;
+        dev->curfilen++;
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !dev->devunique.tape_dev.write_immed
-            || (rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0
+            || !dev->write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
@@ -1165,7 +1164,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         int   errcode   = TAPE_BSENSE_STATUSONLY; // (presume success)
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
@@ -1175,10 +1174,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Calculate number of bytes and residual byte count */
-        RESIDUAL_CALC( 2 * sizeof(dev->devunique.tape_dev.blockid) );
+        RESIDUAL_CALC( 2 * sizeof(dev->blockid) );
 
         /* Ask media handler for actual value(s)... */
-        if ((rc = dev->devunique.tape_dev.tmh->readblkid( dev, log_blockid, phys_blockid )) < 0)
+        if ((rc = dev->tmh->readblkid( dev, log_blockid, phys_blockid )) < 0)
             errcode = TAPE_BSENSE_LOCATEERR;
         else
         {
@@ -1225,16 +1224,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x27:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1243,7 +1242,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Backspace to previous block according to device type,
            and exit with unit check status on error condition */
-        if ((rc = dev->devunique.tape_dev.tmh->bsb( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;
 
         /* Exit with unit exception status if tapemark was sensed */
@@ -1264,16 +1263,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x2F:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1282,7 +1281,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Backspace to previous file according to device type,
            and exit with unit check status on error condition */
-        if ((rc = dev->devunique.tape_dev.tmh->bsf( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->bsf( dev, unitstat, code )) < 0)
             break;
 
         /* Set normal status */
@@ -1339,7 +1338,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1375,16 +1374,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x37:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1393,7 +1392,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Forward to next block according to device type  */
         /* Exit with unit check status if error condition  */
-        if ((rc = dev->devunique.tape_dev.tmh->fsb( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->fsb( dev, unitstat, code )) < 0)
             break;
 
         /* Exit with unit exception status if tapemark was sensed */
@@ -1438,14 +1437,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Command reject if no subsystem data was prepared
            by a previous Perform Subsystem Function command */
-        if (!dev->devunique.tape_dev.tapssdlen)      // (any subsystem data?)
+        if (!dev->tapssdlen)      // (any subsystem data?)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
         }
 
         /* Calculate residual byte count */
-        RESIDUAL_CALC (dev->devunique.tape_dev.tapssdlen);
+        RESIDUAL_CALC (dev->tapssdlen);
 
         /* PROGRAMMING NOTE: the Prepare for Read Subsystem Data
            order of the previous Perform Subsystem Function command
@@ -1466,16 +1465,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x3F:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1484,7 +1483,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Forward to next file according to device type  */
         /* Exit with unit check status if error condition */
-        if ((rc = dev->devunique.tape_dev.tmh->fsf( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->fsf( dev, unitstat, code )) < 0)
             break;
 
         /* Set normal status */
@@ -1498,16 +1497,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x43:
     {
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1515,7 +1514,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the sync */
-        if ((rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0)
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
@@ -1529,13 +1528,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     {
         int     argc, i;                                     /* work */
         char  **argv;                                        /* work */
-        char    newfile [ PATH_MAX ];                        /* work */
+        char    newfile [ sizeof(dev->filename) ];           /* work */
 
         /* Command reject if AUTOMOUNT support not enabled */
         if (0
-            || dev->devunique.tape_dev.tapedevt == TAPEDEVT_SCSITAPE
+            || dev->tapedevt == TAPEDEVT_SCSITAPE
             || sysblk.tamdir == NULL
-            || dev->devunique.tape_dev.noautomount
+            || dev->noautomount
         )
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
@@ -1543,7 +1542,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1585,7 +1584,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             /* (because i hate typing) BHe: Shame on you ;-) */
 #define  _HHC00205E(_file,_reason) \
             { \
-                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, TTYPSTR(dev->devunique.tape_dev.tapedevt), "auto-mount", _reason); \
+                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
                 release_lock (&dev->lock); \
                 break; \
@@ -1644,7 +1643,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            WRMSG(HHC00214, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->devunique.tape_dev.tapedevt));
+            WRMSG(HHC00214, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->tapedevt));
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);
             break;
@@ -1687,7 +1686,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
                 WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile,
-                      TTYPSTR(dev->devunique.tape_dev.tapedevt), "auto-unmount", "see previous message");
+                      TTYPSTR(dev->tapedevt), "auto-unmount", "see previous message");
             }
             else
                 _HHC00205E( newfile, "file not found" ); // (presumed)
@@ -1700,9 +1699,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                WRMSG(HHC00216, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->devunique.tape_dev.tapedevt));
+                WRMSG(HHC00216, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->tapedevt));
             else
-                WRMSG(HHC00215, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt));
+                WRMSG(HHC00215, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt));
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1805,14 +1804,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         int  errcode = TAPE_BSENSE_STATUSONLY;  /* Presumed success */
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Check for minimum count field */
-        if (count < sizeof(dev->devunique.tape_dev.blockid))
+        if (count < sizeof(dev->blockid))
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1841,16 +1840,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
             WRMSG(HHC00217, "I", SSID_TO_LCSS(dev->ssid), dev->devnum
-                ,TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt ? (char*)dev->filename : ""
-                ,TTYPSTR(dev->devunique.tape_dev.tapedevt)
+                ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
+                ,TTYPSTR(dev->tapedevt)
                 ,locblock
             );
 
         /* Update display if needed */
-        if ( TAPEDISPTYP_IDLE    == dev->devunique.tape_dev.tapedisptype ||
-             TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_LOCATING;
+            dev->tapedisptype = TAPEDISPTYP_LOCATING;
             UpdateDisplay( dev );
         }
 
@@ -1858,16 +1857,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Ask media handler to perform the locate... */
-        if ((rc = dev->devunique.tape_dev.tmh->locateblk( dev, locblock, unitstat, code )) < 0)
+        if ((rc = dev->tmh->locateblk( dev, locblock, unitstat, code )) < 0)
         {
             errcode = TAPE_BSENSE_LOCATEERR;
-            dev->devunique.tape_dev.fenced = 1;  // (position lost; fence the volume)
+            dev->fenced = 1;  // (position lost; fence the volume)
         }
 
         /* Update display if needed */
-        if ( TAPEDISPTYP_LOCATING == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_LOCATING == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
@@ -1892,7 +1891,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1979,7 +1978,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         BYTE  parm   = iobuf[2];
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2025,13 +2024,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             if (PSF_ACTION_FEL_IMPLICIT == parm)
             {
                 // Implicit: for ALL devices...
-                dev->devunique.tape_dev.forced_logging = bEnable ? 1 : 0;
+                dev->forced_logging = bEnable ? 1 : 0;
             }
             else // (PSF_ACTION_FEL_EXPLICIT == parm)
 #endif // (implicit not supported)
             {
                 // Explicit: for only THIS device...
-                dev->devunique.tape_dev.forced_logging = bEnable ? 1 : 0;
+                dev->forced_logging = bEnable ? 1 : 0;
             }
 
             build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
@@ -2066,18 +2065,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
             /* Enable/Disable Logical Write Protect if requested */
             if (parm & PSF_ACTION_AC_LWP)
-                dev->devunique.tape_dev.tdparms.logical_readonly = bEnable ? 1 : 0;
+                dev->tdparms.logical_readonly = bEnable ? 1 : 0;
 
             /* Enable/Disable Data Compaction (compression) if requested */
             if (parm & PSF_ACTION_AC_DCD)
             {
-                if (TAPEDEVT_HETTAPE == dev->devunique.tape_dev.tapedevt)
+                if (TAPEDEVT_HETTAPE == dev->tapedevt)
                 {
-                    rc = het_cntl( dev->devunique.tape_dev.hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
                                    bEnable ? TRUE : FALSE );
                 }
 #if defined(OPTION_SCSI_TAPE)
-                else if (TAPEDEVT_SCSITAPE == dev->devunique.tape_dev.tapedevt)
+                else if (TAPEDEVT_SCSITAPE == dev->tapedevt)
                 {
                     // ZZ FIXME: future place for direct SCSI i/o
                     // to enable/disable compression for 3480/later.
@@ -2125,7 +2124,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
               break;
             }
 
-            dev->devunique.tape_dev.fenced = 0;        // (as requested!)
+            dev->fenced = 0;        // (as requested!)
 
             build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
             break;
@@ -2257,10 +2256,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
             /* If the Special Intercept Condition is active, present
                unit check status with sense indicating ERA code 53 */
-            if (dev->devunique.tape_dev.SIC_active)
+            if (dev->SIC_active)
             {
                 build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-                dev->devunique.tape_dev.SIC_active = 0;
+                dev->SIC_active = 0;
                 break;
             }
 
@@ -2286,8 +2285,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             if (memcmp( &iobuf[8], "\00\00\00\00", 4 ) == 0)
             {
                 /* Format x'00': "No Message" */
-                dev->devunique.tape_dev.tapssdlen = 9;                     // (Length)
-                STORE_HW ( &iobuf[0], dev->devunique.tape_dev.tapssdlen ); // (Length = 9 bytes)
+                dev->tapssdlen = 9;                     // (Length)
+                STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 9 bytes)
                 iobuf[2] = 0x00;                        // (Format = x'00': "No Message")
                 iobuf[3] = 0x00;                        // (Message Code = none)
                 memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
@@ -2296,8 +2295,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             else
             {
                 /* Format x'02': "Message Id Status" */
-                dev->devunique.tape_dev.tapssdlen = 10;                    // (Length)
-                STORE_HW ( &iobuf[0], dev->devunique.tape_dev.tapssdlen ); // (Length = 10 bytes)
+                dev->tapssdlen = 10;                    // (Length)
+                STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 10 bytes)
                 iobuf[2] = 0x02;                        // (Format = x'01: Message Id Status)
                 iobuf[3] = 0x01;                        // (Message Code = Delayed Response)
                 memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
@@ -2359,7 +2358,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             */
 
             /* Command reject if Special Intercept Condition not supported */
-            if (!dev->devunique.tape_dev.SIC_supported)      // (not supported?)
+            if (!dev->SIC_supported)      // (not supported?)
             {
                 build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
                 break;
@@ -2368,15 +2367,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             /* If the command is issued while the Special Intercept  */
             /* Condition is active, a unit check status is presented */
             /* with associated sense data indicating ERA code 53.    */
-            if (dev->devunique.tape_dev.SIC_active)        // (already active?)
+            if (dev->SIC_active)        // (already active?)
             {
                 build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-                dev->devunique.tape_dev.SIC_active = 0;      // (reset after UC)
+                dev->SIC_active = 0;      // (reset after UC)
                 break;
             }
 
             /* Activate Special Intercept Condition */
-            dev->devunique.tape_dev.SIC_active = 1;
+            dev->SIC_active = 1;
             break;
 
         } /* End case PSF_ORDER_SSIC */
@@ -2519,24 +2518,24 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
 
         /* Command reject if tape is write-protected */
-        if (dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly)
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_IDLE    == dev->devunique.tape_dev.tapedisptype ||
-             TAPEDISPTYP_WAITACT == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_ERASING;
+            dev->tapedisptype = TAPEDISPTYP_ERASING;
             UpdateDisplay( dev );
         }
 
@@ -2544,20 +2543,20 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the DSE; exit if error */
-        if ((rc = dev->devunique.tape_dev.tmh->dse( dev, unitstat, code )) < 0)
+        if ((rc = dev->tmh->dse( dev, unitstat, code )) < 0)
             break;      // (error)
 
         /* Update matrix display if needed */
-        if ( TAPEDISPTYP_ERASING == dev->devunique.tape_dev.tapedisptype )
+        if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
         {
-            dev->devunique.tape_dev.tapedisptype = TAPEDISPTYP_IDLE;
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
         /* Perform flush/sync and/or set normal completion status */
         if (0
-            || !dev->devunique.tape_dev.write_immed
-            || (rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0
+            || !dev->write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
         )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
@@ -2571,7 +2570,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x9F:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2660,7 +2659,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2729,7 +2728,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xB7:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2826,7 +2825,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         memset( iobuf, 0, num );          // (init to all zeroes first)
 
-        if (dev->devunique.tape_dev.tmh->tapeloaded( dev, unitstat, code ))
+        if (dev->tmh->tapeloaded( dev, unitstat, code ))
             iobuf[0] |= (0x01 & 0x0F);    // MSENSE_ASSOCIATED_MOUNT
 //      else
 //          iobuf[0] |= (0x00 & 0x0F);    // MSENSE_UNASSOCIATED
@@ -2851,7 +2850,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         // for 3480 and later models is handled below.
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
@@ -2895,8 +2894,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         INCREMENT_MESSAGEID(dev);
 
         /* set write-immedediate mode and perform sync function */
-        dev->devunique.tape_dev.write_immed = 1;
-        if ((rc = dev->devunique.tape_dev.tmh->sync( dev, unitstat, code )) == 0)
+        dev->write_immed = 1;
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
         break;
 
@@ -2908,7 +2907,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xC7:
     {
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -3016,7 +3015,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command reject if the volume is currently fenced */
-        if (dev->devunique.tape_dev.fenced)
+        if (dev->fenced)
         {
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
@@ -3029,7 +3028,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            supvr-inhibit mode hasn't already been established */
         if (0
             || count < len
-            || dev->devunique.tape_dev.supvr_inhibit
+            || dev->supvr_inhibit
         )
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
@@ -3041,10 +3040,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Process request */
         if (iobuf[0] & MSET_SUPVR_INHIBIT)
-            dev->devunique.tape_dev.supvr_inhibit = 1;         /* set supvr-inhibit mode*/
+            dev->supvr_inhibit = 1;         /* set supvr-inhibit mode*/
 
         if (iobuf[0] & MSET_WRITE_IMMED)
-            dev->devunique.tape_dev.write_immed = 1;           /* set write-immed. mode */
+            dev->write_immed = 1;           /* set write-immed. mode */
 
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
@@ -3084,7 +3083,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         */
 
         /* Command Reject if Supervisor-Inhibit */
-        if (dev->devunique.tape_dev.supvr_inhibit)
+        if (dev->supvr_inhibit)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -3196,9 +3195,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 #if defined( OPTION_TAPE_AUTOMOUNT )
         /* AUTOMOUNT QUERY - part 2 (if command-chained from prior 0x4B) */
         if (1
-            && dev->devunique.tape_dev.tapedevt != TAPEDEVT_SCSITAPE
+            && dev->tapedevt != TAPEDEVT_SCSITAPE
             && sysblk.tamdir != NULL
-            && !dev->devunique.tape_dev.noautomount
+            && !dev->noautomount
             && (chained & CCW_FLAGS_CC)
             && 0x4B == prevcode
         )
@@ -3207,10 +3206,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             RESIDUAL_CALC ((int)strlen(dev->filename));
 
             /* Copy device filename to guest storage */
-            if ( dev->filename != NULL )
-                str_host_to_guest( (const BYTE*)dev->filename, iobuf, num );
-            else
-                str_host_to_guest( "", iobuf, num );
+            str_host_to_guest( (const BYTE*)dev->filename, iobuf, num );
 
             /* Return normal status */
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -3450,7 +3446,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
     msg1[ sizeof(msg1) - 1 ] = 0;
     msg2[ sizeof(msg2) - 1 ] = 0;
 
-    tapeloaded = dev->devunique.tape_dev.tmh->tapeloaded( dev, NULL, 0 );
+    tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
 
     switch ( fcb & FCB_FS )  // (high-order 3 bits)
     {
@@ -3462,12 +3458,12 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       motion, or until the message is updated."
         */
 
-        dev->devunique.tape_dev.tapedispflags = 0;
+        dev->tapedispflags = 0;
 
-        strlcpy( dev->devunique.tape_dev.tapemsg1, msg1, sizeof(dev->devunique.tape_dev.tapemsg1) );
-        strlcpy( dev->devunique.tape_dev.tapemsg2, msg2, sizeof(dev->devunique.tape_dev.tapemsg2) );
+        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
 
-        dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_WAITACT;
+        dev->tapedisptype  = TAPEDISPTYP_WAITACT;
 
         break;
 
@@ -3483,17 +3479,17 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       of the command."
         */
 
-        dev->devunique.tape_dev.tapedispflags = 0;
+        dev->tapedispflags = 0;
 
         if ( tapeloaded )
         {
-            dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_UNMOUNT;
-            dev->devunique.tape_dev.tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+            dev->tapedisptype  = TAPEDISPTYP_UNMOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            strlcpy( dev->devunique.tape_dev.tapemsg1, msg1, sizeof(dev->devunique.tape_dev.tapemsg1) );
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), dev->devunique.tape_dev.tapemsg1 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
         break;
@@ -3508,17 +3504,17 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       prior to the receipt of the command."
         */
 
-        dev->devunique.tape_dev.tapedispflags = 0;
+        dev->tapedispflags = 0;
 
         if ( !tapeloaded )
         {
-            dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_MOUNT;
-            dev->devunique.tape_dev.tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+            dev->tapedisptype  = TAPEDISPTYP_MOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            strlcpy( dev->devunique.tape_dev.tapemsg1, msg1, sizeof(dev->devunique.tape_dev.tapemsg1) );
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), dev->devunique.tape_dev.tapemsg1 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
         break;
@@ -3542,8 +3538,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       a unit message is displayed instead."
         */
 
-        dev->devunique.tape_dev.tapedispflags = 0;
-        dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_IDLE;
+        dev->tapedispflags = 0;
+        dev->tapedisptype  = TAPEDISPTYP_IDLE;
 
         break;
 
@@ -3559,26 +3555,26 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       displayed until the drive is next loaded."
         */
 
-        dev->devunique.tape_dev.tapedispflags = 0;
+        dev->tapedispflags = 0;
 
-        strlcpy( dev->devunique.tape_dev.tapemsg1, msg1, sizeof(dev->devunique.tape_dev.tapemsg1) );
-        strlcpy( dev->devunique.tape_dev.tapemsg2, msg2, sizeof(dev->devunique.tape_dev.tapemsg2) );
+        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
 
         if ( tapeloaded )
         {
-            dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
-            dev->devunique.tape_dev.tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+            dev->tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00219, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), dev->devunique.tape_dev.tapemsg1, dev->devunique.tape_dev.tapemsg2 );
+                WRMSG(HHC00219, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1, dev->tapemsg2 );
         }
         else
         {
-            dev->devunique.tape_dev.tapedisptype  = TAPEDISPTYP_MOUNT;
-            dev->devunique.tape_dev.tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
+            dev->tapedisptype  = TAPEDISPTYP_MOUNT;
+            dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->devunique.tape_dev.tapedevt), dev->devunique.tape_dev.tapemsg2 );
+                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg2 );
         }
 
         break;
@@ -3598,7 +3594,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
     )
     {
         fcb  &=  ~( FCB_AM | FCB_BM | FCB_M2 );
-        dev->devunique.tape_dev.tapedispflags &= ~TAPEDISPFLG_MESSAGE2;
+        dev->tapedispflags &= ~TAPEDISPFLG_MESSAGE2;
     }
 
     /*
@@ -3613,7 +3609,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
     )
     {
         fcb  &=  ~( FCB_AM | FCB_BM | FCB_M2 );
-        dev->devunique.tape_dev.tapedispflags |= TAPEDISPFLG_MESSAGE2;
+        dev->tapedispflags |= TAPEDISPFLG_MESSAGE2;
     }
 
     /*
@@ -3623,7 +3619,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
     if ( fcb & FCB_AM )
         fcb  &=  ~( FCB_BM | FCB_M2 );
 
-    dev->devunique.tape_dev.tapedispflags |= (((fcb & FCB_AM) ? TAPEDISPFLG_ALTERNATE  : 0 ) |
+    dev->tapedispflags |= (((fcb & FCB_AM) ? TAPEDISPFLG_ALTERNATE  : 0 ) |
                           ( (fcb & FCB_BM) ? TAPEDISPFLG_BLINKING   : 0 ) |
                           ( (fcb & FCB_M2) ? TAPEDISPFLG_MESSAGE2   : 0 ) |
                           ( (fcb & FCB_AL) ? TAPEDISPFLG_AUTOLOADER : 0 ));
@@ -3691,7 +3687,7 @@ int sense_built;
                     || 0x17 == ccwcode      // erase gap
                     || 0x1F == ccwcode      // write tapemark
                 )
-                && dev->devunique.tape_dev.tmh->passedeot(dev)
+                && dev->tmh->passedeot(dev)
             )
             {
                 // We're still in the "Early Warning Zone",
@@ -3808,7 +3804,7 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     /* Fill in the common sense information */
 
     if (strcmp(dev->filename,TAPE_UNLOADED) == 0
-        || !dev->devunique.tape_dev.tmh->tapeloaded(dev,NULL,0))
+        || !dev->tmh->tapeloaded(dev,NULL,0))
     {
         dev->sense[0] |= SENSE_IR;
         dev->sense[1] |= SENSE1_TAPE_FP;
@@ -3817,10 +3813,10 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     {
         dev->sense[0] &= ~SENSE_IR;
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
-        dev->sense[1] |= dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly ?
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
             SENSE1_TAPE_FP : 0;
     }
-    if (dev->devunique.tape_dev.tmh->passedeot(dev))
+    if (dev->tmh->passedeot(dev))
     {
         dev->sense[4] |= 0x40;
     }
@@ -3982,7 +3978,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
     default:
         if ( ccwcode == 0x24 )      // READ BUFFERED LOG
         {
-            if ( dev->devunique.tape_dev.tdparms.compress == 0 )
+            if ( dev->tdparms.compress == 0 )
                 sns4mat = TAPE_SNS7_FMT_21_3480_READ_BUF_LOG;
             else
                 sns4mat = TAPE_SNS7_FMT_30_3480_READ_BUF_LOG;
@@ -4035,7 +4031,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
     }
 
     if (strcmp(dev->filename,TAPE_UNLOADED) == 0
-        || !dev->devunique.tape_dev.tmh->tapeloaded(dev,NULL,0))
+        || !dev->tmh->tapeloaded(dev,NULL,0))
     {
         dev->sense[0] |= TAPE_SNS0_INTVREQ;
         dev->sense[1] |= TAPE_SNS1_FILEPROT;
@@ -4045,7 +4041,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         dev->sense[0] &= ~TAPE_SNS0_INTVREQ;
         dev->sense[1] &= ~(TAPE_SNS1_BOT|TAPE_SNS1_FILEPROT);
         dev->sense[1] |= IsAtLoadPoint( dev ) ? TAPE_SNS1_BOT : 0;
-        dev->sense[1] |= dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly ?
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
             TAPE_SNS1_FILEPROT : 0;
     }
 
@@ -4166,7 +4162,7 @@ void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
         break;
     default:
         /* OBR - NONE - PERMANENT */
-        if ( ERA == TAPE_ERA_39_BACKWARD_AT_BOT && dev->devunique.tape_dev.blockid == 0 )
+        if ( ERA == TAPE_ERA_39_BACKWARD_AT_BOT && dev->blockid == 0 )
             break;
         dev->sense[2] |= TAPE_SNS2_NTP_LOG_CD2_PERM_OBR;
         break;
@@ -4260,7 +4256,7 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     /* Fill in the common sense information */
 
     if (strcmp(dev->filename,TAPE_UNLOADED) == 0
-        || !dev->devunique.tape_dev.tmh->tapeloaded(dev,NULL,0))
+        || !dev->tmh->tapeloaded(dev,NULL,0))
     {
         dev->sense[0] |= SENSE_IR;
         dev->sense[1] |= SENSE1_TAPE_FP;
@@ -4271,12 +4267,12 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     {
         dev->sense[0] &= ~SENSE_IR;
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
-        dev->sense[1] |= dev->devunique.tape_dev.readonly || dev->devunique.tape_dev.tdparms.logical_readonly ?
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
             SENSE1_TAPE_FP : 0;
         dev->sense[1] |= SENSE1_TAPE_TUA;
         dev->sense[1] &= ~SENSE1_TAPE_TUB;
     }
-    if (dev->devunique.tape_dev.tmh->passedeot(dev))
+    if (dev->tmh->passedeot(dev))
     {
         dev->sense[4] |= 0x40;
     }
@@ -4445,7 +4441,7 @@ void BuildTapeSense( BYTE era, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode )
 
     case TAPE_ERA_UNSOL_INFORMATIONAL_DATA:     // ERA 48
 
-        if (dev->devunique.tape_dev.forced_logging)                // Forced Error Logging enabled?
+        if (dev->forced_logging)                // Forced Error Logging enabled?
             fmt = 0x19;                         // Yes, Forced Error Logging sense
         else
             fmt = 0x20;                         // No, Normal Informational sense

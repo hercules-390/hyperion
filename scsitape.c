@@ -62,7 +62,7 @@
 int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
 {
     /* Is an open for this device already in progress? */
-    if (dev->devunique.tape_dev.stape_mntdrq.link.Flink)
+    if (dev->stape_mntdrq.link.Flink)
     {
         /* Yes. Device is good but no tape is mounted (yet) */
         build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
@@ -71,14 +71,14 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
 
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->fd = -1;
-    dev->devunique.tape_dev.sstat = GMT_DR_OPEN( -1 );
+    dev->sstat = GMT_DR_OPEN( -1 );
 
     /* Open the SCSI tape device */
-    dev->devunique.tape_dev.readonly = 0;
+    dev->readonly = 0;
     dev->fd = open_tape( dev->filename, O_RDWR | O_BINARY | O_NONBLOCK );
     if (dev->fd < 0 && EROFS == errno )
     {
-        dev->devunique.tape_dev.readonly = 1;
+        dev->readonly = 1;
         dev->fd = open_tape( dev->filename, O_RDONLY | O_BINARY | O_NONBLOCK );
     }
 
@@ -97,7 +97,7 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
     int_scsi_status_update( dev, 0 );
 
     /* Asynchronous open now in progress? */
-    if (dev->devunique.tape_dev.stape_mntdrq.link.Flink)
+    if (dev->stape_mntdrq.link.Flink)
     {
         /* Yes. Device is good but no tape is mounted (yet) */
         build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
@@ -148,13 +148,13 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     /* Switch drive over to BLOCKING-mode i/o... */
 
     close_tape( dev->fd );
-    oflags = O_BINARY | (dev->devunique.tape_dev.readonly ? O_RDONLY : O_RDWR);
+    oflags = O_BINARY | (dev->readonly ? O_RDONLY : O_RDWR);
     VERIFY( (dev->fd = open_tape (dev->filename, oflags)) > 0);
 
     /* Since a tape was just mounted, reset the blockid back to zero */
 
-    dev->devunique.tape_dev.blockid = 0;
-    dev->devunique.tape_dev.fenced = 0;
+    dev->blockid = 0;
+    dev->fenced = 0;
 
     /* Set the tape device to process variable length blocks */
 
@@ -192,7 +192,7 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     if (!STS_WR_PROT( dev ))
     {
         opblk.mt_op    = MTEWARN;
-        opblk.mt_count = dev->devunique.tape_dev.eotmargin;
+        opblk.mt_count = dev->eotmargin;
 
         ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
 
@@ -216,22 +216,22 @@ void close_scsitape(DEVBLK *dev)
 
     // Remove drive from SCSIMOUNT thread's work queue...
 
-    if (                     dev->devunique.tape_dev.stape_mntdrq.link.Flink) {
-        RemoveListEntry(    &dev->devunique.tape_dev.stape_mntdrq.link );
-        InitializeListLink( &dev->devunique.tape_dev.stape_mntdrq.link );
+    if (                     dev->stape_mntdrq.link.Flink) {
+        RemoveListEntry(    &dev->stape_mntdrq.link );
+        InitializeListLink( &dev->stape_mntdrq.link );
     }
 
     // Remove drive from the STATUS thread's work queue...
 
-    if (                     dev->devunique.tape_dev.stape_statrq.link.Flink) {
-        RemoveListEntry(    &dev->devunique.tape_dev.stape_statrq.link );
-        InitializeListLink( &dev->devunique.tape_dev.stape_statrq.link );
+    if (                     dev->stape_statrq.link.Flink) {
+        RemoveListEntry(    &dev->stape_statrq.link );
+        InitializeListLink( &dev->stape_statrq.link );
     }
 
     // Close the file if it's open...
     if (dev->fd >= 0)
     {
-        if (dev->devunique.tape_dev.stape_close_rewinds)
+        if (dev->stape_close_rewinds)
         {
             struct mtop opblk;
 //          opblk.mt_op    = MTLOAD;    // (not sure which is more correct)
@@ -249,14 +249,14 @@ void close_scsitape(DEVBLK *dev)
         close_tape( dev->fd );
 
         dev->fd        = -1;
-        dev->devunique.tape_dev.blockid   = -1;
-        dev->devunique.tape_dev.curfilen  =  0;
-        dev->devunique.tape_dev.nxtblkpos =  0;
-        dev->devunique.tape_dev.prvblkpos = -1;
+        dev->blockid   = -1;
+        dev->curfilen  =  0;
+        dev->nxtblkpos =  0;
+        dev->prvblkpos = -1;
     }
 
-    dev->devunique.tape_dev.sstat  = GMT_DR_OPEN(-1); // (forced)
-    dev->devunique.tape_dev.fenced = (rc >= 0) ? 0 : 1;
+    dev->sstat  = GMT_DR_OPEN(-1); // (forced)
+    dev->fenced = (rc >= 0) ? 0 : 1;
 
     release_lock( &sysblk.stape_lock );
 
@@ -279,11 +279,11 @@ int  rc;
 
     if (rc >= 0)
     {
-        dev->devunique.tape_dev.blockid++;
+        dev->blockid++;
 
         /* Increment current file number if tapemark was read */
         if (rc == 0)
-            dev->devunique.tape_dev.curfilen++;
+            dev->curfilen++;
 
         /* Return block length or zero if tapemark  */
         return rc;
@@ -321,12 +321,12 @@ int  save_errno;
 
 #if defined( _MSVC_ )
     if (errno == ENOSPC)
-        dev->devunique.tape_dev.eotwarning = 1;
+        dev->eotwarning = 1;
 #endif
 
     if (rc >= len)
     {
-        dev->devunique.tape_dev.blockid++;
+        dev->blockid++;
         return 0;
     }
 
@@ -350,8 +350,8 @@ int  save_errno;
 
         if (rc >= len)
         {
-            dev->devunique.tape_dev.eotwarning = 1;
-            dev->devunique.tape_dev.blockid++;
+            dev->eotwarning = 1;
+            dev->blockid++;
             return 0;
         }
     }
@@ -402,7 +402,7 @@ int  rc, save_errno;
 
 #if defined( _MSVC_ )
     if (errno == ENOSPC)
-        dev->devunique.tape_dev.eotwarning = 1;
+        dev->eotwarning = 1;
 #endif
 
     if (rc >= 0)
@@ -426,7 +426,7 @@ int  rc, save_errno;
 
         if (int_write_scsimark( dev ) >= 0)
         {
-            dev->devunique.tape_dev.eotwarning = 1;
+            dev->eotwarning = 1;
             return 0;
         }
     }
@@ -485,11 +485,11 @@ struct mtop opblk;
     if (rc >= 0)
     {
         /* Increment current file number since tapemark was written */
-        /*dev->devunique.tape_dev.curfilen++;*/ /* (CCW processor handles this automatically
+        /*dev->curfilen++;*/ /* (CCW processor handles this automatically
                              so there's no need for us to do it here) */
 
         /* (tapemarks count as block identifiers too!) */
-        dev->devunique.tape_dev.blockid++;
+        dev->blockid++;
     }
 
     return rc;
@@ -534,7 +534,7 @@ struct mtop opblk;
     {
 #if defined( _MSVC_ )
         if (errno == ENOSPC)
-            dev->devunique.tape_dev.eotwarning = 1;
+            dev->eotwarning = 1;
 #endif
         return 0;       // (success)
     }
@@ -560,7 +560,7 @@ struct mtop opblk;
 
         if ((rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk)) >= 0)
         {
-            dev->devunique.tape_dev.eotwarning = 1;
+            dev->eotwarning = 1;
             return 0;
         }
     }
@@ -626,7 +626,7 @@ struct mtop opblk;
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.blockid++;
+        dev->blockid++;
         /* Return +1 to indicate forward space successful */
         return +1;
     }
@@ -645,8 +645,8 @@ struct mtop opblk;
 
     if ( EIO == errno && STS_EOF(dev) ) // (fwd-spaced over tapemark?)
     {
-        dev->devunique.tape_dev.curfilen++;
-        dev->devunique.tape_dev.blockid++;
+        dev->curfilen++;
+        dev->blockid++;
         /* Return 0 to indicate tapemark was spaced over */
         return 0;
     }
@@ -728,12 +728,12 @@ struct mtget starting_mtget;
     int_scsi_status_update( dev, 0 );
 
     /* (save the current status before the i/o in case of error) */
-    memcpy( &starting_mtget, &dev->devunique.tape_dev.mtget, sizeof( struct mtget ) );
+    memcpy( &starting_mtget, &dev->mtget, sizeof( struct mtget ) );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
     {
-        dev->devunique.tape_dev.eotwarning = 0;
+        dev->eotwarning = 0;
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
@@ -746,7 +746,7 @@ struct mtget starting_mtget;
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.blockid--;
+        dev->blockid--;
         /* Return +1 to indicate backspace successful */
         return +1;
     }
@@ -816,13 +816,13 @@ struct mtget starting_mtget;
 
         /* (passed over tapemark?) */
         if (1
-            && dev->devunique.tape_dev.mtget.mt_fileno == (starting_mtget.mt_fileno - 1)
-            && dev->devunique.tape_dev.mtget.mt_blkno == -1
+            && dev->mtget.mt_fileno == (starting_mtget.mt_fileno - 1)
+            && dev->mtget.mt_blkno == -1
         )
 #endif // defined( _MSVC_ )
         {
-            dev->devunique.tape_dev.curfilen--;
-            dev->devunique.tape_dev.blockid--;
+            dev->curfilen--;
+            dev->blockid--;
             /* Return 0 to indicate tapemark was spaced over */
             return 0;
         }
@@ -842,7 +842,7 @@ struct mtget starting_mtget;
     {
         if ( EIO == errno && STS_BOT(dev) )
         {
-            dev->devunique.tape_dev.eotwarning = 0;
+            dev->eotwarning = 0;
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         }
         else
@@ -877,17 +877,17 @@ struct mtop opblk;
        (as a result of doing the forward-space file), we now have
        no clue as to what the proper current blockid should be.
     */
-    dev->devunique.tape_dev.blockid = -1;      // (actual position now unknown!)
+    dev->blockid = -1;      // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.curfilen++;
+        dev->curfilen++;
         return 0;
     }
 
     /* Handle error condition */
 
-    dev->devunique.tape_dev.fenced = 1;        // (actual position now unknown!)
+    dev->fenced = 1;        // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -964,7 +964,7 @@ struct mtop opblk;
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
     {
-        dev->devunique.tape_dev.eotwarning = 0;
+        dev->eotwarning = 0;
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
@@ -980,17 +980,17 @@ struct mtop opblk;
        (as a result of doing the back-space file), we now have
        no clue as to what the proper current blockid should be.
     */
-    dev->devunique.tape_dev.blockid = -1;      // (actual position now unknown!)
+    dev->blockid = -1;      // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.curfilen--;
+        dev->curfilen--;
         return 0;
     }
 
     /* Handle error condition */
 
-    dev->devunique.tape_dev.fenced = 1;        // (actual position now unknown!)
+    dev->fenced = 1;        // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -1005,7 +1005,7 @@ struct mtop opblk;
     {
         if ( EIO == errno && STS_BOT(dev) )
         {
-            dev->devunique.tape_dev.eotwarning = 0;
+            dev->eotwarning = 0;
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         }
         else
@@ -1033,16 +1033,16 @@ struct mtop opblk;
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.sstat |= GMT_BOT( -1 );  // (forced)
-        dev->devunique.tape_dev.blockid = 0;
-        dev->devunique.tape_dev.curfilen = 0;
-        dev->devunique.tape_dev.fenced = 0;
+        dev->sstat |= GMT_BOT( -1 );  // (forced)
+        dev->blockid = 0;
+        dev->curfilen = 0;
+        dev->fenced = 0;
         return 0;
     }
 
-    dev->devunique.tape_dev.fenced = 1;        // (because the rewind failed)
-    dev->devunique.tape_dev.blockid  = -1;     // (because the rewind failed)
-    dev->devunique.tape_dev.curfilen = -1;     // (because the rewind failed)
+    dev->fenced = 1;        // (because the rewind failed)
+    dev->blockid  = -1;     // (because the rewind failed)
+    dev->curfilen = -1;     // (because the rewind failed)
 
     WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
             dev->filename, "scsi", "ioctl_tape(MTREW)", strerror(errno));
@@ -1072,7 +1072,7 @@ struct mtop opblk;
 
     if ( rc >= 0 )
     {
-        dev->devunique.tape_dev.fenced = 0;
+        dev->fenced = 0;
 
         if ( dev->ccwtrace || dev->ccwstep )
             WRMSG (HHC00210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "scsi");
@@ -1080,15 +1080,15 @@ struct mtop opblk;
         // PR# tape/88: no sense with 'close_scsitape'
         // attempting a rewind if the tape is unloaded!
 
-        dev->devunique.tape_dev.stape_close_rewinds = 0;   // (skip rewind attempt)
+        dev->stape_close_rewinds = 0;   // (skip rewind attempt)
 
         close_scsitape( dev ); // (required for REW UNLD)
         return;
     }
 
-    dev->devunique.tape_dev.fenced = 1;    // (because the rewind-unload failed)
-    dev->devunique.tape_dev.curfilen = -1; // (because the rewind-unload failed)
-    dev->devunique.tape_dev.blockid  = -1; // (because the rewind-unload failed)
+    dev->fenced = 1;    // (because the rewind-unload failed)
+    dev->curfilen = -1; // (because the rewind-unload failed)
+    dev->blockid  = -1; // (because the rewind-unload failed)
 
     WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
             dev->filename, "scsi", "ioctl_tape(MTOFFL)", strerror( errno ) );
@@ -1108,7 +1108,7 @@ int erg_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 #if defined( OPTION_SCSI_ERASE_GAP )
 int rc;
 
-    if (!dev->devunique.tape_dev.stape_no_erg)
+    if (!dev->stape_no_erg)
     {
         struct mtop opblk;
 
@@ -1119,7 +1119,7 @@ int rc;
 
 #if defined( _MSVC_ )
         if (errno == ENOSPC)
-            dev->devunique.tape_dev.eotwarning = 1;
+            dev->eotwarning = 1;
 #endif
 
         if ( rc < 0 )
@@ -1144,7 +1144,7 @@ int rc;
                 opblk.mt_count = 0;         // (zero means "short" erase-gap)
 
                 if ( (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk )) >= 0 )
-                    dev->devunique.tape_dev.eotwarning = 1;
+                    dev->eotwarning = 1;
             }
 
             if ( rc < 0)
@@ -1410,7 +1410,7 @@ void blockid_emulated_to_actual
     BYTE    *act_blkid      // ptr to o/p 4-byte block-id for actual SCSI i/o
 )
 {
-    if ( TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt )
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
     {
         memcpy( act_blkid, emu_blkid, 4 );
         return;
@@ -1421,7 +1421,7 @@ void blockid_emulated_to_actual
     {
         // 3590 being emulated; guest block-id is full 32-bits...
 
-        if (dev->devunique.tape_dev.stape_blkid_32)
+        if (dev->stape_blkid_32)
         {
             // SCSI using full 32-bit block-ids too. Just copy as-is...
 
@@ -1438,7 +1438,7 @@ void blockid_emulated_to_actual
     }
     else // non-3590 being emulated; guest block-id is 22-bits...
     {
-        if (dev->devunique.tape_dev.stape_blkid_32)
+        if (dev->stape_blkid_32)
         {
             // SCSI using full 32-bit block-ids. Extract the wrap,
             // segment# and 22-bit blockid bits from the "22-bit
@@ -1473,14 +1473,14 @@ void blockid_actual_to_emulated
     BYTE    *emu_blkid      // ptr to o/p 4-byte block-id in guest storage
 )
 {
-    if ( TAPEDEVT_SCSITAPE != dev->devunique.tape_dev.tapedevt )
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
     {
         memcpy( emu_blkid, act_blkid, 4 );
         return;
     }
 
 #if defined(OPTION_SCSI_TAPE)
-    if (dev->devunique.tape_dev.stape_blkid_32)
+    if (dev->stape_blkid_32)
     {
         // SCSI using full 32-bit block-ids...
         if (0x3590 == dev->devtype)
@@ -1658,12 +1658,12 @@ void* get_stape_status_thread( void* notused )
 
                     if (0 == ioctl_tape( dev->fd, MTIOCGET, (char*)&mtget ))
                     {
-                        memcpy( &dev->devunique.tape_dev.mtget, &mtget, sizeof( mtget ));
+                        memcpy( &dev->mtget, &mtget, sizeof( mtget ));
                     }
                 }
                 obtain_lock( &sysblk.stape_lock );
 
-                broadcast_condition( &dev->devunique.tape_dev.stape_sstat_cond );
+                broadcast_condition( &dev->stape_sstat_cond );
                 gettimeofday( &sysblk.stape_query_status_tod, NULL );
             }
 
@@ -1739,9 +1739,9 @@ int int_scsi_status_wait( DEVBLK* dev, int usecs )
 
     // Add our request to its work queue if needed...
 
-    if (!dev->devunique.tape_dev.stape_statrq.link.Flink)
+    if (!dev->stape_statrq.link.Flink)
     {
-        InsertListTail( &sysblk.stape_status_link, &dev->devunique.tape_dev.stape_statrq.link );
+        InsertListTail( &sysblk.stape_status_link, &dev->stape_statrq.link );
     }
 
     // Wake up the status retrieval thread (if needed)...
@@ -1755,7 +1755,7 @@ int int_scsi_status_wait( DEVBLK* dev, int usecs )
 
     rc = timed_wait_condition_relative_usecs
     (
-        &dev->devunique.tape_dev.stape_sstat_cond,     // ptr to condition to wait on
+        &dev->stape_sstat_cond,     // ptr to condition to wait on
         &sysblk.stape_lock,         // ptr to controlling lock (must be held!)
         usecs,                      // max #of microseconds to wait
         NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
@@ -1770,7 +1770,7 @@ int int_scsi_status_wait( DEVBLK* dev, int usecs )
 /*-------------------------------------------------------------------*/
 int passedeot_scsitape( DEVBLK *dev )
 {
-    return dev->devunique.tape_dev.eotwarning;     // (1==past EOT reflector; 0==not)
+    return dev->eotwarning;     // (1==past EOT reflector; 0==not)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1890,7 +1890,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
             ,dev->devnum
             ,( (dev->filename[0]) ? (dev->filename)  : ("(undefined)") )
             ,( (dev->fd   <   0 ) ? (   "closed"  )  : (   "opened"  ) )
-            ,(U32)dev->devunique.tape_dev.sstat
+            ,(U32)dev->sstat
             ,STS_ONLINE(dev)      ? "ON-LINE"        : "OFF-LINE"
             ,STS_MOUNTED(dev)     ? "READY"          : "NO-TAPE"
             ,STS_TAPEMARK(dev)    ? " TAPE-MARK"     : ""
@@ -1902,7 +1902,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
         );
 
         if ( STS_BOT(dev) )
-            dev->devunique.tape_dev.eotwarning = 0;
+            dev->eotwarning = 0;
     }
 
 } /* end function int_scsi_status_update */
@@ -1954,9 +1954,9 @@ void create_automount_thread( DEVBLK* dev )
 
         if (STS_NOT_MOUNTED( dev ))
         {
-            if (!dev->devunique.tape_dev.stape_mntdrq.link.Flink)
+            if (!dev->stape_mntdrq.link.Flink)
             {
-                InsertListTail( &sysblk.stape_mount_link, &dev->devunique.tape_dev.stape_mntdrq.link );
+                InsertListTail( &sysblk.stape_mount_link, &dev->stape_mntdrq.link );
             }
         }
     }
@@ -2023,11 +2023,11 @@ void *scsi_tapemountmon_thread( void *notused )
 
                 if ((fd = dev->fd) < 0)
                 {
-                    dev->devunique.tape_dev.readonly = 0;
+                    dev->readonly = 0;
                     fd = open_tape( dev->filename, O_RDWR | O_BINARY | O_NONBLOCK );
                     if (fd < 0 && EROFS == errno )
                     {
-                        dev->devunique.tape_dev.readonly = 1;
+                        dev->readonly = 1;
                         fd = open_tape( dev->filename, O_RDONLY | O_BINARY | O_NONBLOCK );
                     }
 
@@ -2075,8 +2075,8 @@ void *scsi_tapemountmon_thread( void *notused )
 
                 // Yes, remove completed work item...
 
-                RemoveListEntry( &dev->devunique.tape_dev.stape_mntdrq.link );
-                InitializeListLink( &dev->devunique.tape_dev.stape_mntdrq.link );
+                RemoveListEntry( &dev->stape_mntdrq.link );
+                InitializeListLink( &dev->stape_mntdrq.link );
 
                 // Finish the open drive process (set drive to variable length
                 // block processing mode, etc)...
@@ -2116,9 +2116,9 @@ void *scsi_tapemountmon_thread( void *notused )
         req = CONTAINING_RECORD( pListEntry, STMNTDRQ, link );
         dev = req->dev;
 
-        if (                     dev->devunique.tape_dev.stape_statrq.link.Flink) {
-            RemoveListEntry(    &dev->devunique.tape_dev.stape_statrq.link );
-            InitializeListLink( &dev->devunique.tape_dev.stape_statrq.link );
+        if (                     dev->stape_statrq.link.Flink) {
+            RemoveListEntry(    &dev->stape_statrq.link );
+            InitializeListLink( &dev->stape_statrq.link );
         }
     }
 
@@ -2151,7 +2151,7 @@ void define_BOT_pos( DEVBLK *dev )
     U32 msk  = 0xFF3FFFFF;      // (3480/3490 default)
     U32 bot  = 0x01000000;      // (3480/3490 default)
 
-    if ( dev->devunique.tape_dev.stape_blkid_32 )
+    if ( dev->stape_blkid_32 )
     {
         msk  = 0xFFFFFFFF;      // (3590 default)
         bot  = 0x00000000;      // (3590 default)

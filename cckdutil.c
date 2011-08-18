@@ -84,7 +84,7 @@ CCKD_L2ENT        l2[256];              /* Level 2 table             */
 CCKD_FREEBLK      freeblk;              /* Free block                */
 
     /* Get fd */
-    cckd = dev->devunique.dasd_dev.cckd_ext;
+    cckd = dev->cckd_ext;
     if (cckd == NULL)
         fd = dev->fd;
     else
@@ -396,7 +396,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
     /*---------------------------------------------------------------
      * Get fd
      *---------------------------------------------------------------*/
-    cckd = dev->devunique.dasd_dev.cckd_ext;
+    cckd = dev->cckd_ext;
     if (cckd == NULL)
         fd = dev->fd;
     else
@@ -1027,7 +1027,7 @@ CCKD_FREEBLK   *fsp=NULL;               /* free blocks (new format)  */
 BYTE            buf[4*65536];           /* buffer                    */
 
     /* Get fd */
-    cckd = dev->devunique.dasd_dev.cckd_ext;
+    cckd = dev->cckd_ext;
     if (cckd == NULL)
         fd = dev->fd;
     else

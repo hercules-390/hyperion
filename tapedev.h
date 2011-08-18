@@ -180,14 +180,14 @@
 /* Fish - macros for checking SCSI tape device-independent status    */
 /*-------------------------------------------------------------------*/
 #if defined(OPTION_SCSI_TAPE)
-#define STS_TAPEMARK(dev)       GMT_SM      ( (dev)->devunique.tape_dev.sstat )
-#define STS_EOF(dev)            GMT_EOF     ( (dev)->devunique.tape_dev.sstat )
-#define STS_BOT(dev)            GMT_BOT     ( (dev)->devunique.tape_dev.sstat )
-#define STS_EOT(dev)            GMT_EOT     ( (dev)->devunique.tape_dev.sstat )
-#define STS_EOD(dev)            GMT_EOD     ( (dev)->devunique.tape_dev.sstat )
-#define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->devunique.tape_dev.sstat )
-#define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->devunique.tape_dev.sstat )
-#define STS_MOUNTED(dev)        ((dev)->fd >= 0 && !GMT_DR_OPEN( (dev)->devunique.tape_dev.sstat ))
+#define STS_TAPEMARK(dev)       GMT_SM      ( (dev)->sstat )
+#define STS_EOF(dev)            GMT_EOF     ( (dev)->sstat )
+#define STS_BOT(dev)            GMT_BOT     ( (dev)->sstat )
+#define STS_EOT(dev)            GMT_EOT     ( (dev)->sstat )
+#define STS_EOD(dev)            GMT_EOD     ( (dev)->sstat )
+#define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->sstat )
+#define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
+#define STS_MOUNTED(dev)        ((dev)->fd >= 0 && !GMT_DR_OPEN( (dev)->sstat ))
 #define STS_NOT_MOUNTED(dev)    (!STS_MOUNTED(dev))
 #endif
 
@@ -448,8 +448,8 @@ extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BY
 /*-------------------------------------------------------------------*/
 #if defined(OPTION_SCSI_TAPE)
   #define INCREMENT_MESSAGEID(_dev)   \
-    if ((_dev)->devunique.tape_dev.SIC_active)           \
-        (_dev)->devunique.tape_dev.msgid++
+    if ((_dev)->SIC_active)           \
+        (_dev)->msgid++
 #else
   #define INCREMENT_MESSAGEID(_dev)
 #endif // defined(OPTION_SCSI_TAPE)

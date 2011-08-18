@@ -189,13 +189,13 @@
  * It doesn't hurt otherwise
  * EXTENT_CHECK0(dev) is the same as EXTENT_CHECK(dev,0,0)
  */
-#define EXTENT_CHECK0(_dev) ((_dev)->devunique.dasd_dev.ckdxbcyl > 0          \
-            || ((_dev)->devunique.dasd_dev.ckdxbcyl==0 && (_dev)->devunique.dasd_dev.ckdxbhead>0))
+#define EXTENT_CHECK0(_dev) ((_dev)->ckdxbcyl > 0                            \
+            || ((_dev)->ckdxbcyl==0 && (_dev)->ckdxbhead>0))
 
 #define EXTENT_CHECK(_dev, _cyl, _head)                                        \
-        ( (_cyl) < (_dev)->devunique.dasd_dev.ckdxbcyl || (_cyl) > (_dev)->devunique.dasd_dev.ckdxecyl               \
-            || ((_cyl) == (_dev)->devunique.dasd_dev.ckdxbcyl && (_head) < (_dev)->devunique.dasd_dev.ckdxbhead)     \
-            || ((_cyl) == (_dev)->devunique.dasd_dev.ckdxecyl && (_head) > (_dev)->devunique.dasd_dev.ckdxehead) )
+        ( (_cyl) < (_dev)->ckdxbcyl || (_cyl) > (_dev)->ckdxecyl               \
+            || ((_cyl) == (_dev)->ckdxbcyl && (_head) < (_dev)->ckdxbhead)     \
+            || ((_cyl) == (_dev)->ckdxecyl && (_head) > (_dev)->ckdxehead) )
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -223,15 +223,15 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
-char            pathname[PATH_MAX];     /* file path in host format  */
-char            filename[PATH_MAX+2];   /* work area for display     */
+char            pathname[MAX_PATH];     /* file path in host format  */
+char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(pathname) )
+    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
         WRMSG (HHC00400, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
         return -1;
@@ -241,21 +241,7 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->excps = 0;
 
     /* Save the file name in the device block */
-    hostpath(pathname, argv[0], sizeof(pathname) );
-
-    if ( dev->filename != NULL )
-    {
-        free( dev->filename );
-        dev->filename = NULL;
-    }
-
-    dev->filename = strdup(pathname);
-
-    if ( dev->filename == NULL )
-    {
-        WRMSG (HHC01460, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
-        return -1;
-    }
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     if (strchr(dev->filename, SPACE) == NULL)
     {
@@ -286,7 +272,7 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->syncio = 1;
 
     /* No active track or cache entry */
-    dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+    dev->bufcur = dev->cache = -1;
 
     /* Locate and save the last character of the file name */
     sfxptr = strrchr (dev->filename, PATHSEPC);
@@ -301,40 +287,40 @@ char           *strtok_str = NULL;      /* save last position        */
     {
         if (strcasecmp ("lazywrite", argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdnolazywr = 0;
+            dev->ckdnolazywr = 0;
             continue;
         }
         if (strcasecmp ("nolazywrite", argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdnolazywr = 1;
+            dev->ckdnolazywr = 1;
             continue;
         }
         if (strcasecmp ("fulltrackio", argv[i]) == 0 ||
             strcasecmp ("fulltrkio",   argv[i]) == 0 ||
             strcasecmp ("ftio",        argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdnolazywr = 0;
+            dev->ckdnolazywr = 0;
             continue;
         }
         if (strcasecmp ("nofulltrackio", argv[i]) == 0 ||
             strcasecmp ("nofulltrkio",   argv[i]) == 0 ||
             strcasecmp ("noftio",        argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdnolazywr = 1;
+            dev->ckdnolazywr = 1;
             continue;
         }
         if (strcasecmp ("readonly", argv[i]) == 0 ||
             strcasecmp ("rdonly",   argv[i]) == 0 ||
             strcasecmp ("ro",       argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdrdonly = 1;
+            dev->ckdrdonly = 1;
             continue;
         }
         if (strcasecmp ("fakewrite", argv[i]) == 0 ||
             strcasecmp ("fakewrt",   argv[i]) == 0 ||
             strcasecmp ("fw",        argv[i]) == 0)
         {
-            dev->devunique.dasd_dev.ckdfakewr = 1;
+            dev->ckdfakewr = 1;
             continue;
         }
         if (strlen (argv[i]) > 3 &&
@@ -342,17 +328,17 @@ char           *strtok_str = NULL;      /* save last position        */
         {
             if ('\"' == argv[i][3]) argv[i]++;
             hostpath(pathname, argv[i]+3, sizeof(pathname));
-            dev->devunique.dasd_dev.dasdsfn = strdup(pathname);
-            if (dev->devunique.dasd_dev.dasdsfn)
+            dev->dasdsfn = strdup(pathname);
+            if (dev->dasdsfn)
             {
                 /* Set the pointer to the suffix character */
-                dev->devunique.dasd_dev.dasdsfx = strrchr (dev->devunique.dasd_dev.dasdsfn, PATHSEPC);
-                if (dev->devunique.dasd_dev.dasdsfx == NULL)
-                    dev->devunique.dasd_dev.dasdsfx = dev->devunique.dasd_dev.dasdsfn + 1;
-                dev->devunique.dasd_dev.dasdsfx = strchr (dev->devunique.dasd_dev.dasdsfx, '.');
-                if (dev->devunique.dasd_dev.dasdsfx == NULL)
-                    dev->devunique.dasd_dev.dasdsfx = dev->devunique.dasd_dev.dasdsfn + strlen(dev->devunique.dasd_dev.dasdsfn);
-                dev->devunique.dasd_dev.dasdsfx--;
+                dev->dasdsfx = strrchr (dev->dasdsfn, PATHSEPC);
+                if (dev->dasdsfx == NULL)
+                    dev->dasdsfx = dev->dasdsfn + 1;
+                dev->dasdsfx = strchr (dev->dasdsfx, '.');
+                if (dev->dasdsfx == NULL)
+                    dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
+                dev->dasdsfx--;
             }
             continue;
         }
@@ -381,8 +367,8 @@ char           *strtok_str = NULL;      /* save last position        */
     }
 
     /* Initialize the total tracks and cylinders */
-    dev->devunique.dasd_dev.ckdtrks = 0;
-    dev->devunique.dasd_dev.ckdcyls = 0;
+    dev->ckdtrks = 0;
+    dev->ckdcyls = 0;
 
 #if defined( OPTION_SHOWDVOL1 )
     /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
@@ -430,18 +416,18 @@ char           *strtok_str = NULL;      /* save last position        */
 #endif /* defined( OPTION_SHOWDVOL1 ) */
 
     /* Open all of the CKD image files which comprise this volume */
-    if (dev->devunique.dasd_dev.ckdrdonly)
+    if (dev->ckdrdonly)
         if (!dev->quiet)
             WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename,
-                dev->devunique.dasd_dev.ckdfakewr ? " with fake writing" : "");
+                dev->ckdfakewr ? " with fake writing" : "");
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
-        dev->fd = HOPEN (dev->filename, dev->devunique.dasd_dev.ckdrdonly ?
+        dev->fd = HOPEN (dev->filename, dev->ckdrdonly ?
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */
-            if (!dev->devunique.dasd_dev.ckdrdonly && dev->devunique.dasd_dev.dasdsfn != NULL)
+            if (!dev->ckdrdonly && dev->dasdsfn != NULL)
                 dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
@@ -452,7 +438,7 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* If shadow file, only one base file is allowed */
-        if (fileseq > 1 && dev->devunique.dasd_dev.dasdsfn != NULL)
+        if (fileseq > 1 && dev->dasdsfn != NULL)
         {
             WRMSG (HHC00405, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
@@ -546,7 +532,7 @@ char           *strtok_str = NULL;      /* save last position        */
                  * the highcyl in the device header.  The last file will have
                  * a sequence number of 0xFF.
                  */
-                cyls = highcyl - dev->devunique.dasd_dev.ckdcyls + 1;
+                cyls = highcyl - dev->ckdcyls + 1;
                 trks = cyls * heads;
                 if (devhdr.fileseq == 0xFF)
                 {
@@ -578,21 +564,21 @@ char           *strtok_str = NULL;      /* save last position        */
         if (devhdr.fileseq > 0)
         {
             if (!dev->quiet)
-                WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->devunique.dasd_dev.ckdcyls,
-                    (highcyl > 0 ? highcyl : dev->devunique.dasd_dev.ckdcyls + cyls - 1));
+                WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->ckdcyls,
+                    (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
         /* Save device geometry of first file, or check that device
            geometry of subsequent files matches that of first file */
         if (fileseq == 1)
         {
-            dev->devunique.dasd_dev.ckdheads = heads;
-            dev->devunique.dasd_dev.ckdtrksz = trksize;
+            dev->ckdheads = heads;
+            dev->ckdtrksz = trksize;
         }
-        else if (heads != dev->devunique.dasd_dev.ckdheads || trksize != dev->devunique.dasd_dev.ckdtrksz)
+        else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
             WRMSG (HHC00410, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, heads, trksize,
-                    dev->devunique.dasd_dev.ckdheads, dev->devunique.dasd_dev.ckdtrksz);
+                    dev->ckdheads, dev->ckdtrksz);
             return -1;
         }
 
@@ -600,27 +586,27 @@ char           *strtok_str = NULL;      /* save last position        */
         if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
             || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
-            || (highcyl != 0 && highcyl != dev->devunique.dasd_dev.ckdcyls + cyls - 1)))
+            || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
             WRMSG (HHC00411, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
         /* Check for correct high cylinder number */
-        if (highcyl != 0 && highcyl != dev->devunique.dasd_dev.ckdcyls + cyls - 1)
+        if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
             WRMSG (HHC00412, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
             return -1;
         }
 
         /* Accumulate total volume size */
-        dev->devunique.dasd_dev.ckdtrks += trks;
-        dev->devunique.dasd_dev.ckdcyls += cyls;
+        dev->ckdtrks += trks;
+        dev->ckdcyls += cyls;
 
         /* Save file descriptor and high track number */
-        dev->devunique.dasd_dev.ckdfd[fileseq-1] = dev->fd;
-        dev->devunique.dasd_dev.ckdhitrk[fileseq-1] = dev->devunique.dasd_dev.ckdtrks;
-        dev->devunique.dasd_dev.ckdnumfd = fileseq;
+        dev->ckdfd[fileseq-1] = dev->fd;
+        dev->ckdhitrk[fileseq-1] = dev->ckdtrks;
+        dev->ckdnumfd = fileseq;
 
         /* Exit loop if this is the last file */
         if (highcyl == 0) break;
@@ -648,39 +634,39 @@ char           *strtok_str = NULL;      /* save last position        */
 
     /* Log the device geometry */
     if (!dev->quiet)
-        WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->devunique.dasd_dev.ckdcyls,
-            dev->devunique.dasd_dev.ckdheads, dev->devunique.dasd_dev.ckdtrks, dev->devunique.dasd_dev.ckdtrksz);
+        WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->ckdcyls,
+            dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     /* Locate the CKD dasd table entry */
-    dev->devunique.dasd_dev.ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->devunique.dasd_dev.ckdcyls);
-    if (dev->devunique.dasd_dev.ckdtab == NULL)
+    dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
+    if (dev->ckdtab == NULL)
     {
         WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->devtype);
         return -1;
     }
 
     /* Locate the CKD control unit dasd table entry */
-    dev->devunique.dasd_dev.ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->devunique.dasd_dev.ckdtab->cu, 0, 0);
-    if (dev->devunique.dasd_dev.ckdcu == NULL)
+    dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
+    if (dev->ckdcu == NULL)
     {
-        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, cu ? cu : dev->devunique.dasd_dev.ckdtab->cu);
+        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
     /* Set number of sense bytes according to controller specification */
-    dev->numsense = dev->devunique.dasd_dev.ckdcu->senselength;
+    dev->numsense = dev->ckdcu->senselength;
 
     /* Set flag bit if 3990 controller */
-    if (dev->devunique.dasd_dev.ckdcu->devt == 0x3990)
-        dev->devunique.dasd_dev.ckd3990 = 1;
+    if (dev->ckdcu->devt == 0x3990)
+        dev->ckd3990 = 1;
 
     /* Build the devid area */
-    dev->numdevid = dasd_build_ckd_devid (dev->devunique.dasd_dev.ckdtab, dev->devunique.dasd_dev.ckdcu,
+    dev->numdevid = dasd_build_ckd_devid (dev->ckdtab, dev->ckdcu,
                                           (BYTE *)&dev->devid);
 
     /* Build the devchar area */
-    dev->numdevchar = dasd_build_ckd_devchar (dev->devunique.dasd_dev.ckdtab, dev->devunique.dasd_dev.ckdcu,
-                                  (BYTE *)&dev->devchar, dev->devunique.dasd_dev.ckdcyls);
+    dev->numdevchar = dasd_build_ckd_devchar (dev->ckdtab, dev->ckdcu,
+                                  (BYTE *)&dev->devchar, dev->ckdcyls);
 
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
@@ -693,7 +679,7 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->cdwmerge = 1;
 
     /* default for device cache is on */
-    dev->devunique.dasd_dev.devcache = TRUE;
+    dev->devcache = TRUE;
 
     if (!cckd) return 0;
     else return cckddasd_init_handler(dev, argc, argv);
@@ -719,29 +705,29 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
         MSGBUF( devname, "%s", dev->filename );
         break;
     case SHOWDVOL1_YES:
-        MSGBUF( devname, "%-6.6s %s", dev->devunique.dasd_dev.dasdvol, dev->filename );
+        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
         break;
     case SHOWDVOL1_ONLY:
-        MSGBUF( devname, "%-6.6s", dev->devunique.dasd_dev.dasdvol );
+        MSGBUF( devname, "%-6.6s", dev->dasdvol );
         break;
     }
 
-    cckd = dev->devunique.dasd_dev.cckd_ext;
+    cckd = dev->cckd_ext;
     if (!cckd)
     {
-        if ( dev->devunique.dasd_dev.ckdnumfd > 1)
+        if ( dev->ckdnumfd > 1)
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] [%d segs] IO[%" I64_FMT "u]",
                       devname,
-                      dev->devunique.dasd_dev.ckdcyls,
-                      dev->devunique.dasd_dev.ckdnumfd,
+                      dev->ckdcyls,
+                      dev->ckdnumfd,
                       dev->excps );
         }
         else
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] IO[%" I64_FMT "u]",
                       devname,
-                      dev->devunique.dasd_dev.ckdcyls,
+                      dev->ckdcyls,
                       dev->excps );
         }
     }
@@ -749,7 +735,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
     {
         snprintf( buffer, buflen-1, "%s [%d cyls] [%d sfs] IO[%" I64_FMT "u]",
                   devname,
-                  dev->devunique.dasd_dev.ckdcyls,
+                  dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );
     }
@@ -792,14 +778,13 @@ BYTE    unitstat;                       /* Unit Status               */
 
     if (!dev->batch)
         if (!dev->quiet)
-            WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
-                dev->devunique.dasd_dev.cachehits, dev->devunique.dasd_dev.cachemisses,
-                dev->devunique.dasd_dev.cachewaits);
+            WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->cachehits, dev->cachemisses,
+                dev->cachewaits);
 
     /* Close all of the CKD image files */
-    for (i = 0; i < dev->devunique.dasd_dev.ckdnumfd; i++)
-        if (dev->devunique.dasd_dev.ckdfd[i] > 2)
-            close (dev->devunique.dasd_dev.ckdfd[i]);
+    for (i = 0; i < dev->ckdnumfd; i++)
+        if (dev->ckdfd[i] > 2)
+            close (dev->ckdfd[i]);
 
     dev->buf = NULL;
     dev->bufsize = 0;
@@ -818,7 +803,7 @@ int             rc;                     /* Return code               */
 int             trk;                    /* Track number              */
 
     /* Command reject if seek position is outside volume */
-    if (cyl >= dev->devunique.dasd_dev.ckdcyls || head >= dev->devunique.dasd_dev.ckdheads)
+    if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_4);
@@ -827,7 +812,7 @@ int             trk;                    /* Track number              */
     }
 
     /* Calculate the track number */
-    trk = cyl * dev->devunique.dasd_dev.ckdheads + head;
+    trk = cyl * dev->ckdheads + head;
 
     /* Call the read exit */
     rc = (dev->hnd->read) (dev, trk, unitstat);
@@ -849,14 +834,14 @@ int             sz;                     /* Size so far               */
         sz += CKDDASD_RECHDR_SIZE +
                 buf[sz+5] +
                 (buf[sz+6] << 8) + buf[sz+7];
-        if (sz > dev->devunique.dasd_dev.ckdtrksz - 8) break;
+        if (sz > dev->ckdtrksz - 8) break;
     }
 
     /* add length for end-of-track indicator */
     sz += CKDDASD_RECHDR_SIZE;
 
-    if (sz > dev->devunique.dasd_dev.ckdtrksz)
-        sz = dev->devunique.dasd_dev.ckdtrksz;
+    if (sz > dev->ckdtrksz)
+        sz = dev->ckdtrksz;
 
     return sz;
 }
@@ -878,12 +863,12 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     logdevtr (dev, MSG(HHC00424, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->bufcur));
 
     /* Calculate cylinder and head */
-    cyl = trk / dev->devunique.dasd_dev.ckdheads;
-    head = trk % dev->devunique.dasd_dev.ckdheads;
+    cyl = trk / dev->ckdheads;
+    head = trk % dev->ckdheads;
 
     /* Reset buffer offsets */
     dev->bufoff = 0;
-    dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
+    dev->bufoffhi = dev->ckdtrksz;
 
     /* Return if reading the same track image */
     if (trk >= 0 && trk == dev->bufcur)
@@ -891,7 +876,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     active = dev->syncio_active;
-    if (dev->devunique.dasd_dev.ckdtrkof || trk <= 0)
+    if (dev->ckdtrkof || trk <= 0)
         dev->syncio_active = 0;
 
     /* Write the previous track image if modified */
@@ -909,7 +894,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         dev->bufupd = 0;
 
         /* Seek to the old track image offset */
-        offset = (off_t)(dev->devunique.dasd_dev.ckdtrkoff + dev->bufupdlo);
+        offset = (off_t)(dev->ckdtrkoff + dev->bufupdlo);
         offset = lseek (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
@@ -919,10 +904,10 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
-            cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~CKD_CACHE_ACTIVE, 0);
+            cache_setflag(CACHE_DEVBUF, dev->cache, ~CKD_CACHE_ACTIVE, 0);
             cache_unlock(CACHE_DEVBUF);
             dev->bufupdlo = dev->bufupdhi = 0;
-            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+            dev->bufcur = dev->cache = -1;
             return -1;
         }
 
@@ -937,10 +922,10 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
-            cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~CKD_CACHE_ACTIVE, 0);
+            cache_setflag(CACHE_DEVBUF, dev->cache, ~CKD_CACHE_ACTIVE, 0);
             cache_unlock(CACHE_DEVBUF);
             dev->bufupdlo = dev->bufupdhi = 0;
-            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+            dev->bufcur = dev->cache = -1;
             return -1;
         }
 
@@ -950,9 +935,9 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     cache_lock (CACHE_DEVBUF);
 
     /* Make the previous cache entry inactive */
-    if (dev->devunique.dasd_dev.cache >= 0)
-        cache_setflag(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, ~CKD_CACHE_ACTIVE, 0);
-    dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+    if (dev->cache >= 0)
+        cache_setflag(CACHE_DEVBUF, dev->cache, ~CKD_CACHE_ACTIVE, 0);
+    dev->bufcur = dev->cache = -1;
 
     /* Return on special case when called by the close handler */
     if (trk < 0)
@@ -975,23 +960,23 @@ ckd_read_track_retry:
 
         logdevtr (dev, MSG(HHC00426, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, i));
 
-        dev->devunique.dasd_dev.cachehits++;
-        dev->devunique.dasd_dev.cache = i;
-        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
+        dev->cachehits++;
+        dev->cache = i;
+        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
         dev->bufcur = trk;
         dev->bufoff = 0;
-        dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
+        dev->bufoffhi = dev->ckdtrksz;
         dev->buflen = ckd_trklen (dev, dev->buf);
-        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
+        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
 
         /* Set the file descriptor */
-        for (f = 0; f < dev->devunique.dasd_dev.ckdnumfd; f++)
-            if (trk < dev->devunique.dasd_dev.ckdhitrk[f]) break;
-        dev->fd = dev->devunique.dasd_dev.ckdfd[f];
+        for (f = 0; f < dev->ckdnumfd; f++)
+            if (trk < dev->ckdhitrk[f]) break;
+        dev->fd = dev->ckdfd[f];
 
         /* Calculate the track offset */
-        dev->devunique.dasd_dev.ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-             (off_t)(trk - (f ? dev->devunique.dasd_dev.ckdhitrk[f-1] : 0)) * dev->devunique.dasd_dev.ckdtrksz;
+        dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
+             (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
         dev->syncio_active = active;
 
@@ -1010,7 +995,7 @@ ckd_read_track_retry:
     if (o < 0)
     {
         logdevtr (dev, MSG(HHC00427, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk));
-        dev->devunique.dasd_dev.cachewaits++;
+        dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto ckd_read_track_retry;
     }
@@ -1018,31 +1003,31 @@ ckd_read_track_retry:
     /* Cache miss */
     logdevtr (dev, MSG(HHC00428, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, o));
 
-    dev->devunique.dasd_dev.cachemisses++;
+    dev->cachemisses++;
 
     /* Make this cache entry active */
     cache_setkey (CACHE_DEVBUF, o, CKD_CACHE_SETKEY(dev->devnum, trk));
     cache_setflag(CACHE_DEVBUF, o, 0, CKD_CACHE_ACTIVE|DEVBUF_TYPE_CKD);
     cache_setage (CACHE_DEVBUF, o);
-    dev->buf = cache_getbuf(CACHE_DEVBUF, o, dev->devunique.dasd_dev.ckdtrksz);
+    dev->buf = cache_getbuf(CACHE_DEVBUF, o, dev->ckdtrksz);
     cache_unlock (CACHE_DEVBUF);
 
     /* Set the file descriptor */
-    for (f = 0; f < dev->devunique.dasd_dev.ckdnumfd; f++)
-        if (trk < dev->devunique.dasd_dev.ckdhitrk[f]) break;
-    dev->fd = dev->devunique.dasd_dev.ckdfd[f];
+    for (f = 0; f < dev->ckdnumfd; f++)
+        if (trk < dev->ckdhitrk[f]) break;
+    dev->fd = dev->ckdfd[f];
 
     /* Calculate the track offset */
-    dev->devunique.dasd_dev.ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-         (off_t)(trk - (f ? dev->devunique.dasd_dev.ckdhitrk[f-1] : 0)) * dev->devunique.dasd_dev.ckdtrksz;
+    dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
+         (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
     dev->syncio_active = active;
 
     logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1,
-        dev->devunique.dasd_dev.ckdtrkoff, dev->devunique.dasd_dev.ckdtrksz));
+        dev->ckdtrkoff, dev->ckdtrksz));
 
     /* Seek to the track image offset */
-    offset = (off_t)dev->devunique.dasd_dev.ckdtrkoff;
+    offset = (off_t)dev->ckdtrkoff;
     offset = lseek (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
@@ -1050,7 +1035,7 @@ ckd_read_track_retry:
         WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+        dev->bufcur = dev->cache = -1;
         cache_lock(CACHE_DEVBUF);
         cache_release(CACHE_DEVBUF, o, 0);
         cache_unlock(CACHE_DEVBUF);
@@ -1060,15 +1045,15 @@ ckd_read_track_retry:
     /* Read the track image */
     if (dev->dasdcopy == 0)
     {
-        rc = read (dev->fd, dev->buf, dev->devunique.dasd_dev.ckdtrksz);
-        if (rc < dev->devunique.dasd_dev.ckdtrksz)
+        rc = read (dev->fd, dev->buf, dev->ckdtrksz);
+        if (rc < dev->ckdtrksz)
         {
             /* Handle read error condition */
             WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()",
                 (rc < 0 ? strerror(errno) : "unexpected end of file"));
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+            dev->bufcur = dev->cache = -1;
             cache_lock(CACHE_DEVBUF);
             cache_release(CACHE_DEVBUF, o, 0);
             cache_unlock(CACHE_DEVBUF);
@@ -1099,20 +1084,20 @@ ckd_read_track_retry:
                 trkhdr->bin,trkhdr->cyl[0],trkhdr->cyl[1],trkhdr->head[0],trkhdr->head[1]);
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+        dev->bufcur = dev->cache = -1;
         cache_lock(CACHE_DEVBUF);
         cache_release(CACHE_DEVBUF, o, 0);
         cache_unlock(CACHE_DEVBUF);
         return -1;
     }
 
-    dev->devunique.dasd_dev.cache = o;
-    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->devunique.dasd_dev.cache, 0);
+    dev->cache = o;
+    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
     dev->bufcur = trk;
     dev->bufoff = 0;
-    dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
+    dev->bufoffhi = dev->ckdtrksz;
     dev->buflen = ckd_trklen (dev, dev->buf);
-    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->devunique.dasd_dev.cache);
+    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
 
     return 0;
 } /* end function ckdread_read_track */
@@ -1128,11 +1113,11 @@ int ckddasd_update_track (DEVBLK *dev, int trk, int off,
 int             rc;                     /* Return code               */
 
     /* Immediately return if fake writing */
-    if (dev->devunique.dasd_dev.ckdfakewr)
+    if (dev->ckdfakewr)
         return len;
 
     /* Error if opened read-only */
-    if (dev->devunique.dasd_dev.ckdrdonly)
+    if (dev->ckdrdonly)
     {
         ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
                         FORMAT_1, MESSAGE_0);
@@ -1146,7 +1131,7 @@ int             rc;                     /* Return code               */
         rc = (dev->hnd->read) (dev, trk, unitstat);
         if (rc < 0)
         {
-            dev->bufcur = dev->devunique.dasd_dev.cache = -1;
+            dev->bufcur = dev->cache = -1;
             return -1;
         }
     }
@@ -1185,7 +1170,7 @@ void ckddasd_start (DEVBLK *dev)
 {
     /* Reset buffer offsets */
     dev->bufoff = 0;
-    dev->bufoffhi = dev->devunique.dasd_dev.ckdtrksz;
+    dev->bufoffhi = dev->ckdtrksz;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1205,7 +1190,7 @@ BYTE    unitstat;                       /* Unit Status               */
 static
 int ckddasd_used (DEVBLK *dev)
 {
-    return dev->devunique.dasd_dev.ckdcyls;
+    return dev->ckdcyls;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1260,43 +1245,43 @@ int ckddasd_hsuspend(DEVBLK *dev, void *file) {
         SR_WRITE_VALUE(file, SR_DEV_CKD_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
         SR_WRITE_VALUE(file, SR_DEV_CKD_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
     }
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURCYL, dev->devunique.dasd_dev.ckdcurcyl, sizeof(dev->devunique.dasd_dev.ckdcurcyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURHEAD, dev->devunique.dasd_dev.ckdcurhead, sizeof(dev->devunique.dasd_dev.ckdcurhead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURREC, dev->devunique.dasd_dev.ckdcurrec, sizeof(dev->devunique.dasd_dev.ckdcurrec));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURKL, dev->devunique.dasd_dev.ckdcurkl, sizeof(dev->devunique.dasd_dev.ckdcurkl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_ORIENT, dev->devunique.dasd_dev.ckdorient, sizeof(dev->devunique.dasd_dev.ckdorient));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CUROPER, dev->devunique.dasd_dev.ckdcuroper, sizeof(dev->devunique.dasd_dev.ckdcuroper));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURDL, dev->devunique.dasd_dev.ckdcurdl, sizeof(dev->devunique.dasd_dev.ckdcurdl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_REM, dev->devunique.dasd_dev.ckdrem, sizeof(dev->devunique.dasd_dev.ckdrem));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_POS, dev->devunique.dasd_dev.ckdpos, sizeof(dev->devunique.dasd_dev.ckdpos));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBLKSZ, dev->devunique.dasd_dev.ckdxblksz, sizeof(dev->devunique.dasd_dev.ckdxblksz));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBCYL, dev->devunique.dasd_dev.ckdxbcyl, sizeof(dev->devunique.dasd_dev.ckdxbcyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBHEAD, dev->devunique.dasd_dev.ckdxbhead, sizeof(dev->devunique.dasd_dev.ckdxbhead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXECYL, dev->devunique.dasd_dev.ckdxecyl, sizeof(dev->devunique.dasd_dev.ckdxecyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXEHEAD, dev->devunique.dasd_dev.ckdxehead, sizeof(dev->devunique.dasd_dev.ckdxehead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXFMASK, dev->devunique.dasd_dev.ckdfmask, sizeof(dev->devunique.dasd_dev.ckdfmask));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXGATTR, dev->devunique.dasd_dev.ckdxgattr, sizeof(dev->devunique.dasd_dev.ckdxgattr));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRTRANLF, dev->devunique.dasd_dev.ckdltranlf, sizeof(dev->devunique.dasd_dev.ckdltranlf));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LROPER, dev->devunique.dasd_dev.ckdloper, sizeof(dev->devunique.dasd_dev.ckdloper));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRAUX, dev->devunique.dasd_dev.ckdlaux, sizeof(dev->devunique.dasd_dev.ckdlaux));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRCOUNT, dev->devunique.dasd_dev.ckdlcount, sizeof(dev->devunique.dasd_dev.ckdlcount));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_3990, dev->devunique.dasd_dev.ckd3990, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_XTDEF, dev->devunique.dasd_dev.ckdxtdef, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SETFM, dev->devunique.dasd_dev.ckdsetfm, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LOCAT, dev->devunique.dasd_dev.ckdlocat, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SPCNT, dev->devunique.dasd_dev.ckdspcnt, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SEEK, dev->devunique.dasd_dev.ckdseek, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SKCYL, dev->devunique.dasd_dev.ckdskcyl, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_RECAL, dev->devunique.dasd_dev.ckdrecal, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_RDIPL, dev->devunique.dasd_dev.ckdrdipl, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_XMARK, dev->devunique.dasd_dev.ckdxmark, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_HAEQ, dev->devunique.dasd_dev.ckdhaeq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_IDEQ, dev->devunique.dasd_dev.ckdideq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_KYEQ, dev->devunique.dasd_dev.ckdkyeq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_WCKD, dev->devunique.dasd_dev.ckdwckd, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_TRKOF, dev->devunique.dasd_dev.ckdtrkof, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SSI, dev->devunique.dasd_dev.ckdssi, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_WRHA, dev->devunique.dasd_dev.ckdwrha, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURCYL, dev->ckdcurcyl, sizeof(dev->ckdcurcyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURHEAD, dev->ckdcurhead, sizeof(dev->ckdcurhead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURREC, dev->ckdcurrec, sizeof(dev->ckdcurrec));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURKL, dev->ckdcurkl, sizeof(dev->ckdcurkl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_ORIENT, dev->ckdorient, sizeof(dev->ckdorient));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CUROPER, dev->ckdcuroper, sizeof(dev->ckdcuroper));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURDL, dev->ckdcurdl, sizeof(dev->ckdcurdl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_REM, dev->ckdrem, sizeof(dev->ckdrem));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_POS, dev->ckdpos, sizeof(dev->ckdpos));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBLKSZ, dev->ckdxblksz, sizeof(dev->ckdxblksz));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBCYL, dev->ckdxbcyl, sizeof(dev->ckdxbcyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBHEAD, dev->ckdxbhead, sizeof(dev->ckdxbhead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXECYL, dev->ckdxecyl, sizeof(dev->ckdxecyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXEHEAD, dev->ckdxehead, sizeof(dev->ckdxehead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXFMASK, dev->ckdfmask, sizeof(dev->ckdfmask));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXGATTR, dev->ckdxgattr, sizeof(dev->ckdxgattr));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRTRANLF, dev->ckdltranlf, sizeof(dev->ckdltranlf));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LROPER, dev->ckdloper, sizeof(dev->ckdloper));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRAUX, dev->ckdlaux, sizeof(dev->ckdlaux));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRCOUNT, dev->ckdlcount, sizeof(dev->ckdlcount));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_3990, dev->ckd3990, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_XTDEF, dev->ckdxtdef, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SETFM, dev->ckdsetfm, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LOCAT, dev->ckdlocat, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SPCNT, dev->ckdspcnt, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SEEK, dev->ckdseek, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SKCYL, dev->ckdskcyl, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_RECAL, dev->ckdrecal, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_RDIPL, dev->ckdrdipl, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_XMARK, dev->ckdxmark, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_HAEQ, dev->ckdhaeq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_IDEQ, dev->ckdideq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_KYEQ, dev->ckdkyeq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_WCKD, dev->ckdwckd, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_TRKOF, dev->ckdtrkof, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SSI, dev->ckdssi, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_WRHA, dev->ckdwrha, 1);
     return 0;
 }
 
@@ -1321,132 +1306,132 @@ BYTE byte;
             SR_READ_VALUE(file, len, &dev->bufoff, sizeof(dev->bufoff));
             break;
         case SR_DEV_CKD_CURCYL:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcurcyl, sizeof(dev->devunique.dasd_dev.ckdcurcyl));
+            SR_READ_VALUE(file, len, &dev->ckdcurcyl, sizeof(dev->ckdcurcyl));
             break;
         case SR_DEV_CKD_CURHEAD:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcurhead, sizeof(dev->devunique.dasd_dev.ckdcurhead));
+            SR_READ_VALUE(file, len, &dev->ckdcurhead, sizeof(dev->ckdcurhead));
             break;
         case SR_DEV_CKD_CURREC:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcurrec, sizeof(dev->devunique.dasd_dev.ckdcurrec));
+            SR_READ_VALUE(file, len, &dev->ckdcurrec, sizeof(dev->ckdcurrec));
             break;
         case SR_DEV_CKD_CURKL:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcurkl, sizeof(dev->devunique.dasd_dev.ckdcurkl));
+            SR_READ_VALUE(file, len, &dev->ckdcurkl, sizeof(dev->ckdcurkl));
             break;
         case SR_DEV_CKD_ORIENT:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdorient, sizeof(dev->devunique.dasd_dev.ckdorient));
+            SR_READ_VALUE(file, len, &dev->ckdorient, sizeof(dev->ckdorient));
             break;
         case SR_DEV_CKD_CUROPER:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcuroper, sizeof(dev->devunique.dasd_dev.ckdcuroper));
+            SR_READ_VALUE(file, len, &dev->ckdcuroper, sizeof(dev->ckdcuroper));
             break;
         case SR_DEV_CKD_CURDL:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdcurdl, sizeof(dev->devunique.dasd_dev.ckdcurdl));
+            SR_READ_VALUE(file, len, &dev->ckdcurdl, sizeof(dev->ckdcurdl));
             break;
         case SR_DEV_CKD_REM:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdrem, sizeof(dev->devunique.dasd_dev.ckdrem));
+            SR_READ_VALUE(file, len, &dev->ckdrem, sizeof(dev->ckdrem));
             break;
         case SR_DEV_CKD_POS:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdpos, sizeof(dev->devunique.dasd_dev.ckdpos));
+            SR_READ_VALUE(file, len, &dev->ckdpos, sizeof(dev->ckdpos));
             break;
         case SR_DEV_CKD_DXBLKSZ:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxblksz, sizeof(dev->devunique.dasd_dev.ckdxblksz));
+            SR_READ_VALUE(file, len, &dev->ckdxblksz, sizeof(dev->ckdxblksz));
             break;
         case SR_DEV_CKD_DXBCYL:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxbcyl, sizeof(dev->devunique.dasd_dev.ckdxbcyl));
+            SR_READ_VALUE(file, len, &dev->ckdxbcyl, sizeof(dev->ckdxbcyl));
             break;
         case SR_DEV_CKD_DXBHEAD:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxbhead, sizeof(dev->devunique.dasd_dev.ckdxbhead));
+            SR_READ_VALUE(file, len, &dev->ckdxbhead, sizeof(dev->ckdxbhead));
             break;
         case SR_DEV_CKD_DXECYL:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxecyl, sizeof(dev->devunique.dasd_dev.ckdxecyl));
+            SR_READ_VALUE(file, len, &dev->ckdxecyl, sizeof(dev->ckdxecyl));
             break;
         case SR_DEV_CKD_DXEHEAD:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxehead, sizeof(dev->devunique.dasd_dev.ckdxehead));
+            SR_READ_VALUE(file, len, &dev->ckdxehead, sizeof(dev->ckdxehead));
             break;
         case SR_DEV_CKD_DXFMASK:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdfmask, sizeof(dev->devunique.dasd_dev.ckdfmask));
+            SR_READ_VALUE(file, len, &dev->ckdfmask, sizeof(dev->ckdfmask));
             break;
         case SR_DEV_CKD_DXGATTR:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdxgattr, sizeof(dev->devunique.dasd_dev.ckdxgattr));
+            SR_READ_VALUE(file, len, &dev->ckdxgattr, sizeof(dev->ckdxgattr));
             break;
         case SR_DEV_CKD_LRTRANLF:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdltranlf, sizeof(dev->devunique.dasd_dev.ckdltranlf));
+            SR_READ_VALUE(file, len, &dev->ckdltranlf, sizeof(dev->ckdltranlf));
             break;
         case SR_DEV_CKD_LROPER:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdloper, sizeof(dev->devunique.dasd_dev.ckdloper));
+            SR_READ_VALUE(file, len, &dev->ckdloper, sizeof(dev->ckdloper));
             break;
         case SR_DEV_CKD_LRAUX:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdlaux, sizeof(dev->devunique.dasd_dev.ckdlaux));
+            SR_READ_VALUE(file, len, &dev->ckdlaux, sizeof(dev->ckdlaux));
             break;
         case SR_DEV_CKD_LRCOUNT:
-            SR_READ_VALUE(file, len, &dev->devunique.dasd_dev.ckdltranlf, sizeof(dev->devunique.dasd_dev.ckdltranlf));
+            SR_READ_VALUE(file, len, &dev->ckdltranlf, sizeof(dev->ckdltranlf));
             break;
         case SR_DEV_CKD_3990:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckd3990 = rc;
+            dev->ckd3990 = rc;
             break;
         case SR_DEV_CKD_XTDEF:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdxtdef = rc;
+            dev->ckdxtdef = rc;
             break;
         case SR_DEV_CKD_SETFM:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdsetfm = rc;
+            dev->ckdsetfm = rc;
             break;
         case SR_DEV_CKD_LOCAT:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdlocat = rc;
+            dev->ckdlocat = rc;
             break;
         case SR_DEV_CKD_SPCNT:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdspcnt = rc;
+            dev->ckdspcnt = rc;
             break;
         case SR_DEV_CKD_SEEK:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdseek = rc;
+            dev->ckdseek = rc;
             break;
         case SR_DEV_CKD_SKCYL:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdskcyl = rc;
+            dev->ckdskcyl = rc;
             break;
         case SR_DEV_CKD_RECAL:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdrecal = rc;
+            dev->ckdrecal = rc;
             break;
         case SR_DEV_CKD_RDIPL:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdrdipl = rc;
+            dev->ckdrdipl = rc;
             break;
         case SR_DEV_CKD_XMARK:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdxmark = rc;
+            dev->ckdxmark = rc;
             break;
         case SR_DEV_CKD_HAEQ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdhaeq = rc;
+            dev->ckdhaeq = rc;
             break;
         case SR_DEV_CKD_IDEQ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdideq = rc;
+            dev->ckdideq = rc;
             break;
         case SR_DEV_CKD_KYEQ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdkyeq = rc;
+            dev->ckdkyeq = rc;
             break;
         case SR_DEV_CKD_WCKD:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdwckd = rc;
+            dev->ckdwckd = rc;
             break;
         case SR_DEV_CKD_TRKOF:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdtrkof = rc;
+            dev->ckdtrkof = rc;
             break;
         case SR_DEV_CKD_SSI:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdssi = rc;
+            dev->ckdssi = rc;
             break;
         case SR_DEV_CKD_WRHA:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->devunique.dasd_dev.ckdwrha = rc;
+            dev->ckdwrha = rc;
             break;
         default:
             SR_READ_SKIP(file, len);
@@ -1475,10 +1460,10 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
        if imprecise ending is indicated in sense byte 1 */
     if (sense1 & SENSE1_IE)
     {
-        if (dev->devunique.dasd_dev.ckdtrkof)
-            dev->sense[3] = dev->devunique.dasd_dev.ckdcuroper;
+        if (dev->ckdtrkof)
+            dev->sense[3] = dev->ckdcuroper;
         else
-            dev->sense[3] = dev->devunique.dasd_dev.ckdlcount;
+            dev->sense[3] = dev->ckdlcount;
     }
 
     /* Sense byte 4 is the physical device address */
@@ -1534,7 +1519,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
        address followed by bits 12-15 of the head address,
        unless the device has more than 4095 cylinders, in
        which case sense bytes 5 and 6 both contain X'FF' */
-    if (dev->devunique.dasd_dev.ckdcyls > 4095)
+    if (dev->ckdcyls > 4095)
     {
         dev->sense[5] = 0xFF;
         dev->sense[6] = 0xFF;
@@ -1547,7 +1532,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
      }
      else
      {
-        dev->sense[5] = dev->devunique.dasd_dev.ckdcurcyl & 0xFF;
+        dev->sense[5] = dev->ckdcurcyl & 0xFF;
 
      /* sense byte 6 bits     c = cyl high byte, h=head    */
      /*                          0 1 2 3 4 5 6 7   shift   */
@@ -1566,8 +1551,8 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
         case 0x3375:               shift = 6;
         default:                   shift = 4;
        }
-        dev->sense[6] = ( (dev->devunique.dasd_dev.ckdcurcyl >> 8) << shift )
-                        | (dev->devunique.dasd_dev.ckdcurhead & 0x1F);
+        dev->sense[6] = ( (dev->ckdcurcyl >> 8) << shift )
+                        | (dev->ckdcurhead & 0x1F);
      }
     }
 
@@ -1580,11 +1565,11 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     case FORMAT_4: /* Data check */
     case FORMAT_5: /* Data check with displacement information */
         /* Sense bytes 8-12 contain the CCHHR of the record in error */
-        dev->sense[8] = dev->devunique.dasd_dev.ckdcurcyl >> 8;
-        dev->sense[9] = dev->devunique.dasd_dev.ckdcurcyl & 0xFF;
-        dev->sense[10] = dev->devunique.dasd_dev.ckdcurhead >> 8;
-        dev->sense[11] = dev->devunique.dasd_dev.ckdcurhead & 0xFF;
-        dev->sense[12] = dev->devunique.dasd_dev.ckdcurrec;
+        dev->sense[8] = dev->ckdcurcyl >> 8;
+        dev->sense[9] = dev->ckdcurcyl & 0xFF;
+        dev->sense[10] = dev->ckdcurhead >> 8;
+        dev->sense[11] = dev->ckdcurhead & 0xFF;
+        dev->sense[12] = dev->ckdcurrec;
         break;
 
     } /* end switch(format) */
@@ -1593,11 +1578,11 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     dev->sense[27] = 0x80;
 
     /* Sense bytes 29-30 contain the cylinder address */
-    dev->sense[29] = dev->devunique.dasd_dev.ckdcurcyl >> 8;
-    dev->sense[30] = dev->devunique.dasd_dev.ckdcurcyl & 0xFF;
+    dev->sense[29] = dev->ckdcurcyl >> 8;
+    dev->sense[30] = dev->ckdcurcyl & 0xFF;
 
     /* Sense byte 31 contains the head address */
-    dev->sense[31] = dev->devunique.dasd_dev.ckdcurhead & 0xFF;
+    dev->sense[31] = dev->ckdcurhead & 0xFF;
 
 } /* end function ckd_build_sense */
 
@@ -1616,13 +1601,13 @@ int             rc;                     /* Return code               */
     if (rc < 0) return -1;
 
     /* Set device orientation fields */
-    dev->devunique.dasd_dev.ckdcurcyl = cyl;
-    dev->devunique.dasd_dev.ckdcurhead = head;
-    dev->devunique.dasd_dev.ckdcurrec = 0;
-    dev->devunique.dasd_dev.ckdcurkl = 0;
-    dev->devunique.dasd_dev.ckdcurdl = 0;
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_INDEX;
+    dev->ckdcurcyl = cyl;
+    dev->ckdcurhead = head;
+    dev->ckdcurrec = 0;
+    dev->ckdcurkl = 0;
+    dev->ckdcurdl = 0;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_INDEX;
 
     /* Copy the track header */
     if (trkhdr) memcpy (trkhdr, &dev->buf[dev->bufoff], CKDDASD_TRKHDR_SIZE);
@@ -1645,11 +1630,11 @@ int             head;                   /* Next head for multitrack  */
 
     /* File protect error if not within domain of Locate Record
        and file mask inhibits seek and multitrack operations */
-    if (dev->devunique.dasd_dev.ckdlcount == 0 &&
-        (dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
+    if (dev->ckdlcount == 0 &&
+        (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        logdevtr (dev, MSG(HHC00432, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdlcount, dev->devunique.dasd_dev.ckdfmask));
-        if (dev->devunique.dasd_dev.ckdtrkof)
+        logdevtr (dev, MSG(HHC00432, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdlcount, dev->ckdfmask));
+        if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
         else
            ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
@@ -1659,10 +1644,10 @@ int             head;                   /* Next head for multitrack  */
 
     /* End of cylinder error if not within domain of Locate Record
        and current track is last track of cylinder */
-    if (dev->devunique.dasd_dev.ckdlcount == 0
-        && dev->devunique.dasd_dev.ckdcurhead + trks >= dev->devunique.dasd_dev.ckdheads)
+    if (dev->ckdlcount == 0
+        && dev->ckdcurhead + trks >= dev->ckdheads)
     {
-        if (dev->devunique.dasd_dev.ckdtrkof)
+        if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_EOC | SENSE1_IE, 0, 0, 0);
         else
             ckd_build_sense (dev, 0, SENSE1_EOC, 0, 0, 0);
@@ -1671,11 +1656,11 @@ int             head;                   /* Next head for multitrack  */
     }
 
     /* Advance to next track */
-    cyl = dev->devunique.dasd_dev.ckdcurcyl;
-    head = dev->devunique.dasd_dev.ckdcurhead + trks;
-    while (head >= dev->devunique.dasd_dev.ckdheads)
+    cyl = dev->ckdcurcyl;
+    head = dev->ckdcurhead + trks;
+    while (head >= dev->ckdheads)
     {
-        head -= dev->devunique.dasd_dev.ckdheads;
+        head -= dev->ckdheads;
         cyl++;
     }
     logdevtr (dev, MSG(HHC00433, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head));
@@ -1684,7 +1669,7 @@ int             head;                   /* Next head for multitrack  */
        limits of the device or outside the defined extent */
     if ( EXTENT_CHECK(dev, cyl, head) )
     {
-        if (dev->devunique.dasd_dev.ckdtrkof)
+        if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
         else
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
@@ -1726,11 +1711,11 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    logdevtr (dev, MSG(HHC00434, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, orient[dev->devunique.dasd_dev.ckdorient]));
+    logdevtr (dev, MSG(HHC00434, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, orient[dev->ckdorient]));
 
     /* If orientation is at End-Of_Track then a multi-track advance
        failed previously during synchronous I/O */
-    if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_EOT)
+    if (dev->ckdorient == CKDORIENT_EOT)
     {
         rc = mt_advance (dev, unitstat, 1);
         if (rc < 0) return -1;
@@ -1740,10 +1725,10 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
     for ( ; ; )
     {
         /* If oriented to count or key field, skip key and data */
-        if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_COUNT)
-            dev->bufoff += dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
-        else if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_KEY)
-            dev->bufoff += dev->devunique.dasd_dev.ckdcurdl;
+        if (dev->ckdorient == CKDORIENT_COUNT)
+            dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
+        else if (dev->ckdorient == CKDORIENT_KEY)
+            dev->bufoff += dev->ckdcurdl;
 
         /* Make sure we don't copy past the end of the buffer */
         if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
@@ -1763,16 +1748,16 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         dev->bufoff += CKDDASD_RECHDR_SIZE;
 
         /* Set the device orientation fields */
-        dev->devunique.dasd_dev.ckdcurrec = rechdr->rec;
-        dev->devunique.dasd_dev.ckdrem = 0;
-        dev->devunique.dasd_dev.ckdorient = CKDORIENT_COUNT;
-        dev->devunique.dasd_dev.ckdcurkl = rechdr->klen;
-        dev->devunique.dasd_dev.ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
-        dev->devunique.dasd_dev.ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
+        dev->ckdcurrec = rechdr->rec;
+        dev->ckdrem = 0;
+        dev->ckdorient = CKDORIENT_COUNT;
+        dev->ckdcurkl = rechdr->klen;
+        dev->ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
+        dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
 
         logdevtr (dev, MSG(HHC00435, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, dev->devunique.dasd_dev.ckdcurrec,
-                dev->devunique.dasd_dev.ckdcurkl, dev->devunique.dasd_dev.ckdcurdl, dev->devunique.dasd_dev.ckdtrkof));
+                dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+                dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof));
 
         /* Skip record zero if user data record required */
         if (skipr0 && rechdr->rec == 0)
@@ -1781,7 +1766,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         /* Test for logical end of track and exit if not */
         if (memcmp(rechdr, eighthexFF, 8) != 0)
             break;
-        dev->devunique.dasd_dev.ckdorient = CKDORIENT_EOT;
+        dev->ckdorient = CKDORIENT_EOT;
 
         /* For READ TRACK or READ MULTIPLE CKD, return with the
            end of track marker in the record header field */
@@ -1797,8 +1782,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
            -- except when multitrack READ or SEARCH [KEY?] command
            operates outside the domain of a locate record */
         if (code == 0x47 || code == 0x4B || code == 0x9D
-            || (dev->devunique.dasd_dev.ckdxmark
-                && !((dev->devunique.dasd_dev.ckdlcount == 0)
+            || (dev->ckdxmark
+                && !((dev->ckdlcount == 0)
                      && ( (IS_CCW_READ(code) && (code&0x80))
                          || code==0xA9 || code==0xC9 || code==0xE9) )))
         {
@@ -1811,13 +1796,13 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         if ((code & 0x80) == 0)
         {
             /* If non-multitrack, return to start of current track */
-            cyl = dev->devunique.dasd_dev.ckdcurcyl;
-            head = dev->devunique.dasd_dev.ckdcurhead;
+            cyl = dev->ckdcurcyl;
+            head = dev->ckdcurhead;
             rc = ckd_seek (dev, cyl, head, NULL, unitstat);
             if (rc < 0) return -1;
 
             /* Set index marker found flag */
-            dev->devunique.dasd_dev.ckdxmark = 1;
+            dev->ckdxmark = 1;
         }
         else
         {
@@ -1832,7 +1817,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
                 && (code & 0x7F) != 0x29
                 && (code & 0x7F) != 0x49
                 && (code & 0x7F) != 0x69)
-                dev->devunique.dasd_dev.ckdxmark = 1;
+                dev->ckdxmark = 1;
         }
 
     } /* end for */
@@ -1852,18 +1837,18 @@ int             rc;                     /* Return code               */
 CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
 
     /* If not oriented to count field, read next count field */
-    if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT)
+    if (dev->ckdorient != CKDORIENT_COUNT)
     {
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) return rc;
     }
 
-    logdevtr (dev, MSG(HHC00436, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurkl));
+    logdevtr (dev, MSG(HHC00436, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurkl));
 
     /* Read key field */
-    if (dev->devunique.dasd_dev.ckdcurkl > 0)
+    if (dev->ckdcurkl > 0)
     {
-        if (dev->bufoffhi - dev->bufoff < dev->devunique.dasd_dev.ckdcurkl)
+        if (dev->bufoffhi - dev->bufoff < dev->ckdcurkl)
         {
             /* Handle error condition */
             WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
@@ -1875,13 +1860,13 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
             return -1;
         }
 
-        memcpy (buf, &dev->buf[dev->bufoff], dev->devunique.dasd_dev.ckdcurkl);
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+        memcpy (buf, &dev->buf[dev->bufoff], dev->ckdcurkl);
+        dev->bufoff += dev->ckdcurkl;
     }
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_KEY;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_KEY;
 
     return 0;
 } /* end function ckd_read_key */
@@ -1897,23 +1882,23 @@ int             rc;                     /* Return code               */
 CKDDASD_RECHDR  rechdr;                 /* Record header             */
 
     /* If not oriented to count or key field, read next count field */
-    if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT
-        && dev->devunique.dasd_dev.ckdorient != CKDORIENT_KEY)
+    if (dev->ckdorient != CKDORIENT_COUNT
+        && dev->ckdorient != CKDORIENT_KEY)
     {
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) return rc;
     }
 
     /* If oriented to count field, skip the key field */
-    if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_COUNT)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+    if (dev->ckdorient == CKDORIENT_COUNT)
+        dev->bufoff += dev->ckdcurkl;
 
-    logdevtr (dev, MSG(HHC00437, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurdl));
+    logdevtr (dev, MSG(HHC00437, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurdl));
 
     /* Read data field */
-    if (dev->devunique.dasd_dev.ckdcurdl > 0)
+    if (dev->ckdcurdl > 0)
     {
-        if (dev->bufoff + dev->devunique.dasd_dev.ckdcurdl >= dev->bufoffhi)
+        if (dev->bufoff + dev->ckdcurdl >= dev->bufoffhi)
         {
             /* Handle error condition */
             WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
@@ -1924,13 +1909,13 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             return -1;
         }
-        memcpy (buf, &dev->buf[dev->bufoff], dev->devunique.dasd_dev.ckdcurdl);
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurdl;
+        memcpy (buf, &dev->buf[dev->bufoff], dev->ckdcurdl);
+        dev->bufoff += dev->ckdcurdl;
     }
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_DATA;
 
     return 0;
 } /* end function ckd_read_data */
@@ -1949,10 +1934,10 @@ int             datalen;                /* Data length               */
 int             ckdlen;                 /* Count+key+data length     */
 
     /* If oriented to count or key field, skip key and data */
-    if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_COUNT)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
-    else if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_KEY)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurdl;
+    if (dev->ckdorient == CKDORIENT_COUNT)
+        dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
+    else if (dev->ckdorient == CKDORIENT_KEY)
+        dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
     memset(&rechdr, 0, CKDDASD_RECHDR_SIZE);
@@ -1984,8 +1969,8 @@ int             ckdlen;                 /* Count+key+data length     */
     *size = ckdlen;
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_DATA;
 
     return 0;
 } /* end function ckd_erase */
@@ -2005,10 +1990,10 @@ int             datalen;                /* Data length               */
 int             ckdlen;                 /* Count+key+data length     */
 
     /* If oriented to count or key field, skip key and data */
-    if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_COUNT)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
-    else if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_KEY)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurdl;
+    if (dev->ckdorient == CKDORIENT_COUNT)
+        dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
+    else if (dev->ckdorient == CKDORIENT_KEY)
+        dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
     memset( &rechdr, 0, CKDDASD_RECHDR_SIZE );
@@ -2034,12 +2019,12 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00438, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, recnum, keylen, datalen));
+    logdevtr (dev, MSG(HHC00438, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        logdevtr (dev, MSG(HHC00439, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, recnum));
+        logdevtr (dev, MSG(HHC00439, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum));
         buf[0] |= 0x80;
     }
 
@@ -2059,12 +2044,12 @@ int             ckdlen;                 /* Count+key+data length     */
     if (rc < 0) return -1;
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdcurrec = recnum;
-    dev->devunique.dasd_dev.ckdcurkl = keylen;
-    dev->devunique.dasd_dev.ckdcurdl = datalen;
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
-    dev->devunique.dasd_dev.ckdtrkof = trk_ovfl & 1;
+    dev->ckdcurrec = recnum;
+    dev->ckdcurkl = keylen;
+    dev->ckdcurdl = datalen;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_DATA;
+    dev->ckdtrkof = trk_ovfl & 1;
 
     return 0;
 } /* end function ckd_write_ckd */
@@ -2080,7 +2065,7 @@ int             rc;                     /* Return code               */
 int             kdlen;                  /* Key+data length           */
 
     /* Unit check if not oriented to count area */
-    if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT)
+    if (dev->ckdorient != CKDORIENT_COUNT)
     {
         WRMSG (HHC00420, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -2090,13 +2075,13 @@ int             kdlen;                  /* Key+data length           */
     }
 
     /* Calculate total key and data size */
-    kdlen = dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+    kdlen = dev->ckdcurkl + dev->ckdcurdl;
 
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00440, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, dev->devunique.dasd_dev.ckdcurrec,
-            dev->devunique.dasd_dev.ckdcurkl, dev->devunique.dasd_dev.ckdcurdl));
+    logdevtr (dev, MSG(HHC00440, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+            dev->ckdcurkl, dev->ckdcurdl));
 
     /* Write key and data */
     rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, kdlen, unitstat);
@@ -2104,8 +2089,8 @@ int             kdlen;                  /* Key+data length           */
     dev->bufoff += kdlen;
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_DATA;
 
     return 0;
 } /* end function ckd_write_kd */
@@ -2120,8 +2105,8 @@ static int ckd_write_data ( DEVBLK *dev, BYTE *buf, int len,
 int             rc;                     /* Return code               */
 
     /* Unit check if not oriented to count or key areas */
-    if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT
-        && dev->devunique.dasd_dev.ckdorient != CKDORIENT_KEY)
+    if (dev->ckdorient != CKDORIENT_COUNT
+        && dev->ckdorient != CKDORIENT_KEY)
     {
         WRMSG (HHC00421, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -2131,23 +2116,23 @@ int             rc;                     /* Return code               */
     }
 
     /* If oriented to count field, skip the key field */
-    if (dev->devunique.dasd_dev.ckdorient == CKDORIENT_COUNT)
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+    if (dev->ckdorient == CKDORIENT_COUNT)
+        dev->bufoff += dev->ckdcurkl;
 
     /* Pad the I/O buffer with zeroes if necessary */
-    while (len < dev->devunique.dasd_dev.ckdcurdl) buf[len++] = '\0';
+    while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00441, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, dev->devunique.dasd_dev.ckdcurrec,
-            dev->devunique.dasd_dev.ckdcurdl));
+    logdevtr (dev, MSG(HHC00441, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+            dev->ckdcurdl));
 
     /* Write data */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, dev->devunique.dasd_dev.ckdcurdl, unitstat);
+    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, dev->ckdcurdl, unitstat);
     if (rc < 0) return -1;
-    dev->bufoff += dev->devunique.dasd_dev.ckdcurdl;
+    dev->bufoff += dev->ckdcurdl;
 
     /* Set the device orientation fields */
-    dev->devunique.dasd_dev.ckdrem = 0;
-    dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+    dev->ckdrem = 0;
+    dev->ckdorient = CKDORIENT_DATA;
 
     return 0;
 } /* end function ckd_write_data */
@@ -2179,12 +2164,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)
     {
-        memmove (iobuf, iobuf + dev->devunique.dasd_dev.ckdpos, dev->devunique.dasd_dev.ckdrem);
-        num = (count < dev->devunique.dasd_dev.ckdrem) ? count : dev->devunique.dasd_dev.ckdrem;
+        memmove (iobuf, iobuf + dev->ckdpos, dev->ckdrem);
+        num = (count < dev->ckdrem) ? count : dev->ckdrem;
         *residual = count - num;
-        if (count < dev->devunique.dasd_dev.ckdrem) *more = 1;
-        dev->devunique.dasd_dev.ckdrem -= num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        if (count < dev->ckdrem) *more = 1;
+        dev->ckdrem -= num;
+        dev->ckdpos = num;
         *unitstat = CSW_CE | CSW_DE;
         return;
     }
@@ -2205,39 +2190,39 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* Reset flags at start of CCW chain */
     if (chained == 0 && !dev->syncio_retry)
     {
-        dev->devunique.dasd_dev.ckdlocat = 0;
-        dev->devunique.dasd_dev.ckdspcnt = 0;
-        dev->devunique.dasd_dev.ckdseek = 0;
-        dev->devunique.dasd_dev.ckdskcyl = 0;
-        dev->devunique.dasd_dev.ckdrecal = 0;
-        dev->devunique.dasd_dev.ckdrdipl = 0;
-        dev->devunique.dasd_dev.ckdfmask = 0;
-        dev->devunique.dasd_dev.ckdxmark = 0;
-        dev->devunique.dasd_dev.ckdhaeq = 0;
-        dev->devunique.dasd_dev.ckdideq = 0;
-        dev->devunique.dasd_dev.ckdkyeq = 0;
-        dev->devunique.dasd_dev.ckdwckd = 0;
-        dev->devunique.dasd_dev.ckdlcount = 0;
-        dev->devunique.dasd_dev.ckdlmask = 0;
-        dev->devunique.dasd_dev.ckdtrkof = 0;
+        dev->ckdlocat = 0;
+        dev->ckdspcnt = 0;
+        dev->ckdseek = 0;
+        dev->ckdskcyl = 0;
+        dev->ckdrecal = 0;
+        dev->ckdrdipl = 0;
+        dev->ckdfmask = 0;
+        dev->ckdxmark = 0;
+        dev->ckdhaeq = 0;
+        dev->ckdideq = 0;
+        dev->ckdkyeq = 0;
+        dev->ckdwckd = 0;
+        dev->ckdlcount = 0;
+        dev->ckdlmask = 0;
+        dev->ckdtrkof = 0;
         /* ISW20030819-1 : Clear Write HA flag */
-        dev->devunique.dasd_dev.ckdwrha = 0;
-        dev->devunique.dasd_dev.ckdssdlen = 0;
+        dev->ckdwrha = 0;
+        dev->ckdssdlen = 0;
 
         /* Set initial define extent parameters */
-        dev->devunique.dasd_dev.ckdxtdef = 0;
-        dev->devunique.dasd_dev.ckdsetfm = 0;
-        dev->devunique.dasd_dev.ckdfmask = 0;
-        dev->devunique.dasd_dev.ckdxgattr = 0;
-        dev->devunique.dasd_dev.ckdxblksz = 0;
-        dev->devunique.dasd_dev.ckdxbcyl = 0;
-        dev->devunique.dasd_dev.ckdxbhead = 0;
-        dev->devunique.dasd_dev.ckdxecyl = dev->devunique.dasd_dev.ckdcyls - 1;
-        dev->devunique.dasd_dev.ckdxehead = dev->devunique.dasd_dev.ckdheads - 1;
+        dev->ckdxtdef = 0;
+        dev->ckdsetfm = 0;
+        dev->ckdfmask = 0;
+        dev->ckdxgattr = 0;
+        dev->ckdxblksz = 0;
+        dev->ckdxbcyl = 0;
+        dev->ckdxbhead = 0;
+        dev->ckdxecyl = dev->ckdcyls - 1;
+        dev->ckdxehead = dev->ckdheads - 1;
     }
     /* Reset ckdlmask on retry of LRE */
     else if (dev->syncio_retry && code == 0x4B)
-        dev->devunique.dasd_dev.ckdlmask = 0;
+        dev->ckdlmask = 0;
     dev->syncio_retry = 0;
 
     /* Reset index marker flag if sense or control command,
@@ -2255,16 +2240,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         || (IS_CCW_READ(code)
             &&  code         != 0x12
             && (code & 0x7F) != 0x22))
-        dev->devunique.dasd_dev.ckdxmark = 0;
+        dev->ckdxmark = 0;
 
     /* Note current operation for track overflow sense byte 3 */
-    dev->devunique.dasd_dev.ckdcuroper = (IS_CCW_READ(code)) ? 6 :
+    dev->ckdcuroper = (IS_CCW_READ(code)) ? 6 :
         ((IS_CCW_WRITE(code)) ? 5 : 0);
 
     /* If subsystem data has been prepared in the channel buffer by
        a previous Perform Subsystem Function command, generate a
        command reject if next command is not Read Subsystem Data */
-    if (dev->devunique.dasd_dev.ckdssdlen > 0 && code != 0x3E)
+    if (dev->ckdssdlen > 0 && code != 0x3E)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
@@ -2275,7 +2260,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* If within Locate Record Extended domain and not RT command
        reject with status that includes Unit Check (Command Reject,
        format X'02', Invalid Command Sequence) */
-    if (dev->devunique.dasd_dev.ckdlmask && code != 0xDE)
+    if (dev->ckdlmask && code != 0xDE)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0,FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2291,7 +2276,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if preceded by a Define Extent or
            Set File Mask, or within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdxtdef || dev->devunique.dasd_dev.ckdsetfm || dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdxtdef || dev->ckdsetfm || dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2300,14 +2285,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* No more define extend allowed */
-        dev->devunique.dasd_dev.ckdxtdef = 1;
-        dev->devunique.dasd_dev.ckdsetfm = 1;
+        dev->ckdxtdef = 1;
+        dev->ckdsetfm = 1;
 
         /* Set locate record parameters */
-        dev->devunique.dasd_dev.ckdloper = CKDOPER_ORIENT_DATA | CKDOPER_RDDATA;
-        dev->devunique.dasd_dev.ckdlaux = 0;
-        dev->devunique.dasd_dev.ckdlcount = 2;
-        dev->devunique.dasd_dev.ckdltranlf = 0;
+        dev->ckdloper = CKDOPER_ORIENT_DATA | CKDOPER_RDDATA;
+        dev->ckdlaux = 0;
+        dev->ckdlcount = 2;
+        dev->ckdltranlf = 0;
 
         /* Seek to start of cylinder zero track zero */
         rc = ckd_seek (dev, 0, 0, &trkhdr, unitstat);
@@ -2318,7 +2303,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
@@ -2328,14 +2313,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Set command processed flag */
-        dev->devunique.dasd_dev.ckdrdipl = 1;
+        dev->ckdrdipl = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2347,7 +2332,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2364,7 +2349,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* RESTORE                                                       */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2387,10 +2372,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2399,11 +2384,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2413,15 +2398,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If not oriented to count or key field, read next count */
-        if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT
-            && dev->devunique.dasd_dev.ckdorient != CKDORIENT_KEY)
+        if (dev->ckdorient != CKDORIENT_COUNT
+            && dev->ckdorient != CKDORIENT_KEY)
         {
             rc = ckd_read_count (dev, code, &rechdr, unitstat);
             if (rc < 0) break;
         }
 
         /* Calculate number of bytes to read and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
@@ -2432,7 +2417,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* If track overflow, keep reading */
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -2443,14 +2428,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             if (rc < 0) break;
 
             /* Skip the key field if present */
-            if (dev->devunique.dasd_dev.ckdcurkl > 0)
-                dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+            if (dev->ckdcurkl > 0)
+                dev->bufoff += dev->ckdcurkl;
 
             /* Set offset into buffer for this read */
             offset += num;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             if (*residual < size) *more = 1;
             else *more = 0;
@@ -2465,11 +2450,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2483,10 +2468,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2495,7 +2480,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             /*
              * 3990 reference says LRE CKDOPER_RDANY "must be followed
@@ -2503,9 +2488,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
              * and Data, or Read Data commands".  That is, it doesn't
              * mention Read Key and Data.
              */
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-               /* || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDANY */
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+               /* || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY */
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2515,29 +2500,29 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If not oriented to count field, read next count */
-        if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT)
+        if (dev->ckdorient != CKDORIENT_COUNT)
         {
             rc = ckd_read_count (dev, code, &rechdr, unitstat);
             if (rc < 0) break;
         }
 
         /* Calculate number of bytes to read and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
-        offset = dev->devunique.dasd_dev.ckdcurkl;
+        offset = dev->ckdcurkl;
 
         /* Read key field */
         rc = ckd_read_key (dev, code, iobuf, unitstat);
         if (rc < 0) break;
 
         /* Read data field */
-        rc = ckd_read_data (dev, code, iobuf+dev->devunique.dasd_dev.ckdcurkl, unitstat);
+        rc = ckd_read_data (dev, code, iobuf+dev->ckdcurkl, unitstat);
         if (rc < 0) break;
 
         /* If track overflow, keep reading */
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -2548,14 +2533,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             if (rc < 0) break;
 
             /* Skip the key field if present */
-            if (dev->devunique.dasd_dev.ckdcurkl > 0)
-                dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+            if (dev->ckdcurkl > 0)
+                dev->bufoff += dev->ckdcurkl;
 
             /* Set offset into buffer for this read */
             offset += num;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             if (*residual < size) *more = 1;
             else *more = 0;
@@ -2570,11 +2555,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2588,10 +2573,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2600,14 +2585,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                  || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                      && (dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF)
-                      && dev->devunique.dasd_dev.ckdlcount == 1)))
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                      && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
+                      && dev->ckdlcount == 1)))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2633,8 +2618,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *iobuf &= 0x7F;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2647,10 +2632,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2659,13 +2644,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                      && ((dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_HOME
-                          || (dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+                          || (dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_INDEX
                         ))))
             {
@@ -2678,14 +2663,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For multitrack operation outside domain of a Locate Record,
            attempt to advance to the next track before reading R0 */
-        if ((code & 0x80) && dev->devunique.dasd_dev.ckdlcount == 0)
+        if ((code & 0x80) && dev->ckdlcount == 0)
         {
             rc = mt_advance (dev, unitstat, 1);
             if (rc < 0) break;
         }
 
         /* Seek to beginning of track */
-        rc = ckd_seek (dev, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, &trkhdr, unitstat);
+        rc = ckd_seek (dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat);
         if (rc < 0) break;
 
         /* Read the count field for record zero */
@@ -2693,7 +2678,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
@@ -2711,16 +2696,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Read data field */
         rc = ckd_read_data (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl,
+                            iobuf + CKDDASD_RECHDR_SIZE + dev->ckdcurkl,
                             unitstat);
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2734,10 +2719,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2746,11 +2731,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && (dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                      && (dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_INDEX
                     )))
             {
@@ -2763,14 +2748,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For multitrack operation outside domain of a Locate Record,
            attempt to advance to the next track before reading HA */
-        if ((code & 0x80) && dev->devunique.dasd_dev.ckdlcount == 0)
+        if ((code & 0x80) && dev->ckdlcount == 0)
         {
             rc = mt_advance (dev, unitstat, 1);
             if (rc < 0) break;
         }
 
         /* Seek to beginning of track */
-        rc = ckd_seek (dev, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, &trkhdr, unitstat);
+        rc = ckd_seek (dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat);
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
@@ -2783,8 +2768,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         memcpy (iobuf, &trkhdr, CKDDASD_TRKHDR_SIZE);
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2797,10 +2782,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2809,11 +2794,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ
-                      && (dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ
+                      && (dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_INDEX
                     )))
             {
@@ -2825,7 +2810,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protected if file mask does not allow Write HA */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT)
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2833,7 +2818,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Seek to beginning of track */
-        rc = ckd_seek (dev, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, &trkhdr, unitstat);
+        rc = ckd_seek (dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat);
         if (rc < 0) break;
 
         /* Calculate number of bytes to write and set residual count */
@@ -2842,7 +2827,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* FIXME: what devices want 5 bytes, what ones want 7, and what
         ones want 11? Do this right when we figure that out */
         /* ISW20030819-1 Indicate WRHA performed */
-        dev->devunique.dasd_dev.ckdwrha=1;
+        dev->ckdwrha=1;
         *residual = 0;
 
         /* Return normal status */
@@ -2857,10 +2842,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2869,11 +2854,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDANY
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -2887,11 +2872,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
-        offset = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl;
+        offset = CKDDASD_RECHDR_SIZE + dev->ckdcurkl;
 
         /* Copy count field to I/O buffer */
         memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
@@ -2906,12 +2891,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Read data field */
         rc = ckd_read_data (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl,
+                            iobuf + CKDDASD_RECHDR_SIZE + dev->ckdcurkl,
                             unitstat);
         if (rc < 0) break;
 
         /* If track overflow, keep reading */
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -2922,14 +2907,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             if (rc < 0) break;
 
             /* Skip the key field if present */
-            if (dev->devunique.dasd_dev.ckdcurkl > 0)
-                dev->bufoff += dev->devunique.dasd_dev.ckdcurkl;
+            if (dev->ckdcurkl > 0)
+                dev->bufoff += dev->ckdcurkl;
 
             /* Set offset into buffer for this read */
             offset += num;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             if (*residual < size) *more = 1;
             else *more = 0;
@@ -2944,11 +2929,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2961,10 +2946,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -2973,7 +2958,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3002,12 +2987,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             /* Read key field */
             rc = ckd_read_key (dev, code, iobuf + size, unitstat);
             if (rc < 0) break;
-            size += dev->devunique.dasd_dev.ckdcurkl;
+            size += dev->ckdcurkl;
 
             /* Read data field */
             rc = ckd_read_data (dev, code, iobuf + size, unitstat);
             if (rc < 0) break;
-            size += dev->devunique.dasd_dev.ckdcurdl;
+            size += dev->ckdcurdl;
 
         } /* end for(size) */
 
@@ -3017,8 +3002,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (count < size) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3031,9 +3016,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if not within the domain of a Locate Record
            that specifies a read tracks operation */
-        if (dev->devunique.dasd_dev.ckdlcount == 0
-         || (((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS)
-          && ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_RDTSET)))
+        if (dev->ckdlcount == 0
+         || (((dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS)
+          && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTSET)))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3057,12 +3042,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             j = 1;
             /* Skip tracks while hi bit off in ckdlmask */
-            if (dev->devunique.dasd_dev.ckdlmask)
+            if (dev->ckdlmask)
             {
-                while (!(dev->devunique.dasd_dev.ckdlmask & 0x8000))
+                while (!(dev->ckdlmask & 0x8000))
                 {
                     j++;
-                    dev->devunique.dasd_dev.ckdlmask <<= 1;
+                    dev->ckdlmask <<= 1;
                 }
             }
             rc = mt_advance (dev, unitstat, j);
@@ -3070,7 +3055,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Shift read track set mask left a bit */
-        dev->devunique.dasd_dev.ckdlmask <<= 1;
+        dev->ckdlmask <<= 1;
 
         /* Read each record on the track into the I/O buffer */
         for (size = 0; ; )
@@ -3093,12 +3078,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             /* Read key field */
             rc = ckd_read_key (dev, code, iobuf + size, unitstat);
             if (rc < 0) break;
-            size += dev->devunique.dasd_dev.ckdcurkl;
+            size += dev->ckdcurkl;
 
             /* Read data field */
             rc = ckd_read_data (dev, code, iobuf + size, unitstat);
             if (rc < 0) break;
-            size += dev->devunique.dasd_dev.ckdcurdl;
+            size += dev->ckdcurdl;
 
         } /* end for(size) */
 
@@ -3108,8 +3093,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (count < size) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->devunique.dasd_dev.ckdrem = size - num;
-        dev->devunique.dasd_dev.ckdpos = num;
+        dev->ckdrem = size - num;
+        dev->ckdpos = num;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3122,11 +3107,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* If the control unit is not a 3990 then CCW code 0x27 is
            treated as a SEEK AND SET SECTOR (Itel 7330 controller) */
-        if (dev->devunique.dasd_dev.ckd3990 == 0)
+        if (dev->ckd3990 == 0)
             goto seek_0x27;
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3159,10 +3144,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 #if 0
         /* Command reject if SSI active */
-        if(dev->devunique.dasd_dev.ckdssi)
+        if(dev->ckdssi)
         {
             /* Reset SSI condition */
-            dev->devunique.dasd_dev.ckdssi = 0;
+            dev->ckdssi = 0;
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_F);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3197,15 +3182,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[16] = 1;   /* #logical paths thru cluster 0 */
 
                 /* Indicate the length of subsystem data prepared */
-                dev->devunique.dasd_dev.ckdssdlen = (dev->devunique.dasd_dev.ckdcu->code==0x15) ? 24 : 16;
+                dev->ckdssdlen = (dev->ckdcu->code==0x15) ? 24 : 16;
                 break;
 
             case 0x01: /* Subsystem statistics */
                 /* Indicate the length of subsystem data prepared */
-                dev->devunique.dasd_dev.ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
+                dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
 
                 /* Prepare subsystem statistics record */
-                memset (iobuf, 0, dev->devunique.dasd_dev.ckdssdlen);
+                memset (iobuf, 0, dev->ckdssdlen);
                 iobuf[1] = dev->devnum & 0xFF;
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
@@ -3219,7 +3204,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[3] = 0x00;                    // Message code
                 memcpy (iobuf+4, iobuf+8, 4);       // Copy message identifier from bytes 8-11
                 iobuf[9] = 0x00;                    // Flags
-                dev->devunique.dasd_dev.ckdssdlen = 9;                 // Indicate length of subsystem data prepared
+                dev->ckdssdlen = 9;                 // Indicate length of subsystem data prepared
                 break;
             case 0x0E: /* Unit address configuration */
                 /* Prepare unit address configuration record */
@@ -3227,7 +3212,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 /* 256 pairs (UA type, base UA) */
 
                 /* Indicate the length of subsystem data prepared */
-                dev->devunique.dasd_dev.ckdssdlen = 512;
+                dev->ckdssdlen = 512;
                 break;
 
             case 0x41: /* Feature codes */
@@ -3235,7 +3220,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 memset (iobuf, 0, 256);
 
                 /* Indicate the length of subsystem data prepared */
-                dev->devunique.dasd_dev.ckdssdlen = 256;
+                dev->ckdssdlen = 256;
                 break;
 
             default: /* Unknown suborder code */
@@ -3280,7 +3265,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             }
 
             /* Mark Set Special Intercept inactive */
-            dev->devunique.dasd_dev.ckdssi = 1;
+            dev->ckdssi = 1;
 
             break;
 
@@ -3315,7 +3300,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             /* Bytes 0-31 contain the subsystem node descriptor */
             store_fw(&iobuf[0], 0x00000100);
             sprintf ((char *)&iobuf[4], "00%4.4X   HRCZZ000000000001",
-                                dev->devunique.dasd_dev.ckdcu->devt);
+                                dev->ckdcu->devt);
             for (i = 4; i < 30; i++)
                 iobuf[i] = host_to_guest(iobuf[i]);
 
@@ -3331,7 +3316,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             iobuf[64] = 0x00;
 
             /* Indicate the length of subsystem data prepared */
-            dev->devunique.dasd_dev.ckdssdlen = (iobuf[1] & 0x03) ? 32 : 96;
+            dev->ckdssdlen = (iobuf[1] & 0x03) ? 32 : 96;
 
             break;
 
@@ -3360,7 +3345,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* SEEK                                                          */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3370,10 +3355,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For 3990, command reject if Seek Head not preceded by Seek,
            Seek Cylinder, Locate Record, Read IPL, or Recalibrate */
-        if (code == 0x1B && dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (code == 0x1B && dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3383,12 +3368,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* File protected if file mask does not allow requested seek */
         if (((code == 0x07 || code == 0x27)
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR)
+            && (dev->ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR)
            || (code == 0x0B
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_CYLHD)
+            && (dev->ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR
+            && (dev->ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_CYLHD)
            || (code == 0x1B
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT))
+            && (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT))
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3415,10 +3400,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For Seek Head, use the current cylinder number */
         if (code == 0x1B)
-            cyl = dev->devunique.dasd_dev.ckdcurcyl;
+            cyl = dev->ckdcurcyl;
 
         /* Command reject if seek address is invalid */
-        if (bin != 0 || cyl >= dev->devunique.dasd_dev.ckdcyls || head >= dev->devunique.dasd_dev.ckdheads)
+        if (bin != 0 || cyl >= dev->ckdcyls || head >= dev->ckdheads)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -3439,7 +3424,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Set command processed flag */
-        dev->devunique.dasd_dev.ckdseek = 1;
+        dev->ckdseek = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3459,7 +3444,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3469,8 +3454,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* File protected if the file mask does not allow recalibrate,
            or if the file mask specifies diagnostic authorization */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR
-            || (dev->devunique.dasd_dev.ckdfmask & CKDMASK_AAUTH) == CKDMASK_AAUTH_DIAG)
+        if ((dev->ckdfmask & CKDMASK_SKCTL) != CKDMASK_SKCTL_ALLSKR
+            || (dev->ckdfmask & CKDMASK_AAUTH) == CKDMASK_AAUTH_DIAG)
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3490,7 +3475,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Set command processed flag */
-        dev->devunique.dasd_dev.ckdrecal = 1;
+        dev->ckdrecal = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3502,7 +3487,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if preceded by a Define Extent or
            Set File Mask, or within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdxtdef || dev->devunique.dasd_dev.ckdsetfm || dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdxtdef || dev->ckdsetfm || dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3524,11 +3509,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Extract the file mask from the I/O buffer */
-        dev->devunique.dasd_dev.ckdfmask = iobuf[0];
-        logdevtr (dev, MSG(HHC00442, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devunique.dasd_dev.ckdfmask));
+        dev->ckdfmask = iobuf[0];
+        logdevtr (dev, MSG(HHC00442, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdfmask));
 
         /* Command reject if file mask is invalid */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_RESV) != 0)
+        if ((dev->ckdfmask & CKDMASK_RESV) != 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -3537,7 +3522,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Set command processed flag */
-        dev->devunique.dasd_dev.ckdsetfm = 1;
+        dev->ckdsetfm = 1;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3548,7 +3533,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* READ SECTOR                                                   */
     /*---------------------------------------------------------------*/
         /* Command reject if non-RPS device */
-        if (dev->devunique.dasd_dev.ckdtab->sectors == 0)
+        if (dev->ckdtab->sectors == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_1);
@@ -3557,7 +3542,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3582,7 +3567,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* SET SECTOR                                                    */
     /*---------------------------------------------------------------*/
         /* Command reject if non-RPS device */
-        if (dev->devunique.dasd_dev.ckdtab->sectors == 0)
+        if (dev->ckdtab->sectors == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_1);
@@ -3591,7 +3576,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3601,10 +3586,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3637,10 +3622,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3649,7 +3634,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3662,11 +3647,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of compare bytes and set residual count */
-        num = (count < dev->devunique.dasd_dev.ckdcurkl) ? count : dev->devunique.dasd_dev.ckdcurkl;
+        num = (count < dev->ckdcurkl) ? count : dev->ckdcurkl;
         *residual = count - num;
 
         /* Nothing to compare if key length is zero */
-        if (dev->devunique.dasd_dev.ckdcurkl == 0)
+        if (dev->ckdcurkl == 0)
         {
             *unitstat = CSW_CE | CSW_DE;
             break;
@@ -3696,10 +3681,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #endif /*OPTION_CKD_KEY_TRACING*/
 
         /* Set flag if entire key was equal for SEARCH KEY EQUAL */
-        if (rc == 0 && num == dev->devunique.dasd_dev.ckdcurkl && (code & 0x7F) == 0x29)
-            dev->devunique.dasd_dev.ckdkyeq = 1;
+        if (rc == 0 && num == dev->ckdcurkl && (code & 0x7F) == 0x29)
+            dev->ckdkyeq = 1;
         else
-            dev->devunique.dasd_dev.ckdkyeq = 0;
+            dev->ckdkyeq = 0;
 
         break;
 
@@ -3711,10 +3696,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3723,7 +3708,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3754,9 +3739,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Set flag if entire id compared equal for SEARCH ID EQUAL */
         if (rc == 0 && num == 5 && (code & 0x7F) == 0x31)
-            dev->devunique.dasd_dev.ckdideq = 1;
+            dev->ckdideq = 1;
         else
-            dev->devunique.dasd_dev.ckdideq = 0;
+            dev->ckdideq = 0;
 
         break;
 
@@ -3767,10 +3752,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* For 3990, command reject if not preceded by Seek, Seek Cyl,
            Locate Record, Read IPL, or Recalibrate command */
-        if (dev->devunique.dasd_dev.ckd3990
-            && dev->devunique.dasd_dev.ckdseek == 0 && dev->devunique.dasd_dev.ckdskcyl == 0
-            && dev->devunique.dasd_dev.ckdlocat == 0 && dev->devunique.dasd_dev.ckdrdipl == 0
-            && dev->devunique.dasd_dev.ckdrecal == 0)
+        if (dev->ckd3990
+            && dev->ckdseek == 0 && dev->ckdskcyl == 0
+            && dev->ckdlocat == 0 && dev->ckdrdipl == 0
+            && dev->ckdrecal == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3779,7 +3764,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3795,7 +3780,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Seek to beginning of track */
-        rc = ckd_seek (dev, dev->devunique.dasd_dev.ckdcurcyl, dev->devunique.dasd_dev.ckdcurhead, &trkhdr, unitstat);
+        rc = ckd_seek (dev, dev->ckdcurcyl, dev->ckdcurhead, &trkhdr, unitstat);
         if (rc < 0) break;
 
         /* Calculate number of compare bytes and set residual count */
@@ -3813,9 +3798,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Set flag if entire home address compared equal */
         if (rc == 0 && num == 4)
-            dev->devunique.dasd_dev.ckdhaeq = 1;
+            dev->ckdhaeq = 1;
         else
-            dev->devunique.dasd_dev.ckdhaeq = 0;
+            dev->ckdhaeq = 0;
 
         break;
 
@@ -3824,7 +3809,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* WRITE DATA                                                    */
     /*---------------------------------------------------------------*/
         /* Command reject if the current track is in the DSF area */
-        if (dev->devunique.dasd_dev.ckdcurcyl >= dev->devunique.dasd_dev.ckdcyls)
+        if (dev->ckdcurcyl >= dev->ckdcyls)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3838,8 +3823,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            /*INCOMPLETE*/ /*Write CKD allows intervening Read/Write
              key and data commands, Write Data does not!!! Rethink
              the handling of these flags*/
-        if (dev->devunique.dasd_dev.ckdlcount == 0 && dev->devunique.dasd_dev.ckdideq == 0
-            && dev->devunique.dasd_dev.ckdkyeq == 0)
+        if (dev->ckdlcount == 0 && dev->ckdideq == 0
+            && dev->ckdkyeq == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3848,7 +3833,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if file mask inhibits all write commands */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) == CKDMASK_WRCTL_INHWRT)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) == CKDMASK_WRCTL_INHWRT)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3857,12 +3842,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!(((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                       && dev->devunique.dasd_dev.ckdlcount ==
-                            (dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
+            if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                       && dev->ckdlcount ==
+                            (dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -3875,15 +3860,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                except when writing a R0 data area under the control
                of a Locate Record Write Track operation, in which
                case a transfer length factor of 8 is used instead */
-            if ((dev->devunique.dasd_dev.ckdxgattr & CKDGATR_CKDCONV) == 0)
+            if ((dev->ckdxgattr & CKDGATR_CKDCONV) == 0)
             {
-                if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
-                    && dev->devunique.dasd_dev.ckdcurrec == 0)
+                if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+                    && dev->ckdcurrec == 0)
                     num = 8;
                 else
-                    num = dev->devunique.dasd_dev.ckdltranlf;
+                    num = dev->ckdltranlf;
 
-                if (dev->devunique.dasd_dev.ckdcurdl != num)
+                if (dev->ckdcurdl != num)
                 {
                     /* Unit check with invalid track format */
                     ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -3894,14 +3879,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         } /* end if(ckdlcount) */
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
         }
 
         /* Calculate number of bytes written and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -3911,7 +3896,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* If track overflow, keep writing */
         offset = 0;
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -3925,7 +3910,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             offset += size;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             *residual -= num;
 
@@ -3952,9 +3937,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if not within the domain of a Locate Record
            that specifies the Write Data operation code */
-        if (dev->devunique.dasd_dev.ckdlcount == 0
-         || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-          && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY))
+        if (dev->ckdlcount == 0
+         || ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+          && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -3963,8 +3948,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Orient to next user record count field */
-        if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT
-            || dev->devunique.dasd_dev.ckdcurrec == 0)
+        if (dev->ckdorient != CKDORIENT_COUNT
+            || dev->ckdcurrec == 0)
         {
             /* Read next count field */
             rc = ckd_read_count (dev, code, &rechdr, unitstat);
@@ -3973,9 +3958,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* If not operating in CKD conversion mode, check that the
            data length is equal to the transfer length factor */
-        if ((dev->devunique.dasd_dev.ckdxgattr & CKDGATR_CKDCONV) == 0)
+        if ((dev->ckdxgattr & CKDGATR_CKDCONV) == 0)
         {
-            if (dev->devunique.dasd_dev.ckdcurdl != dev->devunique.dasd_dev.ckdltranlf)
+            if (dev->ckdcurdl != dev->ckdltranlf)
             {
                 /* Unit check with invalid track format */
                 ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -3985,14 +3970,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
         }
 
         /* Calculate number of bytes written and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4002,7 +3987,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* If track overflow, keep writing */
         offset = 0;
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -4016,7 +4001,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             offset += size;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             *residual -= num;
 
@@ -4038,7 +4023,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* WRITE KEY AND DATA                                            */
     /*---------------------------------------------------------------*/
         /* Command reject if the current track is in the DSF area */
-        if (dev->devunique.dasd_dev.ckdcurcyl >= dev->devunique.dasd_dev.ckdcyls)
+        if (dev->ckdcurcyl >= dev->ckdcyls)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4052,7 +4037,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            /*INCOMPLETE*/ /*Write CKD allows intervening Read/Write
              key and data commands, Write Key Data does not!!! Rethink
              the handling of these flags*/
-        if (dev->devunique.dasd_dev.ckdlcount == 0 && dev->devunique.dasd_dev.ckdideq == 0)
+        if (dev->ckdlcount == 0 && dev->ckdideq == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4061,7 +4046,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if file mask inhibits all write commands */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) == CKDMASK_WRCTL_INHWRT)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) == CKDMASK_WRCTL_INHWRT)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4070,12 +4055,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!(((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                       && dev->devunique.dasd_dev.ckdlcount ==
-                            (dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
+            if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                       && dev->ckdlcount ==
+                            (dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -4085,8 +4070,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             /* If not operating in CKD conversion mode, check that the
                key + data length equals the transfer length factor */
-            if ((dev->devunique.dasd_dev.ckdxgattr & CKDGATR_CKDCONV) == 0
-                && dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl != dev->devunique.dasd_dev.ckdltranlf)
+            if ((dev->ckdxgattr & CKDGATR_CKDCONV) == 0
+                && dev->ckdcurkl + dev->ckdcurdl != dev->ckdltranlf)
             {
                 /* Unit check with invalid track format */
                 ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -4096,14 +4081,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         } /* end if(ckdlcount) */
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
         }
 
         /* Calculate number of bytes written and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4112,8 +4097,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* If track overflow, keep writing */
-        offset = dev->devunique.dasd_dev.ckdcurkl;
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        offset = dev->ckdcurkl;
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -4127,7 +4112,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             offset += size;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             *residual -= num;
 
@@ -4150,8 +4135,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if not within the domain of a Locate Record
            that specifies the Write Data operation code */
-        if (dev->devunique.dasd_dev.ckdlcount == 0
-            || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRITE)
+        if (dev->ckdlcount == 0
+            || (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4160,8 +4145,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Orient to next user record count field */
-        if (dev->devunique.dasd_dev.ckdorient != CKDORIENT_COUNT
-            || dev->devunique.dasd_dev.ckdcurrec == 0)
+        if (dev->ckdorient != CKDORIENT_COUNT
+            || dev->ckdcurrec == 0)
         {
             /* Read next count field */
             rc = ckd_read_count (dev, code, &rechdr, unitstat);
@@ -4170,9 +4155,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* If not operating in CKD conversion mode, check that the
            data length is equal to the transfer length factor */
-        if ((dev->devunique.dasd_dev.ckdxgattr & CKDGATR_CKDCONV) == 0)
+        if ((dev->ckdxgattr & CKDGATR_CKDCONV) == 0)
         {
-            if ((dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl) != dev->devunique.dasd_dev.ckdltranlf)
+            if ((dev->ckdcurkl + dev->ckdcurdl) != dev->ckdltranlf)
             {
                 /* Unit check with invalid track format */
                 ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -4182,14 +4167,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->devunique.dasd_dev.ckdcurdl == 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
         }
 
         /* Calculate number of bytes written and set residual count */
-        size = dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4198,8 +4183,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* If track overflow, keep writing */
-        offset = dev->devunique.dasd_dev.ckdcurkl;
-        while (dev->devunique.dasd_dev.ckdtrkof)
+        offset = dev->ckdcurkl;
+        while (dev->ckdtrkof)
         {
             /* Advance to next track */
             rc = mt_advance (dev, unitstat, 1);
@@ -4213,7 +4198,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             offset += size;
 
             /* Account for size of this overflow record */
-            size = dev->devunique.dasd_dev.ckdcurdl;
+            size = dev->ckdcurdl;
             num = (*residual < size) ? *residual : size;
             *residual -= num;
 
@@ -4235,7 +4220,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* ERASE                                                         */
     /*---------------------------------------------------------------*/
         /* Command reject if the current track is in the DSF area */
-        if (dev->devunique.dasd_dev.ckdcurcyl >= dev->devunique.dasd_dev.ckdcyls)
+        if (dev->ckdcurcyl >= dev->ckdcyls)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4247,8 +4232,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            and not preceded by either a Search ID Equal or Search Key
            Equal that compared equal on all bytes, or a Write R0 or
            Write CKD not within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount == 0 && dev->devunique.dasd_dev.ckdideq == 0
-            && dev->devunique.dasd_dev.ckdkyeq == 0 && dev->devunique.dasd_dev.ckdwckd == 0)
+        if (dev->ckdlcount == 0 && dev->ckdideq == 0
+            && dev->ckdkyeq == 0 && dev->ckdwckd == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4257,8 +4242,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if file mask does not permit Write CKD */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_INHWR0)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT
+            && (dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_INHWR0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4267,9 +4252,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK)
+            if ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK)
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -4296,7 +4281,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* WRITE RECORD ZERO                                             */
     /*---------------------------------------------------------------*/
         /* Command reject if the current track is in the DSF area */
-        if (dev->devunique.dasd_dev.ckdcurcyl >= dev->devunique.dasd_dev.ckdcyls)
+        if (dev->ckdcurcyl >= dev->ckdcyls)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4310,7 +4295,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            compared equal on all 4 bytes, or a Write Home Address not
            within the domain of a Locate Record */
         /* ISW20030819-1 : Added check for previously issued WRHA */
-        if (dev->devunique.dasd_dev.ckdlcount == 0 && dev->devunique.dasd_dev.ckdhaeq == 0 && dev->devunique.dasd_dev.ckdwrha==0)
+        if (dev->ckdlcount == 0 && dev->ckdhaeq == 0 && dev->ckdwrha==0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4320,7 +4305,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if file mask does not permit Write R0 */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4330,12 +4315,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-                    && ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+                    && ((dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_HOME
-                          || (dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+                          || (dev->ckdloper & CKDOPER_ORIENTATION)
                                 == CKDOPER_ORIENT_INDEX
                        )))
             {
@@ -4352,7 +4337,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4360,10 +4345,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Set flag if Write R0 outside domain of a locate record */
-        if (dev->devunique.dasd_dev.ckdlcount == 0)
-            dev->devunique.dasd_dev.ckdwckd = 1;
+        if (dev->ckdlcount == 0)
+            dev->ckdwckd = 1;
         else
-            dev->devunique.dasd_dev.ckdwckd = 0;
+            dev->ckdwckd = 0;
 
         break;
 
@@ -4373,7 +4358,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* WRITE COUNT KEY AND DATA                                      */
     /*---------------------------------------------------------------*/
         /* Command reject if the current track is in the DSF area */
-        if (dev->devunique.dasd_dev.ckdcurcyl >= dev->devunique.dasd_dev.ckdcyls)
+        if (dev->ckdcurcyl >= dev->ckdcyls)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4388,8 +4373,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            and not preceded by either a Search ID Equal or Search Key
            Equal that compared equal on all bytes, or a Write R0 or
            Write CKD not within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount == 0 && dev->devunique.dasd_dev.ckdideq == 0
-            && dev->devunique.dasd_dev.ckdkyeq == 0 && dev->devunique.dasd_dev.ckdwckd == 0)
+        if (dev->ckdlcount == 0 && dev->ckdideq == 0
+            && dev->ckdkyeq == 0 && dev->ckdwckd == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4398,8 +4383,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if file mask does not permit Write CKD */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT
-            && (dev->devunique.dasd_dev.ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_INHWR0)
+        if ((dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_ALLWRT
+            && (dev->ckdfmask & CKDMASK_WRCTL) != CKDMASK_WRCTL_INHWR0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4418,10 +4403,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check operation code if within domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
-            if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
+            if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
@@ -4438,7 +4423,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4446,10 +4431,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Set flag if Write CKD outside domain of a locate record */
-        if (dev->devunique.dasd_dev.ckdlcount == 0)
-            dev->devunique.dasd_dev.ckdwckd = 1;
+        if (dev->ckdlcount == 0)
+            dev->ckdwckd = 1;
         else
-            dev->devunique.dasd_dev.ckdwckd = 0;
+            dev->ckdwckd = 0;
 
         break;
 
@@ -4459,8 +4444,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
         /* Command reject if not within the domain of a Locate Record
            that specifies a format write operation */
-        if (dev->devunique.dasd_dev.ckdlcount == 0
-            || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT)
+        if (dev->ckdlcount == 0
+            || (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4492,7 +4477,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4520,8 +4505,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Command reject if within the domain of a Locate Record,
            or not preceded by a Define Extent or Read IPL command */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
-            || (dev->devunique.dasd_dev.ckdxtdef == 0 && dev->devunique.dasd_dev.ckdrdipl == 0))
+        if (dev->ckdlcount > 0
+            || (dev->ckdxtdef == 0 && dev->ckdrdipl == 0))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -4530,16 +4515,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Byte 0 contains the locate record operation byte */
-        dev->devunique.dasd_dev.ckdloper = iobuf[0];
+        dev->ckdloper = iobuf[0];
 
         /* Validate the locate record operation code (bits 2-7) */
-        if (!((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
-              || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+        if (!((dev->ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
+              || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -4548,25 +4533,25 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check for valid combination of orientation and opcode */
-        if (   ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+        if (   ((dev->ckdloper & CKDOPER_ORIENTATION)
                                         == CKDOPER_ORIENT_HOME
-                && !((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                && !((dev->ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDTRKS
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             ||
-               ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+               ((dev->ckdloper & CKDOPER_ORIENTATION)
                                         == CKDOPER_ORIENT_DATA
-                && !((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                && !((dev->ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_RDDATA
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             ||
-               ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+               ((dev->ckdloper & CKDOPER_ORIENTATION)
                                         == CKDOPER_ORIENT_INDEX
-                && !((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+                && !((dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -4576,10 +4561,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check for write operation on a read only disk */
-        if ( (dev->devunique.dasd_dev.ckdrdonly && !dev->devunique.dasd_dev.ckdfakewr && !dev->devunique.dasd_dev.dasdsfn)
-             &&  ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-               || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-               || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK)
+        if ( (dev->ckdrdonly && !dev->ckdfakewr && !dev->dasdsfn)
+             &&  ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+               || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+               || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK)
            )
         {
             ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
@@ -4589,13 +4574,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Byte 1 contains the locate record auxiliary byte */
-        dev->devunique.dasd_dev.ckdlaux = iobuf[1];
+        dev->ckdlaux = iobuf[1];
 
         /* Validate the auxiliary byte */
-        if ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RESV) != 0
-            || ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF)
-                && !((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-                  || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_READ))
+        if ((dev->ckdlaux & CKDLAUX_RESV) != 0
+            || ((dev->ckdlaux & CKDLAUX_RDCNTSUF)
+                && !((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+                  || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_READ))
             )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -4614,15 +4599,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Byte 3 contains the locate record domain count */
-        dev->devunique.dasd_dev.ckdlcount = iobuf[3];
+        dev->ckdlcount = iobuf[3];
 
         /* Validate the locate record domain count */
-        if (   ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
-                && dev->devunique.dasd_dev.ckdlcount != 0)
-            || ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_ORIENT
-                && dev->devunique.dasd_dev.ckdlcount == 0)
-            || ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF)
-                && dev->devunique.dasd_dev.ckdlcount < 2)
+        if (   ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_ORIENT
+                && dev->ckdlcount != 0)
+            || ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_ORIENT
+                && dev->ckdlcount == 0)
+            || ((dev->ckdlaux & CKDLAUX_RDCNTSUF)
+                && dev->ckdlcount < 2)
             )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -4636,7 +4621,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         head = (iobuf[6] << 8) | iobuf[7];
 
         /* Command reject if seek address is not valid */
-        if (cyl >= dev->devunique.dasd_dev.ckdcyls || head >= dev->devunique.dasd_dev.ckdheads)
+        if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -4659,7 +4644,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         sector = iobuf[13];
 
         /* Command reject if sector number is not valid */
-        if (sector != 0xFF && sector >= dev->devunique.dasd_dev.ckdtab->sectors)
+        if (sector != 0xFF && sector >= dev->ckdtab->sectors)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -4668,14 +4653,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 14-15 contain the transfer length factor */
-        dev->devunique.dasd_dev.ckdltranlf = (iobuf[14] << 8) | iobuf[15];
+        dev->ckdltranlf = (iobuf[14] << 8) | iobuf[15];
 
         /* Validate the transfer length factor */
-        if (   ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID) == 0
-                && dev->devunique.dasd_dev.ckdltranlf != 0)
-            || ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID)
-                && dev->devunique.dasd_dev.ckdltranlf == 0)
-            || dev->devunique.dasd_dev.ckdltranlf > dev->devunique.dasd_dev.ckdxblksz)
+        if (   ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0
+                && dev->ckdltranlf != 0)
+            || ((dev->ckdlaux & CKDLAUX_TLFVALID)
+                && dev->ckdltranlf == 0)
+            || dev->ckdltranlf > dev->ckdxblksz)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -4685,14 +4670,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* If transfer length factor is not supplied then use
            the blocksize from the define extent command */
-        if ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID) == 0)
-            dev->devunique.dasd_dev.ckdltranlf = dev->devunique.dasd_dev.ckdxblksz;
+        if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
+            dev->ckdltranlf = dev->ckdxblksz;
 
         /* Seek to the required track */
         rc = ckd_seek (dev, cyl, head, &trkhdr, unitstat);
         if (rc < 0)
         {
-            if (dev->syncio_retry) dev->devunique.dasd_dev.ckdlcount = 0;
+            if (dev->syncio_retry) dev->ckdlcount = 0;
             break;
         }
 
@@ -4700,7 +4685,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Perform search according to specified orientation */
-        switch ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)) {
+        switch ((dev->ckdloper & CKDOPER_ORIENTATION)) {
 
         case CKDOPER_ORIENT_HOME:
             /* For home orientation, compare the search CCHH
@@ -4754,19 +4739,19 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
 
         /* Reorient past data if data orientation is specified */
-        if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+        if ((dev->ckdloper & CKDOPER_ORIENTATION)
                         == CKDOPER_ORIENT_DATA)
         {
             /* Skip past key and data fields */
-            dev->bufoff += dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+            dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
 
             /* Set the device orientation fields */
-            dev->devunique.dasd_dev.ckdrem = 0;
-            dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+            dev->ckdrem = 0;
+            dev->ckdorient = CKDORIENT_DATA;
         }
 
         /* Set locate record flag and return normal status */
-        dev->devunique.dasd_dev.ckdlocat = 1;
+        dev->ckdlocat = 1;
         break;
 
     case 0x4B:
@@ -4775,7 +4760,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
 
     /* LRE only valid for 3990-6 */
-    if (dev->devunique.dasd_dev.ckdcu->devt != 0x3990 || dev->devunique.dasd_dev.ckdcu->model != 0xe9)
+    if (dev->ckdcu->devt != 0x3990 || dev->ckdcu->model != 0xe9)
     {
         /* Set command reject sense byte, and unit check status */
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
@@ -4801,7 +4786,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * domain, execution is terminated with status that includes unit
      * check (Command Reject, format X'02', Invalid Command Sequence).
      */
-    if (dev->devunique.dasd_dev.ckdlcount > 0)
+    if (dev->ckdlcount > 0)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4817,7 +4802,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * Command Sequence).
      */
     //FIXME not sure what that last sentence means
-    if (dev->devunique.dasd_dev.ckdxtdef == 0 && dev->devunique.dasd_dev.ckdrdipl == 0)
+    if (dev->ckdxtdef == 0 && dev->ckdrdipl == 0)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4825,22 +4810,22 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
 
     /* Byte 0 contains the locate record operation byte */
-    dev->devunique.dasd_dev.ckdloper = iobuf[0];
+    dev->ckdloper = iobuf[0];
 
     /* Validate the locate record operation code (byte 0 bits 2-7) */
-    if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-     && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
-     && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
-     && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
-     && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_READ
-     && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP)
+    if ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_FORMAT
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTTRK
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDTRKS
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ
+     && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_EXTOP)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         break;
     }
     /* Validate the locate record extended operation code (byte 17) */
-    if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_EXTOP)
+    if ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_EXTOP)
     {
         if (iobuf[17] != CKDOPER_WRTANY
          && iobuf[17] != CKDOPER_RDANY
@@ -4850,8 +4835,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
-        dev->devunique.dasd_dev.ckdloper &= CKDOPER_ORIENTATION;
-        dev->devunique.dasd_dev.ckdloper |= iobuf[17];
+        dev->ckdloper &= CKDOPER_ORIENTATION;
+        dev->ckdloper |= iobuf[17];
     }
     else if (iobuf[17] != 0)
     {
@@ -4862,11 +4847,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
     /* Check for write operation on a read only disk */
 //FIXME Not sure if this is right here
-    if ( (dev->devunique.dasd_dev.ckdrdonly && !dev->devunique.dasd_dev.ckdfakewr && !dev->devunique.dasd_dev.dasdsfn)
-         &&  ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
-           || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTANY
-           || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
-           || (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK)
+    if ( (dev->ckdrdonly && !dev->ckdfakewr && !dev->dasdsfn)
+         &&  ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
+           || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTANY
+           || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
+           || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK)
            )
         {
             ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,
@@ -4894,16 +4879,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * +------------------------------------------------+
      * Table: valid orientation + operation code values
      */
-    if (dev->devunique.dasd_dev.ckdloper != 0x01 && dev->devunique.dasd_dev.ckdloper != 0x81
-     && dev->devunique.dasd_dev.ckdloper != 0x03 && dev->devunique.dasd_dev.ckdloper != 0x43 &&
-        dev->devunique.dasd_dev.ckdloper != 0xC3
-     && dev->devunique.dasd_dev.ckdloper != 0x0B
-     && dev->devunique.dasd_dev.ckdloper != 0x0C && dev->devunique.dasd_dev.ckdloper != 0x4C
-     && dev->devunique.dasd_dev.ckdloper != 0x16 && dev->devunique.dasd_dev.ckdloper != 0x56 &&
-        dev->devunique.dasd_dev.ckdloper != 0x96 && dev->devunique.dasd_dev.ckdloper != 0xD6
-     && dev->devunique.dasd_dev.ckdloper != 0x09
-     && dev->devunique.dasd_dev.ckdloper != 0x0A
-     && dev->devunique.dasd_dev.ckdloper != 0x0E && dev->devunique.dasd_dev.ckdloper != 0x4E)
+    if (dev->ckdloper != 0x01 && dev->ckdloper != 0x81
+     && dev->ckdloper != 0x03 && dev->ckdloper != 0x43 &&
+        dev->ckdloper != 0xC3
+     && dev->ckdloper != 0x0B
+     && dev->ckdloper != 0x0C && dev->ckdloper != 0x4C
+     && dev->ckdloper != 0x16 && dev->ckdloper != 0x56 &&
+        dev->ckdloper != 0x96 && dev->ckdloper != 0xD6
+     && dev->ckdloper != 0x09
+     && dev->ckdloper != 0x0A
+     && dev->ckdloper != 0x0E && dev->ckdloper != 0x4E)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4936,16 +4921,16 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * X'04', Invalid Parameter).
      */
     if ((iobuf[1] & CKDLAUX_RDCNTSUF)
-     && ((dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
-      && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
-      && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
-      && (dev->devunique.dasd_dev.ckdloper & CKDOPER_CODE) != CKDOPER_READ))
+     && ((dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRITE
+      && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_WRTANY
+      && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_RDANY
+      && (dev->ckdloper & CKDOPER_CODE) != CKDOPER_READ))
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         break;
     }
-    dev->devunique.dasd_dev.ckdlaux = iobuf[1];
+    dev->ckdlaux = iobuf[1];
 
     /* Byte 2 must contain zeroes */
     if (iobuf[2] != 0)
@@ -4968,13 +4953,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * Invalid Parameter).
      */
     if (iobuf[3] == 0
-     || ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_RDCNTSUF) && iobuf[3] < 2))
+     || ((dev->ckdlaux & CKDLAUX_RDCNTSUF) && iobuf[3] < 2))
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         break;
     }
-    dev->devunique.dasd_dev.ckdlcount = iobuf[3];
+    dev->ckdlcount = iobuf[3];
     /*
      * The value in bytes 4-7 must be a valid track address for the
      * device and must be within the extent boundaries specified by the
@@ -4990,7 +4975,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      */
     cyl = fetch_hw(iobuf+4);
     head = fetch_hw(iobuf+6);
-    if (cyl >= dev->devunique.dasd_dev.ckdcyls || head >= dev->devunique.dasd_dev.ckdheads)
+    if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5024,7 +5009,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * A value of X'FF' is valid and specifies that sector positioning
      * is not to be performed prior to establishing orientation.
      */
-    if (iobuf[13] != 0xFF && iobuf[13] >= dev->devunique.dasd_dev.ckdtab->sectors)
+    if (iobuf[13] != 0xFF && iobuf[13] >= dev->ckdtab->sectors)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5066,18 +5051,18 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * Extent Blocksize parameter for any required data transfer length
      * calculation.
      */
-    if ((!(dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw(iobuf+14))
-     || ( (dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw(iobuf+14))
-     || fetch_hw(iobuf+14) > dev->devunique.dasd_dev.ckdxblksz)
+    if ((!(dev->ckdlaux & CKDLAUX_TLFVALID) &&  fetch_hw(iobuf+14))
+     || ( (dev->ckdlaux & CKDLAUX_TLFVALID) && !fetch_hw(iobuf+14))
+     || fetch_hw(iobuf+14) > dev->ckdxblksz)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         break;
     }
-    if ((dev->devunique.dasd_dev.ckdlaux & CKDLAUX_TLFVALID) == 0)
-        dev->devunique.dasd_dev.ckdltranlf = dev->devunique.dasd_dev.ckdxblksz;
+    if ((dev->ckdlaux & CKDLAUX_TLFVALID) == 0)
+        dev->ckdltranlf = dev->ckdxblksz;
     else
-        dev->devunique.dasd_dev.ckdltranlf = fetch_hw(iobuf+14);
+        dev->ckdltranlf = fetch_hw(iobuf+14);
     /*
      * Bytes 18-19 contain an unsigned 16-bit binary value that
      * specifies the total number of extended parameter bytes. The
@@ -5195,7 +5180,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
-        dev->devunique.dasd_dev.ckdlmask = mask;
+        dev->ckdlmask = mask;
         /*
          * Count the one bits in mask.  There are elegant but obscure
          * ways to do this but just keeping it simple here.  Plus we
@@ -5208,7 +5193,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 i++;
         }
         /* Number of one bits must match count */
-        if (i != dev->devunique.dasd_dev.ckdlcount)
+        if (i != dev->ckdlcount)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5217,10 +5202,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Check extent of last track to be read */
         lastcyl = cyl;
         lasthead = head + j - 1;
-        while (lasthead >= dev->devunique.dasd_dev.ckdheads)
+        while (lasthead >= dev->ckdheads)
         {
             lastcyl++;
-            lasthead -= dev->devunique.dasd_dev.ckdheads;
+            lasthead -= dev->ckdheads;
         }
         if ( EXTENT_CHECK(dev, lastcyl, lasthead) )
         {
@@ -5234,7 +5219,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     rc = ckd_seek (dev, cyl, head, &trkhdr, unitstat);
     if (rc < 0)
     {
-        if (dev->syncio_retry) dev->devunique.dasd_dev.ckdlcount = 0;
+        if (dev->syncio_retry) dev->ckdlcount = 0;
         break;
     }
 
@@ -5242,7 +5227,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     *unitstat = CSW_CE | CSW_DE;
 
     /* Perform search according to specified orientation */
-    switch ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)) {
+    switch ((dev->ckdloper & CKDOPER_ORIENTATION)) {
 
     case CKDOPER_ORIENT_HOME:
         /* For home orientation, compare the search CCHH
@@ -5285,19 +5270,19 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         break;
 
     /* Reorient past data if data orientation is specified */
-    if ((dev->devunique.dasd_dev.ckdloper & CKDOPER_ORIENTATION)
+    if ((dev->ckdloper & CKDOPER_ORIENTATION)
                         == CKDOPER_ORIENT_DATA)
     {
         /* Skip past key and data fields */
-        dev->bufoff += dev->devunique.dasd_dev.ckdcurkl + dev->devunique.dasd_dev.ckdcurdl;
+        dev->bufoff += dev->ckdcurkl + dev->ckdcurdl;
 
         /* Set the device orientation fields */
-        dev->devunique.dasd_dev.ckdrem = 0;
-        dev->devunique.dasd_dev.ckdorient = CKDORIENT_DATA;
+        dev->ckdrem = 0;
+        dev->ckdorient = CKDORIENT_DATA;
     }
 
     /* Set locate record flag and return normal status */
-    dev->devunique.dasd_dev.ckdlocat = 1;
+    dev->ckdlocat = 1;
     break;
 
     case 0x63:
@@ -5324,12 +5309,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command reject if within the domain of a Locate Record, or
            preceded by Define Extent, Space Count, or Set File Mask,
            or (for 3390 only) preceded by Read IPL */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
+        if (dev->ckdlcount > 0
 #if 0
-            || dev->devunique.dasd_dev.ckdxtdef
+            || dev->ckdxtdef
 #endif
-            || dev->devunique.dasd_dev.ckdsetfm || dev->devunique.dasd_dev.ckdspcnt
-            || (dev->devunique.dasd_dev.ckdrdipl && dev->devtype == 0x3390))
+            || dev->ckdsetfm || dev->ckdspcnt
+            || (dev->ckdrdipl && dev->devtype == 0x3390))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5341,8 +5326,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         fmask = iobuf[0];
         xgattr = iobuf[1];
 
-        if(dev->devunique.dasd_dev.ckdxtdef
-         && (dev->devunique.dasd_dev.ckdfmask != fmask || dev->devunique.dasd_dev.ckdxgattr != xgattr) )
+        if(dev->ckdxtdef
+         && (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr) )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5350,11 +5335,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        dev->devunique.dasd_dev.ckdfmask = fmask;
-        dev->devunique.dasd_dev.ckdxgattr = xgattr;
+        dev->ckdfmask = fmask;
+        dev->ckdxgattr = xgattr;
 
         /* Validate the global attributes byte bits 0-1 */
-        if ((dev->devunique.dasd_dev.ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
+        if ((dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -5363,7 +5348,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Validate the file mask */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_RESV) != 0)
+        if ((dev->ckdfmask & CKDMASK_RESV) != 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -5378,10 +5363,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            record length (as returned in device characteristics
            bytes 44 and 45) plus 8 */
         if (xblksz == 0)
-            xblksz = dev->devunique.dasd_dev.ckdtab->r0 + 8;
+            xblksz = dev->ckdtab->r0 + 8;
 
-        if(dev->devunique.dasd_dev.ckdxtdef
-         && dev->devunique.dasd_dev.ckdxblksz != xblksz )
+        if(dev->ckdxtdef
+         && dev->ckdxblksz != xblksz )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5389,10 +5374,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        dev->devunique.dasd_dev.ckdxblksz = xblksz;
+        dev->ckdxblksz = xblksz;
 
         /* Validate the extent block */
-        if (dev->devunique.dasd_dev.ckdxblksz > dev->devunique.dasd_dev.ckdtab->r0 + 8)
+        if (dev->ckdxblksz > dev->ckdtab->r0 + 8)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -5426,19 +5411,19 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             || EXTENT_CHECK(dev, ecyl, ehead) )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, dev->devunique.dasd_dev.ckdxtdef ? MESSAGE_2 : MESSAGE_4);
+                            FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
 
         /* Define the new extent */
-        dev->devunique.dasd_dev.ckdxbcyl = bcyl;
-        dev->devunique.dasd_dev.ckdxbhead = bhead;
-        dev->devunique.dasd_dev.ckdxecyl = ecyl;
-        dev->devunique.dasd_dev.ckdxehead = ehead;
+        dev->ckdxbcyl = bcyl;
+        dev->ckdxbhead = bhead;
+        dev->ckdxecyl = ecyl;
+        dev->ckdxehead = ehead;
 
         /* Set extent defined flag and return normal status */
-        dev->devunique.dasd_dev.ckdxtdef = 1;
+        dev->ckdxtdef = 1;
         *unitstat = CSW_CE | CSW_DE;
         break;
     }
@@ -5448,7 +5433,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* READ DEVICE CHARACTERISTICS                                   */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5485,7 +5470,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command reject if within the domain of a Locate Record,
            or if subsystem data has not been prepared in the channel
            buffer by a previous Perform Subsystem Function command */
-        if (dev->devunique.dasd_dev.ckdlcount > 0 || dev->devunique.dasd_dev.ckdssdlen == 0)
+        if (dev->ckdlcount > 0 || dev->ckdssdlen == 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5494,9 +5479,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Calculate residual byte count */
-        num = (count < dev->devunique.dasd_dev.ckdssdlen) ? count : dev->devunique.dasd_dev.ckdssdlen;
+        num = (count < dev->ckdssdlen) ? count : dev->ckdssdlen;
         *residual = count - num;
-        if (count < dev->devunique.dasd_dev.ckdssdlen) *more = 1;
+        if (count < dev->ckdssdlen) *more = 1;
 
         /* Subsystem data is already in the channel buffer, so
            just return channel end and device end */
@@ -5508,7 +5493,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* SUSPEND MULTIPATH RECONNECTION                                */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5525,10 +5510,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* DIAGNOSTIC CONTROL                                            */
     /*---------------------------------------------------------------*/
         /* Command reject if SSI active */
-        if(dev->devunique.dasd_dev.ckdssi)
+        if(dev->ckdssi)
         {
             /* Mark Set Special Intercept inactive */
-            dev->devunique.dasd_dev.ckdssi = 0;
+            dev->ckdssi = 0;
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_F);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5549,7 +5534,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5579,7 +5564,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Command reject if file mask does not specify
            diagnostic or device support authorization */
-        if ((dev->devunique.dasd_dev.ckdfmask & CKDMASK_AAUTH) == CKDMASK_AAUTH_NORMAL)
+        if ((dev->ckdfmask & CKDMASK_AAUTH) == CKDMASK_AAUTH_NORMAL)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_5);
@@ -5598,9 +5583,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command reject if within the domain of a Locate Record, or
            preceded by Define Extent, Space Count, or Set File Mask,
            or (for 3390 only) preceded by Read IPL */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
-            || dev->devunique.dasd_dev.ckdxtdef || dev->devunique.dasd_dev.ckdspcnt || dev->devunique.dasd_dev.ckdsetfm
-            || (dev->devunique.dasd_dev.ckdrdipl && dev->devtype == 0x3390))
+        if (dev->ckdlcount > 0
+            || dev->ckdxtdef || dev->ckdspcnt || dev->ckdsetfm
+            || (dev->ckdrdipl && dev->devtype == 0x3390))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5626,7 +5611,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Command reject if within the domain of a Locate Record,
            or indeed if preceded by any command at all apart from
            Suspend Multipath Reconnection */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
+        if (dev->ckdlcount > 0
             || ccwseq > 1
             || (chained && prevcode != 0x5B))
         {
@@ -5652,7 +5637,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* SENSE                                                         */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5694,7 +5679,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5785,7 +5770,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            is Read Device Characteristics, Read Configuration Data, or
            a Suspend Multipath Reconnection command that was the first
            command in the chain */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
+        if (dev->ckdlcount > 0
             || (chained && prevcode != 0x64 && prevcode != 0xFA
                 && prevcode != 0x5B)
             || (chained && prevcode == 0x5B && ccwseq > 1))
@@ -5816,7 +5801,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            is Read Device Characteristics, Read Configuration Data, or
            a Suspend Multipath Reconnection command that was the first
            command in the chain */
-        if (dev->devunique.dasd_dev.ckdlcount > 0
+        if (dev->ckdlcount > 0
             || (chained && prevcode != 0x64 && prevcode != 0xFA
                 && prevcode != 0x5B)
             || (chained && prevcode == 0x5B && ccwseq > 1))
@@ -5845,7 +5830,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
 
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5858,8 +5843,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /*                                                           */
         /* TBD: Add first in chain and Suspend Multipath check       */
         /*                                                           */
-        if ((dev->devunique.dasd_dev.ckdcu->devt != 0x3990 && dev->devunique.dasd_dev.ckdcu->devt != 0x2105)
-            || (dev->devunique.dasd_dev.ckdcu->model & 0x07) == 0x02)      /* 3990-1/2  */
+        if ((dev->ckdcu->devt != 0x3990 && dev->ckdcu->devt != 0x2105)
+            || (dev->ckdcu->model & 0x07) == 0x02)      /* 3990-1/2  */
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5920,7 +5905,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
-        if (dev->devunique.dasd_dev.ckdlcount > 0)
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
@@ -5959,35 +5944,35 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* Reset search HA flag if command was not SEARCH HA EQUAL
        or WRITE HA */
     if ((code & 0x7F) != 0x39 && (code & 0x7F) != 0x19)
-        dev->devunique.dasd_dev.ckdhaeq = 0;
+        dev->ckdhaeq = 0;
 
     /* Reset search id flag if command was not SEARCH ID EQUAL,
        READ/WRITE KEY AND DATA, or READ/WRITE DATA */
     if ((code & 0x7F) != 0x31
         && (code & 0x7F) != 0x0E && (code & 0x7F) != 0x0D
         && (code & 0x7F) != 0x06 && (code & 0x7F) != 0x05)
-        dev->devunique.dasd_dev.ckdideq = 0;
+        dev->ckdideq = 0;
 
     /* Reset search key flag if command was not SEARCH KEY EQUAL
        or READ/WRITE DATA */
     if ((code & 0x7F) != 0x29
         && (code & 0x7F) != 0x06 && (code & 0x7F) != 0x05)
-        dev->devunique.dasd_dev.ckdkyeq = 0;
+        dev->ckdkyeq = 0;
 
     /* Reset write CKD flag if command was not WRITE R0 or WRITE CKD */
     if (code != 0x15 && code != 0x1D)
-        dev->devunique.dasd_dev.ckdwckd = 0;
+        dev->ckdwckd = 0;
 
     /* If within the domain of a locate record then decrement the
        count of CCWs remaining to be processed within the domain */
-    if (dev->devunique.dasd_dev.ckdlcount > 0 && code != 0x047 && code != 0x4B)
+    if (dev->ckdlcount > 0 && code != 0x047 && code != 0x4B)
     {
         /* Decrement the count of CCWs remaining in the domain */
-        dev->devunique.dasd_dev.ckdlcount--;
+        dev->ckdlcount--;
 
         /* Command reject with incomplete domain if CCWs remain
            but command chaining is not specified */
-        if (dev->devunique.dasd_dev.ckdlcount > 0 && (flags & CCW_FLAGS_CC) == 0 &&
+        if (dev->ckdlcount > 0 && (flags & CCW_FLAGS_CC) == 0 &&
             code != 0x02)
         {
             ckd_build_sense (dev, SENSE_CR | SENSE_OC, 0, 0, 0, 0);

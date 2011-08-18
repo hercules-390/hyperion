@@ -82,16 +82,16 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
     dev->numsense = 1;
 
     /* Initialize device dependent fields */
-    dev->devunique.cons_dev.keybdrem = 0;
+    dev->keybdrem = 0;
 
     /* Set length of print buffer */
     dev->bufsize = BUFLEN_1052;
 
     /* Assume we want to prompt */
-    dev->devunique.cons_dev.prompt1052 = 1;
+    dev->prompt1052 = 1;
 
     /* Default command character is "/" */
-    strlcpy(dev->devunique.cons_dev.szCmdPrefix,"/",sizeof(dev->devunique.cons_dev.szCmdPrefix));
+    strlcpy(dev->filename,"/",sizeof(dev->filename));
 
     /* Is there an argument? */
     if (argc > 0)
@@ -99,12 +99,11 @@ con1052_init_handler ( DEVBLK *dev, int argc, char *argv[] )
         /* Look at the argument and set noprompt flag if specified. */
         if (strcasecmp(argv[ac], "noprompt") == 0)
         {
-            dev->devunique.cons_dev.prompt1052 = 0;
+            dev->prompt1052 = 0;
             ac++; argc--;
         }
         else
-            strlcpy(dev->devunique.cons_dev.szCmdPrefix,argv[ac],sizeof(dev->devunique.cons_dev.szCmdPrefix));
-// ZZ:FIX ME this needs to error if length is not 1
+            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
     }
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
@@ -135,8 +134,8 @@ con1052_query_device (DEVBLK *dev, char **devclass,
 
     snprintf(buffer, buflen-1,
         "*syscons cmdpref(%s)%s IO[%" I64_FMT "u]",
-        dev->devunique.cons_dev.szCmdPrefix,
-        !dev->devunique.cons_dev.prompt1052 ? " noprompt" : "",
+        dev->filename,
+        !dev->prompt1052 ? " noprompt" : "",
         dev->excps );
 
 } /* end function con1052_query_device */
@@ -245,10 +244,10 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
 
         /* Solicit console input if no data in the device buffer */
-        if (!dev->devunique.cons_dev.keybdrem)
+        if (!dev->keybdrem)
         {
             /* Display prompting message on console if allowed */
-            if (dev->devunique.cons_dev.prompt1052)
+            if (dev->prompt1052)
                 WRCMSG ("<pnl,color(lightyellow,black)>", HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
@@ -259,7 +258,7 @@ BYTE    c;                              /* Print character           */
         }
 
         /* Calculate number of bytes to move and residual byte count */
-        len = dev->devunique.cons_dev.keybdrem;
+        len = dev->keybdrem;
         num = (count < len) ? count : len;
         *residual = count - num;
         if (count < len) *more = 1;
@@ -271,11 +270,11 @@ BYTE    c;                              /* Print character           */
         if ((flags & CCW_FLAGS_CD) && len > count)
         {
             memmove (dev->buf, dev->buf + count, len - count);
-            dev->devunique.cons_dev.keybdrem = len - count;
+            dev->keybdrem = len - count;
         }
         else
         {
-            dev->devunique.cons_dev.keybdrem = 0;
+            dev->keybdrem = 0;
         }
 
         /* Return normal status */
@@ -383,14 +382,14 @@ int  i;
     {
         if(dev->allocated
           && dev->hnd == &con1052_device_hndinfo
-          && !strncasecmp(cmd,dev->devunique.cons_dev.szCmdPrefix,strlen(dev->devunique.cons_dev.szCmdPrefix)) )
+          && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
-            input = cmd + strlen(dev->devunique.cons_dev.szCmdPrefix);
+            input = cmd + strlen(dev->filename);
             WRCMSG ("<pnl,color(lightyellow,black)>", HHC00008, "I", 
-                        dev->devunique.cons_dev.szCmdPrefix, cmd+strlen(dev->devunique.cons_dev.szCmdPrefix) );
+                        dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
-            dev->devunique.cons_dev.keybdrem = dev->buflen = i;
+            dev->keybdrem = dev->buflen = i;
             obtain_lock(&dev->lock);
             if(dev->iowaiters)
             {

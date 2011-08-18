@@ -1,5 +1,3 @@
-17 Aug 2011 Change dev->filename to pointer - P. Gorlinsky
-17 Aug 2011 Move device unique data fields into devunique union. - P.Gorlinsky
 12 Aug 2011 Fix color message and timestamp problem. Removed LOGMSG macro.
             change log_msg to logmsg. - P. Gorlinsky
 12 Aug 2011 Add logmsg() support for utilities. - P. Gorlinsky

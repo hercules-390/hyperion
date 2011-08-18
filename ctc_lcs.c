@@ -246,10 +246,11 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 //      SetCIWInfo( pLCSDev->pDEVBLK[0], 1, 1, 0x83, 0x0004 );
 //      SetCIWInfo( pLCSDev->pDEVBLK[0], 2, 2, 0x82, 0x0040 );
 
-        pLCSDev->pDEVBLK[0]->devunique.ctca_dev.ctctype  = CTC_LCS;
-        pLCSDev->pDEVBLK[0]->devunique.ctca_dev.ctcxmode = 1;
+        pLCSDev->pDEVBLK[0]->ctctype  = CTC_LCS;
+        pLCSDev->pDEVBLK[0]->ctcxmode = 1;
         pLCSDev->pDEVBLK[0]->dev_data = pLCSDev;
         pLCSDev->pLCSBLK              = pLCSBLK;
+        strcpy( pLCSDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
 
         // If this is an IP Passthru address, we need a write address
         if( pLCSDev->bMode == LCSDEV_MODE_IP )
@@ -269,10 +270,11 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 //          SetCIWInfo( pLCSDev->pDEVBLK[1], 1, 1, 0x83, 0x0004 );
 //          SetCIWInfo( pLCSDev->pDEVBLK[1], 2, 2, 0x82, 0x0040 );
 
-            pLCSDev->pDEVBLK[1]->devunique.ctca_dev.ctctype  = CTC_LCS;
-            pLCSDev->pDEVBLK[1]->devunique.ctca_dev.ctcxmode = 1;
+            pLCSDev->pDEVBLK[1]->ctctype  = CTC_LCS;
+            pLCSDev->pDEVBLK[1]->ctcxmode = 1;
             pLCSDev->pDEVBLK[1]->dev_data = pLCSDev;
 
+            strcpy( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
         }
 
         // Indicate that the DEVBLK(s) have been create sucessfully
@@ -387,7 +389,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     else if( ( bCode & 0x0F ) == 0x0C )
         bOpCode = 0x0C;
     else if( ( bCode & 0x03 ) == 0x01 )
-        bOpCode = pDEVBLK->devunique.ctca_dev.ctcxmode ? ( bCode & 0x83 ) : 0x01;
+        bOpCode = pDEVBLK->ctcxmode ? ( bCode & 0x83 ) : 0x01;
     else if( ( bCode & 0x1F ) == 0x14 )
         bOpCode = 0x14;
     else if( ( bCode & 0x47 ) == 0x03 )
@@ -464,7 +466,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
+        if( pDEVBLK->ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -473,7 +475,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Reset extended mode and return normal status
-        pDEVBLK->devunique.ctca_dev.ctcxmode = 0;
+        pDEVBLK->ctcxmode = 0;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -485,7 +487,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // SET EXTENDED MODE
         // -----------------------------------------------------------
 
-        pDEVBLK->devunique.ctca_dev.ctcxmode = 1;
+        pDEVBLK->ctcxmode = 1;
 
         *pResidual = 0;
         *pUnitStat = CSW_CE | CSW_DE;
@@ -515,7 +517,7 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
       // -----------------------------------------------------------
 
         // Command reject if in basic mode
-        if( pDEVBLK->devunique.ctca_dev.ctcxmode == 0 )
+        if( pDEVBLK->ctcxmode == 0 )
         {
             pDEVBLK->sense[0] = SENSE_CR;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -1077,8 +1079,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace Ethernet frame before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
-                WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
-                    pLCSDEV->pLCSBLK->pszTUNDevice );
+                WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen, '<' );
             }
 
@@ -1091,7 +1092,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             {
                 PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*WRITE ERR", 0, iEthLen, 1 );
                 WRMSG(HHC00936, "E",
-                        SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSDEV->pLCSBLK->pszTUNDevice,
+                        SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -2150,7 +2151,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         {
         case 'n':
 
-            if( strlen( optarg ) > FILENAME_MAX )
+            if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "device name", optarg );

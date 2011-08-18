@@ -363,7 +363,7 @@ IOINT *ioint=NULL;
         else
         {
             /* Set condition code 1 if device is LCS CTC */
-            if ( dev->devunique.ctca_dev.ctctype == CTC_LCS )
+            if ( dev->ctctype == CTC_LCS )
             {
                 cc = 1;
                 dev->csw[4] = 0;
@@ -440,7 +440,7 @@ int      pending = 0;                   /* New interrupt pending     */
             dev->pending = dev->pcipending = dev->attnpending = 0;
         }
     }
-    else if (!IOPENDING(dev) && dev->devunique.ctca_dev.ctctype != CTC_LCS)
+    else if (!IOPENDING(dev) && dev->ctctype != CTC_LCS)
     {
         /* Set condition code 1 */
         cc = 1;
@@ -458,7 +458,7 @@ int      pending = 0;                   /* New interrupt pending     */
     else
     {
         /* Set cc 1 if interrupt is not pending and LCS CTC */
-        if ( dev->devunique.ctca_dev.ctctype == CTC_LCS )
+        if ( dev->ctctype == CTC_LCS )
         {
             cc = 1;
             dev->csw[4] = 0;
@@ -480,7 +480,7 @@ int      pending = 0;                   /* New interrupt pending     */
     if (dev->devtype == 0x3270)
     {
         dev->readpending = 0;
-        dev->devunique.cons_dev.rlen3270 = 0;
+        dev->rlen3270 = 0;
     }
 
     /* Signal console thread to redrive select */
@@ -894,7 +894,7 @@ int pending = 0;
 #if !defined(NO_SIGABEND_HANDLER)
             else
             {
-                if( dev->devunique.ctca_dev.ctctype )
+                if( dev->ctctype )
                     signal_thread(dev->tid, SIGUSR2);
             }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -926,7 +926,7 @@ int pending = 0;
         if (dev->devtype == 0x3270)
         {
             dev->readpending = 0;
-            dev->devunique.cons_dev.rlen3270 = 0;
+            dev->rlen3270 = 0;
         }
 
         /* Signal console thread to redrive select */
@@ -1054,7 +1054,7 @@ int pending = 0;
 #if !defined(NO_SIGABEND_HANDLER)
         else
         {
-            if( dev->devunique.ctca_dev.ctctype && dev->tid)
+            if( dev->ctctype && dev->tid)
                 signal_thread(dev->tid, SIGUSR2);
         }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -1072,7 +1072,7 @@ int pending = 0;
         if (dev->devtype == 0x3270)
         {
             dev->readpending = 0;
-            dev->devunique.cons_dev.rlen3270 = 0;
+            dev->rlen3270 = 0;
         }
 
         /* Signal console thread to redrive select */
@@ -1223,10 +1223,10 @@ static void device_reset (DEVBLK *dev)
     memset (&dev->attnscsw, 0, sizeof(SCSW));
 
     dev->readpending = 0;
-    dev->devunique.dasd_dev.ckdxtdef = 0;
-    dev->devunique.dasd_dev.ckdsetfm = 0;
-    dev->devunique.dasd_dev.ckdlcount = 0;
-    dev->devunique.dasd_dev.ckdssi = 0;
+    dev->ckdxtdef = 0;
+    dev->ckdsetfm = 0;
+    dev->ckdlcount = 0;
+    dev->ckdssi = 0;
     memset (dev->sense, 0, sizeof(dev->sense));
     dev->sns_pending = 0;
     memset (dev->pgid, 0, sizeof(dev->pgid));
@@ -1933,7 +1933,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                 {
                     midawdat = (midawdat - midawlen) + 1;
                     memcpy (dev->mainstor + midawdat,
-                            iobuf + dev->devunique.tape_dev.curblkrem + midawrem - midawlen,
+                            iobuf + dev->curblkrem + midawrem - midawlen,
                             midawlen);
 
                     /* Decrement buffer pointer */
@@ -2017,7 +2017,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             {
                 idadata =  (idadata - idalen) + 1;
                 memcpy (dev->mainstor + idadata,
-                        iobuf + dev->devunique.tape_dev.curblkrem + idacount - idalen, idalen);
+                        iobuf + dev->curblkrem + idacount - idalen, idalen);
             }
             else
             {
@@ -2115,7 +2115,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             if (IS_CCW_RDBACK(code))
             {
                 /* read backward  - use END of buffer */
-                memcpy(dev->mainstor + addr,iobuf + dev->devunique.tape_dev.curblkrem, count);
+                memcpy(dev->mainstor + addr,iobuf + dev->curblkrem, count);
             }
             else /* read forward */
             {
@@ -2715,7 +2715,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             if (dev->devtype == 0x3270)
             {
                 dev->readpending = 0;
-                dev->devunique.cons_dev.rlen3270 = 0;
+                dev->rlen3270 = 0;
             }
 
             /* Signal console thread to redrive select */
@@ -2774,7 +2774,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             if (dev->devtype == 0x3270)
             {
                 dev->readpending = 0;
-                dev->devunique.cons_dev.rlen3270 = 0;
+                dev->rlen3270 = 0;
             }
 
             /* Signal console thread to redrive select */

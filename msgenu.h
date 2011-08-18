@@ -351,7 +351,6 @@ do { \
 #define HHC00161 "Function %s failed: '[%02d] %s'"
 
 // reserve 002xx for tape device related
-#define HHC00200 "%1d:%04X Tape file: filename missing or invalid length"
 #define HHC00201 "%1d:%04X Tape file '%s', type '%s': tape closed"
 #define HHC00202 "%1d:%04X Tape file '%s', type '%s': block length %d exceeds maximum at offset 0x"I64_FMTX""
 #define HHC00203 "%1d:%04X Tape file '%s', type '%s': invalid tapemark at offset 0x"I64_FMTX""
@@ -395,7 +394,6 @@ do { \
 #define HHC00241 "%1d:%04X Tape file '%s', type '%s': '%s'"
 #define HHC00242 "%1d:%04X Tape DWTVFscrtap must be 6 character volser; defaulting to SCRTAP"
 #define HHC00243 "%1d:%04X Tape status retrieval timeout"
-#define HHC00244 "%1d:%04X Tape type '%s': error in function '%s': '%s'"
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"

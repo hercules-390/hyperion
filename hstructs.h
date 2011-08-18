@@ -960,7 +960,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
-        char   *filename;               /* filename (plus poss "|")  */
+        char    filename[PATH_MAX+1];   /* filename (plus poss "|")  */
 
         /*  device i/o fields...                                     */
 
@@ -981,6 +981,19 @@ struct DEVBLK {                         /* Device configuration block*/
         int     bufupdlo;               /* Lowest offset updated     */
         int     bufupdhi;               /* Highest offset updated    */
         U32     bufupd;                 /* 1=Buffer updated          */
+
+        /*  device cache management fields                           */
+
+        int     cache;                  /* Current cache index       */
+        int     cachehits;              /* Cache hits                */
+        int     cachemisses;            /* Cache misses              */
+        int     cachewaits;             /* Cache waits               */
+
+        /*  device compression support                               */
+
+        int     comps;                  /* Acceptable compressions   */
+        int     comp;                   /* Compression used          */
+        int     compoff;                /* Offset to compressed data */
 
         /*  device i/o scheduling fields...                          */
 
@@ -1037,13 +1050,6 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ecw[32];                /* Extended control word     */
         U32     numsense;               /* Number of sense bytes     */
         BYTE    sense[256];             /* Sense bytes 3480+ 64 bytes*/
-        u_int   sns_pending:1;          /* Contingency Allegiance    */
-                                        /* - means : don't build a   */
-                                        /* sense on X'04' : it's     */
-                                        /* already there             */
-                                        /* NOTE : flag cleared by    */
-                                        /*        sense command only */
-                                        /*        or a device init   */
         U32     numdevid;               /* Number of device id bytes */
         BYTE    devid[256];             /* Device identifier bytes   */
         U32     numdevchar;             /* Number of devchar bytes   */
@@ -1120,237 +1126,219 @@ struct DEVBLK {                         /* Device configuration block*/
         struct VMBIOENV *vmd250env;     /* Established environment   */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
 
-        // Note: Currently only share devices uses this struct
-        struct _rmt_dev             /* Fields for remote devices */
-        {
-            struct in_addr rmtaddr; /* Remote address            */
-            U16     rmtport;        /* Remote port number        */
-            U16     rmtnum;         /* Remote device number      */
-            int     rmtid;          /* Remote Id                 */
-            int     rmtrel;         /* Remote release level      */
-            DBLWRD  rmthdr;         /* Remote header             */
-            int     rmtcomp;        /* Remote compression parm   */
-            int     rmtcomps;       /* Supported compressions    */
-            int     rmtpurgen;      /* Remote purge count        */
-            FWORD  *rmtpurge;       /* Remote purge list         */
-        } rmt_dev;
+        /*  Fields for remote devices                                */
+
+        struct in_addr rmtaddr;         /* Remote address            */
+        U16     rmtport;                /* Remote port number        */
+        U16     rmtnum;                 /* Remote device number      */
+        int     rmtid;                  /* Remote Id                 */
+        int     rmtrel;                 /* Remote release level      */
+        DBLWRD  rmthdr;                 /* Remote header             */
+        int     rmtcomp;                /* Remote compression parm   */
+        int     rmtcomps;               /* Supported compressions    */
+        int     rmtpurgen;              /* Remote purge count        */
+        FWORD  *rmtpurge;               /* Remote purge list         */
 
 #ifdef OPTION_SHARED_DEVICES
-        struct _shrd_dev            /* Fields for device sharing         */
-        {
-            TID     shrdtid;                /* Device thread id          */
-            int     shrdid;                 /* Id for next client        */
-            int     shrdconn;               /* Number connected clients  */
-            int     shrdwait;               /* Signal indicator          */
-            SHRD   *shrd[SHARED_MAX_SYS];   /* ->SHRD block              */
-        } shrd_dev;
+        /*  Fields for device sharing                                */
+        TID     shrdtid;                /* Device thread id          */
+        int     shrdid;                 /* Id for next client        */
+        int     shrdconn;               /* Number connected clients  */
+        int     shrdwait;               /* Signal indicator          */
+        SHRD   *shrd[SHARED_MAX_SYS];   /* ->SHRD block              */
 #endif
 
-        /* Common Storage for Devices */
-        union devunique
-        {
-            struct _cons_dev            /*Device dependent fields for console*/
-            {        
-                struct in_addr ipaddr;          /* Client IP address         */
-                in_addr_t  acc_ipaddr;          /* Allowable clients IP addr */
-                in_addr_t  acc_ipmask;          /* Allowable clients IP mask */
-                U32     rlen3270;               /* Length of data in buffer  */
-                int     pos3270;                /* Current screen position   */
-                int     keybdrem;               /* Number of bytes remaining
-                                                   in keyboard read buffer   */
-                u_int   eab3270:1;              /* 1=Extended attributes     */
-                u_int   ewa3270:1;              /* 1=Last erase was EWA      */
-                u_int   prompt1052:1;           /* 1=Prompt for linemode i/p */
-                BYTE    aid3270;                /* Current input AID value   */
-                BYTE    mod3270;                /* 3270 model number         */
-                BYTE    szgroupip[16];          /* str of IP GRP MASK        */
-                BYTE    szCmdPrefix[2];         /* Command Prefix Character  */
-            } cons_dev;
+        /*  Device dependent fields for console                      */
 
-            struct _crdr_dev            /*Device dependent fields for cardrdr*/
-            {
-                char    **more_files;           /* for more that one file in
-                                                   reader */
-                char    **current_file;         /* counts how many additional
-                                                   reader files are avail    */
-                int     cardpos;                /* Offset of next byte to be
-                                                   read from data buffer     */
-                int     cardrem;                /* Number of bytes remaining
-                                                   in data buffer            */
-                u_int   multifile:1;            /* 1=auto-open next i/p file */
-                u_int   rdreof:1;               /* 1=Unit exception at EOF   */
-                u_int   ebcdic:1;               /* 1=Card deck is EBCDIC     */
-                u_int   ascii:1;                /* 1=Convert ASCII to EBCDIC */
-                u_int   trunc:1;                /* Truncate overlength record*/
-                u_int   autopad:1;              /* 1=Pad incomplete last rec
-                                                   to 80 bytes if EBCDIC     */
-            } crdr_dev;
+        struct in_addr ipaddr;          /* Client IP address         */
+        in_addr_t  acc_ipaddr;          /* Allowable clients IP addr */
+        in_addr_t  acc_ipmask;          /* Allowable clients IP mask */
+        U32     rlen3270;               /* Length of data in buffer  */
+        int     pos3270;                /* Current screen position   */
+        int     keybdrem;               /* Number of bytes remaining
+                                           in keyboard read buffer   */
+        u_int   eab3270:1;              /* 1=Extended attributes     */
+        u_int   ewa3270:1;              /* 1=Last erase was EWA      */
+        u_int   prompt1052:1;           /* 1=Prompt for linemode i/p */
+        BYTE    aid3270;                /* Current input AID value   */
+        BYTE    mod3270;                /* 3270 model number         */
 
-            struct _cpch_dev            /*Device dependent fields for cardpch*/
-            {
-                int     cardpos;                /* Offset of next byte to be
-                                                   read from data buffer     */
-                int     cardrem;                /* Number of bytes remaining
-                                                   in data buffer            */
-                u_int   ascii:1;                /* 1=Convert ASCII to EBCDIC */
-                u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
-                u_int   stopdev:1;              /* T=stopped; F=started      */
-                u_int   notrunc:1;              /* 1=do not truncate at open */
-            } cpch_dev;
+        /*  Device dependent fields for cardrdr                      */
 
-            struct _cprt_dev            /*Device dependent fields for printer*/
-            {
-                int     printpos;               /* Number of bytes already
-                                                placed in print buffer    */
-                int     printrem;               /* Number of bytes remaining
-                                                in print buffer           */
-                pid_t   ptpcpid;                /* print-to-pipe child pid   */
-                u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
-                u_int   diaggate:1;             /* 1=Diagnostic gate command */
-                u_int   fold:1;                 /* 1=Fold to upper case      */
-                u_int   ispiped:1;              /* 1=Piped device            */
-                u_int   stopdev:1;              /* T=stopped; F=started      */
-                u_int   notrunc:1;              /* 1=do not truncate at open */
+        char    **more_files;           /* for more that one file in
+                                           reader */
+        char    **current_file;         /* counts how many additional
+                                           reader files are avail    */
+        int     cardpos;                /* Offset of next byte to be
+                                           read from data buffer     */
+        int     cardrem;                /* Number of bytes remaining
+                                           in data buffer            */
+        u_int   multifile:1;            /* 1=auto-open next i/p file */
+        u_int   rdreof:1;               /* 1=Unit exception at EOF   */
+        u_int   ebcdic:1;               /* 1=Card deck is EBCDIC     */
+        u_int   ascii:1;                /* 1=Convert ASCII to EBCDIC */
+        u_int   trunc:1;                /* Truncate overlength record*/
+        u_int   autopad:1;              /* 1=Pad incomplete last rec
+                                           to 80 bytes if EBCDIC     */
 
-                u_int   fcbsupp:1;              /* fcb support flag          */
-                u_int   rawcc:1;                /* 1=just print cchr and data*/
-                u_int   nofcbcheck:1;           /* ignore FCB errors         */
-                u_int   ccpend:1;               /* cc process pending        */
+        /*  Device dependent fields for ctcadpt                      */
 
-                int     optbrowse;              /* optimize for browse  1    */
-                                                /* optimize for print   0    */
+        DEVBLK *ctcpair;                /* -> Paired device block    */
+        int     ctcpos;                 /* next byte offset          */
+        int     ctcrem;                 /* bytes remaining in buffer */
+        int     ctclastpos;             /* last packet read          */
+        int     ctclastrem;             /* last packet read          */
+        u_int   ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
+        BYTE    ctctype;                /* CTC_xxx device type       */
+        BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 
-                int     lpi;                    /* lines per inch 6/8        */
-                int     index;                  /* 3211 indexing             */
-                int     lpp;                    /* lines per page            */
-                int     ffchan ;                /* ff when skip here         */
+        /*  Device dependent fields for printer                      */
+
+        int     printpos;               /* Number of bytes already
+                                           placed in print buffer    */
+        int     printrem;               /* Number of bytes remaining
+                                           in print buffer           */
+        pid_t   ptpcpid;                /* print-to-pipe child pid   */
+        u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
+        u_int   diaggate:1;             /* 1=Diagnostic gate command */
+        u_int   fold:1;                 /* 1=Fold to upper case      */
+        u_int   ispiped:1;              /* 1=Piped device            */
+        u_int   stopdev:1;              /* T=stopped; F=started      */
+        u_int   notrunc:1;              /* 1=do not truncate at open */
+
+        u_int   fcbsupp:1;              /* fcb support flag          */
+        u_int   rawcc:1;                /* 1=just print cchr and data*/
+        u_int   nofcbcheck:1;           /* ignore FCB errors         */
+        u_int   ccpend:1;               /* cc process pending        */
+
+        int     optbrowse;              /* optimize for browse  1    */
+                                        /* optimize for print   0    */
+
+        int     lpi;                    /* lines per inch 6/8        */
+        int     index;                  /* 3211 indexing             */
+        int     lpp;                    /* lines per page            */
+        int     ffchan ;                /* ff when skip here         */
 #define FCBSIZE 256
-                int     fcb[FCBSIZE+1];         /* FCB image                 */
-                int     fcbisdef;               /* FCB is default            */
+        int     fcb[FCBSIZE+1];         /* FCB image                 */
+        int     fcbisdef;               /* FCB is default            */
 
-                int     prevline;               /* previous line number      */
-                int     currline;               /* curr line number          */
-                int     destline;               /* destination  line number  */
-            } cprt_dev;
+        int     prevline;               /* previous line number      */
+        int     currline;               /* curr line number          */
+        int     destline;               /* destination  line number  */
 
-            struct _ctca_dev            /*Device dependent fields for ctcadpt*/
-            {
-                DEVBLK *ctcpair;                /* -> Paired device block    */
-                int     ctcpos;                 /* next byte offset          */
-                int     ctcrem;                 /* bytes remaining in buffer */
-                int     ctclastpos;             /* last packet read          */
-                int     ctclastrem;             /* last packet read          */
-                u_int   ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
-                BYTE    ctctype;                /* CTC_xxx device type       */
-                BYTE    netdevname[IFNAMSIZ];   /* network device name       */
-            } ctca_dev;
+        /*  Device dependent fields for tapedev                      */
 
-            struct _tape_dev            /*  Device dependent fields for tape */
-            {
-                void   *omadesc;                /* -> OMA descriptor array   */
-                U16     omafiles;               /* Number of OMA tape files  */
-                U16     curfilen;               /* Current file number       */
-                U32     blockid;                /* Current device block ID   */
-                off_t   nxtblkpos;              /* Offset from start of file
-                                                   to next block             */
-                off_t   prvblkpos;              /* Offset from start of file
-                                                   to previous block         */
-                U16     curblkrem;              /* Number of bytes unread
-                                                   from current block        */
-                U16     curbufoff;              /* Offset into buffer of data
-                                                   for next data chained CCW */
-                U16     tapssdlen;              /* #of bytes of data prepared
-                                                   for Read Subsystem Data   */
-                HETB   *hetb;                   /* HET control block         */
+        void   *omadesc;                /* -> OMA descriptor array   */
+        U16     omafiles;               /* Number of OMA tape files  */
+        U16     curfilen;               /* Current file number       */
+        U32     blockid;                /* Current device block ID   */
+        off_t   nxtblkpos;              /* Offset from start of file
+                                           to next block             */
+        off_t   prvblkpos;              /* Offset from start of file
+                                           to previous block         */
+        U16     curblkrem;              /* Number of bytes unread
+                                           from current block        */
+        U16     curbufoff;              /* Offset into buffer of data
+                                           for next data chained CCW */
+        U16     tapssdlen;              /* #of bytes of data prepared
+                                           for Read Subsystem Data   */
+        HETB   *hetb;                   /* HET control block         */
 
-                struct                          /* TAPE device parms         */
-                {
-                    u_int compress:1;             /* 1=Compression enabled     */
-                    u_int method:3;               /* Compression method        */
-                    u_int level:4;                /* Compression level         */
-                    u_int strictsize:1;           /* Strictly enforce MAXSIZE  */
-                    u_int displayfeat:1;          /* Device has a display      */
-                                                  /* feature installed         */
-                    u_int deonirq:1;              /* DE on IRQ on tape motion  */
-                                                  /* MVS 3.8j workaround       */
-                    u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
-                    /* These are not obsolete and are being used for new development     */
-                    u_int auto_create:1;          /* Create Tape if needed     */
-                    u_int mnt_req_type:2;         /* default to SL labels      */
-                    u_int SL_tape_mounted:1;      /* Tape is SL labeled        */
-                    u_int AL_tape_mounted:1;      /* Tape is AL labeled        */
-                    U16   chksize;                /* Chunk size                */
-                    off_t maxsize;                /* Maximum allowed TAPE file
-                                                     size                      */
-                    /* These are not obsolete and are being used for new development     */
-                    enum  type_loader loader;     /* Loader Operation          */
-                    u_int ldr_req_remount:1;      /* Initiate Remount request  */
-                    u_int scr_tape_list:1;        /* Volume contains scrlist   */
-                    char *pszACLfilename;         /* Pointer to FQ filename for
-                                                     ACL AUTO mode options     */
-                    char *psACLvolsers;           /* pointer to ACL volser buf */
-                    char *psACLvolser;            /* pointer to cur ACL volser */
-                    u_int uiACLvolsers;           /* length of ACL volser buf  */
-                    char  pszIL_VOLSER[7];        /* Internal Label of Tape    */
+        struct                          /* TAPE device parms         */
+        {
+          u_int compress:1;             /* 1=Compression enabled     */
+          u_int method:3;               /* Compression method        */
+          u_int level:4;                /* Compression level         */
+          u_int strictsize:1;           /* Strictly enforce MAXSIZE  */
+          u_int displayfeat:1;          /* Device has a display      */
+                                        /* feature installed         */
+          u_int deonirq:1;              /* DE on IRQ on tape motion  */
+                                        /* MVS 3.8j workaround       */
+          u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
+/* These are not obsolete and are being used for new development     */
+          u_int auto_create:1;          /* Create Tape if needed     */
+          u_int mnt_req_type:2;         /* default to SL labels      */
+          u_int SL_tape_mounted:1;      /* Tape is SL labeled        */
+          u_int AL_tape_mounted:1;      /* Tape is AL labeled        */
+          U16   chksize;                /* Chunk size                */
+          off_t maxsize;                /* Maximum allowed TAPE file
+                                           size                      */
+/* These are not obsolete and are being used for new development     */
+          enum  type_loader loader;     /* Loader Operation          */
+          u_int ldr_req_remount:1;      /* Initiate Remount request  */
+          u_int scr_tape_list:1;        /* Volume contains scrlist   */
+          char *pszACLfilename;         /* Pointer to FQ filename for
+                                           ACL AUTO mode options     */
+          char *psACLvolsers;           /* pointer to ACL volser buf */
+          char *psACLvolser;            /* pointer to cur ACL volser */
+          u_int uiACLvolsers;           /* length of ACL volser buf  */
+          char  pszIL_VOLSER[7];         /* Internal Label of Tape   */
 
-                }       tdparms;                  /* TAPE device parms         */
+        }       tdparms;                /* TAPE device parms         */
 
-                off_t   eotmargin;                /* Amount of space left before
-                                                     reporting EOT (in bytes)  */
-                u_int   fenced:1;                 /* 1=Pos err; volume fenced  */
-                u_int   readonly:1;               /* 1=Tape is write-protected */
-                u_int   SIC_supported:1;          /* 1=Spec Intcpt Cond support*/
-                u_int   SIC_active:1;             /* 1=SIC active              */
-                u_int   forced_logging:1;         /* 1=Forced Error Logging    */
-                u_int   eotwarning:1;             /* 1=EOT warning area reached*/
+        off_t   eotmargin;              /* Amount of space left before
+                                           reporting EOT (in bytes)  */
+        u_int   fenced:1;               /* 1=Pos err; volume fenced  */
+        u_int   readonly:1;             /* 1=Tape is write-protected */
+        u_int   sns_pending:1;          /* Contingency Allegiance    */
+                                        /* - means : don't build a   */
+                                        /* sense on X'04' : it's     */
+                                        /* aleady there              */
+                                        /* NOTE : flag cleared by    */
+                                        /*        sense command only */
+                                        /*        or a device init   */
+        u_int   SIC_supported:1;        /* 1=Spec Intcpt Cond support*/
+        u_int   SIC_active:1;           /* 1=SIC active              */
+        u_int   forced_logging:1;       /* 1=Forced Error Logging    */
+        u_int   eotwarning:1;           /* 1=EOT warning area reached*/
 #if defined( OPTION_TAPE_AUTOMOUNT )
-                u_int   noautomount:1;            /* 1=AUTOMOUNT disabled      */
+        u_int   noautomount:1;          /* 1=AUTOMOUNT disabled      */
 #endif
-                u_int   supvr_inhibit:1;          /* 1=Supvr-Inhibit mode      */
-                u_int   write_immed:1;            /* 1=Write-Immediate mode    */
+        u_int   supvr_inhibit:1;        /* 1=Supvr-Inhibit mode      */
+        u_int   write_immed:1;          /* 1=Write-Immediate mode    */
 #if defined( OPTION_SCSI_TAPE )
-                struct mtget mtget;               /* Current SCSI tape status  */
-#define sstat  mtget.mt_gstat                     /* Generic SCSI tape device-
-                                                     independent status field;
-                                                     (struct mtget->mt_gstat)  */
-                u_int   stape_close_rewinds:1;    /* 1=Rewind at close         */
-                u_int   stape_blkid_32:1;         /* 1=block-ids are 32 bits   */
-                u_int   stape_no_erg:1;           /* 1=ignore Erase Gap CCWs   */
-                /* Access to SCSI fields controlled via sysblk.stape_lock    */
-                COND      stape_sstat_cond;       /* Tape-status updated COND  */
-                STSTATRQ  stape_statrq;           /* Status request structure  */
-                STMNTDRQ  stape_mntdrq;           /* Mounted request structure */
+        struct mtget mtget;             /* Current SCSI tape status  */
+#define sstat  mtget.mt_gstat           /* Generic SCSI tape device-
+                                           independent status field;
+                                           (struct mtget->mt_gstat)  */
+        u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
+        u_int   stape_blkid_32:1;       /* 1=block-ids are 32 bits   */
+        u_int   stape_no_erg:1;         /* 1=ignore Erase Gap CCWs   */
+        /* Access to SCSI fields controlled via sysblk.stape_lock    */
+        COND      stape_sstat_cond;     /* Tape-status updated COND  */
+        STSTATRQ  stape_statrq;         /* Status request structure  */
+        STMNTDRQ  stape_mntdrq;         /* Mounted request structure */
 #endif // defined( OPTION_SCSI_TAPE )
-                U32     msgid;                    /* Message Id of async. i/o  */
-                BYTE    tapedevt;                 /* Hercules tape device type */
-                TAPEMEDIA_HANDLER *tmh;           /* Tape Media Handling       */
-                                                  /* dispatcher                */
+        U32     msgid;                  /* Message Id of async. i/o  */
+        BYTE    tapedevt;               /* Hercules tape device type */
+        TAPEMEDIA_HANDLER *tmh;         /* Tape Media Handling       */
+                                        /* dispatcher                */
 
-                /* ---------- Autoloader feature --------------------------- */
-                TAPEAUTOLOADENTRY *als;          /* Autoloader stack         */
-                int     alss;                    /* Autoloader stack size    */
-                int     alsix;                   /* Current Autoloader index */
-                char  **al_argv;                 /* ARGV in autoloader       */
-                int     al_argc;                 /* ARGC in autoloader       */
+        /* ---------- Autoloader feature --------------------------- */
+        TAPEAUTOLOADENTRY *als;          /* Autoloader stack         */
+        int     alss;                    /* Autoloader stack size    */
+        int     alsix;                   /* Current Autoloader index */
+        char  **al_argv;                 /* ARGV in autoloader       */
+        int     al_argc;                 /* ARGC in autoloader       */
 #define AUTOLOADER_MAX      256          /* Maximum #of entries      */
-                /* ---------- end Autoloader feature ----------------------- */
+        /* ---------- end Autoloader feature ----------------------- */
 
-                /* 3480/3490/3590 tape vault support */
+        /* 3480/3490/3590 tape vault support */
 
-                TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
-                u_int   utapemountreq;          /* Count of tape mounts      */
-                char   *pszVaultPath;           /* path to tape vault        */
-                void   *ptvfb;                  /* reserve pointer to struct */
+        TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
+        u_int   utapemountreq;          /* Count of tape mounts      */
+        char   *pszVaultPath;           /* path to tape vault        */
+        void   *ptvfb;                  /* reserve pointer to struct */
 
-                /* 3480/3490/3590 Message display */
-                char   *tapemsg;                /* tape volser               */
-                char    tapemsg1[9];            /* 1st Host Message          */
-                char    tapemsg2[9];            /* 2nd Host Message          */
-                char    tapesysmsg[32];         /*     Unit Message     (SYS)*/
-                char   *prev_tapemsg;           /* Previously displayed msg  */
+        /* 3480/3490/3590 Message display */
+        char   *tapemsg;                /* tape volser               */
+        char    tapemsg1[9];            /* 1st Host Message          */
+        char    tapemsg2[9];            /* 2nd Host Message          */
+        char    tapesysmsg[32];         /*     Unit Message     (SYS)*/
+        char   *prev_tapemsg;           /* Previously displayed msg  */
 
-                BYTE    tapedisptype;           /* Type of message display   */
-                BYTE    tapedispflags;          /* How the msg is displayed  */
+        BYTE    tapedisptype;           /* Type of message display   */
+        BYTE    tapedispflags;          /* How the msg is displayed  */
 
 #define TAPEDISPTYP_IDLE           0    /* "READY" "NT RDY" etc (SYS)*/
 #define TAPEDISPTYP_LOCATING       1    /* Locate in progress   (SYS)*/
@@ -1361,17 +1349,17 @@ struct DEVBLK {                         /* Device configuration block*/
 #define TAPEDISPTYP_MOUNT          6    /* Display Until Mounted     */
 #define TAPEDISPTYP_UNMOUNT        7    /* Display Until Unmounted   */
 #define TAPEDISPTYP_UMOUNTMOUNT    8    /* Display #1 Until Unmounted,
-                                                then #2 Until Mounted  */
+                                              then #2 Until Mounted  */
 #define TAPEDISPTYP_WAITACT        9    /* Display until motion      */
 
 #define IS_TAPEDISPTYP_SYSMSG( dev ) \
     (0 \
-    || TAPEDISPTYP_IDLE      == (dev)->devunique.tape_dev.tapedisptype \
-    || TAPEDISPTYP_LOCATING  == (dev)->devunique.tape_dev.tapedisptype \
-    || TAPEDISPTYP_ERASING   == (dev)->devunique.tape_dev.tapedisptype \
-    || TAPEDISPTYP_REWINDING == (dev)->devunique.tape_dev.tapedisptype \
-    || TAPEDISPTYP_UNLOADING == (dev)->devunique.tape_dev.tapedisptype \
-    || TAPEDISPTYP_CLEAN     == (dev)->devunique.tape_dev.tapedisptype \
+     || TAPEDISPTYP_IDLE      == (dev)->tapedisptype \
+     || TAPEDISPTYP_LOCATING  == (dev)->tapedisptype \
+     || TAPEDISPTYP_ERASING   == (dev)->tapedisptype \
+     || TAPEDISPTYP_REWINDING == (dev)->tapedisptype \
+     || TAPEDISPTYP_UNLOADING == (dev)->tapedisptype \
+     || TAPEDISPTYP_CLEAN     == (dev)->tapedisptype \
     )
 
 #define TAPEDISPFLG_ALTERNATE   0x80    /* Alternate msgs 1 & 2      */
@@ -1380,137 +1368,113 @@ struct DEVBLK {                         /* Device configuration block*/
 #define TAPEDISPFLG_AUTOLOADER  0x10    /* Autoloader request        */
 #define TAPEDISPFLG_REQAUTOMNT  0x08    /* ReqAutoMount has work     */
 
-            } tape_dev;
-
-            struct _dasd_dev            /*  Device dependent fields for dasd */
-            {
-                /*  dasd device compression support                          */
-
-                int     comps;                  /* Acceptable compressions   */
-                int     comp;                   /* Compression used          */
-                int     compoff;                /* Offset to compressed data */
-
-                /*  dasd device cache management fields                      */
-
-                int     cache;                  /* Current cache index       */
-                int     cachehits;              /* Cache hits                */
-                int     cachemisses;            /* Cache misses              */
-                int     cachewaits;             /* Cache waits               */
-
-                /*  Device dependent fields for dasd (fba and ckd)           */
-
-                char   *dasdsfn;                /* Shadow file name          */
-                char   *dasdsfx;                /* Pointer to suffix char    */
-                char    dasdvol[7];             /* dasd volume  ASCII        */
-
-                /*  Device dependent fields for fbadasd                      */
-
-                FBADEV *fbatab;                 /* Device table entry        */
-                int     fbanumblk;              /* Number of blocks in device*/
-                int     fbablksiz;              /* Physical block size       */
-                off_t   fbaorigin;              /* Device origin block number*/
-                off_t   fbarba;                 /* Relative byte offset      */
-                off_t   fbaend;                 /* Last RBA in file          */
-                /* Values from define extent */
-                u_int   fbaxtdef:1;             /* 1=Extent defined          */
-                BYTE    fbamask;                /* Define extent file mask   */
-                U32     fbaxblkn;               /* Offset from start of device
-                                                to first block of extent  */
-                U32     fbaxfirst;              /* Block number within dataset
-                                                of first block of extent  */
-                U32     fbaxlast;               /* Block number within dataset
-                                                of last block of extent   */
-                /* Values from locate */
-                BYTE    fbaoper;                /* Locate operation byte     */
-                U16     fbalcnum;               /* Block count for locate    */
-                U32     fbalcblk;               /* Block number within dataset
-                                                of first block for locate */
-
-                /*  Device dependent fields for ckddasd                      */
-
-                int     ckdnumfd;               /* Number of CKD image files */
-                int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
-                int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
-                                                   in each CKD image file    */
-                CKDDEV *ckdtab;                 /* Device table entry        */
-                CKDCU  *ckdcu;                  /* Control unit entry        */
-                off_t   ckdtrkoff;              /* Track image file offset   */
-                int     ckdcyls;                /* Number of cylinders       */
-                int     ckdtrks;                /* Number of tracks          */
-                int     ckdheads;               /* #of heads per cylinder    */
-                int     ckdtrksz;               /* Track size                */
-                int     ckdcurcyl;              /* Current cylinder          */
-                int     ckdcurhead;             /* Current head              */
-                int     ckdcurrec;              /* Current record id         */
-                int     ckdcurkl;               /* Current record key length */
-                int     ckdorient;              /* Current orientation       */
-                int     ckdcuroper;             /* Curr op: read=6, write=5  */
-                U16     ckdcurdl;               /* Current record data length*/
-                U16     ckdrem;                 /* #of bytes from current
-                                                   position to end of field  */
-                U16     ckdpos;                 /* Offset into buffer of data
-                                                   for next data chained CCW */
-                U16     ckdxblksz;              /* Define extent block size  */
-                U16     ckdxbcyl;               /* Define extent begin cyl   */
-                U16     ckdxbhead;              /* Define extent begin head  */
-                U16     ckdxecyl;               /* Define extent end cyl     */
-                U16     ckdxehead;              /* Define extent end head    */
-                BYTE    ckdfmask;               /* Define extent file mask   */
-                BYTE    ckdxgattr;              /* Define extent global attr */
-                U16     ckdltranlf;             /* Locate record transfer
-                                                   length factor             */
-                U16     ckdlmask;               /* Locate record mask        */
-                BYTE    ckdloper;               /* Locate record operation   */
-                BYTE    ckdlaux;                /* Locate record aux byte    */
-                BYTE    ckdlcount;              /* Locate record count       */
-                BYTE    ckdreserved1;           /* Alignment                 */
-                void   *cckd_ext;               /* -> Compressed ckddasd
-                                                   extension otherwise NULL  */
-                BYTE    devcache:1;             /* 0 = device cache off
-                                                   1 = device cache on       */
-                u_int   ckd3990:1;              /* 1=Control unit is 3990    */
-                u_int   ckdxtdef:1;             /* 1=Define Extent processed */
-                u_int   ckdsetfm:1;             /* 1=Set File Mask processed */
-                u_int   ckdlocat:1;             /* 1=Locate Record processed */
-                u_int   ckdspcnt:1;             /* 1=Space Count processed   */
-                u_int   ckdseek:1;              /* 1=Seek command processed  */
-                u_int   ckdskcyl:1;             /* 1=Seek cylinder processed */
-                u_int   ckdrecal:1;             /* 1=Recalibrate processed   */
-                u_int   ckdrdipl:1;             /* 1=Read IPL processed      */
-                u_int   ckdxmark:1;             /* 1=End of track mark found */
-                u_int   ckdhaeq:1;              /* 1=Search Home Addr Equal  */
-                u_int   ckdideq:1;              /* 1=Search ID Equal         */
-                u_int   ckdkyeq:1;              /* 1=Search Key Equal        */
-                u_int   ckdwckd:1;              /* 1=Write R0 or Write CKD   */
-                u_int   ckdtrkof:1;             /* 1=Track ovfl on this blk  */
-                u_int   ckdssi:1;               /* 1=Set Special Intercept   */
-                u_int   ckdnolazywr:1;          /* 1=Perform updates now     */
-                u_int   ckdrdonly:1;            /* 1=Open read only          */
-                u_int   ckdwrha:1;              /* 1=Write Home Address      */
-                                                /* Line above ISW20030819-1  */
-                u_int   ckdfakewr:1;            /* 1=Fake successful write
-                                                   for read only file      */
-
-                BYTE    ckdnvs:1;               /* 1=NVS defined             */
-                BYTE    ckdraid:1;              /* 1=RAID device             */
-                U16     ckdssdlen;              /* #of bytes of data prepared
-                                                   for Read Subsystem Data   */
-
-            } dasd_dev;
-
-            struct _qdio_dev           /*  Device dependent fields for QDIO  */
-            {
-                BYTE   *qrspbf;                 /* Response Buffer           */
-                int     qrspsz;                 /* Response Buffer Size      */
-                int     qidxstate;              /* IDX state                 */
-#define OSA_IDX_STATE_INACTIVE  0x00
-#define OSA_IDX_STATE_ACTIVE    0x01
-            } qdio_dev;
-
-        } devunique;
-
        /* Device dependent fields for Comm Line                      */
         COMMADPT *commadpt;             /* Single structure pointer  */
+
+        /*  Device dependent fields for dasd (fba and ckd)           */
+
+        char   *dasdsfn;                /* Shadow file name          */
+        char   *dasdsfx;                /* Pointer to suffix char    */
+        char    dasdvol[7];             /* dasd volume  ASCII        */
+
+        /*  Device dependent fields for fbadasd                      */
+
+        FBADEV *fbatab;                 /* Device table entry        */
+        int     fbanumblk;              /* Number of blocks in device*/
+        int     fbablksiz;              /* Physical block size       */
+        off_t   fbaorigin;              /* Device origin block number*/
+        off_t   fbarba;                 /* Relative byte offset      */
+        off_t   fbaend;                 /* Last RBA in file          */
+        /* Values from define extent */
+        u_int   fbaxtdef:1;             /* 1=Extent defined          */
+        BYTE    fbamask;                /* Define extent file mask   */
+        U32     fbaxblkn;               /* Offset from start of device
+                                           to first block of extent  */
+        U32     fbaxfirst;              /* Block number within dataset
+                                           of first block of extent  */
+        U32     fbaxlast;               /* Block number within dataset
+                                           of last block of extent   */
+        /* Values from locate */
+        BYTE    fbaoper;                /* Locate operation byte     */
+        U16     fbalcnum;               /* Block count for locate    */
+        U32     fbalcblk;               /* Block number within dataset
+                                           of first block for locate */
+
+        /*  Device dependent fields for ckddasd                      */
+
+        int     ckdnumfd;               /* Number of CKD image files */
+        int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
+        int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
+                                           in each CKD image file    */
+        CKDDEV *ckdtab;                 /* Device table entry        */
+        CKDCU  *ckdcu;                  /* Control unit entry        */
+        off_t   ckdtrkoff;              /* Track image file offset   */
+        int     ckdcyls;                /* Number of cylinders       */
+        int     ckdtrks;                /* Number of tracks          */
+        int     ckdheads;               /* #of heads per cylinder    */
+        int     ckdtrksz;               /* Track size                */
+        int     ckdcurcyl;              /* Current cylinder          */
+        int     ckdcurhead;             /* Current head              */
+        int     ckdcurrec;              /* Current record id         */
+        int     ckdcurkl;               /* Current record key length */
+        int     ckdorient;              /* Current orientation       */
+        int     ckdcuroper;             /* Curr op: read=6, write=5  */
+        U16     ckdcurdl;               /* Current record data length*/
+        U16     ckdrem;                 /* #of bytes from current
+                                           position to end of field  */
+        U16     ckdpos;                 /* Offset into buffer of data
+                                           for next data chained CCW */
+        U16     ckdxblksz;              /* Define extent block size  */
+        U16     ckdxbcyl;               /* Define extent begin cyl   */
+        U16     ckdxbhead;              /* Define extent begin head  */
+        U16     ckdxecyl;               /* Define extent end cyl     */
+        U16     ckdxehead;              /* Define extent end head    */
+        BYTE    ckdfmask;               /* Define extent file mask   */
+        BYTE    ckdxgattr;              /* Define extent global attr */
+        U16     ckdltranlf;             /* Locate record transfer
+                                           length factor             */
+        U16     ckdlmask;               /* Locate record mask        */
+        BYTE    ckdloper;               /* Locate record operation   */
+        BYTE    ckdlaux;                /* Locate record aux byte    */
+        BYTE    ckdlcount;              /* Locate record count       */
+        BYTE    ckdreserved1;           /* Alignment                 */
+        void   *cckd_ext;               /* -> Compressed ckddasd
+                                           extension otherwise NULL  */
+        BYTE    devcache:1;             /* 0 = device cache off
+                                           1 = device cache on       */
+        u_int   ckd3990:1;              /* 1=Control unit is 3990    */
+        u_int   ckdxtdef:1;             /* 1=Define Extent processed */
+        u_int   ckdsetfm:1;             /* 1=Set File Mask processed */
+        u_int   ckdlocat:1;             /* 1=Locate Record processed */
+        u_int   ckdspcnt:1;             /* 1=Space Count processed   */
+        u_int   ckdseek:1;              /* 1=Seek command processed  */
+        u_int   ckdskcyl:1;             /* 1=Seek cylinder processed */
+        u_int   ckdrecal:1;             /* 1=Recalibrate processed   */
+        u_int   ckdrdipl:1;             /* 1=Read IPL processed      */
+        u_int   ckdxmark:1;             /* 1=End of track mark found */
+        u_int   ckdhaeq:1;              /* 1=Search Home Addr Equal  */
+        u_int   ckdideq:1;              /* 1=Search ID Equal         */
+        u_int   ckdkyeq:1;              /* 1=Search Key Equal        */
+        u_int   ckdwckd:1;              /* 1=Write R0 or Write CKD   */
+        u_int   ckdtrkof:1;             /* 1=Track ovfl on this blk  */
+        u_int   ckdssi:1;               /* 1=Set Special Intercept   */
+        u_int   ckdnolazywr:1;          /* 1=Perform updates now     */
+        u_int   ckdrdonly:1;            /* 1=Open read only          */
+        u_int   ckdwrha:1;              /* 1=Write Home Address      */
+                                        /* Line above ISW20030819-1  */
+        u_int   ckdfakewr:1;            /* 1=Fake successful write
+                                             for read only file      */
+        BYTE    ckdnvs:1;               /* 1=NVS defined             */
+        BYTE    ckdraid:1;              /* 1=RAID device             */
+        U16     ckdssdlen;              /* #of bytes of data prepared
+                                           for Read Subsystem Data   */
+
+        /*  Device dependent fields for QDIO devices                 */
+        BYTE   *qrspbf;                 /* Response Buffer           */
+        int     qrspsz;                 /* Response Buffer Size      */
+        int     qidxstate;              /* IDX state                 */
+#define OSA_IDX_STATE_INACTIVE  0x00
+#define OSA_IDX_STATE_ACTIVE    0x01
 
         BYTE    blkend[16];             /* eye-end                   */
 };

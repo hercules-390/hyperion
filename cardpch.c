@@ -51,7 +51,6 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
-char    pathname[PATH_MAX];
 int     i;                              /* Array subscript           */
 
     /* The first argument is the file name */
@@ -61,36 +60,23 @@ int     i;                              /* Array subscript           */
         return -1;
     }
 
-    if ( strlen(argv[0]) >= sizeof(pathname) )
+    if (strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (int)sizeof(pathname) );
+        WRMSG (HHC01201, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0], (int)sizeof(dev->filename) - 1);
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(pathname, argv[0], sizeof(pathname));
-
-    if ( dev->filename != NULL )
-    {
-        free( dev->filename );
-        dev->filename = NULL;
-    }
-
-    dev->filename = strdup(pathname);
-    if ( dev->filename == NULL )
-    {
-        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup(filename)", strerror(errno));
-        return -1;
-    }
+    hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
     /* Initialize device dependent fields */
     dev->fd = -1;
-    dev->devunique.cpch_dev.ascii = 0;
-    dev->devunique.cpch_dev.crlf = 0;
-    dev->devunique.cpch_dev.cardpos = 0;
-    dev->devunique.cpch_dev.cardrem = CARD_LENGTH;
-    dev->devunique.cpch_dev.notrunc = 0;
-    dev->devunique.cpch_dev.stopdev = FALSE;
+    dev->ascii = 0;
+    dev->crlf = 0;
+    dev->cardpos = 0;
+    dev->cardrem = CARD_LENGTH;
+    dev->notrunc = 0;
+    dev->stopdev = FALSE;
 
     dev->excps = 0;
 
@@ -102,25 +88,25 @@ int     i;                              /* Array subscript           */
     {
         if (strcasecmp(argv[i], "ascii") == 0)
         {
-            dev->devunique.cpch_dev.ascii = 1;
+            dev->ascii = 1;
             continue;
         }
 
         if (strcasecmp(argv[i], "ebcdic") == 0)
         {
-            dev->devunique.cpch_dev.ascii = 0;
+            dev->ascii = 0;
             continue;
         }
 
         if (strcasecmp(argv[i], "crlf") == 0)
         {
-            dev->devunique.cpch_dev.crlf = 1;
+            dev->crlf = 1;
             continue;
         }
 
         if (strcasecmp(argv[i], "noclear") == 0)
         {
-            dev->devunique.cpch_dev.notrunc = 1;
+            dev->notrunc = 1;
             continue;
         }
 
@@ -161,10 +147,10 @@ static void cardpch_query_device (DEVBLK *dev, char **devclass,
 
     snprintf (buffer, buflen-1, "%s%s%s%s%s IO[%" I64_FMT "u]",
                 dev->filename,
-                (dev->devunique.cpch_dev.ascii ? " ascii" : " ebcdic"),
-                ((dev->devunique.cpch_dev.ascii && dev->devunique.cpch_dev.crlf) ? " crlf" : ""),
-                (dev->devunique.cpch_dev.notrunc ? " notrunc" : ""),
-                (dev->devunique.cpch_dev.stopdev    ? " (stopped)"    : ""),
+                (dev->ascii ? " ascii" : " ebcdic"),
+                ((dev->ascii && dev->crlf) ? " crlf" : ""),
+                (dev->notrunc ? " notrunc" : ""),
+                (dev->stopdev    ? " (stopped)"    : ""),
                 dev->excps );
 
 } /* end function cardpch_query_device */
@@ -178,7 +164,7 @@ static int cardpch_close_device ( DEVBLK *dev )
     if (dev->fd >= 0)
         close (dev->fd);
     dev->fd = -1;
-    dev->devunique.cpch_dev.stopdev = FALSE;
+    dev->stopdev = FALSE;
 
     return 0;
 } /* end function cardpch_close_device */
@@ -203,7 +189,7 @@ BYTE            c;                      /* Output character          */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
         open_flags = O_WRONLY | O_CREAT /* | O_SYNC */ |  O_BINARY;
-        if (dev->devunique.cpch_dev.notrunc != 1)
+        if (dev->notrunc != 1)
         {
             open_flags |= O_TRUNC;
         }
@@ -224,7 +210,7 @@ BYTE            c;                      /* Output character          */
     else
     {
         /* If punch stopped, return intervention required */
-        if (dev->devunique.cpch_dev.stopdev && !IS_CCW_SENSE(code))
+        if (dev->stopdev && !IS_CCW_SENSE(code))
             rc = -1;
         else
             rc = 0;
@@ -250,13 +236,13 @@ BYTE            c;                      /* Output character          */
         /* Start a new record if not data-chained from previous CCW */
         if ((chained & CCW_FLAGS_CD) == 0)
         {
-            dev->devunique.cpch_dev.cardpos = 0;
-            dev->devunique.cpch_dev.cardrem = CARD_LENGTH;
+            dev->cardpos = 0;
+            dev->cardrem = CARD_LENGTH;
 
         } /* end if(!data-chained) */
 
         /* Calculate number of bytes to write and set residual count */
-        num = (count < dev->devunique.cpch_dev.cardrem) ? count : dev->devunique.cpch_dev.cardrem;
+        num = (count < dev->cardrem) ? count : dev->cardrem;
         *residual = count - num;
 
         /* Copy data from channel buffer to card buffer */
@@ -264,33 +250,33 @@ BYTE            c;                      /* Output character          */
         {
             c = iobuf[i];
 
-            if (dev->devunique.cpch_dev.ascii)
+            if (dev->ascii)
             {
                 c = guest_to_host(c);
             }
 
-            dev->buf[dev->devunique.cpch_dev.cardpos] = c;
-            dev->devunique.cpch_dev.cardpos++;
-            dev->devunique.cpch_dev.cardrem--;
+            dev->buf[dev->cardpos] = c;
+            dev->cardpos++;
+            dev->cardrem--;
         } /* end for(i) */
 
         /* Perform end of record processing if not data-chaining */
         if ((flags & CCW_FLAGS_CD) == 0)
         {
-            if (dev->devunique.cpch_dev.ascii)
+            if (dev->ascii)
             {
                 /* Truncate trailing blanks from card buffer */
-                for (i = dev->devunique.cpch_dev.cardpos; i > 0; i--)
+                for (i = dev->cardpos; i > 0; i--)
                     if (dev->buf[i-1] != SPACE) break;
 
                 /* Append carriage return and line feed */
-                if (dev->devunique.cpch_dev.crlf) dev->buf[i++] = '\r';
+                if (dev->crlf) dev->buf[i++] = '\r';
                 dev->buf[i++] = '\n';
             }
             else
             {
                 /* Pad card image with blanks */
-                for (i = dev->devunique.cpch_dev.cardpos; i < CARD_LENGTH; i++)
+                for (i = dev->cardpos; i < CARD_LENGTH; i++)
                     dev->buf[i] = HEX40;
             }
 

@@ -1693,8 +1693,7 @@ static void NP_update(REGS *regs)
         if (i >= cons_rows - 3) break;
         if (!dev->allocated) continue;
 
-        online = (dev->console && dev->connected) || 
-                 ( dev->filename != NULL && strlen(dev->filename) > 0 );
+        online = (dev->console && dev->connected) || strlen(dev->filename) > 0;
         busy   = dev->busy != 0 || IOPENDING(dev) != 0;
         open   = dev->fd > 2;
 

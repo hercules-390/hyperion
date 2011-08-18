@@ -428,7 +428,7 @@ int i;
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if ( equal_threads( dev->tid, tid ) ||
-                 equal_threads( dev->shrd_dev.shrdtid, tid ) )
+                 equal_threads( dev->shrdtid, tid ) )
                  break;
         if( dev == NULL)
         {
