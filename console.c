@@ -1563,7 +1563,8 @@ char                    *logoout;
            and the device group does not match the requested group */
         if (devnum==0xFFFF && (group[0] || dev->devunique.cons_dev.szgroupip[0]))
         {
-            if (strncasecmp(group,dev->devunique.cons_dev.szgroupip,strlen(group))!=0)
+            if (strncasecmp(group,dev->devunique.cons_dev.szgroupip,
+                MAX(strlen(dev->devunique.cons_dev.szgroupip),strlen(group)) )!=0)
             {
                 continue;
             }
