@@ -755,6 +755,7 @@ noinst_HEADERS = fishhang.h     \
                  dbgtrace.h     \
                  chain.h        \
                  extstring.h    \
+                 milieu.h                \
                  softfloat-fixme.h       \
                  softfloat-macros.h      \
                  softfloat-specialize.h  \

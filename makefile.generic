@@ -181,6 +181,7 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
+           milieu.h                \
            softfloat-fixme.h       \
            softfloat-macros.h      \
            softfloat-specialize.h  \
