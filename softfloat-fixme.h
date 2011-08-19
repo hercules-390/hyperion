@@ -58,12 +58,10 @@
 
   #else /* !_MSVC_ */
 
-    //#define G4146_MSG "warning G4146: FIXME: unary minus operator applied to unsigned type, result still unsigned"
-    //#define G4244_MSG "warning G4244: FIXME: conversion from 'bits64' to 'bits32', possible loss of data"
+    #define G4018_MSG "warning: comparison between signed and unsigned"
 
     #ifdef SUPPRESS_WARNINGS
-      //#pragma GCC diagnostic ignored "-Wfoo..."
-      //#pragma GCC diagnostic ignored "-Wbar..."
+      #pragma GCC diagnostic ignored "-Wsign-compare"
     #endif
 
   #endif /* _MSVC_ */

@@ -389,6 +389,7 @@ INLINE void
     carry0 = ( z1 < a1 );
     z0 = a0 + b0;
     z1 += carry1;
+//  FIXME(GCC,G4018_MSG) /* "warning: comparison between signed and unsigned" */
     z0 += ( z1 < carry1 );
     z0 += carry0;
     *z2Ptr = z2;
@@ -444,6 +445,7 @@ INLINE void
     z1 = a1 - b1;
     borrow0 = ( a1 < b1 );
     z0 = a0 - b0;
+//  FIXME(GCC,G4018_MSG) /* "warning: comparison between signed and unsigned" */
     z0 -= ( z1 < borrow1 );
     z1 -= borrow1;
     z0 -= borrow0;

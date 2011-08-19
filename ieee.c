@@ -104,21 +104,22 @@ struct GVARS {
 };
 typedef struct GVARS GVARS;
 
-INLINE int8 get_float_detect_tininess( void* ctx )
+int8 get_float_detect_tininess( void* ctx )
 {
+    UNREFERENCED(ctx);
     return float_tininess_before_rounding; /* SA22-7832-08, page 9-22 */
 }
 
-INLINE int8 get_float_rounding_mode( void* ctx )
+int8 get_float_rounding_mode( void* ctx )
 {
     register GVARS* gv = (GVARS*) ctx;
     register REGS* regs = gv->regs;
-    return (int8) (gv->effective_rounding_mode) >= 4 ?
-                  (gv->effective_rounding_mode - 4) :
-                  ((regs->fpc & FPC_BRM) >> FPC_BRM_SHIFT);
+    return (int8) ((gv->effective_rounding_mode) >= 4  ?
+                   (gv->effective_rounding_mode   - 4) :
+                   ((int8)((regs->fpc & FPC_BRM) >> FPC_BRM_SHIFT)));
 }
 
-INLINE void float_raise( void* ctx, uint32 flags )
+void float_raise( void* ctx, uint32 flags )
 {
     set_exception_flags( ctx, flags );
 }
@@ -230,7 +231,7 @@ enum {
     float_class_signaling_nan  = 0x00000002
 };
 
-static INLINE U32 float128_class( float128 op )
+INLINE U32 float128_class( float128 op )
 {
     int neg =
        (  op.high & LIT64( 0x8000000000000000 )) ? 1 : 0;
@@ -243,7 +244,7 @@ static INLINE U32 float128_class( float128 op )
                                                              return float_class_subnormal     >> neg;
 }
 
-static INLINE U32 float64_class( float64 op )
+INLINE U32 float64_class( float64 op )
 {
     int neg =
        (  op & LIT64( 0x8000000000000000 )) ? 1 : 0;
@@ -256,7 +257,7 @@ static INLINE U32 float64_class( float64 op )
                                              return float_class_subnormal     >> neg;
 }
 
-static INLINE U32 float32_class( float32 op )
+INLINE U32 float32_class( float32 op )
 {
     int neg =
        (  op & 0x80000000) ? 1 : 0;
@@ -294,13 +295,13 @@ struct sbfp {
 /*                                                                           */
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
-static INLINE void ARCH_DEP(get_float128)( float128 *op, U32 *fpr )
+INLINE void ARCH_DEP(get_float128)( float128 *op, U32 *fpr )
 {
     op->high = ((U64)fpr[0]     << 32) | fpr[1];
     op->low  = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
 }
 
-static INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
+INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
 {
     fpr[0]       = (U32) (op->high >> 32);
     fpr[1]       = (U32) (op->high & 0xFFFFFFFF);
@@ -308,23 +309,23 @@ static INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
     fpr[FPREX+1] = (U32) (op->low  & 0xFFFFFFFF);
 }
 
-static INLINE void ARCH_DEP(get_float64)( float64 *op, U32 *fpr )
+INLINE void ARCH_DEP(get_float64)( float64 *op, U32 *fpr )
 {
     *op = ((U64)fpr[0] << 32) | fpr[1];
 }
 
-static INLINE void ARCH_DEP(put_float64)( float64 *op, U32 *fpr )
+INLINE void ARCH_DEP(put_float64)( float64 *op, U32 *fpr )
 {
     fpr[0] = (U32) (*op >> 32);
     fpr[1] = (U32) (*op & 0xFFFFFFFF);
 }
 
-static INLINE void ARCH_DEP(get_float32)( float32 *op, U32 *fpr )
+INLINE void ARCH_DEP(get_float32)( float32 *op, U32 *fpr )
 {
     *op = *fpr;
 }
 
-static INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
+INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
 {
     *fpr = *op;
 }
@@ -365,7 +366,7 @@ static INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
         GET_FLOAT32_OP( op2, r2, regs );            \
     } while (0)
 
-static INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float128 op2 )
+INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float128 op2 )
 {
     return float128_is_nan(        op1      ) ||
            float128_is_nan(             op2 ) ? 3 :
@@ -373,7 +374,7 @@ static INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float12
            float128_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-static INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128 op2 )
+INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128 op2 )
 {
     if (float128_is_signaling_nan( op1 ) ||
         float128_is_signaling_nan( op2 ))
@@ -381,7 +382,7 @@ static INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128
     return ARCH_DEP(float128_cc_quiet)( ctx, op1, op2 );
 }
 
-static INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1, float128 op2 )
+INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1, float128 op2 )
 {
     if (float128_is_nan( op1 ) ||
         float128_is_nan( op2 ))
@@ -389,7 +390,7 @@ static INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1
     return ARCH_DEP(float128_cc_quiet)( ctx, op1, op2 );
 }
 
-static INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 op2 )
+INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 op2 )
 {
     return float64_is_nan(        op1      ) ||
            float64_is_nan(             op2 ) ? 3 :
@@ -397,7 +398,7 @@ static INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 o
            float64_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-static INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op2 )
+INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op2 )
 {
     if (float64_is_signaling_nan( op1 ) ||
         float64_is_signaling_nan( op2 ))
@@ -405,7 +406,7 @@ static INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op
     return ARCH_DEP(float64_cc_quiet)( ctx, op1, op2 );
 }
 
-static INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, float64 op2 )
+INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, float64 op2 )
 {
     if (float64_is_nan( op1 ) ||
         float64_is_nan( op2 ))
@@ -413,7 +414,7 @@ static INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, 
     return ARCH_DEP(float64_cc_quiet)( ctx, op1, op2 );
 }
 
-static INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 op2 )
+INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 op2 )
 {
     return float32_is_nan(        op1      ) ||
            float32_is_nan(             op2 ) ? 3 :
@@ -421,7 +422,7 @@ static INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 o
            float32_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-static INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op2 )
+INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op2 )
 {
     if (float32_is_signaling_nan( op1 ) ||
         float32_is_signaling_nan( op2 ))
@@ -429,7 +430,7 @@ static INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op
     return ARCH_DEP(float32_cc_quiet)( ctx, op1, op2 );
 }
 
-static INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, float32 op2 )
+INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, float32 op2 )
 {
     if (float32_is_nan( op1 ) ||
         float32_is_nan( op2 ))
@@ -515,15 +516,18 @@ static INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, 
 
 #if !defined(_IEEE_NONARCHDEP_)
 
+#if !defined(HAVE_MATH_H)
 /* All floating-point numbers can be put in one of these categories.  */
 enum
 {
-    FP_NAN,         /* 0 */
-    FP_INFINITE,    /* 1 */
-    FP_ZERO,        /* 2 */
-    FP_SUBNORMAL,   /* 3 */
-    FP_NORMAL       /* 4 */
+    FP_NAN          =  0,
+    FP_INFINITE     =  1,
+    FP_ZERO         =  2,
+    FP_SUBNORMAL    =  3,
+    FP_NORMAL       =  4
 };
+#endif /*!defined(HAVE_MATH_H)*/
+
 /*
  * Classify emulated fp values
  */
@@ -2603,7 +2607,6 @@ DEF_INST(test_data_class_bfp_short)
     int r1, b2;
     VADR effective_addr2;
     float32 op1;
-    GVARS ctx = {regs,0,0};
 
     RXE(inst, regs, r1, b2, effective_addr2);
     BFPINST_CHECK(regs);
@@ -2621,7 +2624,6 @@ DEF_INST(test_data_class_bfp_long)
     int r1, b2;
     VADR effective_addr2;
     float64 op1;
-    GVARS ctx = {regs,0,0};
 
     RXE(inst, regs, r1, b2, effective_addr2);
     BFPINST_CHECK(regs);
@@ -2639,7 +2641,6 @@ DEF_INST(test_data_class_bfp_ext)
     int r1, b2;
     VADR effective_addr2;
     float128 op1;
-    GVARS ctx = {regs,0,0};
 
     RXE(inst, regs, r1, b2, effective_addr2);
     BFPINST_CHECK(regs);

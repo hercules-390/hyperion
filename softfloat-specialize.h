@@ -104,7 +104,7 @@ static commonNaNT float32ToCommonNaN( void* ctx, float32 a )
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-static INLINE float32 commonNaNToFloat32( commonNaNT a )
+INLINE float32 commonNaNToFloat32( commonNaNT a )
 {
     return ( ( (bits32) a.sign )<<31 ) | 0x7FC00000 | ( a.high>>41 );
 }
@@ -191,7 +191,7 @@ static commonNaNT float64ToCommonNaN( void* ctx, float64 a )
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-static INLINE float64 commonNaNToFloat64( commonNaNT a )
+INLINE float64 commonNaNToFloat64( commonNaNT a )
 {
     return
           ( ( (bits64) a.sign )<<63 )
