@@ -2595,7 +2595,6 @@ DEF_INST(subtract_bfp_short)
 
 /*-------------------------------------------------------------------*/
 /* ED10 TCEB  - TEST DATA CLASS (short BFP)                    [RXE] */
-/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_short)
 {
@@ -2613,7 +2612,6 @@ DEF_INST(test_data_class_bfp_short)
 
 /*-------------------------------------------------------------------*/
 /* ED11 TCDB  - TEST DATA CLASS (long BFP)                     [RXE] */
-/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_long)
 {
@@ -2631,7 +2629,6 @@ DEF_INST(test_data_class_bfp_long)
 
 /*-------------------------------------------------------------------*/
 /* ED12 TCXB  - TEST DATA CLASS (extended BFP)                 [RXE] */
-/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_ext)
 {
