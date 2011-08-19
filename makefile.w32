@@ -98,7 +98,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
                vstore.o general1.o general2.o general3.o \
                pfpo.o plo.o control.o io.o decimal.o \
-	       service.o scedasd.c opcode.o diagnose.o \
+               service.o scedasd.c opcode.o diagnose.o \
                diagmssf.o vm.o vmd250.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o losc.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
@@ -108,7 +108,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                hsccmd.o hscmisc.o history.o logger.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
                hscutl.o hscutl2.o hsys.o bootstrap.o pttrace.o \
-               strsignal.o hconsole.o w32util.o
+               strsignal.o hconsole.o w32util.o softfloat.o
 
 hercules_OBJ += memrchr.o
 hdt1403_OBJ  = printer.o sockdev.o
@@ -213,12 +213,17 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h ftlib.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
-           hetlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
+           hetlib.h hostinfo.h httpmisc.h htypes.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
-           hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h
+           hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
+           softfloat-fixme.h       \
+           softfloat-macros.h      \
+           softfloat-specialize.h  \
+           softfloat-types.h       \
+           softfloat.h
 
 all:       $(EXEFILES) $(DYNFILES)
 

@@ -48,6 +48,9 @@ $(O)getopt.obj: getopt.c
 $(O)herclin.obj: herclin.c
     $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" herclin.c
 
+$(O)softfloat.obj: softfloat.c
+    $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" softfloat.c
+
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule
 # in the member so that nmake doesn't complain or otherwise treat the

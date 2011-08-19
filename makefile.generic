@@ -74,7 +74,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                decNumber/decContext.o decNumber/decimal128.o decNumber/decimal32.o decNumber/decimal64.o decNumber/decNumber.o decNumber/decPacked.o \
                printer.o sockdev.o console.o commadpt.o cardrdr.o cardpch.o \
                tapedev.o tapeccws.o faketape.o awstape.o hettape.o omatape.o scsitape.o hetlib.o \
-               ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
+               ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o softfloat.o
 
 hdt1403_OBJ  = printer.o sockdev.o
 hdt2703_OBJ  = commadpt.o
@@ -175,12 +175,17 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercules.h \
-           hetlib.h ftlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
+           hetlib.h ftlib.h hostinfo.h httpmisc.h htypes.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
-           hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h
+           hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
+           softfloat-fixme.h       \
+           softfloat-macros.h      \
+           softfloat-specialize.h  \
+           softfloat-types.h       \
+           softfloat.h
 
 all:      $(EXEFILES) $(DYNFILES)
 

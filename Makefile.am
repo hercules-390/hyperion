@@ -378,6 +378,7 @@ endif
                        timer.c      \
                        esame.c      \
                        ieee.c       \
+                       softfloat.c  \
                        dfp.c        \
                        machdep.h    \
                        httpserv.c   \
@@ -622,6 +623,9 @@ EXTRA_DIST = autoconf/config.rpath \
              README.SUN            \
              README.AIX            \
              _TODO.txt             \
+             SoftFloat-history.txt \
+             SoftFloat-source.txt  \
+             SoftFloat.txt         \
              makefile.msvc         \
              makefile-dllmod.msvc  \
              msvc.makefile.includes/BZIP2_DIR.msvc    \
@@ -696,8 +700,6 @@ noinst_HEADERS = fishhang.h     \
                  w32ctca.h      \
                  tt32api.h      \
                  linklist.h     \
-                 ieee-sol.h     \
-                 ieee-w32.h     \
                  httpmisc.h     \
                  devtype.h      \
                  codepage.h     \
@@ -753,6 +755,11 @@ noinst_HEADERS = fishhang.h     \
                  dbgtrace.h     \
                  chain.h        \
                  extstring.h    \
+                 softfloat-fixme.h       \
+                 softfloat-macros.h      \
+                 softfloat-specialize.h  \
+                 softfloat-types.h       \
+                 softfloat.h             \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
