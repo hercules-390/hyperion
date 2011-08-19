@@ -1,34 +1,34 @@
-/*  IEEE.C    (C) Copyright Roger Bowler and others, 2003-2011       */
-/*            (C) Copyright Willem Konynenberg, 2001-2003            */
-/*            (C) Copyright "Fish" (David B. Trout), 2011            */
+/* IEEE.C       (c) Copyright Roger Bowler and others, 2003-2011     */
+/*              (c) Copyright Willem Konynenberg, 2001-2003          */
+/*              (c) Copyright "Fish" (David B. Trout), 2011          */
+/*              Hercules Binary (IEEE) Floating Point Instructions   */
 /*                                                                   */
-/*            Hercules Binary (IEEE) Floating Point Instructions     */
-/*                                                                   */
-/*            Released under "The Q Public License Version 1"        */
-/*            (http://www.hercules-390.org/herclic.html)             */
-/*             as modifications to Hercules.                         */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
+/*-------------------------------------------------------------------*/
+/* This module implements ESA/390 Binary Floating-Point (IEEE 754)   */
+/* instructions as described in SA22-7201-05 ESA/390 Principles of   */
+/* Operation and SA22-7832-08 z/Architecture Principles of Operation.*/
+/*-------------------------------------------------------------------*/
+
 /*
  * Hercules System/370, ESA/390, z/Architecture emulator
- * ieee.c - Binary (IEEE) Floating Point Instructions
- *
- * This module implements ESA/390 (IEEE 754) Binary Floating-Point
- * Instructions as described in SA22-7201-05 ESA/390 Principles of
- * Operation and SA22-7832-08 z/Architecture Principles of Operation.
- *
- * Copyright (C) 2001-2009 Willem Konynenberg <wfk@xos.nl>
+ * ieee.c
+ * Binary (IEEE) Floating Point Instructions
+ * Copyright (c) 2001-2009 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
- *
  * Additional instructions by Roger Bowler, November 2004:
  *  LXDBR,LXDB,LXEBR,LXEB,LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR,
  *  MXDBR,MXDB,MDEBR,MDEB,MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,
  *  MSEBR,MSEB,DIEBR,DIDBR,TBEDR,TBDR.
- *
+ * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2006.
  * All instructions (except convert to/from HFP/BFP format THDR, THDER,
- *  TBDR and TBEDR) completely rewritten by "Fish" (David B. Trout)
+ *  TBDR and TBEDR) completely updated by "Fish" (David B. Trout)
  *  Aug 2011 to use SoftFloat Floating-Point package by John R. Hauser
  *  (http://www.jhauser.us/arithmetic/SoftFloat.html).
  */
@@ -218,9 +218,9 @@ static void ieee_cond_trap( void* ctx )
     }
 }
 
-/*----------------------------------------------------------------------------
-| zArchitecture Floating-Point classes  (for "Test Data Class" instruction)
-*----------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/* z/Architecture Floating-Point classes (for "Test Data Class" instruction) */
+/*---------------------------------------------------------------------------*/
 enum {
     float_class_zero           = 0x00000800,     /* SA22-7832-08, page 19-39 */
     float_class_normal         = 0x00000200,
@@ -813,6 +813,7 @@ static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
 
     return cc;
 } /* end function cnvt_hfp_to_bfp */
+
 #define _CBH_FUNC
 #endif /*!defined(_CBH_FUNC)*/
 
@@ -2595,6 +2596,7 @@ DEF_INST(subtract_bfp_short)
 
 /*-------------------------------------------------------------------*/
 /* ED10 TCEB  - TEST DATA CLASS (short BFP)                    [RXE] */
+/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_short)
 {
@@ -2612,6 +2614,7 @@ DEF_INST(test_data_class_bfp_short)
 
 /*-------------------------------------------------------------------*/
 /* ED11 TCDB  - TEST DATA CLASS (long BFP)                     [RXE] */
+/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_long)
 {
@@ -2629,6 +2632,7 @@ DEF_INST(test_data_class_bfp_long)
 
 /*-------------------------------------------------------------------*/
 /* ED12 TCXB  - TEST DATA CLASS (extended BFP)                 [RXE] */
+/* Per Jessen, Willem Konynenberg, 20 September 2001                 */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_data_class_bfp_ext)
 {
