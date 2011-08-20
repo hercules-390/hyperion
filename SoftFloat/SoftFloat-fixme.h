@@ -5,7 +5,7 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id: softfloat-fixme.h 7706 2011-08-19 22:52:45Z jj $
+// $Id$
 
 /* This module is my own invention ("Fish", David B. Trout) and is   */
 /* simply an interim means to more easily implement integrating the  */

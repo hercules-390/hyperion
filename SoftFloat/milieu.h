@@ -5,7 +5,7 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id: milieu.h 7703 2011-08-19 00:12:12Z fish $
+// $Id$
 
 /* This module is a UNMODIFIED modified version of John R. Hauser's  */
 /* 'milieu.h' module, and is wholly copyright by him.                */
