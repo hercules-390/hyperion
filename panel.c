@@ -374,12 +374,12 @@ static void unkeep_by_keepnum( int keepnum, int perm )
 #endif // defined(OPTION_MSGHLD)
 #endif // defined(OPTION_MSGCLR)
 
+#if defined(OPTION_MSGHLD)
 /*-------------------------------------------------------------------*/
 /* unkeep messages once expired                                      */
 /*-------------------------------------------------------------------*/
 void expire_kept_msgs(int unconditional)
 {
-#if defined(OPTION_MSGHLD)
   struct timeval now;
   PANMSG *pk = keptmsgs;
   int i;
@@ -397,8 +397,8 @@ void expire_kept_msgs(int unconditional)
       }
     }
   }
-#endif // defined(OPTION_MSGHLD)
 }
+#endif // defined(OPTION_MSGHLD)
 
 #if defined(OPTION_MSGCLR)  /*  -- Message coloring build option --  */
 /*-------------------------------------------------------------------*/
@@ -567,8 +567,10 @@ static void scroll_up_lines( int numlines, int doexpire )
 {
     int i;
 
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
 
     for (i=0; i < numlines && topmsg != oldest_msg(); i++)
     {
@@ -599,8 +601,10 @@ static void scroll_down_lines( int numlines, int doexpire )
 {
     int i;
 
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
 
     for (i=0; i < numlines && topmsg != newest_msg(); i++)
     {
@@ -630,21 +634,27 @@ static void scroll_down_lines( int numlines, int doexpire )
 
 static void page_up( int doexpire )
 {
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
     scroll_up_lines( SCROLL_LINES - 1, 0 );
 }
 static void page_down( int doexpire )
 {
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
     scroll_down_lines( SCROLL_LINES - 1, 0 );
 }
 
 static void scroll_to_top_line( int doexpire )
 {
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
     topmsg = oldest_msg();
 #if defined(OPTION_MSGHLD)
     while (keptmsgs)
@@ -654,16 +664,20 @@ static void scroll_to_top_line( int doexpire )
 
 static void scroll_to_bottom_line( int doexpire )
 {
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
     while (topmsg != newest_msg())
         scroll_down_lines( 1, 0 );
 }
 
 static void scroll_to_bottom_screen( int doexpire )
 {
+#if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
     scroll_to_bottom_line( 0 );
     page_up( 0 );
 }
@@ -744,6 +758,7 @@ static void get_dim (int *y, int *x)
 #endif // defined(WIN32) && !defined( _MSVC_ )
 }
 
+#if defined(OPTION_EXTCURS)
 static int get_keepnum_by_row( int row )
 {
     // PROGRAMMING NOTE: right now all of our kept messages are
@@ -765,6 +780,7 @@ static int get_keepnum_by_row( int row )
 
     return (row - keep_beg_row);
 }
+#endif /*defined(OPTION_EXTCURS)*/
 
 static void set_color (short fg, short bg)
 {
@@ -3218,8 +3234,10 @@ FinishShutdown:
                 saved_cons_row = cur_cons_row;
                 saved_cons_col = cur_cons_col;
 
+#if defined(OPTION_MSGHLD)
                 /* Unkeep kept messages if needed */
                 expire_kept_msgs(0);
+#endif // defined(OPTION_MSGHLD)
                 i = 0;
 #if defined(OPTION_MSGHLD)
                 /* Draw kept messages first */
