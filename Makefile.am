@@ -623,9 +623,6 @@ EXTRA_DIST = autoconf/config.rpath \
              README.SUN            \
              README.AIX            \
              _TODO.txt             \
-             SoftFloat-history.txt \
-             SoftFloat-source.txt  \
-             SoftFloat.txt         \
              makefile.msvc         \
              makefile-dllmod.msvc  \
              msvc.makefile.includes/BZIP2_DIR.msvc    \
