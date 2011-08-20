@@ -5,7 +5,7 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
+// $Id: milieu.h 7703 2011-08-19 00:12:12Z fish $
 
 /* This module is a UNMODIFIED modified version of John R. Hauser's  */
 /* 'milieu.h' module, and is wholly copyright by him.                */
@@ -46,7 +46,7 @@ these four paragraphs for those parts of this code that are retained.
 /*----------------------------------------------------------------------------
 | Include common integer types and flags.
 *----------------------------------------------------------------------------*/
-#include "softfloat-types.h"
+#include "SoftFloat-types.h"
 
 /*----------------------------------------------------------------------------
 | Symbolic Boolean literals.

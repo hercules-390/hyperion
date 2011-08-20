@@ -67,9 +67,9 @@
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
 #include "milieu.h"
-#include "softfloat.h"
-#include "softfloat-macros.h"
-#include "softfloat-specialize.h"
+#include "SoftFloat.h"
+#include "SoftFloat-macros.h"
+#include "SoftFloat-specialise.h"
 
 /* Handy constants                           low       high                 */
 static const float128  float128_zero   = { LIT64(0), LIT64( 0x0000000000000000 ) };

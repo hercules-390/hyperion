@@ -11,11 +11,11 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-SUBDIRS = decNumber m4 po util html man . crypto
+SUBDIRS = decNumber SoftFloat m4 po util html man . crypto
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I$(top_srcdir)/SoftFloat
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
@@ -378,7 +378,6 @@ endif
                        timer.c      \
                        esame.c      \
                        ieee.c       \
-                       softfloat.c  \
                        dfp.c        \
                        machdep.h    \
                        httpserv.c   \
@@ -414,6 +413,7 @@ endif
                       libherct.la     \
                       libhercd.la     \
                       decNumber/libdecNumber.la \
+                      SoftFloat/libSoftFloat.la \
                       $(LDADD)
 
 #
@@ -755,12 +755,6 @@ noinst_HEADERS = fishhang.h     \
                  dbgtrace.h     \
                  chain.h        \
                  extstring.h    \
-                 milieu.h                \
-                 softfloat-fixme.h       \
-                 softfloat-macros.h      \
-                 softfloat-specialize.h  \
-                 softfloat-types.h       \
-                 softfloat.h             \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

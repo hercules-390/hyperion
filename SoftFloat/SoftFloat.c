@@ -6,7 +6,7 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
+// $Id: softfloat.c 7703 2011-08-19 00:12:12Z fish $
 
 /* This module is a SLIGHTLY modified version of John R. Hauser's    */
 /* original 'softfloat.c' module, and is largely copyright by him.   */
@@ -50,14 +50,14 @@ these four paragraphs for those parts of this code that are retained.
 =============================================================================*/
 
 #include "milieu.h"
-#include "softfloat.h"
+#include "SoftFloat.h"
 
 /*----------------------------------------------------------------------------
 | Primitive arithmetic functions, including multi-word arithmetic, and
 | division and square root approximations.  (Can be specialized to target if
 | desired.)
 *----------------------------------------------------------------------------*/
-#include "softfloat-macros.h"
+#include "SoftFloat-macros.h"
 
 /*----------------------------------------------------------------------------
 | Functions and definitions to determine:  (1) whether tininess for underflow
@@ -67,7 +67,7 @@ these four paragraphs for those parts of this code that are retained.
 | are propagated from function inputs to output.  These details are target-
 | specific.
 *----------------------------------------------------------------------------*/
-#include "softfloat-specialize.h"
+#include "SoftFloat-specialise.h"
 
 /*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6
