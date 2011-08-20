@@ -24,19 +24,19 @@ else
 endif
 
 if OPTION_DYNAMIC_LOAD
-  LTDL  	 = ../ltdl.c
-  LIB_LD_FLAGS    = -export-dynamic  \
-		   $(XSTATIC)       \
-		   -no-undefined    \
-		   -avoid-version
+  LTDL          = ../ltdl.c
+  LIB_LD_FLAGS  = -export-dynamic  \
+                  $(XSTATIC)       \
+                  -no-undefined    \
+                  -avoid-version
 else
-  LTDL  	 =
-  LIB_LD_FLAGS    = $(XSTATIC)    \
-		   -no-undefined \
-		   -avoid-version
+  LTDL          =
+  LIB_LD_FLAGS  = $(XSTATIC)    \
+                  -no-undefined \
+                  -avoid-version
 endif
 
-  HERCLIBS =
+  HERCLIBS  =
   HERCLIBS2 = libSoftFloat.la
   noinst_LTLIBRARIES = $(HERCLIBS)
   lib_LTLIBRARIES = $(HERCLIBS2)
