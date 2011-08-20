@@ -58,7 +58,7 @@ linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -
     echo $* $@
 
 .c{$(OBJDIR)}.obj::
-    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+    $(cc) $(cdebug) $(cflags) /ISoftFloat /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule

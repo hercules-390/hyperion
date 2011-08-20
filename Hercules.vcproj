@@ -1523,61 +1523,69 @@
 							>
 						</File>
 					</Filter>
-					<Filter
-						Name="_softfloat"
+				</Filter>
+				<Filter
+					Name="SoftFloat"
+					>
+					<File
+						RelativePath=".\SoftFloat\Makefile.am"
 						>
-						<Filter
-							Name="Header Files"
+					</File>
+					<File
+						RelativePath=".\SoftFloat\Makefile.in"
+						>
+					</File>
+					<Filter
+						Name="Doc Files"
+						>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-history.txt"
 							>
-							<File
-								RelativePath=".\milieu.h"
-								>
-							</File>
-							<File
-								RelativePath=".\softfloat-fixme.h"
-								>
-							</File>
-							<File
-								RelativePath=".\softfloat-macros.h"
-								>
-							</File>
-							<File
-								RelativePath=".\softfloat-specialize.h"
-								>
-							</File>
-							<File
-								RelativePath=".\softfloat-types.h"
-								>
-							</File>
-							<File
-								RelativePath=".\softfloat.h"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="Source Files"
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-source.txt"
 							>
-							<File
-								RelativePath=".\softfloat.c"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="_DOC"
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat.txt"
 							>
-							<File
-								RelativePath=".\SoftFloat-history.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\SoftFloat-source.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\SoftFloat.txt"
-								>
-							</File>
-						</Filter>
+						</File>
+					</Filter>
+					<Filter
+						Name="Header Files"
+						>
+						<File
+							RelativePath=".\SoftFloat\milieu.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-fixme.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-macros.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-specialise.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat-types.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Source Files"
+						>
+						<File
+							RelativePath=".\SoftFloat\SoftFloat.c"
+							>
+						</File>
 					</Filter>
 				</Filter>
 			</Filter>
