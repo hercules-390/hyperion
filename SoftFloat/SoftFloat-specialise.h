@@ -1,4 +1,4 @@
-/* softfloat-specialize.h (C) John R. Hauser, 1998-2002              */
+/* SoftFloat-specialize.h (C) John R. Hauser, 1998-2002              */
 /*             (C) Copyright "Fish" (David B. Trout), 2011           */
 /*             This module is part of the SoftFloat package.         */
 /*                                                                   */

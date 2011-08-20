@@ -1,4 +1,4 @@
-/* softfloat-macros.h (C) John R. Hauser, 1998-2002                  */
+/* SoftFloat-macros.h (C) John R. Hauser, 1998-2002                  */
 /*             This module is part of the SoftFloat package.         */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */

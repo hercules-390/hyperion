@@ -1,4 +1,4 @@
-/* softfloat-fixme.h (C) Copyright "Fish" (David B. Trout), 2011     */
+/* SoftFloat-fixme.h (C) Copyright "Fish" (David B. Trout), 2011     */
 /*             This module is NOT part of the SoftFloat package!     */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */
