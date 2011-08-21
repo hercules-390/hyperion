@@ -1,4 +1,4 @@
-/* HCONSTS.H  (c) Copyright "Fish" (David B. Trout), 2005-2009       */
+/* HCONSTS.H  (c) Copyright "Fish" (David B. Trout), 2005-2011       */
 /*           Hercules #define constants...                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

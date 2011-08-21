@@ -1,4 +1,4 @@
-/* HETUPD.C     (c) Copyright Leland Lucius, 2000-2009               */
+/* HETUPD.C     (c) Copyright Leland Lucius, 2000-2011               */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*                 Update/Copy Hercules Emulated Tape                */
 /*                                                                   */

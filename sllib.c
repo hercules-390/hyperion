@@ -1,4 +1,4 @@
-/* SLLIB.C      (c) Copyright Leland Lucius, 2000-2009               */
+/* SLLIB.C      (c) Copyright Leland Lucius, 2000-2011               */
 /*             Library for managing Standard Label tapes.            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

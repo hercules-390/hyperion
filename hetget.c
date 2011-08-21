@@ -1,4 +1,4 @@
-/* HETGET.C     (c) Copyright Leland Lucius, 2000-2009               */
+/* HETGET.C     (c) Copyright Leland Lucius, 2000-2011               */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Extract files from an HET file                       */
 /*                                                                   */

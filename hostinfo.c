@@ -1,4 +1,4 @@
-/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2009     */
+/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2011     */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*                 Hercules functions to set/query host information  */
 /*                                                                   */

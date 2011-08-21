@@ -1,4 +1,4 @@
-/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2009                  */
+/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              ESA/390 feature definitions                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

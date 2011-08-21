@@ -1,4 +1,4 @@
-/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2009                  */
+/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              S/370 feature definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

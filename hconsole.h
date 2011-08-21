@@ -1,4 +1,4 @@
-/* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009          */
+/* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009-2011     */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*          Hercules hardware console (panel) support functions      */
 /*                                                                   */

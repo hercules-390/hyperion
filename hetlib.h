@@ -1,4 +1,4 @@
-/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2009                */
+/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2011                */
 /*             Header for the Hercules Emulated Tape library         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

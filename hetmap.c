@@ -1,4 +1,4 @@
-/* HETMAP.C     (c) Copyright Leland Lucius, 2000-2009               */
+/* HETMAP.C     (c) Copyright Leland Lucius, 2000-2011               */
 /*              (c) Copyright Paul F. Gorlinsky, 2010                */
 /*              (c) Copyright TurboHercules, SAS, 2011               */
 /*         Displays information about a Hercules Emulated Tape       */
