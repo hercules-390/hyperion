@@ -52,7 +52,8 @@ noinst_HEADERS = milieu.h \
                  SoftFloat-specialise.h \
                  SoftFloat-types.h
 
-EXTRA_DIST = SoftFloat-history.txt \
+EXTRA_DIST = README.txt \
+             SoftFloat-history.txt \
              SoftFloat-source.txt \
              SoftFloat.txt
 
