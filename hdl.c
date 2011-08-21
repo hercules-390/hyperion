@@ -137,7 +137,6 @@ HDLSHD *shdent;
             WRMSG(HHC01502, "I", shdent->shdname);
         }   
         free(shdent);
-        log_wakeup(NULL);
     }
 
     WRMSG(HHC01504, "I");

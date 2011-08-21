@@ -144,7 +144,6 @@ int was_locked = sysblk.mainstor_locked;
             if (sysblk.mainstor_locked)
             {
                 WRMSG(HHC01429, "I", "main"); // "Unlocking %s storage"
-                log_wakeup(NULL);
                 MUNLOCK(sysblk.storkeys,
                          round_to_hostpagesize( sysblk.mainsize ) +
                          round_to_hostpagesize( sysblk.mainsize / STORAGE_KEY_UNITSIZE ) );
@@ -183,7 +182,6 @@ int was_locked = sysblk.mainstor_locked;
                         if (was_locked)
                         {
                             WRMSG(HHC01428, "I", "main"); // "Locking %s storage"
-                            log_wakeup(NULL);
                             MLOCK(storkeys, config_allocmsize);
                             sysblk.mainstor_locked = 1;
                         }
@@ -200,7 +198,6 @@ int was_locked = sysblk.mainstor_locked;
             if (sysblk.lock_mainstor)
             {
                 WRMSG(HHC01428, "I", "main"); // "Locking %s storage"
-                log_wakeup(NULL);
                 MLOCK(storkeys, storsize);
                 sysblk.mainstor_locked = 1;
             }
@@ -287,7 +284,6 @@ int was_locked = sysblk.xpndstor_locked;
             if (sysblk.xpndstor_locked)
             {
                 WRMSG(HHC01428, "I", "expanded"); // "Locking %s storage"
-                log_wakeup(NULL);
                 MUNLOCK(sysblk.xpndstor, ((RADR)config_allocxsize << XSTORE_PAGESHIFT) );
                 sysblk.xpndstor_locked = 0;
             }
@@ -316,7 +312,6 @@ int was_locked = sysblk.xpndstor_locked;
                         if (was_locked)
                         {
                             WRMSG(HHC01428, "I", "expanded"); // "Locking %s storage"
-                            log_wakeup(NULL);
                             MLOCK(xpndstor, ((RADR)config_allocxsize << XSTORE_PAGESHIFT) );
                             sysblk.xpndstor_locked = 1;
                         }
@@ -338,7 +333,6 @@ int was_locked = sysblk.xpndstor_locked;
             if (sysblk.lock_xpndstor)
             {
                 WRMSG(HHC01428, "I", "expanded"); // "Locking %s storage"
-                log_wakeup(NULL);
                 MLOCK(xpndstor, xpndsize);
                 sysblk.xpndstor_locked = 1;
             }
