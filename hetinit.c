@@ -1,5 +1,5 @@
-/* HETINIT.C    (c) Copyright TurboHercules, SAS 2010-2011           */
-/*              (c) Copyright Leland Lucius, 2000-2009               */
+/* HETINIT.C    (c) Copyright Leland Lucius, 2000-2009               */
+/*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*           Creates IEHINITT or NL format Hercules Emulated Tapes   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,5 +1,4 @@
-/* HETLIB.C    (c) Copyright Roger Bowler, 2010-2011                 */
-/*             (c) Copyright Leland Lucius, 2000-2009                */
+/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2009                */
 /*             Library for managing Hercules Emulated Tapes          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

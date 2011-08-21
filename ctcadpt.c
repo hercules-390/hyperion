@@ -1,5 +1,5 @@
-/* CTCADPT.C    (c) Copyright Roger Bowler, 2000-2011                */
-/*              (c) Copyright James A. Pierson, 2002-2009            */
+/* CTCADPT.C    (c) Copyright James A. Pierson, 2002-2009            */
+/*              (c) Copyright Roger Bowler, 2000-2011                */
 /*              (c) Copyright Willem Konynenberg, 2000-2009          */
 /*              (c) Copyright Vic Cross, 2001-2009                   */
 /*              Hercules Channel-to-Channel Emulation Support        */

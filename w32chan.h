@@ -1,4 +1,4 @@
-/* W32CHAN.H    (c) Copyright "Fish" (David B. Trout), 2001-2011     */
+/* W32CHAN.H    (c) Copyright "Fish" (David B. Trout), 2001-2009     */
 /*              Fish's new i/o scheduling logic                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

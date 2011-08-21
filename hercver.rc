@@ -1,4 +1,4 @@
-/* HERCVER.RC   (c) Copyright "Fish" (David B. Trout), 2009-2011     */
+/* HERCVER.RC   (c) Copyright "Fish" (David B. Trout), 2009          */
 /*      Defines the Windows resources to be linked into the product  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -31,7 +31,7 @@
 #endif
 
 #define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
-#define HERCULES_COPYRIGHT        "(c) Copyright 1999-2011"
+#define HERCULES_COPYRIGHT        "(c) Copyright 1999-2010"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
 #define HERCULES_PRODUCT_URL      "http://www.hercules-390.org"
 #define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"
