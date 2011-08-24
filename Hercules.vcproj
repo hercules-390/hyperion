@@ -1531,13 +1531,13 @@
 						RelativePath=".\SoftFloat\Makefile.am"
 						>
 					</File>
-					<File
-						RelativePath=".\SoftFloat\Makefile.in"
-						>
-					</File>
 					<Filter
 						Name="Doc Files"
 						>
+						<File
+							RelativePath=".\SoftFloat\README.txt"
+							>
+						</File>
 						<File
 							RelativePath=".\SoftFloat\SoftFloat-history.txt"
 							>
