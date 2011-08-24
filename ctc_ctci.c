@@ -145,6 +145,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     {
         char buf[40];
         MSGBUF(buf,"malloc(%d)", (int)sizeof(CTCBLK));
+        // "%1d:%04X CTC: error in function '%s': '%s'"
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         return -1;
     }
@@ -167,6 +168,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)sizeof(CTCBLK));
+        // "%1d:%04X CTC: error in function '%s': '%s'"
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
         free( pWrkCTCBLK );
         pWrkCTCBLK = NULL;
@@ -223,6 +225,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
     else
     {
+        // "%1d:%04X CTC: device '%s', type '%s' opened"
         WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
                   pDevCTCBLK->szTUNDevName, "TUN");
     }
@@ -239,6 +242,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
         if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
         {
+            // "%1d:%04X CTC: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
                   "TT32SDEVBUFF", pDevCTCBLK->szTUNDevName, strerror( errno ) );
         }
@@ -246,6 +250,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         tt32ctl.tt32ctl_iobuffsize = pDevCTCBLK->iIOBuff;
         if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
         {
+            // "%1d:%04X CTC: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
                   "TT32SIOBUFF", pDevCTCBLK->szTUNDevName, strerror( errno ) );
         }
@@ -310,7 +315,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     MSGBUF(thread_name, "CTCI %4.4X ReadThread", pDEVBLK->devnum);
     rc = create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
     if(rc)
+    {
+       // "Error in function create_thread(): %s"
        WRMSG(HHC00102, "E", strerror(rc));
+    }
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
@@ -692,7 +700,10 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+                    {
+                        // "%1d:%04X CTC: halt or clear recognized"
                         WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                    }
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -742,6 +753,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pCTCBLK->fDebug )
         {
+            // "%1d:%04X CTC: received %d bytes size frame"
             WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)iLength );
             packet_trace( pCTCBLK->bFrameBuffer, (int)iLength, '>' );
         }
@@ -783,6 +795,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
+        // "%1d:%04X CTC: write CCW count %u is invalid"
         WRMSG(HHC00906, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
@@ -811,6 +824,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
         // Display stack command and discard the packet
+        // "%1d:%04X CTC: interface command: '%s' %8.8X"
         WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
 
         *pUnitStat = CSW_CE | CSW_DE;
@@ -859,6 +873,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Check that the segment is fully contained within the block
         if( iPos + sizeof( CTCISEG ) > sOffset )
         {
+            // "%1d:%04X CTC: incomplete write buffer segment header at offset %4.4X"
             WRMSG(HHC00908, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
@@ -877,6 +892,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
+            // "%1d:%04X CTC: invalid write buffer segment length %u at offset %4.4X"
             WRMSG(HHC00909, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );
 
             pDEVBLK->sense[0] = SENSE_DC;
@@ -890,6 +906,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending to TUN device
         if( pCTCBLK->fDebug )
         {
+            // "%1d:%04X CTC: sending packet to device '%s'"
             WRMSG(HHC00910, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName );
             packet_trace( pSegment->bData, sDataLen, '<' );
         }
@@ -899,6 +916,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( rc < 0 )
         {
+            // "%1d:%04X CTC: error writing to device '%s': '%s'"
             WRMSG(HHC00911, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
 
@@ -977,6 +995,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
+            // "%1d:%04X CTC: error reading from device '%s': '%s'"
             WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                 strerror( errno ) );
             break;
@@ -987,6 +1006,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
         if( pCTCBLK->fDebug )
         {
+            // "%1d:%04X CTC: received %d bytes size packet from device '%s'"
             WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength, pCTCBLK->szTUNDevName );
             packet_trace( szBuff, iLength, '>' );
         }
@@ -998,7 +1018,10 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             if( EMSGSIZE == errno )     // (if too large for buffer)
             {
                 if( pCTCBLK->fDebug )
+                {
+                    // "%1d:%04X CTC: packet frame too big, dropped"
                     WRMSG(HHC00914, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                }
                 break;                  // (discard it...)
             }
 
@@ -1144,6 +1167,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc < 2 )
     {
+        // "%1d:%04X CTC: incorrect number of parameters"
         WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
@@ -1228,6 +1252,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Not an IP address, check for valid MAC
                 if( ParseMAC( optarg, mac ) != 0 )
                 {
+                    // "%1d:%04X CTC: option '%s' value '%s' invalid"
                     WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                           "adapter address", optarg );
                     return -1;
@@ -1237,6 +1262,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "device name", optarg );
                 return -1;
@@ -1251,6 +1277,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "kernel buffer size", optarg );
                 return -1;
@@ -1265,6 +1292,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "dll i/o buffer size", optarg );
                 return -1;
@@ -1279,6 +1307,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             if( iMTU < 46 || iMTU > 65536 )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "MTU size", optarg );
                 return -1;
@@ -1290,6 +1319,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 's':     // Netmask of point-to-point link
             if( inet_aton( optarg, &addr ) == 0 )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "netmask", optarg );
                 return -1;
@@ -1301,6 +1331,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
+                // "%1d:%04X CTC: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                       "MAC address", optarg );
                 return -1;
@@ -1328,6 +1359,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc == 0 )
     {
+        // "%1d:%04X CTC: incorrect number of parameters"
         WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
         return -1;
     }
@@ -1337,6 +1369,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // New format has 2 and only 2 parameters (Though several options).
         if( argc != 2 )
         {
+            // "%1d:%04X CTC: incorrect number of parameters"
             WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
@@ -1344,6 +1377,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "IP address", *argv );
             return -1;
@@ -1356,6 +1390,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "IP address", *argv );
             return -1;
@@ -1372,6 +1407,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Old format has 5 and only 5 arguments
         if( argc != 5 )
         {
+            // "%1d:%04X CTC: incorrect number of parameters"
             WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
@@ -1380,6 +1416,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( **argv != '/' ||
             strlen( *argv ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "device name", *argv );
             return -1;
@@ -1394,6 +1431,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( iMTU < 46 || iMTU > 65536 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "MTU size", *argv );
             return -1;
@@ -1405,6 +1443,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "IP address", *argv );
             return -1;
@@ -1417,6 +1456,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "IP address", *argv );
             return -1;
@@ -1429,6 +1469,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Netmask
         if( inet_aton( *argv, &addr ) == 0 )
         {
+            // "%1d:%04X CTC: option '%s' value '%s' invalid"
             WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                   "netmask", *argv );
             return -1;
@@ -1440,6 +1481,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( argc > 0 )
         {
+            // "%1d:%04X CTC: incorrect number of parameters"
             WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
@@ -1457,6 +1499,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Guest IP Address
                 if( inet_aton( *argv, &addr ) == 0 )
                 {
+                    // "%1d:%04X CTC: option '%s' value '%s' invalid"
                     WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                           "IP address", *argv );
                     return -1;
@@ -1472,6 +1515,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     // Not an IP address, check for valid MAC
                     if( ParseMAC( *argv, mac ) != 0 )
                     {
+                        // "%1d:%04X CTC: option '%s' value '%s' invalid"
                         WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                               "MAC address", *argv );
                         return -1;
@@ -1505,6 +1549,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
                     iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
                 {
+                    // "%1d:%04X CTC: option '%s' value '%s' invalid"
                     WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                           "kernel buffer size", *argv );
                     return -1;
@@ -1522,6 +1567,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
                     iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
                 {
+                    // "%1d:%04X CTC: option '%s' value '%s' invalid"
                     WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
                           "dll i/o buffer size", *argv );
                     return -1;
@@ -1533,6 +1579,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 continue;
 
             default:
+                // "%1d:%04X CTC: incorrect number of parameters"
                 WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 return -1;
             }
