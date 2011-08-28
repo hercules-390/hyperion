@@ -634,7 +634,6 @@ int     dll_count;                      /* index into array          */
 
     /* Initialize locks, conditions, and attributes */
     initialize_lock (&sysblk.config);
-    initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
     sysblk.mainowner = LOCK_OWNER_NONE;
@@ -673,11 +672,6 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
 #endif
-
-#if defined(OPTION_INSTRUCTION_COUNTING)
-    initialize_lock (&sysblk.icount_lock);
-#endif
-
 
 
     /* Copy length for regs */

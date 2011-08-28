@@ -1,9 +1,5 @@
 /* LOSC.C       (c) Copyright Jan Jaeger, 2009-2011                  */
 /*              Hercules Licensed Operating System Check             */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 

@@ -1,9 +1,5 @@
 /* CON1052.C    (c)Copyright Jan Jaeger, 2004-2011                   */
 /*              Emulated 1052 on hercules console                    */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -362,7 +358,10 @@ DEVHND con1052_device_hndinfo = {
         con1052_immed,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };

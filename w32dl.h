@@ -1,9 +1,5 @@
 /* W32DL.H      (c) Copyright Jan Jaeger, 2004-2011                  */
 /*                        dlopen compat                              */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 

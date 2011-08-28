@@ -1,9 +1,5 @@
 /* CPUINT.H     (c) Copyright Jan Jaeger, 2001-2011                  */
 /*              Hercules Interrupt State and Mask Definitions        */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 

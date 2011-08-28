@@ -120,7 +120,6 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
 
     /* set default system state to reset */
     sysblk.sys_reset = TRUE; 
-    sysblk.ipled = FALSE;
 
     return rc1;
 } /* end function system_reset */
@@ -318,7 +317,6 @@ int rc;
     sysblk.ipldev = devnum;
     sysblk.iplcpu = regs->cpuad;
     sysblk.ipllcss = lcss;
-    sysblk.ipled = TRUE;
 
     /* Finish up... */
     return ARCH_DEP(common_load_finish) (regs);

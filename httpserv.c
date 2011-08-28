@@ -1,10 +1,6 @@
 /* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2011                   */
 /*              (c)Copyright TurboHercules, SAS 2010-2011            */
 /*              Hercules HTTP Server for Console Ops                 */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 

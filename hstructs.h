@@ -574,12 +574,14 @@ struct SYSBLK {
                 stape_query_status_tod; /* TOD of last status query  */
 #endif // defined( OPTION_SCSI_TAPE )
 
+
         /*-----------------------------------------------------------*/
         /*      Control Units                                        */
         /*-----------------------------------------------------------*/
 
         U16     cuhigh;                 /* Highest used CU number    */
        CHAINBLK cuchain;                /* -> CU chain               */
+
 
         /*-----------------------------------------------------------*/
         /*      Devices                                              */
@@ -603,11 +605,7 @@ struct SYSBLK {
 
         int     mss;                    /* Multiple CSS enabled      */
         int     lcssmax;                /* Maximum Subchannel-Set Id */
-        LOCK    crwlock;                /* CRW queue lock            */
-        U32    *crwarray;               /* CRW queue                 */
-        U32     crwalloc;               /* #of entries allocated     */
-        U32     crwcount;               /* #of entries queued        */
-        U32     crwindex;               /* CRW queue index           */
+        U32     chp_reset[8];           /* Channel path reset masks  */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
         DEVBLK *ioq;                    /* I/O queue                 */
@@ -633,10 +631,10 @@ struct SYSBLK {
         char   *defdir;                 /* Default AUTOMOUNT dir     */
 #endif
 
+
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
-                ipled:1,                /* 1 = guest has been IPL'ed */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */
@@ -726,7 +724,6 @@ struct SYSBLK {
 #endif
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
-        LOCK  icount_lock;
 #define IMAP_FIRST sysblk.imap01
         U64 imap01[256];
         U64 imapa4[256];
@@ -920,6 +917,21 @@ typedef struct _SSBLK {                 /* Subsystem ID block        */
         void   *stats;                  /* Associated statistics     */
 } SSBLK;
 
+
+/*-------------------------------------------------------------------*/
+/* Channel Path config block                                         */
+/*-------------------------------------------------------------------*/
+struct CHPBLK {
+#define HDL_NAME_CHPBLK   "DEVBLK"
+#define HDL_VERS_CHPBLK   "3.08"
+#define HDL_SIZE_CHPBLK   sizeof(CHPBLK)
+        CHPBLK *next;
+        BYTE    css;
+        BYTE    chpid;
+        BYTE    chptype;
+};
+
+
 /*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -1100,7 +1112,8 @@ struct DEVBLK {                         /* Device configuration block*/
                 resumesuspended:1;      /* 1=Hresuming suspended dev */
 #define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
 #define INITIAL_POWERON_370() \
-    ( !sysblk.ipled && ARCH_370 == sysblk.arch_mode )
+    ( dev->crwpending && ARCH_370 == sysblk.arch_mode )
+        int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
 
@@ -1327,7 +1340,6 @@ struct DEVBLK {                         /* Device configuration block*/
 
         TID     tape_mountmon_tid;      /* Thread ID for async mnts  */
         u_int   utapemountreq;          /* Count of tape mounts      */
-        char   *pszVaultPath;           /* path to tape vault        */
         void   *ptvfb;                  /* reserve pointer to struct */
 
         /* 3480/3490/3590 Message display */
@@ -1473,6 +1485,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE   *qrspbf;                 /* Response Buffer           */
         int     qrspsz;                 /* Response Buffer Size      */
         int     qidxstate;              /* IDX state                 */
+        int     thinint;                /* Thin Interrupts on PCI    */
 #define OSA_IDX_STATE_INACTIVE  0x00
 #define OSA_IDX_STATE_ACTIVE    0x01
 

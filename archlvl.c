@@ -1,8 +1,5 @@
 /* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010-2011                */
 /*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -258,9 +255,15 @@ FACILITY(MSA_EXTENSION_2,  Z390,         NONE,      Z390,          ALS3)
 #if defined(_FEATURE_HERCULES_DIAGCALLS)
 FACILITY(PROBSTATE_DIAGF08,NONE,         NONE,      S370|ESA390|ZARCH, NONE)
 FACILITY(SIGP_SETARCH_S370,NONE,         NONE,      S370|ESA390|ZARCH, NONE)
- #if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
+#if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
 FACILITY(HOST_RESOURCE_ACCESS,NONE,      NONE,      S370|ESA390|ZARCH, NONE)
- #endif
+#endif
+#if defined(_FEATURE_QEBSM)
+FACILITY(QEBSM,            Z390,         NONE,      Z390,          ALS3)
+#endif /*defined(_FEATURE_QEBSM)*/
+#if defined(_FEATURE_QDIO_THININT)
+FACILITY(QDIO_THININT,     Z390,         NONE,      Z390,          ALS3)
+#endif /*defined(_FEATURE_QDIO_THININT)*/
 #endif
 
 { NULL, 0, 0, 0, 0, 0 }

@@ -1,9 +1,5 @@
 /* XSTORE.C     (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Expanded storage related instructions                */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */

@@ -1,9 +1,5 @@
 /* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2011                  */
 /*              Hercules Device Definitions                          */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -53,7 +49,10 @@ struct DEVHND {
         DEVIM immed;                   /* Immediate CCW Codes        */
         DEVSA *siga_r;                 /* Signal Adapter Input       */
         DEVSA *siga_w;                 /* Signal Adapter Output      */
-        DEVQD *ssqd;                   /* QDIO subsys desc           */
+        DEVSA *siga_s;                 /* Signal Adapter Sync        */
+        DEVSA *siga_m;                 /* Signal Adapter Output Mult */
+        DEVQD *ssqd;                   /* QDIO subsys query desc     */
+        DEVQD *ssci;                   /* QDIO set subchan ind       */
         DEVSR *hsuspend;               /* Hercules suspend           */
         DEVSR *hresume;                /* Hercules resume            */
 };

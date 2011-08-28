@@ -54,13 +54,16 @@
 
 #undef PTIO
 #undef PTIO_CH
-
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
- #define PTIO(    _class, _name      )  PTT( PTT_CL_ ## _class, _name, regs->GR_L(1), (U32)(effective_addr2 & 0xffffffff), regs->psw.IA_L )
- #define PTIO_CH( _class, _name, _op )  PTT( PTT_CL_ ## _class, _name, _op,           (U32)(effective_addr2 & 0xffffffff), regs->psw.IA_L )
+ #define PTIO(_class, _name) \
+  PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
+ #define PTIO_CH( _class, _name, _op ) \
+  PTT( PTT_CL_ ## _class, _name, _op, (U32)(effective_addr2 & 0xffffffff), regs->psw.IA_L )
 #else
- #define PTIO(    _class, _name      )  PTT( PTT_CL_ ## _class, _name, (U32)(effective_addr2 & 0xffffffff), 0, regs->psw.IA_L )
- #define PTIO_CH( _class, _name, _op )  PTT( PTT_CL_ ## _class, _name, _op,                                 0, regs->psw.IA_L )
+ #define PTIO(_class, _name) \
+  PTT(PTT_CL_ ## _class,_name,(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L)
+ #define PTIO_CH( _class, _name, _op ) \
+  PTT( PTT_CL_ ## _class, _name, _op, 0, regs->psw.IA_L )
 #endif
 
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
@@ -154,8 +157,8 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     /* Perform halt subchannel and set condition code */
-    if ((regs->psw.cc = halt_subchan (regs, dev)) != 0)
-        PTIO(ERR,"*HSCH");
+    regs->psw.cc = halt_subchan (regs, dev);
+
 }
 
 
@@ -322,10 +325,9 @@ BYTE    chpid;
 
     chpid = regs->GR_L(1) & 0xFF;
 
-    if((regs->psw.cc = chp_reset(chpid, 1)) != 0)
-        PTIO(ERR,"*RCHP");
+    if( !(regs->psw.cc = chp_reset(regs, chpid)) )
+        RETURN_INTCHECK(regs);
 
-    RETURN_INTCHECK(regs);
 }
 
 
@@ -370,8 +372,7 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     /* Perform resume subchannel and set condition code */
-    if ((regs->psw.cc = resume_subchan (regs, dev)) != 0)
-        PTIO(ERR,"*RSCH");
+    regs->psw.cc = resume_subchan (regs, dev);
 
     regs->siocount++;
 }
@@ -561,10 +562,8 @@ ORB     orb;                            /* Operation request block   */
     regs->siocount++;
 
     /* Set the last path used mask */
-    if (regs->psw.cc == 0)
-        dev->pmcw.lpum = 0x80;
-    else
-        PTIO(ERR,"*SSCH");
+    if (regs->psw.cc == 0) dev->pmcw.lpum = 0x80;
+
 }
 
 
@@ -578,25 +577,7 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 BYTE    chpid;                          /* CHPID associated w/lpum   */
 BYTE    work[32];                       /* Work area                 */
-static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
-/*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  */
-    8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, /* 0x00 */
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* 0x10 */
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x20 */
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x30 */
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x40 */
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x50 */
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x60 */
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x70 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x80 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x90 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xA0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xB0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xC0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xD0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xE0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xF0 */
-};
+int     i;
 
     S(inst, regs, b2, effective_addr2);
 
@@ -626,11 +607,17 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
             && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
         )
         {
-            /* Retrieve active CHPID */
-            chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
+            for (i = 0; i < 8; i++)
+            {
+                if((0x80 >> i) & dev->pmcw.lpum)
+                {
+                    /* Retrieve active CHPID */
+                    chpid = dev->pmcw.chpid[i];
 
-            /* Update channel path status work area */
-            work[chpid/8] |= 0x80 >> (chpid % 8);
+                    /* Update channel path status work area */
+                    work[chpid / 8] |= 0x80 >> (chpid % 8);
+                }
+            }
         }
 
         /* Release the device lock */
@@ -649,7 +636,7 @@ DEF_INST(store_channel_report_word)
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-U32     crw;                            /* Channel Report Word       */
+U32     n;                              /* Integer work area         */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -666,18 +653,14 @@ U32     crw;                            /* Channel Report Word       */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
 
     /* Obtain any pending channel report */
-    crw = get_next_channel_report_word(regs);
-
-    PTIO_CH( IO, "STCRW crw", crw );
+    n = channel_report(regs);
 
     /* Store channel report word at operand address */
-    ARCH_DEP(vstore4) ( crw, effective_addr2, b2, regs );
+    ARCH_DEP(vstore4) ( n, effective_addr2, b2, regs );
 
     /* Indicate if channel report or zeros were stored */
-    regs->psw.cc = (crw == 0) ? 1 : 0;
+    regs->psw.cc = (n == 0) ? 1 : 0;
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*STCRW");
 }
 
 
@@ -847,9 +830,6 @@ RADR    pfx;                            /* Prefix                    */
     }
 
     regs->psw.cc = (icode == 0) ? 0 : 1;
-
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*TPI");
 }
 
 
@@ -913,8 +893,6 @@ int     cc;                             /* Condition Code            */
 
     regs->psw.cc = cc;
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*TSCH");
 }
 
 
@@ -962,8 +940,6 @@ DEVBLK *dev;                            /* -> device block           */
     /* Perform cancel subchannel and set condition code */
     regs->psw.cc = cancel_subchan (regs, dev);
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*XSCH");
 }
 #endif /*defined(FEATURE_CANCEL_IO_FACILITY)*/
 #endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
@@ -1027,10 +1003,8 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     /* Start the channel program and set the condition code */
     regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);        /*@IZW*/
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*SIO");
-
     regs->siocount++;
+
 }
 
 
@@ -1063,16 +1037,13 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     /* Test the device and set the condition code */
     regs->psw.cc = testio (regs, dev, inst[1]);
-
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*TIO");
-
     /* Yield time slice so that device handler may get some time */
     /* to possibly complete an I/O - to prevent a TIO Busy Loop  */
     if(regs->psw.cc == 2)
     {
         sched_yield();
     }
+
 }
 
 
@@ -1106,8 +1077,6 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     /* Test the device and set the condition code */
     regs->psw.cc = haltio (regs, dev, inst[1]);
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*HIO");
 }
 
 
@@ -1149,8 +1118,6 @@ U16     tch_ctl;
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*TCH");
 }
 
 
@@ -1174,8 +1141,6 @@ VADR    effective_addr2;                /* Effective address         */
     regs->psw.cc =
         stchan_id (regs, effective_addr2 & 0xFF00);
 
-    if (regs->psw.cc != 0)
-        PTIO(ERR,"*STIDC");
 }
 
 
@@ -1295,10 +1260,7 @@ int     i;
                 regs->psw.cc = 0;
             }
             else
-            {
                 regs->psw.cc = 1;
-                PTIO(ERR,"*DISCS");
-            }
             RELEASE_INTLOCK(regs);
             return;
         }
@@ -1309,6 +1271,7 @@ int     i;
     /* The channel set is not connected, no operation
        is performed */
     regs->psw.cc = 0;
+
 }
 #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 

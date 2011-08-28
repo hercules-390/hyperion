@@ -17,6 +17,13 @@
 #include "devtype.h"
 #include "opcode.h"
 
+#if !defined(V1)
+ #define V1 0
+#endif
+#if !defined(V2)
+ #define V2 0
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
 

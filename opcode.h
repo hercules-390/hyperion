@@ -1,9 +1,5 @@
 /* OPCODE.H     (c) Copyright Jan Jaeger, 2000-2011                  */
 /*              Instruction decoding macros and prototypes           */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -218,10 +214,8 @@ int used; \
     } \
     if(!used) \
     { \
-    obtain_lock( &sysblk.icount_lock ); \
     WRMSG(HHC02292, "I", "First use"); \
     ARCH_DEP(display_inst) ((_regs), (_inst)); \
-    release_lock( &sysblk.icount_lock ); \
     } \
 } while(0)
 
@@ -579,6 +573,8 @@ do { \
 /* Virtual Architecture Level Set Facility */
 #define FACILITY_ENABLED(_faci, _regs) \
         (((_regs)->facility_list[((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+#define FACILITY_ENABLED_DEV(_faci) \
+        ((sysblk.facility_list[sysblk.arch_mode][((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
 #define FACILITY_CHECK(_faci, _regs) \
     do { \
@@ -2858,7 +2854,7 @@ int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                               U32 *iointid, BYTE zone);
 void io_reset (void);
-int  chp_reset(BYTE chpid, int solicited);
+int  chp_reset(REGS *, BYTE chpid);
 void channelset_reset(REGS *regs);
 
 
@@ -2974,14 +2970,10 @@ void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *);
 /* Functions in module machchk.c */
 int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
     RADR *fsta);
-U32  get_next_channel_report_word (REGS *);
+U32  channel_report (REGS *);
 void machine_check_crwpend (void);
 void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);
-void build_attach_chrpt( DEVBLK *dev );
-void build_detach_chrpt( DEVBLK *dev );
-void build_chp_reset_chrpt( BYTE chpid, int solicited, int found );
-int  queue_channel_report( U32* crwarray, U32 crwcount );
 
 
 /* Functions in module opcode.c */

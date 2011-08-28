@@ -887,8 +887,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
-    U32    *crwarray;                   /* -> Channel Report queue   */
-    unsigned crwcount;
     int     i;
     int first, last;
     char    sysid[12];
@@ -912,10 +910,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 last++;
             continue;
         }
-
-        /*---------------------*/
-        /* CPU state and flags */
-        /*---------------------*/
 
         if ( first > 0 )
         {
@@ -999,11 +993,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
         WRMSG( HHC00869, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
-
-        /*--------------------------*/
-        /* (same thing but for SIE) */
-        /*--------------------------*/
-
         if (sysblk.regs[i]->sie_active)
         {
             WRMSG( HHC00850, "I", "IE", sysblk.regs[i]->cpuad,
@@ -1056,11 +1045,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    /*------------------------*/
-    /* System masks and locks */
-    /*------------------------*/
-
-
     if ( first > 0 )
     {
         if ( first == last )
@@ -1078,47 +1062,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 #if !defined(OPTION_FISHIO)
     WRMSG( HHC00876, "I", test_lock(&sysblk.ioqlock) ? "" : "not ");
 #endif
-
-    /*----------------------*/
-    /* Channel Report queue */
-    /*----------------------*/
-
-    OBTAIN_CRWLOCK();
-
-    if ((crwarray = sysblk.crwarray) != NULL)
-        if ((crwcount = sysblk.crwcount) != 0)
-            if ((crwarray = malloc( crwcount * sizeof(U32) )) != NULL)
-                memcpy( crwarray, sysblk.crwarray, crwcount * sizeof(U32));
-
-    RELEASE_CRWLOCK();
-
-    if (!crwarray)
-        //     HHC00883 "Channel Report queue: (NULL)"
-        WRMSG( HHC00883, "I");
-    else if (!crwcount)
-        //     HHC00884 "Channel Report queue: (empty)"
-        WRMSG( HHC00884, "I");
-    else
-    {
-        U32 crw;
-        char buf[256];
-
-        //     HHC00885 "Channel Report queue:"
-        WRMSG( HHC00885, "I");
-
-        for (i=0; i < (int) crwcount; i++)
-        {
-            crw = *(crwarray + i);
-            //     HHC00886 "CRW 0x%08.8X: %s"
-            WRMSG( HHC00886, "I", crw, FormatCRW( crw, buf, sizeof(buf) ));
-        }
-        free( crwarray );
-    }
-
-    /*-------------------------*/
-    /* Device interrupt status */
-    /*-------------------------*/
-
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
@@ -1154,16 +1097,15 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
         }
+        if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
+        {
+            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "CRW pending" );
+        }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "lock held" );
         }
     }
-
-    /*---------------------*/
-    /* I/O Interrupt Queue */
-    /*---------------------*/
-
     if (!sysblk.iointq)
         WRMSG( HHC00881, "I", " (NULL)");
     else
@@ -1512,63 +1454,30 @@ int count_cmd(int argc, char *argv[], char *cmdline)
 int icount_cmd(int argc, char *argv[], char *cmdline)
 {
     int i, i1, i2, i3;
-    unsigned char *opcode1;
-    unsigned char *opcode2;
-    U64 *count;
+
+#define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
+                                     in architecture instruction set */
+
+    unsigned char opcode1[MAX_ICOUNT_INSTR];
+    unsigned char opcode2[MAX_ICOUNT_INSTR];
+    U64 count[MAX_ICOUNT_INSTR];
     U64 total;
     char buf[128];
 
     UNREFERENCED(cmdline);
 
-    obtain_lock( &sysblk.icount_lock );
-
     if ( argc > 1 && CMD(argv[1],clear,5) )
     {
         memset(IMAP_FIRST, 0, IMAP_SIZE);
         WRMSG(HHC02204, "I", "instruction counts", "zero");
-        release_lock( &sysblk.icount_lock );
         return 0;
     }
 
-#define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
-                                     in architecture instruction set */
-
     if ( argc > 1 && CMD(argv[1],sort,4) )
     {
-      /* Allocate space */
-      if (!(opcode1 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))) )
-      {
-        char buf[40];
-        MSGBUF( buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
-        WRMSG(HHC02219, "E", buf, strerror(errno));
-        release_lock( &sysblk.icount_lock );
-        return 0;
-      }
-      if ( !(opcode2 = malloc(MAX_ICOUNT_INSTR * sizeof(unsigned char))) )
-      {
-        char buf[40];
-        MSGBUF( buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(unsigned char));
-        WRMSG(HHC02219, "E", buf, strerror(errno));
-        free(opcode1);
-        release_lock( &sysblk.icount_lock );
-        return 0;
-      }
-      if ( !(count = malloc(MAX_ICOUNT_INSTR * sizeof(U64))) )
-      {
-        char buf[40];
-        MSGBUF( buf, "malloc(%lu)", MAX_ICOUNT_INSTR * sizeof(U64));
-        WRMSG(HHC02219, "E", buf, strerror(errno));
-        free(opcode1);
-        free(opcode2);
-        release_lock( &sysblk.icount_lock );
-        return 0;
-      }
-      for ( i = 0; i < (MAX_ICOUNT_INSTR-1); i++ )
-      {
-        opcode1[i] = 0;
-        opcode2[i] = 0;
-        count[i] = 0;
-      }
+      memset(opcode1,0x00,sizeof(opcode1));
+      memset(opcode2,0x00,sizeof(opcode2));
+      memset(count,0x00,sizeof(count));
 
       /* Collect */
       i = 0;
@@ -1590,10 +1499,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1) )
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1613,10 +1518,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1636,10 +1537,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1659,10 +1556,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1682,10 +1575,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1705,10 +1594,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1728,10 +1613,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1751,10 +1632,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1774,10 +1651,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1797,10 +1670,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1820,10 +1689,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1843,10 +1708,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1866,10 +1727,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252, "E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1889,10 +1746,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1912,10 +1765,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1935,10 +1784,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1958,10 +1803,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -1981,10 +1822,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -2004,10 +1841,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 if (i == (MAX_ICOUNT_INSTR-1))
                 {
                   WRMSG(HHC02252,"E");
-                  free(opcode1);
-                  free(opcode2);
-                  free(count);
-                  release_lock( &sysblk.icount_lock );
                   return 0;
                 }
               }
@@ -2025,10 +1858,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
               if (i == (MAX_ICOUNT_INSTR-1))
               {
                 WRMSG(HHC02252,"E");
-                free(opcode1);
-                free(opcode2);
-                free(count);
-                release_lock( &sysblk.icount_lock );
                 return 0;
               }
             }
@@ -2190,10 +2019,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
           }
         }
       }
-      free(opcode1);
-      free(opcode2);
-      free(count);
-      release_lock( &sysblk.icount_lock );
       return 0;
     }
 
@@ -2383,7 +2208,6 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                 break;
         }
     }
-    release_lock( &sysblk.icount_lock );
     return 0;
 }
 

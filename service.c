@@ -1400,14 +1400,21 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Identify CHPIDs installed, standby, and online */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            chpbyte = dev->devnum >> 11;
-            chpbit = (dev->devnum >> 8) & 7;
+            for (i = 0; i < 8; i++)
+            {
+                chpbyte = dev->pmcw.chpid[i] / 8;
+                chpbit = dev->pmcw.chpid[i] % 8;
 
-            sccbchp->installed[chpbyte] |= 0x80 >> chpbit;
-            if (dev->pmcw.flag5 & PMCW5_V)
-                sccbchp->online[chpbyte] |= 0x80 >> chpbit;
-            else
-                sccbchp->standby[chpbyte] |= 0x80 >> chpbit;
+                if( ((0x80 >> i) & dev->pmcw.pim))
+                {
+                    sccbchp->installed[chpbyte] |= 0x80 >> chpbit;
+
+                    if (dev->pmcw.flag5 & PMCW5_V)
+                        sccbchp->online[chpbyte] |= 0x80 >> chpbit;
+                    else
+                        sccbchp->standby[chpbyte] |= 0x80 >> chpbit;
+                }
+            }
         }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 

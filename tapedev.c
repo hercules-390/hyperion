@@ -147,7 +147,10 @@ DEVHND  tapedev_device_hndinfo   =
         TapeImmedCommands,             /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };

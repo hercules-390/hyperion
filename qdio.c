@@ -2,9 +2,6 @@
 /*              (C) Copyright Harold Grovesteen, 2011                */
 /*              Queued Direct Input Output                           */
 /*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -53,18 +50,17 @@ DEVBLK *dev;                            /* -> device block           */
     PTIO(IO,"SIGA");
 
     /* Specification exception if invalid function code */
-    if(
+    if((regs->GR_L(0)
 #if defined(FEATURE_QEBSM)
-       (regs->GR_L(0) & ~SIGA_TOKEN) > SIGA_FC_MAX
-#else /*!defined(FEATURE_QEBSM)*/
-        regs->GR_L(0)                > SIGA_FC_MAX
-#endif /*!defined(FEATURE_QEBSM)*/
-                                                  )
+                      & ~(FACILITY_ENABLED(QEBSM,regs) ? SIGA_TOKEN : 0)
+#endif /*defined(FEATURE_QEBSM)*/
+                      ) > SIGA_FC_MAX)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Locate the device block for this subchannel */
 #if defined(FEATURE_QEBSM)
-    if((regs->GR_L(0) & SIGA_TOKEN))
+    if(FACILITY_ENABLED(QEBSM, regs) 
+      && (regs->GR_L(0) & SIGA_TOKEN))
         dev = find_device_by_subchan (TKN2IOID(regs->GR_G(1)));
     else
 #endif /*defined(FEATURE_QEBSM)*/
@@ -102,12 +98,11 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     switch(
-#if defined(FEATURE_QEBSM)
-           regs->GR_L(0) & ~SIGA_TOKEN
-#else /*!defined(FEATURE_QEBSM)*/
            regs->GR_L(0)
-#endif /*!defined(FEATURE_QEBSM)*/
-                                      ) {
+#if defined(FEATURE_QEBSM)
+                         & ~(FACILITY_ENABLED(QEBSM,regs) ? SIGA_TOKEN : 0)
+#endif /*defined(FEATURE_QEBSM)*/
+                         ) {
 
     case SIGA_FC_R:
         if(dev->hnd->siga_r)
@@ -130,10 +125,32 @@ DEVBLK *dev;                            /* -> device block           */
         break;
 
     case SIGA_FC_S:
+#if SIGA_FC_MAX >= SIGA_FC_S
+        if(dev->hnd->siga_s)
+            regs->psw.cc = (dev->hnd->siga_s) (dev, regs->GR_L(2) );
+        else
+        {
+            PTIO(ERR,"*SIGA");
+            regs->psw.cc = 3;
+        }
+#else
         /* No signalling required for sync requests as we emulate
            a real machine */
         regs->psw.cc = 0;
+#endif
         break;
+
+#if SIGA_FC_MAX >= SIGA_FC_M
+    case SIGA_FC_M:
+        if(dev->hnd->siga_m)
+            regs->psw.cc = (dev->hnd->siga_m) (dev, regs->GR_L(2) );
+        else
+        {
+            PTIO(ERR,"*SIGA");
+            regs->psw.cc = 3;
+        }
+        break;
+#endif
 
     default:
         PTIO(ERR,"*SIGA");
@@ -184,6 +201,8 @@ OSA_GRP *grp;                           /* OSA Group device structure         */
 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
+
+    FACILITY_CHECK(QEBSM, regs);
 
 // ARCH_DEP(display_inst) (regs, inst);
 
@@ -334,6 +353,8 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
+    FACILITY_CHECK(QEBSM, regs);
+
 // ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
@@ -377,7 +398,7 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     qndx  = regs->GR_H(r1);       /* Fetch the queue index from operand 1 */
     bndx  = regs->GR_L(r1);       /* Fetch the buffer index from operand 1 */
     /* Set auto-acknowledgement flag from operand 2, bit 0 */
-    autoack= (regs->GR_G(r2) & 0x8000000000000000) == 0x8000000000000000;
+    autoack = (regs->GR_G(r2) & 0x8000000000000000ULL) == 0x8000000000000000ULL;
     count = regs->GR_G(r3);       /* Fetch the number of buffer states to change */
 
     queues = (U32)(grp->i_qcnt + grp->o_qcnt);  /* Calculate number of queues */

@@ -1,9 +1,5 @@
 /* CHSC.C       (c) Copyright Jan Jaeger, 2002-2011                  */
 /*              Channel Subsystem Call                               */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
@@ -38,10 +34,10 @@
 
 static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-    U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 
-    CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
-    CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
+CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
+CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 
     FETCH_HW(f_sch,chsc_req4->f_sch);
     FETCH_HW(l_sch,chsc_req4->l_sch);
@@ -80,6 +76,10 @@ static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
             chsc_rsp4->path_mask = dev->pmcw.pim;
             STORE_HW(chsc_rsp4->sch, sch);
             memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
+#if 1 // ZZTEST
+            chsc_rsp4->fla_valid_mask = 0x80;
+            STORE_HW(chsc_rsp4->fla[0], ((dev->devnum & 0xff00) >> 8));
+#endif
         }
     }
 
@@ -97,7 +97,57 @@ static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 }
 
 
-static int ARCH_DEP(chsc_get_css_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+#if 0 // ZZTEST
+static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+
+CHSC_REQ6 *chsc_req6 = (CHSC_REQ6 *)(chsc_req);
+CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
+
+    FETCH_HW(f_sch,chsc_req6->f_sch);
+    FETCH_HW(l_sch,chsc_req6->l_sch);
+    FETCH_HW(lcss,chsc_req6->ssidfmt);
+    lcss &= CHSC_REQ6_SSID;
+
+    /* Fetch length of request field */
+    FETCH_HW(req_len, chsc_req6->length);
+
+    rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
+
+    if(l_sch < f_sch
+      || rsp_len > (0x1000 - req_len)) {
+        /* Set response field length */
+        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+        /* Store request error */
+        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+        /* No reaon code */
+        STORE_FW(chsc_rsp->info,0);
+        return 0;
+    }
+
+    for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp6++)
+    {
+    DEVBLK *dev;
+        memset(chsc_rsp6, 0, sizeof(CHSC_RSP6) );
+    }
+
+    /* Store response length */
+    STORE_HW(chsc_rsp->length,rsp_len);
+
+    /* Store request OK */
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
+
+    /* No reaon code */
+    STORE_FW(chsc_rsp->info,0);
+
+    return 0;
+
+}
+#endif
+
+
+static int ARCH_DEP(chsc_get_css_info) (REGS *regs, CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 CHSC_RSP10 *chsc_rsp10;
 U16 req_len, rsp_len;
@@ -126,42 +176,38 @@ U16 req_len, rsp_len;
     memset(chsc_rsp10->general_char, 0, sizeof(chsc_rsp10->general_char));
     memset(chsc_rsp10->chsc_char, 0, sizeof(chsc_rsp10->chsc_char));
 
-    chsc_rsp10->general_char[0][0] = 0
 #if defined(FEATURE_REGION_RELOCATE)
-                                   | 0x24
+    CHSC_AI(chsc_rsp10->general_char,2) |= CHSC_BI(2);
+    CHSC_AI(chsc_rsp10->general_char,5) |= CHSC_BI(5);
 #endif
 #if defined(FEATURE_CANCEL_IO_FACILITY)
-                                   | 0x02
+    CHSC_AI(chsc_rsp10->general_char,6) |= CHSC_BI(6);
 #endif
-                                   | 0x01   /* Concurrent Sense Fac */
-                                   ;
-
-    chsc_rsp10->general_char[0][1] = 0
-//                                 | 0x08  /* Dynamic I/O */
-                                   ;
-
-    chsc_rsp10->general_char[1][1] = 0
+    CHSC_AI(chsc_rsp10->general_char,7) |= CHSC_BI(7);   /* Concurrent Sense */
+    CHSC_AI(chsc_rsp10->general_char,12) |= CHSC_BI(12); /* Dynamic IO */
 #if defined(FEATURE_QUEUED_DIRECT_IO)
-                                   | 0x40  /* Adapter Interruption Facility */
+    CHSC_AI(chsc_rsp10->general_char,41) |= CHSC_BI(41); /* Adapter Interruption Facility */
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
-                                   | (sysblk.mss ? 0x04 : 0x00) /* Multiple CSS */
-                                   ;
+    if(sysblk.mss)
+        CHSC_AI(chsc_rsp10->general_char,45) |= CHSC_BI(45); /* Multiple CSS */
+//  CHSC_AI(chsc_rsp10->general_char,46) |= CHSC_BI(46); /* FCS */
+//  CHSC_AI(chsc_rsp10->general_char,48) |= CHSC_BI(48); /* Ext MB */
+//  CHSC_AI(chsc_rsp10->general_char,56) |= CHSC_BI(56); /* AIF Time Delay Disablement fac*/
+#if defined(_FEATURE_QEBSM)
+    if(FACILITY_ENABLED(QEBSM, regs))
+        CHSC_AI(chsc_rsp10->general_char,58) |= CHSC_BI(58);
+#endif /*defined(_FEATURE_QEBSM)*/
+#if defined(_FEATURE_QDIO_THININT)
+    if(FACILITY_ENABLED(QDIO_THININT, regs))
+        CHSC_AI(chsc_rsp10->general_char,67) |= CHSC_BI(67); /* OSA/FCP Thin interrupts */
+#endif /*defined(_FEATURE_QDIO_THININT)*/
+//  CHSC_AI(chsc_rsp10->general_char,82) |= CHSC_BI(82); /* CIB */
+//  CHSC_AI(chsc_rsp10->general_char,88) |= CHSC_BI(88); /* FCX */
 
-    chsc_rsp10->general_char[1][3] = 0
-//                                 | 0x80  /* AIF Time Delay Disablement fac*/
-#if defined(FEATURE_QEBSM)
-                                   | 0x40  /* QEBSM Available */
-#endif /*defined(FEATURE_QEBSM)*/
-                                   ;
-
-    chsc_rsp10->general_char[2][0] = 0
-//                                 | 0x10 /* OSA/FCP Thin interrupts */
-                                   ;
-
-    chsc_rsp10->chsc_char[3][1] = 0
-//                              | 0x10 /* Set Channel Subsystem Char */
-//                              | 0x08 /* Fast CHSCs */
-                                ;
+//  CHSC_AI(chsc_rsp10->chsc_char,84) |= CHSC_BI(84); /* SECM */
+//  CHSC_AI(chsc_rsp10->chsc_char,86) |= CHSC_BI(86); /* SCMC */
+//  CHSC_AI(chsc_rsp10->chsc_char,107) |= CHSC_BI(107); /* Set Channel Subsystem Char */
+//  CHSC_AI(chsc_rsp10->chsc_char,108) |= CHSC_BI(108); /* Fast CHSCs */
 
     /* Store request OK */
     STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
@@ -175,10 +221,10 @@ U16 req_len, rsp_len;
 
 static int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-    U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 
-    CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
-    CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
+CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
+CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
 
     FETCH_HW(f_sch,chsc_req24->first_sch);
     FETCH_HW(l_sch,chsc_req24->last_sch);
@@ -227,10 +273,10 @@ static int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 
 static int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-    U16 req_len, rsp_len, facility;
+U16 req_len, rsp_len, facility;
 
-    CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
-    CHSC_RSP31* chsc_rsp31 = (CHSC_RSP31*) (chsc_rsp+1);
+CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
+CHSC_RSP31* chsc_rsp31 = (CHSC_RSP31*) (chsc_rsp+1);
 
     /* Fetch length of request field and validate */
     FETCH_HW( req_len, chsc_req31->length );
@@ -272,6 +318,133 @@ static int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rs
 }
 
 
+#if defined(_FEATURE_QDIO_THININT)
+static int ARCH_DEP(chsc_set_sci) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+DEVBLK *dev;
+U32 ssid;
+int rc;
+
+CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
+
+    /* Fetch length of request field */
+    FETCH_FW(ssid, chsc_req21->ssid);
+
+    if((dev = find_device_by_subchan(ssid)))
+        if(dev->hnd->ssci)
+            if(!(rc = (dev->hnd->ssci)(dev, chsc_req21)))
+            {
+                /* Store response length */
+                STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+                /* Store request OK */
+                STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
+                /* No reaon code */
+                STORE_FW(chsc_rsp->info,0);
+                return rc;
+            } 
+
+    /* Store response length */
+    STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+    /* Store request OK */
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+    /* No reaon code */
+    STORE_FW(chsc_rsp->info,0);
+    return 0;
+}
+#endif /*defined(_FEATURE_QDIO_THININT)*/
+
+
+static int ARCH_DEP(chsc_get_chp_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+U16 req_len, rsp_len;
+int chp;
+
+CHSC_REQ2 *chsc_req2 = (CHSC_REQ2 *)(chsc_req);
+CHSC_RSP2 *chsc_rsp2 = (CHSC_RSP2 *)(chsc_rsp+1);
+CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
+
+    /* Fetch length of request field */
+    FETCH_HW(req_len, chsc_req2->length);
+
+    rsp_len = sizeof(CHSC_RSP) + ((1 + chsc_req2->last_chpid - chsc_req2->first_chpid) * ((chsc_req2->flags & CHSC_REQ2_F1_C) ? sizeof(CHSC_RSP2F1) :  sizeof(CHSC_RSP2)));
+
+
+    if(chsc_req2->first_chpid > chsc_req2->last_chpid
+      || rsp_len > (0x1000 - req_len)) {
+// ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2)) {
+        /* Set response field length */
+        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+        /* Store request error */
+        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+        /* No reaon code */
+        STORE_FW(chsc_rsp->info,0);
+        return 0;
+    }
+
+    for(chp = chsc_req2->first_chpid; chp <= chsc_req2->last_chpid; chp++, chsc_rsp2++, chsc_rsp2f1++)
+    {
+        if(!(chsc_req2->flags & CHSC_REQ2_F1_C))
+        {
+        DEVBLK *dev;
+
+            memset(chsc_rsp2, 0, sizeof(CHSC_RSP2) );
+            chsc_rsp2->chpid  = chp;
+
+            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+                if (dev->allocated
+                  && (dev->pmcw.chpid[0] == chp))
+                {
+                    chsc_rsp2->flags  = 0x80;
+// ZZ TEMP SOLUTION WIP
+                    switch(dev->devtype) {
+                        case 0x1731:
+                            chsc_rsp2->chp_type = CHP_TYPE_OSD;
+                            break;
+                    }
+//                  chsc_rsp2->lsn    = 0;
+//                  chsc_rsp2->swla   = 0;
+//                  chsc_rsp2->chla   = 0;
+//                  chsc_rsp2->chpp   = 0;
+                }
+        }
+        else
+        {
+        DEVBLK *dev;
+
+            memset(chsc_rsp2f1, 0, sizeof(CHSC_RSP2F1) );
+            chsc_rsp2f1->chpid  = chp;
+
+            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+                if (dev->allocated
+                  && (dev->pmcw.chpid[0] == chp))
+                {
+                    chsc_rsp2f1->flags  = 0x80;
+// ZZ TEMP SOLUTION WIP
+                    switch(dev->devtype) {
+                        case 0x1731:
+                            chsc_rsp2f1->chp_type = CHP_TYPE_OSD;
+                            break;
+                    }
+//                  chsc_rsp2f1->lsn    = 0;
+//                  chsc_rsp2f1->chpp   = 0;
+//                  STORE_HW(chsc_rsp2f1->mdc,0x0000);
+//                  STORE_HW(chsc_rsp2f1->flags2,0x0000);
+                }
+        }
+    }
+
+    /* Store response length */
+    STORE_HW(chsc_rsp->length,rsp_len);
+
+    /* Store request OK */
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
+
+    /* No reaon code */
+    STORE_FW(chsc_rsp->info,0);
+
+    return 0;
+
+}
 /*-------------------------------------------------------------------*/
 /* B25F CHSC  - Channel Subsystem Call                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -321,7 +494,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             break;
 
         case CHSC_REQ_CSSINFO:
-            regs->psw.cc = ARCH_DEP(chsc_get_css_info) (chsc_req, chsc_rsp);
+            regs->psw.cc = ARCH_DEP(chsc_get_css_info) (regs, chsc_req, chsc_rsp);
             break;
 
         case CHSC_REQ_GETSSQD:
@@ -331,6 +504,27 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         case CHSC_REQ_ENFACIL:
             regs->psw.cc = ARCH_DEP(chsc_enable_facility) (chsc_req, chsc_rsp);
             break;
+
+        case CHSC_REQ_CHPDESC:
+            regs->psw.cc = ARCH_DEP(chsc_get_chp_desc) (chsc_req, chsc_rsp);
+            break;
+
+#if 0 // ZZTEST
+        case CHSC_REQ_CUDESC:
+        case 0x0026:
+            regs->psw.cc = ARCH_DEP(chsc_get_cu_desc) (chsc_req, chsc_rsp);
+            break;
+#endif
+
+#if defined(_FEATURE_QDIO_THININT)
+        case CHSC_REQ_SETSSSI:
+            if(FACILITY_ENABLED(QDIO_THININT, regs))
+            {
+                regs->psw.cc = ARCH_DEP(chsc_set_sci) (chsc_req, chsc_rsp);
+                break;
+            }
+            /* Fall through to unkown request if thinint not supported */
+#endif /*defined(_FEATURE_QDIO_THININT)*/
 
         default:
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);

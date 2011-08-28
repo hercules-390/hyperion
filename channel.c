@@ -1223,6 +1223,7 @@ static void device_reset (DEVBLK *dev)
     memset (&dev->attnscsw, 0, sizeof(SCSW));
 
     dev->readpending = 0;
+    dev->crwpending = 0;
     dev->ckdxtdef = 0;
     dev->ckdsetfm = 0;
     dev->ckdlcount = 0;
@@ -1288,26 +1289,25 @@ int     console = 0;                    /* 1 = console device reset  */
 /* Reset all devices on a particular chpid                           */
 /* Called by io.c 'RHCP' Reset Channel Path instruction.             */
 /*-------------------------------------------------------------------*/
-int chp_reset(BYTE chpid, int solicited)
+int chp_reset(REGS *regs, BYTE chpid)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
-int reset = 0, console = 0;
+int operational = 3;
+int console = 0;
 
-    /* Reset each device in the configuration with this chpid */
-    for (reset=0, dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    OBTAIN_INTLOCK(regs);
+
+    /* Reset each device in the configuration */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        if (!IS_DEV(dev))
-            continue;
-
-        for (i=0; i < 8; i++)
+        for(i = 0; i < 8; i++)
         {
             if((chpid == dev->pmcw.chpid[i])
               && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
             {
-                reset = 1;
-                if (dev->console)
-                    console = 1;
+                operational = 0;
+                if (dev->console) console = 1;
                 device_reset(dev);
             }
         }
@@ -1315,17 +1315,18 @@ int reset = 0, console = 0;
 
     /* Signal console thread to redrive select */
     if (console)
-    {
-        ASSERT( reset ); /* (sanity check) */
         SIGNAL_CONSOLE_THREAD();
-    }
 
-    /* Indicate channel path reset completed */
-    build_chp_reset_chrpt( chpid, solicited, reset );
-    return 0;
+    /* Set Channel Path Reset Pending */
+    sysblk.chp_reset[chpid/32] |= 0x80000000 >> (chpid % 32);
+    ON_IC_CHANRPT;
+    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
+
+    RELEASE_INTLOCK(regs);
+
+    return operational;
 
 } /* end function chp_reset */
-
 
 /*-------------------------------------------------------------------*/
 /* I/O RESET  --  handle the "Channel Subsystem Reset" signal        */
@@ -1362,10 +1363,6 @@ int i;
     }
 
     /* No crws pending anymore */
-    OBTAIN_CRWLOCK();
-    sysblk.crwcount = 0;
-    sysblk.crwindex = 0;
-    RELEASE_CRWLOCK();
     OFF_IC_CHANRPT;
 
     /* Signal console thread to redrive select */
@@ -3648,6 +3645,25 @@ retry:
     *ioid = (dev->ssid << 16) | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
 #if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_QDIO_THININT)
+    if(unlikely(FACILITY_ENABLED(QDIO_THININT, regs)
+      && (dev->pciscsw.flag2 & SCSW2_Q) && dev->thinint) )
+    {
+        *iointid = 0x80000000
+                 | ((dev->pmcw.flag5 & PMCW4_ISC) << 24)
+                 | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7);
+
+        /* Clear the pending PCI status */
+        dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+        dev->pciscsw.flag3 &= ~(SCSW3_SC);
+        dev->pcipending = 0;
+
+        /* Dequeue the interrupt */
+        DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+
+    }
+    else
+#endif /*defined(FEATURE_QDIO_THININT)*/
     *iointid =
 #if defined(_FEATURE_IO_ASSIST)
     /* For I/O Assisted devices use (V)ISC */
@@ -3834,8 +3850,20 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 #if defined(_370)
         case ARCH_370:
             /* Do NOT raise if initial power-on state */
-            if (!INITIAL_POWERON_370())
-                return s370_device_attention(dev, unitstat);
+            /*
+             * FIXME : The dev->crwpending test in S/370
+             *         mode prevents any devices added
+             *         at run time after IPL from being
+             *         operational. The test has been
+             *         temporarily disabled until it is
+             *         either confirmed as being superfluous
+             *         or another solution is found.
+             *         ISW 20070109
+             */
+            /*
+            if (dev->crwpending) return 3;
+            */
+            return s370_device_attention(dev, unitstat);
 #endif
 #if defined(_390)
         case ARCH_390: return s390_device_attention(dev, unitstat);

@@ -1652,7 +1652,10 @@ DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
         &fbadasd_hsuspend,             /* Hercules suspend           */
         &fbadasd_hresume               /* Hercules resume            */
 };

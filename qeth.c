@@ -1,9 +1,6 @@
 /* QETH.C       (c) Copyright Jan Jaeger,   1999-2011                */
 /*              OSA Express                                          */
 /*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -254,6 +251,84 @@ int i;
 }
 
 
+#if defined(_FEATURE_QDIO_THININT)
+/*-------------------------------------------------------------------*/
+/* Set Adapter Local Summary Indicator bits                          */
+/*-------------------------------------------------------------------*/
+static inline void set_alsi(DEVBLK *dev, BYTE bits)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+    if(grp->alsi)
+    {
+    BYTE *alsi = dev->mainstor + grp->alsi;
+
+        obtain_lock(&sysblk.mainlock);
+        *alsi |= bits;
+        STORAGE_KEY(grp->alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        release_lock(&sysblk.mainlock);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Clear Adapter Local Summary Indicator bits                        */
+/*-------------------------------------------------------------------*/
+static inline void alsi_clr(DEVBLK *dev, BYTE bits)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+    if(grp->alsi)
+    {
+    BYTE *alsi = dev->mainstor + grp->alsi;
+
+        obtain_lock(&sysblk.mainlock);
+        *alsi &= bits;
+        STORAGE_KEY(grp->alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        release_lock(&sysblk.mainlock);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Set Device State Change Indicator bits                            */
+/*-------------------------------------------------------------------*/
+static inline void set_dsci(DEVBLK *dev, BYTE bits)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+    if(grp->dsci)
+    {
+    BYTE *dsci = dev->mainstor + grp->dsci;
+
+        obtain_lock(&sysblk.mainlock);
+        *dsci |= bits;
+        STORAGE_KEY(grp->dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        release_lock(&sysblk.mainlock);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Clear Device State Change Indicator bits                          */
+/*-------------------------------------------------------------------*/
+static inline void dsci_clr(DEVBLK *dev, BYTE bits)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+    if(grp->dsci)
+    {
+    BYTE *dsci = dev->mainstor + grp->dsci;
+
+        obtain_lock(&sysblk.mainlock);
+        *dsci &= bits;
+        STORAGE_KEY(grp->dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        release_lock(&sysblk.mainlock);
+    }
+}
+#endif /*defined(_FEATURE_QDIO_THININT)*/
+
+
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
@@ -426,6 +501,20 @@ U32 ackseq;
                         }
                         break;
 
+                    case IPA_INBOUND_CHECKSUM:
+                        TRACE("Set Inbound Checksum\n");
+                        STORE_HW(sap->rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        break;
+
+                    case IPA_SOURCE_MAC:
+                    {
+                        TRACE("Source MAC\n");
+                        STORE_HW(sap->rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                    }
+                        break;
+
                     default:
                         TRACE("Invalid SetAdapter SubCmd(%08x)\n",cmd);
                         STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
@@ -567,6 +656,11 @@ U32 ackseq;
 
             case IPA_CMD_CREATEADDR:
                 TRACE("L3 Create IPv6 addr from MAC\n");
+                STORE_HW(ipa->rc,IPA_RC_OK);
+                break;
+
+            case IPA_CMD_SETDIAGASS:
+                TRACE("L3 Set Diag parms\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -739,6 +833,10 @@ int nobuff = 1;
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->i_slk[iq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;
+                        STORAGE_KEY(grp->i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+#if defined(_FEATURE_QDIO_THININT)
+                        set_alsi(dev,ALSI_ERROR);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->i_slk[iq]);
                         return;
@@ -754,6 +852,10 @@ int nobuff = 1;
                         if(STORCHK(la,len-1,grp->i_sbalk[iq],STORKEY_CHANGE,dev))
                         {
                             slsb->slsbe[ib] = SLSBE_ERROR;
+                            STORAGE_KEY(grp->i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+#if defined(_FEATURE_QDIO_THININT)
+                            set_alsi(dev,ALSI_ERROR);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->i_sbalk[iq]);
                             return;
@@ -815,6 +917,9 @@ DUMP("INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
 
                     if(tlen > 0)
                     {
+#if defined(_FEATURE_QDIO_THININT)
+                        set_dsci(dev,DSCI_IOCOMP);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
                         STORAGE_KEY(grp->i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -911,6 +1016,10 @@ int mq = grp->o_qcnt;
                     if(STORCHK(sa,sizeof(OSA_SBAL)-1,grp->o_slk[oq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;
+                        STORAGE_KEY(grp->o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+#if defined(_FEATURE_QDIO_THININT)
+                        set_alsi(dev,ALSI_ERROR);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
                         TRACE(_("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,grp->o_slk[oq]);
                         return;
@@ -926,6 +1035,10 @@ int mq = grp->o_qcnt;
                         if(STORCHK(la,len-1,grp->o_sbalk[oq],STORKEY_REF,dev))
                         {
                             slsb->slsbe[ob] = SLSBE_ERROR;
+                            STORAGE_KEY(grp->o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+#if defined(_FEATURE_QDIO_THININT)
+                            set_alsi(dev,ALSI_ERROR);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
                             TRACE(_("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,grp->o_sbalk[oq]);
                             return;
@@ -956,7 +1069,12 @@ else { TRACE("OUTPUT DROPPED, INVALID MAC\n"); }
                         }
 
                         if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
+                        {
+#if defined(_FEATURE_QDIO_THININT)
+                            set_dsci(dev,DSCI_IOCOMP);
+#endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
+                        }
                     }
 
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
@@ -1186,6 +1304,55 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 } /* end function qeth_close_device */
 
 
+#if defined(_FEATURE_QDIO_THININT)
+/*-------------------------------------------------------------------*/
+/* QDIO Set Subchannel Indicator                                     */
+/*-------------------------------------------------------------------*/
+static int qeth_set_sci ( DEVBLK *dev, void *desc )
+{ 
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+CHSC_REQ21 *chsc_req21 = (void *)desc;
+BYTE alsi, ks;
+BYTE dsci, kc;
+U16 opc;
+
+    FETCH_HW(opc,chsc_req21->opcode);
+
+    if(opc)
+        return 3; // Invalid operation code
+
+    FETCH_DW(alsi, chsc_req21->alsi); 
+    ks = chsc_req21->sk & CHSC_REQ21_KS;
+
+    FETCH_DW(dsci, chsc_req21->dsci); 
+    kc = (chsc_req21->sk << 4) & CHSC_REQ21_KC;
+
+    if(alsi && dsci)
+    {
+        if(STORCHK(alsi,0,ks,STORKEY_CHANGE,dev) 
+          || STORCHK(dsci,0,kc,STORKEY_CHANGE,dev))
+        {
+            dev->thinint = 0;
+            return 3;
+        }
+        else
+            dev->thinint = 1;
+        
+    }
+    else
+        dev->thinint = 0;
+
+    grp->alsi = alsi;
+    grp->ks = ks;
+
+    grp->dsci = dsci;
+    grp->kc = kc;
+
+    return 0;
+}
+#endif /*defined(_FEATURE_QDIO_THININT)*/
+
+
 /*-------------------------------------------------------------------*/
 /* QDIO subsys desc                                                  */
 /*-------------------------------------------------------------------*/
@@ -1195,18 +1362,29 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
 
-#if defined(_FEATURE_QEBSM)
-    STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
-#endif /*defined(_FEATURE_QEBSM)*/
-
     chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
     chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
-//  chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
+    chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
 
 #if defined(_FEATURE_QEBSM)
-    chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
+    if(FACILITY_ENABLED_DEV(QEBSM))
+    {
+        STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
+        chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
+    }
 #endif /*defined(_FEATURE_QEBSM)*/
+
+#if defined(_FEATURE_QDIO_THININT)
+    if(FACILITY_ENABLED_DEV(QDIO_THININT))
+        chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
+#endif /*defined(_FEATURE_QDIO_THININT)*/
+
+#if 1 // ZZTEST
+      chsc_rsp24->icnt = QDIO_MAXQ;
+      chsc_rsp24->ocnt = QDIO_MAXQ;
+      chsc_rsp24->mbccnt = 0x04;
+#endif
 
     return 0;
 }
@@ -1492,7 +1670,8 @@ int num;                                /* Number of bytes to move   */
         OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + grp->qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
-            qib->rflags |= QIB_RFLAGS_QEBSM; 
+            if(FACILITY_ENABLED_DEV(QEBSM))
+                qib->rflags |= QIB_RFLAGS_QEBSM; 
 #endif /*defined(_FEATURE_QEBSM)*/
         }
 
@@ -1718,6 +1897,28 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 }
 
 
+/*-------------------------------------------------------------------*/
+/* Signal Adapter Sync                                               */
+/*-------------------------------------------------------------------*/
+static int qeth_do_sync(DEVBLK *dev, U32 qmask)
+{
+    TRACE(_("SIGA-s dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Signal Adapter Initiate Output Multiple                           */
+/*-------------------------------------------------------------------*/
+static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
+{
+    TRACE(_("SIGA-m dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+
+    return qeth_initiate_output(dev, qmask);
+}
+
+
 #if defined( OPTION_DYNAMIC_LOAD )
 static
 #endif
@@ -1742,7 +1943,14 @@ DEVHND qeth_device_hndinfo =
         qeth_immed_commands,           /* Immediate CCW Codes        */
         &qeth_initiate_input,          /* Signal Adapter Input       */
         &qeth_initiate_output,         /* Signal Adapter Output      */
+        &qeth_do_sync,                 /* Signal Adapter Sync        */
+        &qeth_initiate_output_mult,    /* Signal Adapter Output Mult */
         &qeth_ssqd_desc,               /* QDIO subsys desc           */
+#if defined(_FEATURE_QDIO_THININT)
+        &qeth_set_sci,                 /* QDIO set subchan ind       */
+#else /*defined(_FEATURE_QDIO_THININT)*/
+        NULL,                          /* QDIO set subchan ind       */
+#endif /*defined(_FEATURE_QDIO_THININT)*/
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };

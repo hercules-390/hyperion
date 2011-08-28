@@ -1,9 +1,5 @@
 /* QETH.H       (c) Copyright Jan Jaeger,   2010-2011                */
 /*              OSA Express                                          */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
 
 // $Id$
 
@@ -205,6 +201,13 @@ typedef struct _OSA_GRP {
 
     BYTE  qibk;                 /* Queue Information Block Key       */
     U64   qiba;                 /* Queue Information Block Address   */
+
+    U64   alsi;                 /* Adapter Local Summ Indicator      */
+#define ALSI_ERROR      0x80    /* ZZ TO BE CONFIRMED                */
+    U64   dsci;                 /* Device status change Indicator    */
+#define DSCI_IOCOMP     0x01    /* ZZ TO BE CONFIRMED                */
+    BYTE  ks;                   /* alsi storage key                  */
+    BYTE  kc;                   /* dsci storage key                  */
 
     int   l3;                   /* Adapter in layer 3 mode           */
 

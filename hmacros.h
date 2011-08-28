@@ -511,14 +511,6 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
  } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Obtain/Release crwlock.                                           */
-/* crwlock can be obtained by any thread.                            */
-/*-------------------------------------------------------------------*/
-
-#define OBTAIN_CRWLOCK()    obtain_lock( &sysblk.crwlock )
-#define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
-
-/*-------------------------------------------------------------------*/
 /* Obtain/Release intlock.                                           */
 /* intlock can be obtained by any thread                             */
 /* if obtained by a cpu thread, check to see if synchronize_cpus     */

@@ -3000,7 +3000,10 @@ DEVHND shared_ckd_device_hndinfo = {
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
         &ckddasd_hsuspend,             /* Hercules suspend           */
         &ckddasd_hresume               /* Hercules resume            */
 };
@@ -3025,7 +3028,10 @@ DEVHND shared_fba_device_hndinfo = {
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
         &fbadasd_hsuspend,             /* Hercules suspend           */
         &fbadasd_hresume               /* Hercules resume            */
 };

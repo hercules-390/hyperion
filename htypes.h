@@ -173,6 +173,7 @@ typedef struct REGS      REGS;      // CPU register context
 typedef struct VFREGS    VFREGS;    // Vector Facility Registers
 typedef struct ZPBLK     ZPBLK;     // Zone Parameter Block
 typedef struct DEVBLK    DEVBLK;    // Device configuration block
+typedef struct CHPBLK    CHPBLK;    // Channel Path config block
 typedef struct IOINT     IOINT;     // I/O interrupt queue
 
 typedef struct GSYSINFO  GSYSINFO;  // Ebcdic machine information
