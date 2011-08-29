@@ -274,7 +274,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Clear Adapter Local Summary Indicator bits                        */
 /*-------------------------------------------------------------------*/
-static inline void alsi_clr(DEVBLK *dev, BYTE bits)
+static inline void clr_alsi(DEVBLK *dev, BYTE bits)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -300,10 +300,13 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if(grp->dsci)
     {
     BYTE *dsci = dev->mainstor + grp->dsci;
+    BYTE *alsi = dev->mainstor + grp->alsi;
 
         obtain_lock(&sysblk.mainlock);
         *dsci |= bits;
         STORAGE_KEY(grp->dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        *alsi |= bits;
+        STORAGE_KEY(grp->alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         release_lock(&sysblk.mainlock);
     }
 }
@@ -312,7 +315,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Clear Device State Change Indicator bits                          */
 /*-------------------------------------------------------------------*/
-static inline void dsci_clr(DEVBLK *dev, BYTE bits)
+static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
