@@ -1325,7 +1325,7 @@ U16 opc;
     ks = chsc_req21->sk & CHSC_REQ21_KS;
 
     FETCH_DW(dsci, chsc_req21->dsci); 
-    kc = (chsc_req21->sk << 4) & CHSC_REQ21_KC;
+    kc = (chsc_req21->sk & CHSC_REQ21_KC) << 4;
 
     if(alsi && dsci)
     {

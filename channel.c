@@ -3650,7 +3650,7 @@ retry:
       && (dev->pciscsw.flag2 & SCSW2_Q) && dev->thinint) )
     {
         *iointid = 0x80000000
-                 | ((dev->pmcw.flag5 & PMCW4_ISC) << 24)
+                 | ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
                  | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7);
 
         /* Clear the pending PCI status */
