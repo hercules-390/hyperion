@@ -579,6 +579,8 @@ static int hao_ignoremsg(char *msg)
       return TRUE;                              /* Ignore if now empty */
   if (nocolor > msg)                            /* Color prefix found? */
     memmove( msg, nocolor, msglen+1 );          /* Remove color prefix */
+#else /* defined( OPTION_MSGCLR ) */
+  msglen = strlen(msg);
 #endif /* defined( OPTION_MSGCLR ) */
 
   if (!debuglen)

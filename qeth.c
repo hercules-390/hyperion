@@ -1312,8 +1312,8 @@ static int qeth_set_sci ( DEVBLK *dev, void *desc )
 { 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 CHSC_REQ21 *chsc_req21 = (void *)desc;
-BYTE alsi, ks;
-BYTE dsci, kc;
+RADR alsi, dsci;
+BYTE ks, kc;
 U16 opc;
 
     FETCH_HW(opc,chsc_req21->opcode);
