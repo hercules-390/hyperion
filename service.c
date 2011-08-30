@@ -1963,6 +1963,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     /* Set condition code 0 */
     regs->psw.cc = 0;
 
+    RETURN_INTCHECK(regs);
 } /* end function service_call */
 
 
