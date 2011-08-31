@@ -865,6 +865,11 @@
 #endif /*!defined(FEATURE_QEBSM)*/
 
 
+#if !defined(FEATURE_SVS)
+ UNDEF_INST(set_vector_summary)
+#endif /*!defined(FEATURE_SVS)*/
+
+
 #if !defined(FEATURE_CHANNEL_SWITCHING)
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
@@ -3133,7 +3138,7 @@ static zz_func opcode_b2xx[0x100][GEN_MAXARCH] = {
  /*B262*/ GENx___x390x900 (lock_page,RRE,"LKPG"),
  /*B263*/ GENx37Xx390x900 (compression_call,RRE,"CMPSC"),
  /*B264*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B265*/ GENx___x___x___ , /*(set_vector_summary,?,"SVS"),*/   /* Sysplex   */
+ /*B265*/ GENx___x___x900 (set_vector_summary,RRE,"SVS"),    /*           */
  /*B266*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B267*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B268*/ GENx___x___x___ , /*(define_vector,?,"DV"),*/         /* Sysplex   */

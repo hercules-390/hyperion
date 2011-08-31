@@ -295,6 +295,10 @@
  #define _FEATURE_QDIO_THININT
 #endif 
 
+#if defined(FEATURE_SVS)
+ #define _FEATURE_SVS
+#endif 
+
 #if defined(FEATURE_HERCULES_DIAGCALLS)
  #define _FEATURE_HERCULES_DIAGCALLS
  #if defined(FEATURE_HOST_RESOURCE_ACCESS_FACILITY)

@@ -1448,8 +1448,9 @@ typedef struct _MBK {
 #define STFL_HOST_RESOURCE_ACCESS (STFL_HBASE+5)
 #define STFL_QEBSM              (STFL_HBASE+6)
 #define STFL_QDIO_THININT       (STFL_HBASE+7)
+#define STFL_SVS                (STFL_HBASE+8)
 
-#define STFL_HMAX               (STFL_HBASE+7)
+#define STFL_HMAX               (STFL_HBASE+8)
 #define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
 #define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
 

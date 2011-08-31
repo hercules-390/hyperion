@@ -509,6 +509,38 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
 }
 #endif /*defined(FEATURE_QEBSM)*/
 
+#if defined(FEATURE_SVS)
+/*-------------------------------------------------------------------*/
+/* B265 SVS   - Set Vector Summary                             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_vector_summary)
+{
+int     r1, unused;            /* Register numbers                   */
+
+    RRE0(inst, regs, r1, unused);
+
+//  ARCH_DEP(display_inst) (regs, inst);
+
+    FACILITY_CHECK(SVS, regs);
+
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+    ODD_CHECK(r1, regs);
+
+    switch(regs->GR_L(1)) {
+
+        case 3:   // Clear Global Summary
+            regs->GR(r1+1) = 0;
+            break;
+
+        default:
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+     }
+}
+#endif /*defined(FEATURE_SVS)*/
+
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
 
 
