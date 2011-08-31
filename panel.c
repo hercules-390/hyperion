@@ -2338,11 +2338,11 @@ char    buf[1024];                      /* Buffer workarea           */
                                 redraw_status = 1;
                                 break;
                             }
-                            MSGBUF( cmdline,
 #if defined(OPTION_CMDTGT)
-                                             "herc "
+                            MSGBUF( cmdline, "herc i %4.4x", NPdevnum[i]);
+#else
+                            MSGBUF( cmdline, "i %4.4x", NPdevnum[i]);
 #endif
-                                                  "i %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
@@ -2514,11 +2514,11 @@ char    buf[1024];                      /* Buffer workarea           */
 
                     if ( pf == NULL )
                     {
-                        MSGBUF( msgbuf, "DELAY "
 #if defined(OPTION_CMDTGT)
-                                                 "herc "
+                        MSGBUF( msgbuf, "DELAY herc * %s UNDEFINED", szPF );
+#else
+                        MSGBUF( msgbuf, "DELAY * %s UNDEFINED", szPF );
 #endif
-                                                   "* %s UNDEFINED", szPF );
                         pf = msgbuf;
                     }
 
