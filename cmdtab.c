@@ -813,6 +813,8 @@ void *panel_command (void *cmdline)
         case CMDTGT_HERC:           /* Hercules */
         {
             /* (stay compatible) */
+#endif /* defined( OPTION_CMDTGT ) */
+
 #if defined( _FEATURE_SYSTEM_CONSOLE )
             if(cmd[0] == '.' || cmd[0] == '!')
             {
@@ -845,6 +847,7 @@ void *panel_command (void *cmdline)
                 HercCmdLine( cmd );
 #endif /* defined( OPTION_CONFIG_SYMBOLS ) */
             }
+#if defined( OPTION_CMDTGT )
             break;
         }
         case CMDTGT_SCP:        /* Guest O/S */
@@ -870,23 +873,6 @@ void *panel_command (void *cmdline)
             break;
         }
     }
-#else /* !defined( OPTION_CMDTGT ) */
-#if defined( _FEATURE_SYSTEM_CONSOLE )
-    if ('.' == cmd[0] || '!' == cmd[0])
-    {
-    int priomsg = cmd[0] == '!'  ? TRUE : FALSE;
-    int scpecho = sysblk.scpecho ? TRUE : FALSE;
-        if (!cmd[1]) {          /* (empty command given?) */
-            cmd[1] = ' ';       /* (MUST send something!) */
-            cmd[2] = 0;
-        }
-        scp_command( cmd+1, priomsg, scpecho );
-        return NULL;
-    }
-#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
-    if (hercecho && *cmd)
-        EchoHercCmdLine( cmd );
-    HercCmdLine( cmd );
 #endif /* defined( OPTION_CMDTGT ) */
 
     return NULL;
