@@ -596,6 +596,7 @@ struct SYSBLK {
                                         /* lookup table              */
 #endif  /* FAST_DEVICE_LOOKUP */
         U16     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
+        CHPBLK *firstchp;               /* -> First channel path     */
         u_int   dasdcache:1;            /* 0 = system cache off
                                            1 = system cache on       */
 
@@ -925,7 +926,7 @@ struct CHPBLK {
 #define HDL_NAME_CHPBLK   "DEVBLK"
 #define HDL_VERS_CHPBLK   "3.08"
 #define HDL_SIZE_CHPBLK   sizeof(CHPBLK)
-        CHPBLK *next;
+        CHPBLK *nextchp;
         BYTE    css;
         BYTE    chpid;
         BYTE    chptype;

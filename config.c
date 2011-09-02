@@ -432,6 +432,49 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 
 
 static
+CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
+{
+CHPBLK *chp;
+
+    for (chp = sysblk.firstchp; chp != NULL; chp = chp->nextchp)
+        if (chp->chpid == chpid && chp->css == css) 
+            return chp;
+    return NULL;
+}
+
+
+static
+CHPBLK *get_chpblk(U16 css, BYTE chpid, BYTE chptype)
+{
+CHPBLK *chp;
+CHPBLK**chpp;
+
+    if((chp = fnd_chpblk(css, chpid)))
+        return chp;
+    else
+    {
+        if (!(chp = (CHPBLK*)malloc(sizeof(CHPBLK))))
+        {
+            logmsg("malloc(chpblk) failed: %s\n",strerror(errno));
+            return NULL;
+        }
+        memset (chp, 0, sizeof(CHPBLK));
+
+        chp->css = css;
+        chp->chpid = chpid;
+        chp->chptype = chptype;
+
+        /* Search for the last channel path block on the chain */
+        for (chpp = &(sysblk.firstchp); *chpp != NULL;
+            chpp = &((*chpp)->nextchp));
+
+        /* Add the new channel path block to the end of the chain */
+        *chpp = chp;
+    }
+}
+
+
+static
 DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
 DEVBLK *dev;
@@ -921,9 +964,8 @@ char  thread_name[32];
         sysblk.regs[i]->intwait = 1;
 
     /* Wait for CPU thread to initialize */
-    do
+    while (!IS_CPU_ONLINE(cpu))
        wait_condition (&sysblk.cpucond, &sysblk.intlock);
-    while (!IS_CPU_ONLINE(cpu));
 
     if (i < sysblk.maxcpu)
         sysblk.regs[i]->intwait = 0;
@@ -964,9 +1006,8 @@ int   i;
             sysblk.regs[i]->intwait = 1;
 
         /* Wait for CPU thread to terminate */
-        do
+        while (IS_CPU_ONLINE(cpu))
             wait_condition (&sysblk.cpucond, &sysblk.intlock);
-        while (IS_CPU_ONLINE(cpu));
 
         /* (if we're a cpu thread) */
         if (i < sysblk.maxcpu)
