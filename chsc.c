@@ -192,7 +192,10 @@ U16 req_len, rsp_len;
         CHSC_AI(chsc_rsp10->general_char,45) |= CHSC_BI(45); /* Multiple CSS */
 //  CHSC_AI(chsc_rsp10->general_char,46) |= CHSC_BI(46); /* FCS */
 //  CHSC_AI(chsc_rsp10->general_char,48) |= CHSC_BI(48); /* Ext MB */
-//  CHSC_AI(chsc_rsp10->general_char,56) |= CHSC_BI(56); /* AIF Time Delay Disablement fac*/
+#if defined(_FEATURE_QDIO_TDD)
+    if(FACILITY_ENABLED(QDIO_TDD, regs))
+        CHSC_AI(chsc_rsp10->general_char,56) |= CHSC_BI(56); /* AIF Time Delay Disablement fac*/
+#endif /*defined(_FEATURE_QDIO_TDD)*/
 #if defined(_FEATURE_QEBSM)
     if(FACILITY_ENABLED(QEBSM, regs))
         CHSC_AI(chsc_rsp10->general_char,58) |= CHSC_BI(58);

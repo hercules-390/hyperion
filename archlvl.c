@@ -264,6 +264,9 @@ FACILITY(QEBSM,            Z390,         NONE,      Z390,          ALS3)
 #if defined(_FEATURE_QDIO_THININT)
 FACILITY(QDIO_THININT,     Z390,         NONE,      Z390,          ALS3)
 #endif /*defined(_FEATURE_QDIO_THININT)*/
+#if defined(_FEATURE_QDIO_TDD)
+FACILITY(QDIO_TDD,         NONE,         NONE,      Z390,          ALS3)
+#endif /*defined(_FEATURE_QDIO_TDD)*/
 #if defined(_FEATURE_SVS)
 FACILITY(SVS,              Z390,         NONE,      Z390,          ALS3)
 #endif /*defined(_FEATURE_SVS)*/
