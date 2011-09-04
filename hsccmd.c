@@ -398,23 +398,19 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
                      mytm->tm_sec,
                      (strlen(lparname)!=0)? lparname: "HERCULES",
                      msgtxt );
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY),
 #if defined(OPTION_MSGCLR)
-                     "<pnl,color(white,black)>",
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "<pnl,color(white,black)>", "%s", msgbuf );
 #else
-                     "",
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", msgbuf );
 #endif
-                     "%s", msgbuf );
         }
         else
         {
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY),
 #if defined(OPTION_MSGCLR)
-                     "<pnl,color(white,black)>",
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "<pnl,color(white,black)>", "%s\n", msgtxt );
 #else
-                     "",
+            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s\n", msgtxt );
 #endif
-                     "%s\n",msgtxt);
         }
     }
     return 0;
