@@ -186,14 +186,14 @@ static char *dbg_name[] = {
         int i;
         for(i = 0; i < 0x61; i++)
             if(sie_perfmon[i])
-                WRMSG(HHC02285, "I" ,sie_perfmon[i],dbg_name[i]);
-        WRMSG(HHC02286, "I", 
+                logmsg(MSG(HHC02285, "I" ,sie_perfmon[i],dbg_name[i]));
+        logmsg(MSG(HHC02286, "I", 
             (sie_perfmon[SIE_PERF_EXEC+SIE_PERF_MAXNEG] +
              sie_perfmon[SIE_PERF_EXEC_U+SIE_PERF_MAXNEG]*7) /
-            sie_perfmon[SIE_PERF_ENTER+SIE_PERF_MAXNEG]);
+            sie_perfmon[SIE_PERF_ENTER+SIE_PERF_MAXNEG]));
     }
     else
-        WRMSG(HHC02287, "I");
+        logmsg(MSG(HHC02287, "I"));
 }
 #else
 #define SIE_PERFMON(_code)
@@ -292,9 +292,7 @@ U64     dreg;
         GUESTREGS = calloc (1, sizeof(REGS));
         if (GUESTREGS == NULL)
          {
-         char buf[40];
-         MSGBUF(buf, "calloc(%d, %d)", 1, (int)sizeof(REGS));
-             WRMSG (HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, buf, strerror(errno));
+             logmsg(MSG(HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, "calloc()", strerror(errno)));
 #if !defined(NO_SIGABEND_HANDLER)
              signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
 #endif
