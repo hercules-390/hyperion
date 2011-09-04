@@ -1243,7 +1243,7 @@ char qdiostat[80] = {0};
     if (dev->group->acount == OSA_GROUP_SIZE)
     {
         OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-        snprintf( qdiostat, sizeof(qdiostat)-1, "%s%s%stx[%u] rx[%u] "
+        snprintf( qdiostat, sizeof(qdiostat), "%s%s%stx[%u] rx[%u] "
             , grp->ttdevn[0] ? grp->ttdevn : ""
             , grp->ttdevn[0] ? " "         : ""
             , grp->debug     ? "debug "    : ""
@@ -1252,7 +1252,7 @@ char qdiostat[80] = {0};
         );
     }
 
-    snprintf( buffer, buflen-1, "QDIO %s %s%sIO[%" I64_FMT "u]"
+    snprintf( buffer, buflen, "QDIO %s %s%sIO[%" I64_FMT "u]"
         , (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete"
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
         , (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""

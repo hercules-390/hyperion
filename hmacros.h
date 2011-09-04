@@ -116,6 +116,11 @@
   #define  atoll(s)             strtoll(s,NULL,0)
 #endif
 
+#if defined(_MSVC_)
+ // MSVC snprintf may not store the trailing '\0', so we use _snprintf_s instead */
+ #define snprintf(_buf, _size, ...) _snprintf_s((_buf), (_size), (_size) - 1, ## __VA_ARGS__ )
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Portable macro for copying 'va_list' variable arguments variable  */
 /*-------------------------------------------------------------------*/
@@ -738,7 +743,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
     (NULL)
   #define HDC3(_func, _arg1,_arg2,_arg3) \
     (NULL)
-  #define HDC4(_func, _arg1,_arg2,arg3,arg4) \
+  #define HDC4(_func, _arg1,_arg2,_arg3,_arg4) \
     (NULL)
   #define HDC5(_func, _arg1,_arg2,_arg3,_arg4,_arg5) \
     (NULL)

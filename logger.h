@@ -57,14 +57,17 @@ LOG_DLL_IMPORT void logmsg(char *,...);
 LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
 LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...);
 #else /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/
-#define  writemsg(_file, _line, _function, _grp, _lvl, _color, _msg, ...) logmsg( _msg, __VA_ARGS__ );
+#define  writemsg(_file, _line, _function, _grp, _lvl, _color, ...) logmsg( __VA_ARGS__ );
 #define logdevtr( _dev, ... ) \
 do { \
     if(dev->ccwtrace||dev->ccwstep) \
         logmsg( __VA_ARGS__ ); \
 } while (0)
 #endif /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/
+
+#if defined( OPTION_MSGCLR )
 LOG_DLL_IMPORT int skippnlpfx(const char** ppsz);
+#endif /*defined( OPTION_MSGCLR )*/
 
 // BHe I want to remove these functions for simplification
 //LOG_DLL_IMPORT void logmsgp(char *,...);

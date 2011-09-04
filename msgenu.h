@@ -84,7 +84,7 @@ always be manually overridden at any time via the "msglevel" command.
 #if defined (_MSVC_)
 #define MSGBUF( _buf, ... )           _snprintf_s( _buf, sizeof(_buf), sizeof(_buf)-1, ## __VA_ARGS__ )
 #else
-#define MSGBUF( _buf, ... )           snprintf(    _buf,               sizeof(_buf)-1, ## __VA_ARGS__ )
+#define MSGBUF( _buf, ... )           snprintf(_buf, sizeof(_buf), ## __VA_ARGS__ )
 #endif
 
 #define MSG(   id, s, ... )           #id s" " id "\n", ## __VA_ARGS__

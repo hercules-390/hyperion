@@ -595,6 +595,7 @@ DLL_EXPORT char *log_capture(void *(*fun)(void *),void *p)
     return(cd.obfr);
 }
 
+#if defined( OPTION_MSGCLR )
 /*-------------------------------------------------------------------*/
 /* Skip past "<pnl ...>" message prefix...                           */
 /* Input:                                                            */
@@ -612,3 +613,4 @@ DLL_EXPORT int skippnlpfx(const char** ppsz)
     }
     return (int)strlen( *ppsz );
 }
+#endif /*defined( OPTION_MSGCLR )*/
