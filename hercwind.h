@@ -126,7 +126,10 @@ typedef int             mode_t;
 #define strcasecmp      stricmp
 #define strncasecmp     strnicmp
 
-#define snprintf        _snprintf
+// #define snprintf        _snprintf
+// MSVC snprintf may not store the trailing '\0', so we use _snprintf_s instead */
+#define snprintf(_buf, _size, ...) _snprintf_s((_buf), (_size), (_size) - 1, ## __VA_ARGS__ )
+
 #define vsnprintf       _vsnprintf
 #define strerror        w32_strerror
 #define strerror_r      w32_strerror_r

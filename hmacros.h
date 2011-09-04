@@ -116,11 +116,6 @@
   #define  atoll(s)             strtoll(s,NULL,0)
 #endif
 
-#if defined(_MSVC_)
- // MSVC snprintf may not store the trailing '\0', so we use _snprintf_s instead */
- #define snprintf(_buf, _size, ...) _snprintf_s((_buf), (_size), (_size) - 1, ## __VA_ARGS__ )
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Portable macro for copying 'va_list' variable arguments variable  */
 /*-------------------------------------------------------------------*/
