@@ -196,6 +196,7 @@ DLL_EXPORT void log_close(void)
     return;
 }
 
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
 DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
                          int grp, int lvl, char *color, char *msg, ...)
 {
@@ -299,6 +300,7 @@ DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
 
     log_wakeup(NULL);
 }
+#endif /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
 
 /*-------------------------------------------------------------------*/
 /* Log message: Normal routing (panel or buffer, as appropriate)     */
@@ -394,6 +396,7 @@ DLL_EXPORT void logmsgb(char *msg,...)
 }
 #endif
 
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
 /*-------------------------------------------------------------------*/
 /* Log message: Device trace                                         */
 /*-------------------------------------------------------------------*/
@@ -425,6 +428,7 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
         free(bfr);
     }
 } /* end function logdevtr */
+#endif /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
 
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg)

@@ -569,7 +569,9 @@ static void* hao_thread(void* dummy)
 /*---------------------------------------------------------------------------*/
 static int hao_ignoremsg(char *msg)
 {
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
   static int debuglen = 0;
+#endif
   char* nocolor = msg;
   int msglen;
 
@@ -583,6 +585,7 @@ static int hao_ignoremsg(char *msg)
   msglen = strlen(msg);
 #endif /* defined( OPTION_MSGCLR ) */
 
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
   if (!debuglen)
   {
     char prefix[64] = {0};
@@ -593,6 +596,7 @@ static int hao_ignoremsg(char *msg)
   /* Get past debug prefix if msglevel DEBUG is active */
   if (MLVL( DEBUG ) && msglen >= debuglen)
     memmove( msg, msg + debuglen, (msglen -= debuglen)+1 );
+#endif
 
   /* Ignore our own messages (HHC0007xx, HHC0008xx and HHC0009xx
      are reserved so that hao.c can recognize its own messages) */
