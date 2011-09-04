@@ -116,7 +116,8 @@ DLL_EXPORT void hdl_shut (void)
 {
 HDLSHD *shdent;
 
-    WRMSG(HHC01500, "I");
+    if(MLVL(DEBUG))
+        logmsg(MSG(HHC01500, "I"));
     
     hdl_sdip = TRUE;
 
@@ -126,16 +127,19 @@ HDLSHD *shdent;
         hdl_shdlist = shdent->next;
 
         {
-            WRMSG(HHC01501, "I", shdent->shdname);
-            {
-                (shdent->shdcall) (shdent->shdarg);
-            }
-            WRMSG(HHC01502, "I", shdent->shdname);
+            if(MLVL(DEBUG))
+                logmsg(MSG(HHC01501, "I", shdent->shdname));
+
+            (shdent->shdcall) (shdent->shdarg);
+
+            if(MLVL(DEBUG))
+                logmsg(MSG(HHC01502, "I", shdent->shdname));
         }   
         free(shdent);
     }
 
-    WRMSG(HHC01504, "I");
+        if(MLVL(DEBUG))
+            logmsg(MSG(HHC01504, "I"));
 }
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -157,7 +161,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
 
     if ( strlen(path) > MAX_PATH )
     {
-        WRMSG (HHC01505, "E", (int)strlen(path), MAX_PATH);
+        logmsg(MSG(HHC01505, "E", (int)strlen(path), MAX_PATH));
         return NULL;
     }
 
@@ -173,8 +177,8 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
             }
             else
             {
-                WRMSG (HHC01506, "W", pathname); 
-                WRMSG (HHC01507, "W", hdl_modpath);
+                logmsg(MSG(HHC01506, "W", pathname)); 
+                logmsg(MSG(HHC01507, "W", hdl_modpath));
                 return hdl_modpath;
             }
         }
@@ -188,8 +192,8 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
 
     hdl_modpath = strdup(pathname);
 
-    if ( MLVL(VERBOSE) )
-        WRMSG (HHC01508, "I", hdl_modpath);
+    if (MLVL(VERBOSE))
+        logmsg(MSG(HHC01508, "I", hdl_modpath));
 
     return hdl_modpath;
 }
@@ -208,9 +212,7 @@ void   *ret;
 size_t  fulllen = 0;
 
     if ( (ret = dlopen(filename,flag)) )       /* try filename as is first */
-    {
         return ret;
-    }
  
     fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
     fullname = (char *)calloc(1,fulllen);
@@ -360,21 +362,21 @@ int len;
 
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        WRMSG( HHC01531, "I"
+        logmsg(MSG(HHC01531, "I"
             ,(dllent->flags & HDL_LOAD_MAIN)       ? "main"     : "load"
             ,dllent->name
             ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "not unloadable" : "unloadable"
-            ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : "not forced" );
+            ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : "not forced"));
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
             if((flags & HDL_LIST_ALL) 
               || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
             {
-                WRMSG( HHC01532, "I"
+                logmsg(MSG(HHC01532, "I"
                     ,modent->name
                     ,modent->count
                     ,modent->fep ? "" : ", unresolved"
-                    ,dllent->name );
+                    ,dllent->name));
             }
 
         if(dllent->hndent)
@@ -383,7 +385,7 @@ int len;
             len = 0;
             for(hndent = dllent->hndent; hndent; hndent = hndent->next)
                 len += snprintf(buf + len, sizeof(buf) - len - 1, " %s",hndent->name);
-            WRMSG(HHC01533, "I", buf);
+            logmsg(MSG(HHC01533, "I", buf));
 
         }
 
@@ -405,10 +407,10 @@ int len;
                 if(insent->archflags & HDL_INSTARCH_900)
                     len += snprintf(buf + len, sizeof(buf) - len - 1, ", archmode = " _ARCH_900_NAME);
 #endif
-                WRMSG( HHC01534, "I"
+                logmsg(MSG(HHC01534, "I"
                     ,insent->instname
                     ,insent->opcode
-                    ,buf );
+                    ,buf));
             }
         }
     }
@@ -424,7 +426,7 @@ HDLDEP *depent;
     for(depent = hdl_depend;
       depent;
       depent = depent->next)
-        WRMSG(HHC01535,"I",depent->name,depent->version,depent->size);
+        logmsg(MSG(HHC01535,"I",depent->name,depent->version,depent->size));
 }
 
 
@@ -462,13 +464,13 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
-            WRMSG(HHC01509, "I",name, version, depent->version);
+            logmsg(MSG(HHC01509, "I",name, version, depent->version));
             return -1;
         }
 
         if(size != depent->size)
         {
-            WRMSG(HHC01510, "I", name, size, depent->size);
+            logmsg(MSG(HHC01510, "I", name, size, depent->size));
             return -1;
         }
     }
@@ -509,9 +511,7 @@ void *fep;
         {
             if(!(modent = malloc(sizeof(MODENT))))
             {
-                char buf[64];
-                MSGBUF( buf, "malloc(%d)", (int)sizeof(MODENT));
-                WRMSG(HHC01511, "E", buf, strerror(errno));
+                logmsg(MSG(HHC01511, "E", "malloc()", strerror(errno)));
                 return NULL;
             }
 
@@ -605,22 +605,26 @@ static void hdl_term (void *unused _HDL_UNUSED)
 {
 DLLENT *dllent;
 
-    WRMSG(HHC01512, "I");
+    if(MLVL(DEBUG))
+        logmsg(MSG(HHC01512, "I"));
 
     /* Call all final routines, in reverse load order */
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(dllent->hdlfini)
         {
-            WRMSG(HHC01513, "I", dllent->name);
-            {
-                (dllent->hdlfini)();
-            }
-            WRMSG(HHC01514, "I", dllent->name);
+            if(MLVL(DEBUG))
+                logmsg(MSG(HHC01513, "I", dllent->name));
+
+            (dllent->hdlfini)();
+
+            if(MLVL(DEBUG))
+                logmsg(MSG(HHC01514, "I", dllent->name));
         }
     }
 
-    WRMSG(HHC01515, "I");
+    if(MLVL(DEBUG))
+        logmsg(MSG(HHC01515, "I"));
 }
 
 
@@ -638,7 +642,7 @@ MODENT *modent;
 
     if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
     {
-        WRMSG(HHC01516, "E", dllent->name, dlerror());
+        logmsg(MSG(HHC01516, "E", dllent->name, dlerror()));
         free(dllent);
         return -1;
     }
@@ -647,7 +651,7 @@ MODENT *modent;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        WRMSG(HHC01517, "E", dllent->name, dlerror());
+        logmsg(MSG(HHC01517, "E", dllent->name, dlerror()));
         free(dllent);
         return -1;
     }
@@ -673,7 +677,7 @@ MODENT *modent;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            WRMSG(HHC01518, "E", dllent->name);
+            logmsg(MSG(HHC01518, "E", dllent->name));
         }
     }
 
@@ -866,16 +870,14 @@ char *modname;
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
         {
-            WRMSG(HHC01519, "E", dllent->name);
+            logmsg(MSG(HHC01519, "E", dllent->name));
             return -1;
         }
     }
 
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
-        char buf[64];
-        MSGBUF( buf, "malloc(%d)", (int)sizeof(DLLENT));
-        WRMSG(HHC01511, "E", buf, strerror(errno));
+        logmsg(MSG(HHC01511, "E", "malloc()", strerror(errno)));
         return -1;
     }
 
@@ -884,7 +886,7 @@ char *modname;
     if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
-            WRMSG(HHC01516, "E", name, dlerror());
+            logmsg(MSG(HHC01516, "E", name, dlerror()));
         free(dllent);
         return -1;
     }
@@ -893,7 +895,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        WRMSG(HHC01517, "E", dllent->name, dlerror());
+        logmsg(MSG(HHC01517, "E", dllent->name, dlerror()));
         dlclose(dllent->dll);
         free(dllent);
         return -1;
@@ -903,7 +905,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
-            WRMSG(HHC01520, "E", dllent->name, tmpdll->name);
+            logmsg(MSG(HHC01520, "E", dllent->name, tmpdll->name));
             dlclose(dllent->dll);
             free(dllent);
             return -1;
@@ -932,7 +934,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            WRMSG(HHC01518, "E", dllent->name);
+            logmsg(MSG(HHC01518, "E", dllent->name));
             if(!(flags & HDL_LOAD_FORCE))
             {
                 dlclose(dllent->dll);
@@ -1003,8 +1005,8 @@ char *modname;
         {
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
-                WRMSG(HHC01521, "E", (*dllent)->name);
                 release_lock(&hdl_lock);
+                logmsg(MSG(HHC01521, "E", (*dllent)->name));
                 return -1;
             }
 
@@ -1013,8 +1015,8 @@ char *modname;
                     for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
                         if(hnd->hnd == dev->hnd)
                         {
-                            WRMSG(HHC01522, "E",(*dllent)->name, SSID_TO_LCSS(dev->ssid), dev->devnum);
                             release_lock(&hdl_lock);
+                            logmsg(MSG(HHC01522, "E",(*dllent)->name, SSID_TO_LCSS(dev->ssid), dev->devnum));
                             return -1;
                         }
 
@@ -1025,8 +1027,8 @@ char *modname;
                 
                 if((rc = ((*dllent)->hdlfini)()))
                 {
-                    WRMSG(HHC01523, "E", (*dllent)->name);
                     release_lock(&hdl_lock);
+                    logmsg(MSG(HHC01523, "E", (*dllent)->name));
                     return rc;
                 }
             }
@@ -1096,7 +1098,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    WRMSG(HHC01524, "E", modname);
+    logmsg(MSG(HHC01524, "E", modname));
 
     return -1;
 }
