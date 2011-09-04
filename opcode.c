@@ -1323,8 +1323,8 @@ char operands[64]
     name = mnemonic+1; while(*name++)
 
 
-#define DISASM_PRINT_OPERANDS \
-    snprintf(operands,sizeof(operands)-1,
+#define DISASM_PRINT_OPERANDS(...) \
+    snprintf(operands,sizeof(operands)-1, ## __VA_ARGS__ )
 
 
 #define DISASM_LOGMSG \
@@ -1337,8 +1337,7 @@ int disasm_none (BYTE inst[], char mnemonic[], char *p)
 DISASM_COMMON_VARS;
     UNREFERENCED(inst);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%c",',');
+    DISASM_PRINT_OPERANDS("%c",',');
     DISASM_LOGMSG;
 }
 
@@ -1348,8 +1347,7 @@ int disasm_E (BYTE inst[], char mnemonic[], char *p)
 DISASM_COMMON_VARS;
     UNREFERENCED(inst);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%c",',');
+    DISASM_PRINT_OPERANDS("%c",',');
     DISASM_LOGMSG;
 }
 
@@ -1361,8 +1359,7 @@ int r1, r2;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d",r1,r2);
+    DISASM_PRINT_OPERANDS("%d,%d",r1,r2);
     DISASM_LOGMSG;
 }
 
@@ -1374,8 +1371,7 @@ DISASM_COMMON_VARS;
 int r1;
     r1 = inst[1] >> 4;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d",r1);
+    DISASM_PRINT_OPERANDS("%d",r1);
     DISASM_LOGMSG;
 }
 
@@ -1384,8 +1380,7 @@ int disasm_RR_SVC (BYTE inst[], char mnemonic[], char *p)
 {
 DISASM_COMMON_VARS;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d",inst[1]);
+    DISASM_PRINT_OPERANDS("%d",inst[1]);
     DISASM_LOGMSG;
 }
 
@@ -1397,8 +1392,7 @@ int r1, r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d",r1,r2);
+    DISASM_PRINT_OPERANDS("%d,%d",r1,r2);
     DISASM_LOGMSG;
 }
 
@@ -1410,8 +1404,7 @@ DISASM_COMMON_VARS;
 int r1;
     r1 = inst[3] >> 4;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d",r1);
+    DISASM_PRINT_OPERANDS("%d",r1);
     DISASM_LOGMSG;
 }
 
@@ -1424,8 +1417,7 @@ int r1,r3,r2;
     r3 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,r3,r2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r3,r2);
     DISASM_LOGMSG;
 }
 
@@ -1438,8 +1430,7 @@ int m3,r1,r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,m3,r2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,m3,r2);
     DISASM_LOGMSG;
 }
 
@@ -1452,8 +1443,7 @@ int m3,r1,r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,r2,m3);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,m3);
     DISASM_LOGMSG;
 }
 
@@ -1466,8 +1456,7 @@ int m4,r1,r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,r2,m4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,m4);
     DISASM_LOGMSG;
 }
 
@@ -1481,8 +1470,7 @@ int m3,m4,r1,r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,%d",r1,m3,r2,m4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,%d",r1,m3,r2,m4);
     DISASM_LOGMSG;
 }
 
@@ -1496,8 +1484,7 @@ int r3,m4,r1,r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,%d",r1,r3,r2,m4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,%d",r1,r3,r2,m4);
     DISASM_LOGMSG;
 }
 
@@ -1510,8 +1497,7 @@ int r1,r2,r3;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,r2,r3);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,r3);
     DISASM_LOGMSG;
 }
 
@@ -1525,8 +1511,7 @@ int r1,x2,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1540,8 +1525,7 @@ int r1,x2,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1555,8 +1539,7 @@ int r1,x2,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1571,8 +1554,7 @@ int r1,r3,x2,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1586,8 +1568,7 @@ int r1,r3,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1601,8 +1582,7 @@ int r1,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d)",r1,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d(%d)",r1,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1616,8 +1596,7 @@ int r1,r3,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1631,8 +1610,7 @@ int r1,r3,b2,d2;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1646,8 +1624,7 @@ int r1,b2,d2,m3;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d),%d",r1,d2,b2,m3);
+    DISASM_PRINT_OPERANDS("%d,%d(%d),%d",r1,d2,b2,m3);
     DISASM_LOGMSG;
 }
 
@@ -1660,8 +1637,7 @@ int l1,b1,d1;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d,%d)",d1,l1+1,b1);
+    DISASM_PRINT_OPERANDS("%d(%d,%d)",d1,l1+1,b1);
     DISASM_LOGMSG;
 }
 
@@ -1674,8 +1650,7 @@ int r1,r3,i2;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,*%+d",r1,r3,i2*2);
+    DISASM_PRINT_OPERANDS("%d,%d,*%+d",r1,r3,i2*2);
     DISASM_LOGMSG;
 }
 
@@ -1687,8 +1662,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d",r1,i2);
+    DISASM_PRINT_OPERANDS("%d,%d",r1,i2);
     DISASM_LOGMSG;
 }
 
@@ -1700,8 +1674,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,*%+d",r1,i2*2);
+    DISASM_PRINT_OPERANDS("%d,*%+d",r1,i2*2);
     DISASM_LOGMSG;
 }
 
@@ -1714,8 +1687,7 @@ int r1,r3,i2;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,*%+d",r1,r3,i2*2);
+    DISASM_PRINT_OPERANDS("%d,%d,*%+d",r1,r3,i2*2);
     DISASM_LOGMSG;
 }
 
@@ -1728,8 +1700,7 @@ int r1,r3,i2;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,r3,i2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r3,i2);
     DISASM_LOGMSG;
 }
 
@@ -1742,8 +1713,7 @@ int r1,i2,m3;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",r1,i2,m3);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,i2,m3);
     DISASM_LOGMSG;
 }
 
@@ -1757,8 +1727,7 @@ int r1,r2,i4,m3;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,*%+d",r1,r2,m3,i4*2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,*%+d",r1,r2,m3,i4*2);
     DISASM_LOGMSG;
 }
 
@@ -1772,8 +1741,7 @@ int r1,m3,i4,i2;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     i2 = inst[4];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,*%+d",r1,i2,m3,i4*2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,*%+d",r1,i2,m3,i4*2);
     DISASM_LOGMSG;
 }
 
@@ -1788,8 +1756,7 @@ int r1,r2,i3,i4,i5;
     i4 = inst[3];
     i5 = inst[4];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
     DISASM_LOGMSG;
 }
 
@@ -1802,8 +1769,7 @@ int r1,i2;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%"I32_FMT"d",r1,i2);
+    DISASM_PRINT_OPERANDS("%d,%"I32_FMT"d",r1,i2);
     DISASM_LOGMSG;
 }
 
@@ -1817,8 +1783,7 @@ int r1,i2;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,*%+"I64_FMT"d",r1,i2*Two_S64);
+    DISASM_PRINT_OPERANDS("%d,*%+"I64_FMT"d",r1,i2*Two_S64);
     DISASM_LOGMSG;
 }
 
@@ -1833,8 +1798,7 @@ int r1,i2,m3,b4,d4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = inst[4];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
     DISASM_LOGMSG;
 }
 
@@ -1849,8 +1813,7 @@ int r1,r2,m3,b4,d4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     m3 = inst[4] >> 4;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
     DISASM_LOGMSG;
 }
 
@@ -1863,8 +1826,7 @@ int i2,b1,d1;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
     DISASM_LOGMSG;
 }
 
@@ -1877,8 +1839,7 @@ int i2,b1,d1;
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
     DISASM_LOGMSG;
 }
 
@@ -1891,8 +1852,7 @@ int b1,d1,i2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
     DISASM_LOGMSG;
 }
 
@@ -1904,8 +1864,7 @@ int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d)",d2,b2);
+    DISASM_PRINT_OPERANDS("%d(%d)",d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1921,8 +1880,7 @@ int l1,l2,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2);
+    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2);
     DISASM_LOGMSG;
 }
 
@@ -1937,8 +1895,7 @@ int l1,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2);
+    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -1954,8 +1911,7 @@ int l2,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2);
+    DISASM_PRINT_OPERANDS("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2);
     DISASM_LOGMSG;
 }
 
@@ -1971,8 +1927,7 @@ int r1,r3,b2,d2,b4,d4;
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4);
     DISASM_LOGMSG;
 }
 
@@ -1989,8 +1944,7 @@ int r1,r3,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3);
+    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3);
     DISASM_LOGMSG;
 }
 
@@ -2007,8 +1961,7 @@ int r1,r3,b2,d2,b4,d4;
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4);
+    DISASM_PRINT_OPERANDS("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4);
     DISASM_LOGMSG;
 }
 
@@ -2025,8 +1978,7 @@ int l1,i3,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3);
+    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3);
     DISASM_LOGMSG;
 }
 
@@ -2040,8 +1992,7 @@ int b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d(%d)",d1,b1,d2,b2);
+    DISASM_PRINT_OPERANDS("%d(%d),%d(%d)",d1,b1,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -2056,8 +2007,7 @@ int r3,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
+    DISASM_PRINT_OPERANDS("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
     DISASM_LOGMSG;
 }
 
@@ -2072,8 +2022,7 @@ int r3,b1,d1,b2,d2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -2087,8 +2036,7 @@ int vr3,rt2,vr1,rs2;
     vr1 = inst[3] >> 4;
     rs2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d)",vr1,vr3,rs2,rt2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",vr1,vr3,rs2,rt2);
     DISASM_LOGMSG;
 }
 
@@ -2101,8 +2049,7 @@ int vr1,fr3,gr2;
     vr1 = inst[3] >> 4;
     gr2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d",vr1,fr3,gr2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d",vr1,fr3,gr2);
     DISASM_LOGMSG;
 }
 
@@ -2113,8 +2060,7 @@ DISASM_COMMON_VARS;
 int rs2;
     rs2 = inst[3] & 0x0F;
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d",rs2);
+    DISASM_PRINT_OPERANDS("%d",rs2);
     DISASM_LOGMSG;
 }
 
@@ -2128,8 +2074,7 @@ int vr1,vr3,d2,b2;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d,%d,%d(%d)",vr1,vr3,d2,b2);
+    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",vr1,vr3,d2,b2);
     DISASM_LOGMSG;
 }
 
@@ -2141,8 +2086,7 @@ int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS
-        "%d(%d)",d2,b2);
+    DISASM_PRINT_OPERANDS("%d(%d)",d2,b2);
     DISASM_LOGMSG;
 }
 
