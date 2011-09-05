@@ -1314,564 +1314,314 @@ DISASM_ROUTE(edxx,[5])
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 
-#define DISASM_COMMON_VARS \
+#define DISASM_TYPE(_type)  \
+int disasm_ ## _type (BYTE inst[], char mnemonic[], char *p) \
+{ \
 char* name; \
 char operands[64]
 
-
-#define DISASM_SET_NAME \
-    name = mnemonic+1; while(*name++)
-
-
-#define DISASM_PRINT_OPERANDS(...) \
-    snprintf(operands,sizeof(operands)-1, ## __VA_ARGS__ )
-
-
-#define DISASM_LOGMSG \
-    operands[sizeof(operands)-1]=0; \
-    return sprintf(p, "%-5s %-19s    %s",mnemonic,operands,name)
-
-
-int disasm_none (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
-    UNREFERENCED(inst);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%c",',');
-    DISASM_LOGMSG;
+#define DISASM_PRINT(...) \
+    name = mnemonic+1; \
+    while(*name++);  \
+    snprintf(operands,sizeof(operands), ## __VA_ARGS__ ); \
+    return sprintf(p, "%-5s %-19s    %s",mnemonic,operands,name); \
 }
 
 
-int disasm_E (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(none);
+  UNREFERENCED(inst);
+  DISASM_PRINT("%c",',');
+
+DISASM_TYPE(E);
     UNREFERENCED(inst);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%c",',');
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%c",',');
 
 
-int disasm_RR (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RR);
 int r1, r2;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d",r1,r2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d",r1,r2);
 
 
 // "Mnemonic   R1"
-int disasm_RR_R1 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RR_R1);
 int r1;
     r1 = inst[1] >> 4;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d",r1);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d",r1);
 
+DISASM_TYPE(RR_SVC);
+    DISASM_PRINT("%d",inst[1]);
 
-int disasm_RR_SVC (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d",inst[1]);
-    DISASM_LOGMSG;
-}
-
-
-int disasm_RRE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRE);
 int r1, r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d",r1,r2);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d,%d",r1,r2);
 
 // "Mnemonic   R1"
-int disasm_RRE_R1 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRE_R1);
 int r1;
     r1 = inst[3] >> 4;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d",r1);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d",r1);
 
-
-int disasm_RRF_R (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_R);
 int r1,r3,r2;
     r1 = inst[2] >> 4;
     r3 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r3,r2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,r3,r2);
 
-
-int disasm_RRF_M (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_M);
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,m3,r2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,m3,r2);
 
-
-int disasm_RRF_M3 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_M3);
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,m3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,r2,m3);
 
-
-int disasm_RRF_M4 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_M4);
 int m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,m4);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,r2,m4);
 
-
-int disasm_RRF_MM (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_MM);
 int m3,m4,r1,r2;
     m3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,%d",r1,m3,r2,m4);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,%d",r1,m3,r2,m4);
 
-
-int disasm_RRF_RM (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRF_RM);
 int r3,m4,r1,r2;
     r3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,%d",r1,r3,r2,m4);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,%d",r1,r3,r2,m4);
 
-
-int disasm_RRR (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRR);
 int r1,r2,r3;
     r3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r2,r3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,r2,r3);
 
-
-int disasm_RX (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RX);
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
 
-
-int disasm_RXE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RXE);
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
 
-
-int disasm_RXY (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RXY);
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d,%d)",r1,d2,x2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
 
-
-int disasm_RXF (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RXF);
 int r1,r3,x2,b2,d2;
     r1 = inst[4] >> 4;
     r3 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2);
 
-
-int disasm_RS (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RS);
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
 
 // "Mnemonic   R1,D2(B2)"
-int disasm_RS_R1D2B2 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RS_R1D2B2);
 int r1,b2,d2;
     r1 = inst[1] >> 4;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d)",r1,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d)",r1,d2,b2);
 
-
-int disasm_RSE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RSE);
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
 
-
-int disasm_RSY (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RSY);
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",r1,r3,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
 
-
-int disasm_RSY_M3 (BYTE inst[], char mnemonic[], char *p)               /*810*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RSY_M3);
 int r1,b2,d2,m3;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d),%d",r1,d2,b2,m3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d),%d",r1,d2,b2,m3);
 
-
-int disasm_RSL (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RSL);
 int l1,b1,d1;
     l1 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d,%d)",d1,l1+1,b1);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d,%d)",d1,l1+1,b1);
 
-
-int disasm_RSI (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RSI);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,*%+d",r1,r3,i2*2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2);
 
-
-int disasm_RI (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RI);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d",r1,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d",r1,i2);
 
-
-int disasm_RI_B (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RI_B);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,*%+d",r1,i2*2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,*%+d",r1,i2*2);
 
-
-int disasm_RIE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,*%+d",r1,r3,i2*2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2);
 
-
-int disasm_RIE_RRI (BYTE inst[], char mnemonic[], char *p)              /*810*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE_RRI);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,r3,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,r3,i2);
 
-
-int disasm_RIE_RIM (BYTE inst[], char mnemonic[], char *p)              /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE_RIM);
 int r1,i2,m3;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",r1,i2,m3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",r1,i2,m3);
 
-
-int disasm_RIE_RRIM (BYTE inst[], char mnemonic[], char *p)             /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE_RRIM);
 int r1,r2,i4,m3;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,*%+d",r1,r2,m3,i4*2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2);
 
-
-int disasm_RIE_RMII (BYTE inst[], char mnemonic[], char *p)             /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE_RMII);
 int r1,m3,i4,i2;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     i2 = inst[4];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,*%+d",r1,i2,m3,i4*2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2);
 
-
-int disasm_RIE_RRIII (BYTE inst[], char mnemonic[], char *p)            /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIE_RRIII);
 int r1,r2,i3,i4,i5;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i3 = inst[2];
     i4 = inst[3];
     i5 = inst[4];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
 
-
-int disasm_RIL (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIL);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%"I32_FMT"d",r1,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%"I32_FMT"d",r1,i2);
 
-
-int disasm_RIL_A (BYTE inst[], char mnemonic[], char *p)                /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIL_A);
 int r1,i2;
     const S64 Two_S64=2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,*%+"I64_FMT"d",r1,i2*Two_S64);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,*%+"I64_FMT"d",r1,i2*Two_S64);
 
-
-int disasm_RIS (BYTE inst[], char mnemonic[], char *p)                  /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RIS);
 int r1,i2,m3,b4,d4;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = inst[4];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
 
-
-int disasm_RRS (BYTE inst[], char mnemonic[], char *p)                  /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(RRS);
 int r1,r2,m3,b4,d4;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     m3 = inst[4] >> 4;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
 
-
-int disasm_SI (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SI);
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
 
-
-int disasm_SIY (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SIY);
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
 
-
-int disasm_SIL (BYTE inst[], char mnemonic[], char *p)                  /*208*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SIL);
 int b1,d1,i2;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d",d1,b1,i2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
 
-
-int disasm_S (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(S);
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d)",d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d)",d2,b2);
 
-
-int disasm_SS (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS);
 int l1,l2,b1,d1,b2,d2;
     l1 = inst[1] >> 4;
     l2 = inst[1] & 0x0F;
@@ -1879,46 +1629,28 @@ int l1,l2,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2);
 
-
-int disasm_SS_L (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_L);
 int l1,b1,d1,b2,d2;
     l1 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2);
 
 // "Mnemonic   D1(B1),D2(L2,B2)"
-int disasm_SS_L2 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_L2);
 int l2,b1,d1,b2,d2;
     l2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2);
 
-
-int disasm_SS_R (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_R);
 int r1,r3,b2,d2,b4,d4;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1926,16 +1658,10 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4);
 
 // "Mnemonic   D1(R1,B1),D2(B2),R3"
-int disasm_SS_R3 (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_R3);
 int r1,r3,b1,d1,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1943,16 +1669,10 @@ int r1,r3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3);
 
 // "Mnemonic   R1,D2(B2),R3,D4(B4)"
-int disasm_SS_RSRS (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_RSRS);
 int r1,r3,b2,d2,b4,d4;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1960,16 +1680,10 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4);
-    DISASM_LOGMSG;
-}
-
+    DISASM_PRINT("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4);
 
 // "Mnemonic   D1(L1,B1),D2(B2),I3"
-int disasm_SS_I (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SS_I);
 int l1,i3,b1,d1,b2,d2;
     l1 = inst[1] >> 4;
     i3 = inst[1] & 0x0F;
@@ -1977,118 +1691,67 @@ int l1,i3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3);
 
-
-int disasm_SSE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SSE);
 int b1,d1,b2,d2;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d(%d)",d1,b1,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2);
 
-
-int disasm_SSF (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SSF);
 int r3,b1,d1,b2,d2;
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
 
-
-int disasm_SSF_RSS (BYTE inst[], char mnemonic[], char *p)              /*810*/
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(SSF_RSS);
 int r3,b1,d1,b2,d2;
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
 
-
-int disasm_VST (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(VST);
 int vr3,rt2,vr1,rs2;
     vr3 = inst[2] >> 4;
     rt2 = inst[2] & 0x0F;
     vr1 = inst[3] >> 4;
     rs2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",vr1,vr3,rs2,rt2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2);
 
-
-int disasm_VR (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(VR);
 int vr1,fr3,gr2;
     fr3 = inst[2] >> 4;
     vr1 = inst[3] >> 4;
     gr2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d",vr1,fr3,gr2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d",vr1,fr3,gr2);
 
-
-int disasm_VS (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(VS);
 int rs2;
     rs2 = inst[3] & 0x0F;
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d",rs2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d",rs2);
 
-
-int disasm_VRSE (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(VRSE);
 int vr1,vr3,d2,b2;
     vr3 = inst[2] >> 4;
     vr1 = inst[3] >> 4;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d,%d,%d(%d)",vr1,vr3,d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2);
 
-
-int disasm_S_NW (BYTE inst[], char mnemonic[], char *p)
-{
-DISASM_COMMON_VARS;
+DISASM_TYPE(S_NW);
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_SET_NAME;
-    DISASM_PRINT_OPERANDS("%d(%d)",d2,b2);
-    DISASM_LOGMSG;
-}
+    DISASM_PRINT("%d(%d)",d2,b2);
 
 
 /*----------------------------------------------------------------------------*/
