@@ -1315,7 +1315,7 @@ DISASM_ROUTE(edxx,[5])
 
 
 #define DISASM_TYPE(_type)  \
-int disasm_ ## _type (BYTE inst[], char mnemonic[], char *p) \
+static int disasm_ ## _type (BYTE inst[], char mnemonic[], char *p) \
 { \
 char* name; \
 char operands[64]
