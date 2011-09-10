@@ -1512,6 +1512,7 @@ COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        
 #endif
 #if defined(HAVE_MLOCKALL)
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
+COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          NULL,                   NULL                )
 #endif /*defined(HAVE_MLOCKALL)*/
 #if defined( OPTION_COUNTING )
 COMMAND( "count",                   count_cmd,              SYSCMDNOPER,        count_cmd_desc,         NULL                )

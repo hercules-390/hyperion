@@ -274,8 +274,9 @@ int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
 int  configure_memlock(int);
-int  configure_storage(RADR);               // amount of storage
-int  configure_xstorage(RADR);              // amount of storage
+int  configure_memfree(int);
+int  configure_storage(U32);
+int  configure_xstorage(U32);
 int  configure_capping(U32 value);
 
 int  configure_herc_priority(int prio);

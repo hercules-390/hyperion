@@ -389,8 +389,6 @@ AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
 AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is present on your system] )
 AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 
-AH_TEMPLATE( [OPTION_CONFIG_SYMBOLS],   [Define to enable symbolic substitutions in configuration file] )
-AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_SYMBOLS], [Define to enable enhanced-mode symbolic substitutions in configuration file] )
 AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_INCLUDE], [Define to enable enhanced-mode 'include' file support in configuration file] )
 AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
 AH_TEMPLATE( [OPTION_DYNAMIC_LOAD],     [Define to enable Hercules Dynamic Loader feature] )
@@ -1398,42 +1396,6 @@ AC_ARG_ENABLE( optimization,
     [hc_cv_opt_optimization=yes]
 )
 
-AC_ARG_ENABLE( configsymbols,
-
-    AC_HELP_STRING( [--disable-configsymbols],
-
-        [disable symbolic substitutions in configuration file]
-    ),
-    [
-        case "${enableval}" in
-        yes) hc_cv_opt_configsymbols=yes                      ;;
-        no)  hc_cv_opt_configsymbols=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'configsymbols' option] )
-             hc_error=yes
-             ;;
-        esac
-    ],
-    [hc_cv_opt_configsymbols=yes]
-)
-
-AC_ARG_ENABLE( enhanced-configsymbols,
-
-    AC_HELP_STRING( [--disable-enhanced-configsymbols],
-
-        [disable enhanced-mode symbolic substitutions in configuration file]
-    ),
-    [
-        case "${enableval}" in
-        yes) hc_cv_opt_enhanced_configsymbols=yes                      ;;
-        no)  hc_cv_opt_enhanced_configsymbols=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'enhanced-configsymbols' option] )
-             hc_error=yes
-             ;;
-        esac
-    ],
-    [hc_cv_opt_enhanced_configsymbols=yes]
-)
-
 AC_ARG_ENABLE( enhanced-configincludes,
 
     AC_HELP_STRING( [--disable-enhanced-configincludes],
@@ -1972,8 +1934,6 @@ AC_MSG_NOTICE( [                                         ] )
 test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
 test "$hc_cv_have_inttypes_h"             = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
 test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
-test "$hc_cv_opt_configsymbols"           = "yes"  &&  AC_DEFINE(OPTION_CONFIG_SYMBOLS)
-test "$hc_cv_opt_enhanced_configsymbols"  = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_SYMBOLS)
 test "$hc_cv_opt_enhanced_configincludes" = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_INCLUDE)
 test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
 test "$hc_cv_opt_dynamic_load"            = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)

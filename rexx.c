@@ -131,25 +131,25 @@ int rc;
 
         if (!(addr = dlopen(REGINA_LIBRARY,RTLD_LAZY)))
         {
-            WRMSG( HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, dlerror());
+            logmsg(MSG(HHC17504, "E", REXX_PACKAGE, REGINA_LIBRARY, dlerror()));
             return -1;
         }
 
         if (!(hRexxRegisterSubcomExe = (rRexxRegisterSubcomExe *)dlsym(addr, REXX_REGISTER_SUBCOM )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, dlerror());
+            logmsg(MSG(HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_SUBCOM, dlerror()));
             return -1;
         }
 
         if (!(hRexxRegisterExitExe = (rRexxRegisterExitExe *)dlsym( addr, REXX_REGISTER_EXIT )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, dlerror());
+            logmsg(MSG(HHC17505, "E", REXX_PACKAGE, REXX_REGISTER_EXIT, dlerror()));
             return -1;
         }
 
         if (!(hRexxStart = (rRexxStart *)dlsym(addr, REXX_START )))
         {
-            WRMSG( HHC17505, "E", REXX_PACKAGE, REXX_START, dlerror());
+            logmsg(MSG(HHC17505, "E", REXX_PACKAGE, REXX_START, dlerror()));
             return -1;
         }
 
@@ -159,14 +159,14 @@ int rc;
     if ((rc = hRexxRegisterExitExe( hSIOExit, (RexxExitHandler *)hExitHnd, NULL )) != RXEXIT_OK
       && !(rexx_initialised && rc == RXEXIT_NOTREG))
     {
-        WRMSG( HHC17506, "E", REXX_PACKAGE, "Exit Handler", rc);
+        logmsg(MSG(HHC17506, "E", REXX_PACKAGE, "Exit Handler", rc));
         return -1;
     }
 
     if ((rc = hRexxRegisterSubcomExe( hSubcom, (RexxSubcomHandler *)hSubCmd, NULL)) != RXSUBCOM_OK
       && !(rexx_initialised && rc == RXSUBCOM_NOTREG))
     {
-        WRMSG( HHC17506, "E", REXX_PACKAGE, "Subcom Handler", rc);
+        logmsg(MSG(HHC17506, "E", REXX_PACKAGE, "Subcom Handler", rc));
         return -1;
     }
 
@@ -192,13 +192,13 @@ RXSYSEXIT ExitList[2];
 
     if (argc < 2)
     {
-        WRMSG( HHC17501, "E", REXX_PACKAGE );
+        logmsg(MSG(HHC17501, "E", REXX_PACKAGE));
         return -1;
     }
 
     if (init_rexx())
     {
-        WRMSG( HHC17500, "E", REXX_PACKAGE );
+        logmsg(MSG(HHC17500, "E", REXX_PACKAGE));
         return -1;
     }
 
@@ -208,8 +208,10 @@ RXSYSEXIT ExitList[2];
     {   /* try $(MODPATH)\rexx\filename if not found and no pathing information */
     char execpath[MAX_PATH];
 
+#if defined(OPTION_CONFIG_SYMBOLS)
         strlcpy( execpath, get_symbol("MODPATH"), sizeof(execpath) );
         strlcat( execpath, PATHSEPS,              sizeof(execpath) );
+#endif
         strlcat( execpath, "rexx",                sizeof(execpath) );
         strlcat( execpath, PATHSEPS,              sizeof(execpath) );
         strlcat( execpath, argv[1],               sizeof(execpath) );
@@ -244,10 +246,10 @@ RXSYSEXIT ExitList[2];
     ExitList[1].sysexit_code = RXENDLST;
 
     if ((rc = hRexxStart ((argc > 2) ? 1 : 0, &arg, pathname, NULL, hSubcom, RXCOMMAND, ExitList, &ret, &retval )))
-        WRMSG( HHC17503, "E", REXX_PACKAGE, rc );
+        logmsg(MSG(HHC17503, "E", REXX_PACKAGE, rc));
     else
         if (ret)
-            WRMSG( HHC17502, "E", REXX_PACKAGE, RXSTRPTR(retval) );
+            logmsg(MSG(HHC17502, "E", REXX_PACKAGE, RXSTRPTR(retval)));
 
     if (RXSTRPTR(arg))
         free(RXSTRPTR(arg));

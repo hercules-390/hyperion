@@ -93,14 +93,14 @@
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 
-#if !defined(OPTION_CMDSER) && !defined(NO_CMDSER)
-    #define NO_CMDSER                   /* Serialise all commands    */
+#if 0
+#define OPTION_BUILTIN_SYMBOLS
+#define OPTION_CONFIG_SYMBOLS
+#define OPTION_CMDTGT                   /* the cmdtgt command        */
+#define OPTION_MSGCLR                   /* Colored messages          */
+#define OPTION_MSGHLD                   /* Sticky messages           */
+#define OPTION_MSGLCK                   /* Lock during msg write     */
 #endif
-
-// #define OPTION_CMDTGT                   /* the cmdtgt command        */
-// #define OPTION_MSGCLR                   /* Colored messages          */
-// #define OPTION_MSGHLD                   /* Sticky messages           */
-// #define OPTION_MSGLCK                   /* Lock during msg write     */
 
 #if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
 #define NO_SCP_MSG_PREFIX               /* Prefix scp msg with HHC*  */

@@ -514,8 +514,10 @@ int     dll_count;                      /* index into array          */
     /* default for system dasd cache is on */
     sysblk.dasdcache = TRUE;
 
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
     /* set default error message display (emsg) */
     sysblk.emsg = EMSG_ON;
+#endif
 
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* set default quit timeout value (also ssd) */
@@ -1137,9 +1139,11 @@ int     dll_count;                      /* index into array          */
     SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
     socket_deinit();
 #endif
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
     if ( sysblk.emsg & EMSG_TEXT )
         fprintf(stdout, HHC01412 );
     else
+#endif
         fprintf(stdout, MSG(HHC01412, "I"));
     fflush(stdout);
     usleep(10000);

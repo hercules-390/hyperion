@@ -55,6 +55,7 @@ It is also possible to use any defined symbol or environment variable.
  */
 
 static char *herclogo[]={
+#if defined( OPTION_CONFIG_SYMBOLS )
 "@ALIGN NONE",
 "@SBA 0,0",
 "@SF P",
@@ -97,6 +98,7 @@ static char *herclogo[]={
 "@SF HP",
 "$(SUBCHAN)",
 "@SF P",
+#endif
 "@ALIGN LEFT",
 "",
 "",

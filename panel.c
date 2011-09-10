@@ -3594,31 +3594,28 @@ PANMSG* p;
 
     UNREFERENCED(unused);
 
-    /* BHe: I put a sleep(1) here to prevent a segmentation fault */
-    /* in the case when the hercules.rc has only a quit command. */
-    if(!topmsg)
-      sleep(1);
-
     log_wakeup(NULL);
 
-    set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
-    clear_screen( stderr );
-
-    /* Scroll to last full screen's worth of messages */
-    scroll_to_bottom_screen( 1 );
-
-    /* Display messages in scrolling area */
-    for (i=0, p = topmsg; i < SCROLL_LINES && p != curmsg->next; i++, p = p->next)
+    if(topmsg)
     {
-        set_pos (i+1, 1);
-#if defined(OPTION_MSGCLR)
-        set_color (p->fg, p->bg);
-#else // !defined(OPTION_MSGCLR)
-        set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-#endif // defined(OPTION_MSGCLR)
-        write_text (p->msg, MSG_SIZE);
-    }
+        set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+        clear_screen( stderr );
 
+        /* Scroll to last full screen's worth of messages */
+        scroll_to_bottom_screen( 1 );
+
+        /* Display messages in scrolling area */
+        for (i=0, p = topmsg; i < SCROLL_LINES && p != curmsg->next; i++, p = p->next)
+        {
+            set_pos (i+1, 1);
+#if defined(OPTION_MSGCLR)
+            set_color (p->fg, p->bg);
+#else // !defined(OPTION_MSGCLR)
+            set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+#endif // defined(OPTION_MSGCLR)
+            write_text (p->msg, MSG_SIZE);
+        }
+    }
     sysblk.panel_init = 0;                          /* Panel is no longer running */
 
     /* Restore the terminal mode */

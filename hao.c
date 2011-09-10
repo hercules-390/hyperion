@@ -514,12 +514,18 @@ static void* hao_thread(void* dummy)
 
   UNREFERENCED(dummy);
 
+  /* Do not start HAO if no logger is active 
+   * the next hao command will restart the thread
+   */
+  if(!logger_status())
+  {
+    haotid = 0;
+    return NULL;
+  }
+
   WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
-  while(!sysblk.panel_init && !sysblk.shutdown && !logger_status() )
-    usleep( 10 * 1000 );
-
   /* Do until shutdown */
   while(!sysblk.shutdown && msgamt >= 0)
   {

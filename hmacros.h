@@ -37,6 +37,7 @@
   #endif
 #endif
 
+
 /*-------------------------------------------------------------------*/
 /* "Portability" macros for handling _MSVC_ port...                  */
 /*-------------------------------------------------------------------*/
@@ -794,17 +795,8 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
  #define INIT_MSGLCK
 #endif
 
-#define INITIALIZE_UTILITY(name) \
-  do { \
-    SET_THREAD_NAME(name); \
-    INITIALIZE_NLS(); \
-    INITIALIZE_EXTERNAL_GUI(); \
-    memset (&sysblk, 0, sizeof(SYSBLK)); \
-    INIT_MSGLCK \
-    initialize_detach_attr (DETACHED); \
-    initialize_join_attr   (JOINABLE); \
-    set_codepage(NULL); \
-    init_hostinfo( &hostinfo ); \
+#if defined(OPTION_CONFIG_SYMBOLS)
+#define INIT_UTILMSGLVL \
     do \
     { \
         char *msglvl = (char *)get_symbol( "HERCULES_UTIL_MSGLVL" );\
@@ -824,7 +816,23 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
             if ( strcasestr(msglvl, "time") ) \
                 sysblk.emsg |= EMSG_TS; \
         } \
-    } while(0); \
+    } while (0)
+#else
+#define INIT_UTILMSGLVL
+#endif
+
+#define INITIALIZE_UTILITY(name) \
+  do { \
+    SET_THREAD_NAME(name); \
+    INITIALIZE_NLS(); \
+    INITIALIZE_EXTERNAL_GUI(); \
+    memset (&sysblk, 0, sizeof(SYSBLK)); \
+    INIT_MSGLCK \
+    initialize_detach_attr (DETACHED); \
+    initialize_join_attr   (JOINABLE); \
+    set_codepage(NULL); \
+    init_hostinfo( &hostinfo ); \
+    INIT_UTILMSGLVL; \
   } while (0)
 
 /*-------------------------------------------------------------------*/

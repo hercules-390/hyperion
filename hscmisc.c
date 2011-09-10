@@ -174,9 +174,11 @@ static void do_shutdown_now()
 #ifdef _MSVC_
         socket_deinit();
 #endif
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
         if ( sysblk.emsg & EMSG_TEXT )
             fprintf(stdout, HHC01412);
         else
+#endif
             fprintf(stdout, MSG(HHC01412, "I"));
         fflush(stdout);
         exit(0);
@@ -1495,13 +1497,15 @@ char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
 
-    if ( sysblk.emsg & EMSG_TEXT )
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
+    if ( !(sysblk.emsg & EMSG_TEXT) )
+        n = snprintf(buf, sizeof(buf)-1, "HHC02267I ");
+    else
+#endif
     {
         n = 0;
         buf[0] = '\0';
     }
-    else
-        n = snprintf(buf, sizeof(buf)-1, "HHC02267I ");
 
     if (iregs->ghostregs)
         regs = iregs;
@@ -1545,10 +1549,12 @@ REGS   *regs;                           /* Copied regs               */
     {
         n += snprintf(buf + n, sizeof(buf)-n-1, "Instruction fetch error\n");
 
-        if ( sysblk.emsg & EMSG_TEXT )
-            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
-        else
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
+        if ( !(sysblk.emsg & EMSG_TEXT) )
             n += display_regs (regs, buf + n, sizeof(buf)-n-1, "HHC02267I ");
+        else
+#endif
+            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
 
         if (!iregs->ghostregs) free(regs);
         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
@@ -1562,10 +1568,12 @@ REGS   *regs;                           /* Copied regs               */
     /* Show registers associated with the instruction */
     if (sysblk.showregsfirst)
     {
-        if ( sysblk.emsg & EMSG_TEXT )
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
-        else
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
+        if ( !(sysblk.emsg & EMSG_TEXT) )
             n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
+        else
+#endif
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
     }
 
     /* Display the instruction */
@@ -1683,8 +1691,10 @@ REGS   *regs;                           /* Copied regs               */
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"", &xcode);
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
         if ( !(sysblk.emsg & EMSG_TEXT) )
             n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
+#endif
 
         if ( sysblk.cpus > 1 )
         {
@@ -1709,8 +1719,10 @@ REGS   *regs;                           /* Copied regs               */
             ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), b2,
                                         ACCTYPE_READ, "", &xcode);
 
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
         if ( !(sysblk.emsg & EMSG_TEXT) )
             n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
+#endif
         
         if ( sysblk.cpus > 1 )
         {
@@ -1725,10 +1737,12 @@ REGS   *regs;                           /* Copied regs               */
     /* Show registers associated with the instruction */
     if (!sysblk.showregsfirst && !sysblk.showregsnone)
     {
-        if ( sysblk.emsg & EMSG_TEXT )
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
-        else
+#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
+        if ( !(sysblk.emsg & EMSG_TEXT) )
             n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
+        else
+#endif
+            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
     }
 
     if (!iregs->ghostregs)
