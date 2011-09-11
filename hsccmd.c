@@ -2726,6 +2726,11 @@ int rc;
                 logmsg(MSG(HHC02204, "I", argv[0], argv[1]));
         }
     }
+    else if(argc < 2)
+    {
+        logmsg("%s %d\n", argv[0], sysblk.mainsize >> 20);
+        return -1;
+    }
     else
     {
         logmsg(MSG(HHC01455, "E", argv[0]));
@@ -2776,10 +2781,15 @@ int rc;
                 logmsg(MSG(HHC02204, "I", argv[0], argv[1]));
         }
     }
+    else if(argc < 2)
+    {
+        logmsg("%s %d\n", argv[0], sysblk.xpndsize >> (20 - XSTORE_PAGESHIFT));
+        return -1;
+    }
     else
     {
         logmsg(MSG(HHC01455, "E", argv[0]));
-        return  -1;
+        return -1;
     }
 
     return 0;
