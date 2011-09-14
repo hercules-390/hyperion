@@ -1132,7 +1132,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
 //
 
 static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
-                       int argc, char** argv )
+                       int argc, char** argx )
 {
     struct in_addr  addr;               // Work area for addresses
     int             iMTU;
@@ -1142,6 +1142,12 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     int             iKernBuff;
     int             iIOBuff;
 #endif
+    char          *argn[MAX_ARGS];
+    char         **argv = argn;
+
+    // Copy argv (as this routine needs to make local changes)
+    for(i=0; i<argc && i<MAX_ARGS;i++)
+        argn[i]=argx[i];
 
     // Housekeeping
     memset( &addr, 0, sizeof( struct in_addr ) );
