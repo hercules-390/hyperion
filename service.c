@@ -897,7 +897,7 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] = {
 BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         0
 #if defined(FEATURE_HYPERVISOR)
-                        | SCCB_CFG0_LOGICALLY_PARTITIONED
+//                      | SCCB_CFG0_LOGICALLY_PARTITIONED
 #endif /*defined(FEATURE_HYPERVISOR)*/
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
                         | SCCB_CFG0_SUPPRESSION_ON_PROTECTION
@@ -1313,6 +1313,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
         /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
+#if defined(_FEATURE_HYPERVISOR)
+        if(FACILITY_ENABLED(HYPERVISOR,regs))
+            sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
+#endif /*defined(_FEATURE_HYPERVISOR)*/
 #if defined(_900) || defined(FEATURE_ESAME)
         if(FACILITY_ENABLED(ESAME_INSTALLED,regs))
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
