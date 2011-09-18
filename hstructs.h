@@ -391,6 +391,7 @@ struct GSYSINFO {
         BYTE    systype[8];
         BYTE    sysname[8];
         BYTE    sysplex[8];
+        BYTE    cpid[16];
 };
 
 /*-------------------------------------------------------------------*/
