@@ -709,7 +709,12 @@ AC_CHECK_LIB( iconv,  iconv          )
 # jbs 10/15/2003 Solaris requires -lrt for sched_yield() and fdatasync()
 AC_CHECK_LIB( rt,     sched_yield    )
 # rbowler 2008/03/10 rev 1.196 Solaris 2.9 requires -lpthread
-AC_CHECK_LIB( pthread,pthread_create )
+# jj 18sep2011 The below checklib forces a -lpthread to be included which
+#              appears to break the latest combination of the pthread library
+#              and libtool on linux-64; it is at this stage unclear where the
+#              error lies or if the statement is still required for Solaris
+#              To be further investigate...
+# AC_CHECK_LIB( pthread,pthread_create )
 AC_CHECK_LIB( regina, RexxStart      )
 
 AC_CACHE_SAVE()
