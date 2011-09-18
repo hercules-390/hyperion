@@ -2655,6 +2655,8 @@ DEF_INST(test_data_class_bfp_ext)
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_integer_bfp_long_reg)
 {
+    U32     regs_fpc;
+    uint32  trap_flags;
     int r1, r2, r3, m4;
     float64 op1, op2, quo, rem;
     GVARS ctx = {regs,0,0};
@@ -2683,6 +2685,9 @@ DEF_INST(divide_integer_bfp_long_reg)
     /* Calculate IEEE remainder */
     rem = float64_rem( &ctx, op1, op2 );
 
+    regs_fpc   = regs->fpc;      /* (save) */
+    trap_flags = ctx.trap_flags; /* (save) */
+
     /* Adjust condition code according to the manual */
     // ZZFIXME: if ((op2*quo)+rem != op1), then partial??
     if (!float64_eq( &ctx, rem, float64_zero ))
@@ -2696,6 +2701,9 @@ DEF_INST(divide_integer_bfp_long_reg)
     ctx.effective_rounding_mode = m4;
     quo = float64_round_to_int( &ctx, quo );
 
+    regs->fpc      = regs_fpc;   /* (restore) */
+    ctx.trap_flags = trap_flags; /* (restore) */
+
     /* Update register results */
     ARCH_DEP(put_float64)( &quo, regs->fpr + FPR2I(r3) );
     PUT_FLOAT64_NOCC( ctx, rem, r1, regs );
@@ -2706,6 +2714,8 @@ DEF_INST(divide_integer_bfp_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_integer_bfp_short_reg)
 {
+    U32     regs_fpc;
+    uint32  trap_flags;
     int r1, r2, r3, m4;
     float32 op1, op2, quo, rem;
     GVARS ctx = {regs,0,0};
@@ -2734,6 +2744,9 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* Calculate IEEE remainder */
     rem = float32_rem( &ctx, op1, op2 );
 
+    regs_fpc   = regs->fpc;      /* (save) */
+    trap_flags = ctx.trap_flags; /* (save) */
+
     /* Adjust condition code according to the manual */
     // ZZFIXME: if ((op2*quo)+rem != op1), then partial??
     if (!float32_eq( &ctx, rem, float32_zero ))
@@ -2746,6 +2759,9 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* final quotient rounding = m4 */
     ctx.effective_rounding_mode = m4;
     quo = float32_round_to_int( &ctx, quo );
+
+    regs->fpc      = regs_fpc;   /* (restore) */
+    ctx.trap_flags = trap_flags; /* (restore) */
 
     /* Update register results */
     ARCH_DEP(put_float32)( &quo, regs->fpr + FPR2I(r3) );
