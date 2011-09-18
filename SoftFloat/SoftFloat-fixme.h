@@ -11,7 +11,7 @@
 /* simply an interim means to more easily implement integrating the  */
 /* softfloat package into Hercules. Certain compiler warnings were   */
 /* causing Hercules to fail to build and I did not want to modify    */
-/* John's code with unnecessary and possibly dangerous casts is I    */
+/* John's code with unnecessary and possibly dangerous casts if I    */
 /* didn't need to. Thus we purposely silence such warnings, but not  */
 /* without providing a means to issue our OWN "non-warning" warning  */
 /* so we don't forget about the warnings that are being suppressed.  */

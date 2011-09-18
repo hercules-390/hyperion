@@ -7,8 +7,8 @@
 
 // $Id$
 
-/* This module is a UNMODIFIED modified version of John R. Hauser's  */
-/* 'softfloat-macros.h' module, and is wholly copyright by him.     */
+/* This module is an UNMODIFIED version of John R. Hauser's          */
+/* 'softfloat-macros.h' module, and is wholly copyright by him.      */
 /* Refer to the documents "SoftFloat.txt", "SoftFloat-source.txt",   */
 /* and "SoftFloat-history.txt" for detailed SoftFloat information.   */
 
