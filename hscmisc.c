@@ -1145,7 +1145,7 @@ BYTE    c;                              /* Character work area       */
     for (i = 0, j = 0; i < 16; i++)
     {
         c = regs->mainstor[aaddr++];
-        j += snprintf (hbuf+j, sizeof(hbuf)-1, "%2.2X", c);
+        j += snprintf (hbuf+j, sizeof(hbuf)-j, "%2.2X", c);
         if ((aaddr & 0x3) == 0x0) hbuf[j++] = SPACE;
         c = guest_to_host(c);
         if (!isprint(c)) c = '.';
