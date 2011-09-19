@@ -159,7 +159,7 @@
 #include <string.h>                // for strcpy
 #include <ctype.h>                 // for lower
 #if defined(_MSVC_)
-#pragma warning(disable:4244)      // [for win64]
+#pragma warning( disable: 4244 )   // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
 #endif /*defined(_MSVC_)*/
 #include "decNumber.h"             // base number library
 #include "decNumberLocal.h"        // decNumber local types, etc.

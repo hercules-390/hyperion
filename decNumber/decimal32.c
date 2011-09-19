@@ -26,7 +26,7 @@
 #include <string.h>           // [for memset/memcpy]
 #include <stdio.h>            // [for printf]
 #if defined(_MSVC_)
-#pragma warning(disable:4244) // [for win64]
+#pragma warning(disable:4244) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
 #endif /*defined(_MSVC_)*/
 
 #define  DECNUMDIGITS  7      // make decNumbers with space for 7
