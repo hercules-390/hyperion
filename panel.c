@@ -570,6 +570,8 @@ static void scroll_up_lines( int numlines, int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
 
     for (i=0; i < numlines && topmsg != oldest_msg(); i++)
@@ -604,6 +606,8 @@ static void scroll_down_lines( int numlines, int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
 
     for (i=0; i < numlines && topmsg != newest_msg(); i++)
@@ -637,6 +641,8 @@ static void page_up( int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
     scroll_up_lines( SCROLL_LINES - 1, 0 );
 }
@@ -645,6 +651,8 @@ static void page_down( int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
     scroll_down_lines( SCROLL_LINES - 1, 0 );
 }
@@ -654,6 +662,8 @@ static void scroll_to_top_line( int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
     topmsg = oldest_msg();
 #if defined(OPTION_MSGHLD)
@@ -667,6 +677,8 @@ static void scroll_to_bottom_line( int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
     while (topmsg != newest_msg())
         scroll_down_lines( 1, 0 );
@@ -677,6 +689,8 @@ static void scroll_to_bottom_screen( int doexpire )
 #if defined(OPTION_MSGHLD)
     if (doexpire)
         expire_kept_msgs(0);
+#else
+    UNREFERENCED(doexpire);
 #endif // defined(OPTION_MSGHLD)
     scroll_to_bottom_line( 0 );
     page_up( 0 );
