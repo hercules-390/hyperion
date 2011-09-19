@@ -577,8 +577,8 @@ static int hao_ignoremsg(char *msg)
 {
 #if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
   static int debuglen = 0;
-#endif
   char* nocolor = msg;
+#endif
   int msglen;
 
 #if defined( OPTION_MSGCLR )
