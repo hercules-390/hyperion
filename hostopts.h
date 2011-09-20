@@ -167,15 +167,15 @@
 #endif
 
 #if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < _WIN32_WINNT_VISTA )
-    #pragma message( MSVC_MESSAGE_LINENUM "OPTION_WTHREADS specified on unsupported version of Windows; Using FTHREADS" )
-    #undef OPTION_WTHREADS
-    #define OPTION_FTHREADS
+  WARNING( "OPTION_WTHREADS specified on unsupported version of Windows; Using FTHREADS" )
+  #undef OPTION_WTHREADS
+  #define OPTION_FTHREADS
 #endif
 
 #if defined( OPTION_WTHREADS )
-    #undef OPTION_FTHREADS
-    #undef OPTION_FISHIO                  /* User Herc's I/O Scheduler */
-    #undef OPTION_PTTRACE
+  #undef OPTION_FTHREADS
+  #undef OPTION_FISHIO                  /* User Herc's I/O Scheduler */
+  #undef OPTION_PTTRACE
 #endif // defined( OPTION_WTHREADS ) 
 
 /*  Note:  OPTION_FISHIO  only possible with  OPTION_FTHREADS        */
@@ -186,13 +186,11 @@
 #endif
 
 #if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
-    #pragma message( MSVC_MESSAGE_LINENUM "error: Both FTHREADS and WTHREADS requested" )
     #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
 #endif
 
 #if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
-    #pragma message( MSVC_MESSAGE_LINENUM "error: Neither FTHREADS or WTHREADS specified" )
-    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified
+    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not neither
 #endif
 
 

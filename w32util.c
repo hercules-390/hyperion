@@ -206,7 +206,7 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
   #define FPOS_T_TO_INT64(pos)      ((__int64)(pos))
   #define INT64_TO_FPOS_T(i64,pos)  ((pos) = (long)(i64))
   #if _INTEGRAL_MAX_BITS < 64
-    #pragma message( MSVC_MESSAGE_LINENUM "warning: fseek/ftell use offset arguments of insufficient size" )
+    WARNING( "fseek/ftell use offset arguments of insufficient size" )
   #endif
 #else
   #if !__STDC__ && _INTEGRAL_MAX_BITS >= 64

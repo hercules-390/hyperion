@@ -53,7 +53,7 @@
   #ifndef _MSVC_
     #warning No version specified
   #else
-    #pragma message( MSVC_MESSAGE_LINENUM "warning: No version specified" )
+    WARNING("No version specified")
   #endif
   #define VERSION              "(unknown!)"
   #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"

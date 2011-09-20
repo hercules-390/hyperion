@@ -39,11 +39,11 @@
  #endif
 
  #if defined(_MSVC_)
-    #pragma message( MSVC_MESSAGE_LINENUM "Warning: MAX_CPU_ENGINES in Windows is 64" )
+    WARNING( "MAX_CPU_ENGINES in Windows is 64" )
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"I64_FMT"X"
-    #undef MAX_CPU_ENGINES
-    #define MAX_CPU_ENGINES 64
+    #undef  MAX_CPU_ENGINES
+    #define MAX_CPU_ENGINES     64
  #else
     typedef __uint128_t         CPU_BITMAP;
  // ZZ FIXME: No printf format support for __int128 yet, so we will incorrectly display...
