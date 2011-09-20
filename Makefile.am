@@ -738,6 +738,8 @@ noinst_HEADERS = fishhang.h     \
                  hconsole.h     \
                  hextapi.h      \
                  hstdinc.h      \
+                 ccfixme.h      \
+                 ccnowarn.h     \
                  hstdint.h      \
                  hsocket.h      \
                  w32stape.h     \
