@@ -290,15 +290,6 @@
 #define MSTRING(x)      STRINGMAC(x)
 
 /*-------------------------------------------------------------------*/
-/* Use these to suppress unreferenced variable warnings...           */
-/*-------------------------------------------------------------------*/
-
-#define  UNREFERENCED(x)      while(0 && x)
-#define  UNREFERENCED_370(x)  while(0 && x)
-#define  UNREFERENCED_390(x)  while(0 && x)
-#define  UNREFERENCED_900(x)  while(0 && x)
-
-/*-------------------------------------------------------------------*/
 /* Macro for command parsing with variable length                    */
 /*-------------------------------------------------------------------*/
 #define  CMD(str,cmd,min) ( strcaseabbrev(#cmd,str,min) )

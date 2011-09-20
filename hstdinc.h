@@ -31,6 +31,8 @@
 
 /* Required headers  --  These we ALWAYS need to have... */
 
+#include "ccnowarn.h"           /* suppress compiler warning support */
+
 #ifdef _MSVC_
   // The following ensures certain functions get defined...
   // (such as TryEnterCriticalSection and InitializeCriticalSectionAndSpinCount)
