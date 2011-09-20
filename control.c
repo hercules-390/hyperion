@@ -52,10 +52,6 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
-#if defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 5
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
-
 /* Temporary debug */
 extern  int     ipending_cmd(int,void *,void *);
 

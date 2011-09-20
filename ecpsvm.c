@@ -74,10 +74,6 @@
 #include "inline.h"
 #include "ecpsvm.h"
 
-#if defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 5
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
-
 #ifdef FEATURE_ECPSVM
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);

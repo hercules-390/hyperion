@@ -19,11 +19,6 @@
 /* Fish note: 'FLOATX80' support was removed as we don't need it.    */
 
 /*----------------------------------------------------------------------------
-| Fish: Suppress some apparently benign compiler warning messages.
-*----------------------------------------------------------------------------*/
-#include "SoftFloat-fixme.h"
-
-/*----------------------------------------------------------------------------
 | One of the macros `BIGENDIAN' or `LITTLEENDIAN' must be defined.
 *----------------------------------------------------------------------------*/
 #ifndef LITTLEENDIAN

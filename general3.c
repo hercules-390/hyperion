@@ -27,10 +27,6 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 5
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
-
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
 #if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/

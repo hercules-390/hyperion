@@ -40,7 +40,6 @@
 #define UNREFERENCED_390(x)     while(0 && x)
 #define UNREFERENCED_900(x)     while(0 && x)
 
-#if 0
 /*-------------------------------------------------------------------*/
 /* The "FIXME" macro itself to mark code needing further research    */
 /*-------------------------------------------------------------------*/
@@ -67,8 +66,6 @@
 
 #ifndef   TODO
   #define TODO( _msg )          /* (do nothing) */
-#endif
-
 #endif
 
 /*-------------------------------------------------------------------*/

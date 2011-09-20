@@ -49,10 +49,6 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 5
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
-
 #if defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
 
 /* Rename all inline functions for multi architectural support *JJ   */

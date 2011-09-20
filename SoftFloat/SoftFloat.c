@@ -107,7 +107,6 @@ static int32 roundAndPackInt32( void* ctx, flag zSign, bits64 absZ )
     roundBits = absZ & 0x7F;
     absZ = ( absZ + roundIncrement )>>7;
     absZ &= ~ ( ( ( roundBits ^ 0x40 ) == 0 ) & roundNearestEven );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     z = absZ;
     if ( zSign ) z = - z;
     if ( ( absZ>>32 ) || ( z && ( ( z < 0 ) ^ zSign ) ) ) {
@@ -841,7 +840,6 @@ float32 int64_to_float32( void* ctx, int64 a )
     absA = zSign ? - a : a;
     shiftCount = countLeadingZeros64( absA ) - 40;
     if ( 0 <= shiftCount ) {
-        FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
         return packFloat32( zSign, 0x95 - shiftCount, absA<<shiftCount );
     }
     else {
@@ -852,7 +850,6 @@ float32 int64_to_float32( void* ctx, int64 a )
         else {
             absA <<= shiftCount;
         }
-        FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
         return roundAndPackFloat32( ctx, zSign, 0x9C - shiftCount, absA );
     }
 
@@ -1428,7 +1425,6 @@ float32 float32_mul( void* ctx, float32 a, float32 b )
     aSig = ( aSig | 0x00800000 )<<7;
     bSig = ( bSig | 0x00800000 )<<8;
     shift64RightJamming( ( (bits64) aSig ) * bSig, 32, &zSig64 );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     zSig = zSig64;
     if ( 0 <= (sbits32) ( zSig<<1 ) ) {
         zSig <<= 1;
@@ -1575,14 +1571,12 @@ float32 float32_rem( void* ctx, float32 a, float32 b )
         while ( 0 < expDiff ) {
             q64 = estimateDiv128To64( aSig64, 0, bSig64 );
             q64 = ( 2 < q64 ) ? q64 - 2 : 0;
-            FIXME(MSVC,C4146_MSG) /* "warning C4146_MSG: FIXME! unary minus operator applied to unsigned type, result still unsigned" */
             aSig64 = - ( ( bSig * q64 )<<38 );
             expDiff -= 62;
         }
         expDiff += 64;
         q64 = estimateDiv128To64( aSig64, 0, bSig64 );
         q64 = ( 2 < q64 ) ? q64 - 2 : 0;
-        FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
         q = q64>>( 64 - expDiff );
         bSig <<= 6;
         aSig = ( ( aSig64>>33 )<<( expDiff - 1 ) ) - bSig * q;
@@ -1597,7 +1591,6 @@ float32 float32_rem( void* ctx, float32 a, float32 b )
         aSig = alternateASig;
     }
     zSign = ( (sbits32) aSig < 0 );
-    FIXME(MSVC,C4146_MSG) /* "warning C4146_MSG: FIXME! unary minus operator applied to unsigned type, result still unsigned" */
     if ( zSign ) aSig = - aSig;
     return normalizeRoundAndPackFloat32( ctx, aSign ^ zSign, bExp, aSig );
 
@@ -1856,7 +1849,6 @@ int32 float64_to_int32_round_to_zero( void* ctx, float64 a )
     shiftCount = 0x433 - aExp;
     savedASig = aSig;
     aSig >>= shiftCount;
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     z = aSig;
     if ( aSign ) z = - z;
     if ( ( z < 0 ) ^ aSign ) {
@@ -1987,7 +1979,6 @@ float32 float64_to_float32( void* ctx, float64 a )
         return packFloat32( aSign, 0xFF, 0 );
     }
     shift64RightJamming( aSig, 22, &aSig );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     zSig = aSig;
     if ( aExp || zSig ) {
         zSig |= 0x40000000;
@@ -2462,7 +2453,6 @@ float64 float64_rem( void* ctx, float64 a, float64 b )
     while ( 0 < expDiff ) {
         q = estimateDiv128To64( aSig, 0, bSig );
         q = ( 2 < q ) ? q - 2 : 0;
-        FIXME(MSVC,C4146_MSG) /* "warning C4146_MSG: FIXME! unary minus operator applied to unsigned type, result still unsigned" */
         aSig = - ( ( bSig>>2 ) * q );
         expDiff -= 62;
     }
@@ -2488,7 +2478,6 @@ float64 float64_rem( void* ctx, float64 a, float64 b )
         aSig = alternateASig;
     }
     zSign = ( (sbits64) aSig < 0 );
-    FIXME(MSVC,C4146_MSG) /* "warning C4146_MSG: FIXME! unary minus operator applied to unsigned type, result still unsigned" */
     if ( zSign ) aSig = - aSig;
     return normalizeRoundAndPackFloat64( ctx, aSign ^ zSign, bExp, aSig );
 
@@ -2527,7 +2516,6 @@ float64 float64_sqrt( void* ctx, float64 a )
     }
     zExp = ( ( aExp - 0x3FF )>>1 ) + 0x3FE;
     aSig |= LIT64( 0x0010000000000000 );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     zSig = estimateSqrt32( aExp, aSig>>21 );
     aSig <<= 9 - ( aExp & 1 );
     zSig = estimateDiv128To64( aSig, 0, zSig<<32 ) + ( zSig<<30 );
@@ -2751,7 +2739,6 @@ int32 float128_to_int32_round_to_zero( void* ctx, float128 a )
     shiftCount = 0x402F - aExp;
     savedASig = aSig0;
     aSig0 >>= shiftCount;
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     z = aSig0;
     if ( aSign ) z = - z;
     if ( ( z < 0 ) ^ aSign ) {
@@ -2896,7 +2883,6 @@ float32 float128_to_float32( void* ctx, float128 a )
     }
     aSig0 |= ( aSig1 != 0 );
     shift64RightJamming( aSig0, 18, &aSig0 );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     zSig = aSig0;
     if ( aExp || zSig ) {
         zSig |= 0x40000000;
@@ -3490,8 +3476,10 @@ float128 float128_rem( void* ctx, float128 a, float128 b )
         ++q;
         sub128( aSig0, aSig1, bSig0, bSig1, &aSig0, &aSig1 );
     } while ( 0 <= (sbits64) aSig0 );
+DISABLE_GCC_WARNING( pointer-sign, "pointer targets in passing argument n of 'func' differ in signedness" )
     add128(
         aSig0, aSig1, alternateASig0, alternateASig1, &sigMean0, &sigMean1 );
+ENABLE_GCC_WARNING( pointer-sign )
     if (    ( sigMean0 < 0 )
          || ( ( ( sigMean0 | sigMean1 ) == 0 ) && ( q & 1 ) ) ) {
         aSig0 = alternateASig0;
@@ -3541,7 +3529,6 @@ float128 float128_sqrt( void* ctx, float128 a )
     }
     zExp = ( ( aExp - 0x3FFF )>>1 ) + 0x3FFE;
     aSig0 |= LIT64( 0x0001000000000000 );
-    FIXME(MSVC,C4244_MSG) /* "warning C4244_MSG: FIXME! conversion from 'bits64' to 'bits32', possible loss of data" */
     zSig0 = estimateSqrt32( aExp, aSig0>>17 );
     shortShift128Left( aSig0, aSig1, 13 - ( aExp & 1 ), &aSig0, &aSig1 );
     zSig0 = estimateDiv128To64( aSig0, aSig1, zSig0<<32 ) + ( zSig0<<30 );

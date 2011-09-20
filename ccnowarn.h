@@ -35,7 +35,6 @@
                                                     \
         __pragma( warning( pop ) )
 
-#if 0
     /* Globally disable some uninteresting MSVC compiler warnings */
 
     #pragma warning( disable: 4127 ) // "conditional expression is constant"
@@ -45,7 +44,6 @@
     #pragma warning( disable: 4244 ) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
     #pragma warning( disable: 4267 ) // "conversion from size_t to int possible loss of data"
     #pragma warning( disable: 4748 ) // "/GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function"
-#endif
 
   #endif
 
@@ -78,13 +76,11 @@
         #define ENABLE_GCC_WARNING(  _opt )         GCC_WARNING_ON(  _opt )
       #endif
 
-#if 0
       /* Globally disable some rather annoying GCC compiler warnings which */
       /* frequently occurs due to our build multiple architectures design. */
 
       #pragma GCC diagnostic ignored "-Wunused-but-set-variable"  // "variable 'xxx' set but not used"
       #pragma GCC diagnostic ignored "-Wunused-function"          // "'xxxxxxxx' defined but not used"
-#endif
 
     #endif
   #endif

@@ -46,7 +46,8 @@ endif
   libSoftFloat_la_LIBADD  = $(LDADD)
 
 noinst_HEADERS = milieu.h \
-                 SoftFloat-fixme.h \
+                 ccfixme.h \
+                 ccnowarn.h \
                  SoftFloat.h \
                  SoftFloat-macros.h \
                  SoftFloat-specialise.h \

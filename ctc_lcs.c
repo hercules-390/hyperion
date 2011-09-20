@@ -26,8 +26,6 @@
 
 #if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
-  #pragma warning( push )               // save current settings
-  #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
 #endif
 
 #if defined( LCS_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
@@ -2711,7 +2709,6 @@ END_DEVICE_SECTION
 #endif
 
 #if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
-  #pragma warning( pop )                // restore previous settings
   #pragma optimize( "", on )            // restore previous settings
 #endif
 

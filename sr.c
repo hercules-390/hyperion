@@ -32,8 +32,6 @@
 
 #if defined( _MSVC_ ) && defined( NO_SR_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
-  #pragma warning( push )               // save current settings
-  #pragma warning( disable: 4748 )      // C4748:  /GS can not ... because optimizations are disabled...
 #endif
 
 #include "sr.h"     // (must FOLLOW above enable/disable debugging macros)
@@ -1404,6 +1402,5 @@ sr_error_exit:
 }
 
 #if defined( _MSVC_ ) && defined( NO_SR_OPTIMIZE )
-  #pragma warning( pop )                // restore previous settings
   #pragma optimize( "", on )            // restore previous settings
 #endif
