@@ -788,6 +788,8 @@ float64 int32_to_float64( void* ctx, int32 a )
     int8 shiftCount;
     bits64 zSig;
 
+    UNREFERENCED( ctx );
+
     if ( a == 0 ) return 0;
     zSign = ( a < 0 );
     absA = zSign ? - a : a;
@@ -811,6 +813,8 @@ float128 int32_to_float128( void* ctx, int32 a )
     uint32 absA;
     int8 shiftCount;
     bits64 zSig0;
+
+    UNREFERENCED( ctx );
 
     if ( a == 0 ) return packFloat128( 0, 0, 0, 0 );
     zSign = ( a < 0 );
@@ -889,6 +893,8 @@ float128 int64_to_float128( void* ctx, int64 a )
     int8 shiftCount;
     int32 zExp;
     bits64 zSig0, zSig1;
+
+    UNREFERENCED( ctx );
 
     if ( a == 0 ) return packFloat128( 0, 0, 0, 0 );
     zSign = ( a < 0 );

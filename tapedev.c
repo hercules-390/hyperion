@@ -1316,7 +1316,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 BYTE    f       = '\0';
                 BYTE    c       = '\0';
 
-                rc = sscanf(res.str, "%"I64_FMT"u%c%c", &maxsize, &f, &c);
+                rc = sscanf((const char*)res.str, "%"I64_FMT"u%c%c", &maxsize, &f, &c);
                 if ( rc < 1 || rc > 2 )
                 {
                     WRMSG( HHC01451, "E", res.str, "maxsize" );
@@ -1379,7 +1379,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 BYTE    f           = '\0';
                 BYTE    c           = '\0';
 
-                rc = sscanf(res.str, "%"I64_FMT"u%c%c", &eotmargin, &f, &c);
+                rc = sscanf((const char*)res.str, "%"I64_FMT"u%c%c", &eotmargin, &f, &c);
                 if ( rc < 1 || rc > 2 )
                 {
                     WRMSG( HHC01451, "E", res.str, "eotmargin" );
