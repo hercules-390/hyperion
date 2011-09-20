@@ -1263,6 +1263,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\ccfixme.h"
+							>
+						</File>
+						<File
+							RelativePath=".\ccnowarn.h"
+							>
+						</File>
+						<File
 							RelativePath=".\chain.h"
 							>
 						</File>
