@@ -653,8 +653,8 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
             {
                 // "Invalid argument '%s'%s"
                 WRMSG( HHC02205, "E", argv[1], ": must be 'default' or n where "
-                    MSTRING( MIN_TOD_UPDATE_USECS ) " <= n <= "
-                    MSTRING( MAX_TOD_UPDATE_USECS ) );
+                    QSTR( MIN_TOD_UPDATE_USECS ) " <= n <= "
+                    QSTR( MAX_TOD_UPDATE_USECS ) );
                 rc = -1;
             }
         }

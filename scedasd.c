@@ -195,7 +195,7 @@ int     rc = 0;                         /* Return codes (work)       */
 
         if(inputline)
         {
-            rc = sscanf(inputline,"%" MSTRING(MAX_PATH) "s %i",filename,&fileaddr);
+            rc = sscanf(inputline,"%" QSTR(MAX_PATH) "s %i",filename,&fileaddr);
         }
 
         /* If no load address was found load to location zero */

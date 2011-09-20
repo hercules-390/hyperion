@@ -31,7 +31,7 @@ static const char *build_info[] = {
   #if defined(DEBUG)
     "** DEBUG ** "
   #endif
-    "build for " MSTRING(HOST_ARCH)
+    "build for " QSTR(HOST_ARCH)
   #if defined(CUSTOM_BUILD_STRING)
     ": \"" CUSTOM_BUILD_STRING "\""
   #endif
@@ -56,7 +56,7 @@ static const char *build_info[] = {
 #endif
     ,
 
-    "Max CPU Engines: " MSTRING(MAX_CPU_ENGINES),
+    "Max CPU Engines: " QSTR(MAX_CPU_ENGINES),
 
 #if !defined(_MSVC_)
   #if defined(NO_SETUID)

@@ -821,8 +821,8 @@
   "Format: \"panrate [nnn | fast | slow]\".\n"                                                  \
   "Sets or displays the panel refresh rate.\n"                                                  \
   "panrate nnn sets the refresh rate to nnn milliseconds.\n"                                    \
-  "panrate fast sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"  \
-  "panrate slow sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"  \
+  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"  \
+  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"  \
   "If no operand is specified, panrate displays the current refresh rate.\n"
 
 #define pantitle_cmd_desc       "Display or set console title"
@@ -1068,7 +1068,7 @@
   "Format: \"script [filename [filename] ...]\". Sequentially executes\n"        \
   "the commands contained within the file 'filename'. The script file\n"         \
   "may also contain \"script\" commands, but the system ensures that no\n"       \
-  "more than " MSTRING( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n\n"  \
+  "more than " QSTR( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n\n"  \
                                                                                  \
   "Enter the command with no arguments to list all running scripts.\n"
 

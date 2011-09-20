@@ -37,9 +37,6 @@
 
 /*********************************************************************/
 
-#define STRING_M( _string ) #_string
-#define STRING_Q( _string ) STRING_M( _string )
-
 struct _HDLSHD;
 typedef struct _HDLSHD {
     struct _HDLSHD *next;
@@ -59,16 +56,16 @@ DLL_EXPORT DEVHND *hdl_ghnd(const char *devname);        /* Get device handler  
 
 #if !defined(OPTION_DYNAMIC_LOAD)
 
-#define HDL_DEVICE_SECTION                              \
-DLL_EXPORT DEVHND *hdl_ghnd(const char *devtype)                         \
+#define HDL_DEVICE_SECTION                          \
+DLL_EXPORT DEVHND *hdl_ghnd(const char *devtype)    \
 {
 
-#define HDL_DEVICE( _devname, _devhnd )                 \
-    if(!strcasecmp( STRING_Q(_devname), devtype ))      \
+#define HDL_DEVICE( _devname, _devhnd )             \
+    if(!strcasecmp( QSTR(_devname), devtype ))      \
         return &(_devhnd);
 
-#define END_DEVICE_SECTION                              \
-    return NULL;                                        \
+#define END_DEVICE_SECTION                          \
+    return NULL;                                    \
 }
 
 #else /* defined(OPTION_DYNAMIC_LOAD) */
@@ -211,29 +208,28 @@ static void **unresolved _HDL_UNUSED = NULL;
 #define UNRESOLVED *unresolved
 
 
-#define HDL_DEPC hdl_depc
-#define HDL_RESO hdl_reso
-#define HDL_INIT hdl_init
-#define HDL_FINI hdl_fini
-#define HDL_DDEV hdl_ddev
-#define HDL_DINS hdl_dins
+#define HDL_DEPC        hdl_depc
+#define HDL_RESO        hdl_reso
+#define HDL_INIT        hdl_init
+#define HDL_FINI        hdl_fini
+#define HDL_DDEV        hdl_ddev
+#define HDL_DINS        hdl_dins
 
-#define HDL_HDTP hdt
+#define HDL_HDTP        hdt
 
-#define HDL_DEPC_Q STRING_Q(HDL_DEPC)
-#define HDL_RESO_Q STRING_Q(HDL_RESO)
-#define HDL_INIT_Q STRING_Q(HDL_INIT)
-#define HDL_FINI_Q STRING_Q(HDL_FINI)
-#define HDL_DDEV_Q STRING_Q(HDL_DDEV)
-#define HDL_DINS_Q STRING_Q(HDL_DINS)
+#define HDL_DEPC_Q      QSTR( HDL_DEPC )
+#define HDL_RESO_Q      QSTR( HDL_RESO )
+#define HDL_INIT_Q      QSTR( HDL_INIT )
+#define HDL_FINI_Q      QSTR( HDL_FINI )
+#define HDL_DDEV_Q      QSTR( HDL_DDEV )
+#define HDL_DINS_Q      QSTR( HDL_DINS )
+#define HDL_HDTP_Q      QSTR( HDL_HDTP )
 
-#define HDL_HDTP_Q STRING_Q(HDL_HDTP)
 
-
-#define HDL_FINDSYM(_name)                              \
+#define HDL_FINDSYM(_name)      \
     hdl_fent( (_name) )
 
-#define HDL_FINDNXT(_ep)                                \
+#define HDL_FINDNXT(_ep)        \
     hdl_nent( &(_ep) )
 
 
@@ -243,10 +239,10 @@ DLL_EXPORT int HDL_DEPC(int (*hdl_depc_vers)(char *, char *, int) _HDL_UNUSED ) 
 int hdl_depc_rc = 0
 
 #define HDL_DEPENDENCY(_comp) \
-    if (hdl_depc_vers( STRING_Q(_comp), HDL_VERS_ ## _comp, HDL_SIZE_ ## _comp)) \
+    if (hdl_depc_vers( QSTR(_comp), HDL_VERS_ ## _comp, HDL_SIZE_ ## _comp)) \
         hdl_depc_rc = 1
 
-#define END_DEPENDENCY_SECTION                            \
+#define END_DEPENDENCY_SECTION                          \
 return hdl_depc_rc; }
 
 
@@ -256,7 +252,7 @@ DLL_EXPORT void HDL_INIT(int (*hdl_init_regi)(char *, void *) _HDL_UNUSED ) \
 
 /*       register this epname, as ep = addr of this var or func...   */
 #define HDL_REGISTER( _epname, _varname )               \
-    (hdl_init_regi)( STRING_Q(_epname), &(_varname) )
+    (hdl_init_regi)( QSTR(_epname), &(_varname) )
 
 #define END_REGISTER_SECTION                            \
 }
@@ -267,7 +263,7 @@ DLL_EXPORT void HDL_DDEV(int (*hdl_init_ddev)(char *, void *) _HDL_UNUSED ) \
 {
 
 #define HDL_DEVICE( _devname, _devhnd )                 \
-    (hdl_init_ddev)( STRING_Q(_devname), &(_devhnd) )
+    (hdl_init_ddev)( QSTR(_devname), &(_devhnd) )
 
 #define END_DEVICE_SECTION                              \
 }
@@ -278,30 +274,30 @@ DLL_EXPORT void HDL_DINS(int (*hdl_init_dins)(int, int, void *, void *) _HDL_UNU
 {
 
 #if defined(_370)
- #define HDL_370_DEFINST( _arch, _opcode, _instruction)                                  \
-do {                                                                                     \
-  if( (_arch) & HDL_INSTARCH_370 )                                                       \
-    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(s370_ ## _instruction) ); \
+ #define HDL_370_DEFINST( _arch, _opcode, _instruction)                               \
+do {                                                                                  \
+  if( (_arch) & HDL_INSTARCH_370 )                                                    \
+    (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(s370_ ## _instruction) );  \
 } while(0)
 #else
  #define HDL_370_DEFINST( _arch, _opcode, _instruction)
 #endif
 
 #if defined(_390)
- #define HDL_390_DEFINST( _arch, _opcode, _instruction)                                  \
-do {                                                                                     \
-  if( (_arch) & HDL_INSTARCH_390 )                                                       \
-    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(s390_ ## _instruction) ); \
+ #define HDL_390_DEFINST( _arch, _opcode, _instruction)                               \
+do {                                                                                  \
+  if( (_arch) & HDL_INSTARCH_390 )                                                    \
+    (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(s390_ ## _instruction) );  \
 } while(0)
 #else
  #define HDL_390_DEFINST( _arch, _opcode, _instruction)
 #endif
 
 #if defined(_900)
- #define HDL_900_DEFINST( _arch, _opcode, _instruction)                                  \
-do {                                                                                     \
-  if( (_arch) & HDL_INSTARCH_900 )                                                       \
-    (hdl_init_dins)( _arch, _opcode, STRING_Q(_instruction), &(z900_ ## _instruction) ); \
+ #define HDL_900_DEFINST( _arch, _opcode, _instruction)                               \
+do {                                                                                  \
+  if( (_arch) & HDL_INSTARCH_900 )                                                    \
+    (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(z900_ ## _instruction) );  \
 } while(0)
 #else
  #define HDL_900_DEFINST( _arch, _opcode, _instruction)
@@ -314,7 +310,7 @@ do {                                                                       \
     HDL_900_DEFINST(( (_arch) & HDL_INSTARCH_900), _opcode, _instruction); \
 } while(0)
 
-#define END_INSTRUCTION_SECTION                              \
+#define END_INSTRUCTION_SECTION                         \
 }
 
 #define HDL_RESOLVER_SECTION                                          \
@@ -322,18 +318,18 @@ DLL_EXPORT void HDL_RESO(void *(*hdl_reso_fent)(char *) _HDL_UNUSED ) \
 {
 
 #define HDL_RESOLVE(_name)                              \
-    (_name) = (hdl_reso_fent)(STRING_Q(_name))
+    (_name) = (hdl_reso_fent)(QSTR(_name))
 
 /*                  set this ptrvar, to this ep value...             */
 #define HDL_RESOLVE_PTRVAR( _ptrvar, _epname )          \
-    (_ptrvar) = (hdl_reso_fent)( STRING_Q(_epname) )
+    (_ptrvar) = (hdl_reso_fent)(QSTR(_epname))
 
 #define END_RESOLVER_SECTION                            \
 }
 
 
 #define HDL_FINAL_SECTION                               \
-DLL_EXPORT int HDL_FINI()                                          \
+DLL_EXPORT int HDL_FINI()                               \
 {
 
 #define END_FINAL_SECTION                               \

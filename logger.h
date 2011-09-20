@@ -53,7 +53,7 @@ LOG_DLL_IMPORT void logmsg(char *,...);
 /* Constants used by 'writemsg()' function in logmsg.c */
 #define  MLVL_DEBUG_FILE_FIELD_WIDTH  10
 #define  MLVL_DEBUG_LINE_FIELD_WIDTH  5
-#define  MLVL_DEBUG_PRINTF_PATTERN "%-" MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "." MSTRING( MLVL_DEBUG_FILE_FIELD_WIDTH ) "s %" MSTRING( MLVL_DEBUG_LINE_FIELD_WIDTH ) "d "
+#define  MLVL_DEBUG_PRINTF_PATTERN "%-" QSTR( MLVL_DEBUG_FILE_FIELD_WIDTH ) "." QSTR( MLVL_DEBUG_FILE_FIELD_WIDTH ) "s %" QSTR( MLVL_DEBUG_LINE_FIELD_WIDTH ) "d "
 LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
 LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...);
 #else /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/

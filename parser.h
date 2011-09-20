@@ -24,9 +24,7 @@
 #endif
 
 #define  MAX_PARSER_STRLEN           79
-#define  STRING_M( _string )         #_string
-#define  STRING_Q( _string )         STRING_M( _string )
-#define  _PARSER_STR_TYPE( len )     "%" STRING_Q( len ) "s"
+#define  _PARSER_STR_TYPE( len )     "%" QSTR( len ) "s"
 #define  PARSER_STR_TYPE             _PARSER_STR_TYPE( MAX_PARSER_STRLEN )
 
 typedef struct _parser

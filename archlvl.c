@@ -36,13 +36,9 @@
  #undef   _GEN_ARCH
 #endif
 
-#define STR_Q( _string ) #_string
-#define STR_M( _string ) STR_Q( _string )
-
-
 /* Layout of the facility table */
 #define FACILITY(_name, _mode, _fixed, _supp, _level) \
-    { STR_M(_name), (STFL_ ## _name), (_mode), (_fixed), (_supp), (_level) },
+    { QSTR(_name), (STFL_ ## _name), (_mode), (_fixed), (_supp), (_level) },
 typedef struct _FACTAB
 {
     const char  *name;             /* Facility Name       */

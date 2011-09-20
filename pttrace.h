@@ -110,13 +110,9 @@ typedef struct _PTT_TRACE {
         int          result;            /* Result                     */
       } PTT_TRACE;
 
-#define PTT_LOC_Q( _string ) #_string
-#define PTT_LOC_M( _string ) PTT_LOC_Q( _string )
-#define PTT_LOC __FILE__ ":" PTT_LOC_M( __LINE__ ) 
-
-#define PTT_TRACE_SIZE sizeof(PTT_TRACE)
-
-#define PTT_MAGIC -99
+#define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
+#define PTT_TRACE_SIZE      sizeof(PTT_TRACE)
+#define PTT_MAGIC           -99
 
 #define PTT(_class,_type,_data1,_data2,_result) \
 do { \

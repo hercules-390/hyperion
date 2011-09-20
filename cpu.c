@@ -597,7 +597,7 @@ static char *pgmintname[] = {
           strlcpy(buf1, "SIE: ", sizeof(buf1) );
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
-       strlcpy(buf2, MSTRING(_GEN_ARCH), sizeof(buf2) );
+       strlcpy(buf2, QSTR(_GEN_ARCH), sizeof(buf2) );
        strlcat(buf2, " ", sizeof(buf2) );
 #endif /*defined(SIE_DEBUG)*/
        if (code == PGM_DATA_EXCEPTION)

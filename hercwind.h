@@ -31,28 +31,6 @@
 #pragma intrinsic( memset, memcmp, memcpy )
 
 ///////////////////////////////////////////////////////////////////////
-// The following is mostly for issuing "warning" messages since MS's
-// compiler doesn't support #warning. Instead, we must use #pragma
-// message as follows:
-//
-//     #pragma message( MSVC_MESSAGE_LINENUM "blah, blah..." )
-//
-// which results in:
-//
-//     foobar.c(123) : blah, blah...
-//
-// which is really handy when using their Visual Studio IDE since
-// it allows us to quickly jump to that specific source statement
-// with just the press of a function key...
-
-#if !defined( MSVC_MESSAGE_LINENUM )
-  #define MSVC_STRINGIZE( L )        #L
-  #define MSVC_MAKESTRING( M, L )    M( L )
-  #define MSVC_QUOTED_LINENUM        MSVC_MAKESTRING( MSVC_STRINGIZE, __LINE__ )
-  #define MSVC_MESSAGE_LINENUM       __FILE__ "(" MSVC_QUOTED_LINENUM ") : "
-#endif
-
-///////////////////////////////////////////////////////////////////////
 // Disable some warnings that tend to get in the way...
 //
 // FIXME: purposely disabling warning C4244 is dangerous IMO and might

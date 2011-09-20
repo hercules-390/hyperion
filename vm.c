@@ -974,7 +974,7 @@ BYTE       c;                           /* Character work area       */
     buf[9] = 0x00;
 
     /* Byte 10 contains the system product version number */
-    sscanf (MSTRING(VERSION), "%d.%d", &ver, &rel);
+    sscanf (QSTR(VERSION), "%d.%d", &ver, &rel);
     buf[10] = ver & 0xff;
 
     /* Byte 11 contains version number from STIDP */

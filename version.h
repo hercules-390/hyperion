@@ -31,10 +31,8 @@
 
 #if !defined(VERSION)
 #if defined(V1) && defined(V2) && defined(V3) && defined(V4)
-#define Q_(x) #x
-#define Q(x) Q_(x)
 #define VER V1##.##V2##.##V3##.##V4
-#define VERSION Q(VER)
+#define VERSION QSTR(VER)
 #endif
 #endif
 

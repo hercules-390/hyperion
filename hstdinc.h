@@ -37,7 +37,7 @@
   // The following ensures certain functions get defined...
   // (such as TryEnterCriticalSection and InitializeCriticalSectionAndSpinCount)
   #ifndef _WIN32_WINNT
-    #define _WIN32_WINNT 0x0403  // Windows 98 or WinNT SP4 or greater
+    #define _WIN32_WINNT 0x0403 // Windows 98 or WinNT SP4 or greater
   #endif
   #include <winsock2.h>         // Windows Sockets 2
   #include <mstcpip.h>          // (need struct tcp_keepalive)
