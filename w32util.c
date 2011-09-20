@@ -3222,8 +3222,9 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     HANDLE hPipeReadHandle;             // (temporary for creating pipes)
     HANDLE hPipeWriteHandle;            // (temporary for creating pipes)
 
-    HANDLE hWorkerThread;               // (worker thread to monitor child's pipe)
-    DWORD  dwThreadId;                  // (worker thread to monitor child's pipe)
+    HANDLE hStdOutWorkerThread;         // (worker thread to monitor child's pipe)
+    HANDLE hStdErrWorkerThread;         // (worker thread to monitor child's pipe)
+    DWORD  dwThreadId;                  // (work)
 
     STARTUPINFO          siStartInfo;   // (info passed to CreateProcess)
     PROCESS_INFORMATION  piProcInfo;    // (info returned by CreateProcess)
@@ -3450,7 +3451,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     //////////////////////////////////////////////////
     // Stdout...
 
-    hWorkerThread = (HANDLE) _beginthreadex
+    hStdOutWorkerThread = (HANDLE) _beginthreadex
     (
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
@@ -3461,7 +3462,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     );
     rc = GetLastError();                            // (save return code)
 
-    if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
+    if (!hStdOutWorkerThread || INVALID_HANDLE_VALUE == hStdOutWorkerThread)
     {
         TRACE("*** _beginthreadex() failed! rc = %d : %s\n",
             rc,w32_strerror(rc));
@@ -3483,15 +3484,13 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         errno = rc;
         return -1;
     }
-    else
-        VERIFY(CloseHandle(hWorkerThread));         // (not needed anymore)
 
     SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdOUT_output_thread");
 
     //////////////////////////////////////////////////
     // Stderr...
 
-    hWorkerThread = (HANDLE) _beginthreadex
+    hStdErrWorkerThread = (HANDLE) _beginthreadex
     (
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
@@ -3502,7 +3501,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     );
     rc = GetLastError();                            // (save return code)
 
-    if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
+    if (!hStdErrWorkerThread || INVALID_HANDLE_VALUE == hStdErrWorkerThread)
     {
         TRACE("*** _beginthreadex() failed! rc = %d : %s\n",
             rc,w32_strerror(rc));
@@ -3511,6 +3510,9 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         VERIFY(CloseHandle(hOurWriteToStdin));
         VERIFY(CloseHandle(hOurReadFromStdout));
         VERIFY(CloseHandle(hOurReadFromStderr));
+
+        WaitForSingleObject( hStdOutWorkerThread, INFINITE );
+        CloseHandle( hStdOutWorkerThread );
 
         if ( !pnWriteToChildStdinFD )
         {
@@ -3524,8 +3526,6 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         errno = rc;
         return -1;
     }
-    else
-        VERIFY(CloseHandle(hWorkerThread));     // (not needed anymore)
 
     SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
 
@@ -3534,10 +3534,16 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     if ( !pnWriteToChildStdinFD )
     {
         // We're in control of the process...
-        // Wait for it to exit...
+
+        // Wait for process to exit...
 
         WaitForSingleObject( piProcInfo.hProcess, INFINITE );
+        WaitForSingleObject( hStdOutWorkerThread, INFINITE );
+        WaitForSingleObject( hStdErrWorkerThread, INFINITE );
+
         CloseHandle( piProcInfo.hProcess );
+        CloseHandle( hStdOutWorkerThread );
+        CloseHandle( hStdErrWorkerThread );
 
         // Now print ALL captured messages AT ONCE (if any)...
 
@@ -3560,6 +3566,8 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         // Caller is in control of the process...
 
         CloseHandle( piProcInfo.hProcess );
+        CloseHandle( hStdOutWorkerThread );
+        CloseHandle( hStdErrWorkerThread );
 
         // Return a C run-time file descriptor
         // for the write-to-child-stdin HANDLE...
