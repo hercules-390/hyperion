@@ -1567,10 +1567,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-fixme.h"
-							>
-						</File>
-						<File
 							RelativePath=".\SoftFloat\SoftFloat-macros.h"
 							>
 						</File>

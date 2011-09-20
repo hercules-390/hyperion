@@ -220,7 +220,8 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
            milieu.h                \
-           softfloat-fixme.h       \
+           ccfixme.h               \
+           ccnowarn.h              \
            ccfixme.h               \
            ccnowarn.h              \
            softfloat-macros.h      \
