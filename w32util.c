@@ -3244,7 +3244,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     buffer_overflow_msg         = MSG_TRUNCATED_MSG;
     buffer_overflow_msg_len     = strlen( buffer_overflow_msg );
-    saAttr.nLength              = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.nLength              = sizeof( SECURITY_ATTRIBUTES );
     saAttr.lpSecurityDescriptor = NULL; // (we dunt need no stinkin suckurity!)
     saAttr.bInheritHandle       = TRUE; // (allows our inheritable HANDLEs
                                         // to be inherited by child)
@@ -3276,62 +3276,62 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     {
         // Create Stdin pipe for sending data to child...
 
-        VERIFY(CreatePipe(&hChildReadFromStdin, &hPipeWriteHandle, &saAttr, PIPEBUFSIZE));
+        VERIFY( CreatePipe( &hChildReadFromStdin, &hPipeWriteHandle, &saAttr, PIPEBUFSIZE ));
 
         // Create non-inheritable duplcate of pipe handle for our own private use...
 
-        VERIFY(DuplicateHandle
+        VERIFY( DuplicateHandle
         (
-            hOurProcess, hPipeWriteHandle,      // (handle to be duplicated)
-            hOurProcess, &hOurWriteToStdin,     // (non-inheritable duplicate)
+            hOurProcess, hPipeWriteHandle,          // (handle to be duplicated)
+            hOurProcess, &hOurWriteToStdin,         // (non-inheritable duplicate)
             0,
-            FALSE,                              // (prevents child from inheriting it)
+            FALSE,                                  // (prevents child from inheriting it)
             DUPLICATE_SAME_ACCESS
         ));
-        VERIFY(CloseHandle(hPipeWriteHandle));  // (MUST close so child won't hang!)
+        VERIFY( CloseHandle( hPipeWriteHandle ));   // (MUST close so child won't hang!)
     }
 
     //////////////////////////////////////////////////
     // Pipe child's Stdout output back to us...
 
-    VERIFY(CreatePipe(&hPipeReadHandle, &hChildWriteToStdout, &saAttr, PIPEBUFSIZE));
+    VERIFY( CreatePipe( &hPipeReadHandle, &hChildWriteToStdout, &saAttr, PIPEBUFSIZE ));
 
     // Create non-inheritable duplcate of pipe handle for our own private use...
 
-    VERIFY(DuplicateHandle
+    VERIFY( DuplicateHandle
     (
-        hOurProcess, hPipeReadHandle,       // (handle to be duplicated)
-        hOurProcess, &hOurReadFromStdout,   // (non-inheritable duplicate)
+        hOurProcess, hPipeReadHandle,           // (handle to be duplicated)
+        hOurProcess, &hOurReadFromStdout,       // (non-inheritable duplicate)
         0,
-        FALSE,                              // (prevents child from inheriting it)
+        FALSE,                                  // (prevents child from inheriting it)
         DUPLICATE_SAME_ACCESS
     ));
-    VERIFY(CloseHandle(hPipeReadHandle));   // (MUST close so child won't hang!)
+    VERIFY( CloseHandle( hPipeReadHandle ));    // (MUST close so child won't hang!)
 
     //////////////////////////////////////////////////
     // Pipe child's Stderr output back to us...
 
-    VERIFY(CreatePipe(&hPipeReadHandle, &hChildWriteToStderr, &saAttr, PIPEBUFSIZE));
+    VERIFY( CreatePipe( &hPipeReadHandle, &hChildWriteToStderr, &saAttr, PIPEBUFSIZE ));
 
     // Create non-inheritable duplcate of pipe handle for our own private use...
 
-    VERIFY(DuplicateHandle
+    VERIFY( DuplicateHandle
     (
-        hOurProcess, hPipeReadHandle,       // (handle to be duplicated)
-        hOurProcess, &hOurReadFromStderr,   // (non-inheritable duplicate)
+        hOurProcess, hPipeReadHandle,           // (handle to be duplicated)
+        hOurProcess, &hOurReadFromStderr,       // (non-inheritable duplicate)
         0,
-        FALSE,                              // (prevents child from inheriting it)
+        FALSE,                                  // (prevents child from inheriting it)
         DUPLICATE_SAME_ACCESS
     ));
-    VERIFY(CloseHandle(hPipeReadHandle));   // (MUST close so child won't hang!)
+    VERIFY( CloseHandle( hPipeReadHandle ));    // (MUST close so child won't hang!)
 
     //////////////////////////////////////////////////
     // Prepare for creation of child process...
 
-    ZeroMemory(&piProcInfo,  sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO        ));
+    ZeroMemory( &piProcInfo,  sizeof( PROCESS_INFORMATION ));
+    ZeroMemory( &siStartInfo, sizeof( STARTUPINFO         ));
 
-    siStartInfo.cb         = sizeof(STARTUPINFO);   // (size of structure)
+    siStartInfo.cb         = sizeof( STARTUPINFO ); // (size of structure)
     siStartInfo.dwFlags    = STARTF_USESTDHANDLES;  // (use redirected std HANDLEs)
     siStartInfo.hStdInput  = hChildReadFromStdin;   // (use redirected std HANDLEs)
     siStartInfo.hStdOutput = hChildWriteToStdout;   // (use redirected std HANDLEs)
@@ -3339,7 +3339,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     // Build the command-line for the system to create the child process with...
 
-    len = strlen(pszCommandLine) + 1;
+    len = strlen( pszCommandLine ) + 1;
     pszNewCommandLine = malloc( len );
     strlcpy( pszNewCommandLine, pszCommandLine, len );
 
@@ -3373,18 +3373,19 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         &piProcInfo             // output PROCESS_INFORMATION
     );
 
-    rc = GetLastError();                        // (save return code)
+    rc = GetLastError();        // (save return code)
 
     // Close the HANDLEs we don't need...
 
     if (pnWriteToChildStdinFD)
-    VERIFY(CloseHandle(hChildReadFromStdin));   // (MUST close so child won't hang!)
-    VERIFY(CloseHandle(hChildWriteToStdout));   // (MUST close so child won't hang!)
-    VERIFY(CloseHandle(hChildWriteToStderr));   // (MUST close so child won't hang!)
+        VERIFY( CloseHandle( hChildReadFromStdin ));    // (MUST close so child won't hang!)
 
-           CloseHandle(piProcInfo.hThread);     // (we don't need this one)
+    VERIFY( CloseHandle( hChildWriteToStdout ));        // (MUST close so child won't hang!)
+    VERIFY( CloseHandle( hChildWriteToStderr ));        // (MUST close so child won't hang!)
 
-    free(pszNewCommandLine);                    // (not needed anymore)
+    CloseHandle( piProcInfo.hThread  );                 // (we don't need this one)
+
+    free( pszNewCommandLine );                          // (not needed anymore)
 
     // Check results...
 
@@ -3394,9 +3395,10 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
             rc,w32_strerror(rc));
 
         if (pnWriteToChildStdinFD)
-        VERIFY(CloseHandle(hOurWriteToStdin));
-        VERIFY(CloseHandle(hOurReadFromStdout));
-        VERIFY(CloseHandle(hOurReadFromStderr));
+            VERIFY( CloseHandle( hOurWriteToStdin ));
+
+        VERIFY( CloseHandle( hOurReadFromStdout ));
+        VERIFY( CloseHandle( hOurReadFromStderr ));
 
         errno = rc;
         return -1;
@@ -3421,15 +3423,15 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     // same thread-id as the thread that started the capture, which was us!
     // (actually it was the caller, but we're the same thread as they are!)).
 
-    pPipedStdOutThreadCtl = malloc( sizeof(PIPED_THREAD_CTL) );
-    pPipedStdErrThreadCtl = malloc( sizeof(PIPED_THREAD_CTL) );
+    pPipedStdOutThreadCtl = malloc( sizeof( PIPED_THREAD_CTL ));
+    pPipedStdErrThreadCtl = malloc( sizeof( PIPED_THREAD_CTL ));
 
     pPipedStdOutThreadCtl->hStdXXX = hOurReadFromStdout;
     pPipedStdErrThreadCtl->hStdXXX = hOurReadFromStderr;
 
     if ( !pnWriteToChildStdinFD )
     {
-        pPipedProcessCtl = malloc( sizeof(PIPED_PROCESS_CTL) );
+        pPipedProcessCtl = malloc( sizeof( PIPED_PROCESS_CTL ));
 
         pPipedStdOutThreadCtl->pPipedProcessCtl = pPipedProcessCtl;
         pPipedStdErrThreadCtl->pPipedProcessCtl = pPipedProcessCtl;
@@ -3468,9 +3470,10 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
             rc,w32_strerror(rc));
 
         if (pnWriteToChildStdinFD)
-        VERIFY(CloseHandle(hOurWriteToStdin));
-        VERIFY(CloseHandle(hOurReadFromStdout));
-        VERIFY(CloseHandle(hOurReadFromStderr));
+            VERIFY( CloseHandle( hOurWriteToStdin ));
+
+        VERIFY( CloseHandle( hOurReadFromStdout ));
+        VERIFY( CloseHandle( hOurReadFromStderr ));
 
         if ( !pnWriteToChildStdinFD )
         {
@@ -3485,7 +3488,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
-    SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdOUT_output_thread");
+    SET_THREAD_NAME_ID( dwThreadId, "w32_read_piped_process_stdOUT_output_thread" );
 
     //////////////////////////////////////////////////
     // Stderr...
@@ -3507,9 +3510,10 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
             rc,w32_strerror(rc));
 
         if (pnWriteToChildStdinFD)
-        VERIFY(CloseHandle(hOurWriteToStdin));
-        VERIFY(CloseHandle(hOurReadFromStdout));
-        VERIFY(CloseHandle(hOurReadFromStderr));
+            VERIFY( CloseHandle( hOurWriteToStdin ));
+
+        VERIFY( CloseHandle( hOurReadFromStdout ));
+        VERIFY( CloseHandle( hOurReadFromStderr ));
 
         WaitForSingleObject( hStdOutWorkerThread, INFINITE );
         CloseHandle( hStdOutWorkerThread );
@@ -3527,7 +3531,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
-    SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
+    SET_THREAD_NAME_ID( dwThreadId, "w32_read_piped_process_stdERR_output_thread" );
 
     // Piped process capture handling...
 
