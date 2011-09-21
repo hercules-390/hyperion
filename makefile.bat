@@ -142,6 +142,10 @@
   if %rc% NEQ 0 exit /b 1
 
 
+  call :set_VERSION
+  if %rc% NEQ 0 exit /b 1
+
+
   goto :%build_env%
 
 
@@ -421,6 +425,84 @@
   echo.
   echo %~nx0^(1^) : error C9999 : Build support for target architecture %targ_arch% is not installed
   set rc=1
+  goto :EOF
+
+
+::-----------------------------------------------------------------------------
+:set_VERSION
+
+  :: ---------------------------------------------------------------
+  ::  The following logic determines the Hercules version number,
+  ::  SVN revision number and sets variables VERSION,V1,V2,V3,V4.
+  ::  NOTE: it's OK if we fail, since the Hercules makefile will
+  ::  set the VERSION for itself whenever it's still undefined.
+  :: ---------------------------------------------------------------
+
+  if defined VERSION goto :set_VERSION_done
+
+  set "V1="
+  set "V2="
+  set "V3="
+  set "V4="
+
+  :: ---------------------------------------------------------------
+  ::  First, extract the Hercules version from the "configure.ac"
+  ::  file by looking for "AM_INIT_AUTOMAKE=(hercules,x.y[.z])"
+  :: ---------------------------------------------------------------
+
+  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac^|find /i "AM_INIT_AUTOMAKE"') do (
+    set "V1=%%c"
+    set "V2=%%d"
+    set "V3=%%e"
+  )
+
+  if not defined V1 (
+    set "V1=0"
+    set "V2=0"
+    set "V3=0"
+  )
+
+  if "%V3%" == "#" set "V3=0"
+
+  if defined V1 %TRACE% V1.V2.V3 = "%V1%.%V2%.%V3%"
+
+  :: ---------------------------------------------------------------
+  ::  If V4 is not set use the "svn info" command if it exists
+  :: ---------------------------------------------------------------
+
+  set "svn_exe=svn.exe"
+  call :fullpath "%svn_exe%"
+  if "%fullpath%" == "" goto :skip_svn_info
+
+  for /f "tokens=1-2" %%a in ('"%svn_exe%" info^|find /i "Revision:"') do set "V4=%%b"
+
+:skip_svn_info
+
+  :: ---------------------------------------------------------------
+  ::  If V4 is not set use the TortoiseSVN program "SubWCRev.exe"
+  :: ---------------------------------------------------------------
+
+  set "SubWCRev_exe=SubWCRev.exe"
+  call :fullpath "%SubWCRev_exe%"
+  if "%fullpath%" == "" goto :skip_subwcrev
+
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Updated to revision"') do set "V4=%%j"
+  set "modified_str="
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Local modifications found"') do set "modified_str=  (modified)"
+
+:skip_subwcrev
+
+  if not defined V4 set "V4=0"
+
+  set "VERSION=%V1%.%V2%.%V3%"
+
+  if not "%V4%" == "0" set "VERSION=%VERSION%-svn-%V4%"
+
+  set VERSION=\"%VERSION%%modified_str%\"
+
+:set_VERSION_done
+
+  echo Hercules version number is %VERSION% (%V1%.%V2%.%V3%.%V4%)
   goto :EOF
 
 
