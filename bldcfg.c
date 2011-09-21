@@ -72,9 +72,6 @@
  #undef   _GEN_ARCH
 #endif
 
-int     g_numcpu = 0;                   /* Number of CPUs            */
-int     g_maxcpu = 0;                   /* Maximum number of CPUs    */
-
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -139,24 +136,8 @@ int     devtmax;                        /* Max number device threads */
     configure_storage(2);
     configure_numcpu(1);
 
-    g_numcpu = 0;
-    g_maxcpu = 0;
-
     if (hercules_cnf && (process_config(hercules_cnf)))
         return -1;
-
-    /* If MAXCPU is not specified in the configuration file,
-    then its initial value is equal to NUMCPU. If MAXCPU and
-    NUMCPU are both omitted, MAXCPU is set to 1.
-    */
-    if (!g_maxcpu)
-        sysblk.maxcpu = g_maxcpu = g_numcpu ? g_numcpu : 1;
-    else
-    {
-        ASSERT( g_maxcpu == sysblk.maxcpu );
-    }
-    ASSERT( g_maxcpu && g_maxcpu <= MAX_CPU_ENGINES );
-    ASSERT( g_numcpu <= g_maxcpu );
 
     return 0;
 } /* end function build_config */

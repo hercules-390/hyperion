@@ -6417,38 +6417,20 @@ U64     dreg;                           /* Double word workarea      */
     /* Load the CPU ID */
     dreg = sysblk.cpuid;
 
-    /* If LPARNUM is two digits, build a format 1 CPU ID */
-    if (sysblk.lparnuml == 2)
-    {
-        /* Overlay first two digits of CPU ID by LPARNUM */
-        dreg &= 0xFF00FFFFFFFFFFFFULL;
+    /* If fmt1 cpuid and the digits are zero, insert the two digit lpar id */
+    if((dreg & 0x8000ULL) && !(dreg & 0x00FF000000000000ULL))
         dreg |= ((U64)(sysblk.lparnum & 0xFF) << 48);
-
-        /* Indicate format 1 CPU ID */
-        dreg |= 0x8000ULL;
-    }
-    /* If LPARNUM is one digit, build a format 0 CPU ID */
-    else if (sysblk.lparnuml == 1)
-    {
-        /* Overlay first digit of CPU ID by processor id
-           and overlay second digit of CPU ID by LPARNUM */
-        dreg &= 0xFF00FFFFFFFFFFFFULL;
-        dreg |= ((U64)(regs->cpuad & 0x0F) << 52)
-                | ((U64)(sysblk.lparnum & 0x0F) << 48);
-    }
-    /* If LPARNUM is not specified, build basic mode CPU ID */
     else
     {
+        /* For fmt0 Insert a single digit lpar id */
+        if(!(dreg & 0x000F000000000000ULL))
+            dreg |= ((U64)(sysblk.lparnum & 0xF) << 48);
+
         /* If first digit of serial is zero, insert processor id */
-        if ((dreg & 0x00F0000000000000ULL) == 0)
+        if(!(dreg & 0x00F0000000000000ULL))
             dreg |= (U64)(regs->cpuad & 0x0F) << 52;
     }
-
-#if defined(FEATURE_ESAME)
-    /* For ESAME, set version code in CPU ID bits 0-7 to zero */
-    dreg &= 0x00FFFFFFFFFFFFFFULL;
-#endif /*defined(FEATURE_ESAME)*/
-
+    
     /* Store CPU ID at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 

@@ -3213,7 +3213,7 @@ BYTE c;
     }
 
     /* Configure CPUs */
-    rc = configure_numcpu(g_numcpu = numcpu);
+    rc = configure_numcpu(numcpu);
     switch(rc) {
     case 0:
         if ( MLVL(VERBOSE) )
@@ -3274,28 +3274,7 @@ BYTE c;
         return HERRCPUONL;
     }
 
-    /* If CPU ID format change from 0 to 1, all stop required */
-    if (maxcpu > 16 && sysblk.cpuidfmt == 0)
-    {
-        if (!ALL_STOPPED)
-        {
-            WRMSG(HHC02253, "E");
-            return -1;
-        }
-
-        sysblk.cpuidfmt = 1;
-
-        if (MLVL(VERBOSE))
-        {
-            char msgbuf[32];
-
-            MSGBUF(msgbuf, "%d", sysblk.cpuidfmt);
-            WRMSG(HHC02204, "I", "cpuidfmt", msgbuf);
-        }
-    }
-
-
-    sysblk.maxcpu = g_maxcpu = maxcpu;
+    sysblk.maxcpu = maxcpu;
 
     if (MLVL(VERBOSE))
     {
@@ -4425,7 +4404,6 @@ BYTE    c;
                 return -1;
             }
             sysblk.lparnum = id;
-            sysblk.lparnuml = (U16)strlen(argv[1]);
             if ( MLVL(VERBOSE) )
             {
                 char buf[20];
@@ -4626,17 +4604,11 @@ u_int     id;
                 WRMSG(HHC02205, "E", argv[1], ": must be either 0 or 1");
                 return -1;
             }
-            if (sysblk.maxcpu > 16 && id == 0)
-            {
-                WRMSG(HHC02205, "E", argv[1], ": must be 1 when MAXCPU > 16");
-                return -1;
-            }
-            if (!ALL_STOPPED)
-            {
-                WRMSG(HHC02253, "E");
-                return -1;
-            }
-            sysblk.cpuidfmt = (U16)id;
+
+            if(id)
+                sysblk.cpuid &= ~0x8000ULL;
+            else
+                sysblk.cpuid |= 0x8000ULL;
         }
         else
         {
@@ -4646,14 +4618,14 @@ u_int     id;
         if ( MLVL(VERBOSE) )
         {
             char buf[40];
-            MSGBUF( buf, "%d", sysblk.cpuidfmt);
+            MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
             WRMSG(HHC02204, "I", argv[0], buf);
         }
     }
     else
     {
         char buf[40];
-        MSGBUF( buf, "%d", sysblk.cpuidfmt);
+        MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
         WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;

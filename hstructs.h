@@ -429,7 +429,6 @@ struct SYSBLK {
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */
-        U16     lparnuml;               /* #digits (0-2) in lparnum  */
         U16     lparnum;                /* LPAR identification number*/
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
