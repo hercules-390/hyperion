@@ -3482,10 +3482,8 @@ float128 float128_rem( void* ctx, float128 a, float128 b )
         ++q;
         sub128( aSig0, aSig1, bSig0, bSig1, &aSig0, &aSig1 );
     } while ( 0 <= (sbits64) aSig0 );
-DISABLE_GCC_WARNING( pointer-sign, "pointer targets in passing argument n of 'func' differ in signedness" )
     add128(
-        aSig0, aSig1, alternateASig0, alternateASig1, &sigMean0, &sigMean1 );
-ENABLE_GCC_WARNING( pointer-sign )
+        aSig0, aSig1, alternateASig0, alternateASig1, (bits64*)&sigMean0, &sigMean1 );
     if (    ( sigMean0 < 0 )
          || ( ( ( sigMean0 | sigMean1 ) == 0 ) && ( q & 1 ) ) ) {
         aSig0 = alternateASig0;

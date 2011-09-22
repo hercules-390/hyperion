@@ -381,7 +381,7 @@ INLINE void
  )
 {
     bits64 z0, z1, z2;
-    int8 carry0, carry1;
+    bits8 carry0, carry1;
 
     z2 = a2 + b2;
     carry1 = ( z2 < a2 );
@@ -389,9 +389,7 @@ INLINE void
     carry0 = ( z1 < a1 );
     z0 = a0 + b0;
     z1 += carry1;
-DISABLE_GCC_WARNING( sign-compare, "comparison between signed and unsigned" )
     z0 += ( z1 < carry1 );
-ENABLE_GCC_WARNING( sign-compare )
     z0 += carry0;
     *z2Ptr = z2;
     *z1Ptr = z1;
@@ -439,16 +437,14 @@ INLINE void
  )
 {
     bits64 z0, z1, z2;
-    int8 borrow0, borrow1;
+    bits8 borrow0, borrow1;
 
     z2 = a2 - b2;
     borrow1 = ( a2 < b2 );
     z1 = a1 - b1;
     borrow0 = ( a1 < b1 );
     z0 = a0 - b0;
-DISABLE_GCC_WARNING( sign-compare, "comparison between signed and unsigned" )
     z0 -= ( z1 < borrow1 );
-ENABLE_GCC_WARNING( sign-compare )
     z1 -= borrow1;
     z0 -= borrow0;
     *z2Ptr = z2;

@@ -13,6 +13,9 @@
 /* causing the problem and the "_ENABLE" macro shortly afterwards.   */
 /* PLEASE DO NOT GO OVERBOARD (overdo or overuse) THE SUPPRESSION    */
 /* OF WARNINGS! Most warnings are actually bugs waiting to happen.   */
+/* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros are     */
+/* only meant as a temporary measure until the warning itself can    */
+/* be properly investigated and resolved.                            */
 /*-------------------------------------------------------------------*/
 
 #include "ccfixme.h"            /* need "QSTR" macro, etc */
@@ -57,17 +60,12 @@
   /*---------------------------------------------------------------*/
 
   #if defined( __GNUC__ )
-
-    /* "pragma GCC diagnostic" support introduced in version 4.2 */
-    #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2)))
-
+    #ifdef HAVE_GCC_DIAG_PRAGMA
       #define PRAGMA_GCC_DIAG( _opt )               _Pragma( GCC diagnostic _opt )
       #define GCC_WARNING_ON(   _opt )              PRAGMA_GCC_DIAG( warning QSTR2( -W, _opt ) )
       #define GCC_WARNING_OFF(  _opt, _msg )        PRAGMA_GCC_DIAG( ignored QSTR2( -W, _opt ) )  \
                                                                       FIXME(            _msg )
-      /* "diagnostic push/pop" support introduced in version 4.6 */
-      #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)))
-
+      #ifdef HAVE_GCC_DIAG_PUSHPOP
         #define DISABLE_GCC_WARNING( _opt, _msg )   PRAGMA_GCC_DIAG( push )  \
                                                     GCC_WARNING_OFF( _opt, _msg )
         #define ENABLE_GCC_WARNING(  _opt )         PRAGMA_GCC_DIAG( pop )

@@ -41,12 +41,25 @@
 #define UNREFERENCED_900(x)     while(0 && x)
 
 /*-------------------------------------------------------------------*/
+/* Determine GCC diagnostic pragma support level                     */
+/*-------------------------------------------------------------------*/
+
+#if defined( __GNUC__ )
+  #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2)))
+    #define HAVE_GCC_DIAG_PRAGMA
+    #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)))
+      #define HAVE_GCC_DIAG_PUSHPOP
+    #endif
+  #endif
+#endif
+
+/*-------------------------------------------------------------------*/
 /* The "FIXME" macro itself to mark code needing further research    */
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
   #define FIXME( _msg )         __pragma( message( FIXME_LINE  _msg ))
-#elif defined( __GNUC__ )
+#elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
   #define FIXME( _msg )         _Pragma(  message( FIXME_LINE  _msg ))
 #endif
 
@@ -60,7 +73,7 @@
 
 #if defined( _MSVC_ )
   #define TODO( _msg )          __pragma( message( TODO_LINE  _msg ))
-#elif defined( __GNUC__ )
+#elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
   #define TODO( _msg )          _Pragma(  message( TODO_LINE  _msg ))
 #endif
 
@@ -74,8 +87,12 @@
 
 #if defined( _MSVC_ )
   #define WARNING( _msg )       __pragma( message( WARN_LINE  _msg ))
-#elif defined( __GNUC__ )
+#elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
   #define WARNING( _msg )       _Pragma(  message( WARN_LINE  _msg ))
+#endif
+
+#ifndef   WARNING
+  #define WARNING( _msg )       /* (do nothing) */
 #endif
 
 #endif /* _CCFIXME_H_ */
