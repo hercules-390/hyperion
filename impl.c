@@ -306,10 +306,12 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     hostpath(pathname, rcname, sizeof(pathname));
 
+#if 0
     /* Wait for panel thread to engage */
 // ZZ FIXME:THIS NEED TO GO
     while (!sysblk.panel_init)
         usleep( 10 * 1000 );
+#endif
 
     /* Run the script processor for this file */
 
@@ -693,6 +695,7 @@ int     dll_count;                      /* index into array          */
        the logger facility for handling by virtue of stdout/stderr
        being redirected to the logger facility.
     */
+
     logger_init();
 
     /*
@@ -1101,7 +1104,11 @@ int     dll_count;                      /* index into array          */
 
     /* Activate the control panel */
     if(!sysblk.daemon_mode)
-        panel_display ();
+    {
+        ui_init();
+        while(!sysblk.shutdown)
+          sleep(1);
+    }
     else
     {
 #if defined(OPTION_DYNAMIC_LOAD)

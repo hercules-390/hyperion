@@ -4396,13 +4396,6 @@ BYTE    c;
         if ( strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
           && sscanf(argv[1], "%hx%c", &id, &c) == 1)
         {
-            if ( strlen(argv[1]) == 2 && id > 0x3f )
-            {
-                char buf[8];
-                MSGBUF( buf, "%02X", id);
-                WRMSG(HHC02205,"E", buf, ": must be within 00 to 3F (hex)");
-                return -1;
-            }
             sysblk.lparnum = id;
             if ( MLVL(VERBOSE) )
             {

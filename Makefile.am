@@ -335,6 +335,7 @@ endif
                        bldcfg.c     \
                        script.c     \
                        archlvl.c    \
+                       ui.c         \
                        panel.c      \
                        history.c    \
                        fillfnam.c   \

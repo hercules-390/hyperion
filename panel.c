@@ -278,12 +278,14 @@ static int      npquiet = 0;            /* screen updating flag      */
 
 ///////////////////////////////////////////////////////////////////////
 
+static char  logbuf[65536];
 static char *lmsbuf = NULL;             /* xxx                       */
 static int   lmsndx = 0;                /* xxx                       */
 static int   lmsnum = -1;               /* xxx                       */
 static int   lmscnt = -1;               /* xxx                       */
 static int   lmsmax = LOG_DEFSIZE/2;    /* xxx                       */
 static int   keybfd = -1;               /* Keyboard file descriptor  */
+static int   logfd = -1;
 
 static REGS  copyregs, copysieregs;     /* Copied regs               */
 
@@ -714,7 +716,7 @@ static void do_panel_command( void* cmd )
         cmdsep = strtok_r(cmdline, sysblk.cmdsep, &strtok_str);
         while ( cmdsep != NULL )
         {
-            panel_command( cmdsep );
+            ui_command( cmdsep );
             cmdsep = strtok_r(NULL, sysblk.cmdsep, &strtok_str);
         }
 
@@ -722,7 +724,7 @@ static void do_panel_command( void* cmd )
         free(command);
     }
     else
-        panel_command( cmdline );
+        ui_command( cmdline );
     cmdline[0] = '\0';
     cmdlen = 0;
     cmdoff = 0;
@@ -950,13 +952,13 @@ void set_console_title ( char *status )
 
     if ( !sysblk.pantitle )
     {
-        char msgbuf[256];
+        char mbuf[256];
         char sysname[16] = { 0 };
         char sysplex[16] = { 0 };
         char systype[16] = { 0 };
         char lparnam[16] = { 0 };
 
-        memset( msgbuf, 0, sizeof(msgbuf) );
+        memset( mbuf, 0, sizeof(mbuf) );
 
         strlcat(systype,str_systype(),sizeof(systype));
         strlcat(sysname,str_sysname(),sizeof(sysname));
@@ -967,28 +969,28 @@ void set_console_title ( char *status )
         {
             if ( strlen(lparnam) > 0 )
             {
-                strlcat(msgbuf, lparnam, sizeof(msgbuf));
+                strlcat(mbuf, lparnam, sizeof(mbuf));
                 if ( strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " - ", sizeof(msgbuf));
+                    strlcat(mbuf, " - ", sizeof(mbuf));
             }
             if ( strlen(systype) > 0 )
             {
-                strlcat(msgbuf, systype, sizeof(msgbuf));
+                strlcat(mbuf, systype, sizeof(mbuf));
                 if ( strlen(sysname)+strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+                    strlcat(mbuf, " * ", sizeof(mbuf));
             }
             if ( strlen(sysname) > 0 )
             {
-                strlcat(msgbuf, sysname, sizeof(msgbuf));
+                strlcat(mbuf, sysname, sizeof(mbuf));
                 if ( strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+                    strlcat(mbuf, " * ", sizeof(mbuf));
             }
             if ( strlen(sysplex) > 0 )
             {
-                strlcat(msgbuf, sysplex, sizeof(msgbuf));
+                strlcat(mbuf, sysplex, sizeof(mbuf));
             }
 
-            MSGBUF( title, "%s - System Status: %s", msgbuf, status );
+            MSGBUF( title, "%s - System Status: %s", mbuf, status );
         }
         else
         {
@@ -1899,7 +1901,7 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
     {
         if (sysblk.panel_init)
         {
-            panel_command(
+            ui_command(
 #if defined(OPTION_CMDTGT)
                           "herc "
 #endif
@@ -1923,29 +1925,28 @@ REGS *copy_regs(int cpu)
 {
     REGS *regs;
 
+#if 0
+    copysieregs.guestregs = copyregs.guestregs = &copysieregs;
+    copyregs.hostregs = copysieregs.hostregs = &copyregs;
+    regs = &copyregs;
+#else
+    ui_copymem(&sysblk,&sysblk,sizeof(sysblk));
+
     if (cpu < 0 || cpu >= sysblk.maxcpu)
         cpu = 0;
 
-    obtain_lock (&sysblk.cpulock[cpu]);
-
     if ((regs = sysblk.regs[cpu]) == NULL)
-    {
-        release_lock(&sysblk.cpulock[cpu]);
         return &sysblk.dummyregs;
-    }
 
-    memcpy (&copyregs, regs, sysblk.regs_copy_len);
+    ui_copymem (&copyregs, regs, sysblk.regs_copy_len);
 
     if (copyregs.hostregs == NULL)
-    {
-        release_lock(&sysblk.cpulock[cpu]);
         return &sysblk.dummyregs;
-    }
 
 #if defined(_FEATURE_SIE)
     if (regs->sie_active)
     {
-        memcpy (&copysieregs, regs->guestregs, sysblk.regs_copy_len);
+        ui_copymem (&copysieregs, regs->guestregs, sysblk.regs_copy_len);
         copyregs.guestregs = &copysieregs;
         copysieregs.hostregs = &copyregs;
         regs = &copysieregs;
@@ -1955,8 +1956,7 @@ REGS *copy_regs(int cpu)
         regs = &copyregs;
 
     SET_PSW_IA(regs);
-
-    release_lock(&sysblk.cpulock[cpu]);
+#endif
     return regs;
 }
 
@@ -2009,10 +2009,12 @@ char    buf[1024];                      /* Buffer workarea           */
 
     SET_THREAD_NAME("panel_display");
 
+sleep(3);
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 
-    hdl_adsc("panel_cleanup",panel_cleanup, NULL);
+//  hdl_adsc("panel_cleanup",panel_cleanup, NULL);
+    logfd = ui_comm_log_fd();
 
     history_init();
 
@@ -2165,12 +2167,12 @@ char    buf[1024];                      /* Buffer workarea           */
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
-        FD_SET (logger_syslogfd[LOG_READ], &readset);
+        FD_SET (logfd, &readset);
         FD_SET (0, &readset);
-        if(keybfd > logger_syslogfd[LOG_READ])
+        if(keybfd > logfd)
           maxfd = keybfd;
         else
-          maxfd = logger_syslogfd[LOG_READ];
+          maxfd = logfd;
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
@@ -2488,7 +2490,7 @@ char    buf[1024];                      /* Buffer workarea           */
                 if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */
                 {
                     char szPF[6];
-                    char msgbuf[32];
+                    char mbuf[32];
                     char *pf;
                     char *psz_PF;
                     int j;
@@ -2511,7 +2513,7 @@ char    buf[1024];                      /* Buffer workarea           */
                      !strcmp(kbbuf+i, KBD_PF19)|| !strcmp(kbbuf+i, KBD_PF20 ) )
                 {
                     char *szPF;
-                    char msgbuf[32];
+                    char mbuf[32];
                     char *pf;
                     char *psz_PF;
                     int j;
@@ -2547,11 +2549,11 @@ char    buf[1024];                      /* Buffer workarea           */
                     if ( pf == NULL )
                     {
 #if defined(OPTION_CMDTGT)
-                        MSGBUF( msgbuf, "DELAY herc * %s UNDEFINED", szPF );
+                        MSGBUF( mbuf, "DELAY herc * %s UNDEFINED", szPF );
 #else
-                        MSGBUF( msgbuf, "DELAY * %s UNDEFINED", szPF );
+                        MSGBUF( mbuf, "DELAY * %s UNDEFINED", szPF );
 #endif
-                        pf = msgbuf;
+                        pf = mbuf;
                     }
 
                     psz_PF = strdup(pf);
@@ -3149,7 +3151,10 @@ FinishShutdown:
 
         if ( lmsndx >= lmscnt )  // (all previous data processed?)
         {
-            lmscnt = log_read( &lmsbuf, &lmsnum, LOG_NOBLOCK );
+//          lmscnt = log_read( &lmsbuf, &lmsnum, LOG_NOBLOCK );
+            lmsbuf = logbuf;
+            lmscnt = ui_logread(lmsbuf, sizeof(lmsbuf), LOG_NOBLOCK);
+// ZZ fprintf(confp,"LMSBUF(%p,%s), lmscnt(%d)\n",lmsbuf,lmsbuf,lmscnt);
             lmsndx = 0;
         }
         else if ( lmsndx >= lmsmax )
@@ -3306,6 +3311,9 @@ FinishShutdown:
         /*        than inserted.  It makes the block of 3 ifs in the */
         /*        original code dependent on NPDup == 0, and inserts */
         /*        the NP display as an else after those ifs */
+
+        if (curmsg == NULL) // ZZ
+            curmsg = topmsg = msgbuf; // ZZ
 
         if (NPDup == 0) {
             /* Rewrite the screen if display update indicators are set */
@@ -3611,7 +3619,7 @@ FinishShutdown:
 
     } /* end while */
 
-    sysblk.panel_init = 0;
+panel_cleanup(NULL);
 
     WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
 
@@ -3687,7 +3695,7 @@ PANMSG* p;
 #endif
 
     /* Read and display any msgs still remaining in the system log */
-    while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
+    while((lmscnt = ui_logread(lmsbuf, sizeof(lmsbuf), LOG_NOBLOCK)))
         fwrite(lmsbuf,lmscnt,1,stderr);
 
     set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);

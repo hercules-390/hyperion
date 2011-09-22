@@ -361,6 +361,7 @@ int bytes_read;
             bytes_read = 0;
         }
 
+#if 0
         /* If Hercules is not running in daemon mode and panel
            initialization is not yet complete, write message
            to stderr so the user can see it on the terminal */
@@ -388,6 +389,7 @@ int bytes_read;
                     fwrite( pLeft2, nLeft2, 1, stderr );
             }
         }
+#endif
 
         obtain_lock(&logger_lock);
 
