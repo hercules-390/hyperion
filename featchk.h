@@ -305,7 +305,11 @@
 
 #if defined(FEATURE_HYPERVISOR)
  #define _FEATURE_HYPERVISOR
-#endif 
+#endif
+
+#if defined(FEATURE_LPAR)
+ #define _FEATURE_LPAR
+#endif
 
 #if defined(FEATURE_HERCULES_DIAGCALLS)
  #define _FEATURE_HERCULES_DIAGCALLS
