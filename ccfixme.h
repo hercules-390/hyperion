@@ -45,9 +45,10 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( __GNUC__ )
-  #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2)))
+  #define GCC_VERSION ((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
+  #if GCC_VERSION >= 40200
     #define HAVE_GCC_DIAG_PRAGMA
-    #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)))
+    #if GCC_VERSION >= 40600
       #define HAVE_GCC_DIAG_PUSHPOP
     #endif
   #endif
