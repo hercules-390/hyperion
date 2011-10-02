@@ -1309,10 +1309,17 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
         /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
+
+        if( 0
 #if defined(_FEATURE_HYPERVISOR)
-        if(FACILITY_ENABLED(LOGICAL_PARTITION,regs))
-            sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
+            || FACILITY_ENABLED(LOGICAL_PARTITION,regs)
 #endif /*defined(_FEATURE_HYPERVISOR)*/
+#if defined(_FEATURE_EMULATE_VM)
+            || FACILITY_ENABLED(VIRTUAL_MACHINE,regs)
+#endif /*defined(_FEATURE_EMULATE_VM)*/
+          )
+            sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
+
 #if defined(_900) || defined(FEATURE_ESAME)
         if(FACILITY_ENABLED(ESAME_INSTALLED,regs))
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
