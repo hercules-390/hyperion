@@ -6553,6 +6553,7 @@ VADR    effective_addr2;                /* Effective address         */
 BYTE   *m;                              /* Mainstor address          */
 int     i;
 U16     offset;                         /* Offset into control block */
+U32     curlvl;                         /* Current config level      */
 SYSIB111  *sysib111;                    /* Basic machine conf        */
 SYSIB121  *sysib121;                    /* Basic machine CPU         */
 SYSIB122  *sysib122;                    /* Basic machine CPUs        */
@@ -6593,8 +6594,17 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             effective_addr2);
 #endif /*DEBUG_STSI*/
 
+     /* Determine current configuration level */
+     if(FACILITY_ENABLED(VIRTUAL_MACHINE,regs))
+         curlvl = STSI_GPR0_FC_VM;
+     else
+         if(FACILITY_ENABLED(LOGICAL_PARTITION,regs))
+             curlvl = STSI_GPR0_FC_LPAR;
+         else
+             curlvl = STSI_GPR0_FC_BASIC;
+
     /* Check function code */
-    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) >  STSI_GPR0_FC_LPAR
+    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > curlvl
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
         && (regs->GR_L(0) & STSI_GPR0_FC_MASK) != STSI_GPR0_FC_CURRINFO
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
@@ -6616,7 +6626,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     /* Return current level if function code is zero */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRNUM)
     {
-        regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
+        regs->GR_L(0) |= curlvl;
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
 #endif /*DEBUG_STSI*/
