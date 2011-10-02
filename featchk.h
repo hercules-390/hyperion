@@ -313,6 +313,10 @@
   #define _FEATURE_HOST_RESOURCE_ACCESS_FACILITY
  #endif
 #endif
+
+#if defined(FEATURE_EMULATE_VM)
+ #define _FEATURE_EMULATE_VM
+#endif
  
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
