@@ -6595,12 +6595,16 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #endif /*DEBUG_STSI*/
 
      /* Determine current configuration level */
+#if defined(_FEATURE_EMULATE_VM)
      if(FACILITY_ENABLED(VIRTUAL_MACHINE,regs))
          curlvl = STSI_GPR0_FC_VM;
      else
+#endif /*defined(_FEATURE_EMULATE_VM)*/
+#if defined(_FEATURE_HYPERVISOR)
          if(FACILITY_ENABLED(LOGICAL_PARTITION,regs))
              curlvl = STSI_GPR0_FC_LPAR;
          else
+#endif /*defined(_FEATURE_HYPERVISOR)*/
              curlvl = STSI_GPR0_FC_BASIC;
 
     /* Check function code */
