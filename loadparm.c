@@ -31,6 +31,11 @@ static const BYTE default_manufact[16]  = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0
                                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
                                           /*  Z    Z           */
 static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
+                                         /*   H    E    R    C    U    L    E    S  */
+static const BYTE dflt_cpid[16]         = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2,
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+                                          /*  H    E    R    C    U    L    E    S  */
+static const BYTE dflt_vmid[8]          = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };      
 
 static int gsysinfo_init_flg = FALSE;
 
@@ -52,6 +57,9 @@ static GSYSINFO gsysinfo;
                                           { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // systype
                                           { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // sysname
                                           { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 }, // sysplex
+                                          { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2,   // cpid
+                                            0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 },
+                                          { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 }  // vmid
                                         };
 */
 
@@ -138,6 +146,8 @@ static void get_gsysinfo(GSYSINFO *dest)
         memcpy(gsysinfo.plant,     default_plant,       sizeof(gsysinfo.plant));
         memcpy(gsysinfo.model,     dflt_model,          sizeof(gsysinfo.model));
         memcpy(gsysinfo.modelcapa, dflt_model,          sizeof(gsysinfo.modelcapa));
+        memcpy(gsysinfo.cpid,      dflt_cpid,           sizeof(gsysinfo.cpid));
+        memcpy(gsysinfo.vmid,      dflt_vmid,           sizeof(gsysinfo.vmid));
 
         memset(gsysinfo.modelperm, 0, sizeof(gsysinfo.modelperm));
         memset(gsysinfo.modeltemp, 0, sizeof(gsysinfo.modeltemp));
