@@ -615,6 +615,70 @@ char *str_sysplex()
 
 
 /*-------------------------------------------------------------------*/
+/* VIRTUAL MACHINE ID                                                */
+/* Set by: VMD configuration statement                               */
+/* Retrieved by: STSI instruction                                    */
+/*-------------------------------------------------------------------*/
+
+void set_vmid(BYTE *src)
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    memcpy(gsysinfo.vmid, src, sizeof(gsysinfo.vmid));
+}
+
+void get_vmid(BYTE *dst)
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    memcpy(dst, gsysinfo.vmid, sizeof(gsysinfo.vmid));
+}
+
+LOADPARM_DLL_IMPORT
+char *str_vmid()
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    ebcdic_to_stringz_return(gsysinfo.vmid);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* CONTROL PROGRAM  ID                                               */
+/* Set by: VMD configuration statement                               */
+/* Retrieved by: STSI instruction                                    */
+/*-------------------------------------------------------------------*/
+
+void set_cpid(BYTE *src)
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    memcpy(gsysinfo.cpid, src, sizeof(gsysinfo.cpid));
+}
+
+void get_cpid(BYTE *dst)
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    memcpy(dst, gsysinfo.cpid, sizeof(gsysinfo.cpid));
+}
+
+LOADPARM_DLL_IMPORT
+char *str_cpid()
+{
+    if (gsysinfo_init_flg == FALSE )
+        get_gsysinfo(NULL);
+
+    ebcdic_to_stringz_return(gsysinfo.cpid);
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Retrieve Multiprocessing CPU-Capability Adjustment Factors        */
 /*                                                                   */
 /* This function retrieves the Multiprocessing CPU-Capability        */

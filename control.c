@@ -6559,10 +6559,9 @@ SYSIB121  *sysib121;                    /* Basic machine CPU         */
 SYSIB122  *sysib122;                    /* Basic machine CPUs        */
 SYSIB221  *sysib221;                    /* LPAR CPU                  */
 SYSIB222  *sysib222;                    /* LPAR CPUs                 */
-#if 0
 SYSIB322  *sysib322;                    /* VM CPUs                   */
-SYSIBVMDB *sysib322;                    /* VM description block      */
-#endif
+SYSIBVMDB *sysibvmdb;                   /* VM description block      */
+
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
 SYSIB1512 *sysib1512;                   /* Configuration Topology    */
 TLECPU    *tlecpu;                      /* CPU TLE Type              */
@@ -6846,6 +6845,20 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
+        break;
+        
+    case STSI_GPR0_FC_VM:
+        sysib322 = (SYSIB322 *)(m);
+        memset(sysib322, 0, sizeof(SYSIB322));
+        sysibvmdb = (SYSIBVMDB *)&sysib322->vmdb[0];
+        STORE_HW(sysibvmdb->totcpu,sysblk.maxcpu);
+        STORE_HW(sysibvmdb->confcpu,sysblk.cpus);
+        STORE_HW(sysibvmdb->sbcpu,sysblk.maxcpu - sysblk.cpus);
+        get_vmid(sysibvmdb->vmname);
+        STORE_FW(sysibvmdb->vmcaf,1000);   /* Full capability factor */
+        get_cpid(sysibvmdb->cpid);
+        
+        regs->psw.cc = 0;
         break;
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)

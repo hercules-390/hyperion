@@ -1,3 +1,8 @@
+02 Oct 2011 STSI made aware of facilities LOGICAL_PARTITION and VIRTUAL_MACHINE
+            for reporting system information - Harold
+02 Oct 2011 Enabled STSI 3.2.2 - Harold
+02 Oct 2011 Added Hercules facilities VIRTUAL_MACHINE and LOGICAL_PARTITION, 
+            replacing facility HYPERVISOR - Harold
 28 Aug 2011 QDIO Thin Interrupts - Jan Jaeger
 18 Aug 2011 New IEEE-754 Binary Floating-Point implementation - Fish
 12 Aug 2011 Fix color message and timestamp problem. Removed LOGMSG macro.

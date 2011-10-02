@@ -427,6 +427,12 @@ void set_sysplex(BYTE *name);
 LOADPARM_DLL_IMPORT char *str_sysname();
 LOADPARM_DLL_IMPORT char *str_sysplex();
 LOADPARM_DLL_IMPORT char *str_systype();
+void get_vmid(BYTE *name);
+void set_vmid(BYTE *name);
+LOADPARM_DLL_IMPORT char *str_vmid();
+void get_cpid(BYTE *name);
+void set_cpmid(BYTE *name);
+LOADPARM_DLL_IMPORT char *str_cpid();
 void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */
