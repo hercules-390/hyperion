@@ -1450,7 +1450,7 @@ typedef struct _MBK {
 #define STFL_QDIO_TDD           (STFL_HBASE+7)
 #define STFL_QDIO_THININT       (STFL_HBASE+8)
 #define STFL_SVS                (STFL_HBASE+9)
-#define STFL_HYPERVISOR         (STFL_HBASE+10)
+#define STFL_LOGICAL_PARTITION  (STFL_HBASE+10)
 
 #define STFL_HMAX               (STFL_HBASE+10)
 #define STFL_HBYTESIZE (((STFL_HMAX+8))/8)

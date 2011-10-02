@@ -1310,7 +1310,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
         /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
 #if defined(_FEATURE_HYPERVISOR)
-        if(FACILITY_ENABLED(HYPERVISOR,regs))
+        if(FACILITY_ENABLED(LOGICAL_PARTITION,regs))
             sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
 #endif /*defined(_FEATURE_HYPERVISOR)*/
 #if defined(_900) || defined(FEATURE_ESAME)
