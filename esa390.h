@@ -2075,6 +2075,8 @@ typedef struct _SYSIB322 {              /* Virtual Machines CPUs     */
         BYTE    resv2[3*1];             /* Reserved                  */
         BYTE    dbct;                   /* Four bit desc block count */
         BYTE    vmdb[4*16];             /* Virtual Machine desc block*/
+        BYTE    vmdbs[4*112];           /* Additional VMDB's         */
+        BYTE    resv3[4*888];           /* Reserved                  */
     }   SYSIB322;
 
 typedef struct _SYSIB1512 {             /* Configuration Topology    */
