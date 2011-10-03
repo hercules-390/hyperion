@@ -98,7 +98,7 @@ int configure_memfree(int mfree)
     if(mfree < 0)
         return config_mfree >> 20;
     else
-        config_mfree = mfree << 20;
+        config_mfree = (RADR)mfree << 20;
 
     return 0;
 }
@@ -128,7 +128,7 @@ int cpu;
     RELEASE_INTLOCK(NULL);
 
     /* Convert from configuration units to bytes */
-    mainsize = mbstor << 20;
+    mainsize = (RADR)mbstor << 20;
     /* Adjust for alignment */
     storsize = mainsize + 8192;
     /* Storage key array size */
@@ -241,7 +241,7 @@ int  cpu;
     RELEASE_INTLOCK(NULL);
 
     /* Convert from configuration units to bytes */
-    xpndsize = mbxstor << 20;
+    xpndsize = (RADR)mbxstor << 20;
     /* Adjust for alignment */
 
     if (xpndsize > config_allocxsize)
