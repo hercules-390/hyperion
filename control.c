@@ -6850,6 +6850,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     case STSI_GPR0_FC_VM:
         sysib322 = (SYSIB322 *)(m);
         memset(sysib322, 0, sizeof(SYSIB322));
+        sysib322->dbct = 0x01;
         sysibvmdb = (SYSIBVMDB *)&sysib322->vmdb[0];
         STORE_HW(sysibvmdb->totcpu,sysblk.maxcpu);
         STORE_HW(sysibvmdb->confcpu,sysblk.cpus);
