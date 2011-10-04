@@ -6797,6 +6797,15 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         break;
 
     case STSI_GPR0_FC_LPAR:
+        
+#if defined(_FEATURE_HYPERVISOR)
+         if(!FACILITY_ENABLED(LOGICAL_PARTITION,regs))
+         {
+             PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+             regs->psw.cc = 3;
+             break;
+         }
+#endif
 
         switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
 
