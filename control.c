@@ -6550,7 +6550,7 @@ DEF_INST(store_system_information)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-BYTE   *m;                              /* Mainstor address          */
+BYTE   *m = 0;                          /* Mainstor address          */
 int     i;
 U16     offset;                         /* Offset into control block */
 U32     curlvl;                         /* Current config level      */
@@ -6699,13 +6699,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         return;
     }
 
-    /* Obtain absolute address of main storage block,
-       check protection, and set reference and change bits */
-    m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
     switch(regs->GR_L(0) & STSI_GPR0_FC_MASK) {
 
     case STSI_GPR0_FC_BASIC:
+        
+        /* Obtain absolute address of main storage block,
+           check protection, and set reference and change bits */
+        m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
         switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
 
@@ -6807,6 +6807,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
          }
 #endif
 
+        /* Obtain absolute address of main storage block,
+           check protection, and set reference and change bits */
+        m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
         switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
 
         case 2:
@@ -6857,6 +6861,11 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         break;
         
     case STSI_GPR0_FC_VM:
+        
+        /* Obtain absolute address of main storage block,
+           check protection, and set reference and change bits */
+        m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        
         sysib322 = (SYSIB322 *)(m);
         memset(sysib322, 0, sizeof(SYSIB322));
         sysib322->dbct = 0x01;
@@ -6873,6 +6882,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
     case STSI_GPR0_FC_CURRINFO:
+        
+        /* Obtain absolute address of main storage block,
+           check protection, and set reference and change bits */
+        m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
         switch(regs->GR_L(0) & STSI_GPR0_SEL1_MASK) {
 
