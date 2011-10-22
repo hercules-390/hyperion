@@ -8,9 +8,6 @@
 
 // $Id$
 
-// Copyright    (C) Copyright Roger Bowler, 2000-2009
-//              (C) Copyright James A. Pierson, 2002-2009
-
 // Based on code originally written by Roger Bowler
 // Modified to communicate via unix sockets.
 //
@@ -40,9 +37,10 @@ int main( int argc, char **argv )
     char*       pszProgName  = NULL;    // Name of this program
     char*       pOp          = NULL;    // Operation text
     char*       pIF          = NULL;    // -> interface name
-    void*       pArg         = NULL;    // -> ifreq or rtentry 
+    void*       pArg         = NULL;    // -> hifr or rtentry
     CTLREQ      ctlreq;                 // Request Buffer
-    int         sockfd;                 // Socket descriptor
+    int         fd_inet;                // Socket descriptor
+    int         fd_inet6;               // Socket descriptor
     int         fd;                     // FD for ioctl
     int         rc;                     // Return code
     pid_t       ppid;                   // Parent's PID
@@ -65,14 +63,24 @@ int main( int argc, char **argv )
     }
 
     // Obtain a socket for ioctl operations
-    sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
+    fd_inet = socket( AF_INET, SOCK_DGRAM, 0 );
 
-    if( sockfd < 0 )
+    if( fd_inet < 0 )
     {
         fprintf( stderr,
-                 _("HHCIF002E %s: Cannot obtain socket: %s\n"),
+                 _("HHCIF002E %s: Cannot obtain inet socket: %s\n"),
                  pszProgName, strerror( errno ) );
         exit( 2 );
+    }
+
+    fd_inet6 = socket( AF_INET6, SOCK_DGRAM, 0 );
+
+    if( fd_inet6 < 0 )
+    {
+        fprintf( stderr,
+                 _("HHCIF002E %s: Cannot obtain inet6 socket: %s\n"),
+                 pszProgName, strerror( errno ) );
+        fd_inet6 = fd_inet;
     }
 
     ppid = getppid();
@@ -101,14 +109,14 @@ int main( int argc, char **argv )
             exit( 4 );
         }
 
-        fd = sockfd;
+        fd = fd_inet;
         answer = 0;
 
         switch( ctlreq.iCtlOp )
         {
         case TUNSETIFF:
             pOp  = "TUNSETIFF";
-            pArg = &ctlreq.iru.ifreq;
+            pArg = &ctlreq.iru.hifr.ifreq;
             pIF  = "?";
             fd = ctlreq.iProcID;
             answer = 1;
@@ -116,61 +124,69 @@ int main( int argc, char **argv )
 
         case SIOCSIFADDR:
             pOp  = "SIOCSIFADDR";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            if( ctlreq.iru.hifr.hifr_afamily == AF_INET6 )
+            {
+                pArg = &ctlreq.iru.hifr.in6_ifreq;
+                fd = fd_inet6;
+            }
+            else
+            {
+                pArg = &ctlreq.iru.hifr.ifreq;
+            }
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
         case SIOCSIFDSTADDR:
             pOp  = "SIOCSIFDSTADDR";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
         case SIOCSIFFLAGS:
             pOp  = "SIOCSIFFLAGS";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
 #if 0 /* (hercifc can't "get" information, only "set" it) */
         case SIOCGIFFLAGS:
             pOp  = "SIOCGIFFLAGS";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             answer = 1;
             break;
 #endif /* (caller should do 'ioctl' directly themselves instead) */
 
         case SIOCSIFMTU:
             pOp  = "SIOCSIFMTU";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
         case SIOCADDMULTI:
             pOp  = "SIOCADDMULTI";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
         case SIOCDELMULTI:
             pOp  = "SIOCDELMULTI";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 
 #ifdef OPTION_TUNTAP_SETNETMASK
         case SIOCSIFNETMASK:
             pOp  = "SIOCSIFNETMASK";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 #endif
 #ifdef OPTION_TUNTAP_SETMACADDR
         case SIOCSIFHWADDR:
             pOp  = "SIOCSIFHWADDR";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 #endif
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
@@ -191,8 +207,8 @@ int main( int argc, char **argv )
 #ifdef OPTION_TUNTAP_CLRIPADDR
         case SIOCDIFADDR:
             pOp  = "SIOCDIFADDR";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
+            pArg = &ctlreq.iru.hifr.ifreq;
+            pIF  = ctlreq.iru.hifr.hifr_name;
             break;
 #endif
         case CTLREQ_OP_DONE:

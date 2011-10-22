@@ -103,8 +103,6 @@ extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
                          BYTE*   UnitStat,  U16*   pResidual,
                          BYTE*   pMore );
 
-extern void     packet_trace( BYTE *addr, int len, BYTE dir );
-
 
 
 /**********************************************************************\
@@ -136,6 +134,7 @@ typedef struct _ETHFRM ETHFRM, *PETHFRM;
 #define  ETH_TYPE_ARP       0x0806
 #define  ETH_TYPE_RARP      0x0835
 #define  ETH_TYPE_SNA       0x80D5
+#define  ETH_TYPE_IPV6      0x86dd
 
 
 // --------------------------------------------------------------------
@@ -187,6 +186,23 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
 #define  RARP_REQUEST       0x03
 #define  RARP_REPLY         0x04
 
+
+// --------------------------------------------------------------------
+// IP Version 6 Frame Header (Type 0x86dd)  (network byte order)
+// --------------------------------------------------------------------
+
+struct  _IP6FRM
+{
+    BYTE      bVersTCFlow[4];            // 0x00 Vers:4, TC:8 FlowID:20
+    BYTE      bPayloadLength[2];         // 0x04
+    BYTE      bNextHeader;               // 0x06
+    BYTE      bHopLimit;                 // 0x07
+    BYTE      bSrcAddr[16];              // 0x08
+    BYTE      bDstAddr[16];              // 0x18
+    BYTE      bPayload[FLEXIBLE_ARRAY];  // The payload
+} ATTRIBUTE_PACKED;
+
+typedef struct _IP6FRM IP6FRM, *PIP6FRM;
 
 
 /**********************************************************************\
