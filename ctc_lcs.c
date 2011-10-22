@@ -257,7 +257,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( !pLCSDev->pDEVBLK[1] )
             {
-                WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid), 
+                WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid),
                       pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
                 return -1;
             }
@@ -1225,7 +1225,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
                   pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize, "LCS", 
+                  pLCSDEV->iMaxFrameBufferSize, "LCS",
                   (int)sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = iOrigMaxFrameBufferSize;
     }
@@ -1236,7 +1236,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
                   pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize, "LCS", 
+                  pLCSDEV->iMaxFrameBufferSize, "LCS",
                   CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = iOrigMaxFrameBufferSize;
     }
@@ -1755,7 +1755,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
 
                         c.i = ntohl(lIPAddress);
                         MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
-                        
+
                         WRMSG(HHC00947, "I", pLCSPORT->bPort, str );
 
                         bReported = 1;
@@ -2055,7 +2055,7 @@ static int  LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply,
 // ====================================================================
 
 int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
-                int argc, char** argv )
+                int argc, char** argx )
 {
     struct in_addr  addr;               // Work area for addresses
     MAC             mac;
@@ -2064,6 +2064,19 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     int             iKernBuff;
     int             iIOBuff;
 #endif
+    char            *argn[MAX_ARGS];
+    char            **argv = argn;
+
+
+    // Build a copy of the argv list.
+    // getopt() and getopt_long() expect argv[0] to be a program name.
+    // We need to shift the arguments and insert a dummy argv[0].
+    if( argc > (MAX_ARGS-1) )
+        argc = (MAX_ARGS-1);
+    for( i = 0; i < argc; i++ )
+        argn[i+1] = argx[i];
+    argc++;
+    argn[0] = pDEVBLK->typname;
 
     // Housekeeping
     memset( &addr, 0, sizeof( struct in_addr ) );
@@ -2084,30 +2097,10 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
+    OPTRESET();
     optind = 0;
 
-    // Build new argv list.
-    // getopt_long used to work on old format configuration statements
-    // because LCS was the first argument passed to the device
-    // initialization routine (and was interpreted by getopt*
-    // as the program name and ignored). Now that argv[0] is a valid
-    // argument, we need to shift the arguments and insert a dummy
-    // argv[0];
-
-    // Don't allow us to exceed the allocated storage (sanity check)
-    if( argc > (MAX_ARGS-1))
-        argc = (MAX_ARGS-1);
-
-    for( i = argc; i > 0; i-- )
-        argv[i] = argv[i - 1];
-
-    argc++;
-    argv[0] = pDEVBLK->typname;
-
-    // Parse the optional arguments
-
-    OPTRESET();
-    optind=0;
+    // Parse any optional arguments
     while( 1 )
     {
         int     c;
@@ -2151,7 +2144,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "device name", optarg );
                 return -1;
             }
@@ -2163,7 +2156,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "MAC address", optarg );
                 return -1;
             }
@@ -2191,7 +2184,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "kernel buffer size", optarg );
                 return -1;
             }
@@ -2206,7 +2199,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "dll i/o buffer size", optarg );
                 return -1;
             }
@@ -2240,7 +2233,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, 
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                   "IP address", *argv );
             return -1;
         }
@@ -2320,7 +2313,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 #if defined(OPTION_CONFIG_SYMBOLS)
         // Make a copy of the OAT statement with symbols resolved
         pszStatement = resolve_symbol_string( szBuff );
-#else 
+#else
         // Make a copy of the OAT statement
         pszStatement = strdup( szBuff );
 #endif
