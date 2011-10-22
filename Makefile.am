@@ -84,12 +84,14 @@ dyndev_SRC         = commadpt.c  \
                      omatape.c   \
                      scsitape.c  \
                      w32stape.c  \
+                     ctc_ptp.c   \
                      ctc_lcs.c   \
                      ctc_ctci.c  \
                      ctcadpt.c   \
                      w32ctca.c   \
                      hchan.c     \
                      tuntap.c    \
+                     resolve.c   \
                      qeth.c      \
                      con1052c.c
 
@@ -164,7 +166,8 @@ endif
              hdt2880.la  \
              hdt3525.la  \
              hdtqeth.la  \
-             hdt1052c.la
+             hdt1052c.la \
+             hdtptp.la
 
 if OPTION_DYNAMIC_LOAD
   modexec_LTLIBRARIES = $(HERCMODS)
@@ -258,6 +261,10 @@ if OPTION_DYNAMIC_LOAD
   hdt1052c_la_SOURCES = con1052c.c
   hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  hdtptp_la_SOURCES  = ctc_ptp.c tuntap.c resolve.c
+  hdtptp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
+  hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
 
 endif
 
@@ -443,7 +450,8 @@ else
              -dlopen hdt3505.la   \
              -dlopen hdt3525.la   \
              -dlopen hdtqeth.la   \
-             -dlopen hdt1052c.la
+             -dlopen hdt1052c.la  \
+             -dlopen hdtptp.la
 
   HDEPS    = dyngui.la    \
              dyninst.la   \
@@ -459,6 +467,7 @@ else
              hdt3525.la   \
              hdtqeth.la   \
              hdt1052c.la  \
+             hdtptp.la    \
              libherc.la   \
              libherct.la  \
              libhercd.la

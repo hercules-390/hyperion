@@ -71,6 +71,7 @@
 #include "tapedev.h"
 #include "dasdtab.h"
 #include "ctcadpt.h"
+#include "ctc_ptp.h"
 
 // (forward references, etc)
 
@@ -2084,11 +2085,14 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 {
     DEVBLK*  dev;
     CTCBLK*  pCTCBLK;
+    PTPATH*  pPTPATH;
+    PTPBLK*  pPTPBLK;
     LCSDEV*  pLCSDEV;
     LCSBLK*  pLCSBLK;
     U16      lcss;
     U16      devnum;
     BYTE     onoff;
+    u_int    mask;
 
     UNREFERENCED( cmdline );
 
@@ -2114,6 +2118,10 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     }
 
     onoff = ( CMD(argv[2],on,2) );
+    if( onoff )
+        mask = DEBUGPACKET;
+    else
+        mask = 0;
 
     if (argc < 4 || CMD(argv[3],ALL,3) )
     {
@@ -2122,7 +2130,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             if (0
                 || !dev->allocated
                 || 0x3088 != dev->devtype
-                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype && CTC_PTP != dev->ctctype)
             )
                 continue;
 
@@ -2131,11 +2139,18 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pCTCBLK = dev->dev_data;
                 pCTCBLK->fDebug = onoff;
             }
-            else // (CTC_LCS == dev->ctctype)
+            else if (CTC_LCS == dev->ctctype)
             {
                 pLCSDEV = dev->dev_data;
                 pLCSBLK = pLCSDEV->pLCSBLK;
                 pLCSBLK->fDebug = onoff;
+            }
+            else // (CTC_PTP == dev->ctctype)
+            {
+                pPTPATH = dev->dev_data;
+                pPTPBLK = pPTPATH->pPTPBLK;
+                pPTPBLK->fDebug = onoff;
+                pPTPBLK->uDebugMask = mask;
             }
         }
 
@@ -2174,9 +2189,20 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pLCSBLK->fDebug = onoff;
             }
         }
+        else if (CTC_PTP == dev->ctctype)
+        {
+            for (i=0; i < pDEVGRP->acount; i++)
+            {
+                pDEVBLK = pDEVGRP->memdev[i];
+                pPTPATH = pDEVBLK->dev_data;
+                pPTPBLK = pPTPATH->pPTPBLK;
+                pPTPBLK->fDebug = onoff;
+                pPTPBLK->uDebugMask = mask;
+            }
+        }
         else
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI or LSC" );
+            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LSC or PTP" );
             return -1;
         }
 
@@ -2184,13 +2210,152 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
           char buf[128];
           MSGBUF( buf, "%s for %s device %1d:%04X pair",
                   onoff ? "on" : "off",
-                  CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
+                  CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
                   lcss, devnum );
           WRMSG(HHC02204, "I", "CTC debug", buf);
         }
     }
 
     return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* ptp command - enable/disable PTP debugging                        */
+/*-------------------------------------------------------------------*/
+int ptp_cmd( int argc, char *argv[], char *cmdline )
+{
+    DEVBLK*  dev;
+    PTPATH*  pPTPATH;
+    PTPBLK*  pPTPBLK;
+    U16      lcss;
+    U16      devnum;
+    u_int    all;
+    u_int    onoff;
+    u_int    mask;
+
+    UNREFERENCED( cmdline );
+
+    // Format:  "ptp  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]"
+
+    if( argc < 3 )
+        goto ptp_cmd_duff;
+
+    if( !CMD(argv[1],debug,5) )
+        goto ptp_cmd_duff;
+
+    if( CMD(argv[2],on,2) )
+    {
+        onoff = TRUE;
+        mask = DEBUGPACKET;
+    }
+    else if( CMD(argv[2],off,3) )
+    {
+        onoff = FALSE;
+        mask = 0;
+        if( argc > 4 )
+            goto ptp_cmd_duff;
+    }
+    else
+    {
+        goto ptp_cmd_duff;
+    }
+
+    all = TRUE;
+    if( argc >= 4 )
+    {
+        if( CMD(argv[3],ALL,3) )
+        {
+            all = TRUE;
+        }
+        else if( parse_single_devnum( argv[3], &lcss, &devnum) == 0 )
+        {
+            all = FALSE;
+        }
+        else
+        {
+            goto ptp_cmd_duff;
+        }
+    }
+
+    if( argc >= 5 )
+    {
+        mask = atoi( argv[4] );                  /* One day all of           */
+        if( mask < 1 || mask > 255 )             /* this will change.        */
+            goto ptp_cmd_duff;                   /* Keywords (e.g. 'packet') */
+        if( argc > 5 )                           /* will checked for, and    */
+            goto ptp_cmd_duff;                   /* values OR'ed into mask.  */
+    }
+
+    if( all )
+    {
+        for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+        {
+            if( dev->allocated &&
+                dev->devtype == 0x3088 &&
+                dev->ctctype == CTC_PTP )
+            {
+                pPTPATH = dev->dev_data;
+                pPTPBLK = pPTPATH->pPTPBLK;
+                pPTPBLK->fDebug = onoff;
+                pPTPBLK->uDebugMask = mask;
+            }
+        }
+
+        //    HHC02204 "%-14s set to %s"
+        WRMSG(HHC02204, "I", "PTP debug", onoff ? "on ALL" : "off ALL");
+    }
+    else
+    {
+        int i;
+        DEVGRP* pDEVGRP;
+        DEVBLK* pDEVBLK;
+
+        if (!(dev = find_device_by_devnum ( lcss, devnum )))
+        {
+            devnotfound_msg( lcss, devnum );
+            return -1;
+        }
+
+        pDEVGRP = dev->group;
+
+        if( dev->ctctype == CTC_PTP )
+        {
+            for( i=0; i < pDEVGRP->acount; i++ )
+            {
+                pDEVBLK = pDEVGRP->memdev[i];
+                pPTPATH = pDEVBLK->dev_data;
+                pPTPBLK = pPTPATH->pPTPBLK;
+                pPTPBLK->fDebug = onoff;
+                pPTPBLK->uDebugMask = mask;
+            }
+        }
+        else
+        {
+            //    HHC02209 "%1d:%04X device is not a '%s'"
+            WRMSG(HHC02209, "E", lcss, devnum, "PTP" );
+            return -1;
+        }
+
+        {
+        char buf[128];
+        MSGBUF( buf, "%s for %s device %1d:%04X pair",
+                onoff ? "on" : "off",
+                "PTP",
+                lcss, devnum );
+        //    HHC02204 "%-14s set to %s"
+        WRMSG(HHC02204, "I", "PTP debug", buf);
+        }
+
+    }
+
+    return 0;
+
+ptp_cmd_duff:
+    //     HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+    WRMSG( HHC02299, "E", argv[0] );
+    return -1;
+
 }
 
 

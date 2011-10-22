@@ -277,8 +277,8 @@
 #define ctc_cmd_help            \
                                 \
   "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"              \
-  "Enables/disables debug packet tracing for the specified CTCI/LCS\n"          \
-  "device group(s) identified by <devnum> or for all CTCI/LCS device\n"         \
+  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP\n"          \
+  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP device\n"         \
   "groups if <devnum> is not specified or specified as 'ALL'.\n"
 
 #define define_cmd_desc         "Rename device"
@@ -892,6 +892,14 @@
   "\n"                                                                           \
   "Enter \"psw\" by itself to display the current PSW without altering it.\n"
 
+#define ptp_cmd_desc            "Enable/Disable PTP debugging"
+#define ptp_cmd_help            \
+                                \
+  "Format:  \"ptp  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]\".\n\n"   \
+  "Enables/disables debug tracing for the PTP device group\n"                    \
+  "identified by <devnum>, or for all PTP device groups if\n"                    \
+  "<devnum> is not specified or specified as 'ALL'.\n"
+
 #define ptt_cmd_desc            "Set or display internal trace"
 #define ptt_cmd_help            \
                                 \
@@ -1375,6 +1383,7 @@ COMMAND( "ostailor",                ostailor_cmd,           SYSCMDNOPER,        
 COMMAND( "pgmtrace",                pgmtrace_cmd,           SYSCMDNOPER,        pgmtrace_cmd_desc,      pgmtrace_cmd_help   )
 COMMAND( "pr",                      pr_cmd,                 SYSCMDNOPER,        pr_cmd_desc,            NULL                )
 COMMAND( "psw",                     psw_cmd,                SYSCMDNOPER,        psw_cmd_desc,           psw_cmd_help        )
+COMMAND( "ptp",                     ptp_cmd,                SYSCMDNOPER,        ptp_cmd_desc,           ptp_cmd_help        )
 COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            NULL                )
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
 COMMAND( "r",                       r_cmd,                  SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )

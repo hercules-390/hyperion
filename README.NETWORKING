@@ -99,6 +99,7 @@ The currently supported emulation modes are:
      CTCI     - Point-to-point connection to the host IP stack.
      LCS      - LAN Channel Station (3172/OSA)
      VMNET    - Point-to-point link via SLIP/VMNET
+     PTP      - Point-to-point connection to the host IP stack.
 
 -----------------------------------------------------------------
 CTCT - Channel to Channel Emulation via TCP connection
@@ -340,6 +341,128 @@ of the TUN/TAP driver.
 
 Refer to http://www.kiyoinc.com/herc3088.html for more details.
 
+
+-----------------------------------------------------------------
+PTP      - MPCPTP/PCPTP6 Channel to Channel link
+-----------------------------------------------------------------
+
+This is a point-to-point link to the driving system's TCP/IP
+stack. From the point of view of the z/OS V1R5 or later image
+running in the Hercules machine it appears to be an MPCPTP and/or
+MPCPTP6 ESCON CTC link to another z/OS image.
+
+PTP uses the Universal TUN/TAP driver on *nix and Politecnico
+di Torino's WinPCap packet driver as well as Fish's TunTap32
+and FishPack DLLs on Windows[1].
+
+The configuration statement for PTP is as follows:
+
+     <devnum1-devnum2> PTP [options] <guest1> <host1> [ <guest2> <host2> ]
+
+where:
+
+     <devnum1-devnum2>  is the address pair of the PTP device.
+
+     <guest1>  is the host name or IP address of the Hercules (guest OS) side.
+
+     <host1>   is the host name or IP address on the driving system.
+
+     <guest2>  is the host name or IP address of the Hercules (guest OS) side.
+
+     <host2>   is the host name or IP address on the driving system.
+
+             <guest1> and <host1> must both be of the same address
+             family, i.e. both IPv4 or both IPv6.
+
+             <guest2> and <host2>, if specified, must both be of the
+             same address family, i.e. both IPv4 or both IPv6, and
+             must not be of the same address family as <guest1> and
+             <host1>.
+
+             If a host name is specified for <guest1>, and the host
+             name can be resolved to both an IPv4 and an IPv6
+             address, use either the -4/--inet or the -6/--inet6
+             option to specify which address family should be
+             used; if neither the -4/--inet nor the -6/--inet6
+             option is specified, whichever address family the
+             resolver returns first will be used.
+
+             If <guest1>/<host1> or <guest2>/<host2> are IPv4
+             addresses, or host names that resolve to IPv4
+             addresses, <guest1>/<guest2> can be followed by the
+             prefix size expressed in CIDR notation, for example
+             192.168.1.1/24. If the prefix size is specified it
+             can have a value from 0 to 32; if not specified a
+             value of 32 is assumed. The prefix size is used to
+             produce the equivalent subnet mask. For example, a
+             value of 24 produces a subnet mask of 255.255.255.0.
+
+             If <guest1>/<host1> or <guest2>/<host2> are IPv6
+             addresses, or host names that resolve to IPv6
+             addresses, <host1>/<host2> can be followed by the
+             prefix size expressed in CIDR notation, for example
+             2001:db8:3003:1::543:210f/48. If the prefix size is
+             specified it can have a value from 0 to 128; if not
+             specified a value of 128 is assumed.
+
+             If <guest1>, <host1>, <guest2> or <host2> are numeric
+             IPv6 addresses, they can be between braces, for example
+             [2001:db8:3003:1::543:210f].
+
+     [options]  can be any of the following:
+
+         -n <devname> or --dev <devname>
+
+             where <devname> is:
+
+             [*nix] the name of the TUN/TAP special character
+             device, normally /dev/net/tun.
+
+             [Windows] is either the IP or MAC address of the
+             driving systems network card. TunTap32 will
+             automatically select the first network card it
+             finds if this option is omitted, this may not be
+             desirable for some users.
+
+         -t <mtu> or --mtu <mtu>
+
+             [*nix only] where <mtu> is the maximum transmission
+             unit size, normally 1500
+
+         -m <MAC Address> or --mac <MAC address>
+
+             [Windows only] where <MAC Address> is the optional
+             hardware address of the interface in the format of
+             either xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx.
+
+         -k <kbuff> or --kbuff <kbuff>
+
+             [Windows only] where <kbuff> is the size of the
+             WinPCap kernel buffer size, normally 1024.
+
+         -i <ibuff> or --ibuff <ibuff>
+
+             [Windows only] where <ibuff> is the size of the
+             WinPCap I/O buffer size, normally 64.
+
+         -4 or --inet
+
+             indicates that when a host name is specified for
+             <guest1>, the host name must resolve to an IPv4
+             address.
+
+         -6 or --inet6
+
+             indicates that when a host name is specified for
+             <guest1>, the host name must resolve to an IPv6
+             address.
+
+         -d or --debug
+
+             this will turn on the internal debugging routines.
+             Warning: This will produce a tremendous amount of
+             output to the Hercules console. It is suggested that
+             you only enable this at the request of the maintainers.
 
 
 =================================================================

@@ -175,6 +175,7 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
 #endif /*defined(WIN32)*/
     HDL_DEVICE(QETH, qeth_device_hndinfo    );
+    HDL_DEVICE(PTP,  ptp_device_hndinfo     );
 
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
 

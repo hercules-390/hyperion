@@ -79,6 +79,7 @@ extern DEVHND ctci_device_hndinfo;
 extern DEVHND ctct_device_hndinfo;
 extern DEVHND lcs_device_hndinfo;
 extern DEVHND vmnet_device_hndinfo;
+extern DEVHND ptp_device_hndinfo;
 
 
 #endif /*!defined(_DEVICES_H)*/
