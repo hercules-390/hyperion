@@ -213,11 +213,19 @@ BYTE    c;                              /* Print character           */
 
             while (str != NULL)
             {
-#ifdef OPTION_SCP_MSG_PREFIX
+#ifdef OPTION_MSGCLR
+    #ifdef OPTION_SCP_MSG_PREFIX
                 WRCMSG ("<pnl,color(green,black)>", HHC00001, "I", str);
-#else
+    #else /*!OPTION_SCP_MSG_PREFIX*/
                 logmsg ("<pnl,color(green,black)>%s\n", str);
-#endif /* OPTION_SCP_MSG_PREFIX */
+    #endif /*OPTION_SCP_MSG_PREFIX*/
+#else /*!OPTION_MSGCLR*/
+    #ifdef OPTION_SCP_MSG_PREFIX
+                WRMSG (HHC00001, "I", str);
+    #else /*!OPTION_SCP_MSG_PREFIX*/
+                logmsg ("%s\n", str);
+    #endif /*OPTION_SCP_MSG_PREFIX*/
+#endif /*OPTION_MSGCLR*/
                 str = strtok_r (NULL, "\n", &strtok_str);
             }
 
