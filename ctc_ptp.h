@@ -142,10 +142,12 @@ struct  _PTPBLK
     int         iMTU;                      // MTU size
     struct in_addr  iaDriveIPAddr4;        // IPv4 Address (Driver)
     struct in_addr  iaGuestIPAddr4;        // IPv4 Address (Guest)
+#if defined(HAVE_IPV6)
     struct in6_addr iaDriveIPAddr6;        // IPv6 Address (Driver)
     struct in6_addr iaGuestIPAddr6;        // IPv6 Address (Guest)
     struct in6_addr iaDriveLLAddr6;        // IPv6 Link Local Address (Driver)
     struct in6_addr iaGuestLLAddr6;        // IPv6 Link Local Address (Guest)
+#endif /*defined(HAVE_IPV6)*/
 
     BYTE        xSAaddress[4];             // x-sides Subarea address
     BYTE        xStartTime[8];             // x-sides start time (tod)
@@ -859,7 +861,9 @@ struct HRB
     union
        {
            struct sockaddr_in in;
+#if defined(HAVE_IPV6)
            struct sockaddr_in6 in6;
+#endif /*defined(HAVE_IPV6)*/
        }            sa;                 // Sockaddr
     char            ipaddr[64];         // Host IP address
     char            em[64];             // getaddrinfo() error message

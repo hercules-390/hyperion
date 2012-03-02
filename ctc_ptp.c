@@ -19,7 +19,7 @@
 
 #include "hstdinc.h"
 
-#if !defined(__SOLARIS__)
+#if defined(HAVE_IPV6)
 
 #include "hercules.h"
 #include "ctcadpt.h"
@@ -9975,4 +9975,4 @@ END_DEVICE_SECTION
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
 
-#endif /* !defined(__SOLARIS__) */
+#endif /*defined(HAVE_IPV6)*/
