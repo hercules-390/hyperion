@@ -444,7 +444,7 @@ int             TUNTAP_SetIPAddr6( char*   pszNetDevName,
         return -1;
     }
 
-    if( inet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
+    if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
     {
         WRMSG( HHC00141, "E", pszNetDevName, pszIPAddr6 );
         return -1;
@@ -466,7 +466,7 @@ int             TUNTAP_SetIPAddr6( char*   pszNetDevName,
 
     hifr.hifr6_prefixlen = iPfxSiz;
 
-    hifr.hifr6_ifindex = if_nametoindex( pszNetDevName );
+    hifr.hifr6_ifindex = hif_nametoindex( pszNetDevName );
 
     hifr.hifr_afamily = AF_INET6;
 

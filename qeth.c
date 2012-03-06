@@ -412,8 +412,10 @@ U32 ackseq;
                     /* Set Non-Blocking mode */
                     socket_set_blocking_mode(grp->ttfd,0);
 
+#if defined(IFF_DEBUG)
                     if (grp->debug)
                         VERIFY(!TUNTAP_SetFlags(grp->ttdevn,IFF_DEBUG));
+#endif /*defined(IFF_DEBUG)*/
 #if defined( OPTION_TUNTAP_SETMACADDR )
                     if(grp->tthwaddr)
                         VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
@@ -536,7 +538,9 @@ U32 ackseq;
                         | QETH_PROMISC
                         | IFF_MULTICAST
                         | IFF_BROADCAST
+#if defined(IFF_DEBUG)
                         | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(IFF_DEBUG)*/
                     ))
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else

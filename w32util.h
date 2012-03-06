@@ -200,6 +200,10 @@ W32_DLL_IMPORT int   w32_select   ( int nfds,
                      int nLineNumber
                    );
 
+W32_DLL_IMPORT unsigned w32_if_nametoindex ( const char* ifname );
+W32_DLL_IMPORT const char* w32_inet_ntop ( int af, const void* src, char* dst, socklen_t size );
+W32_DLL_IMPORT int      w32_inet_pton ( int af, const char* src, void* dst );
+
 W32_DLL_IMPORT FILE*  w32_fdopen ( int their_fd, const char* their_mode );
 W32_DLL_IMPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE* stream );
 W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... );

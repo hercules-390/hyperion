@@ -41,6 +41,9 @@
   #endif
   #include <winsock2.h>         // Windows Sockets 2
   #include <mstcpip.h>          // (need struct tcp_keepalive)
+  #include <ws2tcpip.h>         /* For IPV6                          */
+  #include <netioapi.h>         /* For if_nametoindex                */
+  #define HAVE_IPV6
 #endif
 #ifdef WIN32
   #include <windows.h>

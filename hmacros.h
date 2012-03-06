@@ -77,12 +77,18 @@
   int write_socket(int fd, const char *ptr, int nbytes);
 */
   #define  close_socket(f)      closesocket(f)
+  #define  hif_nametoindex      w32_if_nametoindex
+  #define  hinet_ntop           w32_inet_ntop
+  #define  hinet_pton           w32_inet_pton
 #else
 /* Now defined in hsocket.h
   int read_socket(int fd, char *ptr, int nbytes);
   int write_socket(int fd, const char *ptr, int nbytes);
 */
   #define  close_socket(f)      close(f)
+  #define  hif_nametoindex      if_nametoindex
+  #define  hinet_ntop           inet_ntop
+  #define  hinet_pton           inet_pton
 #endif
 
 #ifdef _MSVC_

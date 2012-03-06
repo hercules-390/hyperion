@@ -96,7 +96,7 @@ int  resolve_host( PHRB pHRB )
             pHRB->afam = AF_INET;
             pHRB->salen = rescon->ai_addrlen;
             memcpy( &pHRB->sa, rescon->ai_addr, rescon->ai_addrlen );
-            inet_ntop( AF_INET, &pHRB->sa.in.sin_addr, pHRB->ipaddr, sizeof(pHRB->ipaddr)-1 );
+            hinet_ntop( AF_INET, &pHRB->sa.in.sin_addr, pHRB->ipaddr, sizeof(pHRB->ipaddr)-1 );
             rv = 0;
             break;
         }
@@ -106,7 +106,7 @@ int  resolve_host( PHRB pHRB )
             pHRB->afam = AF_INET6;
             pHRB->salen = rescon->ai_addrlen;
             memcpy( &pHRB->sa, rescon->ai_addr, rescon->ai_addrlen );
-            inet_ntop( AF_INET6, &pHRB->sa.in6.sin6_addr, pHRB->ipaddr, sizeof(pHRB->ipaddr)-1 );
+            hinet_ntop( AF_INET6, &pHRB->sa.in6.sin6_addr, pHRB->ipaddr, sizeof(pHRB->ipaddr)-1 );
             rv = 0;
             break;
         }

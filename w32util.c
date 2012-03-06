@@ -2982,6 +2982,162 @@ static void SelectSet
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// (global variables)
+
+typedef NET_IFINDEX (WINAPI *PIF_NAMETOINDEX)( LPCSTR pszInterfaceName );
+
+static HMODULE          g_hIphlpapi_dll    = NULL;
+static PIF_NAMETOINDEX  g_pIf_NameToIndex  = NULL;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (Note: only available on Vista or greater)
+
+unsigned w32_if_nametoindex( const char* ifname )
+{
+    if (!g_hIphlpapi_dll)
+        g_hIphlpapi_dll = LoadLibraryA( "iphlpapi.dll" );
+
+    if (!g_hIphlpapi_dll)
+        return 0;
+
+    if (!g_pIf_NameToIndex)
+        g_pIf_NameToIndex = (PIF_NAMETOINDEX)
+            GetProcAddress( g_hIphlpapi_dll, "if_nametoindex" );
+
+    return g_pIf_NameToIndex ? g_pIf_NameToIndex( ifname ) : 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (global variables)
+
+typedef LONG (NTAPI *PRTLIPV4ADDRESSTOSTRINGEXA)( const IN_ADDR*  pAddr,                 USHORT nPort, LPSTR pszAddressString, ULONG* pnAddressStringLength );
+typedef LONG (NTAPI *PRTLIPV6ADDRESSTOSTRINGEXA)( const IN6_ADDR* pAddr, ULONG nScopeId, USHORT nPort, LPSTR pszAddressString, ULONG* pnAddressStringLength );
+typedef LONG (NTAPI *PRTLIPV4STRINGTOADDRESSEXA)( PCSTR pszAddressString, BOOLEAN bStrict, IN_ADDR*  pAddress,                   USHORT* pnPort );
+typedef LONG (NTAPI *PRTLIPV6STRINGTOADDRESSEXA)( PCSTR pszAddressString,                  IN6_ADDR* pAddress, ULONG* pnScopeId, USHORT* pnPort );
+
+static HMODULE                     g_hNtdll_dll                  = NULL;
+static PRTLIPV4ADDRESSTOSTRINGEXA  g_pRtlIpv4AddressToStringExA  = NULL;
+static PRTLIPV6ADDRESSTOSTRINGEXA  g_pRtlIpv6AddressToStringExA  = NULL;
+static PRTLIPV4STRINGTOADDRESSEXA  g_pRtlIpv4StringToAddressExA  = NULL;
+static PRTLIPV6STRINGTOADDRESSEXA  g_pRtlIpv6StringToAddressExA  = NULL;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (Note: only available on Vista or greater)
+
+const char* w32_inet_ntop( int af, const void* src, char* dst, socklen_t size )
+{
+    ULONG len = size;
+
+    // "The inet_ntop() function shall return a pointer to the buffer containing
+    // the text string if the conversion succeeds, and NULL otherwise, and set errno
+    // to indicate the error."
+
+    // [EAFNOSUPPORT]   The af argument is invalid.
+    // [ENOSPC]         The size of the inet_ntop() result buffer is inadequate.
+
+    if (!g_hNtdll_dll && !(g_hNtdll_dll = LoadLibraryA( "ntdll.dll" )))
+    {
+        errno = ENOENT;
+        return NULL;
+    }
+
+    if (af == AF_INET)
+    {
+        if (! g_pRtlIpv4AddressToStringExA &&
+            !(g_pRtlIpv4AddressToStringExA =
+               (PRTLIPV4ADDRESSTOSTRINGEXA) GetProcAddress( g_hNtdll_dll,
+                "RtlIpv4AddressToStringExA" )))
+        {
+            errno = ENOENT;
+            return NULL;
+        }
+
+        if (g_pRtlIpv4AddressToStringExA( src, 0, dst, &len ) == NO_ERROR)
+            return dst;
+
+        errno = ENOSPC;
+        return NULL;
+    }
+
+    if (af == AF_INET6)
+    {
+        if (! g_pRtlIpv6AddressToStringExA &&
+            !(g_pRtlIpv6AddressToStringExA =
+               (PRTLIPV6ADDRESSTOSTRINGEXA) GetProcAddress( g_hNtdll_dll,
+                "RtlIpv6AddressToStringExA" )))
+        {
+            errno = ENOENT;
+            return NULL;
+        }
+
+        if (g_pRtlIpv6AddressToStringExA( src, 0, 0, dst, &len ) == NO_ERROR)
+            return dst;
+
+        errno = ENOSPC;
+        return NULL;
+    }
+
+    errno = EAFNOSUPPORT;
+    return NULL;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (Note: only available on Vista or greater)
+
+int w32_inet_pton( int af, const char* src, void* dst )
+{
+    // "The inet_pton() function shall return 1 if the conversion succeeds,
+    // with the address pointed to by dst in network byte order. It shall
+    // return 0 if the input is not a valid IPv4 dotted-decimal string or
+    // a valid IPv6 address string, or -1 with errno set to [EAFNOSUPPORT]
+    // if the af argument is unknown.
+
+    // [EAFNOSUPPORT]   The af argument is invalid.
+
+    if (!g_hNtdll_dll && !(g_hNtdll_dll = LoadLibraryA( "ntdll.dll" )))
+    {
+        errno = ENOENT;
+        return FALSE;
+    }
+
+    if (af == AF_INET)
+    {
+        USHORT nPort;
+
+        if (! g_pRtlIpv4StringToAddressExA &&
+            !(g_pRtlIpv4StringToAddressExA =
+               (PRTLIPV4STRINGTOADDRESSEXA) GetProcAddress( g_hNtdll_dll,
+                "RtlIpv4StringToAddressExA" )))
+        {
+            errno = ENOENT;
+            return FALSE;
+        }
+
+        return (g_pRtlIpv4StringToAddressExA( src, FALSE, dst, &nPort ) == NO_ERROR) ? TRUE : FALSE;
+    }
+
+    if (af == AF_INET6)
+    {
+        ULONG nScopeId;
+        USHORT nPort;
+
+        if (! g_pRtlIpv6StringToAddressExA &&
+            !(g_pRtlIpv6StringToAddressExA =
+               (PRTLIPV6STRINGTOADDRESSEXA) GetProcAddress( g_hNtdll_dll,
+                "RtlIpv6StringToAddressExA" )))
+        {
+            errno = ENOENT;
+            return FALSE;
+        }
+
+        return (g_pRtlIpv6StringToAddressExA( src, dst, &nScopeId, &nPort ) == NO_ERROR) ? TRUE : FALSE;
+    }
+
+    errno = EAFNOSUPPORT;
+    return -1;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 struct MODE_TRANS
 {

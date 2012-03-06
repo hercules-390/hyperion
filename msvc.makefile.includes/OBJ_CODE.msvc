@@ -168,9 +168,11 @@ hmodule_OBJ = \
     $(O)console.obj  \
     $(O)ctc_ctci.obj \
     $(O)ctc_lcs.obj  \
+    $(O)ctc_ptp.obj  \
     $(O)ctcadpt.obj  \
     $(O)printer.obj  \
     $(O)qeth.obj     \
+    $(O)resolve.obj  \
     $(O)sockdev.obj  \
     $(O)tuntap.obj   \
     $(O)w32ctca.obj

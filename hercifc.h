@@ -50,7 +50,7 @@
   /* The in6_ifreq structure can be found in include/linux/ipv6.h */
   struct in6_ifreq {
     struct in6_addr ifr6_addr;
-    __u32   ifr6_prefixlen;
+    u_int32_t ifr6_prefixlen;
     int   ifr6_ifindex;
   };
 #endif /*defined(HAVE_IPV6)*/
@@ -123,7 +123,7 @@
 
 #endif
 
-#if !defined(HAVE_NET_IF_H)
+#if (!defined(HAVE_NET_IF_H) && !defined(_MSVC_))
   /* Standard interface flags. */
   #define IFF_UP          0x1             /* interface is up              */
   #define IFF_BROADCAST   0x2             /* broadcast address valid      */
@@ -133,6 +133,10 @@
   #define IFF_RUNNING     0x40            /* resources allocated          */
   #define IFF_PROMISC     0x100           /* receive all packets          */
   #define IFF_MULTICAST   0x1000          /* Supports multicast           */
+#endif
+
+#if (defined(OPTION_W32_CTCI) && !defined(IFF_PROMISC))
+  #define IFF_PROMISC     0x100           /* required by qeth.h           */
 #endif
 
 // --------------------------------------------------------------------
