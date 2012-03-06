@@ -795,40 +795,40 @@ install-exec-local:
 
 install-exec-hook:
 if BUILD_SHARED
-        rm -f $(DESTDIR)$(libdir)/libherc*.a
-        rm -f $(DESTDIR)$(modexecdir)/dyn*.a
-        rm -f $(DESTDIR)$(modexecdir)/hdt*.a
+	rm -f $(DESTDIR)$(libdir)/libherc*.a
+	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
+	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
 else
-        rm -f $(DESTDIR)$(libdir)/libherc*
+	rm -f $(DESTDIR)$(libdir)/libherc*
 endif
 #
 # NOTE : symbolic links point to FINAL destination (not to staged install)
 #
-        rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
-        rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
-        rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
-        rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
-        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
 if SETUID_HERCIFC
-        chown root $(DESTDIR)$(bindir)/hercifc
+	chown root $(DESTDIR)$(bindir)/hercifc
 if HERCIFC_GROUPSET
-        chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
+	chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
 endif
-        chmod 0750 $(DESTDIR)$(bindir)/hercifc
-        chmod +s   $(DESTDIR)$(bindir)/hercifc
-        rm                             hercifc
+	chmod 0750 $(DESTDIR)$(bindir)/hercifc
+	chmod +s   $(DESTDIR)$(bindir)/hercifc
+	rm                             hercifc
 endif
 
 uninstall-local:
 
 uninstall-hook:
-        rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-        rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-        rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-        rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
 %.s: %.c
-        $(COMPILE) -S $<
+	$(COMPILE) -S $<
