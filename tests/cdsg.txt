@@ -1,0 +1,23 @@
+* CDSG test $Id$
+sysclear
+archmode esame
+r 1a0=00000000000000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+* CDSG tests
+r 200=E32003200004 # LG R2,TGT+0       R2=Quadword old value part 1
+r 206=E33003280004 # LG R3,TGT+8       R3=Quadword old value part 2
+r 20C=E34003400004 # LG R4,NEW+0       R4=Quadword new value part 1
+r 212=E35003480004 # LG R5,NEW+8       R5=Quadword new value part 2
+r 218=EB240320003E # CDSG R2,R4,TGT    CC0 Compare Double and Swap
+r 21E=B9820022     # XGR R2,R2         R2=Quadword old value part 1
+r 222=B9820033     # XGR R3,R3         R2=Quadword old value part 2
+r 226=EB240320003E # CDSG R2,R4,TGT    CC1 Compare Double and Swap
+r 22C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000000000000FED0D0 # Enabled wait state PSW
+* Test data
+r 320=0011223344556677 # TGT (Quadword target area part 1)
+r 328=8899AABBCCDDEEFF #  "  (Quadword target area part 2)
+r 340=A1A3A5A7A9ABADAF # NEW (Quadword new value part 1)
+r 348=B1B3B5B7B9BBBDBF #  "  (Quadword new value part 2)
+s+
+restart
