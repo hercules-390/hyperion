@@ -356,8 +356,9 @@ typedef struct _OSA_SLSB {
 #define SLSBE_VALID             0x10 /* Buffer Valid                 */
 #define SLSBE_STATE             0x0F /* Buffer state mask            */
 #define SLSBE_STATE_NOTINIT     0x00 /* Not initialised              */
-#define SLSBE_STATE_EMPTY       0x01 /* Buffer empty (but owned)     */
-#define SLSBE_STATE_PRIMED      0x02 /* Buffer ready (not owned)     */
+#define SLSBE_STATE_EMPTY       0x01 /* Buffer empty                 */
+#define SLSBE_STATE_PRIMED      0x02 /* Buffer ready                 */
+#define SLSBE_STATE_PENDING     0x03 /* Buffer pending               */
 #define SLSBE_STATE_HALTED      0x0E /* I/O halted                   */
 #define SLSBE_STATE_ERROR       0x0F /* I/O Error                    */
 #define SLSBE_ERROR             0xFF /* Addressing Error             */
@@ -376,11 +377,6 @@ typedef struct _OSA_SLSB {
                                 | SLSBE_OWNER_CU                    \
                                 | SLSBE_TYPE_INPUT                  \
                                 | SLSBE_STATE_EMPTY                 \
-                                )
-#define SLSBE_INPUT_PRIMED      ( 0 \
-                                | SLSBE_OWNER_OS                    \
-                                | SLSBE_TYPE_INPUT                  \
-                                | SLSBE_STATE_PRIMED                \
                                 )
 #define SLSBE_INPUT_ACKED       ( 0 \
                                 | SLSBE_OWNER_OS                    \
