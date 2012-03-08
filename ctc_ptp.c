@@ -1,11 +1,11 @@
-/* CTC_PTP.C    (c) Copyright Ian Shorter, 2009-2011                 */
+/* CTC_PTP.C    (c) Copyright Ian Shorter, 2011                      */
 /*              MPC Point-To-Point (PTP)                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: ctc_ptp.c 5125 2009-12-25 12:00:00Z ian $
+// $Id$
 
 /* This module contains device handling functions for the            */
 /* MPCPTP and/or MPCPTP6 emulated connection                         */
@@ -2874,8 +2874,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
 #endif /* defined( OPTION_W32_CTCI ) */
 
         default:
-            // HHC00918 "%1d:%04X CTC: option specified incorrectly or unknown option"
-            WRMSG(HHC00918, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            // HHC00918 "%1d:%04X CTC: option '%s' unknown or specified incorrectly"
+            WRMSG(HHC00918, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (char)c );
             return -1;
         }
 
@@ -6229,8 +6229,8 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 // Check whether the guests IPv4 address was specified on config statement.
                 if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaGuestIPAddr4, 4 ) == 0 )
                 {
-                    // The y-side has told us his IPv4 address is the one specified
-                    // on the config statement, which is of course good news.
+                    // The y-side has told us his IPv4 address and it is the guest address
+                    // specified on the config statement, which is of course good news.
                     // Remember the activation status.
                     pPTPBLK->bActivate4 |= HETOLDMEHIS_ADDRESS;
 
@@ -6347,8 +6347,8 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                     // that was specified on the config statement.
                     if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaGuestIPAddr6, 16 ) == 0 )
                     {
-                        // The y-side has told us his IPv6 address is the one specified
-                        // on the config statement, which is of course good news.
+                        // The y-side has told us his IPv6 address and it is the guest address
+                        // specified on the config statement, which is of course good news.
                         // Remember the activation status.
                         pPTPBLK->bActivate6 |= HETOLDMEHIS_ADDRESS;
 
@@ -6392,8 +6392,8 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                             // The guest has an IPv6 address we know nothing about. The guest
                             // can have multiple IPv6 addresses associated with an interface.
                             inet_ntop( AF_INET6, &pPTPDACwr->IPAddr, cIPaddr, sizeof(cIPaddr) );
-                            // HHC03913 "%1d:%04X CTC: Guest has IP address '%s'"
-                            WRMSG(HHC03913, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                            // HHC03914 "%1d:%04X CTC: Guest has IP address '%s'"
+                            WRMSG(HHC03914, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                                  cIPaddr );
 
                             // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
