@@ -1,6 +1,7 @@
 
 # /
 /*.bin
+/*.o
 /.DS_Store
 /.deps
 /.libs
@@ -8,6 +9,7 @@
 /Makefile
 /Makefile.in
 /aclocal.m4
+/archlvl.lo
 /assist.lo
 /autogen.log
 /autom4te.cache
@@ -33,6 +35,7 @@
 /cmdtab.lo
 /cmpsc.lo
 /codepage.lo
+/comm3705.lo
 /commadpt.lo
 /con1052c.lo
 /config.h
@@ -47,6 +50,7 @@
 /crypto.lo
 /ctc_ctci.lo
 /ctc_lcs.lo
+/ctc_ptp.lo
 /ctcadpt.lo
 /dasdcat
 /dasdconv
@@ -65,6 +69,7 @@
 /diagmssf.lo
 /diagnose.lo
 /dmap2hrc
+/dyn76.lo
 /dyngui
 /dyngui.dll
 /dyngui.la
@@ -83,12 +88,14 @@
 /fillfnam.lo
 /float.lo
 /fthreads.lo
+/ftlib.lo
 /general1.lo
 /general2.lo
 /general3.lo
 /hao.lo
 /hchan.lo
 /hconsole.lo
+/hdiagf18.lo
 /hdl.lo
 /hdlmain.lo
 /hdt1052c
@@ -116,10 +123,12 @@
 /hdt3525
 /hdt3525.dll
 /hdt3525.la
+/hdt3705.la
 /hdteq
 /hdteq.dll
 /hdteq.la
 /hdteq.lo
+/hdtptp.la
 /hdtqeth.la
 /hercifc
 /herclin
@@ -136,7 +145,10 @@
 /history.lo
 /hostinfo.lo
 /hsccmd.lo
+/hscemode.lo
+/hscloc.lo
 /hscmisc.lo
+/hscpufun.lo
 /hscutl.lo
 /hscutl2.lo
 /hsocket.lo
@@ -153,6 +165,7 @@
 /libherct.la
 /libhercu.la
 /libtool
+/loadmem.lo
 /loadparm.lo
 /logger.lo
 /logmsg.lo
@@ -179,7 +192,13 @@
 /pttrace.lo
 /qdio.lo
 /qeth.lo
+/resolve.lo
+/rexx.lo
+/s37x.la
+/s37x.lo
+/s37xmod.lo
 /scedasd.lo
+/script.lo
 /scsitape.lo
 /service.lo
 /shared.lo
@@ -203,6 +222,7 @@
 /vector.lo
 /version.lo
 /vm.lo
+/vmd250.lo
 /vmfplc2
 /vstore.lo
 /w32chan.lo
