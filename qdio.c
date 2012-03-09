@@ -174,16 +174,17 @@ int     r1, r3;                /* Register numbers                   */
 int     b2;                    /* effective address base             */
 VADR    effective_addr2;       /* effective address                  */
 
+DEVBLK  *dev;                  /* Data device DEVBLK                 */
+OSA_GRP *grp;                  /* OSA Group device structure         */
+
 BYTE    state;                 /* Target buffer state                */
 BYTE    oldstate;              /* Current buffer state               */
 BYTE    nextstate;             /* Next buffer's state                */
 U32     queues;                /* Total number of queues             */
 U32     count;                 /* Number of buffers to set           */
-U32     qndx;                  /* Queue index                        */
+U32     qidx;                  /* Queue index                        */
 U32     bidx;                  /* SLSB buffer state index            */
 U64     slsba;                 /* Storage list state block address   */
-DEVBLK  *dev;                  /* Data device DEVBLK                 */
-OSA_GRP *grp;                  /* OSA Group device structure         */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -229,39 +230,38 @@ OSA_GRP *grp;                  /* OSA Group device structure         */
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;
 
-    qndx  = regs->GR_H(r1);       /* Queue index */
+    qidx  = regs->GR_H(r1);       /* Queue index */
     bidx  = regs->GR_L(r1);       /* Buffer index */
-    count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128;  /* Number of buffer */
+    count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
     state = effective_addr2 & 0xFF;
 
-    queues = (U32)(grp->i_qcnt + grp->o_qcnt);  /* Calculate number of queues */
+    queues = (U32)(grp->i_qcnt + grp->o_qcnt);
 
-    if ( (qndx >= queues) || (bidx > 127) )
+    if ( (qidx >= queues) || (bidx > 127) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    if (qndx < (U32)grp->i_qcnt)
-        slsba = grp->i_slsbla[qndx];
+    if (qidx < (U32)grp->i_qcnt)
+        slsba = grp->i_slsbla[qidx];
     else
-        slsba = grp->o_slsbla[qndx - grp->i_qcnt];
+        slsba = grp->o_slsbla[qidx - grp->i_qcnt];
 
     oldstate = nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
     while (count && oldstate == nextstate)
     {
-        /* set the new state */
         ARCH_DEP(wstoreb)(state, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
-        bidx++; bidx &= 0x7F;     /* Advance and wrap index */
+        bidx++; bidx &= 0x7F;              /* Advance and wrap index */
         count--;
 
-        if(!count)
+        if(count)
             nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
     }
 
 
-    regs->GR_L(r1) = bidx;    /* Return the next unchanged buffer state index */
-    regs->GR_L(r3) = count;  /* Return the number of unchanged buffers */
-    regs->GR_H(r3) = !count || state == nextstate ? 0 : 0x20;
+    regs->GR_L(r1) = bidx;              /* Return buffer state index */
+    regs->GR_L(r3) = count;    /* Return number of unchanged buffers */
+    regs->GR_H(r3) = !count || oldstate == nextstate ? 0 : 0x20;
     regs->psw.cc = 0;
 
     return;
@@ -276,16 +276,17 @@ DEF_INST(extract_queue_buffer_state)
 int     r1, r2, r3, m4;       /* Register numbers                    */
 VADR    effective_addr2 = 0;  /* effective address                   */
 
-int     autoack;              /* flag for auto-acknowkledgement      */
+DEVBLK  *dev;                 /* Data device DEVBLK                  */
+OSA_GRP *grp;                 /* OSA Group device structure          */
+
+int     autoack;              /* Flag for auto-acknowkledgement      */
 BYTE    state;                /* State extracted from first buffer   */
 BYTE    nextstate;            /*    next buffer                      */
 U32     queues;               /* Total number of queues              */
 U32     count;                /* Number of buffers to set            */
-U32     qndx;                 /* Queue index                         */
+U32     qidx;                 /* Queue index                         */
 U32     bidx;                 /* SLSB buffer state index             */
 U64     slsba;                /* Storage list state block address    */
-DEVBLK  *dev;                 /* Data device DEVBLK                  */
-OSA_GRP *grp;                 /* OSA Group device structure          */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
@@ -331,20 +332,20 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
     /* Locate the group device block */
     grp = (OSA_GRP*)dev->group->grp_data;
 
-    qndx  = regs->GR_H(r1);       /* Queue index */
-    bidx  = regs->GR_L(r1);       /* Buffer index */
-    autoack = (regs->GR_H(r2) & 0x80000000ULL);
+    qidx  = regs->GR_H(r1);                           /* Queue index */
+    bidx  = regs->GR_L(r1);                          /* Buffer index */
+    autoack = (regs->GR_H(r2) & 0x80000000);
     count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
 
-    queues = (U32)(grp->i_qcnt + grp->o_qcnt);  /* Calculate number of queues */
+    queues = (U32)(grp->i_qcnt + grp->o_qcnt);
 
-    if ( (qndx >= queues) || (bidx > 127) )
+    if ( (qidx >= queues) || (bidx > 127) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    if (qndx < (U32)grp->i_qcnt)
-        slsba = grp->i_slsbla[qndx];
+    if (qidx < (U32)grp->i_qcnt)
+        slsba = grp->i_slsbla[qidx];
     else
-        slsba = grp->o_slsbla[qndx - grp->i_qcnt];
+        slsba = grp->o_slsbla[qidx - grp->i_qcnt];
 
     state = nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
@@ -358,17 +359,19 @@ OSA_GRP *grp;                 /* OSA Group device structure          */
                         (SLSBE_INPUT_ACKED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
                     break;
 
+#if 0
                 case SLSBE_OUTPUT_COMPLETED:
                     ARCH_DEP(wstoreb)
                         (SLSBE_OUTPUT_PRIMED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
                     break;
+#endif
 
             }
 
-        bidx++; bidx &= 0x7F;             /* Advance and wrap index buffer */
+        bidx++; bidx &= 0x7F;              /* Advance and wrap index */
         count--;
 
-        if(!count)
+        if(count)
             nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
     }
 
