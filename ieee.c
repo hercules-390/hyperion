@@ -33,6 +33,20 @@
  *  (http://www.jhauser.us/arithmetic/SoftFloat.html).
  */
 
+
+/* SoftFloat was repackaged to reside in the main source path        */
+/* to provide FULL CROSS PLATFORM build compatibility.               */
+/* To make evident the SoftFloat rePackaging standardized names      */
+/* were used                                                         */
+/* mileu.h was renamed to SoftFloat-milieu.h and all the sources     */
+/* were modified accordingly.                                        */
+/* no other modifications were made                                  */
+/* no reason to clutter the copyright stuff for such a minor change  */
+/*                                                                   */
+/* the original unmodified SoftFloat package is still distributed    */
+/* in zipped format here as SoftFloat-2b.zip                         */
+
+
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)
@@ -66,7 +80,7 @@
 /*                                                                           */
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
-#include "milieu.h"
+#include "SoftFloat-milieu.h"
 #include "SoftFloat.h"
 #include "SoftFloat-macros.h"
 #include "SoftFloat-specialise.h"
@@ -88,12 +102,12 @@ static const float128  float128_neginf = { LIT64(0), LIT64( 0xFFFF000000000000 )
 static const float64   float64_neginf  = {           LIT64( 0xFFF0000000000000 ) };
 static const float32   float32_neginf  =                    0xFF800000;
 
-/* The following are the softfloat package callback functions. It calls
+/* The following are the SoftFloat package callback functions. It calls
    these functions during processing to perform implementation specific
    things, such as retrieving the rounding mode, setting and/or raising
    an IEEE Exception, etc. For our purposes we need to have the current
    REGS value passed, which is the purpose for the below GVARS context,
-   which we initially pass to softfloat who just passes it along to us.
+   which we initially pass to SoftFloat who just passes it along to us.
    PLEASE NOTE that none of the below callback functions must depend on
    the current architecture mode!
 */

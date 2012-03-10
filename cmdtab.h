@@ -411,12 +411,14 @@
                                 \
   "This command is deprecated. Use \"ecpsvm\" instead.\n"
 
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 #define exec_cmd_desc           "Execute a REXX script"
 #define exec_cmd_help           \
                                 \
   "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is the name of\n"      \
   "the REXX script, and 'args' are arguments (separated by spaces) to be\n"      \
   "passed to the script.\n"
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
@@ -992,6 +994,23 @@
 
 #define restart_cmd_desc        "Generate restart interrupt"
 #define resume_cmd_desc         "Resume hercules"
+
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#define rexx_cmd_desc           "Enable/Disable/display Rexx interpreter settings"
+#define rexx_cmd_help           \
+                                \
+  "Format: 'rexx [args]'\n"                                                      \
+  "<none>           - display rexx status\n"                                     \
+  "Disa[ble]        - disable rexx support\n"                                    \
+  "Ena[ble](regina) - enable regina rexx\n"                                      \
+  "Ena[ble](oorexx) - enable open object rexx\n"                                 \
+  "\n"                                                                           \
+  "Paths            - where to find rexx scripts\n"                              \
+  "Ext[ensions]     - what extensions to use for rexx scripts autodetect \n"     \
+  "Suf[fixes]       - same as above\n"                                           \
+  "Resolv/Noresolv  - resolve paths/extensions(suffixes)\n"
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+
 #define rmmod_cmd_desc          "Delete a module"
 #define sminus_cmd_desc         "Turn off instruction stepping"
 #define s_cmd_desc              "Instruction stepping"
@@ -1497,9 +1516,10 @@ COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        
 COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL )
 #endif
 #endif
-#if defined( HAVE_REXX )
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          rexx_cmd_desc,          rexx_cmd_help       )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
-#endif
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 #if defined( _MSVC_ )
 COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       dir_cmd_desc,           NULL                )
 #else

@@ -229,10 +229,10 @@ BYTE    c;                              /* Work area for sscanf      */
 char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */
 int     errorcount = 0;
-#if defined(HAVE_REXX)
-int     shell_flg = FALSE;              /* indicate it is has a shell 
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+int     shell_flg = FALSE;              /* indicate it is has a shell
                                            path specified            */
-#endif /*defined(HAVE_REXX)*/
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
     /* Open the base configuration file */
     hostpath(fname, cfg_name, sizeof(fname));
@@ -273,9 +273,9 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         /* Parse the statement just read */
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
-#if defined(HAVE_REXX)
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
         // Test for REXX script. If first card starts with "/*" or
-        // first card has shell path specification "#!" and second card 
+        // first card has shell path specification "#!" and second card
         // "/*", then we will process as a REXX script.
 
         if ( inc_level == 0 && inc_stmtnum[0] < 3 )
@@ -300,7 +300,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
                 goto rexx_done;
             }
         }
-#endif /*defined(HAVE_REXX)*/
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)   */
 
 #if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
@@ -355,7 +355,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 #else
                sscanf(addargv[0], "%x%c", &rc, &c) == 1 )
 #endif
-             || 
+             ||
         /* Also, if addargv[0] contains ':' (added by Harold Grovesteen jan2008)  */
         /* Added because device statements may now contain channel set or LCSS id */
              strchr( addargv[0], ':' )
@@ -478,9 +478,9 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 
     } /* end for(scount) (end of configuration file statement loop) */
 
-#if defined(HAVE_REXX)
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 rexx_done:
-#endif /*defined(HAVE_REXX)*/
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
 #if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
     /* close configuration file */
@@ -867,7 +867,7 @@ int     rc;                             /* (work)                    */
         goto script_end;
     }
 
-#if defined( HAVE_REXX )
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
     /* Skip past blanks to start of command */
     for (p = stmt; isspace( *p ); p++)
@@ -883,7 +883,7 @@ int     rc;                             /* (work)                    */
         goto script_end;
     }
 
-#endif /* defined( HAVE_REXX ) */
+#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
     // "Script %d: begin processing file '%s'"
     WRMSG( HHC02260, "I", pCtl->scr_id, script_path );

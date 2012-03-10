@@ -11,11 +11,11 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-SUBDIRS = decNumber SoftFloat m4 po util html man . crypto
+SUBDIRS = decNumber m4 po util html man . crypto
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I$(top_srcdir)/SoftFloat
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
@@ -144,7 +144,7 @@ endif
 # List of Libtool shared libraries & loadable modules
 #
 
-  HERCLIBS = 
+  HERCLIBS =
 
   HERCLIBS2 = libhercs.la  \
               libhercu.la \
@@ -262,7 +262,7 @@ if OPTION_DYNAMIC_LOAD
   hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdtptp_la_SOURCES  = ctc_ptp.c tuntap.c resolve.c
+  hdtptp_la_SOURCES  = resolve.c ctc_ptp.c w32ctca.c tuntap.c
   hdtptp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -385,6 +385,7 @@ endif
                        timer.c      \
                        esame.c      \
                        ieee.c       \
+                       SoftFloat.c  \
                        dfp.c        \
                        machdep.h    \
                        httpserv.c   \
@@ -402,7 +403,9 @@ endif
                        $(FISHIO)    \
                        $(DYNSRC)    \
                        ecpsvm.c     \
-                       rexx.c
+                       hRexx.c      \
+                       hRexx_o.c    \
+                       hRexx_r.c
 
   EXTRA_libherc_la_SOURCES = $(fthreads_SRC)  \
                              $(fishhang_SRC)  \
@@ -420,7 +423,6 @@ endif
                       libherct.la     \
                       libhercd.la     \
                       decNumber/libdecNumber.la \
-                      SoftFloat/libSoftFloat.la \
                       $(LDADD)
 
 #
@@ -650,7 +652,7 @@ EXTRA_DIST = autoconf/config.rpath \
              msvc.makefile.includes/PCRE_FLAGS.msvc   \
              msvc.makefile.includes/PCRE_RULES.msvc   \
              msvc.makefile.includes/PRIM_RULES.msvc   \
-             msvc.makefile.includes/REXX_DIR.msvc     \
+             msvc.makefile.includes/REXX_DIRS.msvc     \
              msvc.makefile.includes/REXX_FLAGS.msvc   \
              msvc.makefile.includes/REXX_RULES.msvc   \
              msvc.makefile.includes/VERSION.msvc      \
@@ -765,6 +767,7 @@ noinst_HEADERS = fishhang.h     \
                  dbgtrace.h     \
                  chain.h        \
                  extstring.h    \
+                 hRexx.h        \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

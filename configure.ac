@@ -9,9 +9,9 @@
 #    in the 'hercules.m4' file in the 'autoconf' subdirectory.
 
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
-AC_REVISION($Revision$)          # (the version of this configure.ac)
+AC_REVISION($Revision$)                 # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
-AM_INIT_AUTOMAKE(hercules,3.07)         # (the version of our software package)
+AM_INIT_AUTOMAKE(hercules,3.08)         # (the version of our software package)
 AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
@@ -412,6 +412,11 @@ AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in e
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
 
+AH_TEMPLATE( [ENABLE_OBJECT_REXX],             [Define to enable open object rexx support] )
+AH_TEMPLATE( [ENABLE_REGINA_REXX],             [Define to enable Regina Rexx support] )
+
+AH_TEMPLATE( [ENABLE_IPV6],                    [Define to enable IPV6 support] )
+
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
 ###############################################################################
@@ -571,16 +576,20 @@ AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_t
 AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
 AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
 AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
-AC_CHECK_HEADERS( sys/syscall.h,  [hc_cv_have_syscall_h=yes],      [hc_cv_have_syscall_h=no]      )
-AC_CHECK_HEADERS( rexxsaa.h,      [hc_cv_have_rexxsaa_h=yes],      [hc_cv_have_rexxsaa_h=no]      )
-AC_CHECK_HEADERS( regina/rexxsaa.h, [hc_cv_have_regina_rexxsaa_h=yes],    [hc_cv_have_regina_rexxsaa_h=no]    )
+AC_CHECK_HEADERS( sys/syscall.h,  [hc_cv_have_syscall_h=yes],      [hc_cv_have_syscall_h=no]    )
 
-if test "$hc_cv_have_rexxsaa_h" == "yes"  ||
-   test "$hc_cv_have_regina_rexxsaa_h" == "yes"; then
-
-    AC_DEFINE(HAVE_REXX)
-    AC_DEFINE([HAVE_REXX],[1],[Define to 1 if REXX is supported.])
-fi
+AC_CHECK_HEADERS( rexx.h,
+                  [hc_cv_have_oorexx_rexx_h=yes],
+                  [hc_cv_have_oorexx_rexx_h=no]    )
+AC_CHECK_HEADERS( oorexxapi.h,
+                  [hc_cv_have_oorexx_oorexxapi_h=yes],
+                  [hc_cv_have_oorexx_oorexxapi_h=no]    )
+AC_CHECK_HEADERS( oorexxerrors.h,
+                  [hc_cv_have_oorexx_oorexxerrors_h=yes],
+                  [hc_cv_have_oorexx_oorexxerrors_h=no]    )
+AC_CHECK_HEADERS( rexxsaa.h,
+                  [hc_cv_have_regina_rexxsaa_h=yes],
+                  [hc_cv_have_regina_rexxsaa_h=no]    )
 
 AC_CACHE_SAVE()
 
@@ -715,7 +724,6 @@ AC_CHECK_LIB( rt,     sched_yield    )
 #              error lies or if the statement is still required for Solaris
 #              To be further investigate...
 # AC_CHECK_LIB( pthread,pthread_create )
-AC_CHECK_LIB( regina, RexxStart      )
 
 AC_CACHE_SAVE()
 
@@ -1335,6 +1343,60 @@ AC_ARG_ENABLE( dynamic-load,
     [hc_cv_opt_dynamic_load=yes]
 )
 
+AC_ARG_ENABLE( object-rexx,
+
+    AC_HELP_STRING( [--enable-object-rexx],
+
+        [enable open object rexx support]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_ena_object_rexx=yes                      ;;
+        no)  hc_cv_ena_object_rexx=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'object-rexx' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_ena_object_rexx=no]
+)
+
+AC_ARG_ENABLE( regina-rexx,
+
+    AC_HELP_STRING( [--enable-regina-rexx],
+
+        [enable regina rexx support]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_ena_regina_rexx=yes                      ;;
+        no)  hc_cv_ena_regina_rexx=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'regina-rexx' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_ena_regina_rexx=no]
+)
+
+AC_ARG_ENABLE( ipv6,
+
+    AC_HELP_STRING( [--enable-ipv6],
+
+        [enable ipv6 support]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_ena_ipv6=yes                      ;;
+        no)  hc_cv_ena_ipv6=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'ipv6' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_ena_ipv6=yes]
+)
+
 AC_ARG_ENABLE( cckd-bzip2,
 
     AC_HELP_STRING( [--enable-cckd-bzip2],
@@ -1608,6 +1670,37 @@ AC_CACHE_SAVE()
 ###############################################################################
 #   Final default settings, final sanity / error checks...
 ###############################################################################
+if test "$hc_cv_ena_object_rexx" = "yes" ; then
+
+   if test "$hc_cv_have_oorexx_rexx_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) rexx.h is not available] )
+      hc_error=yes
+   fi
+
+   if test "$hc_cv_have_oorexx_oorexxapi_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
+      hc_error=yes
+   fi
+
+   if test "$hc_cv_have_oorexx_oorexxerrors_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxerrors.h is not available] )
+      hc_error=yes
+   fi
+
+fi
+
+if test "$hc_cv_ena_regina_rexx" = "yes" ; then
+
+   if test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
+      hc_error=yes
+   fi
+
+fi
 
 if test "$hc_cv_build_hercifc" = "yes"; then
 
@@ -1958,6 +2051,11 @@ test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETT
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 
+test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_OBJECT_REXX)
+test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_REGINA_REXX)
+
+test "$hc_cv_ena_ipv6"                    = "yes"  &&  AC_DEFINE(ENABLE_IPV6)
+
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||
    test $hc_cv_have_sigusr2      != yes ||
@@ -2068,7 +2166,7 @@ AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] 
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile decNumber/Makefile SoftFloat/Makefile] )
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
 
 ###############################################################################
 #   (end-of-file)

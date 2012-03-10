@@ -17,7 +17,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\ZLIB_DIR.msvc
 !INCLUDE $(INCDIR)\BZIP2_DIR.msvc
 !INCLUDE $(INCDIR)\PCRE_DIR.msvc
-!INCLUDE $(INCDIR)\REXX_DIR.msvc
+!INCLUDE $(INCDIR)\REXX_DIRS.msvc
 # ---------------------------------------------------------------------
 
 ###################################################

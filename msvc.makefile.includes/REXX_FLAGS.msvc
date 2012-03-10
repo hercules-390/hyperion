@@ -1,15 +1,46 @@
 # ***************************************************************************
 #     REXX_FLAGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2010
-# --------------------------------------------------------------------------
-# $Id$
+# (c) Copyright Enrico Sorichetti, 2012
 #
-#  Sets compiler and linker flags for REXX support
+# based on the previous REXX_FLAGS.msvc (c) Copyright Roger Bowler, 2010-2011
+#
+# --------------------------------------------------------------------------
+#
+#   Set compiler and linker flags for REXX support
+#
+#   $Id$
 #
 # ***************************************************************************
 
-!IFDEF REXX_DIR
-LIBS   = $(LIBS) "$(REXX_LIBPATH)"
-cflags = $(cflags) /D HAVE_REXX /I"$(REXX_INCDIR)" 
+!IFDEF OBJECT_REXX_DIR
+OBJECT_REXX_HEADER1 = $(OBJECT_REXX_DIR)\rexx.h
+OBJECT_REXX_HEADER2 = $(OBJECT_REXX_DIR)\oorexxapi.h
+OBJECT_REXX_HEADER1 = $(OBJECT_REXX_DIR)\oorexxerrors.h
+
+!IF EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER1)")
+cflgs1 =
+cflgs1 = $(cflgs1) /D HAVE_REXX_H
+cflgs1 = $(cflgs1) /D HAVE_OOREXXAPI.H
+cflgs1 = $(cflgs1) /D HAVE_OOREXXERRORS.H
+cflgs1 = $(cflgs1) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_DIR)"
+!MESSAGE OBJECT REXX FLAGS $(cflgs1)
+cflags = $(cflags) $(cflgs1)
 !ENDIF
+
+!ENDIF
+
+!IFDEF REGINA_REXX_DIR
+REGINA_REXX_HEADER1 = $(REGINA_REXX_DIR)\rexxsaa.h
+
+!IF EXISTS("$(REGINA_REXX_HEADER1)")
+cflgs2 =
+cflgs2 = $(cflgs2) /D HAVE_REXXSAA_H
+cflgs2 = $(cflgs2) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_DIR)"
+!MESSAGE REGINA REXX FLAGS $(cflgs2)
+cflags = $(cflags) $(cflgs2)
+!ENDIF
+
+!ENDIF
+
+# End of Rexx Flags for REXX support

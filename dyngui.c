@@ -258,7 +258,7 @@ void ReadInputData ( int nTimeoutMillsecs )
 
         WRMSG
         (
-            HHC01511, "S" 
+            HHC01511, "S"
             ,"read()"
             ,strerror(errno)
         );
@@ -471,7 +471,17 @@ void*  gui_panel_command (char* pszCommand)
         // build version. V1 and V2 however should ALWAYS be numbers and should
         // ALWAYS equal Hercules's actual build version...
 
-        gui_fprintf(fStatusStream,"MAINSIZE=%d.%d\n",V1,V2);
+        //  VERSION is set in configure.ac as x.xx
+        //  version is (char) parsed in makefile.bat to get (char) V1 V2 V3 V4
+        //  printing V2 with a %d format worked well until 3.07
+        //  when bumping to 3.08 the stupid C complained about a wrong octal
+        //  constant
+        //  since Fish asked for numbers only and the VERSION string is
+        //  set in configure.ac by reasonable people it is SAFE to expect that
+        //  it will always be a sequence of 2 digits numbers xx.xx.xx
+        //  so instead of using %d,%d V1,V2 it is right to ....
+
+        gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
 
         if (gui_version < 1.12)
             gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
@@ -588,7 +598,7 @@ void  UpdateStatus ()
                 )
                 {
                     started++;
-                    cpupct += sysblk.regs[ cpu ]->cpupct; 
+                    cpupct += sysblk.regs[ cpu ]->cpupct;
                 }
             }
             gui_fprintf(fStatusStream,
@@ -762,25 +772,25 @@ void  UpdateCPUStatus ()
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
         // CPU status line...  (PSW, status indicators, and instruction count)
-    
+
         gui_fprintf(fStatusStream, "STATUS="
-    
+
             "%s%02X "
-    
+
             "PSW=%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
-    
+
             "%c%c%c%c%c%c%c%c "
-    
+
             "instcount=%" I64_FMT "u\n"
-    
+
             ,PTYPSTR(pTargetCPU_REGS->cpuad), pTargetCPU_REGS->cpuad
-    
+
             ,psw[0], psw[1], psw[2],  psw[3]
             ,psw[4], psw[5], psw[6],  psw[7]
             ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
-    
+
             ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
             ,sysblk.inststep                               ? 'T' : '.'
             ,wait_bit                                      ? 'W' : '.'
@@ -1802,7 +1812,7 @@ void  NewUpdateDevStats ()
         {
             WRMSG
             (
-                HHC01540, "E" 
+                HHC01540, "E"
                 ,SSID_TO_LCSS(pDEVBLK->ssid)
                 ,pDEVBLK->devnum
             );
@@ -1961,8 +1971,8 @@ void gui_fprintf( FILE* stream, const char* pszFormat, ... )
     va_list vl;
     va_start( vl, pszFormat );
     obtain_lock ( &gui_fprintf_lock );
-    vfprintf( stream, pszFormat, vl ); 
-    fflush( stream );  
+    vfprintf( stream, pszFormat, vl );
+    fflush( stream );
     release_lock( &gui_fprintf_lock );
 }
 

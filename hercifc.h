@@ -50,7 +50,7 @@
   /* The in6_ifreq structure can be found in include/linux/ipv6.h */
   struct in6_ifreq {
     struct in6_addr ifr6_addr;
-    u_int32_t ifr6_prefixlen;
+    U32   ifr6_prefixlen;
     int   ifr6_ifindex;
   };
 #endif /*defined(HAVE_IPV6)*/
@@ -93,7 +93,11 @@
     int    hifr_afamily;
   };
 
+#if ( defined(__APPLE__) )
+  #define  hifr_name       ifreq.ifr_name
+#else
   #define  hifr_name       ifreq.ifr_ifrn.ifrn_name
+#endif
   #define  hifr_addr       ifreq.ifr_ifru.ifru_addr
   #define  hifr_netmask    ifreq.ifr_ifru.ifru_netmask
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr

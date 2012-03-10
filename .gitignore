@@ -193,7 +193,6 @@
 /qdio.lo
 /qeth.lo
 /resolve.lo
-/rexx.lo
 /s37x.la
 /s37x.lo
 /s37xmod.lo
@@ -232,13 +231,13 @@
 /winbuild
 /xstore.lo
 
+# /hRexx/
+/hRexx.lo
+/hRexx_o.lo
+/hRexx_r.lo
+
 # /SoftFloat/
-/SoftFloat/.deps
-/SoftFloat/.libs
-/SoftFloat/libSoftFloat.la
-/SoftFloat/Makefile
-/SoftFloat/Makefile.in
-/SoftFloat/SoftFloat.lo
+/SoftFloat.lo
 
 # /crypto/
 /crypto/.deps

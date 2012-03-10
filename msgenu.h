@@ -1935,14 +1935,33 @@ do { \
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is '%d' seconds"
 #define HHC17199 "%.4s '%s'"
 
-// Reserve 17500-17999 REXX Message
-#define HHC17500 "REXX(%s) Initialization failed"
-#define HHC17501 "REXX(%s) Exec file name missing"
-#define HHC17502 "REXX(%s) Exec returned error code: %s"
-#define HHC17503 "REXX(%s) Interpreter error code: %d"
-#define HHC17504 "REXX(%s) Unable to not open %s, error: %s"
-#define HHC17505 "REXX(%s) Could not load %s, error: %s"
-#define HHC17506 "REXX(%s) Could not register %s, return code: %d"
+// Reserve 17500-17999 for REXX Messages
+#define HHC17500 "REXX(%s) %s"
+#define HHC17501 "REXX(%s) %s"
+#define HHC17502 "REXX(%s) %s RC(%d)"
+#define HHC17503 "REXX(%s) Exec/Script '%s' RetRC(%d)"
+#define HHC17504 "REXX(%s) Exec/Script '%s' RetValue'%s'"
+#define HHC17505 "REXX(%s) Exec/script name not specified"
+#define HHC17506 "REXX(%s) Exec/script '%s' not found"
+#define HHC17507 "REXX(%s) Option '%s' needs a value"
+#define HHC17508 "REXX(%s) Option '%s' in argument (%d) is invalid"
+#define HHC17509 "REXX(%s) Value '%s' for option '%s' is invalid"
+#define HHC17510 "REXX(%s) Value '%s' length (%d) for option '%s' is invalid"
+
+#define HHC17520 "REXX(%s) %s"
+#define HHC17521 "REXX(%s) Support not started/enabled"
+#define HHC17522 "REXX(%s) Support already started/enabled"
+#define HHC17523 "REXX(%s) Start/Enable invalid in a single REXX environment"
+#define HHC17524 "REXX(%s) Stop/Disable invalid in a single REXX environment"
+#define HHC17525 "REXX(%s) Has been started/enabled"
+#define HHC17526 "REXX(%s) Has been stopped/disabled"
+
+#define HHC17530 "REXX(%s) %s"
+#define HHC17531 "REXX(%s) Dynamic library '%s' open/load error"
+#define HHC17532 "REXX(%s) Dynamic library '%s' close/free error"
+#define HHC17533 "REXX(%s) Unable to resolve symbol '%s' RC(%d)"
+#define HHC17534 "REXX(%s) Error Registering '%s' RC(%d)"
+#define HHC17535 "REXX(%s) Error Deregistering '%s' RC(%d)"
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"

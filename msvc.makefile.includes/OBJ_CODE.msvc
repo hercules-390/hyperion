@@ -131,7 +131,7 @@ hengine_OBJ = \
     $(O)hscmisc.obj  \
     $(O)httpserv.obj \
     $(O)ieee.obj     \
-    $(O)softfloat.obj \
+    $(O)SoftFloat.obj \
     $(O)impl.obj     \
     $(O)io.obj       \
     $(O)ipl.obj      \
@@ -144,7 +144,9 @@ hengine_OBJ = \
     $(O)pfpo.obj     \
     $(O)plo.obj      \
     $(O)qdio.obj     \
-    $(O)rexx.obj     \
+    $(O)hRexx.obj    \
+    $(O)hRexx_o.obj  \
+    $(O)hRexx_r.obj  \
     $(O)service.obj  \
     $(O)scedasd.obj  \
     $(O)sie.obj      \

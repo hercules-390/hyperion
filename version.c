@@ -60,104 +60,144 @@ static const char *build_info[] = {
 
 #if !defined(_MSVC_)
   #if defined(NO_SETUID)
-    "No setuid support",
+    "Without setuid support",
   #else
-    "Using "
+    "Using   "
     #if defined(HAVE_SETRESUID)
-      "setresuid()"
+     "setresuid()"
     #elif defined(HAVE_SETREUID)
-      "setreuid()"
+     "setreuid()"
     #else
-      "(UNKNOWN)"
+     "(UNKNOWN)"
     #endif
-    " for setting privileges",
+     " for setting privileges",
   #endif
 #endif
 
 #if defined( OPTION_FTHREADS )
-    "Using fthreads Threading Model",
+    "Using   fthreads Threading Model",
 #else
     #if defined( OPTION_WTHREADS )
-        "Using Windows Native Threading Model",
+        "Using   Windows Native Threading Model",
     #else
-        "Using POSIX threads Threading Model",
+        "Using   POSIX threads Threading Model",
     #endif
 #endif
 
 #if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
-    "Using Normal Mutex Locking Model",
+    "Using   Normal Mutex Locking Model",
 #elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
-    "Using Error-Checking Mutex Locking Model",
+    "Using   Error-Checking Mutex Locking Model",
 #elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
-    "Using Recursive Mutex Locking Model",
+    "Using   Recursive Mutex Locking Model",
 #else
-    "Using (undefined) Mutex Locking Model",
+    "Using   (undefined) Mutex Locking Model",
 #endif
 
 #if defined( OPTION_FISHIO)
-    "Using FishIO",
+    "Using   FishIO",
 #endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
-    "Dynamic loading support",
+    "With    Dynamic loading support",
 #else
-    "No Dynamic loading support",
+    "Without Dynamic loading support",
 #endif
 #if defined(HDL_BUILD_SHARED)
-    "Using shared libraries",
+    "Using   shared libraries",
 #else
-    "Using static libraries",
+    "Using   static libraries",
 #endif
 
-#if !defined(EXTERNALGUI)
-    "No External GUI support",
+#if defined(OPTION_CMDSER)
+    "With    'CONSOLE' command serialization",
+#else
+    "Without 'CONSOLE' command serialization",
+#endif
+
+
+#if defined(EXTERNALGUI)
+    "With    External GUI support",
+#else
+    "Without External GUI support",
+#endif
+
+#if defined(ENABLE_IPV6)
+    "With    IPV6 support",
+#else
+    "Without IPV6 support",
 #endif
 
 #if defined(OPTION_HTTP_SERVER)
-    "HTTP Server support",
+    "With    HTTP Server support",
 #if defined(PKGDATADIR) && defined(DEBUG)
-    "HTTP document default root directory is "PKGDATADIR,
+    "        HTTP document default root directory is "PKGDATADIR,
 #endif
+#else
+    "Without HTTP Server support",
 #endif
 
 #if defined(NO_IEEE_SUPPORT)
-    "No IEEE support",
+    "Without IEEE support",
 #else
-    #if !defined(HAVE_SQRTL)
-        "No sqrtl support",
+    #if defined(HAVE_SQRTL)
+        "With    sqrtl support",
+    #else
+        "Without sqrtl support",
     #endif
 #endif
 
 #if defined(NO_SIGABEND_HANDLER)
-    "No SIGABEND handler",
+    "Without SIGABEND handler",
+#else
+    "With    SIGABEND handler",
 #endif
 
-#if !defined(CCKD_BZIP2)
-    "No CCKD BZIP2 support",
+#if defined(CCKD_BZIP2)
+    "With    CCKD BZIP2 support",
+#else
+    "Without CCKD BZIP2 support",
 #endif
 
-#if !defined(HAVE_LIBZ)
-    "No ZLIB support",
+#if defined(HET_BZIP2)
+    "With    HET BZIP2 support",
+#else
+    "Without HET BZIP2 support",
+#endif
+
+#if defined(HAVE_LIBZ)
+    "With    ZLIB support",
+#else
+    "Without ZLIB support",
 #endif
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
-    "Regular Expressions support",
+    "With    Regular Expressions support",
+#else
+    "Without Regular Expressions support",
 #endif
 
-#if defined(HAVE_REXX)
-    "REXX(Regina) support",
+#if defined(ENABLE_OBJECT_REXX)
+    "With    Object REXX",
+#else
+    "Without Object REXX",
+#endif
+#if defined(ENABLE_REGINA_REXX)
+    "With    Regina REXX",
+#else
+    "Without Regina REXX",
 #endif
 
 #if defined(OPTION_HAO)
-    "Automatic Operator support",
-#endif
-
-#if !defined(HET_BZIP2)
-    "No HET BZIP2 support",
+    "With    Automatic Operator support",
+#else
+    "Without Automatic Operator support",
 #endif
 
 #if defined(ENABLE_NLS)
-    "National Language Support",
+    "With    National Language Support",
+#else
+    "Without National Language Support",
 #endif
 
     "Machine dependent assists:"
@@ -166,7 +206,7 @@ static const char *build_info[] = {
  && !defined( ASSIST_CMPXCHG8  ) \
  && !defined( ASSIST_CMPXCHG16 ) \
  && !defined( ASSIST_FETCH_DW  ) \
- && !defined( ASSIST_STORE_DW  ) 
+ && !defined( ASSIST_STORE_DW  )
     " (none)",
 #else
   #if defined( ASSIST_CMPXCHG1 )
