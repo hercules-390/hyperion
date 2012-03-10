@@ -10,6 +10,22 @@ since support is fully dynamic no library checking is done
 I hope to have done the proper error checking
 when loading the Rexx dynamic libraries and resolving the symbols
 
+oops I forgot about windows
+
+to enable REXX support on windows just
+set/export the environment variables
+OBJECT_REXX_DIR
+REGINA_REXX_DIR
+to the appropriate directory
+
+if the installation was standard
+for object rexx ==> <programs files>\oorexx\api
+
+for REGINA rexx the silly installer wants to install
+to c:\Regina, smarter to force the install to <Program Files>\regina
+anyway the include directory is <regina install path>\include
+
+
 when enabling multilanguange support, REXX is not <autostarted>
 the desired <package> must be manually started (*)
 
