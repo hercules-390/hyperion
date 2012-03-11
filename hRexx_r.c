@@ -25,7 +25,12 @@ _RETC_ = 0;\
 } while (0)
 
 #define INCL_REXXSAA
-#include "rexxsaa.h"
+#if defined(HAVE_REGINA_REXXSAA_H)
+ #include "regina/rexxsaa.h"
+#else
+ #include "rexxsaa.h"
+#endif
+
 #define RXAPI_MEMFAIL   1002
 
 #include "hRexx.h"

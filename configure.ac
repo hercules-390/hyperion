@@ -587,9 +587,12 @@ AC_CHECK_HEADERS( oorexxapi.h,
 AC_CHECK_HEADERS( oorexxerrors.h,
                   [hc_cv_have_oorexx_oorexxerrors_h=yes],
                   [hc_cv_have_oorexx_oorexxerrors_h=no]    )
-AC_CHECK_HEADERS( rexxsaa.h,
+AC_CHECK_HEADERS( regina/rexxsaa.h,
                   [hc_cv_have_regina_rexxsaa_h=yes],
                   [hc_cv_have_regina_rexxsaa_h=no]    )
+AC_CHECK_HEADERS( rexxsaa.h,
+                  [hc_cv_have_rexxsaa_h=yes],
+                  [hc_cv_have_rexxsaa_h=no]    )
 
 AC_CACHE_SAVE()
 
@@ -1376,7 +1379,14 @@ AC_ARG_ENABLE( regina-rexx,
              ;;
         esac
     ],
-    [hc_cv_ena_regina_rexx=no]
+    [
+     if test "$hc_cv_have_rexxsaa_h" == "yes" ||
+        test "$hc_cv_have_regina_rexxsaa_h" == "yes"; then
+         hc_cv_ena_regina_rexx=yes
+     else
+         hc_cv_ena_regina_rexx=no
+     fi
+    ]  
 )
 
 AC_ARG_ENABLE( ipv6,
@@ -1694,7 +1704,8 @@ fi
 
 if test "$hc_cv_ena_regina_rexx" = "yes" ; then
 
-   if test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
+   if test "$hc_cv_have_rexxsaa_h" != "yes" &&
+      test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
       hc_error=yes
