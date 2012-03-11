@@ -3808,6 +3808,8 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     {
         dev->sense[0] |= SENSE_IR;
         dev->sense[1] |= SENSE1_TAPE_FP;
+        dev->sense[1] &= ~SENSE1_TAPE_TUA;
+        dev->sense[1] |= SENSE1_TAPE_TUB;
     }
     else
     {
@@ -3815,6 +3817,8 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
         dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
             SENSE1_TAPE_FP : 0;
+        dev->sense[1] |= SENSE1_TAPE_TUA;
+        dev->sense[1] &= ~SENSE1_TAPE_TUB;
     }
     if (dev->tmh->passedeot(dev))
     {
