@@ -416,7 +416,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
 }   // End of function  TUNTAP_SetNetMask()
 #endif // OPTION_TUNTAP_SETNETMASK
 
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
 //
 // TUNTAP_SetIPAddr6
 //
@@ -472,8 +472,7 @@ int             TUNTAP_SetIPAddr6( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_SetIPAddr6()
-#endif /*defined(HAVE_IPV6)*/
-
+#endif /* defined(ENABLE_IPV6) */
 //
 // TUNTAP_SetMTU
 //

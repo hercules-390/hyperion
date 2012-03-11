@@ -412,10 +412,10 @@ AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in e
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
 
-AH_TEMPLATE( [ENABLE_OBJECT_REXX],             [Define to enable open object rexx support] )
-AH_TEMPLATE( [ENABLE_REGINA_REXX],             [Define to enable Regina Rexx support] )
+AH_TEMPLATE( [ENABLE_OBJECT_REXX],      [Define to enable open object rexx support] )
+AH_TEMPLATE( [ENABLE_REGINA_REXX],      [Define to enable Regina Rexx support] )
 
-AH_TEMPLATE( [ENABLE_IPV6],                    [Define to enable IPV6 support] )
+AH_TEMPLATE( [ENABLE_IPV6],             [Define to enable IPV6 support] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -579,14 +579,14 @@ AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_s
 AC_CHECK_HEADERS( sys/syscall.h,  [hc_cv_have_syscall_h=yes],      [hc_cv_have_syscall_h=no]    )
 
 AC_CHECK_HEADERS( rexx.h,
-                  [hc_cv_have_oorexx_rexx_h=yes],
-                  [hc_cv_have_oorexx_rexx_h=no]    )
+                  [hc_cv_have_rexx_h=yes],
+                  [hc_cv_have_rexx_h=no]    )
 AC_CHECK_HEADERS( oorexxapi.h,
-                  [hc_cv_have_oorexx_oorexxapi_h=yes],
-                  [hc_cv_have_oorexx_oorexxapi_h=no]    )
+                  [hc_cv_have_oorexxapi_h=yes],
+                  [hc_cv_have_oorexxapi_h=no]    )
 AC_CHECK_HEADERS( oorexxerrors.h,
-                  [hc_cv_have_oorexx_oorexxerrors_h=yes],
-                  [hc_cv_have_oorexx_oorexxerrors_h=no]    )
+                  [hc_cv_have_oorexxerrors_h=yes],
+                  [hc_cv_have_oorexxerrors_h=no]    )
 AC_CHECK_HEADERS( regina/rexxsaa.h,
                   [hc_cv_have_regina_rexxsaa_h=yes],
                   [hc_cv_have_regina_rexxsaa_h=no]    )
@@ -1362,12 +1362,12 @@ AC_ARG_ENABLE( object-rexx,
         esac
     ],
     [
-     if test "$hc_cv_have_oorexx_rexx_h" == "yes"; then
+     if test "$hc_cv_have_rexx_h" == "yes"; then
          hc_cv_ena_object_rexx=yes
      else
          hc_cv_ena_object_rexx=no
      fi
-    ]  
+    ]
 )
 
 AC_ARG_ENABLE( regina-rexx,
@@ -1392,7 +1392,7 @@ AC_ARG_ENABLE( regina-rexx,
      else
          hc_cv_ena_regina_rexx=no
      fi
-    ]  
+    ]
 )
 
 AC_ARG_ENABLE( ipv6,
@@ -1688,19 +1688,19 @@ AC_CACHE_SAVE()
 ###############################################################################
 if test "$hc_cv_ena_object_rexx" = "yes" ; then
 
-   if test "$hc_cv_have_oorexx_rexx_h" != "yes"; then
+   if test "$hc_cv_have_rexx_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) rexx.h is not available] )
       hc_error=yes
    fi
 
-   if test "$hc_cv_have_oorexx_oorexxapi_h" != "yes"; then
+   if test "$hc_cv_have_oorexxapi_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
       hc_error=yes
    fi
 
-   if test "$hc_cv_have_oorexx_oorexxerrors_h" != "yes"; then
+   if test "$hc_cv_have_oorexxerrors_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxerrors.h is not available] )
       hc_error=yes

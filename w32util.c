@@ -3011,15 +3011,18 @@ unsigned w32_if_nametoindex( const char* ifname )
 // (global variables)
 
 typedef LONG (NTAPI *PRTLIPV4ADDRESSTOSTRINGEXA)( const IN_ADDR*  pAddr,                 USHORT nPort, LPSTR pszAddressString, ULONG* pnAddressStringLength );
-typedef LONG (NTAPI *PRTLIPV6ADDRESSTOSTRINGEXA)( const IN6_ADDR* pAddr, ULONG nScopeId, USHORT nPort, LPSTR pszAddressString, ULONG* pnAddressStringLength );
 typedef LONG (NTAPI *PRTLIPV4STRINGTOADDRESSEXA)( PCSTR pszAddressString, BOOLEAN bStrict, IN_ADDR*  pAddress,                   USHORT* pnPort );
+static  PRTLIPV4ADDRESSTOSTRINGEXA  g_pRtlIpv4AddressToStringExA  = NULL;
+static  PRTLIPV4STRINGTOADDRESSEXA  g_pRtlIpv4StringToAddressExA  = NULL;
+
+#if defined(ENABLE_IPV6)
+typedef LONG (NTAPI *PRTLIPV6ADDRESSTOSTRINGEXA)( const IN6_ADDR* pAddr, ULONG nScopeId, USHORT nPort, LPSTR pszAddressString, ULONG* pnAddressStringLength );
 typedef LONG (NTAPI *PRTLIPV6STRINGTOADDRESSEXA)( PCSTR pszAddressString,                  IN6_ADDR* pAddress, ULONG* pnScopeId, USHORT* pnPort );
+static  PRTLIPV6ADDRESSTOSTRINGEXA  g_pRtlIpv6AddressToStringExA  = NULL;
+static  PRTLIPV6STRINGTOADDRESSEXA  g_pRtlIpv6StringToAddressExA  = NULL;
+#endif /* defined(ENABLE_IPV6) */
 
 static HMODULE                     g_hNtdll_dll                  = NULL;
-static PRTLIPV4ADDRESSTOSTRINGEXA  g_pRtlIpv4AddressToStringExA  = NULL;
-static PRTLIPV6ADDRESSTOSTRINGEXA  g_pRtlIpv6AddressToStringExA  = NULL;
-static PRTLIPV4STRINGTOADDRESSEXA  g_pRtlIpv4StringToAddressExA  = NULL;
-static PRTLIPV6STRINGTOADDRESSEXA  g_pRtlIpv6StringToAddressExA  = NULL;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // (Note: only available on Vista or greater)
@@ -3059,6 +3062,8 @@ const char* w32_inet_ntop( int af, const void* src, char* dst, socklen_t size )
         return NULL;
     }
 
+#if defined(ENABLE_IPV6)
+
     if (af == AF_INET6)
     {
         if (! g_pRtlIpv6AddressToStringExA &&
@@ -3076,6 +3081,7 @@ const char* w32_inet_ntop( int af, const void* src, char* dst, socklen_t size )
         errno = ENOSPC;
         return NULL;
     }
+#endif /* defined(ENABLE_IPV6) */
 
     errno = EAFNOSUPPORT;
     return NULL;
@@ -3116,6 +3122,7 @@ int w32_inet_pton( int af, const char* src, void* dst )
         return (g_pRtlIpv4StringToAddressExA( src, FALSE, dst, &nPort ) == NO_ERROR) ? TRUE : FALSE;
     }
 
+#if defined(ENABLE_IPV6)
     if (af == AF_INET6)
     {
         ULONG nScopeId;
@@ -3132,7 +3139,7 @@ int w32_inet_pton( int af, const char* src, void* dst )
 
         return (g_pRtlIpv6StringToAddressExA( src, dst, &nScopeId, &nPort ) == NO_ERROR) ? TRUE : FALSE;
     }
-
+#endif /* defined(ENABLE_IPV6) */
     errno = EAFNOSUPPORT;
     return -1;
 }
@@ -4097,7 +4104,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     if ( MLVL( DEBUG ) && err != 0 )
     {
         char msgbuf[MAX_PATH * 2];
-        MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) ); 
+        MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) );
         logmsg(MSG(HHC90000, "D", msgbuf));
     }
     return fh;

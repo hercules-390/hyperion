@@ -1,4 +1,4 @@
-/* CTC_PTP.C    (c) Copyright Ian Shorter, 2011                      */
+/* CTC_PTP.C    (c) Copyright Ian Shorter, 2011-2012                 */
 /*              MPC Point-To-Point (PTP)                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -16,10 +16,9 @@
 /* 0E20-0E21 PTP <optional parameters>                               */
 /* See README.NETWORKING for details.                                */
 
-
 #include "hstdinc.h"
 
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
 
 #include "hercules.h"
 #include "ctcadpt.h"
@@ -9974,5 +9973,4 @@ END_DEVICE_SECTION
 
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
-
-#endif /*defined(HAVE_IPV6)*/
+#endif /*defined(ENABLE_IPV6)*/

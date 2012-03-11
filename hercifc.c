@@ -16,7 +16,7 @@
 //
 // The are no command line arguments anymore.
 //
-// Error messages are written to stderr, which is redirected to 
+// Error messages are written to stderr, which is redirected to
 // the Hercules message log by ctcadpt.c
 //
 // The exit status is zero if successful, non-zero if error.
@@ -40,9 +40,9 @@ int main( int argc, char **argv )
     void*       pArg         = NULL;    // -> hifr or rtentry
     CTLREQ      ctlreq;                 // Request Buffer
     int         fd_inet;                // Socket descriptor
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
     int         fd_inet6;               // Socket descriptor
-#endif /*defined(HAVE_IPV6)*/
+#endif /* defined(ENABLE_IPV6) */
     int         fd;                     // FD for ioctl
     int         rc;                     // Return code
     pid_t       ppid;                   // Parent's PID
@@ -75,7 +75,7 @@ int main( int argc, char **argv )
         exit( 2 );
     }
 
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
     fd_inet6 = socket( AF_INET6, SOCK_DGRAM, 0 );
 
     if( fd_inet6 < 0 )
@@ -85,15 +85,15 @@ int main( int argc, char **argv )
                  pszProgName, strerror( errno ) );
         fd_inet6 = fd_inet;
     }
-#endif /*defined(HAVE_IPV6)*/
+#endif /* defined(ENABLE_IPV6) */
 
     ppid = getppid();
 
     // Process ioctl messages from Hercules
     while( 1 )
     {
-        rc = read( STDIN_FILENO, 
-                   &ctlreq, 
+        rc = read( STDIN_FILENO,
+                   &ctlreq,
                    CTLREQ_SIZE );
 
         if( rc == -1 )
@@ -128,14 +128,16 @@ int main( int argc, char **argv )
 
         case SIOCSIFADDR:
             pOp  = "SIOCSIFADDR";
-#if defined(HAVE_IPV6)
+
+#if defined(ENABLE_IPV6)
             if( ctlreq.iru.hifr.hifr_afamily == AF_INET6 )
             {
                 pArg = &ctlreq.iru.hifr.in6_ifreq;
                 fd = fd_inet6;
             }
             else
-#endif /*defined(HAVE_IPV6)*/
+#endif /* defined(ENABLE_IPV6) */
+
             {
                 pArg = &ctlreq.iru.hifr.ifreq;
             }

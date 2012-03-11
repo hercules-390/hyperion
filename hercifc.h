@@ -45,7 +45,7 @@
 
 #endif
 
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
 //FIXME: Temporary, should be part of the make system.
   /* The in6_ifreq structure can be found in include/linux/ipv6.h */
   struct in6_ifreq {
@@ -53,8 +53,7 @@
     U32   ifr6_prefixlen;
     int   ifr6_ifindex;
   };
-#endif /*defined(HAVE_IPV6)*/
-
+#endif /* defined(ENABLE_IPV6) */
 // The Hercules ifr (hifr) structure. Why? Because an ifreq stucture is
 // not large enough to hold inet6 addresses, an in6_ifreq structure is
 // needed for them. The hifr structure contains both an ifreq stucture
@@ -87,9 +86,9 @@
   struct hifr
   {
     struct ifreq ifreq;
-#if defined(HAVE_IPV6)
+#if defined(ENABLE_IPV6)
     struct in6_ifreq in6_ifreq;
-#endif /*defined(HAVE_IPV6)*/
+#endif /* defined(ENABLE_IPV6) */
     int    hifr_afamily;
   };
 
@@ -103,11 +102,12 @@
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr
   #define  hifr_flags      ifreq.ifr_ifru.ifru_flags
   #define  hifr_mtu        ifreq.ifr_ifru.ifru_mtu
-#if defined(HAVE_IPV6)
+
+#if defined(ENABLE_IPV6)
   #define  hifr6_addr      in6_ifreq.ifr6_addr
   #define  hifr6_prefixlen in6_ifreq.ifr6_prefixlen
   #define  hifr6_ifindex   in6_ifreq.ifr6_ifindex
-#endif /*defined(HAVE_IPV6)*/
+#endif /* defined(ENABLE_IPV6) */
 
 #if ( !defined(WIN32) && !defined(HAVE_LINUX_IF_TUN_H) ) || \
     (  defined(OPTION_W32_CTCI)                        )
