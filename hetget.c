@@ -200,8 +200,8 @@ merge( SLLABEL *lab )
     /*
     || Print DCB attributes
     */
-    logmsg( "DCB Attributes used:\n" );
-    logmsg( "  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d\n",
+    printf( "DCB Attributes used:\n" );
+    printf( "  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d\n",
         valfm[ i ].recfm,
         opts.lrecl,
         opts.blksize );
@@ -649,7 +649,7 @@ getfile( FILE *outf )
 void
 usage( char *name )
 {
-    logmsg( MSG( HHC02728, "I", name ) );
+    printf( MSG( HHC02728, "I", name ) );
 }
 
 /*
@@ -849,7 +849,7 @@ main( int argc, char *argv[] )
                     strcat( msgbuf2, msgbuf3 );
                 }
             }
-            logmsg( "%s", msgbuf );
+            printf( "%s", msgbuf );
             exit( 1 );
         }
 

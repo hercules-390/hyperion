@@ -358,8 +358,8 @@ main( int argc, char *argv[] )
 
     if( opts & O_ALL )
     {
-        logmsg( sep );
-        logmsg( "%-20.20s: %s\n", "Filename", argv[ optind ] );
+        printf( "%s", sep );
+        printf( "%-20.20s: %s\n", "Filename", argv[ optind ] );
     }
 
     i_filename = argv[ optind ];
@@ -377,12 +377,12 @@ main( int argc, char *argv[] )
     {
         if ( i_faketape )
         {
-            logmsg( "fet_open() returned %d\n", (int)rc );
+            printf( "fet_open() returned %d\n", (int)rc );
             fet_close( &fetb );
         }
         else
         {
-            logmsg( "het_open() returned %d\n", (int)rc );
+            printf( "het_open() returned %d\n", (int)rc );
             het_close( &hetb );
         }
         exit( 1 );
@@ -433,7 +433,7 @@ main( int argc, char *argv[] )
         {
             if( opts & O_TAPEMAP_OUTPUT )
             {
-                logmsg ("End of tape.\n");
+                printf ("End of tape.\n");
             }
             break;
         }
@@ -446,23 +446,23 @@ main( int argc, char *argv[] )
 
             if( opts & O_TAPEMAP_OUTPUT )
             {
-                logmsg ("File %d: Blocks=%d, block size min=%d, max=%d\n",
+                printf ("File %d: Blocks=%d, block size min=%d, max=%d\n",
                         (int)fileno, (int)gBlkCount, (int)uminsz, (int)umaxsz      );
             }
 
             if( opts & O_FILES )
             {
-                logmsg ( sep );
-                logmsg ( "%-20.20s: %d\n", "File #", (int)fileno );
-                logmsg ( "%-20.20s: %d\n", "Blocks", (int)gBlkCount );
-                logmsg ( "%-20.20s: %d\n", "Min Blocksize", (int)uminsz );
-                logmsg ( "%-20.20s: %d\n", "Max Blocksize", (int)umaxsz );
+                printf ( "%s", sep );
+                printf ( "%-20.20s: %d\n", "File #", (int)fileno );
+                printf ( "%-20.20s: %d\n", "Blocks", (int)gBlkCount );
+                printf ( "%-20.20s: %d\n", "Min Blocksize", (int)uminsz );
+                printf ( "%-20.20s: %d\n", "Max Blocksize", (int)umaxsz );
                 if ( !i_faketape )
                 {
-                    logmsg ( "%-20.20s: %d\n", "Uncompressed bytes", (int)ubytes );
-                    logmsg ( "%-20.20s: %d\n", "Min Blocksize-Comp", (int)cminsz );
-                    logmsg ( "%-20.20s: %d\n", "Max Blocksize-Comp", (int)cmaxsz );
-                    logmsg ( "%-20.20s: %d\n", "Compressed bytes", (int)cbytes );
+                    printf ( "%-20.20s: %d\n", "Uncompressed bytes", (int)ubytes );
+                    printf ( "%-20.20s: %d\n", "Min Blocksize-Comp", (int)cminsz );
+                    printf ( "%-20.20s: %d\n", "Max Blocksize-Comp", (int)cmaxsz );
+                    printf ( "%-20.20s: %d\n", "Compressed bytes", (int)cbytes );
                 }
             }
 
@@ -486,9 +486,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( i_faketape )
-                logmsg ( "fet_read() returned %d\n", (int)rc );
+                printf ( "fet_read() returned %d\n", (int)rc );
             else
-                logmsg ( "het_read() returned %d\n", (int)rc );
+                printf ( "het_read() returned %d\n", (int)rc );
             break;
         }
 
@@ -578,15 +578,15 @@ main( int argc, char *argv[] )
 
     if( opts & O_FILES )
     {
-        logmsg ( sep );
-        logmsg ( "%-20.20s:\n", "Summary" );
-        logmsg ( "%-20.20s: %d\n", "Files", (int)fileno );
-        logmsg ( "%-20.20s: %d\n", "Blocks", (int)totblocks );
+        printf ( "%s", sep );
+        printf ( "%-20.20s:\n", "Summary" );
+        printf ( "%-20.20s: %d\n", "Files", (int)fileno );
+        printf ( "%-20.20s: %d\n", "Blocks", (int)totblocks );
         if ( !i_faketape )
         {
-            logmsg ( "%-20.20s: %llu\n", "Uncompressed bytes", (unsigned long long)totubytes );
-            logmsg ( "%-20.20s: %llu\n", "Compressed bytes", (unsigned long long)totcbytes );
-            logmsg ( "%-20.20s: %llu\n", "Reduction", (unsigned long long)(totubytes - totcbytes) );
+            printf ( "%-20.20s: %llu\n", "Uncompressed bytes", (unsigned long long)totubytes );
+            printf ( "%-20.20s: %llu\n", "Compressed bytes", (unsigned long long)totcbytes );
+            printf ( "%-20.20s: %llu\n", "Reduction", (unsigned long long)(totubytes - totcbytes) );
         }
     }
 
@@ -619,16 +619,16 @@ Print_Dataset( SInt32 len, SInt32 fileno )
 
     if( sl_isvol( gBuffer, 1 ) )
     {
-        logmsg ( "vol=%-17.17s  owner=%s\n\n",
+        printf ( "vol=%-17.17s  owner=%s\n\n",
                fmt.slvol.volser,
                fmt.slvol.owner);
     }
     else if( sl_iseof( gBuffer, 1 ) )
     {
-        logmsg ( "seq=%-17d  file#=%d\n",
+        printf ( "seq=%-17d  file#=%d\n",
                atoi( fmt.slds1.dsseq ),
                (int)fileno );
-        logmsg ( "dsn=%-17.17s  crtdt=%-8.8s  expdt=%-8.8s  blocks=%d\n",
+        printf ( "dsn=%-17.17s  crtdt=%-8.8s  expdt=%-8.8s  blocks=%d\n",
                fmt.slds1.dsid,
                sl_fmtdate( crtdt, fmt.slds1.crtdt, TRUE ),
                sl_fmtdate( expdt, fmt.slds1.expdt, TRUE ),
@@ -641,7 +641,7 @@ Print_Dataset( SInt32 len, SInt32 fileno )
                                fmt.slds2.recfm ),
                        fmt.slds2.blkattr ),
                fmt.slds2.ctrl );
-        logmsg ( "job=%17.17s  recfm=%-3.3s       lrecl=%-5d     blksize=%-5d\n\n",
+        printf ( "job=%17.17s  recfm=%-3.3s       lrecl=%-5d     blksize=%-5d\n\n",
                fmt.slds2.jobid,
                recfm,
                atoi( fmt.slds2.lrecl ),
@@ -668,11 +668,11 @@ Print_Label( SInt32 len )
 
     sl_fmtlab( &fmt, &lab );
 
-    logmsg ( sep );
+    printf ( "%s", sep );
 
     for( i = 0; fmt.key[ i ] != NULL; i++ )
     {
-        logmsg ("%-20.20s: '%s'\n", fmt.key[ i ] , fmt.val[ i ] );
+        printf ("%-20.20s: '%s'\n", fmt.key[ i ] , fmt.val[ i ] );
     }
 
     return;
@@ -697,7 +697,7 @@ Print_Label_Tapemap( SInt32 len )
         labelrec[i] = guest_to_host(gBuffer[i]);
     }
     labelrec[i] = '\0';
-    logmsg ("%s\n", labelrec);
+    printf ("%s\n", labelrec);
 }
 
 /*
@@ -708,11 +708,11 @@ Print_Usage( char* name )
 {
     if  ((strcmp(name, "tapemap") == 0) || (strcmp(name, "TAPEMAP") == 0))
     {
-        logmsg ( help_tapemap, name, name );
+        printf ( help_tapemap, name, name );
     }
     else
     {
-        logmsg ( help_hetmap, name, name );
+        printf ( help_hetmap, name, name );
     }
 }
 
@@ -767,14 +767,14 @@ Print_Standard_Labels (void )
             TERMINATE(vsec);
             TERMINATE(owner);
 
-            logmsg ( "\n%-2s", "" );
+            printf ( "\n%-2s", "" );
 
             if ( atoi( lLblNum ) == 1 )
-                logmsg ( "Standard Label Tape\n\n%-4s"
+                printf ( "Standard Label Tape\n\n%-4s"
                         "VolSer: %-10s"
                         "Owner: %s\n", "", volser, owner );
             else
-                logmsg ( "%-4s %1s %-s\n", lLblType, lLblNum, &gStdLblBuffer[4] );
+                printf ( "%-4s %1s %-s\n", lLblType, lLblNum, &gStdLblBuffer[4] );
         }
             rc = TRUE;
             break;
@@ -829,7 +829,7 @@ Print_Standard_Labels (void )
                     }
                     else
                         if ( atoi( lLblNum ) == 1 )
-                            logmsg ("\f");
+                            printf ("\f");
 
                     if ( fseq[0] == '?' )       /* this is the indicator that IBM uses for seq no > 9999 ebcdic x'6f' */
                     {
@@ -842,54 +842,54 @@ Print_Standard_Labels (void )
                     else
                         gLastFileSeqSL = (UInt32)atol( fseq );
 
-                    logmsg ( "\n%-4s"
+                    printf ( "\n%-4s"
                             "SL File Seq: %-4d%-3s"
                             "DSNAME: %-20s"
                             , "", atoi( fseq ), "", fid );
 
-                    logmsg ( "Created: " );
+                    printf ( "Created: " );
                     if ( cdate[0] == ' ' )
                         if ( (int)( atol( &cdate[1] ) / 1000l ) < 1967 )
-                            logmsg ( "20" );
+                            printf ( "20" );
                         else
-                            logmsg ( "19" );
+                            printf ( "19" );
                     else
-                        logmsg ( "2%1c", cdate[0] );
-                    logmsg ( "%02d.%03d%-3s", (int)( atol( &cdate[1] ) / 1000l ), atoi( &cdate[3] ), "" );
+                        printf ( "2%1c", cdate[0] );
+                    printf ( "%02d.%03d%-3s", (int)( atol( &cdate[1] ) / 1000l ), atoi( &cdate[3] ), "" );
 
                     if ( strcmp ( &edate[1], "00000" ) !=0 )
                     {
-                        logmsg ( "Expires: " );
+                        printf ( "Expires: " );
                         if ( atoi ( &edate[3] ) == 0 )
-                            logmsg ( "TMS-%-5s", &edate[1] );
+                            printf ( "TMS-%-5s", &edate[1] );
                         else
                         {
                             if ( edate[0] == ' ' )
                                 if ( (int)( atol( &edate[1] ) / 1000l ) < 1967 )
-                                    logmsg ( "20" );
+                                    printf ( "20" );
                                 else
-                                    logmsg ( "19" );
+                                    printf ( "19" );
                             else
-                                logmsg ( "2%1c", edate[0] );
-                            logmsg ( "%02d.%03d%-1s", (int)( atol( &edate[1] ) / 1000l ), atoi( &edate[3] ), "" );
+                                printf ( "2%1c", edate[0] );
+                            printf ( "%02d.%03d%-1s", (int)( atol( &edate[1] ) / 1000l ), atoi( &edate[3] ), "" );
                         }
                     }
                     else
-                        logmsg ( "%-9s", "NO EXPDT" );
+                        printf ( "%-9s", "NO EXPDT" );
 
-                    logmsg ( "%-3sSystem: %s\n", "", impid );
+                    printf ( "%-3sSystem: %s\n", "", impid );
 
                     if ( gStdLblBuffer[0] == 'E' )
                     {
                         UInt64   lBlockCnt  = (UInt64)(atol( bcnt ) % 1000000l) + (UInt64)(atol( ebcnt ) * 1000000l);
-                        logmsg ( "%-4sBlock Count: "
+                        printf ( "%-4sBlock Count: "
                                 "Expected %llu; "
                                 "Actual %d",
                                 "", lBlockCnt, (int)gPrevBlkCnt );
                         if ( lBlockCnt == (UInt64)gPrevBlkCnt )
-                            logmsg ( "\n" );
+                            printf ( "\n" );
                         else
-                            logmsg ( "%-4s---> BLOCK COUNT MISMATCH <---\n", "" );
+                            printf ( "%-4s---> BLOCK COUNT MISMATCH <---\n", "" );
                     }
                     else
                     {
@@ -966,7 +966,7 @@ Print_Standard_Labels (void )
                     {
                         tmp[0] = dcb[0] = '\0';
 
-                        logmsg ( "%-4sCreated by: Job %-8s; Step %-11s%-6s"
+                        printf ( "%-4sCreated by: Job %-8s; Step %-11s%-6s"
                                 , "", jname, sname, "" );
 
                         strcat ( dcb, "DCB=(RECFM=" );
@@ -995,18 +995,18 @@ Print_Standard_Labels (void )
 
                         strcat ( dcb, ")" );
 
-                        logmsg ( "%-51s", dcb );
+                        printf ( "%-51s", dcb );
 
                         if ( mltv[0] == '1' || atoi( gMltVolSeq ) > 1 )
-                            logmsg ( "\n%-4sTape is part %d of multi-volume set %s\n", "", atoi( gMltVolSeq ), gMltVolSet );
+                            printf ( "\n%-4sTape is part %d of multi-volume set %s\n", "", atoi( gMltVolSeq ), gMltVolSet );
 
                         if ( rtech[0] == 'P' )
-                            logmsg ( "%-3sCompression: IDRC", "" );
+                            printf ( "%-3sCompression: IDRC", "" );
 
-                        logmsg ( "\n" );
+                        printf ( "\n" );
                     }
                     else
-                        logmsg( "======================================"
+                        printf( "======================================"
                                 "======================================"
                                 "======================================"
                                 "======================================\n" );
@@ -1014,7 +1014,7 @@ Print_Standard_Labels (void )
                     break;
 
                 default:
-                    logmsg ( "%-4s %1d %-s\n", lLblType, *lLblNum, &gStdLblBuffer[4] );
+                    printf ( "%-4s %1d %-s\n", lLblType, *lLblNum, &gStdLblBuffer[4] );
                     break;
             }
         }
@@ -1022,7 +1022,7 @@ Print_Standard_Labels (void )
             break;
 
         case        3:
-            logmsg ( "%-4s %1d %-s\n", lLblType, *lLblNum, &gStdLblBuffer[4] );
+            printf ( "%-4s %1d %-s\n", lLblType, *lLblNum, &gStdLblBuffer[4] );
             rc = TRUE;
             break;
 
@@ -1091,7 +1091,7 @@ Print_Block_Data    ( SInt32 prtlen )
 
     BLANK_OUT ( lPadding, J );
 
-    logmsg ( "\n\nADDR%-4sBLOCK %-2d BYTES %-6d%s*%s%s%s|%s%s%s*\n"
+    printf ( "\n\nADDR%-4sBLOCK %-2d BYTES %-6d%s*%s%s%s|%s%s%s*\n"
             , ""
             , (int)gBlkCount
             , (int)lAmt2Prt
@@ -1111,7 +1111,7 @@ Print_Block_Data    ( SInt32 prtlen )
             Kl = Kr;
         }
 
-        logmsg ( "%04X    ", (int)B );
+        printf ( "%04X    ", (int)B );
         BLANK_OUT ( pAscii, bytes_per_line + 1 );
         BLANK_OUT ( pEbcdic, bytes_per_line + 1 );
         bcopy ( &pAsciiBuf[B], pAscii, Kl ); pAscii[bytes_per_line] = '\0';
@@ -1119,16 +1119,16 @@ Print_Block_Data    ( SInt32 prtlen )
 
         for ( Cl = 4, J = 0; J < Kl; J++ )
         {
-            logmsg( "%02X", gBuffer[B++] );
+            printf( "%02X", gBuffer[B++] );
             Cl += 2;
-            if ( ( ( J + 1 ) % 16 ) == 0 ) { Cl++; logmsg ( " " ); }
-            if ( ( ( J + 1 ) % 4 ) == 0 ) { Cl++; logmsg ( " " ); }
+            if ( ( ( J + 1 ) % 16 ) == 0 ) { Cl++; printf ( " " ); }
+            if ( ( ( J + 1 ) % 4 ) == 0 ) { Cl++; printf ( " " ); }
         }
 
-        logmsg ( "%s*%s|%s*\n", ( pSpaces + Cl ), pEbcdic, pAscii );
+        printf ( "%s*%s|%s*\n", ( pSpaces + Cl ), pEbcdic, pAscii );
     }
 
-    logmsg ( "\n" );
+    printf ( "\n" );
 
     return ( lAmt2Prt );
 }
