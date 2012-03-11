@@ -33,6 +33,7 @@ the REXX command is used to manage the Rexx environment
 
 rexx start oorexx/regina
 rexx stop
+! enable/disable are the alternative forms
 
 to tell rexx what path to use to search for the execs
 rexx paths < a list of paths >
@@ -87,5 +88,9 @@ well You are all smart enough to understand how it works
 
 enoug documenation for now! I am fed up of writing :-)
 
-
-
+! oops I forgot an important thing ...
+! when starting/enabling object rexx receiving a 1002 error is not really
+! a RXAPI_MEMFAIL
+! it is a consequence of the RXAPI daemon not being active
+! it should be enough to start it according to the documentation
+! or have it autostarted at ipl/boot time
