@@ -1361,7 +1361,13 @@ AC_ARG_ENABLE( object-rexx,
              ;;
         esac
     ],
-    [hc_cv_ena_object_rexx=no]
+    [
+     if test "$hc_cv_have_oorexx_rexx_h" == "yes"; then
+         hc_cv_ena_object_rexx=yes
+     else
+         hc_cv_ena_object_rexx=no
+     fi
+    ]  
 )
 
 AC_ARG_ENABLE( regina-rexx,
