@@ -1222,12 +1222,15 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   notrunc:1;              /* 1=do not truncate at open */
 
         u_int   fcbsupp:1;              /* fcb support flag          */
-        u_int   rawcc:1;                /* 1=just print cchr and data*/
+        u_int   cc:1;                   /* emit line controls        */
+        u_int   rawcc:1;                /* emit just cc(hex) and data*/
+        u_int   fcbcheck:1;             /* signal FCB errors         */
         u_int   nofcbcheck:1;           /* ignore FCB errors         */
         u_int   ccpend:1;               /* cc process pending        */
+        u_int   chskip:1;               /* cc process pending        */
 
-        int     optbrowse;              /* optimize for browse  1    */
-                                        /* optimize for print   0    */
+        int     print;                  /* optimize for print   0    */
+        int     browse;                 /* optimize for browse  1    */
 
         int     lpi;                    /* lines per inch 6/8        */
         int     index;                  /* 3211 indexing             */

@@ -1,4 +1,5 @@
-/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2011                */
+/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Enrico Sorichetti, 2012               */
 /*              ESA/390 Line Printer Device Handler                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -71,7 +72,7 @@ static BYTE printer_immed_commands[256]=
 int line;
 int coun;
 int chan;
-int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61} ;
+int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
 int havechan;
 
 #define WRITE_LINE() \
@@ -86,7 +87,7 @@ do { \
     { \
         for (i = 1; i < dev->index; i++) \
         { \
-            dev->buf[dev->bufoff] = SPACE ; \
+            dev->buf[dev->bufoff] = SPACE; \
             dev->bufoff++; \
             dev->bufres--; \
         } /* end for(i) */ \
@@ -127,28 +128,30 @@ do { \
     havechan = 0; \
     for ( i = 0; i <= dev->lpp; i++ ) \
     { \
-        line = 1 + ( dev->currline + i ) - dev->lpp * ( ( dev->currline + i ) / dev->lpp ) ; \
+        line = 1 + ( dev->currline + i ) - dev->lpp * ( ( dev->currline + i ) / dev->lpp ); \
         if ( dev->fcb[line] != chan )  \
-            continue ; \
-        havechan = 1 ; \
-        dev->destline = line ; \
-        break ; \
+            continue; \
+        havechan = 1; \
+        dev->destline = line; \
+        break; \
     } \
     if ( havechan == 1 ) \
     { \
-        if ( dev->destline <= dev->currline ) \
+        if ( ( dev->destline < dev->currline ) ||  \
+             ( dev->chskip == 1 && dev->destline <= dev->currline ) ) \
         { \
+            dev->chskip = 0; \
             write_buffer (dev, "\f", 1, unitstat); \
-            if (*unitstat != 0) return ; \
-            dev->currline = 1 ; \
+            if (*unitstat != 0) return; \
+            dev->currline = 1; \
         } \
-        for ( ; dev->currline < dev->destline ; dev->currline++ ) \
+        for (; dev->currline < dev->destline; dev->currline++ ) \
         { \
             write_buffer (dev, "\n", 1, unitstat); \
             if (*unitstat != 0) return; \
         } \
         *unitstat = CSW_CE | CSW_DE; \
-        return ; \
+        return; \
     } \
     /* channel not found */ \
     { \
@@ -162,7 +165,7 @@ do { \
         } \
         else \
         { \
-            dev->sense[0] = (dev->devtype == 0x1403 ) ? SENSE_EC :SENSE_EC ; \
+            dev->sense[0] = (dev->devtype == 0x1403 ) ? SENSE_EC :SENSE_EC; \
             *unitstat = CSW_CE | CSW_DE | CSW_UC; \
             return; \
         } \
@@ -186,7 +189,7 @@ static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
         if (dev->fcb[i] != 0)
         {
             MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
-            sep[0] = ',' ;
+            sep[0] = ',';
             if (strlen(buf) + strlen(wrk) >= buflen - 4)
             {
                 /* Too long, truncate it */
@@ -352,15 +355,19 @@ int   sockdev = 0;                     /* 1 == is socket device     */
 
     /* initialize the new fields for FCB+ support */
     dev->fcbsupp = 1;
+    dev->cc = 0;
     dev->rawcc = 0;
+    dev->fcbcheck = 1;
     dev->nofcbcheck = 0;
     dev->ccpend = 0;
+    dev->chskip = 0;
 
     dev->prevline = 1;
     dev->currline = 1;
     dev->destline = 1;
 
-    dev->optbrowse = 1;
+    dev->print = 1;
+    dev->browse = 0;
 
     dev->lpi = 6;
     dev->index = 0;
@@ -371,8 +378,8 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         if ( FCBMASK[i] != 0 )
             dev->fcb[FCBMASK[i]] = i;
     }
-    dev->lpp = FCBMASK[0] ;
-    dev->fcbisdef = 0 ;
+    dev->lpp = FCBMASK[0];
+    dev->fcbisdef = 0;
 
     /* Process the driver arguments */
     for (iarg = 1; iarg < argc; iarg++)
@@ -400,34 +407,46 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             continue;
         }
 
+        if (strcasecmp(argv[iarg], "cc") == 0)
+        {
+            dev->cc = 1;
+            dev->rawcc = 0;
+            continue;
+        }
         if (strcasecmp(argv[iarg], "rawcc") == 0)
         {
+            dev->cc = 0;
             dev->rawcc = 1;
-            dev->optbrowse = 0;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "nofcbcheck") == 0)
         {
+            dev->fcbcheck = 0;
             dev->nofcbcheck = 1;
             continue;
         }
 
         if (strcasecmp(argv[iarg], "fcbcheck") == 0)
         {
+            dev->fcbcheck = 1;
             dev->nofcbcheck = 0;
             continue;
         }
 
-        if (strcasecmp(argv[iarg], "optbrowse") == 0)
+        if ( (strcasecmp(argv[iarg], "browse") == 0) ||
+             (strcasecmp(argv[iarg], "optbrowse") == 0 ) )
         {
-            dev->optbrowse = 1;
+            dev->print = 0;
+            dev->browse = 1;
             continue;
         }
 
-        if (strcasecmp(argv[iarg], "optprint") == 0)
+        if ( (strcasecmp(argv[iarg], "print") == 0 ) ||
+             (strcasecmp(argv[iarg], "optprint") == 0) )
         {
-            dev->optbrowse = 0;
+            dev->print = 1;
+            dev->browse = 0;
             continue;
         }
 
@@ -435,10 +454,10 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             ptr = argv[iarg]+4;
             errno = 0;
-            dev->lpi = (int) strtoul(ptr,&nxt,10) ;
+            dev->lpi = (int) strtoul(ptr,&nxt,10);
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->lpi != 6 && dev->lpi != 8 ) )
             {
-                j = ptr - argv[iarg] ;
+                j = ptr - argv[iarg];
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                 return -1;
             }
@@ -454,10 +473,10 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             }
             ptr = argv[iarg]+6;
             errno = 0;
-            dev->index = (int) strtoul(ptr,&nxt,10) ;
+            dev->index = (int) strtoul(ptr,&nxt,10);
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->index < 0 || dev->index > 15) )
             {
-                j = ptr - argv[iarg] ;
+                j = ptr - argv[iarg];
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                 return -1;
             }
@@ -468,10 +487,10 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             ptr = argv[iarg]+4;
             errno = 0;
-            dev->lpp = (int) strtoul(ptr,&nxt,10) ;
+            dev->lpp = (int) strtoul(ptr,&nxt,10);
             if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->lpp > FCBSIZE)
             {
-                j = ptr - argv[iarg] ;
+                j = ptr - argv[iarg];
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                 return -1;
             }
@@ -482,20 +501,20 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             ptr = argv[iarg]+7;
             errno = 0;
-            dev->ffchan = (int) strtoul(ptr,&nxt,10) ;
+            dev->ffchan = (int) strtoul(ptr,&nxt,10);
             if (errno != 0 || nxt == ptr || *nxt != 0 ||  dev->ffchan < 1 || dev->ffchan > 12)
             {
-                j = ptr - argv[iarg] ;
+                j = ptr - argv[iarg];
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                 return -1;
             }
-            continue ;
+            continue;
         }
 #endif
 
         if (strncasecmp("fcb=", argv[iarg], 4) == 0)
         {
-            for (line = 0 ; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
+            for (line = 0; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
             /* check for simple mode */
             if ( strstr(argv[iarg],":") )
             {
@@ -504,26 +523,26 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                 while (*ptr)
                 {
                     errno = 0;
-                    line = (int) strtoul(ptr,&nxt,10) ;
+                    line = (int) strtoul(ptr,&nxt,10);
                     if (errno != 0 || *nxt != ':' || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
                     {
-                        j = ptr - argv[iarg] ;
+                        j = ptr - argv[iarg];
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
 
-                    ptr = nxt + 1 ;
+                    ptr = nxt + 1;
                     errno = 0;
-                    chan = (int) strtoul(ptr,&nxt,10) ;
+                    chan = (int) strtoul(ptr,&nxt,10);
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
                     {
-                        j = ptr - argv[iarg] ;
+                        j = ptr - argv[iarg];
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
                     dev->fcb[line] = chan;
-                    if ( nxt == 0 )
-                        break ;
+                    if ( *nxt == 0 )
+                        break;
                     ptr = nxt + 1;
                 }
 
@@ -536,28 +555,28 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                 while (*ptr)
                 {
                     errno = 0;
-                    line = (int) strtoul(ptr,&nxt,10) ;
+                    line = (int) strtoul(ptr,&nxt,10);
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
                     {
-                        j = ptr - argv[iarg] ;
+                        j = ptr - argv[iarg];
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
                     chan += 1;
                     if ( chan > 12 )
                     {
-                        j = ptr - argv[iarg] ;
+                        j = ptr - argv[iarg];
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                         return -1;
                     }
                     dev->fcb[line] = chan;
-                    if ( nxt == 0 )
-                        break ;
+                    if ( *nxt == 0 )
+                        break;
                     ptr = nxt + 1;
                 }
                 if ( chan != 12 )
                 {
-                    j = 5 ;
+                    j = 5;
                     WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
                     return -1;
                 }
@@ -571,9 +590,9 @@ int   sockdev = 0;                     /* 1 == is socket device     */
     }
 
     /* Check for incompatible options */
-    if (dev->rawcc && dev->optbrowse)
+    if (dev->rawcc && dev->browse)
     {
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "rawcc/optbrowse");
+        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "rawcc/browse");
         return -1;
     }
 
@@ -636,7 +655,7 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
                 (dev->bs         ? " sockdev"      : ""),
                 (dev->crlf       ? " crlf"         : ""),
                 (dev->notrunc    ? " noclear"      : ""),
-                (dev->rawcc      ? " rawcc"        : dev->optbrowse  ? " brwse"    : " print"),
+                (dev->rawcc      ? " rawcc"        : dev->browse  ? " brwse"    : " print"),
                 (dev->nofcbcheck ? " nofcbck"   : " fcbck"),
                 (dev->stopdev    ? " (stopped)"    : ""),
                 dev->excps );
@@ -951,7 +970,7 @@ char            wbuf[150];
             return;
         }
 
-        if ( dev->optbrowse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0) )
+        if ( dev->browse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0) )
         {
             dev->ccpend = 0;
             /* dev->currline++; */
@@ -963,10 +982,11 @@ char            wbuf[150];
         {
             if    ( code <= 0x80 ) /* line control */
             {
-                coun = code / 8 ;
+                coun = code / 8;
                 if ( coun == 0 )
                 {
-                    if ( dev->optbrowse )
+                    dev->chskip = 1;
+                    if ( dev->browse )
                     {
                         dev->ccpend = 1;
                         *unitstat = 0;
@@ -978,7 +998,7 @@ char            wbuf[150];
                     return;
                 }
 
-                dev->ccpend = 0 ;
+                dev->ccpend = 0;
                 dev->currline += coun;
                 write_buffer(dev, nls, coun, unitstat);
                 if (*unitstat == 0)
@@ -988,14 +1008,14 @@ char            wbuf[150];
             else  /*code >  0x80*/ /* chan control */
             {
                 /*
-                if ( dev->optbrowse )
+                if ( dev->browse )
                 {
                     dev->currline++;
                     write_buffer(dev, "\n", 1, unitstat);
                     if (*unitstat != 0) return;
                 }
                 */
-                chan = ( code - 128 ) / 8 ;
+                chan = ( code - 128 ) / 8;
                 if ( chan == 1 )
                 {
                     write_buffer(dev, "\r", 1, unitstat);
@@ -1046,8 +1066,8 @@ char            wbuf[150];
 
         if    ( code <= 0x80 ) /* line control */
         {
-            coun = code / 8 ;
-            dev->ccpend = 0 ;
+            coun = code / 8;
+            dev->ccpend = 0;
             dev->currline += coun;
             write_buffer(dev, nls, coun, unitstat);
             if (*unitstat == 0)
@@ -1057,22 +1077,22 @@ char            wbuf[150];
         else  /*code >  0x80*/ /* chan control */
         {
             /*
-            if ( dev->optbrowse && dev->ccpend)
+            if ( dev->browse && dev->ccpend)
             {
-                coun = 1 ;
-                dev->ccpend = 0 ;
+                coun = 1;
+                dev->ccpend = 0;
                 dev->currline += coun;
                 write_buffer(dev, nls, coun, unitstat);
                 if (*unitstat != 0) return;
             }
             */
-            chan = ( code - 128 ) / 8 ;
+            chan = ( code - 128 ) / 8;
             SKIP_TO_CHAN();
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
             return;
         }
-        break ;
+        break;
 
     case 0x63:
     /*---------------------------------------------------------------*/
@@ -1099,7 +1119,7 @@ char            wbuf[150];
         {
             int i = 0;
             int j = 1;
-            int more = 1 ;
+            int more = 1;
             for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;
 
             dev->lpi = 6;
@@ -1116,7 +1136,7 @@ char            wbuf[150];
                 i = 1;
             }
 
-            for ( ; i < count && j <= FCBSIZE && more ; i++, j++)
+            for (; i < count && j <= FCBSIZE && more; i++, j++)
             {
                 dev->fcb[i] = iobuf[i] & 0x0f;
                 if (dev->fcb[j] > 12)
@@ -1294,6 +1314,7 @@ char            wbuf[150];
 
         /* Set fold indicator and return normal status */
         dev->fold = 1;
+        dev->chskip = 1;
     /*
         *residual = 0;
     */
@@ -1314,6 +1335,8 @@ char            wbuf[150];
 
         /* Reset fold indicator and return normal status */
         dev->fold = 0;
+        dev->chskip = 1;
+
     /*
         *residual = 0;
     */
