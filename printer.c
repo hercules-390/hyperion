@@ -131,7 +131,7 @@ do { \
 #define SKIP_TO_CHAN() \
 do { \
     havechan = 0; \
-    for ( i = 0; i <= dev->lpp; i++ ) \
+    for ( i = 0; i < dev->lpp; i++ ) \
     { \
         line = LINENUM( dev->currline + i ); \
         if ( dev->fcb[line] != chan )  \
