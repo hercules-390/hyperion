@@ -40,6 +40,7 @@
 /con1052c.lo
 /config.h
 /config.h.in
+/config.h.in~
 /config.lo
 /config.log
 /config.status
@@ -193,6 +194,7 @@
 /qdio.lo
 /qeth.lo
 /resolve.lo
+/rexx.lo
 /s37x.la
 /s37x.lo
 /s37xmod.lo
@@ -238,6 +240,12 @@
 
 # /SoftFloat/
 /SoftFloat.lo
+/SoftFloat/.deps
+/SoftFloat/.libs
+/SoftFloat/Makefile
+/SoftFloat/Makefile.in
+/SoftFloat/SoftFloat.lo
+/SoftFloat/libSoftFloat.la
 
 # /crypto/
 /crypto/.deps
