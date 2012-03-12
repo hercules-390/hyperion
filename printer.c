@@ -1,5 +1,5 @@
 /* PRINTER.C    (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Enrico Sorichetti, 2012               */
+/*              (c) Copyright Enrico Sorichetti, 2012                */
 /*              ESA/390 Line Printer Device Handler                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -75,6 +75,8 @@ int chan;
 int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
 int havechan;
 
+#define LINENUM(n)  ( 1 + ( ( (n)-1) % dev->lpp))
+
 #define WRITE_LINE() \
 do { \
     /* Start a new record if not data-chained from previous CCW */ \
@@ -123,12 +125,15 @@ do { \
     /* Return normal status */ \
 } while(0)
 
+/* changed to                                                 */
+/* search the fcb array starting at the CURRENT line position */
+/* check if the previous operation was a write no space       */
 #define SKIP_TO_CHAN() \
 do { \
     havechan = 0; \
     for ( i = 0; i <= dev->lpp; i++ ) \
     { \
-        line = 1 + ( dev->currline + i ) - dev->lpp * ( ( dev->currline + i ) / dev->lpp ); \
+        line = LINENUM( dev->currline + i ); \
         if ( dev->fcb[line] != chan )  \
             continue; \
         havechan = 1; \
