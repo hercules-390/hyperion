@@ -999,16 +999,21 @@
 #define rexx_cmd_desc           "Enable/Disable/display Rexx interpreter settings"
 #define rexx_cmd_help           \
                                 \
-  "Format: 'rexx [args]'\n"                                                      \
+  "Format: 'rexx [option parms]'\n"                                                      \
   "<none>           - display rexx status\n"                                     \
-  "Disa[ble]        - disable rexx support\n"                                    \
-  "Ena[ble](regina) - enable regina rexx\n"                                      \
-  "Ena[ble](oorexx) - enable open object rexx\n"                                 \
+  "Disa[ble]        - stop/disable rexx support\n"                               \
+  "Ena[ble] regina  - enable regina rexx\n"                                      \
+  "Ena[ble] oorexx  - enable open object rexx\n"                                 \
+  "Start/Stop can be used instead of Enable/Disable\n"                           \
   "\n"                                                                           \
-  "Paths            - where to find rexx scripts\n"                              \
+  "Path[s]          - where to find rexx scripts\n"                              \
   "Ext[ensions]     - what extensions to use for rexx scripts autodetect \n"     \
   "Suf[fixes]       - same as above\n"                                           \
-  "Resolv/Noresolv  - resolve paths/extensions(suffixes)\n"
+  "Msg[prefix]      - set the prefix for normal messages\n"                      \
+  "Err[prefix]      - set the prefix for error messages\n"                       \
+  "\n"                                                                           \
+  "using reset as parameter will reset the above settings to the defaults\n"
+
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
 #define rmmod_cmd_desc          "Delete a module"
