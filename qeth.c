@@ -1146,9 +1146,6 @@ int i;
 
     dev->fla[0] = 0x0101;
 
-    if(IS_OSA_DATA_DEVICE(dev))
-        dev->pmcw.flag4 |= PMCW4_Q;
-
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
@@ -1229,6 +1226,7 @@ int i;
 
     if(grouped)
     {
+        dev->group->memdev[OSA_DATA_DEVICE]->pmcw.flag4 |= PMCW4_Q;
 //      for(i = 0; i < OSA_GROUP_SIZE; i++)
 //          dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
     }
@@ -1372,29 +1370,33 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 
     STORE_HW(chsc_rsp24->sch, dev->subchan);
 
-    chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
+    if(dev->pmcw.flag4 & PMCW4_Q)
+    {
 
-    chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
-    chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
+        chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
+
+        chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
+        chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
 
 #if defined(_FEATURE_QEBSM)
-    if(FACILITY_ENABLED_DEV(QEBSM))
-    {
-        STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
-        chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
-    }
+        if(FACILITY_ENABLED_DEV(QEBSM))
+        {
+            STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
+            chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
+        }
 #endif /*defined(_FEATURE_QEBSM)*/
 
 #if defined(_FEATURE_QDIO_THININT)
-    if(FACILITY_ENABLED_DEV(QDIO_THININT))
-        chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
+        if(FACILITY_ENABLED_DEV(QDIO_THININT))
+            chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
 #if 1 // ZZTEST
-      chsc_rsp24->icnt = QDIO_MAXQ;
-      chsc_rsp24->ocnt = QDIO_MAXQ;
-      chsc_rsp24->mbccnt = 0x04;
+          chsc_rsp24->icnt = QDIO_MAXQ;
+          chsc_rsp24->ocnt = QDIO_MAXQ;
+          chsc_rsp24->mbccnt = 0x04;
 #endif
+    }
 
     return 0;
 }
