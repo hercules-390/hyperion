@@ -89,8 +89,30 @@ well You are all smart enough to understand how it works
 enoug documenation for now! I am fed up of writing :-)
 
 ! oops I forgot an important thing ...
-! when starting/enabling object rexx receiving a 1002 error is not really
+! when starting/enabling object rexx, receiving a 1002 error is not really
 ! a RXAPI_MEMFAIL
 ! it is a consequence of the RXAPI daemon not being active
 ! it should be enough to start it according to the documentation
 ! or have it autostarted at ipl/boot time
+
+I tested with a standard ooRexx and Regina Rexx installation
+and as long the installer sets up correctly the path for dynamic libraries
+the hercules rexx interface will find them
+( tested on fedora core 15, both oorexx and regina )
+
+if the installation is <not standard> then it is a user task to
+setup properly the overall environment
+for example defining the relevant symlinks from /usr/<whatever> to the
+relative paths for the non standared rexx installation
+from :
+/usr/bin to <rexx>/bin
+/usr/lib to <rexx>/lib ( on some linux[es] regina uses lib64 )
+the above are needed to run, to compile
+/usr/include to <rexx>/include
+
+please let me know of standard installations where the Rexx interface
+fails to find the dynamic libraries
+
+
+
+

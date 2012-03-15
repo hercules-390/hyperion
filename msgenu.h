@@ -1955,6 +1955,7 @@ do { \
 #define HHC17524 "REXX(%s) Stop/Disable invalid in a single REXX environment"
 #define HHC17525 "REXX(%s) Has been started/enabled"
 #define HHC17526 "REXX(%s) Has been stopped/disabled"
+#define HHC17527 "REXX(%s) Has been AUTO started/enabled"
 
 #define HHC17530 "REXX(%s) %s"
 #define HHC17531 "REXX(%s) Dynamic library '%s' open/load error"

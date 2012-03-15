@@ -18,8 +18,6 @@
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
-#define HHC17527 "REXX(%s) Has been AUTO started/enabled"
-
 #include "hRexx.h"
 
 // forward references
