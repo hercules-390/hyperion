@@ -67,6 +67,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
         memset(chsc_rsp4, 0, sizeof(CHSC_RSP4) );
         if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
         {
+            int n;
             chsc_rsp4->sch_val = 1;
             if(dev->pmcw.flag5 & PMCW5_V)
                 chsc_rsp4->dev_val = 1;
@@ -76,10 +77,10 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
             chsc_rsp4->path_mask = dev->pmcw.pim;
             STORE_HW(chsc_rsp4->sch, sch);
             memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
-#if 1 // ZZTEST
-            chsc_rsp4->fla_valid_mask = 0x80;
-            STORE_HW(chsc_rsp4->fla[0], ((dev->devnum & 0xff00) >> 8));
-#endif
+            chsc_rsp4->fla_valid_mask = dev->pmcw.pim;
+            for(n = 0; n < 7; n++)
+                if(dev->pmcw.pim & (0x80 >> n))
+                    STORE_HW(chsc_rsp4->fla[n], dev->fla[n]);
         }
     }
 
@@ -187,6 +188,7 @@ U16 req_len, rsp_len;
     CHSC_AI(chsc_rsp10->general_char,12) |= CHSC_BI(12); /* Dynamic IO */
 #if defined(FEATURE_QUEUED_DIRECT_IO)
     CHSC_AI(chsc_rsp10->general_char,41) |= CHSC_BI(41); /* Adapter Interruption Facility */
+    CHSC_AI(chsc_rsp10->chsc_char,1) |= CHSC_BI(1);
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
     if(sysblk.mss)
         CHSC_AI(chsc_rsp10->general_char,45) |= CHSC_BI(45); /* Multiple CSS */

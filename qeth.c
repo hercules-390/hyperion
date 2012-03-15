@@ -43,7 +43,7 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-// #define QETH_DEBUG
+#define QETH_DEBUG
 
 #if defined(DEBUG) && !defined(QETH_DEBUG)
  #define QETH_DEBUG
@@ -487,6 +487,7 @@ U32 ackseq;
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
 // STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
+STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
@@ -631,6 +632,8 @@ U32 ackseq;
                 TRACE("L3 Query IP Assist\n");
                 STORE_FW(ipa->ipas,IPA_SUPP);
 // STORE_FW(ipa->ipas, 0xFFFFFFFF); /* ZZ */
+STORE_FW(ipa->ipas, 0xFFFFFFFF); /* ZZ */
+// STORE_FW(ipa->ipas, IPA_SETADAPTERPARMS); /* ZZ */
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -1143,6 +1146,8 @@ int i;
     dev->numdevid = sizeof(sense_id_bytes);
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
+
+    dev->fla[0] = 0x0101;
 
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {

@@ -1079,6 +1079,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
         BYTE    drvpwd[11];             /* Password for drive        */
         BYTE    sensemm[5];             /* Manuf. & model for sense  */
+        U16     fla[8];                 /* Full Link Address Array   */
 
         /*  control flags...                                         */
         unsigned int                    /* Flags                     */
