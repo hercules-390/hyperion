@@ -43,7 +43,7 @@
 #include "qeth.h"
 #include "tuntap.h"
 
-#define QETH_DEBUG
+// #define QETH_DEBUG
 
 #if defined(DEBUG) && !defined(QETH_DEBUG)
  #define QETH_DEBUG
@@ -487,7 +487,6 @@ U32 ackseq;
                             TRACE("Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
 // STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
-STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
@@ -632,8 +631,6 @@ STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                 TRACE("L3 Query IP Assist\n");
                 STORE_FW(ipa->ipas,IPA_SUPP);
 // STORE_FW(ipa->ipas, 0xFFFFFFFF); /* ZZ */
-STORE_FW(ipa->ipas, 0xFFFFFFFF); /* ZZ */
-// STORE_FW(ipa->ipas, IPA_SETADAPTERPARMS); /* ZZ */
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -1149,6 +1146,9 @@ int i;
 
     dev->fla[0] = 0x0101;
 
+    if(IS_OSA_DATA_DEVICE(dev))
+        dev->pmcw.flag4 |= PMCW4_Q;
+
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
@@ -1229,8 +1229,8 @@ int i;
 
     if(grouped)
     {
-        for(i = 0; i < OSA_GROUP_SIZE; i++)
-            dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
+//      for(i = 0; i < OSA_GROUP_SIZE; i++)
+//          dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
     }
 
     return 0;
