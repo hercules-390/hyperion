@@ -189,6 +189,7 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_QUEUED_DIRECT_IO)
     CHSC_AI(chsc_rsp10->general_char,41) |= CHSC_BI(41); /* Adapter Interruption Facility */
     CHSC_AI(chsc_rsp10->chsc_char,1) |= CHSC_BI(1);
+    CHSC_AI(chsc_rsp10->chsc_char,8) |= CHSC_BI(8);
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
     if(sysblk.mss)
         CHSC_AI(chsc_rsp10->general_char,45) |= CHSC_BI(45); /* Multiple CSS */
