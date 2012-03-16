@@ -779,7 +779,7 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
     obtain_lock(&dev->lock);
-    dev->pciscsw.flag2 |= SCSW2_Q;
+    dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
     dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
     dev->pciscsw.chanstat = CSW_PCI;
     QUEUE_IO_INTERRUPT(&dev->pciioint);
