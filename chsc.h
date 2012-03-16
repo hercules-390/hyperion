@@ -13,8 +13,12 @@
 #define _CHSC_H
 
 
-#define CHSC_AI(_array, _bitno) ((_array)[((_bitno)/32)][(((_bitno)%32)/8)])
-#define CHSC_BI(_bitno) (0x80 >> (((_bitno)%32)%8))
+#define _CHSC_AI(_array, _bitno) ((_array)[((_bitno)/32)][(((_bitno)%32)/8)])
+#define _CHSC_BI(_bitno) (0x80 >> (((_bitno)%32)%8))
+#define CHSC_SB(_array, _bitno)                                       \
+  do {                                                                \
+      _CHSC_AI((_array), (_bitno)) |= _CHSC_BI((_bitno));             \
+  } while (0)
 
 
 typedef struct _CHSC_REQ {

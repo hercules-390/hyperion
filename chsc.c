@@ -178,42 +178,42 @@ U16 req_len, rsp_len;
     memset(chsc_rsp10->chsc_char, 0, sizeof(chsc_rsp10->chsc_char));
 
 #if defined(FEATURE_REGION_RELOCATE)
-    CHSC_AI(chsc_rsp10->general_char,2) |= CHSC_BI(2);
-    CHSC_AI(chsc_rsp10->general_char,5) |= CHSC_BI(5);
+    CHSC_SB(chsc_rsp10->general_char,2);
+    CHSC_SB(chsc_rsp10->general_char,5);
 #endif
 #if defined(FEATURE_CANCEL_IO_FACILITY)
-    CHSC_AI(chsc_rsp10->general_char,6) |= CHSC_BI(6);
+    CHSC_SB(chsc_rsp10->general_char,6);
 #endif
-    CHSC_AI(chsc_rsp10->general_char,7) |= CHSC_BI(7);   /* Concurrent Sense */
-    CHSC_AI(chsc_rsp10->general_char,12) |= CHSC_BI(12); /* Dynamic IO */
+    CHSC_SB(chsc_rsp10->general_char,7);         /* Concurrent Sense */
+    CHSC_SB(chsc_rsp10->general_char,12);              /* Dynamic IO */
 #if defined(FEATURE_QUEUED_DIRECT_IO)
-    CHSC_AI(chsc_rsp10->general_char,41) |= CHSC_BI(41); /* Adapter Interruption Facility */
-    CHSC_AI(chsc_rsp10->chsc_char,1) |= CHSC_BI(1);
-    CHSC_AI(chsc_rsp10->chsc_char,8) |= CHSC_BI(8);
+    CHSC_SB(chsc_rsp10->general_char,41);  /* Adapter Interruption Facility */
+    CHSC_SB(chsc_rsp10->chsc_char,1);
+    CHSC_SB(chsc_rsp10->chsc_char,8);
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
     if(sysblk.mss)
-        CHSC_AI(chsc_rsp10->general_char,45) |= CHSC_BI(45); /* Multiple CSS */
-//  CHSC_AI(chsc_rsp10->general_char,46) |= CHSC_BI(46); /* FCS */
-//  CHSC_AI(chsc_rsp10->general_char,48) |= CHSC_BI(48); /* Ext MB */
+        CHSC_SB(chsc_rsp10->general_char,45);        /* Multiple CSS */
+//  CHSC_SB(chsc_rsp10->general_char,46);                     /* FCS */
+//  CHSC_SB(chsc_rsp10->general_char,48);                  /* Ext MB */
 #if defined(_FEATURE_QDIO_TDD)
     if(FACILITY_ENABLED(QDIO_TDD, regs))
-        CHSC_AI(chsc_rsp10->general_char,56) |= CHSC_BI(56); /* AIF Time Delay Disablement fac*/
+        CHSC_SB(chsc_rsp10->general_char,56);  /* AIF Time Delay Disablement fac*/
 #endif /*defined(_FEATURE_QDIO_TDD)*/
 #if defined(_FEATURE_QEBSM)
     if(FACILITY_ENABLED(QEBSM, regs))
-        CHSC_AI(chsc_rsp10->general_char,58) |= CHSC_BI(58);
+        CHSC_SB(chsc_rsp10->general_char,58);
 #endif /*defined(_FEATURE_QEBSM)*/
 #if defined(_FEATURE_QDIO_THININT)
     if(FACILITY_ENABLED(QDIO_THININT, regs))
-        CHSC_AI(chsc_rsp10->general_char,67) |= CHSC_BI(67); /* OSA/FCP Thin interrupts */
+        CHSC_SB(chsc_rsp10->general_char,67);  /* OSA/FCP Thin interrupts */
 #endif /*defined(_FEATURE_QDIO_THININT)*/
-//  CHSC_AI(chsc_rsp10->general_char,82) |= CHSC_BI(82); /* CIB */
-//  CHSC_AI(chsc_rsp10->general_char,88) |= CHSC_BI(88); /* FCX */
+//  CHSC_SB(chsc_rsp10->general_char,82);                     /* CIB */
+//  CHSC_SB(chsc_rsp10->general_char,88);                     /* FCX */
 
-//  CHSC_AI(chsc_rsp10->chsc_char,84) |= CHSC_BI(84); /* SECM */
-//  CHSC_AI(chsc_rsp10->chsc_char,86) |= CHSC_BI(86); /* SCMC */
-//  CHSC_AI(chsc_rsp10->chsc_char,107) |= CHSC_BI(107); /* Set Channel Subsystem Char */
-//  CHSC_AI(chsc_rsp10->chsc_char,108) |= CHSC_BI(108); /* Fast CHSCs */
+//  CHSC_SB(chsc_rsp10->chsc_char,84);                       /* SECM */
+//  CHSC_SB(chsc_rsp10->chsc_char,86);                       /* SCMC */
+//  CHSC_SB(chsc_rsp10->chsc_char,107); /* Set Channel Subsystem Char */
+//  CHSC_SB(chsc_rsp10->chsc_char,108);                /* Fast CHSCs */
 
     /* Store request OK */
     STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
