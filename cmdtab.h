@@ -996,24 +996,42 @@
 #define resume_cmd_desc         "Resume hercules"
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
 #define rexx_cmd_desc           "Enable/Disable/display Rexx interpreter settings"
 #define rexx_cmd_help           \
                                 \
-  "Format: 'rexx [option parms]'\n"                                                      \
+  "Format: 'rexx [option parms]'\n"                                              \
   "<none>           - display rexx status\n"                                     \
-  "Disa[ble]        - stop/disable rexx support\n"                               \
-  "Ena[ble] regina  - enable regina rexx\n"                                      \
-  "Ena[ble] oorexx  - enable open object rexx\n"                                 \
-  "Start/Stop can be used instead of Enable/Disable\n"                           \
+  "sta[rt]/ena[ble] - enable rexx \n"                                            \
+  "parms            - package name oorexx/regina\n"                              \
+  "                 - <none> will start/enable the default Rexx package\n"       \
+  "stop[p]/disa[ble]- stop/disable rexx support\n"                               \
+  "parms            - <none>\n"                                                  \
   "\n"                                                                           \
   "Path[s]          - where to find rexx scripts\n"                              \
   "Ext[ensions]     - what extensions to use for rexx scripts autodetect \n"     \
   "Suf[fixes]       - same as above\n"                                           \
-  "Msg[prefix]      - set the prefix for normal messages\n"                      \
-  "Err[prefix]      - set the prefix for error messages\n"                       \
+  "Msgl[evel]       - 0/1 disable/enable HHC17503I and HHC17504I messages \n"    \
+  "Msgp[refix]      - set the prefix for normal messages\n"                      \
+  "Errp[refix]      - set the prefix for trace/error messages\n"                 \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
-
+#else /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#define rexx_cmd_desc           "display Rexx interpreter settings"
+#define rexx_cmd_help           \
+                                \
+  "Format: 'rexx [option parms]'\n"                                              \
+  "<none>           - display rexx status\n"                                     \
+  "\n"                                                                           \
+  "Path[s]          - where to find rexx scripts\n"                              \
+  "Ext[ensions]     - what extensions to use for rexx scripts autodetect \n"     \
+  "Suf[fixes]       - same as above\n"                                           \
+  "Msgl[evel]       - 0/1 disable/enable HHC17503I and HHC17504I messages \n"    \
+  "Msgp[refix]      - set the prefix for normal messages\n"                      \
+  "Errp[refix]      - set the prefix for trace/error messages\n"                 \
+  "\n"                                                                           \
+  "using reset as parameter will reset the above settings to the defaults\n"
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
 #define rmmod_cmd_desc          "Delete a module"

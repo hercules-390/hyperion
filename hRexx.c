@@ -17,6 +17,51 @@
 #define _HREXX_C_
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+
+#define REXX_TRY_OOREXX(_FOUND_) do \
+{ \
+    RexxPackage = OOREXX_PACKAGE; \
+    RexxDynamicLoader = &ObjectRexxDynamicLoader; \
+    RexxRegisterHandlers = &ObjectRexxRegisterHandlers; \
+    RexxExecCmd = &ObjectRexxExecCmd; \
+    RexxExecInstoreCmd = &ObjectRexxExecInstoreCmd; \
+    rc = (*RexxDynamicLoader)(); \
+    if ( rc == 0 ) \
+    { \
+        RexxStatus = _WAITING_ ;\
+        WRMSG( HHC17525, "I", RexxPackage); \
+        goto _FOUND_ ; \
+    } \
+} while(0) ;
+
+#define REXX_TRY_REGINA(_FOUND_) do \
+{ \
+    RexxPackage = REGINA_PACKAGE; \
+    RexxDynamicLoader = &ReginaRexxDynamicLoader; \
+    RexxRegisterHandlers = &ReginaRexxRegisterHandlers; \
+    RexxExecCmd = &ReginaRexxExecCmd; \
+    RexxExecInstoreCmd = &ReginaRexxExecInstoreCmd; \
+    rc = (*RexxDynamicLoader)(); \
+    if ( rc == 0 ) \
+    { \
+        RexxStatus = _WAITING_ ;\
+        WRMSG( HHC17525, "I", RexxPackage); \
+        goto _FOUND_ ; \
+    } \
+} while(0) ;
+
+#define SETREXX_RESET() do \
+{ \
+    RexxPackage = ""; \
+    RexxDynamicLoader = NULL; \
+    RexxRegisterHandlers = NULL; \
+    RexxExecCmd = NULL; \
+    RexxExecInstoreCmd = NULL; \
+    RexxStatus = _STOPPED_ ; \
+} while (0) ;
+
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
 #include "hRexx.h"
 
@@ -39,35 +84,35 @@ int ReginaRexxExecCmd();
 int ReginaRexxExecInstoreCmd();
 #endif
 
-void *hRexxLibHandle = NULL ;       /* Library handle */
-void *hRexxApiLibHandle = NULL ;     /* Api Library handle */
+void *hRexxLibHandle = NULL;       /* Library handle */
+void *hRexxApiLibHandle = NULL;     /* Api Library handle */
 
 #if defined(ENABLE_OBJECT_REXX)  && !defined(ENABLE_REGINA_REXX)
 char *RexxPackage = OOREXX_PACKAGE;
 char *RexxLibrary = OOREXX_LIBRARY;
 char *RexxApiLibrary = OOREXX_API_LIBRARY;
-int (*RexxDynamicLoader)() = &ObjectRexxDynamicLoader ;
-int (*RexxRegisterHandlers)() = &ObjectRexxRegisterHandlers ;
-int (*RexxExecCmd)() = &ObjectRexxExecCmd ;
-int (*RexxExecInstoreCmd)() = &ObjectRexxExecInstoreCmd ;
+int (*RexxDynamicLoader)() = &ObjectRexxDynamicLoader;
+int (*RexxRegisterHandlers)() = &ObjectRexxRegisterHandlers;
+int (*RexxExecCmd)() = &ObjectRexxExecCmd;
+int (*RexxExecInstoreCmd)() = &ObjectRexxExecInstoreCmd;
 
 #elif !defined(ENABLE_OBJECT_REXX) &&  defined(ENABLE_REGINA_REXX)
 char *RexxPackage = REGINA_PACKAGE;
 char *RexxLibrary = REGINA_LIBRARY;
 char *RexxApiLibrary = "";
-int (*RexxDynamicLoader)() = &ReginaRexxDynamicLoader ;
-int (*RexxRegisterHandlers)() = &ReginaRexxRegisterHandlers ;
-int (*RexxExecCmd)() = &ReginaRexxExecCmd ;
-int (*RexxExecInstoreCmd)() = &ReginaRexxExecInstoreCmd ;
+int (*RexxDynamicLoader)() = &ReginaRexxDynamicLoader;
+int (*RexxRegisterHandlers)() = &ReginaRexxRegisterHandlers;
+int (*RexxExecCmd)() = &ReginaRexxExecCmd;
+int (*RexxExecInstoreCmd)() = &ReginaRexxExecInstoreCmd;
 
 #else
-char *RexxPackage = "" ;
-char *RexxLibrary = "" ;
+char *RexxPackage = "";
+char *RexxLibrary = "";
 char *RexxApiLibrary = "";
-int (*RexxDynamicLoader)() = NULL ;
-int (*RexxRegisterHandlers)() = NULL ;
-int (*RexxExecCmd)() = NULL ;
-int (*RexxExecInstoreCmd)() = NULL ;
+int (*RexxDynamicLoader)() = NULL;
+int (*RexxRegisterHandlers)() = NULL;
+int (*RexxExecCmd)() = NULL;
+int (*RexxExecInstoreCmd)() = NULL;
 
 #endif
 
@@ -77,51 +122,58 @@ char *RexxPathsArray[32];
 int   RexxPathsCount=0;
 
 int   RexxExtensionsInitialized=FALSE;
-char *RexxExtensions = NULL ;
+char *RexxExtensions = NULL;
 char *RexxExtensionsArray[32];
 int   RexxExtensionsCount=0;
 
+int   MessageLevel;
 char *MessagePrefix;
-char *TracePrefix;
+char *ErrorPrefix;
+
+
+#define _WAITING_ 0
+#define _STOPPED_ 1
+int   RexxStatus = _WAITING_ ;
 
 /*-------------------------------------------------------------------*/
 /* rexx Command - manage the Rexx environment                        */
 /*-------------------------------------------------------------------*/
 int rexx_cmd(int argc, char *argv[], char *CommandLine)
 {
-char *ARGSDESC[] = {"", "Start/Enable", "Paths", "Extensions", "MsgPrefix", "ErrPrefix"} ;
-char *PACKAGES[] = {"", "ooRexx", "Regina" } ;
+char *ARGSDESC[] = {"", "Paths", "Extensions", "MsgLevel", "MsgPrefix", "ErrPrefix", "Start/Enable"};
+char *PACKAGES[] = {"", "ooRexx", "Regina" };
 
-#define _MINARGLEN 3
-
-#define _NEEDPACKAGE 1
-#define _NEEDPATHS 2
-#define _NEEDEXTNS 3
+#define _NEEDPATHS 1
+#define _NEEDEXTNS 2
+#define _NEEDMSGLEVL 3
 #define _NEEDMSGPREF 4
 #define _NEEDERRPREF 5
+#define _NEEDPACKAGE 6
 
 int   i;
 int   rc = 0;
 short RetRC = 0;
 char  Result[1024];
-char *ptr;
-
+char *ptr,*nxt;
+char temp[33];
 int  iarg,argl;
 
 int  whatValue   = 0;
 
-int  haveStop  = FALSE ;
-int  haveStart = FALSE ;
-int  havePaths = FALSE ;
-int  haveExtns = FALSE ;
-int  haveMsgPref = FALSE ;
-int  haveErrPref = FALSE ;
+int  haveStop  = FALSE;
+int  havePaths = FALSE;
+int  haveExtns = FALSE;
+int  haveMsgLevl= FALSE;
+int  haveMsgPref = FALSE;
+int  haveErrPref = FALSE;
+int  haveStart = FALSE;
 
-char *wPackage  = NULL;
 char *wPaths = NULL;
 char *wExtns = NULL;
+int   wMsgLevl = 0;
 char *wMsgPref = NULL;
 char *wErrPref = NULL;
+char *wPackage  = NULL;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -143,27 +195,35 @@ char *wErrPref = NULL;
         {
             switch ( whatValue )
             {
-                case _NEEDPACKAGE :
-                {
-                    if ( strcasecmp( argv[iarg], REGINA_PACKAGE) == 0 || strcasecmp( argv[iarg], OOREXX_PACKAGE) == 0 )
-                        wPackage = strdup(argv[iarg]) ;
-                    else
-                    {
-                        WRMSG( HHC17509, "W", RexxPackage, argv[iarg], ARGSDESC[_NEEDPACKAGE]);
-                        return -1;
-                    }
-                }
-                break;
-
                 case _NEEDPATHS :
                 {
-                    wPaths = strdup(argv[iarg]) ;
+                    wPaths = strdup(argv[iarg]);
                 }
                 break;
 
                 case _NEEDEXTNS :
                 {
-                    wExtns = strdup(argv[iarg]) ;
+                    wExtns = strdup(argv[iarg]);
+                }
+                break;
+
+                case _NEEDMSGLEVL :
+                {
+                    if ( strcasecmp( argv[iarg], "reset") == 0 )
+                    {
+                        wMsgLevl = 0;
+                    }
+                    else
+                    {
+                        ptr = argv[iarg];
+                        errno = 0;
+                        wMsgLevl = (int) strtoul(argv[iarg],&nxt,10);
+                        if (errno != 0 || nxt == ptr || *nxt != 0 || ( wMsgLevl < 0 || wMsgLevl > 9 ) )
+                        {
+                            WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDMSGLEVL]);
+                            return -1;
+                        }
+                    }
                 }
                 break;
 
@@ -172,9 +232,9 @@ char *wErrPref = NULL;
                     if ( strlen(argv[iarg]) > 9 )
                     {
                         WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDMSGPREF]);
-                        return -1 ;
+                        return -1;
                     }
-                    wMsgPref = strdup(argv[iarg]) ;
+                    wMsgPref = strdup(argv[iarg]);
                 }
                 break;
 
@@ -183,9 +243,21 @@ char *wErrPref = NULL;
                     if ( strlen(argv[iarg]) > 9 )
                     {
                         WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDERRPREF]);
-                        return -1 ;
+                        return -1;
                     }
-                    wErrPref = strdup(argv[iarg]) ;
+                    wErrPref = strdup(argv[iarg]);
+                }
+                break;
+
+                case _NEEDPACKAGE :
+                {
+                    if ( strcasecmp( argv[iarg], REGINA_PACKAGE) == 0 || strcasecmp( argv[iarg], OOREXX_PACKAGE) == 0 )
+                        wPackage = strdup(argv[iarg]);
+                    else
+                    {
+                        WRMSG( HHC17509, "W", RexxPackage, argv[iarg], ARGSDESC[_NEEDPACKAGE]);
+                        return -1;
+                    }
                 }
                 break;
 
@@ -194,9 +266,63 @@ char *wErrPref = NULL;
             continue;
         }
 
-        if ( !haveStart && !haveStop &&
-             ( ( argl >= _MINARGLEN && argl <= 5 && strncasecmp("start",  argv[iarg], argl) == 0 ) ||
-               ( argl >= _MINARGLEN && argl <= 6 && strncasecmp("enable", argv[iarg], argl) == 0 ) ))
+        if ( !haveStop &&
+             ( ( argl >= 3 && argl <= 4 && strncasecmp("stop",    argv[iarg], argl) == 0 ) ||
+               ( argl >= 3 && argl <= 7 && strncasecmp("disable", argv[iarg], argl) == 0 ) ))
+        {
+#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+            haveStop= TRUE;
+            continue;
+#else  /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+            WRMSG( HHC17524, "I", RexxPackage);
+            return 0;
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+        }
+
+        if ( !havePaths &&
+             ( argl >= 4 && argl <= 5 && strncasecmp("paths", argv[iarg], argl) == 0 ) )
+        {
+            havePaths= TRUE;
+            whatValue = _NEEDPATHS;
+            continue;
+        }
+
+        if ( !haveExtns &&
+             ( ( argl >= 3 && argl <=  8 && strncasecmp("suffixes",   argv[iarg], argl) == 0 ) ||
+               ( argl >= 3 && argl <= 10 && strncasecmp("extensions", argv[iarg], argl) == 0 ) ) )
+        {
+            haveExtns= TRUE;
+            whatValue = _NEEDEXTNS;
+            continue;
+        }
+
+        if ( !haveMsgLevl &&
+             ( argl >= 4 && argl <= 10 && strncasecmp("msglevel", argv[iarg], argl) == 0 ) )
+        {
+            haveMsgLevl= TRUE;
+            whatValue = _NEEDMSGLEVL;
+            continue;
+        }
+
+        if ( !haveMsgPref &&
+             ( argl >= 4 && argl <=  9 && strncasecmp("msgprefix", argv[iarg], argl) == 0 ) )
+        {
+            haveMsgPref= TRUE;
+            whatValue = _NEEDMSGPREF;
+            continue;
+        }
+
+        if ( !haveErrPref &&
+             ( argl >= 4 && argl <=  9 && strncasecmp("errprefix", argv[iarg], argl) == 0 ) )
+        {
+            haveErrPref= TRUE;
+            whatValue = _NEEDERRPREF;
+            continue;
+        }
+
+        if ( !haveStart &&
+             ( ( argl >= 3 && argl <= 5 && strncasecmp("start",  argv[iarg], argl) == 0 ) ||
+               ( argl >= 3 && argl <= 6 && strncasecmp("enable", argv[iarg], argl) == 0 ) ) )
         {
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
             if ( hRexxLibHandle )
@@ -206,71 +332,25 @@ char *wErrPref = NULL;
             }
             haveStart= TRUE;
             whatValue = _NEEDPACKAGE;
-            continue ;
-#else
-        WRMSG( HHC17523, "I", RexxPackage);
-        return -1;
-#endif
-        }
-
-        if ( !haveStart && !haveStop &&
-             ( ( argl >= _MINARGLEN && argl <= 4 && strncasecmp("stop",    argv[iarg], argl) == 0 ) ||
-               ( argl >= _MINARGLEN && argl <= 7 && strncasecmp("disable", argv[iarg], argl) == 0 ) ))
-        {
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
-            if ( !hRexxLibHandle )
-            {
-                WRMSG( HHC17521, "I", "");
-                return 0;
-            }
-            haveStop= TRUE;
-            continue ;
-#else
-        WRMSG( HHC17524, "I", RexxPackage);
-        return 0;
-#endif
-        }
-
-        if ( !havePaths && argl >= _MINARGLEN && argl <= 5 &&
-            strncasecmp("paths", argv[iarg], argl) == 0 )
-        {
-            havePaths= TRUE;
-            whatValue = _NEEDPATHS;
-            continue ;
-        }
-
-        if ( !haveExtns &&
-             ( ( argl >= _MINARGLEN && argl <=  8 && strncasecmp("suffixes",   argv[iarg], argl) == 0 ) ||
-               ( argl >= _MINARGLEN && argl <= 10 && strncasecmp("extensions", argv[iarg], argl) == 0 ) ) )
-        {
-            haveExtns= TRUE;
-            whatValue = _NEEDEXTNS;
-            continue ;
-        }
-
-        if ( !haveMsgPref && argl >= _MINARGLEN && argl <=  9 &&
-             strncasecmp("msgprefix", argv[iarg], argl) == 0  )
-        {
-            haveMsgPref= TRUE;
-            whatValue = _NEEDMSGPREF;
-            continue ;
-        }
-        if ( !haveErrPref && argl >= _MINARGLEN && argl <=  9 &&
-             ( strncasecmp("trcprefix", argv[iarg], argl) == 0 || strncasecmp("errprefix", argv[iarg], argl) == 0 ) )
-        {
-            haveErrPref= TRUE;
-            whatValue = _NEEDERRPREF;
-            continue ;
+            continue;
+#else /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+            WRMSG( HHC17523, "I", RexxPackage);
+            return 0;
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
         }
 
         WRMSG( HHC17508, "W", RexxPackage, argv[iarg], iarg + 1 );
-        return -1 ;
+        return 0;
     }
 
-    if ( whatValue > 0 )
+    if ( whatValue == _NEEDPACKAGE )
+    {
+        wPackage = "auto";
+    }
+    else if ( whatValue > 0 )
     {
         WRMSG( HHC17507, "W", RexxPackage, ARGSDESC[whatValue] );
-        return -1 ;
+        return -1;
     }
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
@@ -282,31 +362,36 @@ char *wErrPref = NULL;
         if  ( hRexxApiLibHandle )
             HDLCLOSE( hRexxApiLibHandle);
 
+        RexxStatus = _STOPPED_ ;
+
+        SETREXX_RESET()
+
         WRMSG( HHC17526, "I", RexxPackage);
-        RexxPackage = "" ;
-        RexxDynamicLoader = NULL ;
-        RexxRegisterHandlers = NULL ;
-        RexxExecCmd = NULL ;
-        RexxExecInstoreCmd = NULL ;
+
     }
-#endif
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
     if ( havePaths )
     {
         if ( strcasecmp("reset", wPaths) == 0 )
         {
-            InitializeRexxPaths(NULL) ;
+            InitializeRexxPaths(NULL);
         }
         else
-            InitializeRexxPaths(wPaths) ;
+            InitializeRexxPaths(wPaths);
     }
 
     if ( haveExtns )
     {
         if ( strcasecmp("reset", wExtns) == 0 )
-            InitializeRexxExtensions(NULL) ;
+            InitializeRexxExtensions(NULL);
         else
-            InitializeRexxExtensions(wExtns) ;
+            InitializeRexxExtensions(wExtns);
+    }
+
+    if ( haveMsgLevl )
+    {
+        MessageLevel = wMsgLevl;
     }
 
     if ( haveMsgPref )
@@ -316,12 +401,12 @@ char *wErrPref = NULL;
             if ( MessagePrefix )
             {
                 free(MessagePrefix);
-                MessagePrefix = NULL ;
+                MessagePrefix = NULL;
             }
         }
         else
         {
-            MessagePrefix = strdup(wMsgPref) ;
+            MessagePrefix = strdup(wMsgPref);
         }
         free(wMsgPref);
     }
@@ -330,15 +415,15 @@ char *wErrPref = NULL;
     {
         if ( strcasecmp("reset", wErrPref) == 0 )
         {
-            if ( TracePrefix )
+            if ( ErrorPrefix )
             {
-                free(TracePrefix);
-                TracePrefix = NULL ;
+                free(ErrorPrefix);
+                ErrorPrefix = NULL;
             }
         }
         else
         {
-            TracePrefix = strdup(wErrPref) ;
+            ErrorPrefix = strdup(wErrPref);
         }
         free(wErrPref);
     }
@@ -346,110 +431,119 @@ char *wErrPref = NULL;
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
     if ( haveStart )
     {
+        if ( strcasecmp(wPackage, "auto" ) == 0  )
+        {
+            char *envvar;
+
+            if ( !( envvar = getenv("HREXX_PACKAGE") ) )
+            {
+                REXX_TRY_OOREXX( Start_Rexx_Loaded )
+                REXX_TRY_REGINA( Start_Rexx_Loaded )
+                SETREXX_RESET()
+                RexxStatus = _STOPPED_ ;
+                WRMSG( HHC17526, "I", RexxPackage);
+            }
+            if ( strcasecmp(envvar, "auto" ) == 0 )
+            {
+                REXX_TRY_OOREXX( Start_Rexx_Loaded )
+                REXX_TRY_REGINA( Start_Rexx_Loaded )
+                SETREXX_RESET()
+                RexxStatus = _STOPPED_ ;
+                WRMSG( HHC17526, "I", RexxPackage);
+            }
+
+            if ( strcasecmp(envvar, "none" ) == 0 )
+            {
+                WRMSG( HHC17521, "I", "");
+                return 0;
+            }
+
+            wPackage = envvar ;
+
+        }
+
         if ( strcasecmp(wPackage, OOREXX_PACKAGE ) == 0  )
         {
-            RexxPackage = OOREXX_PACKAGE ;
-            RexxDynamicLoader = &ObjectRexxDynamicLoader ;
-            RexxRegisterHandlers = &ObjectRexxRegisterHandlers ;
-            RexxExecCmd = &ObjectRexxExecCmd ;
-            RexxExecInstoreCmd = &ObjectRexxExecInstoreCmd ;
+            REXX_TRY_OOREXX( Start_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
+            return -1 ;
         }
-        else if ( strcasecmp(wPackage, REGINA_PACKAGE ) == 0  )
+        if ( strcasecmp(wPackage, REGINA_PACKAGE ) == 0  )
         {
-            RexxPackage = REGINA_PACKAGE ;
-            RexxDynamicLoader = &ReginaRexxDynamicLoader ;
-            RexxRegisterHandlers = &ReginaRexxRegisterHandlers ;
-            RexxExecCmd = &ReginaRexxExecCmd ;
-            RexxExecInstoreCmd = &ReginaRexxExecInstoreCmd ;
-
-        }
-        else
-        {
-            WRMSG( HHC17501, "E", RexxPackage,"Oh shit, I should not be here");
-            return -1;
+            REXX_TRY_REGINA( Start_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
+            return -1 ;
         }
 
-        rc = (*RexxDynamicLoader)() ;
-        if ( rc == 0 )
-        {
-            WRMSG( HHC17525, "I", RexxPackage);
-        }
-        else
-        {
-            RexxPackage = "" ;
-            RexxDynamicLoader = NULL ;
-            RexxRegisterHandlers = NULL ;
-            RexxExecCmd = NULL ;
-            RexxExecInstoreCmd = NULL ;
-        }
+        WRMSG( HHC17501, "E", wPackage, "Oh shit, I should not be here");
+        return -1;
+
     }
-#endif
+Start_Rexx_Loaded:
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
     if ( !RexxPathsInitialized )
-        InitializeRexxPaths(NULL) ;
+        InitializeRexxPaths(NULL);
     strcpy(Result,"Paths: " );
     for (i=0;i<RexxPathsCount;i++)
     {
         strcat(Result,RexxPathsArray[i]);
         strcat(Result,i == RexxPathsCount-1 ? "" : PATHDELIM );
     }
-    WRMSG( HHC17500, "I", RexxPackage,Result) ;
+    WRMSG( HHC17500, "I", RexxPackage,Result);
 
     if ( !RexxExtensionsInitialized )
-        InitializeRexxExtensions(NULL) ;
+        InitializeRexxExtensions(NULL);
     strcpy(Result,"Extensions: ");
     for (i=0;i<RexxExtensionsCount;i++)
     {
         strcat(Result,RexxExtensionsArray[i]);
         strcat(Result,i == RexxExtensionsCount-1 ? "" : EXTNDELIM );
     }
-    WRMSG( HHC17500, "I", RexxPackage,Result) ;
+    WRMSG( HHC17500, "I", RexxPackage,Result);
 
+    strcpy(Result,"Msg Level : ");
+    sprintf(temp,"%d",MessageLevel);
+    strcat(Result,temp);
+    WRMSG( HHC17500, "I", RexxPackage,Result);
+
+    strcpy(Result,"Msg Prefix: ");
     if ( MessagePrefix )
-    {
-        strcpy(Result,"Msg Prefix: ");
         strcat(Result,MessagePrefix);
-        WRMSG( HHC17500, "I", RexxPackage,Result) ;
-    }
     else
-    {
-        WRMSG( HHC17500, "I", RexxPackage,"Msg Prefix: (OFF)") ;
-    }
-    if ( TracePrefix )
-    {
-        strcpy(Result,"Err Prefix: ");
-        strcat(Result,TracePrefix);
-        WRMSG( HHC17500, "I", RexxPackage,Result) ;
-    }
-    else
-    {
-        WRMSG( HHC17500, "I", RexxPackage,"Err Prefix: (OFF)") ;
-    }
+        strcat(Result,"(OFF)");
+    WRMSG( HHC17500, "I", RexxPackage,Result);
 
+    strcpy(Result,"Err Prefix: ");
+    if ( ErrorPrefix )
+        strcat(Result,ErrorPrefix);
+    else
+        strcat(Result,"(OFF)");
+    WRMSG( HHC17500, "I", RexxPackage,Result);
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
-    if ( !hRexxLibHandle )
+    if ( RexxStatus == _STOPPED_ )
     {
-        char *envvar ;
-        if ( !(envvar = getenv("HREXX_PACKAGE")) )
-        {
-            WRMSG( HHC17521, "I",RexxPackage);
-            return -1;
-        }
+        WRMSG( HHC17521, "I","");
+        return -1;
     }
-#endif
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
     rc = exec_instore_cmd("parse version _v;parse source  _s;return _v || '0a'x || _s;\n",Result);
     if  ( rc == 0 )
     {
         for (ptr = strtok(Result,"\n"); ptr; ptr = strtok(NULL, "\n"))
         {
-            WRMSG( HHC17500, "I", RexxPackage, ptr) ;
+            WRMSG( HHC17500, "I", RexxPackage, ptr);
         }
     }
     else
     {
-        WRMSG( HHC17501, "I", RexxPackage, "Unexpected RC from instore script") ;
+        WRMSG( HHC17501, "I", RexxPackage, "Unexpected RC from instore script");
     }
 
     return 0;
@@ -462,13 +556,13 @@ char *wErrPref = NULL;
 int exec_cmd(int argc, char *argv[], char *CommandLine)
 {
 int   iarg,argl;
-int   rc=0 ;
+int   rc=0;
 short RetRC = 0;
-int   iPath,iExtn ;
+int   iPath,iExtn;
 int   haveResolvedCommand = FALSE;
 
 char  wCommand[1024];
-char *wArgs ;
+char *wArgs;
 
     UNREFERENCED(rc);
     UNREFERENCED(RetRC);
@@ -476,55 +570,62 @@ char *wArgs ;
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
 
+    if ( RexxStatus == _STOPPED_ )
+    {
+        WRMSG( HHC17521, "I", "");
+        return -1 ;
+    }
     if ( !hRexxLibHandle )
     {
-        char *envvar ;
-        if ( !(envvar = getenv("HREXX_PACKAGE")) )
+        char *envvar;
+        if ( !( envvar = getenv("HREXX_PACKAGE") ) )
         {
-            WRMSG( HHC17521, "I",RexxPackage);
-            return -1;
+            REXX_TRY_OOREXX( exec_cmd_Rexx_Loaded )
+            REXX_TRY_REGINA( exec_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
-
+        if ( strcasecmp(envvar, "auto" ) == 0 )
+        {
+            REXX_TRY_OOREXX( exec_cmd_Rexx_Loaded )
+            REXX_TRY_REGINA( exec_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
+        }
+        if ( strcasecmp(envvar, "none" ) == 0 )
+        {
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17521, "I", "");
+            return 0;
+        }
         if ( strcasecmp(envvar, OOREXX_PACKAGE ) == 0  )
         {
-            RexxPackage = OOREXX_PACKAGE ;
-            RexxDynamicLoader = &ObjectRexxDynamicLoader ;
-            RexxRegisterHandlers = &ObjectRexxRegisterHandlers ;
-            RexxExecCmd = &ObjectRexxExecCmd ;
-            RexxExecInstoreCmd = &ObjectRexxExecInstoreCmd ;
+            REXX_TRY_OOREXX( exec_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
         else if ( strcasecmp(envvar, REGINA_PACKAGE ) == 0  )
         {
-            RexxPackage = REGINA_PACKAGE ;
-            RexxDynamicLoader = &ReginaRexxDynamicLoader ;
-            RexxRegisterHandlers = &ReginaRexxRegisterHandlers ;
-            RexxExecCmd = &ReginaRexxExecCmd ;
-            RexxExecInstoreCmd = &ReginaRexxExecInstoreCmd ;
-
+            REXX_TRY_REGINA( exec_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
         else
         {
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
             WRMSG( HHC17501, "E", envvar,"Unknown REXX Package");
             return -1;
         }
 
-        rc = (*RexxDynamicLoader)() ;
-        if ( rc == 0 )
-        {
-            WRMSG( HHC17527, "I", RexxPackage);
-        }
-        else
-        {
-            RexxPackage = "" ;
-            RexxDynamicLoader = NULL ;
-            RexxRegisterHandlers = NULL ;
-            RexxExecCmd = NULL ;
-            RexxExecInstoreCmd = NULL ;
-            return -1;
-        }
-
     }
-#endif
+exec_cmd_Rexx_Loaded:
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
     if (argc < 2)
     {
@@ -539,21 +640,21 @@ char *wArgs ;
     if ( access(wCommand, R_OK ) == 0 )
     {
         haveResolvedCommand = TRUE;
-        goto endResolver ;
+        goto endResolver;
     }
 
     if (strcmp(basename(wCommand),wCommand) != 0)
-        goto endResolver ;
+        goto endResolver;
 
     if ( !RexxPathsInitialized )
-        InitializeRexxPaths(NULL) ;
+        InitializeRexxPaths(NULL);
     if ( !RexxExtensionsInitialized )
-        InitializeRexxExtensions(NULL) ;
+        InitializeRexxExtensions(NULL);
 
     for( iPath = 0;iPath<RexxPathsCount;iPath++)
     {
         if ( access( RexxPathsArray[iPath], R_OK ) != 0 )
-            continue ;
+            continue;
 
         sprintf(wCommand, PATHFORMAT, RexxPathsArray[iPath], argv[1],"");
         if ( access(wCommand, R_OK ) == 0)
@@ -596,7 +697,7 @@ endResolver:
         }
     }
     else
-        wArgs = NULL ;
+        wArgs = NULL;
 
     return (*RexxExecCmd)(wCommand, wArgs, argc, argv);
 
@@ -607,62 +708,69 @@ endResolver:
 /*-------------------------------------------------------------------*/
 int exec_instore_cmd( char *Command,  char *Result)
 {
-int rc=0 ;
-short RetRC=0 ;
-    UNREFERENCED(rc) ;
-    UNREFERENCED(RetRC) ;
+int rc=0;
+short RetRC=0;
+    UNREFERENCED(rc);
+    UNREFERENCED(RetRC);
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
 
+    if ( RexxStatus == _STOPPED_ )
+    {
+        WRMSG( HHC17521, "I", "");
+        return -1 ;
+    }
     if ( !hRexxLibHandle )
     {
-        char *envvar ;
-        if ( !(envvar = getenv("HREXX_PACKAGE")) )
+        char *envvar;
+        if ( !( envvar = getenv("HREXX_PACKAGE") ) )
         {
-            WRMSG( HHC17521, "I",RexxPackage);
-            return -1;
+            REXX_TRY_OOREXX( exec_instore_cmd_Rexx_Loaded )
+            REXX_TRY_REGINA( exec_instore_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
-
+        if ( strcasecmp(envvar, "auto" ) == 0 )
+        {
+            REXX_TRY_OOREXX( exec_instore_cmd_Rexx_Loaded )
+            REXX_TRY_REGINA( exec_instore_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
+        }
+        if ( strcasecmp(envvar, "none" ) == 0 )
+        {
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17521, "I", "");
+            return 0;
+        }
         if ( strcasecmp(envvar, OOREXX_PACKAGE ) == 0  )
         {
-            RexxPackage = OOREXX_PACKAGE ;
-            RexxDynamicLoader = &ObjectRexxDynamicLoader ;
-            RexxRegisterHandlers = &ObjectRexxRegisterHandlers ;
-            RexxExecCmd = &ObjectRexxExecCmd ;
-            RexxExecInstoreCmd = &ObjectRexxExecInstoreCmd ;
+            REXX_TRY_OOREXX( exec_instore_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
         else if ( strcasecmp(envvar, REGINA_PACKAGE ) == 0  )
         {
-            RexxPackage = REGINA_PACKAGE ;
-            RexxDynamicLoader = &ReginaRexxDynamicLoader ;
-            RexxRegisterHandlers = &ReginaRexxRegisterHandlers ;
-            RexxExecCmd = &ReginaRexxExecCmd ;
-            RexxExecInstoreCmd = &ReginaRexxExecInstoreCmd ;
-
+            REXX_TRY_REGINA( exec_instore_cmd_Rexx_Loaded )
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
+            WRMSG( HHC17526, "I", RexxPackage);
         }
         else
         {
+            SETREXX_RESET()
+            RexxStatus = _STOPPED_ ;
             WRMSG( HHC17501, "E", envvar,"Unknown REXX Package");
             return -1;
         }
 
-        rc = (*RexxDynamicLoader)() ;
-        if ( rc == 0 )
-        {
-            WRMSG( HHC17527, "I", RexxPackage);
-        }
-        else
-        {
-            RexxPackage = "" ;
-            RexxDynamicLoader = NULL ;
-            RexxRegisterHandlers = NULL ;
-            RexxExecCmd = NULL ;
-            RexxExecInstoreCmd = NULL ;
-            return -1;
-        }
-
     }
-#endif
+exec_instore_cmd_Rexx_Loaded:
+#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
     return (*RexxExecInstoreCmd)( Command, NULL, RetRC, Result);
 
@@ -671,7 +779,7 @@ short RetRC=0 ;
 void InitializeRexxPaths(char * wPaths)
 {
 char *ptr;
-char *envvar ;
+char *envvar;
     if ( wPaths )
     {
         RexxPaths = strdup(wPaths);
@@ -681,11 +789,11 @@ char *envvar ;
     {
         if ( ( envvar = getenv("HREXX_PATH") ) )
         {
-            RexxPaths = strdup(envvar) ;
+            RexxPaths = strdup(envvar);
         }
         else if ( ( envvar = getenv("HREXX_PATHS") ) )
         {
-            RexxPaths = strdup(envvar) ;
+            RexxPaths = strdup(envvar);
         }
         else
             RexxPaths = strdup(getenv("PATH"));
@@ -702,7 +810,7 @@ char *envvar ;
 void InitializeRexxExtensions(char * wExtns)
 {
 char *ptr;
-char *envvar ;
+char *envvar;
 
     if ( wExtns )
     {
@@ -713,14 +821,14 @@ char *envvar ;
     {
         if ( ( envvar = getenv("HREXX_EXTENSIONS") ) )
         {
-            RexxExtensions = strdup(envvar) ;
+            RexxExtensions = strdup(envvar);
         }
         else if ( ( envvar = getenv("HREXX_SUFFIXES") ) )
         {
-            RexxExtensions = strdup(envvar) ;
+            RexxExtensions = strdup(envvar);
         }
         else
-            RexxExtensions = strdup(".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx") ;
+            RexxExtensions = strdup(".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx");
     }
 
     for (RexxExtensionsCount= 0,ptr = strtok(RexxExtensions, EXTNDELIM ); ptr; ptr = strtok(NULL, EXTNDELIM))

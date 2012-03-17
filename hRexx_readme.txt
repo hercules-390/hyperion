@@ -113,6 +113,57 @@ the above are needed to run, to compile
 please let me know of standard installations where the Rexx interface
 fails to find the dynamic libraries
 
+changes ..
+
+implemented the "full" autostart facility.
+
+relation with the HREXX_PACKAGE environment variable
+
+when HREXX_PACKAGE undefined/unset ( the most common situation )
+hercules will attempt to enable oorexx first , regina rexx next
+
+when HREXX_PACKAGE has the value "auto"
+same as above
+
+when HREXX_PACKAGE has the value "none"
+no autostart will be attempted
+
+when HREXX_PACKAGE has the value oorexx/regina
+the selected package will be started
+
+the start command has been changed,
+if no package name is entered the above sequence is followed
+
+the help has been modified accordingly
+
+NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+the REXX path will be used to search ONLY for the scripts invoked via the exec command
+
+the hercules configuration written in rexx DOES NOT FOLLOW that setup
+the configuration is read at the beginning of the startup process and it must
+be read by the hercules configuration program to understand that it is a rexx script
+so it must be reached thru a PATH available to the shell
+after that rexx will be invoked passing the absolute path to the configuration
+
+example
+current directory     ==> /Hercules/sandhawk.390.build
+hercules invoked with ==> ./hercules -f hercules.rexx
+
+inside the hercules rexx
+
+parse source _src
+say _src
+
+returned              ==> MACOSX COMMAND /Hercules/sandhawk.390.build/hercules.rexx
+
+notice the full resolved path of the configuration file
+
+to do ...
+some cosmetics
+small optimizations
+comment the code ( pretty linear and sequential ) but better do it
+
+enjoy
 
 
 

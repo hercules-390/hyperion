@@ -19,7 +19,7 @@
 #if defined(ENABLE_OBJECT_REXX)
 
 #define LOG_CAPTURE( _RETC_ , _RESP_, _FCNM_, _BUFF_) do { \
-_RESP_ = log_capture( _FCNM_ , _BUFF_ ) ; \
+_RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
 _RETC_ = 0;\
 } while (0)
 
@@ -27,31 +27,32 @@ _RETC_ = 0;\
 
 #include "hRexx.h"
 
-extern void *hRexxLibHandle ;        /* Library handle */
-extern void *hRexxApiLibHandle ;     /* Api Library handle */
+extern void *hRexxLibHandle;        /* Library handle */
+extern void *hRexxApiLibHandle;     /* Api Library handle */
 
-extern char *RexxPackage ;
+extern char *RexxPackage;
 
-extern char *RexxLibrary ;
-extern char *RexxApiLibrary ;
+extern char *RexxLibrary;
+extern char *RexxApiLibrary;
 
-extern char *MessagePrefix ;
-extern char *TracePrefix ;
+extern int   MessageLevel;
+extern char *MessagePrefix;
+extern char *ErrorPrefix;
 
-extern int (*RexxDynamicLoader)() ;
-extern int (*RexxRegisterHandlers)() ;
-extern int (*RexxExecCmd)() ;
-extern int (*RexxExecInstoreCmd)() ;
+extern int (*RexxDynamicLoader)();
+extern int (*RexxRegisterHandlers)();
+extern int (*RexxExecCmd)();
+extern int (*RexxExecInstoreCmd)();
 
-static PFNREXXSTART             hRexxStart ;
-static PFNREXXREGISTERSUBCOMEXE hRexxRegisterSubcom ;
-static PFNREXXDEREGISTERSUBCOM  hRexxDeregisterSubcom ;
-static PFNREXXREGISTEREXITEXE   hRexxRegisterExit ;
-static PFNREXXDEREGISTEREXIT    hRexxDeregisterExit ;
-static PFNREXXALLOCATEMEMORY    hRexxAllocateMemory ;
-static PFNREXXFREEMEMORY        hRexxFreeMemory ;
+static PFNREXXSTART             hRexxStart;
+static PFNREXXREGISTERSUBCOMEXE hRexxRegisterSubcom;
+static PFNREXXDEREGISTERSUBCOM  hRexxDeregisterSubcom;
+static PFNREXXREGISTEREXITEXE   hRexxRegisterExit;
+static PFNREXXDEREGISTEREXIT    hRexxDeregisterExit;
+static PFNREXXALLOCATEMEMORY    hRexxAllocateMemory;
+static PFNREXXFREEMEMORY        hRexxFreeMemory;
 
-static PFNREXXVARIABLEPOOL      hRexxVariablePool ;
+static PFNREXXVARIABLEPOOL      hRexxVariablePool;
 
 int ObjectRexxFetchVar (
    char *    pszVar,             /* Variable name                     */
@@ -111,28 +112,28 @@ int ObjectRexxSetVar (
   char *        pValue,         /* Ptr to new value                  */
   size_t        ulLen)          /* Value length                      */
 {
-SHVBLOCK      RxVarBlock ;
-unsigned long ulRetc ;
+SHVBLOCK      RxVarBlock;
+unsigned long ulRetc;
 
     /* initialize RxVarBlock */
-    RxVarBlock.shvnext = NULL ;
-    RxVarBlock.shvname.strptr = pszVar ;
-    RxVarBlock.shvname.strlength = strlen(pszVar) ;
-    RxVarBlock.shvnamelen = RxVarBlock.shvname.strlength ;
-    RxVarBlock.shvvalue.strptr = pValue ;
-    RxVarBlock.shvvalue.strlength = ulLen ;
-    RxVarBlock.shvvaluelen = ulLen ;
-    RxVarBlock.shvcode = RXSHV_SYSET ;
-    RxVarBlock.shvret = RXSHV_OK ;
+    RxVarBlock.shvnext = NULL;
+    RxVarBlock.shvname.strptr = pszVar;
+    RxVarBlock.shvname.strlength = strlen(pszVar);
+    RxVarBlock.shvnamelen = RxVarBlock.shvname.strlength;
+    RxVarBlock.shvvalue.strptr = pValue;
+    RxVarBlock.shvvalue.strlength = ulLen;
+    RxVarBlock.shvvaluelen = ulLen;
+    RxVarBlock.shvcode = RXSHV_SYSET;
+    RxVarBlock.shvret = RXSHV_OK;
 
     /* set variable in pool */
-    ulRetc = (*hRexxVariablePool)(&RxVarBlock) ;
+    ulRetc = (*hRexxVariablePool)(&RxVarBlock);
 
     /* test return code */
     if (ulRetc == RXSHV_NEWV)
-        ulRetc = RXSHV_OK ;
+        ulRetc = RXSHV_OK;
 
-    return (int)ulRetc ;
+    return (int)ulRetc;
 
 }
 
@@ -143,148 +144,162 @@ static RexxReturnCode REXXENTRY hSubcomHandler(
 {
 #define MAX_OPTS 16
 
-short rc ;
-char *line = NULL ;
-int   coun ;
-char *zCommand = NULL ;
-char *wCommand = NULL ;
-char *wResp = NULL ;
+short rc;
+char *line = NULL;
+int   coun;
+char *zCommand = NULL;
+char *wCommand = NULL;
+char *wResp = NULL;
 
-int   iarg,argc ;
-char *argv[MAX_OPTS] ;
+int   iarg,argc;
+char *argv[MAX_OPTS];
 
-int   haveecho ;
+#if 0
+int   haveecho;
 int   echo;
-int   havestem ;
-int   needname ;
-int   havename ;
+#endif
+int   havestem;
+int   needname;
+int   havename;
 
-char *wStem ;
-int   l ;
-char *offst ;
+char *RespStemName;
+int   RespStemLength;
+char *RespStemOffset;
 
-char temp[33] ;
+char temp[33];
 
     zCommand = malloc( RXSTRLEN( *Command) +1);
-    strncpy( zCommand, RXSTRPTR( *Command), RXSTRLEN( *Command)) ;
-    zCommand[RXSTRLEN(*Command)] = '\0' ;
+    strncpy( zCommand, RXSTRPTR( *Command), RXSTRLEN( *Command));
+    zCommand[RXSTRLEN(*Command)] = '\0';
     parse_command( zCommand, MAX_OPTS, argv, &argc);
 
     if ( argc == 0 )
     {
-        free(zCommand) ;
-        sprintf(RetValue->strptr, "%d", -1) ;
-        RetValue->strlength = strlen(RetValue->strptr) ;
+        free(zCommand);
+        sprintf(RetValue->strptr, "%d", -1);
+        RetValue->strlength = strlen(RetValue->strptr);
         *Flags = RXSUBCOM_ERROR;
         return -1;
     }
-
+#if 0
     haveecho = 0;
     echo = 0;
+#endif
     havestem = 0;
     needname = 0;
     havename = 0;
 
-    for (iarg = 1 ; iarg < argc ; iarg++)
+    for (iarg = 1; iarg < argc; iarg++)
     {
         if ( !havename && havestem )
         {
-            havename = 1 ;
-            wStem = malloc(strlen(argv[iarg]) + 33) ;
-            strcpy(wStem, argv[iarg]) ;
-            l = strlen(wStem) ;
-            if  ( wStem[l-1] != '.' )
+            havename = 1;
+            RespStemName = malloc(strlen(argv[iarg]) + 33);
+            strcpy(RespStemName, argv[iarg]);
+            RespStemLength = strlen(RespStemName);
+            if  ( RespStemName[RespStemLength-1] != '.' )
             {
-                wStem[l]   = '.' ;
-                wStem[l+1] = '\0' ;
+                RespStemName[RespStemLength]   = '.';
+                RespStemName[RespStemLength+1] = '\0';
             }
-            offst = wStem + strlen(wStem) ;
-            sprintf(offst,"%d",0) ;
-            sprintf(temp,"%d",0) ;
-            ObjectRexxSetVar(wStem, temp, strlen(temp)) ;
-            continue ;
+            RespStemOffset = RespStemName + strlen(RespStemName);
+            sprintf(RespStemOffset,"%d",0);
+            sprintf(temp,"%d",0);
+            ObjectRexxSetVar(RespStemName, temp, strlen(temp));
+            continue;
         }
 
+#if 0
         if ( !haveecho && ( strcasecmp(argv[iarg], "echo" ) == 0 ) )
         {
-            haveecho = 1 ;
-            echo = 1 ;
-            continue ;
+            haveecho = 1;
+            echo = 1;
+            continue;
         }
         if ( !haveecho && ( strcasecmp(argv[iarg], "noecho" ) == 0 ) )
         {
-            haveecho = 1 ;
-            echo = 0 ;
-            continue ;
+            haveecho = 1;
+            echo = 0;
+            continue;
         }
-
+#endif
         if ( !havestem && ( strcasecmp(argv[iarg], "stem" ) == 0 ) )
         {
             havestem = 1;
             needname = 1;
-            continue ;
+            continue;
         }
 
         if ( havename )
         {
-            free( wStem);
+            free( RespStemName);
         }
 
         free( zCommand);
-        sprintf( RetValue->strptr, "%d", -2) ;
+        sprintf( RetValue->strptr, "%d", -2);
         RetValue->strlength = strlen( RetValue->strptr);
         *Flags = RXSUBCOM_ERROR;
         return -2;
 
     }
 
-    wCommand = NULL ;
-    wCommand = malloc(strlen(argv[0])+33) ;
+    wCommand = NULL;
+    wCommand = malloc(strlen(argv[0])+33);
     if ( wCommand )
     {
+        strcpy(wCommand, argv[0]);
+#if 0
         if ( echo )
         {
-            wCommand[0] = '\0' ;
+            wCommand[0] = '\0';
         }
         else
         {
-            wCommand[0] = '-' ;
-            wCommand[1] = '\0' ;
+            wCommand[0] = '-';
+            wCommand[1] = '\0';
         }
-        strcat( wCommand, argv[0] ) ;
-        LOG_CAPTURE( rc, wResp, panel_command, wCommand);
+        strcat( wCommand, argv[0] );
+#endif
+
         if ( havename )
         {
+            LOG_CAPTURE( rc, wResp, panel_command, wCommand);
             coun = 0;
             if (wResp )
             {
-                for (coun=0, line=strtok(wResp, "\n") ; line ; line = strtok(NULL, "\n"))
+                for (coun=0, line=strtok(wResp, "\n"); line; line = strtok(NULL, "\n"))
                 {
                     coun++;
-                    sprintf(offst,"%d",coun) ;
-                    ObjectRexxSetVar(wStem, line, strlen(line)) ;
+                    sprintf(RespStemOffset,"%d",coun);
+                    ObjectRexxSetVar(RespStemName, line, strlen(line));
                 }
-                free(wResp) ;
+                free(wResp);
             }
-            sprintf(offst,"%d",0) ;
-            sprintf(temp,"%d",coun) ;
-            ObjectRexxSetVar(wStem, temp, strlen(temp)) ;
-            free(wStem) ;
+            sprintf(RespStemOffset,"%d",0);
+            sprintf(temp,"%d",coun);
+            ObjectRexxSetVar(RespStemName, temp, strlen(temp));
+            free(RespStemName);
+            *Flags = RXSUBCOM_OK;
+
         }
-        free(wCommand) ;
-        free(zCommand) ;
-        *Flags = RXSUBCOM_OK ;
+        else
+        {
+            rc = HercCmdLine(wCommand);
+            *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
+        }
+        free(wCommand);
+        free(zCommand);
     }
     else
     {
-        rc = -4 ;
-        *Flags = RXAPI_MEMFAIL ;
+        rc = -4;
+        *Flags = RXAPI_MEMFAIL;
     }
 
-    sprintf(RetValue->strptr, "%d", rc) ;
-    RetValue->strlength = strlen(RetValue->strptr) ;
+    sprintf(RetValue->strptr, "%d", rc);
+    RetValue->strlength = strlen(RetValue->strptr);
 
-    return rc ;
+    return rc;
 }
 
 static RexxReturnCode REXXENTRY hExitHandler(
@@ -298,85 +313,85 @@ static RexxReturnCode REXXENTRY hExitHandler(
             switch( SubFunction ) {
                 case RXSIOSAY:
                     if (MessagePrefix)
-                        logmsg("%-9s %s\n", MessagePrefix, RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string)) ;
+                        logmsg("%-9s %s\n", MessagePrefix, RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string));
                     else
-                        logmsg("%s\n", RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string)) ;
-                    return RXEXIT_HANDLED ;
-                    break ;
+                        logmsg("%s\n", RXSTRPTR(((RXSIOSAY_PARM *)ParmBlock)->rxsio_string));
+                    return RXEXIT_HANDLED;
+                    break;
                 case RXSIOTRC:
                     if (MessagePrefix)
-                        logmsg("%-9s %s\n", MessagePrefix, RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string)) ;
+                        logmsg("%-9s %s\n", MessagePrefix, RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
                     else
-                        logmsg("%s\n", RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string)) ;
-                    return RXEXIT_HANDLED ;
-                    break ;
+                        logmsg("%s\n", RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
+                    return RXEXIT_HANDLED;
+                    break;
                 case RXSIOTRD:
-                    MAKERXSTRING(((RXSIOTRD_PARM *)ParmBlock)->rxsiotrd_retc, NULL, 0) ;
-                    return RXEXIT_HANDLED ;
-                    break ;
+                    MAKERXSTRING(((RXSIOTRD_PARM *)ParmBlock)->rxsiotrd_retc, NULL, 0);
+                    return RXEXIT_HANDLED;
+                    break;
                 case RXSIODTR:
-                    MAKERXSTRING(((RXSIODTR_PARM *)ParmBlock)->rxsiodtr_retc, NULL, 0) ;
-                    return RXEXIT_HANDLED ;
-                    break ;
+                    MAKERXSTRING(((RXSIODTR_PARM *)ParmBlock)->rxsiodtr_retc, NULL, 0);
+                    return RXEXIT_HANDLED;
+                    break;
                 default:
-                    break ;
+                    break;
             }
-            break ;
+            break;
         default:
-            break ;
+            break;
     }
-    return RXEXIT_NOT_HANDLED ;
+    return RXEXIT_NOT_HANDLED;
 }
 
 int ObjectRexxDynamicLoader()
 {
-    HDLOPEN( hRexxLibHandle, OOREXX_LIBRARY, RTLD_LAZY) ;
+    HDLOPEN( hRexxLibHandle, OOREXX_LIBRARY, RTLD_LAZY);
 
-    HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY) ;
+    HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY);
 
-    HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START) ;
+    HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
 
-    HDLSYM ( hRexxRegisterSubcom, hRexxApiLibHandle, REXX_REGISTER_SUBCOM) ;
+    HDLSYM ( hRexxRegisterSubcom, hRexxApiLibHandle, REXX_REGISTER_SUBCOM);
 
-    HDLSYM ( hRexxDeregisterSubcom, hRexxApiLibHandle, REXX_DEREGISTER_SUBCOM) ;
+    HDLSYM ( hRexxDeregisterSubcom, hRexxApiLibHandle, REXX_DEREGISTER_SUBCOM);
 
-    HDLSYM ( hRexxRegisterExit, hRexxApiLibHandle, REXX_REGISTER_EXIT) ;
+    HDLSYM ( hRexxRegisterExit, hRexxApiLibHandle, REXX_REGISTER_EXIT);
 
-    HDLSYM ( hRexxDeregisterExit, hRexxApiLibHandle, REXX_DEREGISTER_EXIT) ;
+    HDLSYM ( hRexxDeregisterExit, hRexxApiLibHandle, REXX_DEREGISTER_EXIT);
 
-    HDLSYM ( hRexxAllocateMemory, hRexxApiLibHandle, REXX_ALLOCATE_MEMORY) ;
+    HDLSYM ( hRexxAllocateMemory, hRexxApiLibHandle, REXX_ALLOCATE_MEMORY);
 
-    HDLSYM ( hRexxFreeMemory, hRexxApiLibHandle, REXX_FREE_MEMORY) ;
+    HDLSYM ( hRexxFreeMemory, hRexxApiLibHandle, REXX_FREE_MEMORY);
 
-    HDLSYM ( hRexxVariablePool, hRexxLibHandle, REXX_VARIABLE_POOL) ;
+    HDLSYM ( hRexxVariablePool, hRexxLibHandle, REXX_VARIABLE_POOL);
 
-    return 0 ;
+    return 0;
 }
 
 int ObjectRexxRegisterHandlers()
 {
-int rc=0 ;
+int rc=0;
 
     if (!hRexxLibHandle)
     {
         if ( (*RexxDynamicLoader)() != 0 )
-           return -1 ;
+           return -1;
     }
 
-    rc = (*hRexxRegisterExit)( hSIOExit, (REXXPFN)hExitHandler, NULL ) ;
+    rc = (*hRexxRegisterExit)( hSIOExit, (REXXPFN)hExitHandler, NULL );
     if (rc != RXEXIT_OK && rc != RXEXIT_NOTREG)
     {
-        WRMSG( HHC17534, "E", RexxPackage, "Exit Handler", rc) ;
-        return -1 ;
+        WRMSG( HHC17534, "E", RexxPackage, "Exit Handler", rc);
+        return -1;
     }
 
-    rc = (*hRexxRegisterSubcom)( hSubcom, (REXXPFN)hSubcomHandler, NULL ) ;
+    rc = (*hRexxRegisterSubcom)( hSubcom, (REXXPFN)hSubcomHandler, NULL );
     if (rc != RXSUBCOM_OK && rc != RXSUBCOM_NOTREG)
     {
-        WRMSG( HHC17534, "E", RexxPackage, "Subcom Handler", rc) ;
-        return -1 ;
+        WRMSG( HHC17534, "E", RexxPackage, "Subcom Handler", rc);
+        return -1;
     }
-    return 0 ;
+    return 0;
 
 }
 
@@ -385,32 +400,32 @@ int rc=0 ;
 /*-------------------------------------------------------------------*/
 int ObjectRexxExecCmd(char *Command, char *Args, int argc, char *argv[] )
 {
-int   rc ;
-short RetRC ;
-CONSTRXSTRING  wArgs ;
-RXSYSEXIT      ExitList[2] ;
-RXSTRING       RetValue ;
+int   rc;
+short RetRC;
+CONSTRXSTRING  wArgs;
+RXSYSEXIT      ExitList[2];
+RXSTRING       RetValue;
 
-    UNREFERENCED(argc) ;
+    UNREFERENCED(argc);
 
     if ( (*RexxRegisterHandlers)() != 0 )
-        return -1 ;
+        return -1;
 
     if ( Args )
     {
-        MAKERXSTRING(wArgs, Args, strlen(Args)) ;
+        MAKERXSTRING(wArgs, Args, strlen(Args));
     }
     else
     {
-        MAKERXSTRING(wArgs, NULL, 0 ) ;
+        MAKERXSTRING(wArgs, NULL, 0 );
     }
 
-    ExitList[0].sysexit_name = hSIOExit ;
-    ExitList[0].sysexit_code = RXSIO ;
-    ExitList[1].sysexit_code = RXENDLST ;
+    ExitList[0].sysexit_name = hSIOExit;
+    ExitList[0].sysexit_code = RXSIO;
+    ExitList[1].sysexit_code = RXENDLST;
 
-    RetValue.strptr = NULL ;       /* initialize return-pointer to empty */
-    RetValue.strlength = 0 ;       /* initialize return-length to zero   */
+    RetValue.strptr = NULL;       /* initialize return-pointer to empty */
+    RetValue.strlength = 0;       /* initialize return-length to zero   */
 
     rc= (*hRexxStart)((Args) ? 1 : 0 ,               /* number of arguments   */
                        &wArgs,                       /* array of arguments    */
@@ -420,23 +435,29 @@ RXSTRING       RetValue ;
                        RXCOMMAND,                    /* Code for how invoked  */
                        ExitList,                     /* EXITs on this call    */
                        &RetRC,                       /* converted return code */
-                       &RetValue) ;                   /* Rexx program output   */
+                       &RetValue);                   /* Rexx program output   */
 
     if ( rc !=  0 )
     {
-        WRMSG( HHC17502, "E", RexxPackage, RexxPackage, rc) ;
+        WRMSG( HHC17502, "E", RexxPackage, RexxPackage, rc);
     }
     else
     {
-        WRMSG( HHC17503, "I", RexxPackage, argv[1], RetRC) ;
+        if ( MessageLevel > 0)
+        {
+            WRMSG( HHC17503, "I", RexxPackage, argv[1], RetRC);
+            if (RetValue.strptr != NULL)
+            {
+                WRMSG( HHC17504, "I", RexxPackage, argv[1], RetValue.strptr);
+            }
+        }
         if (RetValue.strptr != NULL)
         {
-            WRMSG( HHC17504, "I", RexxPackage, argv[1], RetValue.strptr) ;
-            (*hRexxFreeMemory)(RetValue.strptr) ;
+            (*hRexxFreeMemory)(RetValue.strptr);
         }
 
     }
-    return 0 ;
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
@@ -445,40 +466,40 @@ RXSTRING       RetValue ;
 int ObjectRexxExecInstoreCmd(char *Command, char *Args,
                             short RetRC, char *Result )
 {
-int rc ;
+int rc;
 
-CONSTRXSTRING  wArgs ;
-RXSTRING       Instore[2] ;
-RXSYSEXIT      ExitList[2] ;
-RXSTRING       RetValue ;
+CONSTRXSTRING  wArgs;
+RXSTRING       Instore[2];
+RXSYSEXIT      ExitList[2];
+RXSTRING       RetValue;
 
     if ( (*RexxRegisterHandlers)() != 0 )
-        return -1 ;
+        return -1;
 
     if ( Args )
     {
-        MAKERXSTRING(wArgs, Args, strlen(Args)) ;
+        MAKERXSTRING(wArgs, Args, strlen(Args));
     }
     else
     {
-        MAKERXSTRING(wArgs, NULL, 0 ) ;
+        MAKERXSTRING(wArgs, NULL, 0 );
     }
 
-    Instore[0].strptr=Command ;
-    Instore[0].strlength=strlen(Instore[0].strptr) ;
-    Instore[1].strptr=NULL ;
-    Instore[1].strlength=0 ;
+    Instore[0].strptr=Command;
+    Instore[0].strlength=strlen(Instore[0].strptr);
+    Instore[1].strptr=NULL;
+    Instore[1].strlength=0;
 
-    ExitList[0].sysexit_name = hSIOExit ;
-    ExitList[0].sysexit_code = RXSIO ;
-    ExitList[1].sysexit_code = RXENDLST ;
+    ExitList[0].sysexit_name = hSIOExit;
+    ExitList[0].sysexit_code = RXSIO;
+    ExitList[1].sysexit_code = RXENDLST;
 
-    RetValue.strptr=NULL ;
-    RetValue.strlength=0 ;
+    RetValue.strptr=NULL;
+    RetValue.strlength=0;
 
 /*  the file name is used as an eye catcher even if none needed
-    for source look alike with regina rexx ;
-    regina rexx clumsily needs a rexx file name also for Instore scripts ;
+    for source look alike with regina rexx;
+    regina rexx clumsily needs a rexx file name also for Instore scripts;
     the issue could be fixed with about five lines of code
     it would also fix a wrong message issued, but ...
     */
@@ -490,21 +511,21 @@ RXSTRING       RetValue ;
                        RXFUNCTION,                   /* Code for how invoked  */
                        ExitList,                     /* EXITs on this call    */
                        &RetRC,                       /* converted return code */
-                       &RetValue) ;                   /* Rexx program output   */
+                       &RetValue);                   /* Rexx program output   */
 
     if ( rc !=  0 )
     {
-        WRMSG( HHC17502, "E", RexxPackage, RexxPackage, rc) ;
+        WRMSG( HHC17502, "E", RexxPackage, RexxPackage, rc);
         if (RetValue.strptr != NULL)
-            (*hRexxFreeMemory)(RetValue.strptr) ;
+            (*hRexxFreeMemory)(RetValue.strptr);
     }
     else
     if (RetValue.strptr != NULL)
     {
-        strcpy(Result,RetValue.strptr) ;
-        (*hRexxFreeMemory)(RetValue.strptr) ;
+        strcpy(Result,RetValue.strptr);
+        (*hRexxFreeMemory)(RetValue.strptr);
     }
-    return rc ;
+    return rc;
 
 }
 #endif /* defined(ENABLE_OBJECT_REXX) */
