@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------ */
 /* Decimal 32-bit format module                                       */
 /* ------------------------------------------------------------------ */
-/* Copyright (c) IBM Corporation, 2000, 2006.  All rights reserved.   */
+/* Copyright (c) IBM Corporation, 2000, 2008.  All rights reserved.   */
 /*                                                                    */
 /* This software is made available under the terms of the             */
 /* ICU License -- ICU 1.8.1 and later.                                */
@@ -9,7 +9,7 @@
 /* The description and User's Guide ("The decNumber C Library") for   */
 /* this software is called decNumber.pdf.  This document is           */
 /* available, together with arithmetic and format specifications,     */
-/* testcases, and Web links, at: http://www2.hursley.ibm.com/decimal  */
+/* testcases, and Web links, on the General Decimal Arithmetic page.  */
 /*                                                                    */
 /* Please send comments, suggestions, and corrections to the author:  */
 /*   mfc@uk.ibm.com                                                   */
@@ -19,15 +19,13 @@
 /* This module comprises the routines for decimal32 format numbers.   */
 /* Conversions are supplied to and from decNumber and String.         */
 /*                                                                    */
-/* No arithmetic routines are included; decNumber provides these.     */
+/* This is used when decNumber provides operations, either for all    */
+/* operations or as a proxy between decNumber and decSingle.          */
 /*                                                                    */
 /* Error handling is the same as decNumber (qv.).                     */
 /* ------------------------------------------------------------------ */
 #include <string.h>           // [for memset/memcpy]
 #include <stdio.h>            // [for printf]
-#if defined(_MSVC_)
-#pragma warning(disable:4244) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
-#endif /*defined(_MSVC_)*/
 
 #define  DECNUMDIGITS  7      // make decNumbers with space for 7
 #include "decNumber.h"        // base number library
@@ -35,6 +33,10 @@
 #include "decimal32.h"        // our primary include
 
 /* Utility tables and routines [in decimal64.c] */
+// DPD2BIN and the reverse are renamed to prevent link-time conflict
+// if decQuad is also built in the same executable
+#define DPD2BIN DPD2BINx
+#define BIN2DPD BIN2DPDx
 extern const uInt   COMBEXP[32], COMBMSD[32];
 extern const uShort DPD2BIN[1024];
 extern const uShort BIN2DPD[1000];
@@ -51,13 +53,6 @@ extern void decNumberShow(const decNumber *);     // ..
 /* Useful macro */
 // Clear a structure (e.g., a decNumber)
 #define DEC_clear(d) memset(d, 0, sizeof(*d))
-
-#if !DECENDIAN || DECTRACE || DECCHECK
-/* compile-time endian tester [assumes sizeof(int)>1] */
-static  const  Int mfcone=1;                 // constant 1
-static  const  Flag *mfctop=(Flag *)&mfcone; // -> top byte
-#define LITEND mfctop[0]           // named flag; 1=little-endian
-#endif
 
 /* ------------------------------------------------------------------ */
 /* decimal32FromNumber -- convert decNumber to decimal32              */
@@ -82,8 +77,8 @@ decimal32 * decimal32FromNumber(decimal32 *d32, const decNumber *dn,
   Int ae;                          // adjusted exponent
   decNumber  dw;                   // work
   decContext dc;                   // ..
-  uInt *pu;                        // ..
   uInt comb, exp;                  // ..
+  uInt uiwork;                     // for macros
   uInt targ=0;                     // target 32-bit
 
   // If the number has too many digits, or the exponent could be
@@ -167,25 +162,8 @@ decimal32 * decimal32FromNumber(decimal32 *d32, const decNumber *dn,
 
   if (dn->bits&DECNEG) targ|=0x80000000;  // add sign bit
 
-  // now write to storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct store
-  pu=(uInt *)d32->bytes;           // overlay
-  *pu=targ;                        // directly store the int
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    uByte *pb;                     // work
-    for (pb=&d32->bytes[3]; pb>=d32->bytes; pb--) {
-      *pb=(uByte)(targ&0xff);
-      targ>>=8;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d32->bytes;         // overlay
-    *pu=targ;                      // directly store the int
-    }
-  #endif
+  // now write to storage; this is endian
+  UBFROMUI(d32->bytes, targ);      // directly store the int
 
   if (status!=0) decContextSetStatus(set, status); // pass on status
   // decimal32Show(d32);
@@ -202,29 +180,11 @@ decNumber * decimal32ToNumber(const decimal32 *d32, decNumber *dn) {
   uInt msd;                        // coefficient MSD
   uInt exp;                        // exponent top two bits
   uInt comb;                       // combination field
-  uInt *pu;                        // work
   uInt sour;                       // source 32-bit
+  uInt uiwork;                     // for macros
 
-  // load source from storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct load
-  pu=(uInt *)d32->bytes;           // overlay
-  sour=*pu;                        // directly load the int
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    const uByte *pb;               // work
-    sour=0;                        // [keep compiler quiet]
-    for (pb=d32->bytes; pb<=&d32->bytes[3]; pb++) {
-      sour<<=8;
-      sour|=*pb;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d32->bytes;         // overlay
-    sour=*pu;                      // directly load the int
-    }
-  #endif
+  // load source from storage; this is endian
+  sour=UBTOUI(d32->bytes);         // directly load the int
 
   comb=(sour>>26)&0x1f;            // combination field
 
@@ -290,33 +250,15 @@ char * decimal32ToString(const decimal32 *d32, char *string){
   uInt comb;                       // combination field
   char *cstart;                    // coefficient start
   char *c;                         // output pointer in string
-  uInt *pu;                        // work
+  const uByte *u;                  // work
   char *s, *t;                     // .. (source, target)
   Int  dpd;                        // ..
   Int  pre, e;                     // ..
-  const uByte *u;                  // ..
+  uInt uiwork;                     // for macros
   uInt sour;                       // source 32-bit
 
-  // load source from storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct load
-  pu=(uInt *)d32->bytes;           // overlay
-  sour=*pu;                        // directly load the int
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    const uByte *pb;               // work
-    sour=0;                        // [keep compiler quiet]
-    for (pb=d32->bytes; pb<=&d32->bytes[3]; pb++) {
-      sour<<=8;
-      sour|=*pb;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d32->bytes;         // overlay
-    sour=*pu;                      // directly load the int
-    }
-  #endif
+  // load source from storage; this is endian
+  sour=UBTOUI(d32->bytes);         // directly load the int
 
   c=string;                        // where result will go
   if (((Int)sour)<0) *c++='-';     // handle sign
@@ -327,7 +269,8 @@ char * decimal32ToString(const decimal32 *d32, char *string){
 
   if (exp==3) {
     if (msd==0) {                  // infinity
-      strcpy(c, "Infinity");
+      strcpy(c,   "Inf");
+      strcpy(c+3, "inity");
       return string;               // easy
       }
     if (sour&0x02000000) *c++='s'; // sNaN
@@ -448,7 +391,63 @@ decimal32 * decimal32FromString(decimal32 *result, const char *string,
   return result;
   } // decimal32FromString
 
+/* ------------------------------------------------------------------ */
+/* decimal32IsCanonical -- test whether encoding is canonical         */
+/*   d32 is the source decimal32                                      */
+/*   returns 1 if the encoding of d32 is canonical, 0 otherwise       */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+uInt decimal32IsCanonical(const decimal32 *d32) {
+  decNumber dn;                         // work
+  decimal32 canon;                      // ..
+  decContext dc;                        // ..
+  decContextDefault(&dc, DEC_INIT_DECIMAL32);
+  decimal32ToNumber(d32, &dn);
+  decimal32FromNumber(&canon, &dn, &dc);// canon will now be canonical
+  return memcmp(d32, &canon, DECIMAL32_Bytes)==0;
+  } // decimal32IsCanonical
+
+/* ------------------------------------------------------------------ */
+/* decimal32Canonical -- copy an encoding, ensuring it is canonical   */
+/*   d32 is the source decimal32                                      */
+/*   result is the target (may be the same decimal32)                 */
+/*   returns result                                                   */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+decimal32 * decimal32Canonical(decimal32 *result, const decimal32 *d32) {
+  decNumber dn;                         // work
+  decContext dc;                        // ..
+  decContextDefault(&dc, DEC_INIT_DECIMAL32);
+  decimal32ToNumber(d32, &dn);
+  decimal32FromNumber(result, &dn, &dc);// result will now be canonical
+  return result;
+  } // decimal32Canonical
+
 #if DECTRACE || DECCHECK
+/* Macros for accessing decimal32 fields.  These assume the argument
+   is a reference (pointer) to the decimal32 structure, and the
+   decimal32 is in network byte order (big-endian) */
+// Get sign
+#define decimal32Sign(d)       ((unsigned)(d)->bytes[0]>>7)
+
+// Get combination field
+#define decimal32Comb(d)       (((d)->bytes[0] & 0x7c)>>2)
+
+// Get exponent continuation [does not remove bias]
+#define decimal32ExpCon(d)     ((((d)->bytes[0] & 0x03)<<4)           \
+                             | ((unsigned)(d)->bytes[1]>>4))
+
+// Set sign [this assumes sign previously 0]
+#define decimal32SetSign(d, b) {                                      \
+  (d)->bytes[0]|=((unsigned)(b)<<7);}
+
+// Set exponent continuation [does not apply bias]
+// This assumes range has been checked and exponent previously 0;
+// type of exponent must be unsigned
+#define decimal32SetExpCon(d, e) {                                    \
+  (d)->bytes[0]|=(uByte)((e)>>4);                                     \
+  (d)->bytes[1]|=(uByte)(((e)&0x0F)<<4);}
+
 /* ------------------------------------------------------------------ */
 /* decimal32Show -- display a decimal32 in hexadecimal [debug aid]    */
 /*   d32 -- the number to show                                        */
@@ -458,8 +457,7 @@ void decimal32Show(const decimal32 *d32) {
   char buf[DECIMAL32_Bytes*2+1];
   Int i, j=0;
 
-  #if DECENDIAN
-  if (LITEND) {
+  if (DECLITEND) {
     for (i=0; i<DECIMAL32_Bytes; i++, j+=2) {
       sprintf(&buf[j], "%02x", d32->bytes[3-i]);
       }
@@ -468,14 +466,11 @@ void decimal32Show(const decimal32 *d32) {
            ((d32->bytes[3]&0x3)<<4)| (d32->bytes[2]>>4));
     }
    else {
-  #endif
     for (i=0; i<DECIMAL32_Bytes; i++, j+=2) {
       sprintf(&buf[j], "%02x", d32->bytes[i]);
       }
     printf(" D32> %s [S:%d Cb:%02x Ec:%02x] BigEndian\n", buf,
            decimal32Sign(d32), decimal32Comb(d32), decimal32ExpCon(d32));
-  #if DECENDIAN
     }
-  #endif
   } // decimal32Show
 #endif

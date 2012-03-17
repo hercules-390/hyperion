@@ -9,7 +9,7 @@
 /* The description and User's Guide ("The decNumber C Library") for   */
 /* this software is called decNumber.pdf.  This document is           */
 /* available, together with arithmetic and format specifications,     */
-/* testcases, and Web links, at: http://www2.hursley.ibm.com/decimal  */
+/* testcases, and Web links, on the General Decimal Arithmetic page.  */
 /*                                                                    */
 /* Please send comments, suggestions, and corrections to the author:  */
 /*   mfc@uk.ibm.com                                                   */
@@ -27,9 +27,6 @@
 /* ------------------------------------------------------------------ */
 
 #include <string.h>           // for NULL
-#if defined(_MSVC_)
-#pragma warning(disable:4244) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
-#endif /*defined(_MSVC_)*/
 #include "decNumber.h"        // base number library
 #include "decPacked.h"        // packed decimal
 #include "decNumberLocal.h"   // decNumber local types, etc.
@@ -194,7 +191,7 @@ decNumber * decPackedToNumber(const uByte *bcd, Int length,
     if (nib>9) {decNumberZero(dn); return NULL;}
 
     if (cut==0) *up=(Unit)nib;
-     else *up=(Unit)(*up+nib*powers[cut]);
+     else *up=(Unit)(*up+nib*DECPOWERS[cut]);
     digits--;
     if (digits==0) break;               // got them all
     cut++;
@@ -208,7 +205,7 @@ decNumber * decPackedToNumber(const uByte *bcd, Int length,
 
     // got a digit, in nib
     if (cut==0) *up=(Unit)nib;
-     else *up=(Unit)(*up+nib*powers[cut]);
+     else *up=(Unit)(*up+nib*DECPOWERS[cut]);
     digits--;
     if (digits==0) break;               // got them all
     cut++;

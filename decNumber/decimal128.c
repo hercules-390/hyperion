@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------ */
 /* Decimal 128-bit format module                                      */
 /* ------------------------------------------------------------------ */
-/* Copyright (c) IBM Corporation, 2000, 2006.  All rights reserved.   */
+/* Copyright (c) IBM Corporation, 2000, 2008.  All rights reserved.   */
 /*                                                                    */
 /* This software is made available under the terms of the             */
 /* ICU License -- ICU 1.8.1 and later.                                */
@@ -9,7 +9,7 @@
 /* The description and User's Guide ("The decNumber C Library") for   */
 /* this software is called decNumber.pdf.  This document is           */
 /* available, together with arithmetic and format specifications,     */
-/* testcases, and Web links, at: http://www2.hursley.ibm.com/decimal  */
+/* testcases, and Web links, on the General Decimal Arithmetic page.  */
 /*                                                                    */
 /* Please send comments, suggestions, and corrections to the author:  */
 /*   mfc@uk.ibm.com                                                   */
@@ -19,15 +19,13 @@
 /* This module comprises the routines for decimal128 format numbers.  */
 /* Conversions are supplied to and from decNumber and String.         */
 /*                                                                    */
-/* No arithmetic routines are included; decNumber provides these.     */
+/* This is used when decNumber provides operations, either for all    */
+/* operations or as a proxy between decNumber and decSingle.          */
 /*                                                                    */
 /* Error handling is the same as decNumber (qv.).                     */
 /* ------------------------------------------------------------------ */
 #include <string.h>           // [for memset/memcpy]
 #include <stdio.h>            // [for printf]
-#if defined(_MSVC_)
-#pragma warning(disable:4244) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
-#endif /*defined(_MSVC_)*/
 
 #define  DECNUMDIGITS 34      // make decNumbers with space for 34
 #include "decNumber.h"        // base number library
@@ -35,6 +33,10 @@
 #include "decimal128.h"       // our primary include
 
 /* Utility routines and tables [in decimal64.c] */
+// DPD2BIN and the reverse are renamed to prevent link-time conflict
+// if decQuad is also built in the same executable
+#define DPD2BIN DPD2BINx
+#define BIN2DPD BIN2DPDx
 extern const uInt   COMBEXP[32], COMBMSD[32];
 extern const uShort DPD2BIN[1024];
 extern const uShort BIN2DPD[1000];      // [not used]
@@ -47,11 +49,6 @@ extern void decDigitsToDPD(const decNumber *, uInt *, Int);
 void decimal128Show(const decimal128 *);          // for debug
 extern void decNumberShow(const decNumber *);     // ..
 #endif
-
-/* compile-time endian tester [assumes sizeof(int)>1] */
-static  const  Int mfcone=1;                 // constant 1
-static  const  Flag *mfctop=(Flag *)&mfcone; // -> top byte
-#define LITEND mfctop[0]           // named flag; 1=little-endian
 
 /* Useful macro */
 // Clear a structure (e.g., a decNumber)
@@ -80,8 +77,8 @@ decimal128 * decimal128FromNumber(decimal128 *d128, const decNumber *dn,
   Int ae;                          // adjusted exponent
   decNumber  dw;                   // work
   decContext dc;                   // ..
-  uInt *pu;                        // ..
   uInt comb, exp;                  // ..
+  uInt uiwork;                     // for macros
   uInt targar[4]={0,0,0,0};        // target 128-bit
   #define targhi targar[3]         // name the word with the sign
   #define targmh targar[2]         // name the words
@@ -162,41 +159,21 @@ decimal128 * decimal128FromNumber(decimal128 *d128, const decNumber *dn,
 
   if (dn->bits&DECNEG) targhi|=0x80000000; // add sign bit
 
-  // now write to storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct store, in the right order
-  pu=(uInt *)d128->bytes;          // overlay
-  if (LITEND) {
-    pu[0]=targlo;                  // directly store the low int
-    pu[1]=targml;                  // then the mid-low
-    pu[2]=targmh;                  // then the mid-high
-    pu[3]=targhi;                  // then the high int
+  // now write to storage; this is endian
+  if (DECLITEND) {
+    // lo -> hi
+    UBFROMUI(d128->bytes,    targlo);
+    UBFROMUI(d128->bytes+4,  targml);
+    UBFROMUI(d128->bytes+8,  targmh);
+    UBFROMUI(d128->bytes+12, targhi);
     }
    else {
-    pu[0]=targhi;                  // directly store the high int
-    pu[1]=targmh;                  // then the mid-high
-    pu[2]=targml;                  // then the mid-low
-    pu[3]=targlo;                  // then the low int
+    // hi -> lo
+    UBFROMUI(d128->bytes,    targhi);
+    UBFROMUI(d128->bytes+4,  targmh);
+    UBFROMUI(d128->bytes+8,  targml);
+    UBFROMUI(d128->bytes+12, targlo);
     }
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    uByte *pb;                     // work
-    Int off;                       // ..
-    for (pb=&d128->bytes[15]; pb>=d128->bytes; pb--) {
-      off=3-((pb-d128->bytes)>>2); // 0, then 1, 2, 3
-      *pb=(uByte)(targar[off]&0xff);
-      targar[off]>>=8;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d128->bytes;        // overlay
-    pu[0]=targhi;                  // directly store the high int
-    pu[1]=targmh;                  // then the mid-high
-    pu[2]=targml;                  // then the mid-low
-    pu[3]=targlo;                  // then the low int
-    }
-  #endif
 
   if (status!=0) decContextSetStatus(set, status); // pass on status
   // decimal128Show(d128);
@@ -213,49 +190,27 @@ decNumber * decimal128ToNumber(const decimal128 *d128, decNumber *dn) {
   uInt msd;                        // coefficient MSD
   uInt exp;                        // exponent top two bits
   uInt comb;                       // combination field
-  uInt *pu;                        // work
-  Int  need;                       // ..
+  Int  need;                       // work
+  uInt uiwork;                     // for macros
   uInt sourar[4];                  // source 128-bit
   #define sourhi sourar[3]         // name the word with the sign
   #define sourmh sourar[2]         // and the mid-high word
   #define sourml sourar[1]         // and the mod-low word
   #define sourlo sourar[0]         // and the lowest word
 
-  // load source from storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct load, in the right order
-  pu=(uInt *)d128->bytes;          // overlay
-  if (LITEND) {
-    sourlo=pu[0];                  // directly load the low int
-    sourml=pu[1];                  // then the mid-low
-    sourmh=pu[2];                  // then the mid-high
-    sourhi=pu[3];                  // then the high int
+  // load source from storage; this is endian
+  if (DECLITEND) {
+    sourlo=UBTOUI(d128->bytes   ); // directly load the low int
+    sourml=UBTOUI(d128->bytes+4 ); // then the mid-low
+    sourmh=UBTOUI(d128->bytes+8 ); // then the mid-high
+    sourhi=UBTOUI(d128->bytes+12); // then the high int
     }
    else {
-    sourhi=pu[0];                  // directly load the high int
-    sourmh=pu[1];                  // then the mid-high
-    sourml=pu[2];                  // then the mid-low
-    sourlo=pu[3];                  // then the low int
+    sourhi=UBTOUI(d128->bytes   ); // directly load the high int
+    sourmh=UBTOUI(d128->bytes+4 ); // then the mid-high
+    sourml=UBTOUI(d128->bytes+8 ); // then the mid-low
+    sourlo=UBTOUI(d128->bytes+12); // then the low int
     }
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    const uByte *pb;               // work
-    Int off;                       // ..
-    for (pb=d128->bytes; pb<=&d128->bytes[15]; pb++) {
-      off=3-((pb-d128->bytes)>>2); // 3, then 2, 1, 0
-      sourar[off]<<=8;
-      sourar[off]|=*pb;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d128->bytes;        // overlay
-    sourhi=pu[0];                  // directly load the high int
-    sourmh=pu[1];                  // then the mid-high
-    sourml=pu[2];                  // then the mid-low
-    sourlo=pu[3];                  // then the low int
-    }
-  #endif
 
   comb=(sourhi>>26)&0x1f;          // combination field
 
@@ -324,11 +279,11 @@ char * decimal128ToString(const decimal128 *d128, char *string){
   uInt comb;                       // combination field
   char *cstart;                    // coefficient start
   char *c;                         // output pointer in string
-  uInt *pu;                        // work
+  const uByte *u;                  // work
   char *s, *t;                     // .. (source, target)
   Int  dpd;                        // ..
   Int  pre, e;                     // ..
-  const uByte *u;                  // ..
+  uInt uiwork;                     // for macros
 
   uInt sourar[4];                  // source 128-bit
   #define sourhi sourar[3]         // name the word with the sign
@@ -336,41 +291,19 @@ char * decimal128ToString(const decimal128 *d128, char *string){
   #define sourml sourar[1]         // and the mod-low word
   #define sourlo sourar[0]         // and the lowest word
 
-  // load source from storage; this may be endian, or not
-  #if DECENDIAN
-  // DECENDIAN -- direct load, in the right order
-  pu=(uInt *)d128->bytes;          // overlay
-  if (LITEND) {
-    sourlo=pu[0];                  // directly load the low int
-    sourml=pu[1];                  // then the mid-low
-    sourmh=pu[2];                  // then the mid-high
-    sourhi=pu[3];                  // then the high int
+  // load source from storage; this is endian
+  if (DECLITEND) {
+    sourlo=UBTOUI(d128->bytes   ); // directly load the low int
+    sourml=UBTOUI(d128->bytes+4 ); // then the mid-low
+    sourmh=UBTOUI(d128->bytes+8 ); // then the mid-high
+    sourhi=UBTOUI(d128->bytes+12); // then the high int
     }
    else {
-    sourhi=pu[0];                  // directly load the high int
-    sourmh=pu[1];                  // then the mid-high
-    sourml=pu[2];                  // then the mid-low
-    sourlo=pu[3];                  // then the low int
+    sourhi=UBTOUI(d128->bytes   ); // directly load the high int
+    sourmh=UBTOUI(d128->bytes+4 ); // then the mid-high
+    sourml=UBTOUI(d128->bytes+8 ); // then the mid-low
+    sourlo=UBTOUI(d128->bytes+12); // then the low int
     }
-  #else
-  // not DECENDIAN -- use network byte order
-  if (LITEND) {                    // little-endian needs reversal
-    const uByte *pb;               // work
-    Int off;                       // ..
-    for (pb=d128->bytes; pb<=&d128->bytes[15]; pb++) {
-      off=3-((pb-d128->bytes)>>2); // 3, then 2, 1, 0
-      sourar[off]<<=8;
-      sourar[off]|=*pb;
-      } // i
-    }
-   else { // big-endian; it's the right way round already
-    pu=(uInt *)d128->bytes;        // overlay
-    sourhi=pu[0];                  // directly load the high int
-    sourmh=pu[1];                  // then the mid-high
-    sourml=pu[2];                  // then the mid-low
-    sourlo=pu[3];                  // then the low int
-    }
-  #endif
 
   c=string;                        // where result will go
   if (((Int)sourhi)<0) *c++='-';   // handle sign
@@ -381,7 +314,8 @@ char * decimal128ToString(const decimal128 *d128, char *string){
 
   if (exp==3) {
     if (msd==0) {                  // infinity
-      strcpy(c, "Infinity");
+      strcpy(c,   "Inf");
+      strcpy(c+3, "inity");
       return string;               // easy
       }
     if (sourhi&0x02000000) *c++='s'; // sNaN
@@ -530,7 +464,65 @@ decimal128 * decimal128FromString(decimal128 *result, const char *string,
   return result;
   } // decimal128FromString
 
+/* ------------------------------------------------------------------ */
+/* decimal128IsCanonical -- test whether encoding is canonical        */
+/*   d128 is the source decimal128                                    */
+/*   returns 1 if the encoding of d128 is canonical, 0 otherwise      */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+uInt decimal128IsCanonical(const decimal128 *d128) {
+  decNumber dn;                         // work
+  decimal128 canon;                      // ..
+  decContext dc;                        // ..
+  decContextDefault(&dc, DEC_INIT_DECIMAL128);
+  decimal128ToNumber(d128, &dn);
+  decimal128FromNumber(&canon, &dn, &dc);// canon will now be canonical
+  return memcmp(d128, &canon, DECIMAL128_Bytes)==0;
+  } // decimal128IsCanonical
+
+/* ------------------------------------------------------------------ */
+/* decimal128Canonical -- copy an encoding, ensuring it is canonical  */
+/*   d128 is the source decimal128                                    */
+/*   result is the target (may be the same decimal128)                */
+/*   returns result                                                   */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+decimal128 * decimal128Canonical(decimal128 *result, const decimal128 *d128) {
+  decNumber dn;                         // work
+  decContext dc;                        // ..
+  decContextDefault(&dc, DEC_INIT_DECIMAL128);
+  decimal128ToNumber(d128, &dn);
+  decimal128FromNumber(result, &dn, &dc);// result will now be canonical
+  return result;
+  } // decimal128Canonical
+
 #if DECTRACE || DECCHECK
+/* Macros for accessing decimal128 fields.  These assume the argument
+   is a reference (pointer) to the decimal128 structure, and the
+   decimal128 is in network byte order (big-endian) */
+// Get sign
+#define decimal128Sign(d)       ((unsigned)(d)->bytes[0]>>7)
+
+// Get combination field
+#define decimal128Comb(d)       (((d)->bytes[0] & 0x7c)>>2)
+
+// Get exponent continuation [does not remove bias]
+#define decimal128ExpCon(d)     ((((d)->bytes[0] & 0x03)<<10)         \
+                              | ((unsigned)(d)->bytes[1]<<2)          \
+                              | ((unsigned)(d)->bytes[2]>>6))
+
+// Set sign [this assumes sign previously 0]
+#define decimal128SetSign(d, b) {                                     \
+  (d)->bytes[0]|=((unsigned)(b)<<7);}
+
+// Set exponent continuation [does not apply bias]
+// This assumes range has been checked and exponent previously 0;
+// type of exponent must be unsigned
+#define decimal128SetExpCon(d, e) {                                   \
+  (d)->bytes[0]|=(uByte)((e)>>10);                                    \
+  (d)->bytes[1] =(uByte)(((e)&0x3fc)>>2);                             \
+  (d)->bytes[2]|=(uByte)(((e)&0x03)<<6);}
+
 /* ------------------------------------------------------------------ */
 /* decimal128Show -- display a decimal128 in hexadecimal [debug aid]  */
 /*   d128 -- the number to show                                       */
@@ -540,8 +532,7 @@ void decimal128Show(const decimal128 *d128) {
   char buf[DECIMAL128_Bytes*2+1];
   Int i, j=0;
 
-  #if DECENDIAN
-  if (LITEND) {
+  if (DECLITEND) {
     for (i=0; i<DECIMAL128_Bytes; i++, j+=2) {
       sprintf(&buf[j], "%02x", d128->bytes[15-i]);
       }
@@ -551,15 +542,12 @@ void decimal128Show(const decimal128 *d128) {
            (d128->bytes[13]>>6));
     }
    else {
-  #endif
     for (i=0; i<DECIMAL128_Bytes; i++, j+=2) {
       sprintf(&buf[j], "%02x", d128->bytes[i]);
       }
     printf(" D128> %s [S:%d Cb:%02x Ec:%02x] BigEndian\n", buf,
            decimal128Sign(d128), decimal128Comb(d128),
            decimal128ExpCon(d128));
-  #if DECENDIAN
     }
-  #endif
   } // decimal128Show
 #endif

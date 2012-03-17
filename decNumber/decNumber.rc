@@ -6,19 +6,22 @@
  *
  * $Log$
  *
+ * the IBM copyright info was different in many modules
+ * here the most comprehensive one is used
+ *
  */
 
 #include <winver.h>
 
   #define DECNAME     "decNumber"                       /* Short name */
-  #define DECVERSION  "decNumber 3.37"           /* Version [16 max.] */
+  #define DECVERSION  "decNumber 3.68"           /* Version [16 max.] */
   #define DECFULLNAME "Decimal Number Module"         /* Verbose name */
   #define DECAUTHOR   "Mike Cowlishaw"                /* Who to blame */
 
-  #define DECCOPYRIGHT "Copyright (c) IBM Corporation, 2000, 2006"
+  #define DECCOPYRIGHT "Copyright (c) IBM Corporation, 2000, 2010"
   #define DECLICENSE   "ICU License -- ICU 1.8.1 and later"
   #define DECVERMAJOR 3                       /* Major version number */
-  #define DECVERMINOR 37                      /* Minor version number */
+  #define DECVERMINOR 68                      /* Minor version number */
 
   #define SPECIALINFO "Built for Hercules"
 
