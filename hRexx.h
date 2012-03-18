@@ -26,6 +26,7 @@
 
 #if     defined( _MSVC_ )
 #define EXTNDELIM             ";"
+#define EXTENSIONS            ".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx"
 #define PATHDELIM             ";"
 #define PATHFORMAT            "%s\\%s%s"
 #define REGINA_LIBRARY        "regina.dll"
@@ -33,7 +34,8 @@
 #define OOREXX_API_LIBRARY    "rexxapi.dll"
 
 #elif   defined ( __APPLE__ )
-#define EXTNDELIM             ";"
+#define EXTNDELIM             ":"
+#define EXTENSIONS            ".REXX:.rexx:.REX:.rex;.CMD:.cmd:.RX:.rx"
 #define PATHDELIM             ":"
 #define PATHFORMAT            "%s/%s%s"
 #define REGINA_LIBRARY        "libregina.dylib"
@@ -41,7 +43,8 @@
 #define OOREXX_API_LIBRARY    "librexxapi.dylib"
 
 #else
-#define EXTNDELIM             ";"
+#define EXTNDELIM             ":"
+#define EXTENSIONS            ".REXX:.rexx:.REX:.rex;.CMD:.cmd:.RX:.rx"
 #define PATHDELIM             ":"
 #define PATHFORMAT            "%s/%s%s"
 #define REGINA_LIBRARY        "libregina.so"

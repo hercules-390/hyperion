@@ -156,7 +156,18 @@ say _src
 
 returned              ==> MACOSX COMMAND /Hercules/sandhawk.390.build/hercules.rexx
 
-notice the full resolved path of the configuration file
+note the full resolved path of the configuration file
+
+
+03/18
+fixed a small glitch where sometimes the rexx status display
+returned a dirty buffer
+
+
+fixed the logic glitch in the extension separator
+USES NOW THE SAME separator as the one used by PATH,
+only one separator to remember !
+
 
 to do ...
 some cosmetics

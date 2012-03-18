@@ -744,7 +744,7 @@ short RetRC=0;
             SETREXX_RESET()
             RexxStatus = _STOPPED_ ;
             WRMSG( HHC17521, "I", "");
-            return 0;
+            return -1;
         }
         if ( strcasecmp(envvar, OOREXX_PACKAGE ) == 0  )
         {
@@ -828,7 +828,7 @@ char *envvar;
             RexxExtensions = strdup(envvar);
         }
         else
-            RexxExtensions = strdup(".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx");
+            RexxExtensions = strdup(EXTENSIONS);
     }
 
     for (RexxExtensionsCount= 0,ptr = strtok(RexxExtensions, EXTNDELIM ); ptr; ptr = strtok(NULL, EXTNDELIM))
