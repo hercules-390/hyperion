@@ -1541,6 +1541,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
+#define SIE_IC0_STFL    0x10            /* Intercept STFL/STFLE      */
 #define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
