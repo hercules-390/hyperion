@@ -1055,12 +1055,13 @@ typedef struct _PMCW {
 #define PMCW5_V         0x01            /* Subchannel valid          */
 
 /* Bit definitions for PMCW flag byte 25 */
-#define PMCW25_VISC     0x1F            /* Guest ISC                 */
+#define PMCW25_VISC     0x07            /* Guest ISC                 */
 #define PMCW25_TYPE     0xE0            /* Subchannel Type           */
 #define PMCW25_TYPE_0   0x00            /* I/O Subchannel            */
 #define PMCW25_TYPE_1   0x20            /* CHSC subchannel           */
 #define PMCW25_TYPE_2   0x40            /* Message subchannel        */
 #define PMCW25_TYPE_3   0x60            /* ADM subchannel            */
+#define PMCW25_RESV     0x18            /* Reserved bits             */
 
 
 /* Bit definitions for PMCW flag byte 27 */
