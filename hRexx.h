@@ -35,7 +35,7 @@
 
 #elif   defined ( __APPLE__ )
 #define EXTNDELIM             ":"
-#define EXTENSIONS            ".REXX:.rexx:.REX:.rex;.CMD:.cmd:.RX:.rx"
+#define EXTENSIONS            ".rexx:.rex:.cmd:.rx" /* APPLE is caseless */
 #define PATHDELIM             ":"
 #define PATHFORMAT            "%s/%s%s"
 #define REGINA_LIBRARY        "libregina.dylib"
@@ -44,7 +44,7 @@
 
 #else
 #define EXTNDELIM             ":"
-#define EXTENSIONS            ".REXX:.rexx:.REX:.rex;.CMD:.cmd:.RX:.rx"
+#define EXTENSIONS            ".REXX:.rexx:.REX:.rex:.CMD:.cmd:.RX:.rx"
 #define PATHDELIM             ":"
 #define PATHFORMAT            "%s/%s%s"
 #define REGINA_LIBRARY        "libregina.so"

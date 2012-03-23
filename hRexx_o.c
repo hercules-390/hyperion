@@ -23,6 +23,7 @@ _RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
 _RETC_ = 0;\
 } while (0)
 
+#include "rexx.h"
 #include "oorexxapi.h"
 
 #include "hRexx.h"
@@ -158,9 +159,9 @@ char *argv[MAX_OPTS];
 int   haveecho;
 int   echo;
 #endif
-int   havestem;
-int   needname;
-int   havename;
+int   haveStemKeyw;
+int   needStemName;
+int   haveStemName;
 
 char *RespStemName;
 int   RespStemLength;
@@ -185,15 +186,15 @@ char temp[33];
     haveecho = 0;
     echo = 0;
 #endif
-    havestem = 0;
-    needname = 0;
-    havename = 0;
+    haveStemKeyw = 0;
+    needStemName = 0;
+    haveStemName = 0;
 
     for (iarg = 1; iarg < argc; iarg++)
     {
-        if ( !havename && havestem )
+        if ( !haveStemName && haveStemKeyw )
         {
-            havename = 1;
+            haveStemName = 1;
             RespStemName = malloc(strlen(argv[iarg]) + 33);
             strcpy(RespStemName, argv[iarg]);
             RespStemLength = strlen(RespStemName);
@@ -223,14 +224,14 @@ char temp[33];
             continue;
         }
 #endif
-        if ( !havestem && ( strcasecmp(argv[iarg], "stem" ) == 0 ) )
+        if ( !haveStemKeyw && ( strcasecmp(argv[iarg], "stem" ) == 0 ) )
         {
-            havestem = 1;
-            needname = 1;
+            haveStemKeyw = 1;
+            needStemName = 1;
             continue;
         }
 
-        if ( havename )
+        if ( haveStemName )
         {
             free( RespStemName);
         }
@@ -261,7 +262,7 @@ char temp[33];
         strcat( wCommand, argv[0] );
 #endif
 
-        if ( havename )
+        if ( haveStemName )
         {
             LOG_CAPTURE( rc, wResp, panel_command, wCommand);
             coun = 0;

@@ -16,10 +16,15 @@
 #ifndef _HREXX_C_
 #define _HREXX_C_
 
+#define  CMPARG( _VALUE_ )  strcasecmp( _VALUE_, argv[iarg])
+#define CMPARGL( _VALUE_ ) strncasecmp( _VALUE_, argv[iarg], argl)
+
+
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
 
-#define REXX_TRY_OOREXX(_FOUND_) do \
+#define REXX_TRY_OOREXX( _FOUND_ ) do \
 { \
     RexxPackage = OOREXX_PACKAGE; \
     RexxDynamicLoader = &ObjectRexxDynamicLoader; \
@@ -35,7 +40,7 @@
     } \
 } while(0) ;
 
-#define REXX_TRY_REGINA(_FOUND_) do \
+#define REXX_TRY_REGINA( _FOUND_ ) do \
 { \
     RexxPackage = REGINA_PACKAGE; \
     RexxDynamicLoader = &ReginaRexxDynamicLoader; \
@@ -68,8 +73,9 @@
 // forward references
 int  exec_cmd(int, char  **, char* );
 int  exec_instore_cmd(char *, char *);
-void InitializeRexxPaths(char *);
-void InitializeRexxExtensions(char *);
+void InitializePaths(char *);
+void InitializeExtensions(char *);
+void InitializeOptions(void);
 
 #if defined(ENABLE_OBJECT_REXX)
 int ObjectRexxDynamicLoader();
@@ -85,7 +91,7 @@ int ReginaRexxExecInstoreCmd();
 #endif
 
 void *hRexxLibHandle = NULL;       /* Library handle */
-void *hRexxApiLibHandle = NULL;     /* Api Library handle */
+void *hRexxApiLibHandle = NULL;    /* Api Library handle ooRexx*/
 
 #if defined(ENABLE_OBJECT_REXX)  && !defined(ENABLE_REGINA_REXX)
 char *RexxPackage = OOREXX_PACKAGE;
@@ -116,20 +122,26 @@ int (*RexxExecInstoreCmd)() = NULL;
 
 #endif
 
-int   RexxPathsInitialized=FALSE;
-char *RexxPaths = NULL;
-char *RexxPathsArray[32];
-int   RexxPathsCount=0;
+int   PathsInitialized = FALSE;
+int   useRexxPath = TRUE;
+char *RexxPath = NULL;
+char *RexxPathArray[32];
+int   RexxPathCount = 0;
+int   useSysPath = TRUE;
+char *SysPath = NULL;
+char *SysPathArray[32];
+int   SysPathCount = 0;
 
-int   RexxExtensionsInitialized=FALSE;
-char *RexxExtensions = NULL;
-char *RexxExtensionsArray[32];
-int   RexxExtensionsCount=0;
+int   ExtensionsInitialized = FALSE;
+char *Extensions = NULL;
+char *ExtensionsArray[32];
+int   ExtensionsCount = 0;
 
-int   MessageLevel;
-char *MessagePrefix;
-char *ErrorPrefix;
-
+int   OptionsInitialized = TRUE;
+int   useResolver = TRUE;
+int   MessageLevel = 0;
+char *MessagePrefix = NULL;
+char *ErrorPrefix = NULL;
 
 #define _WAITING_ 0
 #define _STOPPED_ 1
@@ -140,15 +152,21 @@ int   RexxStatus = _WAITING_ ;
 /*-------------------------------------------------------------------*/
 int rexx_cmd(int argc, char *argv[], char *CommandLine)
 {
-char *ARGSDESC[] = {"", "Paths", "Extensions", "MsgLevel", "MsgPrefix", "ErrPrefix", "Start/Enable"};
+char *ARGSDESC[] = {"", "Start/Enable", "Path", "SysPath", "Extensions", "Resolver", "MsgLevel", "MsgPrefix", "ErrPrefix"};
 char *PACKAGES[] = {"", "ooRexx", "Regina" };
 
-#define _NEEDPATHS 1
-#define _NEEDEXTNS 2
-#define _NEEDMSGLEVL 3
-#define _NEEDMSGPREF 4
-#define _NEEDERRPREF 5
-#define _NEEDPACKAGE 6
+enum
+{
+    _NEEDPACKAGE = 1 ,
+    _NEEDPATH ,
+    _NEEDSYSPATH ,
+    _NEEDEXTNS ,
+    _NEEDRESOLVER ,
+    _NEEDMSGLEVL ,
+    _NEEDMSGPREF ,
+    _NEEDERRPREF ,
+    _NEEDz
+} ;
 
 int   i;
 int   rc = 0;
@@ -158,22 +176,26 @@ char *ptr,*nxt;
 char temp[33];
 int  iarg,argl;
 
-int  whatValue   = 0;
+int  whatValue = 0;
 
-int  haveStop  = FALSE;
-int  havePaths = FALSE;
+int  haveStop = FALSE;
+int  havePath = FALSE;
+int  haveSysPath = FALSE;
 int  haveExtns = FALSE;
-int  haveMsgLevl= FALSE;
+int  haveResolver = FALSE;
+int  haveMsgLevl = FALSE;
 int  haveMsgPref = FALSE;
 int  haveErrPref = FALSE;
 int  haveStart = FALSE;
 
-char *wPaths = NULL;
+char *wPath = NULL;
+int   wSysPath = TRUE;
 char *wExtns = NULL;
+int   wResolver = TRUE;
 int   wMsgLevl = 0;
 char *wMsgPref = NULL;
 char *wErrPref = NULL;
-char *wPackage  = NULL;
+char *wPackage = NULL;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -195,9 +217,43 @@ char *wPackage  = NULL;
         {
             switch ( whatValue )
             {
-                case _NEEDPATHS :
+                case _NEEDPACKAGE :
                 {
-                    wPaths = strdup(argv[iarg]);
+                    if ( CMPARG( REGINA_PACKAGE ) == 0 || CMPARG( OOREXX_PACKAGE ) == 0 )
+                        wPackage = strdup(argv[iarg]);
+                    else
+                    {
+                        WRMSG( HHC17509, "W", RexxPackage, argv[iarg], ARGSDESC[_NEEDPACKAGE]);
+                        return -1;
+                    }
+                }
+                break;
+
+                case _NEEDPATH :
+                {
+                    wPath = strdup(argv[iarg]);
+                }
+                break;
+
+                case _NEEDSYSPATH :
+                {
+                    if ( CMPARG( "reset" ) == 0 )
+                    {
+                        wSysPath = TRUE;
+                    }
+                    else if ( CMPARG( "enable" ) == 0 || CMPARG( "on" ) == 0 )
+                    {
+                        wSysPath = TRUE;
+                    }
+                    else if ( CMPARG( "disable" ) == 0 || CMPARG( "off" ) == 0 )
+                    {
+                        wSysPath = FALSE;
+                    }
+                    else
+                    {
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDSYSPATH]);
+                        return -1;
+                    }
                 }
                 break;
 
@@ -207,9 +263,31 @@ char *wPackage  = NULL;
                 }
                 break;
 
+                case _NEEDRESOLVER :
+                {
+                    if ( CMPARG( "reset" ) == 0 )
+                    {
+                        wResolver = TRUE;
+                    }
+                    else if ( CMPARG( "enable" ) == 0 || CMPARG( "on" ) == 0 )
+                    {
+                        wResolver = TRUE;
+                    }
+                    else if ( CMPARG( "disable" ) == 0 || CMPARG( "off" ) == 0 )
+                    {
+                        wResolver = FALSE;
+                    }
+                    else
+                    {
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDRESOLVER]);
+                        return -1;
+                    }
+                }
+                break;
+
                 case _NEEDMSGLEVL :
                 {
-                    if ( strcasecmp( argv[iarg], "reset") == 0 )
+                    if ( CMPARG( "reset" ) == 0 )
                     {
                         wMsgLevl = 0;
                     }
@@ -249,29 +327,17 @@ char *wPackage  = NULL;
                 }
                 break;
 
-                case _NEEDPACKAGE :
-                {
-                    if ( strcasecmp( argv[iarg], REGINA_PACKAGE) == 0 || strcasecmp( argv[iarg], OOREXX_PACKAGE) == 0 )
-                        wPackage = strdup(argv[iarg]);
-                    else
-                    {
-                        WRMSG( HHC17509, "W", RexxPackage, argv[iarg], ARGSDESC[_NEEDPACKAGE]);
-                        return -1;
-                    }
-                }
-                break;
-
             }
             whatValue = 0;
             continue;
         }
 
         if ( !haveStop &&
-             ( ( argl >= 3 && argl <= 4 && strncasecmp("stop",    argv[iarg], argl) == 0 ) ||
-               ( argl >= 3 && argl <= 7 && strncasecmp("disable", argv[iarg], argl) == 0 ) ))
+             ( ( argl >= 3 && argl <= 4 && CMPARGL( "disable" ) == 0 ) ||
+               ( argl >= 3 && argl <= 7 && CMPARGL( "stop" ) == 0 ) ))
         {
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
-            haveStop= TRUE;
+            haveStop = TRUE;
             continue;
 #else  /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
             WRMSG( HHC17524, "I", RexxPackage);
@@ -279,50 +345,67 @@ char *wPackage  = NULL;
 #endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
         }
 
-        if ( !havePaths &&
-             ( argl >= 4 && argl <= 5 && strncasecmp("paths", argv[iarg], argl) == 0 ) )
+        if ( !havePath &&
+           ( ( argl >= 4 && argl <=  5 && CMPARGL( "paths" ) == 0 ) ||
+             ( argl >= 5 && argl <=  9 && CMPARGL( "rexxpaths" ) == 0 ) ) )
         {
-            havePaths= TRUE;
-            whatValue = _NEEDPATHS;
+            havePath = TRUE;
+            whatValue = _NEEDPATH;
+            continue;
+        }
+
+        if ( !haveSysPath &&
+             ( argl >= 4 && argl <=  7 && CMPARGL( "syspath" ) == 0 ) )
+        {
+            haveSysPath = TRUE;
+            whatValue = _NEEDSYSPATH;
             continue;
         }
 
         if ( !haveExtns &&
-             ( ( argl >= 3 && argl <=  8 && strncasecmp("suffixes",   argv[iarg], argl) == 0 ) ||
-               ( argl >= 3 && argl <= 10 && strncasecmp("extensions", argv[iarg], argl) == 0 ) ) )
+           ( ( argl >= 3 && argl <=  8 && CMPARGL( "extensions" ) == 0 ) ||
+             ( argl >= 3 && argl <= 10 && CMPARGL( "suffixes" ) == 0 ) ) )
         {
-            haveExtns= TRUE;
+            haveExtns = TRUE;
             whatValue = _NEEDEXTNS;
             continue;
         }
 
-        if ( !haveMsgLevl &&
-             ( argl >= 4 && argl <= 10 && strncasecmp("msglevel", argv[iarg], argl) == 0 ) )
+        if ( !haveResolver &&
+             ( argl >= 5 && argl <=  8 && CMPARGL( "resolver" ) == 0 ) )
         {
-            haveMsgLevl= TRUE;
+            haveResolver = TRUE;
+            whatValue = _NEEDRESOLVER;
+            continue;
+        }
+
+        if ( !haveMsgLevl &&
+             ( argl >= 4 && argl <=  8 && CMPARGL( "msglevel" ) == 0 ) )
+        {
+            haveMsgLevl = TRUE;
             whatValue = _NEEDMSGLEVL;
             continue;
         }
 
         if ( !haveMsgPref &&
-             ( argl >= 4 && argl <=  9 && strncasecmp("msgprefix", argv[iarg], argl) == 0 ) )
+             ( argl >= 4 && argl <=  9 && CMPARGL( "msgprefix" ) == 0 ) )
         {
-            haveMsgPref= TRUE;
+            haveMsgPref = TRUE;
             whatValue = _NEEDMSGPREF;
             continue;
         }
 
         if ( !haveErrPref &&
-             ( argl >= 4 && argl <=  9 && strncasecmp("errprefix", argv[iarg], argl) == 0 ) )
+             ( argl >= 4 && argl <=  9 && CMPARGL( "errprefix" ) == 0 ) )
         {
-            haveErrPref= TRUE;
+            haveErrPref = TRUE;
             whatValue = _NEEDERRPREF;
             continue;
         }
 
         if ( !haveStart &&
-             ( ( argl >= 3 && argl <= 5 && strncasecmp("start",  argv[iarg], argl) == 0 ) ||
-               ( argl >= 3 && argl <= 6 && strncasecmp("enable", argv[iarg], argl) == 0 ) ) )
+           ( ( argl >= 3 && argl <=  5 && CMPARGL( "enable" ) == 0 ) ||
+             ( argl >= 3 && argl <=  6 && CMPARGL( "start" ) == 0 ) ) )
         {
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
             if ( hRexxLibHandle )
@@ -371,22 +454,44 @@ char *wPackage  = NULL;
     }
 #endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
-    if ( havePaths )
+    if ( havePath )
     {
-        if ( strcasecmp("reset", wPaths) == 0 )
+        if ( strcasecmp( "reset", wPath) == 0 )
         {
-            InitializeRexxPaths(NULL);
+            if (wPath)
+            {
+                free(wPath);
+                wPath = NULL;
+            }
+            if (RexxPath)
+            {
+                free(RexxPath);
+                RexxPath = NULL;
+            }
+            InitializePaths(NULL);
         }
         else
-            InitializeRexxPaths(wPaths);
+        {
+            InitializePaths(wPath);
+        }
+    }
+
+    if ( haveSysPath )
+    {
+        useSysPath = wSysPath;
     }
 
     if ( haveExtns )
     {
-        if ( strcasecmp("reset", wExtns) == 0 )
-            InitializeRexxExtensions(NULL);
+        if ( strcasecmp( "reset", wExtns) == 0 )
+            InitializeExtensions(NULL);
         else
-            InitializeRexxExtensions(wExtns);
+            InitializeExtensions(wExtns);
+    }
+
+    if ( haveResolver )
+    {
+        useResolver = wResolver;
     }
 
     if ( haveMsgLevl )
@@ -396,7 +501,7 @@ char *wPackage  = NULL;
 
     if ( haveMsgPref )
     {
-        if ( strcasecmp("reset", wMsgPref) == 0 )
+        if ( strcasecmp( "off", wMsgPref) == 0 || strcasecmp( "reset", wMsgPref) == 0 )
         {
             if ( MessagePrefix )
             {
@@ -413,7 +518,7 @@ char *wPackage  = NULL;
 
     if ( haveErrPref )
     {
-        if ( strcasecmp("reset", wErrPref) == 0 )
+        if ( strcasecmp( "off", wErrPref) == 0 || strcasecmp( "reset", wErrPref) == 0 )
         {
             if ( ErrorPrefix )
             {
@@ -486,43 +591,45 @@ char *wPackage  = NULL;
 Start_Rexx_Loaded:
 #endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
-    if ( !RexxPathsInitialized )
-        InitializeRexxPaths(NULL);
-    strcpy(Result,"Paths: " );
-    for (i=0;i<RexxPathsCount;i++)
+    if ( !PathsInitialized )
+        InitializePaths(NULL);
+    strcpy(Result, "Rexx Path : " );
+    for (i=0; i<RexxPathCount; i++)
     {
-        strcat(Result,RexxPathsArray[i]);
-        strcat(Result,i == RexxPathsCount-1 ? "" : PATHDELIM );
+        strcat(Result,RexxPathArray[i]);
+        strcat(Result,i == RexxPathCount-1 ? "" : PATHDELIM );
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    if ( !RexxExtensionsInitialized )
-        InitializeRexxExtensions(NULL);
-    strcpy(Result,"Extensions: ");
-    for (i=0;i<RexxExtensionsCount;i++)
+    strcpy(Result, "Sys Path  : ");
+    strcat(Result, useSysPath ? "(ON)" : "(OFF)" );
+    WRMSG( HHC17500, "I", RexxPackage,Result);
+
+    if ( !ExtensionsInitialized )
+        InitializeExtensions(NULL);
+    strcpy(Result, "Extensions: ");
+    for (i=1; i<ExtensionsCount; i++)
     {
-        strcat(Result,RexxExtensionsArray[i]);
-        strcat(Result,i == RexxExtensionsCount-1 ? "" : EXTNDELIM );
+        strcat(Result, ExtensionsArray[i]);
+        strcat(Result, i == ExtensionsCount-1 ? "" : EXTNDELIM );
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result,"Msg Level : ");
+    strcpy(Result, "Resolver  : ");
+    strcat(Result, useResolver ? "(ON)" : "(OFF)" );
+    WRMSG( HHC17500, "I", RexxPackage,Result);
+
+    strcpy(Result, "Msg Level : ");
     sprintf(temp,"%d",MessageLevel);
     strcat(Result,temp);
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result,"Msg Prefix: ");
-    if ( MessagePrefix )
-        strcat(Result,MessagePrefix);
-    else
-        strcat(Result,"(OFF)");
-    WRMSG( HHC17500, "I", RexxPackage,Result);
+    strcpy(Result, "Msg Prefix: ");
+    strcat(Result, MessagePrefix ? MessagePrefix : "(OFF)" );
+        WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result,"Err Prefix: ");
-    if ( ErrorPrefix )
-        strcat(Result,ErrorPrefix);
-    else
-        strcat(Result,"(OFF)");
+    strcpy(Result, "Err Prefix: ");
+    strcat(Result, ErrorPrefix ? ErrorPrefix : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
@@ -635,6 +742,9 @@ exec_cmd_Rexx_Loaded:
 
     strcpy(wCommand,argv[1]);
 
+    if ( ! useResolver )
+        goto skipResolver;
+
     haveResolvedCommand = FALSE;
 
     if ( access(wCommand, R_OK ) == 0 )
@@ -646,27 +756,20 @@ exec_cmd_Rexx_Loaded:
     if (strcmp(basename(wCommand),wCommand) != 0)
         goto endResolver;
 
-    if ( !RexxPathsInitialized )
-        InitializeRexxPaths(NULL);
-    if ( !RexxExtensionsInitialized )
-        InitializeRexxExtensions(NULL);
+    if ( !PathsInitialized )
+        InitializePaths(NULL);
+    if ( !ExtensionsInitialized )
+        InitializeExtensions(NULL);
+    if ( !OptionsInitialized )
+        InitializeOptions();
 
-    for( iPath = 0;iPath<RexxPathsCount;iPath++)
+    if  ( strstr(argv[1],".") )
     {
-        if ( access( RexxPathsArray[iPath], R_OK ) != 0 )
-            continue;
-
-        sprintf(wCommand, PATHFORMAT, RexxPathsArray[iPath], argv[1],"");
-        if ( access(wCommand, R_OK ) == 0)
+        if ( useRexxPath )
         {
-            haveResolvedCommand = TRUE;
-            goto endResolver;
-        }
-        if  ( !strstr(argv[1],".") )
-        {
-            for( iExtn = 0;iExtn<RexxExtensionsCount;iExtn++)
+            for( iPath = 0; iPath<RexxPathCount; iPath++)
             {
-                sprintf(wCommand, PATHFORMAT, RexxPathsArray[iPath], argv[1],RexxExtensionsArray[iExtn]);
+                sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], "");
                 if ( access(wCommand, R_OK ) == 0)
                 {
                     haveResolvedCommand = TRUE;
@@ -674,16 +777,59 @@ exec_cmd_Rexx_Loaded:
                 }
             }
         }
+        if ( useSysPath )
+        {
+            for( iPath = 0; iPath<SysPathCount; iPath++)
+            {
+                sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1], "");
+                if ( access(wCommand, R_OK ) == 0)
+                {
+                    haveResolvedCommand = TRUE;
+                    goto endResolver;
+                }
+            }
+        }
+
+    }
+    else
+    {
+        for( iExtn = 0; iExtn<ExtensionsCount; iExtn++)
+        {
+            if ( useRexxPath )
+            {
+                for( iPath = 0; iPath<RexxPathCount; iPath++)
+                {
+                    sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
+                    if ( access(wCommand, R_OK ) == 0)
+                    {
+                        haveResolvedCommand = TRUE;
+                        goto endResolver;
+                    }
+                }
+            }
+            if ( useSysPath )
+            {
+                for( iPath = 0; iPath<SysPathCount; iPath++)
+                {
+                    sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
+                    if ( access(wCommand, R_OK ) == 0)
+                    {
+                        haveResolvedCommand = TRUE;
+                        goto endResolver;
+                    }
+                }
+            }
+        }
     }
 
 endResolver:
-
     if ( !haveResolvedCommand )
     {
         WRMSG( HHC17506, "I", RexxPackage, argv[1]);
         return -1;
     }
 
+skipResolver:
     if (argc > 2)
     {
         for (argl = 0, iarg = 2; iarg < argc; iarg++)
@@ -776,68 +922,94 @@ exec_instore_cmd_Rexx_Loaded:
 
 }
 
-void InitializeRexxPaths(char * wPaths)
+void InitializePaths(char * wPath)
 {
 char *ptr;
 char *envvar;
-    if ( wPaths )
+    if ( wPath )
     {
-        RexxPaths = strdup(wPaths);
-        free(wPaths);
+        RexxPath = strdup(wPath);
+        free(wPath);
     }
     else
     {
         if ( ( envvar = getenv("HREXX_PATH") ) )
         {
-            RexxPaths = strdup(envvar);
+            RexxPath = strdup(envvar);
         }
         else if ( ( envvar = getenv("HREXX_PATHS") ) )
         {
-            RexxPaths = strdup(envvar);
+            RexxPath = strdup(envvar);
         }
-        else
-            RexxPaths = strdup(getenv("PATH"));
+
     }
-    for (RexxPathsCount= 0,ptr = strtok(RexxPaths,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
+
+    if ( RexxPath )
     {
-        RexxPathsArray[RexxPathsCount] = ptr;
-        RexxPathsCount++;
+        for (RexxPathCount = 0, ptr = strtok(RexxPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
+        {
+            RexxPathArray[RexxPathCount] = ptr;
+            RexxPathCount++;
+        }
     }
-    RexxPathsInitialized = TRUE;
+    else
+    {
+        RexxPathCount = 0 ;
+    }
+
+    envvar = getenv("PATH");
+    SysPath = strdup(envvar);
+    for (SysPathCount= 0,ptr = strtok(SysPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
+    {
+        SysPathArray[SysPathCount] = ptr;
+        SysPathCount++;
+    }
+
+    PathsInitialized = TRUE;
     return;
 }
 
-void InitializeRexxExtensions(char * wExtns)
+void InitializeExtensions(char * wExtns)
 {
 char *ptr;
 char *envvar;
 
     if ( wExtns )
     {
-        RexxExtensions = strdup(wExtns);
+        Extensions = strdup(wExtns);
         free(wExtns);
     }
     else
     {
         if ( ( envvar = getenv("HREXX_EXTENSIONS") ) )
         {
-            RexxExtensions = strdup(envvar);
+            Extensions = strdup(envvar);
         }
         else if ( ( envvar = getenv("HREXX_SUFFIXES") ) )
         {
-            RexxExtensions = strdup(envvar);
+            Extensions = strdup(envvar);
         }
         else
-            RexxExtensions = strdup(EXTENSIONS);
+            Extensions = strdup(EXTENSIONS);
     }
 
-    for (RexxExtensionsCount= 0,ptr = strtok(RexxExtensions, EXTNDELIM ); ptr; ptr = strtok(NULL, EXTNDELIM))
+    ExtensionsArray[0] = "";
+    ExtensionsCount = 1 ;
+    for (ptr = strtok(Extensions, EXTNDELIM ); ptr; ptr = strtok(NULL, EXTNDELIM))
     {
-        RexxExtensionsArray[RexxExtensionsCount] = ptr;
-        RexxExtensionsCount++;
+        ExtensionsArray[ExtensionsCount] = ptr;
+        ExtensionsCount++;
     }
-    RexxExtensionsInitialized = TRUE;
+    ExtensionsInitialized = TRUE;
     return;
+}
+
+void InitializeOptions( void )
+{
+    useResolver = TRUE;
+    MessageLevel = 0;
+    MessagePrefix = NULL;
+    ErrorPrefix = NULL;
 }
 
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)  */

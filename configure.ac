@@ -584,9 +584,6 @@ AC_CHECK_HEADERS( rexx.h,
 AC_CHECK_HEADERS( oorexxapi.h,
                   [hc_cv_have_oorexxapi_h=yes],
                   [hc_cv_have_oorexxapi_h=no]    )
-AC_CHECK_HEADERS( oorexxerrors.h,
-                  [hc_cv_have_oorexxerrors_h=yes],
-                  [hc_cv_have_oorexxerrors_h=no]    )
 AC_CHECK_HEADERS( regina/rexxsaa.h,
                   [hc_cv_have_regina_rexxsaa_h=yes],
                   [hc_cv_have_regina_rexxsaa_h=no]    )
@@ -1697,12 +1694,6 @@ if test "$hc_cv_ena_object_rexx" = "yes" ; then
    if test "$hc_cv_have_oorexxapi_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
-      hc_error=yes
-   fi
-
-   if test "$hc_cv_have_oorexxerrors_h" != "yes"; then
-
-      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxerrors.h is not available] )
       hc_error=yes
    fi
 
