@@ -209,9 +209,10 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_QUEUED_DIRECT_IO)
     CHSC_SB(chsc_rsp10->general_char,41);  /* Adapter Interruption Facility */
 
-    CHSC_SB(chsc_rsp10->chsc_char,1);
-
-    CHSC_SB(chsc_rsp10->chsc_char,8);
+    CHSC_SB(chsc_rsp10->chsc_char,1); // 0x0002 Supported
+    CHSC_SB(chsc_rsp10->chsc_char,2); // 0x0006 Supported
+    CHSC_SB(chsc_rsp10->chsc_char,3); // 0x0004 Supported
+    CHSC_SB(chsc_rsp10->chsc_char,8); // 0x0024 Supported
 
     if(FACILITY_ENABLED(QDIO_ASSIST, regs))
         CHSC_SB(chsc_rsp10->general_char,61);         /* QDIO Assist */
