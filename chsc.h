@@ -194,7 +194,25 @@ typedef struct _CHSC_RSP4 {
 
 
 typedef struct _CHSC_RSP6 {
-        BYTE    cuinfo[128];
+        BYTE    sch_val : 1;            /* Subchannel valid          */
+        BYTE    dev_val : 1;            /* Device number valid       */
+        BYTE    st : 3;                 /* Subchannel type           */
+#define CHSC_RSP6_ST_IO     0           /* I/O Subchannel; all fields
+                                           have a meaning            */
+#define CHSC_RSP6_ST_CHSC   1           /* CHSC Subchannel only sch_val
+                                           st and sch have a meaning */
+#define CHSC_RSP6_ST_MSG    2           /* MSG Subchannel; all fields
+                                           except unit_addr have a 
+                                           meaning                   */
+#define CHSC_RPS6_ST_ADM    3           /* ADM Subchannel; Only sch_val
+                                           st and sch have a meaning */
+        BYTE    zeros : 3;
+        BYTE    fla_valid_mask;         /* Link Address validty mask */
+        HWORD   devnum;                 /* Control Unit Number       */
+        HWORD   resv1;                  /* Valid link mask           */
+        HWORD   sch;                    /* Subchannel number         */
+        BYTE    chpid[8];               /* Channel path array        */
+        HWORD   fla[8];                 /* Full link address array   */
     } CHSC_RSP6;
 
 
@@ -238,11 +256,13 @@ typedef struct _CHSC_RSP24 {
         HWORD   qdioac2;
 /* qdio adapter-characteristics-2 flag */
 #define QETH_SNIFF_AVAIL                0x0008  /* Promisc mode avail */
+#define QETH_AC2_DATA_DIV_AVAILABLE     0x0010
+#define QETH_AC2_DATA_DIV_ENABLED       0x0002
         DBLWRD  sch_token;
         BYTE    mro;
         BYTE    mri;
-        BYTE    resv4;
-        BYTE    sbalic;
+        HWORD   qdioac3; 
+#define QETH_AC3_FORMAT2_CQ_AVAILABLE   0x8000
         HWORD   resv5;
         BYTE    resv6;
         BYTE    mmwc;

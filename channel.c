@@ -1343,10 +1343,6 @@ DEVBLK *dev;                            /* -> Device control block   */
 int     console = 0;                    /* 1 = console device reset  */
 int i;
 
-    /* Reset channel subsystem back to default initial non-MSS state */
-    sysblk.mss = FALSE;                 /* (not enabled by default)  */
-    sysblk.lcssmax = 0;                 /* (default to single lcss)  */
-
     /* reset sclp interface */
     sclp_reset();
 

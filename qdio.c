@@ -47,7 +47,10 @@ DEVBLK *dev;                            /* -> device block           */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_SIE)
+    if(SIE_STATNB(regs, EC3, SIGAA))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
     PTIO(IO,"SIGA");
 
@@ -194,7 +197,10 @@ U64     slsba;                 /* Storage list state block address   */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_SIE)
+    if(SIE_STATNB(regs, EC3, SIGAA))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
     PTIO(INF,"SQBS");
 
@@ -296,7 +302,10 @@ U64     slsba;                /* Storage list state block address    */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_SIE)
+    if(SIE_STATNB(regs, EC3, SIGAA))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
     PTIO(INF,"EQBS");
 

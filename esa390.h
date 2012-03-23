@@ -1055,12 +1055,13 @@ typedef struct _PMCW {
 #define PMCW5_V         0x01            /* Subchannel valid          */
 
 /* Bit definitions for PMCW flag byte 25 */
-#define PMCW25_VISC     0x1F            /* Guest ISC                 */
+#define PMCW25_VISC     0x07            /* Guest ISC                 */
 #define PMCW25_TYPE     0xE0            /* Subchannel Type           */
 #define PMCW25_TYPE_0   0x00            /* I/O Subchannel            */
 #define PMCW25_TYPE_1   0x20            /* CHSC subchannel           */
 #define PMCW25_TYPE_2   0x40            /* Message subchannel        */
 #define PMCW25_TYPE_3   0x60            /* ADM subchannel            */
+#define PMCW25_RESV     0x18            /* Reserved bits             */
 
 
 /* Bit definitions for PMCW flag byte 27 */
@@ -1452,8 +1453,9 @@ typedef struct _MBK {
 #define STFL_SVS                (STFL_HBASE+9)
 #define STFL_LOGICAL_PARTITION  (STFL_HBASE+10)
 #define STFL_VIRTUAL_MACHINE    (STFL_HBASE+11)
+#define STFL_QDIO_ASSIST        (STFL_HBASE+12)
 
-#define STFL_HMAX               (STFL_HBASE+11)
+#define STFL_HMAX               (STFL_HBASE+12)
 #define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
 #define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
 
@@ -1540,6 +1542,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
+#define SIE_IC0_STFL    0x10            /* Intercept STFL/STFLE      */
 #define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
