@@ -605,8 +605,6 @@ struct SYSBLK {
         /*      I/O Management                                       */
         /*-----------------------------------------------------------*/
 
-        int     mss;                    /* Multiple CSS enabled      */
-        int     lcssmax;                /* Maximum Subchannel-Set Id */
         U32     chp_reset[8];           /* Channel path reset masks  */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
@@ -1071,6 +1069,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    pgstat;                 /* Path Group Status         */
         BYTE    pgid[11];               /* Path Group ID             */
         BYTE    reserved2[4];           /* (pad/align/unused/avail)  */
+        U16     fla[8];                 /* Full Link Address Array   */
         COND    resumecond;             /* Resume condition          */
         COND    iocond;                 /* I/O active condition      */
         int     iowaiters;              /* Number of I/O waiters     */
@@ -1079,7 +1078,6 @@ struct DEVBLK {                         /* Device configuration block*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
         BYTE    drvpwd[11];             /* Password for drive        */
         BYTE    sensemm[5];             /* Manuf. & model for sense  */
-        U16     fla[8];                 /* Full Link Address Array   */
 
         /*  control flags...                                         */
         unsigned int                    /* Flags                     */

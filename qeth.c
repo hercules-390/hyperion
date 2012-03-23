@@ -1214,6 +1214,17 @@ int i;
             grp->ttmtu = strdup(argv[++i]);
             continue;
         }
+        else if(!strcasecmp("chpid",argv[i]) && (i+1) < argc)
+        {
+            int chpid;
+            char c;
+            if(sscanf(argv[++i], "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
+                logmsg(_("QETH: Invalid channel path id %s for device %4.4X\n"),argv[i],dev->devnum);
+
+            else
+                dev->pmcw.chpid[0] = chpid;
+            continue;
+        }
         else if(!strcasecmp("debug",argv[i]) && (i+1) < argc)
         {
             grp->debug = 1;
@@ -1226,9 +1237,9 @@ int i;
 
     if(grouped)
     {
-        dev->group->memdev[OSA_DATA_DEVICE]->pmcw.flag4 |= PMCW4_Q;
-//      for(i = 0; i < OSA_GROUP_SIZE; i++)
-//          dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
+//      dev->group->memdev[OSA_DATA_DEVICE]->pmcw.flag4 |= PMCW4_Q;
+        for(i = 0; i < OSA_GROUP_SIZE; i++)
+            dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
     }
 
     return 0;
@@ -1372,7 +1383,12 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 
     if(dev->pmcw.flag4 & PMCW4_Q)
     {
-
+#if 0
+chsc_rsp24->pcnt = 0x10;
+chsc_rsp24->icnt = 0x01;
+chsc_rsp24->ocnt = 0x20;
+STORE_HW(chsc_rsp24->qdioac2, 0x4000);
+#endif
         chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
         chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
