@@ -1,4 +1,4 @@
-/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2011      */
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2012      */
 /*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Tape Device Handler Structure Definitions            */
 /*                                                                   */
@@ -10,8 +10,6 @@
 /* This header file contains tape related structures and defines     */
 /* for the Hercules ESA/390 emulator.                                */
 /*-------------------------------------------------------------------*/
-
-// $Id$
 
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__

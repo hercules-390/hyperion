@@ -1,4 +1,4 @@
-/*  GETOPT.C    (c) Copyright Roger Bowler, 1999-2011                */
+/*  GETOPT.C    (c) Copyright Roger Bowler, 1999-2012                */
 /*              NetBSD getopt parsing function                       */
 /*              Additional Copyright notices below                   */
 /*                                                                   */
@@ -6,8 +6,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 /*   The above notice applies only to the Hercules Project changes.  */
-
-// $Id$
 
 /*      $NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $      */
 

@@ -1,11 +1,11 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2011                */
+/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2012                */
 /*              ESA/390 Diagnose Functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */
@@ -15,7 +15,6 @@
 /* Additional credits:                                               */
 /*      Hercules-specific diagnose calls by Jay Maynard.             */
 /*      Set/reset bad frame indicator call by Jan Jaeger.            */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"

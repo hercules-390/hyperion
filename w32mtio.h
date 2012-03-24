@@ -1,11 +1,9 @@
-/* W32MTIO.H    (c) Copyright "Fish" (David B. Trout), 2005-2011     */
+/* W32MTIO.H    (c) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Win32 'mtio.h' (Magnetic Tape structures)            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 ////////////////////////////////////////////////////////////////////////////////////
 //

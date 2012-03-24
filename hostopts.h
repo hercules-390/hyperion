@@ -1,11 +1,9 @@
-/* HOSTOPTS.H   (c) Copyright "Fish" (David B. Trout), 2005-2011     */
+/* HOSTOPTS.H   (c) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Host-specific features and options for Hercules      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 //    This header file #included by 'featall.h' and 'hercules.h'
 

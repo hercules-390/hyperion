@@ -1,7 +1,5 @@
-/* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2011                  */
+/* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              Cryptographic instructions                           */
-
-// $Id$
 
 #include "hstdinc.h"
 #include "hercules.h"

@@ -1,11 +1,9 @@
-/* CACHE.C    (c) Copyright Greg Smith, 2002-2011                    */
+/* CACHE.C    (c) Copyright Greg Smith, 2002-2012                    */
 /*            Dynamic cache manager for multi-threaded applications  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 //FIXME ?? Dynamic resizing is disabled
 

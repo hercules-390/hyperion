@@ -1,13 +1,10 @@
-/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2011     */
+/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2012     */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*            Header file contains host system information           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
-
 
 #ifndef _HOSTINFO_H_
 #define _HOSTINFO_H_

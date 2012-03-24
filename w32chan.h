@@ -1,11 +1,9 @@
-/* W32CHAN.H    (c) Copyright "Fish" (David B. Trout), 2001-2011     */
+/* W32CHAN.H    (c) Copyright "Fish" (David B. Trout), 2001-2012     */
 /*              Fish's new i/o scheduling logic                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #ifndef _W32CHANN_H_
 #define _W32CHANN_H_

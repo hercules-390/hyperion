@@ -1,8 +1,5 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2011                   */
-/*              (c)Copyright TurboHercules, SAS 2010-2011            */
+/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2012                   */
 /*              Hercules HTTP Server for Console Ops                 */
-
-// $Id$
 
 /* This file contains all code required for the HTTP server,         */
 /* when the http_server thread is started it will listen on          */

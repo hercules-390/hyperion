@@ -1,4 +1,4 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2011                */
+/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2012                */
 /*              Hercules CPU Emulator - Instructions A-M             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -6,10 +6,8 @@
 /*   Hercules.                                                       */
 
 /* UPT & CFC                (c) Copyright Peter Kuschnerus, 1999-2009*/
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
-
-// $Id$
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements general instructions A-M of the            */

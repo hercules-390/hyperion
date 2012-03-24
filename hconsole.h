@@ -1,12 +1,10 @@
-/* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009-2011     */
+/* HCONSOLE.H   (c) Copyright "Fish" (David B. Trout), 2009-2012     */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*          Hercules hardware console (panel) support functions      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H

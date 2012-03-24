@@ -1,12 +1,9 @@
-/* PARSER.C     (c) Copyright Roger Bowler, 1999-2011                */
+/* PARSER.C     (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Simple parameter parser                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
-
 
 #include "hstdinc.h"
 

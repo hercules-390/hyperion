@@ -1,12 +1,10 @@
-/* STRSIGNAL.C  (c) Copyright Roger Bowler, 1999-2011                */
+/* STRSIGNAL.C  (c) Copyright Roger Bowler, 1999-2012                */
 /*                 Originally written by Fred Fish fnf@cygnus.com    */
 /*      Implements strsignal() for architectures without it          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 

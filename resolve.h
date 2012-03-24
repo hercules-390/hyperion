@@ -1,12 +1,9 @@
-/* RESOLVE.H    (c) Copyright Ian Shorter, 2011                      */
+/* RESOLVE.H    (c) Copyright Ian Shorter, 2011-2012                 */
 /*              Resolve host name or IP address                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id: resolve.h 5125 2009-12-25 12:00:00Z ian $
-
 
 #ifndef __RESOLVE_H_
 #define __RESOLVE_H_

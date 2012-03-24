@@ -1,13 +1,14 @@
-/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2011                */
+/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              ESA/390 Configuration Builder                        */
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2010      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module builds the configuration tables for the Hercules      */
@@ -26,7 +27,6 @@
 /*      PANRATE parameter by Reed H. Petty                           */
 /*      CPUPRIO parameter by Jan Jaeger                              */
 /*      HERCPRIO, TODPRIO, DEVPRIO parameters by Mark L. Gaubatz     */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*      $(DEFSYM) symbol substitution support by Ivan Warren         */
 /*      Patch for ${var=def} symbol substitution (hax #26),          */
 /*          and INCLUDE <filename> support (modified hax #27),       */

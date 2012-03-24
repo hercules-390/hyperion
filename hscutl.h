@@ -1,11 +1,9 @@
-/* HSCUTL.H     (c) Copyright Roger Bowler, 1999-2011                */
+/* HSCUTL.H     (c) Copyright Roger Bowler, 1999-2012                */
 /*              Host-specific functions for Hercules                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*********************************************************************/
 /* HSCUTL.H   --   Implementation of functions used in hercules that */

@@ -1,4 +1,4 @@
-/* HBYTESWP.H   (c) Copyright Roger Bowler, 2011                     */
+/* HBYTESWP.H   (c) Copyright Roger Bowler, 2012                     */
 /*              Hercules Little <> Big Endian conversion             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -9,9 +9,6 @@
 /* versions of linux that do not have /usr/include/byteswap.h        */
 /* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
 /* otherwise Intel (486+) assember will be generated  (Jan Jaeger)   */
-
-// $Id$
-
 
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H

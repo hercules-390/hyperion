@@ -4,8 +4,6 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
-
 /*-------------------------------------------------------------------*/
 /* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros allow   */
 /* you to temporarily suppress certain harmless compiler warnings.   */

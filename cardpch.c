@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* System/370 card punch devices.                                    */

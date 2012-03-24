@@ -5,9 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
-
 /*-------------------------------------------------------------------*/
 /* This module contains the FAKETAPE emulated tape format library.   */
 /* Note: this library was built from the original FAKETAPE.C source. */

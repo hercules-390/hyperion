@@ -1,13 +1,11 @@
 /* WTHREADS.H
- *  (c) Copyright TurboHercules, SAS 2010-2011 - All Rights Reserved
+ *  (c) Copyright TurboHercules, SAS 2010-2012 - All Rights Reserved
  *      Contains Licensed Materials - Property of TurboHercules, SAS
  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #ifndef _WTHREADS_H_
 #define _WTHREADS_H_

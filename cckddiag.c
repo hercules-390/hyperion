@@ -1,4 +1,4 @@
-/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2012                */
 /*       CCKD diagnostic tool                                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,8 +7,6 @@
 
 /* 2003-02-07 James M. Morrison initial implementation               */
 /* portions borrowed from cckdcdsk & other CCKD code                 */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* Diagnostic tool to display various CCKD data                      */

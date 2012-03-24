@@ -1,9 +1,7 @@
-/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2011                  */
+/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              ESA/390 Machine Check Functions                      */
 /*                                                                   */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2010      */
-
-// $Id$
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* The machine check function supports dynamic I/O configuration.    */

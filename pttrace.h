@@ -1,11 +1,9 @@
-/* PTTRACE.H    (c) Copyright Greg Smith, 2003-2011                  */
+/* PTTRACE.H    (c) Copyright Greg Smith, 2003-2012                  */
 /*              Header file for pthreads trace debugger              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* Pthread tracing structures and prototypes                         */

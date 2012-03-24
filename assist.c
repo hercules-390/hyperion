@@ -1,11 +1,12 @@
-/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2011                */
+/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              ESA/390 MVS Assist Routines                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module contains routines which process the MVS Assist        */
@@ -14,7 +15,6 @@
 
 /*              Instruction decode rework - Jan Jaeger               */
 /*              Correct address wraparound - Jan Jaeger              */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*              Add dummy assist instruction - Jay Maynard,          */
 /*                  suggested by Brandon Hill                        */
 

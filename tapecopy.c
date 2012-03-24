@@ -1,11 +1,9 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2012                */
 /*              Convert SCSI tape into AWSTAPE format                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*              Read from AWSTAPE and write to SCSI tape mods        */
 /*              Copyright 2005-2009 James R. Maynard III             */

@@ -1,8 +1,5 @@
-/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2011                  */
+/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              TOD Clock functions                                  */
-
-// $Id$
-
 
 #if !defined(_CLOCK_C_)
  #define _CLOCK_EXTERN extern

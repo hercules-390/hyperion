@@ -1,7 +1,5 @@
-/* REXX.C       (c)Copyright Jan Jaeger, 2010-2011                   */
+/* REXX.C       (c)Copyright Jan Jaeger, 2010-2012                   */
 /*              REXX Interpreter Support                             */
-
-// $Id$
 
 #include "hstdinc.h"
 

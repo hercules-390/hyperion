@@ -1,12 +1,10 @@
-/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2011       */
+/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2012       */
 /*              (c) Copyright, MHP, 2007-2008 (see below)            */
 /*              Hercules Communication Line Driver                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* Hercules Communication Line Driver                                */

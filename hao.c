@@ -1,11 +1,9 @@
-/* HAO.C        (c) Copyright Bernard van der Helm, 2002-2011        */
+/* HAO.C        (c) Copyright Bernard van der Helm, 2002-2012        */
 /*             Hercules Automatic Operator Implementation            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*---------------------------------------------------------------------------*/
 /* file: hao.c                                                               */

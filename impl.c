@@ -1,11 +1,9 @@
-/* IMPL.C       (c) Copyright Roger Bowler, 1999-2011                */
+/* IMPL.C       (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Initialization Module                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module initializes the Hercules S/370 or ESA/390 emulator.   */

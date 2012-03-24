@@ -1,11 +1,9 @@
-/* CACHE.H    (c)Copyright Greg Smith, 2002-2011                     */
+/* CACHE.H    (c)Copyright Greg Smith, 2002-2012                     */
 /*            Buffer Cache Manager                                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------
   Description:

@@ -1,11 +1,9 @@
-/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2011                */
+/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Type Definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #ifndef _HTYPES_H_
 #define _HTYPES_H_

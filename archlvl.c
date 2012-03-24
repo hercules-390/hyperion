@@ -1,7 +1,5 @@
-/* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010-2011                */
+/* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010-2012                */
 /*                                                                   */
-
-// $Id$
 
 #include "hstdinc.h"
 

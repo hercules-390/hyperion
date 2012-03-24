@@ -1,7 +1,5 @@
-/* QETH.H       (c) Copyright Jan Jaeger,   2010-2011                */
+/* QETH.H       (c) Copyright Jan Jaeger,   2010-2012                */
 /*              OSA Express                                          */
-
-// $Id$
 
 /* This implementation is based on the S/390 Linux implementation    */
 

@@ -1,11 +1,9 @@
-/* INLINE.H     (c) Copyright Jan Jaeger, 1999-2010                  */
+/* INLINE.H     (c) Copyright Jan Jaeger, 1999-2012                  */
+/*              (c) Copyright Roger Bowler, 1999-2012                */
 /*              Inline function definitions                          */
 
-// $Id$
-
-/* Original author Roger Bowler, 1999                                */
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /* Storage protection override fix               Jan Jaeger 31/08/00 */
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */

@@ -1,4 +1,4 @@
-/* PFPO.C       (c) Copyright Roger Bowler, 2009-2011                */
+/* PFPO.C       (c) Copyright Roger Bowler, 2009-2012                */
 /*              Perform Floating Point Operation instruction         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,8 +7,6 @@
 
 /*              (c) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */ 
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */

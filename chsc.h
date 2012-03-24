@@ -1,8 +1,6 @@
-/* CHSC.H       (c) Copyright Jan Jaeger, 1999-2011                  */
+/* CHSC.H       (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              Channel Subsystem interface fields                   */
 /*                                                                   */
-
-// $Id$
 
 /* This module implements channel subsystem interface functions      */
 /* for the Hercules ESA/390 emulator.                                */

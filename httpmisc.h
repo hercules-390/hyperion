@@ -1,8 +1,5 @@
-/* HTTPMISC.H   (c) Copyright Jan Jaeger, 2002-2011                  */
+/* HTTPMISC.H   (c) Copyright Jan Jaeger, 2002-2012                  */
 /*              Hercules HTTP Server for Console Ops                 */
-
-// $Id$
-
 
 #ifndef _HTTPMISC_H
 #define _HTTPMISC_H

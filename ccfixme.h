@@ -4,8 +4,6 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
-
 /*-------------------------------------------------------------------*/
 /*  This header file #defines a generic "FIXME" macro used to mark   */
 /*  suspicious code needing fixed or at least further investigated.  */

@@ -1,13 +1,10 @@
-/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2011                  */
+/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Code Page conversion                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
-
 
 #ifndef _HERCULES_CODEPAGE_H
 #define _HERCULES_CODEPAGE_H

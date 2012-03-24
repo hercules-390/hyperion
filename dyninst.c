@@ -1,7 +1,5 @@
-/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2011                  */
+/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
-
-// $Id$
 
 /* This module dynamically loads instructions.  Instruction routine  */
 /* names must be registered under the name of s370_opcode_B220 for   */

@@ -1,11 +1,9 @@
-/* FISHHANG.C   (c) Copyright "Fish" (David B. Trout), 2002-2011     */
+/* FISHHANG.C   (c) Copyright "Fish" (David B. Trout), 2002-2012     */
 /*              Hercules verify/debug proper LOCK handling...        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 

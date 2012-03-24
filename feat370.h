@@ -1,7 +1,5 @@
-/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2011                  */
+/* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              S/370 feature definitions                            */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This file defines the architectural features which are included   */

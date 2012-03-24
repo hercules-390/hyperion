@@ -1,11 +1,9 @@
-/* HMACROS.H    (c) Copyright Roger Bowler, 1999-2011                */
+/* HMACROS.H    (c) Copyright Roger Bowler, 1999-2012                */
 /*               Hercules macros...                                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 //      This header auto-#included by 'hercules.h'...
 //

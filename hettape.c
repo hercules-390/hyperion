@@ -1,4 +1,4 @@
-/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2011                */
+/* HETTAPE.C    (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for HETTAPE             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,8 +8,6 @@
 /* Original Author: Leland Lucius                                    */
 /* Prime Maintainer: Ivan Warren                                     */
 /* Secondary Maintainer: "Fish" (David B. Trout)                     */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains the HET emulated tape format support.        */

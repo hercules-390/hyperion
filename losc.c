@@ -1,7 +1,5 @@
-/* LOSC.C       (c) Copyright Jan Jaeger, 2009-2011                  */
+/* LOSC.C       (c) Copyright Jan Jaeger, 2009-2012                  */
 /*              Hercules Licensed Operating System Check             */
-
-// $Id$
 
 #include "hstdinc.h"
 

@@ -7,8 +7,6 @@
 
 /*  inspired by the previous Rexx implementation by Jan Jaeger       */
 
-// $Id:$
-
 #ifndef _HREXX_H_
 #define _HREXX_H_
 

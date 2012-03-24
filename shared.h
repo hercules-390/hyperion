@@ -1,11 +1,9 @@
-/* SHARED.H     (c)Copyright Greg Smith, 2002-2011                   */
+/* SHARED.H     (c)Copyright Greg Smith, 2002-2012                   */
 /*              Shared Device Server                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------
  * Shared device support           (c)Copyright Greg Smith, 2002-2009

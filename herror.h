@@ -1,8 +1,5 @@
-/* HERROR.H     (c) Copyright Jan Jaeger, 2010-2011                  */
+/* HERROR.H     (c) Copyright Jan Jaeger, 2010-2012                  */
 /*              Hercules Specfic Error codes                         */
-
-// $Id$
-
 
 #ifndef _HERROR_H
 #define _HERROR_H

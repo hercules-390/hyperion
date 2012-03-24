@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /*-------------------------------------------------------------------*/
 /* This header implements the TRACE, ASSERT and VERIFY debugging     */
 /* macros. Use TRACE statements during and after developing your     */

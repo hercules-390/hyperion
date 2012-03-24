@@ -1,8 +1,5 @@
-/* HDL.H        (c) Copyright Jan Jaeger, 2003-2011                  */
+/* HDL.H        (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
-
-// $Id$
-
 
 #ifndef _HDL_H
 #define _HDL_H

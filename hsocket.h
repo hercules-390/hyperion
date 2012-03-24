@@ -1,4 +1,4 @@
-/* HSOCKET.H    (c) Copyright Roger Bowler, 2005-2011                */
+/* HSOCKET.H    (c) Copyright Roger Bowler, 2005-2012                */
 /*              Equates for socket functions                         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,8 +7,6 @@
 
 /*  This header file contains equates for the socket functions       */
 /*  and constants whose values differ between Unix and Winsock       */
-
-// $Id$
 
 #if !defined(_HSOCKET_H)
 #define _HSOCKET_H

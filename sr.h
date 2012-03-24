@@ -1,11 +1,9 @@
-/* SR.H         (c)Copyright Greg Smith, 2004-2011                   */
+/* SR.H         (c)Copyright Greg Smith, 2004-2012                   */
 /*              Suspend/Resume a Hercules session                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*
  * The suspend/resume functions allow a hercules instance to be

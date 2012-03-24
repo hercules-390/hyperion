@@ -1,12 +1,10 @@
-/* HETGET.C     (c) Copyright Leland Lucius, 2000-2011               */
+/* HETGET.C     (c) Copyright Leland Lucius, 2000-2012               */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Extract files from an HET file                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*
 || ----------------------------------------------------------------------------

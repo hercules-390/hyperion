@@ -1,14 +1,12 @@
-/* STACK.C      (c) Copyright Roger Bowler, 1999-2011                */
+/* STACK.C      (c) Copyright Roger Bowler, 1999-2012                */
 /*              ESA/390 Linkage Stack Operations                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
-
-// $Id$
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the linkage stack functions of ESA/390     */

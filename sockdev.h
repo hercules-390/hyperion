@@ -1,11 +1,9 @@
-/* SOCKDEV.H    (c) Copyright Roger Bowler, 1999-2011                */
+/* SOCKDEV.H    (c) Copyright Roger Bowler, 1999-2012                */
 /*              SocketDevice support                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "htypes.h"         // need Herc's struct typedefs
 

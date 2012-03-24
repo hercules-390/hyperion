@@ -1,11 +1,13 @@
-/* VECTOR.C     (c) Copyright Roger Bowler, 1999-2011                */
+/* VECTOR.C     (c) Copyright Jan Jaeger, 1999-2012                  */
+/*              (c) Copyright Roger Bowler, 1999-2012                */
 /*              S/370 and ESA/390 Vector Operations                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the Vector Facility instruction execution  */
@@ -15,10 +17,7 @@
 /*                                             28/05/2000 Jan Jaeger */
 /*                                                                   */
 /* Instruction decoding rework                 09/07/2000 Jan Jaeger */
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 /*-------------------------------------------------------------------*/
-
 
 #include "hstdinc.h"
 

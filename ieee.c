@@ -1,4 +1,4 @@
-/* IEEE.C       (c) Copyright Roger Bowler and others, 2003-2011     */
+/* IEEE.C       (c) Copyright Roger Bowler and others, 2003-2012     */
 /*              (c) Copyright Willem Konynenberg, 2001-2003          */
 /*              (c) Copyright "Fish" (David B. Trout), 2011          */
 /*              Hercules Binary (IEEE) Floating Point Instructions   */
@@ -6,8 +6,6 @@
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements ESA/390 Binary Floating-Point (IEEE 754)   */

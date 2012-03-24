@@ -1,12 +1,10 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2011                */
-/*              (c) Copyright Jan Jaeger, 1999-2011                  */
+/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              Miscellaneous System Command Routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 

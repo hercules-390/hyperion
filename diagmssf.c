@@ -1,7 +1,5 @@
-/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2011                  */
+/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              ESA/390 Diagnose Functions                           */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements various diagnose functions                 */
@@ -10,7 +8,7 @@
 /* LPAR RMF interface call                                           */
 /*                                                                   */
 /*                                             04/12/1999 Jan Jaeger */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"

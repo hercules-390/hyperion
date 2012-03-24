@@ -1,12 +1,9 @@
-/* RESOLVE.C    (c) Copyright Ian Shorter, 2011                      */
+/* RESOLVE.C    (c) Copyright Ian Shorter, 2011-2012                 */
 /*              Resolve host name or IP address                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id: resolve.c 5125 2009-12-25 12:00:00Z ian $
-
 
 #include "hstdinc.h"
 

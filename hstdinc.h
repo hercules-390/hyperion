@@ -1,4 +1,4 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2011                */
+/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules precompilation-eligible Header Files        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,8 +8,6 @@
 /* This file contains #include statements for all of the header      */
 /* files which are not dependent on the mainframe architectural      */
 /* features selected and thus are eligible for precompilation        */
-
-// $Id$
 
 #ifndef _HSTDINC_H
 #define _HSTDINC_H

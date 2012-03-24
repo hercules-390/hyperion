@@ -1,4 +1,4 @@
-/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2011                */
+/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2012                */
 /*             Library for managing Hercules Emulated Tapes          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -15,8 +15,6 @@
 ||
 || ----------------------------------------------------------------------------
 */
-
-// $Id$
 
 #include "hstdinc.h"
 

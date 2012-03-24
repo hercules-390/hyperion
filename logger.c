@@ -1,7 +1,5 @@
-/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2011                  */
+/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              System logger functions                              */
-
-// $Id$
 
 /* If standard output or standard error is redirected then the log   */
 /* is written to the redirection.                                    */

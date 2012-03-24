@@ -1,11 +1,11 @@
-/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Greg Smith, 2002-2012                  */
+/*                                                                   */
 /*       ESA/390 Compressed CKD Direct Access Storage Device Handler */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains device functions for compressed emulated     */

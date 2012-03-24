@@ -1,11 +1,9 @@
-/* VMD250.H     (c) Copyright Harold Grovesteen, 2009-2011           */
+/* VMD250.H     (c) Copyright Harold Grovesteen, 2009-2012           */
 /*              z/VM 5.4 DIAGNOSE code X'250'                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #if !defined(__VMD250_H__)
 #define __VMD250_H__

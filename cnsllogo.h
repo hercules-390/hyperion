@@ -1,11 +1,9 @@
-/* CNSLLOGO.H   (c)Copyright Roger Bowler, 1999-2011                 */
+/* CNSLLOGO.H   (c)Copyright Roger Bowler, 1999-2012                 */
 /*              Hercules Console Logo                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /* This is the default LOGO */
 
@@ -114,7 +112,7 @@ static char *herclogo[]={
 "           HHH          HHH",
 "           HHH          HHH     My PC thinks it's a MAINFRAME",
 "",
-"           Copyright (C) 1999-2011 Roger Bowler, Jan Jaeger, and others"
+"           Copyright (C) 1999-2012 Roger Bowler, Jan Jaeger, and others"
 };
 
 

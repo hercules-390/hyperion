@@ -1,4 +1,4 @@
-/* CMPSC.C      (c) Bernard van der Helm, 2000-2011                  */
+/* CMPSC.C      (c) Bernard van der Helm, 2000-2012                  */
 /*              S/390 compression call instruction                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -18,8 +18,6 @@
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-
-// $Id$
 
 #include "hstdinc.h"
 

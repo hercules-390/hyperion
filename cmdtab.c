@@ -1,6 +1,6 @@
-/* CMDTAB.C     (c) Copyright Roger Bowler, 1999-2011                */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright Jan Jaeger, 2003-2009                  */
+/* CMDTAB.C     (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2012     */
+/*              (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Route all Hercules configuration statements          */
 /*              and panel commands to the appropriate functions      */
@@ -8,8 +8,6 @@
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 

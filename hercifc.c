@@ -1,12 +1,10 @@
-/* HERCIFC.H     (c) Copyright Roger Bowler, 2000-2011               */
+/* HERCIFC.H     (c) Copyright Roger Bowler, 2000-2012               */
 /*               (c) Copyright James A. Pierson, 2002-2009           */
 /*              Hercules Interface Configuration Program             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 // Based on code originally written by Roger Bowler
 // Modified to communicate via unix sockets.

@@ -1,4 +1,4 @@
-/* OMATAPE.C    (c) Copyright Roger Bowler, 1999-2011                */
+/* OMATAPE.C    (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for OMATAPE             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,8 +8,6 @@
 /* Original Author: Roger Bowler                                     */
 /* Prime Maintainer: Ivan Warren                                     */
 /* Secondary Maintainer: "Fish" (David B. Trout)                     */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains the OMATAPE emulated tape format support.    */

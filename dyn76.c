@@ -1,4 +1,4 @@
-/* DYN76.C      (c) Copyright Harold Grovesteen, 2010-2011           */
+/* DYN76.C      (c) Copyright Harold Grovesteen, 2010-2012           */
 /*              Diagnose Instr for file transfers                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,9 +7,6 @@
 
 /* DYN76   (c) Copyright Jason Paul Winter, 2010                      */
 /*             See license_dyn76.txt for licensing                    */
-
-// $Id$
-
 
 #include "hstdinc.h"
 

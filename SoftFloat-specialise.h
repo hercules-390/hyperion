@@ -6,8 +6,6 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
-
 /* This module is a SLIGHTLY modified version of John R. Hauser's    */
 /* 'SoftFloat-specialize.h', and is largely copyright by him. All    */
 /* I (i.e. "Fish", David B. Trout) did was enhance it to interface   */

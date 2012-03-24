@@ -1,9 +1,7 @@
-/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2011                  */
+/* QDIO.C       (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              (C) Copyright Harold Grovesteen, 2011                */
 /*              Queued Direct Input Output                           */
 /*                                                                   */
-
-// $Id$
 
 /*      This module contains the Signal Adapter instruction          */
 /*      and QEBSM EQBS and SQBS instructions                         */

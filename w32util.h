@@ -1,11 +1,9 @@
-/* W32UTIL.H    (c) Copyright "Fish" (David B. Trout), 2005-2011     */
+/* W32UTIL.H    (c) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Windows porting functions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #ifndef _W32UTIL_H
 #define _W32UTIL_H

@@ -1,12 +1,9 @@
-/*  HTHREADS.H  (c) Copyright Roger Bowler, 1999-2011                */
+/*  HTHREADS.H  (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Threading Macros and Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
-
 
 #ifndef _HTHREADS_H
 #define _HTHREADS_H

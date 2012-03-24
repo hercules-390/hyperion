@@ -1,12 +1,10 @@
-/* HSCEMODE.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* HSCEMODE.C   (c) Copyright Roger Bowler, 1999-2012                */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 

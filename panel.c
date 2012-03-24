@@ -1,4 +1,4 @@
-/* PANEL.C      (c) Copyright Roger Bowler, 1999-2011                */
+/* PANEL.C      (c) Copyright Roger Bowler, 1999-2012                */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules Control Panel Commands                      */
 /*                                                                   */
@@ -6,7 +6,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /*              Modified for New Panel Display =NP=                  */
 /*-------------------------------------------------------------------*/
@@ -24,7 +24,6 @@
 /*      Set/reset bad frame indicator command by Jan Jaeger          */
 /*      attach/detach/define commands by Jan Jaeger                  */
 /*      Panel refresh rate triva by Reed H. Petty                    */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*      64-bit address support by Roger Bowler                       */
 /*      Display subchannel command by Nobumichi Kozawa               */
 /*      External GUI logic contributed by "Fish" (David B. Trout)    */

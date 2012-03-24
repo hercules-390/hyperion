@@ -1,7 +1,5 @@
-/* CPUINT.H     (c) Copyright Jan Jaeger, 2001-2011                  */
+/* CPUINT.H     (c) Copyright Jan Jaeger, 2001-2012                  */
 /*              Hercules Interrupt State and Mask Definitions        */
-
-// $Id$
 
 /**********************************************************************
  Interrupts_State & Interrupts_Mask bits definition (Initial_Mask=800E)

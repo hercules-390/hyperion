@@ -1,13 +1,12 @@
-/* VSTORE.C     (c) Copyright Roger Bowler, 2000-2011                */
+/* VSTORE.C     (c) Copyright Roger Bowler, 2000-2012                */
 /*               ESA/390 Virtual Storage Functions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
-
-// $Id$
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 #include "hstdinc.h"
 

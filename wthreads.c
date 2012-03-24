@@ -7,9 +7,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
-
 #include "hstdinc.h"
 
 #define _WTHREADS_C_

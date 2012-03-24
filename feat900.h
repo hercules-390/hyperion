@@ -1,7 +1,5 @@
-/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2011                  */
+/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              ESAME feature definitions                            */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This file defines the architectural features which are included   */

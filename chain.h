@@ -1,4 +1,4 @@
-/* CHAIN.H      (c) Mark L. Gaubatz, 1985-2011                       */
+/* CHAIN.H      (c) Mark L. Gaubatz, 1985-2012                       */
 /*              Chain and queue macros and inline routines           */
 /*              Adapted for use by Hercules                          */
 /*                                                                   */
@@ -7,8 +7,6 @@
 /*   Hercules.                                                       */
 /*                                                                   */
 /*********************************************************************/
-
-// $Id$
 
 #ifndef _CHAIN_H_
 #define _CHAIN_H_

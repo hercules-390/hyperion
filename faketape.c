@@ -1,11 +1,9 @@
-/* FAKETAPE.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* FAKETAPE.C   (c) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for FAKETAPE            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /* Original Author: "Fish" (David B. Trout)                          */
 /* Prime Maintainer: "Fish" (David B. Trout)                         */

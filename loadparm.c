@@ -1,12 +1,10 @@
-/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2011                  */
+/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2012                  */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              SCLP / MSSF loadparm                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains functions which set, copy, and retrieve the  */

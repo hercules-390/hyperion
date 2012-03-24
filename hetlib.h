@@ -1,4 +1,4 @@
-/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2011                */
+/* HETLIB.C    (c) Copyright Leland Lucius, 2000-2012                */
 /*             Header for the Hercules Emulated Tape library         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -19,9 +19,6 @@
 || ----------------------------------------------------------------------------
 */
 
-// $Id$
-
-#include "hercules.h"
 
 #ifndef _HETLIB_C_
 #ifndef _HTAPE_DLL_

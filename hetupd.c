@@ -1,12 +1,10 @@
-/* HETUPD.C     (c) Copyright Leland Lucius, 2000-2011               */
+/* HETUPD.C     (c) Copyright Leland Lucius, 2000-2012               */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*                 Update/Copy Hercules Emulated Tape                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */      
-
-// $Id$
 
 /*
 || ----------------------------------------------------------------------------

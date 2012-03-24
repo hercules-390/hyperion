@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 #if !defined( _FTLIB_H_ )
 #define _FTLIB_H_
 

@@ -1,12 +1,9 @@
-/*  FTHREADS.H  (c) Copyright "Fish" (David B. Trout), 2001-2011     */
+/*  FTHREADS.H  (c) Copyright "Fish" (David B. Trout), 2001-2012     */
 /*              Fish's WIN32 version of pthreads                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
-
 
 #ifndef _FTHREADS_H_
 #define _FTHREADS_H_

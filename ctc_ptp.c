@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /* This module contains device handling functions for the            */
 /* MPCPTP and/or MPCPTP6 emulated connection                         */
 /*                                                                   */

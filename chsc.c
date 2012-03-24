@@ -1,10 +1,8 @@
-/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2011                  */
+/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2012                  */
 /*              Channel Subsystem Call                               */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
-
-// $Id$
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 /* This module implements channel subsystem interface functions      */
 /* for the Hercules ESA/390 emulator.                                */

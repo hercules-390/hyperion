@@ -1,12 +1,10 @@
-/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2011                */
+/* TAPECCWS.C   (c) Copyright Roger Bowler, 1999-2012                */
 /*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Hercules Tape Device Handler CCW Processing          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module contains the CCW handling functions for tape devices. */

@@ -1,4 +1,4 @@
-/* HSCUTL2.C   (c) Copyright Mark L. Gaubatz and others, 2003-2011   */
+/* HSCUTL2.C   (c) Copyright Mark L. Gaubatz and others, 2003-2012   */
 /*              Host-specific functions for Hercules                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -21,8 +21,6 @@
 /*  z/Architecture emulator.                                          */
 /*                                                                    */
 /**********************************************************************/
-
-// $Id$
 
 #include "hstdinc.h"
 

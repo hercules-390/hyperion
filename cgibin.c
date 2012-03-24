@@ -1,7 +1,5 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2011                   */
+/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2012                   */
 /*              HTTP cgi-bin routines                                */
-
-// $Id$
 
 /* This file contains all cgi routines that may be executed on the   */
 /* server (ie under control of a hercules thread)                    */

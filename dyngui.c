@@ -1,11 +1,9 @@
-/* DYNGUI.C     (c) Copyright "Fish" (David B. Trout), 2003-2011     */
+/* DYNGUI.C     (c) Copyright "Fish" (David B. Trout), 2003-2012     */
 /*              Hercules External GUI Interface DLL                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 #include "hstdinc.h"
 #include "hercules.h"       // (#includes "config." w/#define for VERSION)

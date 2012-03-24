@@ -1,11 +1,9 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2007-2011                */
+/* DFP.C        (c) Copyright Roger Bowler, 2007-2012                */
 /*              Decimal Floating Point instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements the Decimal Floating Point instructions    */

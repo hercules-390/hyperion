@@ -1,12 +1,10 @@
-/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2011                */
+/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2012                */
 /*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Hercules Structure Definitions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 //      This header auto-#included by 'hercules.h'...
 //

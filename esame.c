@@ -1,7 +1,5 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2011                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2012                  */
 /*              ESAME (z/Architecture) instructions                  */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements the instructions which exist in ESAME      */

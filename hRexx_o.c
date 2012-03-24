@@ -7,8 +7,6 @@
 
 /*  inspired by the previous Rexx implementation by Jan Jaeger       */
 
-// $Id:$
-
 #include "hstdinc.h"
 #define _HENGINE_DLL_
 #include "hercules.h"

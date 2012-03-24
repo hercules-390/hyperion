@@ -1,4 +1,4 @@
-/* HEXTERNS.H   (c) Copyright Roger Bowler, 1999-2011                */
+/* HEXTERNS.H   (c) Copyright Roger Bowler, 1999-2012                */
 /*                    Hercules function prototypes...                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -9,8 +9,6 @@
 //
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
-
-// $Id$
 
 #ifndef _HEXTERNS_H
 #define _HEXTERNS_H

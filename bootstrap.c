@@ -1,12 +1,10 @@
-/* BOOTSTRAP.C  (c) Copyright Ivan Warren, 2003-2011                 */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2011     */
+/* BOOTSTRAP.C  (c) Copyright Ivan Warren, 2003-2012                 */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Hercules executable main module                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module is the initial entry point of the Hercules emulator.  */

@@ -1,11 +1,9 @@
-/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2011                */
+/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2012                */
 /*         Hercules CPU Emulator - Additional General Instructions   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
-
-// $Id$
 
 /*-------------------------------------------------------------------*/
 /* This module implements additional general instructions introduced */

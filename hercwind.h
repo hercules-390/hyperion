@@ -1,4 +1,4 @@
-/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2011                */
+/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2012                */
 /*              MSVC Environment Specific Definitions                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -9,8 +9,6 @@
 /* Header file containing additional data structures and function    */
 /* prototypes required by Hercules in the MSVC environment           */
 /*-------------------------------------------------------------------*/
-
-// $Id$
 
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H

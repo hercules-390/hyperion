@@ -1,7 +1,5 @@
-/* HDL.C        (c) Copyright Jan Jaeger, 2003-2011                  */
+/* HDL.C        (c) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
-
-// $Id$
 
 #include "hstdinc.h"
 
