@@ -361,8 +361,8 @@ char *wPackage = NULL;
         }
 
         if ( !haveExtns &&
-           ( ( argl >= 3 && argl <=  8 && CMPARGL( "extensions" ) == 0 ) ||
-             ( argl >= 3 && argl <= 10 && CMPARGL( "suffixes" ) == 0 ) ) )
+           ( ( argl >= 3 && argl <= 10 && CMPARGL( "extensions" ) == 0 ) ||
+             ( argl >= 3 && argl <=  8 && CMPARGL( "suffixes" ) == 0 ) ) )
         {
             haveExtns = TRUE;
             whatValue = _NEEDEXTNS;
