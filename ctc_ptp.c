@@ -2652,9 +2652,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  PTP_OPTSTRING  "n:t:m:d::46" "k:i:"
+  #define  PTP_OPTSTRING  "n:x:t:m:d::46" "k:i:"
 #else
-  #define  PTP_OPTSTRING  "n:t:m:d::46"
+  #define  PTP_OPTSTRING  "n:x:t:m:d::46"
 #endif
 
 #if defined(HAVE_GETOPT_LONG)
@@ -2663,6 +2663,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
         static struct option options[] =
         {
             { "dev",     required_argument, NULL, 'n' },
+            { "tundev",  required_argument, NULL, 'x' },
             { "mtu",     required_argument, NULL, 't' },
             { "mac",     required_argument, NULL, 'm' },
             { "debug",   optional_argument, NULL, 'd' },
@@ -2713,6 +2714,17 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
             strlcpy( pPTPBLK->szTUNCharName, optarg, sizeof(pPTPBLK->szTUNCharName) );
             break;
 
+        case 'x':     // TUN network device name
+            if( strlen( optarg ) > sizeof(pPTPBLK->szTUNDevName)-1 )
+            {
+                // HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                      "TUN device name", optarg );
+                return -1;
+            }
+            strlcpy( pPTPBLK->szTUNDevName, optarg, sizeof(pPTPBLK->szTUNDevName) );
+            break;
+
         case 't':     // MTU of link (ignored if Windows) (default 1500).
 
             // Note: The largest MTU supported by MPCPTP or MPCPTP6
@@ -2754,7 +2766,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
             pPTPBLK->iMTU = iMTU;
             break;
 
-//      case 'x':     // Maximum buffers to use (default 5).
+//      case ' ':     // Maximum buffers to use (default 5).
 //
 //          // The number of 4K pages used by VTAM to receive data. The
 //          // resulting buffer size is number_of_pages multiplied by
