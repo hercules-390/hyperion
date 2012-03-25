@@ -606,7 +606,7 @@ Start_Rexx_Loaded:
     if ( !ExtensionsInitialized )
         InitializeExtensions(NULL);
     strcpy(Result, "Extensions: ");
-    for (i=1; i<ExtensionsCount; i++)
+    for (i=0; i<ExtensionsCount; i++)
     {
         strcat(Result, ExtensionsArray[i]);
         strcat(Result, i == ExtensionsCount-1 ? "" : EXTNDELIM );
@@ -761,60 +761,38 @@ exec_cmd_Rexx_Loaded:
     if ( !OptionsInitialized )
         InitializeOptions();
 
-    if  ( strstr(argv[1],".") )
+    if ( useRexxPath )
     {
-        if ( useRexxPath )
+        for( iPath = 0; iPath<RexxPathCount; iPath++)
         {
-            for( iPath = 0; iPath<RexxPathCount; iPath++)
-            {
-                sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], "");
-                if ( access(wCommand, R_OK ) == 0)
-                {
-                    haveResolvedCommand = TRUE;
-                    goto endResolver;
-                }
-            }
-        }
-        if ( useSysPath )
-        {
-            for( iPath = 0; iPath<SysPathCount; iPath++)
-            {
-                sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1], "");
-                if ( access(wCommand, R_OK ) == 0)
-                {
-                    haveResolvedCommand = TRUE;
-                    goto endResolver;
-                }
-            }
-        }
+            if ( access( RexxPathArray[iPath], R_OK ) != 0 )
+                continue ;
 
-    }
-    else
-    {
-        for( iExtn = 0; iExtn<ExtensionsCount; iExtn++)
-        {
-            if ( useRexxPath )
+            for( iExtn = 0; iExtn<ExtensionsCount; iExtn++)
             {
-                for( iPath = 0; iPath<RexxPathCount; iPath++)
+                sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
+                if ( access(wCommand, R_OK ) == 0)
                 {
-                    sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
-                    if ( access(wCommand, R_OK ) == 0)
-                    {
-                        haveResolvedCommand = TRUE;
-                        goto endResolver;
-                    }
+                    haveResolvedCommand = TRUE;
+                    goto endResolver;
                 }
             }
-            if ( useSysPath )
+        }
+    }
+    if ( useSysPath )
+    {
+        for( iPath = 0; iPath<SysPathCount; iPath++)
+        {
+            if ( access( SysPathArray[iPath], R_OK ) != 0 )
+                continue ;
+
+            for( iExtn = 0;iExtn<ExtensionsCount;iExtn++)
             {
-                for( iPath = 0; iPath<SysPathCount; iPath++)
+                sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1],ExtensionsArray[iExtn]);
+                if ( access(wCommand, R_OK ) == 0)
                 {
-                    sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
-                    if ( access(wCommand, R_OK ) == 0)
-                    {
-                        haveResolvedCommand = TRUE;
-                        goto endResolver;
-                    }
+                    haveResolvedCommand = TRUE;
+                    goto endResolver;
                 }
             }
         }
