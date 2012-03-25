@@ -669,6 +669,8 @@ int   haveResolvedCommand = FALSE;
 char  wCommand[1024];
 char *wArgs;
 
+struct stat fstat;
+
     UNREFERENCED(rc);
     UNREFERENCED(RetRC);
     UNREFERENCED(CommandLine);
@@ -740,12 +742,21 @@ exec_cmd_Rexx_Loaded:
 
     strcpy(wCommand,argv[1]);
 
+    if ( !PathsInitialized )
+        InitializePaths(NULL);
+    if ( !ExtensionsInitialized )
+        InitializeExtensions(NULL);
+    if ( !OptionsInitialized )
+        InitializeOptions();
+
     if ( ! useResolver )
         goto skipResolver;
 
     haveResolvedCommand = FALSE;
 
-    if ( access(wCommand, R_OK ) == 0 )
+    rc = stat( wCommand, &fstat );
+    if ( ( rc == 0 ) &&
+         ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
     {
         haveResolvedCommand = TRUE;
         goto endResolver;
@@ -754,24 +765,20 @@ exec_cmd_Rexx_Loaded:
     if (strcmp(basename(wCommand),wCommand) != 0)
         goto endResolver;
 
-    if ( !PathsInitialized )
-        InitializePaths(NULL);
-    if ( !ExtensionsInitialized )
-        InitializeExtensions(NULL);
-    if ( !OptionsInitialized )
-        InitializeOptions();
-
     if ( useRexxPath )
     {
         for( iPath = 0; iPath<RexxPathCount; iPath++)
         {
-            if ( access( RexxPathArray[iPath], R_OK ) != 0 )
+            rc = stat( RexxPathArray[iPath] , &fstat );
+            if ( ( rc != 0 ) || ( ! S_ISDIR(fstat.st_mode) ) )
                 continue ;
 
             for( iExtn = 0; iExtn<ExtensionsCount; iExtn++)
             {
                 sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
-                if ( access(wCommand, R_OK ) == 0)
+                rc = stat( wCommand, &fstat );
+                if ( ( rc == 0 ) &&
+                     ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
                 {
                     haveResolvedCommand = TRUE;
                     goto endResolver;
@@ -783,13 +790,16 @@ exec_cmd_Rexx_Loaded:
     {
         for( iPath = 0; iPath<SysPathCount; iPath++)
         {
-            if ( access( SysPathArray[iPath], R_OK ) != 0 )
+            rc = stat( RexxPathArray[iPath] , &fstat );
+            if ( ( rc != 0 ) || ( ! S_ISDIR(fstat.st_mode) ) )
                 continue ;
 
             for( iExtn = 0;iExtn<ExtensionsCount;iExtn++)
             {
                 sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1],ExtensionsArray[iExtn]);
-                if ( access(wCommand, R_OK ) == 0)
+                rc = stat( wCommand, &fstat );
+                if ( ( rc == 0 ) &&
+                     ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
                 {
                     haveResolvedCommand = TRUE;
                     goto endResolver;
