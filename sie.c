@@ -1032,7 +1032,8 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                     if( OPEN_IC_EXTPENDING(GUESTREGS) )
                         ARCH_DEP(perform_external_interrupt) (GUESTREGS);
 
-                    if( (STATEBK->ec[0] & SIE_EC0_IOA) && OPEN_IC_IOPENDING(GUESTREGS) )
+                    if( ((STATEBK->ec[0] & SIE_EC0_IOA) || (STATEBK->ec[3] & SIE_EC3_SIGAA))
+                      && OPEN_IC_IOPENDING(GUESTREGS) )
                     {
                         PERFORM_SERIALIZATION (GUESTREGS);
                         PERFORM_CHKPT_SYNC (GUESTREGS);

@@ -202,15 +202,17 @@ U16 req_len, rsp_len;
 #if defined(FEATURE_CANCEL_IO_FACILITY)
     CHSC_SB(chsc_rsp10->general_char,6);
 #endif
+
     CHSC_SB(chsc_rsp10->general_char,7);         /* Concurrent Sense */
     CHSC_SB(chsc_rsp10->general_char,12);              /* Dynamic IO */
-#if defined(FEATURE_QUEUED_DIRECT_IO)
-    CHSC_SB(chsc_rsp10->general_char,41);  /* Adapter Interruption Facility */
 
-    CHSC_SB(chsc_rsp10->chsc_char,1); // 0x0002 Supported
-    CHSC_SB(chsc_rsp10->chsc_char,2); // 0x0006 Supported
-    CHSC_SB(chsc_rsp10->chsc_char,3); // 0x0004 Supported
-    CHSC_SB(chsc_rsp10->chsc_char,8); // 0x0024 Supported
+#if defined(FEATURE_QUEUED_DIRECT_IO)
+    CHSC_SB(chsc_rsp10->general_char,41);         /* Adapter Int Fac */
+
+    CHSC_SB(chsc_rsp10->chsc_char,1);            /* 0x0002 Supported */
+    CHSC_SB(chsc_rsp10->chsc_char,2);            /* 0x0006 Supported */
+    CHSC_SB(chsc_rsp10->chsc_char,3);            /* 0x0004 Supported */
+    CHSC_SB(chsc_rsp10->chsc_char,8);            /* 0x0024 Supported */
 
     if(FACILITY_ENABLED(QDIO_ASSIST, regs))
         CHSC_SB(chsc_rsp10->general_char,61);         /* QDIO Assist */
@@ -218,21 +220,31 @@ U16 req_len, rsp_len;
 
 #if defined(_FEATURE_QDIO_TDD)
     if(FACILITY_ENABLED(QDIO_TDD, regs))
-        CHSC_SB(chsc_rsp10->general_char,56);  /* AIF Time Delay Disablement fac*/
+        CHSC_SB(chsc_rsp10->general_char,56);  /* AIF Time Delay Dis */
 #endif /*defined(_FEATURE_QDIO_TDD)*/
+
 #if defined(_FEATURE_QEBSM)
     if(FACILITY_ENABLED(QEBSM, regs))
-        CHSC_SB(chsc_rsp10->general_char,58);
+    {
+        CHSC_SB(chsc_rsp10->general_char,58); /* SQBS/EQBS Available */
+        CHSC_SB(chsc_rsp10->general_char,66); /* SQBS/EQBS Interpret */
+    }
 #endif /*defined(_FEATURE_QEBSM)*/
+
 #if defined(_FEATURE_QDIO_THININT)
     if(FACILITY_ENABLED(QDIO_THININT, regs))
-        CHSC_SB(chsc_rsp10->general_char,67);  /* OSA/FCP Thin interrupts */
+    {
+        CHSC_SB(chsc_rsp10->general_char,67);   /* OSA/FCP Thin Ints */
+        CHSC_SB(chsc_rsp10->chsc_char,107);      /* 0x0021 Supported */
+    }
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
+//  CHSC_SB(chsc_rsp10->general_char,45);            /* Multiple CSS */
+//  CHSC_SB(chsc_rsp10->general_char,64);        /* QDIO Multiple CU */
+//  CHSC_SB(chsc_rsp10->general_char,65);      /* OSA System Console */
 //  CHSC_SB(chsc_rsp10->general_char,82);                     /* CIB */
 //  CHSC_SB(chsc_rsp10->general_char,88);                     /* FCX */
 
-//  CHSC_SB(chsc_rsp10->general_char,45);            /* Multiple CSS */
 //  CHSC_SB(chsc_rsp10->chsc_char,84);                       /* SECM */
 //  CHSC_SB(chsc_rsp10->chsc_char,86);                       /* SCMC */
 //  CHSC_SB(chsc_rsp10->chsc_char,107);   /* Set Channel Subsys Char */
@@ -377,7 +389,8 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
     /* Store response length */
     STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
     /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+//  STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
     /* No reaon code */
     STORE_FW(chsc_rsp->info,0);
     return 0;

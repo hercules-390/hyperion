@@ -20,8 +20,8 @@
 
 
 typedef struct _CHSC_REQ {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
 #define CHSC_REQ_CHPDESC        0x0002
 #define CHSC_REQ_SCHDESC        0x0004
 #define CHSC_REQ_CUDESC         0x0006
@@ -29,148 +29,149 @@ typedef struct _CHSC_REQ {
 #define CHSC_REQ_SETSSSI        0x0021
 #define CHSC_REQ_GETSSQD        0x0024
 #define CHSC_REQ_ENFACIL        0x0031  /* Enable facility           */
-        FWORD   resv[3];
+/*004*/ FWORD   resv[3];
     } CHSC_REQ;
 
 
 typedef struct _CHSC_REQ2 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        BYTE    flags;
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    flags;
 #define CHSC_REQ2_F1_M          0x20
 #define CHSC_REQ2_F1_C          0x10
 #define CHSC_REQ2_F1_FMT        0x0F
-        BYTE    cssid;
-        BYTE    rfmt;
+/*005*/ BYTE    cssid;
+/*006*/ BYTE    rfmt;
 #define CHSC_REQ2_RFMT_MSK      0x0F
-        BYTE    first_chpid;
-        BYTE    resv1[3];
-        BYTE    last_chpid;
-        FWORD   resv2;
+/*007*/ BYTE    first_chpid;
+/*008*/ BYTE    resv1[3];
+/*00B*/ BYTE    last_chpid;
+/*00C*/ FWORD   resv2;
     } CHSC_REQ2;
 
 
 typedef struct _CHSC_REQ4 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        HWORD   ssidfmt;
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   ssidfmt;
 #define CHSC_REQ4_SSID          0x0030
 #define CHSC_REQ4_FMT           0x000f
-        HWORD   f_sch;                  /* First subchannel          */
-        HWORD   resv2;
-        HWORD   l_sch;                  /* Last subchannel           */
-        FWORD   resv3;
+/*006*/ HWORD   f_sch;                  /* First subchannel          */
+/*008*/ HWORD   resv2;
+/*00A*/ HWORD   l_sch;                  /* Last subchannel           */
+/*00C*/ FWORD   resv3;
     } CHSC_REQ4;
 
 
 typedef struct _CHSC_REQ6 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        HWORD   ssidfmt;
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   ssidfmt;
 #define CHSC_REQ6_M             0x2000
 #define CHSC_REQ6_FMT           0x00f0
 #define CHSC_REQ6_SSID          0x0003
-        HWORD   f_sch;                  /* First subchannel          */
-        BYTE    resv2;
-        BYTE    cssid;
-        HWORD   l_sch;                  /* Last subchannel           */
-        FWORD   resv3;
+/*006*/ HWORD   f_sch;                  /* First subchannel          */
+/*008*/ BYTE    resv2;
+/*009*/ BYTE    cssid;
+/*00A*/ HWORD   l_sch;                  /* Last subchannel           */
+/*00C*/ FWORD   resv3;
     } CHSC_REQ6;
 
 
 typedef struct _CHSC_REQ21 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        HWORD   opcode;                 /* Operation Code            */
-        HWORD   resv1;
-        FWORD   resv2;
-        FWORD   resv3;
-        DBLWRD  alsi;                   /* Adapter Summary Indicator */
-        DBLWRD  dsci;                   /* Device State Change Ind   */
-        BYTE    sk;                     /* Storage keys: alsi, dsci  */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   opcode;                 /* Operation Code            */
+/*006*/ HWORD   resv1;
+/*008*/ FWORD   resv2;
+/*00C*/ FWORD   resv3;
+/*010*/ DBLWRD  alsi;                   /* Adapter Summary Indicator */
+/*018*/ DBLWRD  dsci;                   /* Device State Change Ind   */
+/*020*/ BYTE    sk;                     /* Storage keys: alsi, dsci  */
 #define CHSC_REQ21_KS   0xF0            /* Storage key alsi          */
 #define CHSC_REQ21_KC   0x0F            /* Storage key dsci          */
-        BYTE    resv4[2];
-        BYTE    isc;                    /* Interrupt SubClass        */
-#define CHSC_REQ21_ISC_MASK 0x07
-        FWORD   flags;                  /* Flags                     */
+/*021*/ BYTE    resv4[2];
+/*023*/ BYTE    isc;                    /* Interrupt SubClass        */
+#define CHSC_REQ21_VISC_MASK 0x70
+#define CHSC_REQ21_ISC_MASK  0x07
+/*024*/ FWORD   flags;                  /* Flags                     */
 #define CHSC_REQ1_FLAGS_D 0x10000000    /* Time Delay Enablement     */
-        FWORD   resv5;
-        FWORD   ssid;                   /* SubChannel ID             */
-        FWORD   resvx[1004];
+/*028*/ FWORD   resv5;
+/*02C*/ FWORD   ssid;                   /* SubChannel ID             */
+/*030*/ FWORD   resvx[1004];
 } CHSC_REQ21;
         
 
 typedef struct _CHSC_REQ24 {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        HWORD   ssidfmt;
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   ssidfmt;
 #define CHSC_REQ24_SSID         0x0030
 #define CHSC_REQ24_FMT          0x000f
-        HWORD   first_sch;
-        HWORD   resv1;
-        HWORD   last_sch;
-        FWORD   resv2;
+/*006*/ HWORD   first_sch;
+/*008*/ HWORD   resv1;
+/*00A*/ HWORD   last_sch;
+/*00C*/ FWORD   resv2;
     } CHSC_REQ24;
 
 
 typedef struct _CHSC_REQ31 {            /* Enable Facility Request   */
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        HWORD   resv1;
-        HWORD   facility;               /* Operation Code            */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   resv1;
+/*006*/ HWORD   facility;               /* Operation Code            */
 #define CHSC_REQ31_MSS          0x0002  /* MSS Facility              */
-        FWORD   resv2;
-        FWORD   resv3;
-        FWORD   opdata[252];            /* Operation Code Data       */
+/*008*/ FWORD   resv2;
+/*00C*/ FWORD   resv3;
+/*010*/ FWORD   opdata[252];            /* Operation Code Data       */
     } CHSC_REQ31;
 
 
 typedef struct _CHSC_RSP {
-        HWORD   length;                 /* Length of response field  */
-        HWORD   rsp;                    /* Reponse code              */
+/*000*/ HWORD   length;                 /* Length of response field  */
+/*002*/ HWORD   rsp;                    /* Reponse code              */
 #define CHSC_REQ_OK             0x0001  /* No error                  */
 #define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
 #define CHSC_REQ_ERRREQ         0x0003  /* Error in request block    */
 #define CHSC_REQ_NOTSUPP        0x0004  /* Request not supported     */
 #define CHSC_REQ_FACILITY       0x0101  /* Unknown Facility          */
-        FWORD   info;
+/*004*/ FWORD   info;
     } CHSC_RSP;
 
 
 typedef struct _CHSC_RSP2 {
-        BYTE    flags;
-        BYTE    lsn;
-        BYTE    chp_type;
-        BYTE    chpid;
-        BYTE    swla;
-        BYTE    zeroes;
-        BYTE    chla;
-        BYTE    chpp;
+/*000*/ BYTE    flags;
+/*001*/ BYTE    lsn;
+/*002*/ BYTE    chp_type;
+/*003*/ BYTE    chpid;
+/*004*/ BYTE    swla;
+/*005*/ BYTE    zeroes;
+/*006*/ BYTE    chla;
+/*007*/ BYTE    chpp;
     } CHSC_RSP2;
 
 
 typedef struct _CHSC_RSP2F1 {
-        BYTE    flags;
-        BYTE    lsn;
-        BYTE    chp_type;
-        BYTE    chpid;
-        BYTE    resv1[3];
-        BYTE    chpp;
-        FWORD   resv2[3];
-        HWORD   mdc;
-        HWORD   flags2;
+/*000*/ BYTE    flags;
+/*001*/ BYTE    lsn;
+/*002*/ BYTE    chp_type;
+/*003*/ BYTE    chpid;
+/*004*/ BYTE    resv1[3];
+/*007*/ BYTE    chpp;
+/*008*/ FWORD   resv2[3];
+/*00C*/ HWORD   mdc;
+/*00E*/ HWORD   flags2;
 #define CHSC_RSP2F1_F2_R        0x0004
 #define CHSC_RSP2F1_F2_S        0x0002
 #define CHSC_RSP2F1_F2_F        0x0001
-        FWORD   resv3[2];
+/*010*/ FWORD   resv3[2];
     } CHSC_RSP2F1;
 
 
 typedef struct _CHSC_RSP4 {
-        BYTE    sch_val : 1;            /* Subchannel valid          */
-        BYTE    dev_val : 1;            /* Device number valid       */
-        BYTE    st : 3;                 /* Subchannel type           */
+/*000*/ BYTE    sch_val : 1;            /* Subchannel valid          */
+/*000*/ BYTE    dev_val : 1;            /* Device number valid       */
+/*000*/ BYTE    st : 3;                 /* Subchannel type           */
 #define CHSC_RSP4_ST_IO     0           /* I/O Subchannel; all fields
                                            have a meaning            */
 #define CHSC_RSP4_ST_CHSC   1           /* CHSC Subchannel only sch_val
@@ -180,21 +181,21 @@ typedef struct _CHSC_RSP4 {
                                            meaning                   */
 #define CHSC_RPS4_ST_ADM    3           /* ADM Subchannel; Only sch_val
                                            st and sch have a meaning */
-        BYTE    zeros : 3;
-        BYTE    unit_addr;              /* Unit address              */
-        HWORD   devno;                  /* Device number             */
-        BYTE    path_mask;              /* Valid path mask           */
-        BYTE    fla_valid_mask;         /* Valid link mask           */
-        HWORD   sch;                    /* Subchannel number         */
-        BYTE    chpid[8];               /* Channel path array        */
-        HWORD   fla[8];                 /* Full link address array   */
+/*000*/ BYTE    zeros : 3;
+/*001*/ BYTE    unit_addr;              /* Unit address              */
+/*002*/ HWORD   devno;                  /* Device number             */
+/*004*/ BYTE    path_mask;              /* Valid path mask           */
+/*005*/ BYTE    fla_valid_mask;         /* Valid link mask           */
+/*006*/ HWORD   sch;                    /* Subchannel number         */
+/*008*/ BYTE    chpid[8];               /* Channel path array        */
+/*010*/ HWORD   fla[8];                 /* Full link address array   */
     } CHSC_RSP4;
 
 
 typedef struct _CHSC_RSP6 {
-        BYTE    sch_val : 1;            /* Subchannel valid          */
-        BYTE    dev_val : 1;            /* Device number valid       */
-        BYTE    st : 3;                 /* Subchannel type           */
+/*000*/ BYTE    sch_val : 1;            /* Subchannel valid          */
+/*000*/ BYTE    dev_val : 1;            /* Device number valid       */
+/*000*/ BYTE    st : 3;                 /* Subchannel type           */
 #define CHSC_RSP6_ST_IO     0           /* I/O Subchannel; all fields
                                            have a meaning            */
 #define CHSC_RSP6_ST_CHSC   1           /* CHSC Subchannel only sch_val
@@ -204,19 +205,19 @@ typedef struct _CHSC_RSP6 {
                                            meaning                   */
 #define CHSC_RPS6_ST_ADM    3           /* ADM Subchannel; Only sch_val
                                            st and sch have a meaning */
-        BYTE    zeros : 3;
-        BYTE    fla_valid_mask;         /* Link Address validty mask */
-        HWORD   devnum;                 /* Control Unit Number       */
-        HWORD   resv1;                  /* Valid link mask           */
-        HWORD   sch;                    /* Subchannel number         */
-        BYTE    chpid[8];               /* Channel path array        */
-        HWORD   fla[8];                 /* Full link address array   */
+/*000*/ BYTE    zeros : 3;
+/*001*/ BYTE    fla_valid_mask;         /* Link Address validty mask */
+/*002*/ HWORD   devnum;                 /* Control Unit Number       */
+/*004*/ HWORD   resv1;                  /* Valid link mask           */
+/*006*/ HWORD   sch;                    /* Subchannel number         */
+/*007*/ BYTE    chpid[8];               /* Channel path array        */
+/*010*/ HWORD   fla[8];                 /* Full link address array   */
     } CHSC_RSP6;
 
 
 typedef struct _CHSC_RSP10 {
-        FWORD   general_char[510];
-        FWORD   chsc_char[508];         /* ZZ: Linux/390 code indicates 
+/*000*/ FWORD   general_char[510];
+/*1FE*/ FWORD   chsc_char[508];         /* ZZ: Linux/390 code indicates 
                                            this field has a length of
                                            518, however, that would 
                                            mean that the entire CHSC
@@ -227,15 +228,15 @@ typedef struct _CHSC_RSP10 {
 
 
 typedef struct _CHSC_RSP24 {
-        BYTE    flags;
+/*000*/ BYTE    flags;
 /* flags for st qdio sch data */
 #define CHSC_FLAG_QDIO_CAPABILITY       0x80
 #define CHSC_FLAG_VALIDITY              0x40
-        BYTE    resv1;
-        HWORD   sch;
-        BYTE    qfmt;
-        BYTE    parm;
-        BYTE    qdioac1;
+/*001*/ BYTE    resv1;
+/*002*/ HWORD   sch;
+/*004*/ BYTE    qfmt;
+/*005*/ BYTE    parm;
+/*006*/ BYTE    qdioac1;
 /* qdio adapter-characteristics-1 flag */
 #define AC1_SIGA_INPUT_NEEDED           0x40    /* Process input queues */
 #define AC1_SIGA_OUTPUT_NEEDED          0x20    /* Process output queues */
@@ -244,31 +245,31 @@ typedef struct _CHSC_RSP24 {
 #define AC1_AUTOMATIC_SYNC_ON_OUT_PCI   0x04    /* Set by hypervisor */
 #define AC1_SC_QEBSM_AVAILABLE          0x02    /* Available for subchannel */
 #define AC1_SC_QEBSM_ENABLED            0x01    /* Enabled for subchannel */
-        BYTE    sch_class;
-        BYTE    pcnt;
-        BYTE    icnt;
-        BYTE    resv2;
-        BYTE    ocnt;
-        BYTE    resv3;
-        BYTE    mbccnt;
-        HWORD   qdioac2;
+/*007*/ BYTE    sch_class;
+/*008*/ BYTE    pcnt;
+/*009*/ BYTE    icnt;
+/*00A*/ BYTE    resv2;
+/*00B*/ BYTE    ocnt;
+/*00C*/ BYTE    resv3;
+/*00D*/ BYTE    mbccnt;
+/*00E*/ HWORD   qdioac2;
 /* qdio adapter-characteristics-2 flag */
 #define QETH_SNIFF_AVAIL                0x0008  /* Promisc mode avail */
 #define QETH_AC2_DATA_DIV_AVAILABLE     0x0010
 #define QETH_AC2_DATA_DIV_ENABLED       0x0002
-        DBLWRD  sch_token;
-        BYTE    mro;
-        BYTE    mri;
-        HWORD   qdioac3; 
+/*010*/ DBLWRD  sch_token;
+/*011*/ BYTE    mro;
+/*012*/ BYTE    mri;
+/*013*/ HWORD   qdioac3; 
 #define QETH_AC3_FORMAT2_CQ_AVAILABLE   0x8000
-        HWORD   resv5;
-        BYTE    resv6;
-        BYTE    mmwc;
+/*014*/ HWORD   resv5;
+/*016*/ BYTE    resv6;
+/*017*/ BYTE    mmwc;
     } CHSC_RSP24;
 
 
 typedef struct _CHSC_RSP31 {
-        FWORD   resv1;
+/*000*/ FWORD   resv1;
     } CHSC_RSP31;
 
 

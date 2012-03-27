@@ -1766,6 +1766,8 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_C_VALIDITY    32            /* Validity                  */
 #define SIE_C_STOPREQ     40            /* Stop request              */
 #define SIE_C_OPEREXC     44            /* Operation Exception       */
+#define SIE_C_IOINT       60            /* I/O Interruption          */
+#define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
 /*051*/ BYTE  f;                        /* Interception Status       */

@@ -215,8 +215,7 @@ U64     slsba;                 /* Storage list state block address   */
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->GR_H(r3) = 1;       /* Activation error */
-        regs->psw.cc = 3;         /* Guess */
+        regs->psw.cc = 2;
         return;
     }
 
@@ -225,8 +224,7 @@ U64     slsba;                 /* Storage list state block address   */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         PTIO(ERR,"*SQBS");
-        regs->GR_H(r3) = 1;       /* Activation error */
-        regs->psw.cc = 1;
+        regs->psw.cc = 2;
         return;
     }
 #endif
@@ -265,8 +263,7 @@ U64     slsba;                 /* Storage list state block address   */
 
     regs->GR_L(r1) = bidx;              /* Return buffer state index */
     regs->GR_L(r3) = count;    /* Return number of unchanged buffers */
-    regs->GR_H(r3) = !count || oldstate == nextstate ? 0 : 0x20;
-    regs->psw.cc = 0;
+    regs->psw.cc = count ? 1 : 0;
 
     return;
 }
@@ -320,8 +317,7 @@ U64     slsba;                /* Storage list state block address    */
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->GR_H(r3) = 1;    /* Activation error */
-        regs->psw.cc = 3;      /* Guess */
+        regs->psw.cc = 2;
         return;
     }
 
@@ -330,8 +326,7 @@ U64     slsba;                /* Storage list state block address    */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         PTIO(ERR,"*EQBS");
-        regs->GR_H(r3) = 1;    /* Activation error */
-        regs->psw.cc = 1;
+        regs->psw.cc = 2;
         return;
     }
 #endif
@@ -385,8 +380,7 @@ U64     slsba;                /* Storage list state block address    */
     regs->GR_L(r1) = bidx;
     regs->GR_LHLCL(r2) = state;
     regs->GR_L(r3) = count;
-    regs->GR_H(r3) = !count || state == nextstate ? 0 : 0x20;
-    regs->psw.cc = 0;
+    regs->psw.cc = count ? 1 : 0;
 
     return;
 

@@ -92,7 +92,7 @@ typedef struct _OSA_MAC {
 /* OSA Node Element Descriptor                                       */
 /*-------------------------------------------------------------------*/
 typedef struct _NED {
-        BYTE    code;
+/*000*/ BYTE    code;
 #define NODE_UNUS       0x00
 #define NODE_SNEQ       0x40
 #define NODE_GNEQ       0x80
@@ -103,11 +103,11 @@ typedef struct _NED {
 #define NODE_RECON      0x04
 #define NODE_EMULA      0x02
 //  union { struct {
-        BYTE    type;
+/*001*/ BYTE    type;
 #define NODE_TUNSP      0
 #define NODE_TIODV      1
 #define NODE_TCU        2
-        BYTE    class;
+/*002*/ BYTE    class;
 #define NODE_CUNSP      0
 #define NODE_CDASD      1
 #define NODE_CTAPE      2
@@ -119,19 +119,19 @@ typedef struct _NED {
 #define NODE_CLMT       8
 #define NODE_CCTCA      9
 #define NODE_CSWIT     10
-        BYTE    ua;
-        BYTE    devtype[6];
-        BYTE    model[3];
-        BYTE    manufact[3];
-        BYTE    plant[2];
+/*003*/ BYTE    ua;
+/*004*/ BYTE    devtype[6];
+/*00A*/ BYTE    model[3];
+/*00D*/ BYTE    manufact[3];
+/*010*/ BYTE    plant[2];
         union   {
-             BYTE    code[12];
+/*012*/      BYTE    code[12];
              struct  {
-                  BYTE    serial[4];
-                  BYTE    sequence[8];
+/*012*/           BYTE    serial[4];
+/*016*/           BYTE    sequence[8];
              };
         } seq;
-        HWORD   tag;
+/*01E*/ HWORD   tag;
 // }; struct { BYTE zz[31]; }; };
 } NED;
 

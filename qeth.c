@@ -776,6 +776,8 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
+    TRACE(_("Adapter Interrupt dev(%4.4x)\n"),dev->devnum);
+
     obtain_lock(&dev->lock);
     dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
     dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
@@ -1359,6 +1361,13 @@ U16 opc;
     else
         dev->thinint = 0;
 
+#if 0
+    dev->pmcw.flag4 &= ~PMCW4_ISC;
+    dev->pmcw.flag4 |= (chsc_req21->isc & CHSC_REQ21_ISC_MASK) << 3;
+    dev->pmcw.flag25 &= ~PMCW25_VISC;
+    dev->pmcw.flag25 |= (chsc_req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
+#endif
+
     grp->alsi = alsi;
     grp->ks = ks;
 
@@ -1385,7 +1394,6 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 chsc_rsp24->pcnt = 0x10;
 chsc_rsp24->icnt = 0x01;
 chsc_rsp24->ocnt = 0x20;
-STORE_HW(chsc_rsp24->qdioac2, 0x4000);
 #endif
         chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
