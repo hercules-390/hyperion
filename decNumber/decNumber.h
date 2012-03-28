@@ -19,6 +19,13 @@
 
 #if !defined(DECNUMBER)
   #define DECNUMBER
+
+#if defined( _MSVC_ )
+    /* disable some MSVC compiler warnings                            */
+    /* for 64bits builds under WINDOWS 7                              */
+    #pragma warning( disable: 4244 ) // "conversion from 'x' to 'y', possible loss of data"
+#endif
+
   #define DECNAME     "decNumber"                       /* Short name */
   #define DECFULLNAME "Decimal Number Module"         /* Verbose name */
   #define DECAUTHOR   "Mike Cowlishaw"                /* Who to blame */

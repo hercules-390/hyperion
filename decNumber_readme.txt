@@ -63,3 +63,17 @@ with
 as applicable.
 
 References to decCommon.c and decBasic.c in commentary should also be modified to refer to the corresponding .h.
+
+
+NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE
+
+decnumber.h has been modified to add ...
+
+#if defined( _MSVC_ )
+    /* disable some MSVC compiler warnings                            */
+    /* for 64bits builds under WINDOWS 7                              */
+    #pragma warning( disable: 4244 ) // "conversion from 'x' to 'y', possible loss of data"
+#endif
+
+to get rid of a "show stopper" for 64bits MSVC builds
+
