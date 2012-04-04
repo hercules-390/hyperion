@@ -169,7 +169,6 @@
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#define ECACHE_SIZE          32768     /* Expanded iss cache size             */
 #define MINPROC_SIZE         32768     /* Minumum processing size             */
 
 /*----------------------------------------------------------------------------*/
@@ -200,12 +199,12 @@ struct ec                              /* Expand context                      */
   BYTE *dest;                          /* Destination MADDR page address      */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   GREG dictor;                         /* Dictionary origin                   */
-  BYTE ec[ECACHE_SIZE];                /* Expanded index symbol cache         */
+  BYTE ec[8192 * 7];                   /* Expanded index symbol cache         */
   int eci[8192];                       /* Index within cache for is           */
   int ecl[8192];                       /* Size of expanded is                 */
   int ecwm;                            /* Water mark                          */
   REGS *iregs;                         /* Intermediate registers              */
-  BYTE oc[2080];                       /* Output cache                        */
+  BYTE oc[8 * 260];                    /* Output cache                        */
   unsigned ocl;                        /* Output cache length                 */
   int r1;                              /* Guess what                          */
   int r2;                              /* Yep                                 */
@@ -1488,13 +1487,10 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
   memcpy(&ec->oc[ec->ocl], &ece[1], csl);
 
   /* Place within cache */
-  if(likely(ec->ecwm + cw <= ECACHE_SIZE))
-  {
-    memcpy(&ec->ec[ec->ecwm], &ec->oc[ec->ocl], cw);
-    ec->eci[is] = ec->ecwm;
-    ec->ecl[is] = cw;
-    ec->ecwm += cw;
-  }
+  memcpy(&ec->ec[ec->ecwm], &ec->oc[ec->ocl], cw);
+  ec->eci[is] = ec->ecwm;
+  ec->ecl[is] = cw;
+  ec->ecwm += cw;
 
   /* Commit in output buffer */
   ec->ocl += cw;
@@ -1839,8 +1835,8 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
     len1 = 0x800 - ofst;
     ec->dest = MADDR((GR_A(ec->r1, ec->iregs) + len1) & ADDRESS_MAXWRAP(ec->regs), ec->r1, ec->regs, ACCTYPE_WRITE, ec->regs->psw.pkey);
     memcpy(&main1[ofst], buf, len1);
-    len2 = len - len1;
-    while(len2)
+    len2 = len - len1; /* We always start with a len2 */
+    do
     {
       memcpy(ec->dest, &buf[len1], (len2 > 0x800 ? 0x800 : len2));
       *sk |= (STORKEY_REF | STORKEY_CHANGE);
@@ -1859,6 +1855,7 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
       else
         len2 = 0;
     }
+    while(len2);
   }
   
   ADJUSTREGS(ec->r1, ec->regs, ec->iregs, len);
