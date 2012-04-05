@@ -131,10 +131,6 @@
   #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
-  #define OPTION_DYNAMIC_RESOLVE_REXX   /* Dynamically load REXX     */
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
 #endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)

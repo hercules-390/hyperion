@@ -5,17 +5,19 @@
 # --------------------------------------------------------------------------
 #  Sets compiler flags for IPV6 support
 #
-# $Id: $
-#
 # ***************************************************************************
 
 !IFDEF DISABLE_IPV6
+
 !MESSAGE IPV6 SUPPORT DISABLED
+
 !ELSE
-cflgs1 =
-cflgs1 = $(cflgs1) /D ENABLE_IPV6
-!MESSAGE IPV6 FLAGS $(cflgs1)
-cflags = $(cflags) $(cflgs1)
+
+ipv6_flags =
+ipv6_flags = $(ipv6_flags) /D ENABLE_IPV6
+!MESSAGE IPV6   FLAGS $(ipv6_flags)
+cflags = $(cflags) $(ipv6_flags)
+
 !ENDIF
 
 # End of Flags for IPV6 support

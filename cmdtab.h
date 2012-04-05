@@ -410,11 +410,11 @@
   "This command is deprecated. Use \"ecpsvm\" instead.\n"
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
-#define exec_cmd_desc           "Execute a REXX script"
+#define exec_cmd_desc           "Execute a Rexx script"
 #define exec_cmd_help           \
                                 \
   "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is the name of\n"      \
-  "the REXX script, and 'args' are arguments (separated by spaces) to be\n"      \
+  "the Rexx script, and 'args' are arguments (separated by spaces) to be\n"      \
   "passed to the script.\n"
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 

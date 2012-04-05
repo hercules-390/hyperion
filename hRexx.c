@@ -1,5 +1,5 @@
 /* HREXX.C      (c)Copyright Enrico Sorichetti, 2012                 */
-/*              REXX Interpreter Support                             */
+/*              Rexx Interpreter Support                             */
 /*                                                                   */
 /*  Released under "The Q Public License Version 1"                  */
 /*  (http://www.hercules-390.org/herclic.html) as modifications to   */
@@ -14,14 +14,12 @@
 #ifndef _HREXX_C_
 #define _HREXX_C_
 
+#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+
 #define  CMPARG( _VALUE_ )  strcasecmp( _VALUE_, argv[iarg])
 #define CMPARGL( _VALUE_ ) strncasecmp( _VALUE_, argv[iarg], argl)
 
-
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
-
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
-
 #define REXX_TRY_OOREXX( _FOUND_ ) do \
 { \
     RexxPackage = OOREXX_PACKAGE; \
@@ -63,7 +61,6 @@
     RexxExecInstoreCmd = NULL; \
     RexxStatus = _STOPPED_ ; \
 } while (0) ;
-
 #endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
 
 #include "hRexx.h"
@@ -726,7 +723,7 @@ struct stat fstat;
         {
             SETREXX_RESET()
             RexxStatus = _STOPPED_ ;
-            WRMSG( HHC17501, "E", envvar,"Unknown REXX Package");
+            WRMSG( HHC17501, "E", envvar,"Unknown Rexx Package");
             return -1;
         }
 
@@ -755,8 +752,7 @@ exec_cmd_Rexx_Loaded:
     haveResolvedCommand = FALSE;
 
     rc = stat( wCommand, &fstat );
-    if ( ( rc == 0 ) &&
-         ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
+    if ( ( rc == 0 ) && S_ISREG(fstat.st_mode) )
     {
         haveResolvedCommand = TRUE;
         goto endResolver;
@@ -777,8 +773,7 @@ exec_cmd_Rexx_Loaded:
             {
                 sprintf(wCommand, PATHFORMAT, RexxPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
                 rc = stat( wCommand, &fstat );
-                if ( ( rc == 0 ) &&
-                     ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
+                if ( ( rc == 0 ) && S_ISREG(fstat.st_mode) )
                 {
                     haveResolvedCommand = TRUE;
                     goto endResolver;
@@ -798,8 +793,7 @@ exec_cmd_Rexx_Loaded:
             {
                 sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1],ExtensionsArray[iExtn]);
                 rc = stat( wCommand, &fstat );
-                if ( ( rc == 0 ) &&
-                     ( S_ISREG(fstat.st_mode) || S_ISCHR(fstat.st_mode) || S_ISBLK(fstat.st_mode) ) )
+                if ( ( rc == 0 ) && S_ISREG(fstat.st_mode) )
                 {
                     haveResolvedCommand = TRUE;
                     goto endResolver;
@@ -896,7 +890,7 @@ short RetRC=0;
         {
             SETREXX_RESET()
             RexxStatus = _STOPPED_ ;
-            WRMSG( HHC17501, "E", envvar,"Unknown REXX Package");
+            WRMSG( HHC17501, "E", envvar,"Unknown Rexx Package");
             return -1;
         }
 

@@ -9,34 +9,38 @@
 #
 #   Set compiler and linker flags for REXX support
 #
-#   $Id$
-#
 # ***************************************************************************
 
 !IFDEF OBJECT_REXX_DIR
+
 OBJECT_REXX_HEADER1 = $(OBJECT_REXX_DIR)\rexx.h
 OBJECT_REXX_HEADER2 = $(OBJECT_REXX_DIR)\oorexxapi.h
 
 !IF EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER2)")
-cflgs1 =
-cflgs1 = $(cflgs1) /D HAVE_REXX_H
-cflgs1 = $(cflgs1) /D HAVE_OOREXXAPI.H
-cflgs1 = $(cflgs1) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_DIR)"
-!MESSAGE OBJECT REXX FLAGS $(cflgs1)
-cflags = $(cflags) $(cflgs1)
+
+oorexx_flags =
+oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_DIR)"
+oorexx_flags = $(oorexx_flags) /D HAVE_REXX_H
+oorexx_flags = $(oorexx_flags) /D HAVE_OOREXXAPI_H
+!MESSAGE OBJECT REXX FLAGS $(oorexx_flags)
+cflags = $(cflags) $(oorexx_flags)
+
 !ENDIF
 
 !ENDIF
 
 !IFDEF REGINA_REXX_DIR
+
 REGINA_REXX_HEADER1 = $(REGINA_REXX_DIR)\rexxsaa.h
 
 !IF EXISTS("$(REGINA_REXX_HEADER1)")
-cflgs2 =
-cflgs2 = $(cflgs2) /D HAVE_REXXSAA_H
-cflgs2 = $(cflgs2) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_DIR)"
-!MESSAGE REGINA REXX FLAGS $(cflgs2)
-cflags = $(cflags) $(cflgs2)
+
+regina_flags =
+regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_DIR)"
+regina_flags = $(regina_flags) /D HAVE_REXXSAA_H
+!MESSAGE REGINA REXX FLAGS $(regina_flags)
+cflags = $(cflags) $(regina_flags)
+
 !ENDIF
 
 !ENDIF

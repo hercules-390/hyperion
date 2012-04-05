@@ -1,5 +1,5 @@
 /* HREXX_O.C    (c)Copyright Enrico Sorichetti, 2012                 */
-/*              REXX Interpreter Support (Object  Rexx )             */
+/*              Rexx Interpreter Support (Object  Rexx )             */
 /*                                                                   */
 /*  Released under "The Q Public License Version 1"                  */
 /*  (http://www.hercules-390.org/herclic.html) as modifications to   */
@@ -55,7 +55,7 @@ static PFNREXXVARIABLEPOOL      hRexxVariablePool;
 
 int ObjectRexxFetchVar (
    char *    pszVar,             /* Variable name                     */
-   PRXSTRING prxVar)             /* REXX variable contents            */
+   PRXSTRING prxVar)             /* Rexx variable contents            */
    {
 
    /* local function variables */
