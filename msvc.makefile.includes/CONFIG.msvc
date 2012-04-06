@@ -55,6 +55,8 @@ NODEBUG = 1
 !UNDEF NODEBUG
 !ELSEIF  "$(CFG)" == "RETAIL"
 NODEBUG = 1
+!ELSEIF  "$(CFG)" == "RELEASE"
+NODEBUG = 1
 !ELSE
 !ERROR Invalid build configuration!
 !ENDIF
