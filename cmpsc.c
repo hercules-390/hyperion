@@ -192,6 +192,7 @@ struct cc                              /* Compress context                    */
   REGS *regs;                          /* Registers                           */
   unsigned smbsz;                      /* Symbol size                         */
   BYTE *src;                           /* Source MADDR page address           */
+  BYTE st;                             /* Symbol translation                  */
 };
 
 struct ec                              /* Expand context                      */
@@ -427,6 +428,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   cc.regs = regs;
   cc.smbsz = GR0_smbsz(regs);
   cc.src = NULL;
+  cc.st = GR0_st(regs);
 
   /* Process individual index symbols until cbn bocomes zero */
   if(unlikely(GR1_cbn(iregs)))
@@ -1016,7 +1018,7 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
   }
 
   /* Check if symbol translation is requested */
-  if(unlikely(GR0_st(cc->regs)))
+  if(unlikely(cc->st))
   {
     /* Get the interchange symbol */
     ARCH_DEP(vfetchc)(work, 1, (cc->dictor + GR1_sttoff(cc->iregs) + is * 2) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
@@ -1084,7 +1086,7 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
   BYTE *sk;                            /* Storage key                         */
 
   /* Check if symbol translation is requested */
-  if(unlikely(GR0_st(cc->regs)))
+  if(unlikely(cc->st))
   {
     dictor = cc->dictor + GR1_sttoff(cc->iregs);
     for(i = 0; i < 8; i++)
@@ -1112,14 +1114,14 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
       /* 012345678012345678012345678012345678012345678012345678012345678012345678 */
       /* 0        1        2        3        4        5        6        7         */
       mem[0] = (               (is[0] >> 1));
-      mem[1] = ((is[0] << 7) | (is[1] >> 2)) & 0xff;
-      mem[2] = ((is[1] << 6) | (is[2] >> 3)) & 0xff;
-      mem[3] = ((is[2] << 5) | (is[3] >> 4)) & 0xff;
-      mem[4] = ((is[3] << 4) | (is[4] >> 5)) & 0xff;
-      mem[5] = ((is[4] << 3) | (is[5] >> 6)) & 0xff;
-      mem[6] = ((is[5] << 2) | (is[6] >> 7)) & 0xff;
-      mem[7] = ((is[6] << 1) | (is[7] >> 8)) & 0xff;
-      mem[8] = ((is[7])                    ) & 0xff;
+      mem[1] = ((is[0] << 7) | (is[1] >> 2));
+      mem[2] = ((is[1] << 6) | (is[2] >> 3));
+      mem[3] = ((is[2] << 5) | (is[3] >> 4));
+      mem[4] = ((is[3] << 4) | (is[4] >> 5));
+      mem[5] = ((is[4] << 3) | (is[5] >> 6));
+      mem[6] = ((is[5] << 2) | (is[6] >> 7));
+      mem[7] = ((is[6] << 1) | (is[7] >> 8));
+      mem[8] = ((is[7])                    );
       break;
     }
     case 10: /* 10-bits */
@@ -1129,15 +1131,15 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
       /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
       /* 0         1         2         3         4         5         6         7          */
       mem[0] = (               (is[0] >> 2));
-      mem[1] = ((is[0] << 6) | (is[1] >> 4)) & 0xff;
-      mem[2] = ((is[1] << 4) | (is[2] >> 6)) & 0xff;
-      mem[3] = ((is[2] << 2) | (is[3] >> 8)) & 0xff;
-      mem[4] = ((is[3])                    ) & 0xff;
-      mem[5] = (               (is[4] >> 2)) & 0xff;
-      mem[6] = ((is[4] << 6) | (is[5] >> 4)) & 0xff;
-      mem[7] = ((is[5] << 4) | (is[6] >> 6)) & 0xff;
-      mem[8] = ((is[6] << 2) | (is[7] >> 8)) & 0xff;
-      mem[9] = ((is[7])                    ) & 0xff;
+      mem[1] = ((is[0] << 6) | (is[1] >> 4));
+      mem[2] = ((is[1] << 4) | (is[2] >> 6));
+      mem[3] = ((is[2] << 2) | (is[3] >> 8));
+      mem[4] = ((is[3])                    );
+      mem[5] = (               (is[4] >> 2));
+      mem[6] = ((is[4] << 6) | (is[5] >> 4));
+      mem[7] = ((is[5] << 4) | (is[6] >> 6));
+      mem[8] = ((is[6] << 2) | (is[7] >> 8));
+      mem[9] = ((is[7])                    );
       break;
     }
     case 11: /* 11-bits */
@@ -1147,16 +1149,16 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
       /* 0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a */
       /* 0          1          2          3          4          5          6          7           */
       mem[ 0] = (               (is[0] >>  3));
-      mem[ 1] = ((is[0] << 5) | (is[1] >>  6)) & 0xff;
-      mem[ 2] = ((is[1] << 2) | (is[2] >>  9)) & 0xff;
-      mem[ 3] = (               (is[2] >>  1)) & 0xff;
-      mem[ 4] = ((is[2] << 7) | (is[3] >>  4)) & 0xff;
-      mem[ 5] = ((is[3] << 4) | (is[4] >>  7)) & 0xff;
-      mem[ 6] = ((is[4] << 1) | (is[5] >> 10)) & 0xff;
-      mem[ 7] = (               (is[5] >>  2)) & 0xff;
-      mem[ 8] = ((is[5] << 6) | (is[6] >>  5)) & 0xff;
-      mem[ 9] = ((is[6] << 3) | (is[7] >>  8)) & 0xff;
-      mem[10] = ((is[7])                     ) & 0xff;
+      mem[ 1] = ((is[0] << 5) | (is[1] >>  6));
+      mem[ 2] = ((is[1] << 2) | (is[2] >>  9));
+      mem[ 3] = (               (is[2] >>  1));
+      mem[ 4] = ((is[2] << 7) | (is[3] >>  4));
+      mem[ 5] = ((is[3] << 4) | (is[4] >>  7));
+      mem[ 6] = ((is[4] << 1) | (is[5] >> 10));
+      mem[ 7] = (               (is[5] >>  2));
+      mem[ 8] = ((is[5] << 6) | (is[6] >>  5));
+      mem[ 9] = ((is[6] << 3) | (is[7] >>  8));
+      mem[10] = ((is[7])                     );
       break;
     }
     case 12: /* 12-bits */
@@ -1166,17 +1168,17 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
       /* 0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab */
       /* 0           1           2           3           4           5           6           7            */
       mem[ 0] = (               (is[0] >> 4));
-      mem[ 1] = ((is[0] << 4) | (is[1] >> 8)) & 0xff;
-      mem[ 2] = ((is[1])                    ) & 0xff;
-      mem[ 3] = (               (is[2] >> 4)) & 0xff;
-      mem[ 4] = ((is[2] << 4) | (is[3] >> 8)) & 0xff;
-      mem[ 5] = ((is[3])                    ) & 0xff;
-      mem[ 6] = (               (is[4] >> 4)) & 0xff;
-      mem[ 7] = ((is[4] << 4) | (is[5] >> 8)) & 0xff;
-      mem[ 8] = ((is[5])                    ) & 0xff;
-      mem[ 9] = (               (is[6] >> 4)) & 0xff;
-      mem[10] = ((is[6] << 4) | (is[7] >> 8)) & 0xff;
-      mem[11] = ((is[7])                    ) & 0xff;
+      mem[ 1] = ((is[0] << 4) | (is[1] >> 8));
+      mem[ 2] = ((is[1])                    );
+      mem[ 3] = (               (is[2] >> 4));
+      mem[ 4] = ((is[2] << 4) | (is[3] >> 8));
+      mem[ 5] = ((is[3])                    );
+      mem[ 6] = (               (is[4] >> 4));
+      mem[ 7] = ((is[4] << 4) | (is[5] >> 8));
+      mem[ 8] = ((is[5])                    );
+      mem[ 9] = (               (is[6] >> 4));
+      mem[10] = ((is[6] << 4) | (is[7] >> 8));
+      mem[11] = ((is[7])                    );
       break;
     }
     case 13: /* 13-bits */
@@ -1186,18 +1188,18 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
       /* 0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc */
       /* 0            1            2            3            4            5            6            7             */
       mem[ 0] = (               (is[0] >>  5));
-      mem[ 1] = ((is[0] << 3) | (is[1] >> 10)) & 0xff;
-      mem[ 2] = (               (is[1] >>  2)) & 0xff;
-      mem[ 3] = ((is[1] << 6) | (is[2] >>  7)) & 0xff;
-      mem[ 4] = ((is[2] << 1) | (is[3] >> 12)) & 0xff;
-      mem[ 5] = (               (is[3] >>  4)) & 0xff;
-      mem[ 6] = ((is[3] << 4) | (is[4] >>  9)) & 0xff;
-      mem[ 7] = (               (is[4] >>  1)) & 0xff;
-      mem[ 8] = ((is[4] << 7) | (is[5] >>  6)) & 0xff;
-      mem[ 9] = ((is[5] << 2) | (is[6] >> 11)) & 0xff;
-      mem[10] = (               (is[6] >>  3)) & 0xff;
-      mem[11] = ((is[6] << 5) | (is[7] >>  8)) & 0xff;
-      mem[12] = ((is[7])                     ) & 0xff;
+      mem[ 1] = ((is[0] << 3) | (is[1] >> 10));
+      mem[ 2] = (               (is[1] >>  2));
+      mem[ 3] = ((is[1] << 6) | (is[2] >>  7));
+      mem[ 4] = ((is[2] << 1) | (is[3] >> 12));
+      mem[ 5] = (               (is[3] >>  4));
+      mem[ 6] = ((is[3] << 4) | (is[4] >>  9));
+      mem[ 7] = (               (is[4] >>  1));
+      mem[ 8] = ((is[4] << 7) | (is[5] >>  6));
+      mem[ 9] = ((is[5] << 2) | (is[6] >> 11));
+      mem[10] = (               (is[6] >>  3));
+      mem[11] = ((is[6] << 5) | (is[7] >>  8));
+      mem[12] = ((is[7])                     );
       break;
     }
   }
