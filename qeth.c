@@ -714,9 +714,9 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
             TRACE(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
-        else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
+        else if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
+            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
@@ -741,9 +741,9 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
-        else if((iea->port & ~IDX_ACT_PORT) != OSA_PORTNO)
+        else if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & ~IDX_ACT_PORT),osa_devtyp[dev->member],dev->devnum);
+            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
