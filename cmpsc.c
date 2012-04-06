@@ -14,7 +14,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2011 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2012 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -1410,10 +1410,10 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       if(unlikely(ARCH_DEP(vstore)(&ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
         return;
     }
-  }
 
-  /* Commit, including GR1 */
-  COMMITREGS(regs, iregs, r1, r2);
+    /* Commit, including GR1 */
+    COMMITREGS(regs, iregs, r1, r2);
+  }
 }
 
 /*----------------------------------------------------------------------------*/
