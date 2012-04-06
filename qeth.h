@@ -411,7 +411,9 @@ typedef struct _OSA_IEA {
 /*00A*/ BYTE    resv00a;        /*                                   */
 #define IDX_ACT_RESV00A  0x01
 /*00B*/ BYTE    port;           /* Port number (bit 0 set)           */
-#define IDX_ACT_PORT    0x80
+#define IDX_ACT_PORT_MASK       0x3F
+#define IDX_ACT_PORT_ACTIVATE   0x80
+#define IDX_ACT_PORT_STANDBY    0x40
 /*00C*/ FWORD   token;          /* Issuer token                      */
 /*010*/ HWORD   flevel;         /* Function level                    */
 #define IDX_ACT_FLEVEL_READ     0x0000
