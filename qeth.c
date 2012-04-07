@@ -1281,7 +1281,7 @@ char qdiostat[80] = {0};
     snprintf( buffer, buflen, "QDIO %s%s%sIO[%" I64_FMT "u]"
         , (dev->group->acount == OSA_GROUP_SIZE) ? "" : "*Incomplete "
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qidxstate != OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
+        , (dev->qidxstate == OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
         , dev->excps
     );
 
