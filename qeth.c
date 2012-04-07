@@ -162,7 +162,9 @@ static BYTE qeth_immed_commands [256] =
 };
 
 
+#if defined(OSA_FIXED_DEVICE_ORDER)
 static const char *osa_devtyp[] = { "Read", "Write", "Data" };
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
 /*-------------------------------------------------------------------*/
 /* STORCHK macro: check storage access & update ref & change bits    */
@@ -331,10 +333,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th, DEVBLK *rdev)
+static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_TH  *th = (OSA_TH*)rdev->qrspbf;
+OSA_TH  *th = (OSA_TH*)grp->qrspbf;
 OSA_RRH *rrh;
 OSA_PH  *ph;
 U16 offset;
@@ -687,7 +689,7 @@ U32 ackseq;
     /* end switch(rrh->type) */
 
     // Set Response
-    rdev->qrspsz = rqsize;
+    grp->qrspsz = rqsize;
 }
 /* end osa_adapter_cmd */
 
@@ -695,11 +697,14 @@ U32 ackseq;
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
-static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea, DEVBLK *rdev)
+static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea)
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+OSA_IEAR *iear = (OSA_IEAR*)grp->qrspbf;
 U16 reqtype;
+#if defined(OSA_FIXED_DEVICE_ORDER)
 U16 datadev;
-OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
     memset(iear, 0, sizeof(OSA_IEAR));
 
@@ -708,20 +713,23 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
+#if defined(OSA_FIXED_DEVICE_ORDER)
         FETCH_HW(datadev, iea->datadev);
         if(!IS_OSA_READ_DEVICE(dev))
         {
             TRACE(_("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
-        else if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
-        {
-            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
-        }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+        }
+        else
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
+        if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
+        {
+            TRACE(_("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
@@ -735,20 +743,23 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         break;
 
     case IDX_ACT_TYPE_WRITE:
+#if defined(OSA_FIXED_DEVICE_ORDER)
         FETCH_HW(datadev, iea->datadev);
         if(!IS_OSA_WRITE_DEVICE(dev))
         {
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
-        else if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
-        {
-            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),osa_devtyp[dev->member],dev->devnum);
-            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
-        }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
+            dev->qidxstate = OSA_IDX_STATE_INACTIVE;
+        }
+        else
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
+        if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
+        {
+            TRACE(_("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qidxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
@@ -767,7 +778,7 @@ OSA_IEAR *iear = (OSA_IEAR*)rdev->qrspbf;
         break;
     }
 
-    rdev->qrspsz = sizeof(OSA_IEAR);
+    grp->qrspsz = sizeof(OSA_IEAR);
 }
 
 
@@ -1125,8 +1136,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         write_pipe(grp->ppfd[1],"*",1);
     }
     else
-        if(IS_OSA_READ_DEVICE(dev)
-          && (dev->group->acount == OSA_GROUP_SIZE))
+        if(dev->group->acount == OSA_GROUP_SIZE)
             signal_condition(&grp->qcond);
 }
 
@@ -1144,8 +1154,6 @@ int i;
     memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
     dev->devtype = dev->devid[1] << 8 | dev->devid[2];
 
-    dev->fla[0] = 0x0101;
-
     if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
     {
         dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
@@ -1162,6 +1170,10 @@ int i;
         /* Set Non-Blocking mode */
         socket_set_blocking_mode(grp->ppfd[0],0);
 
+        /* Allocate reponse buffer */
+        grp->qrspbf = malloc(RSP_BUFSZ);
+        grp->qrspsz = 0;
+
         /* Set defaults */
 #if defined( OPTION_W32_CTCI )
         grp->tuntap = strdup( tt32_get_default_iface() );
@@ -1171,10 +1183,6 @@ int i;
     }
     else
         grp = dev->group->grp_data;
-
-    /* Allocate reponse buffer */
-    dev->qrspbf = malloc(RSP_BUFSZ);
-    dev->qrspsz = 0;
 
     // process all command line options here
     for(i = 0; i < argc; i++)
@@ -1237,9 +1245,11 @@ int i;
 
     if(grouped)
     {
-//      dev->group->memdev[OSA_DATA_DEVICE]->pmcw.flag4 |= PMCW4_Q;
         for(i = 0; i < OSA_GROUP_SIZE; i++)
+        {
             dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
+            dev->group->memdev[i]->fla[0] = 0x0101;
+        }
     }
 
     return 0;
@@ -1268,10 +1278,10 @@ char qdiostat[80] = {0};
         );
     }
 
-    snprintf( buffer, buflen, "QDIO %s %s%sIO[%" I64_FMT "u]"
-        , (dev->group->acount == OSA_GROUP_SIZE) ? osa_devtyp[dev->member] : "*Incomplete"
+    snprintf( buffer, buflen, "QDIO %s%s%sIO[%" I64_FMT "u]"
+        , (dev->group->acount == OSA_GROUP_SIZE) ? "" : "*Incomplete "
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qidxstate == OSA_IDX_STATE_ACTIVE) ? "IDX " : ""
+        , (dev->qidxstate != OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
         , dev->excps
     );
 
@@ -1305,18 +1315,14 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttnetmask);
         if(grp->ttmtu)
             free(grp->ttmtu);
+        if(grp->qrspbf)
+            free(grp->qrspbf);
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
 
         free(dev->group->grp_data);
         dev->group->grp_data = NULL;
-    }
-
-    if(dev->qrspbf)
-    {
-        free(dev->qrspbf);
-        dev->qrspbf = NULL;
     }
 
     return 0;
@@ -1461,25 +1467,18 @@ int num;                                /* Number of bytes to move   */
     OSA_HDR *hdr = (OSA_HDR*)iobuf;
     U16 ddc;
 
-    /* Device block of device to which response is sent */
-    DEVBLK *rdev = (IS_OSA_WRITE_DEVICE(dev)
-                  && (dev->qidxstate == OSA_IDX_STATE_ACTIVE)
-                  && (dev->group->memdev[OSA_READ_DEVICE]->qidxstate == OSA_IDX_STATE_ACTIVE))
-                 ? dev->group->memdev[OSA_READ_DEVICE] : dev;
-
-        if(!rdev->qrspsz)
+        if(!grp->qrspsz)
         {
             FETCH_HW(ddc,hdr->ddc);
 
             obtain_lock(&grp->qlock);
             if(ddc == IDX_ACT_DDC)
-                osa_device_cmd(dev,(OSA_IEA*)iobuf, rdev);
+                osa_device_cmd(dev,(OSA_IEA*)iobuf);
             else
-                osa_adapter_cmd(dev, (OSA_TH*)iobuf, rdev);
+                osa_adapter_cmd(dev, (OSA_TH*)iobuf);
             release_lock(&grp->qlock);
 
-            if(dev != rdev)
-                signal_condition(&grp->qcond);
+            signal_condition(&grp->qcond);
 
             /* Calculate number of bytes to write and set residual count */
             num = (count < RSP_BUFSZ) ? count : RSP_BUFSZ;
@@ -1507,23 +1506,22 @@ int num;                                /* Number of bytes to move   */
         int rd_size = 0;
 
         obtain_lock(&grp->qlock);
-        if(dev->qrspsz)
+        if(grp->qrspsz)
         {
-            rd_size = dev->qrspsz;
-            memcpy(iobuf,dev->qrspbf,rd_size);
-            dev->qrspsz = 0;
+            rd_size = grp->qrspsz;
+            memcpy(iobuf,grp->qrspbf,rd_size);
+            grp->qrspsz = 0;
         }
         else
         {
-            if(IS_OSA_READ_DEVICE(dev)
-              && (dev->qidxstate == OSA_IDX_STATE_ACTIVE))
+            if(dev->qidxstate == OSA_IDX_STATE_ACTIVE)
             {
                 wait_condition(&grp->qcond, &grp->qlock);
-                if(dev->qrspsz)
+                if(grp->qrspsz)
                 {
-                    rd_size = dev->qrspsz;
-                    memcpy(iobuf,dev->qrspbf,rd_size);
-                    dev->qrspsz = 0;
+                    rd_size = grp->qrspsz;
+                    memcpy(iobuf,grp->qrspbf,rd_size);
+                    grp->qrspsz = 0;
                 }
             }
         }
@@ -1612,15 +1610,15 @@ int num;                                /* Number of bytes to move   */
         /* Insert chpid & unit address in the device ned */
         STORE_HW((rcd+0)->tag,dev->devnum);
         
-        /* Use unit address of OSA read device as control unit address */
-        STORE_HW((rcd+1)->tag,dev->group->memdev[OSA_READ_DEVICE]->devnum);
+        /* Use unit address of first OSA device as control unit address */
+        STORE_HW((rcd+1)->tag,dev->group->memdev[0]->devnum);
 
-        /* Use unit address of OSA read device as control unit address */
-        STORE_HW((rcd+2)->tag,dev->group->memdev[OSA_READ_DEVICE]->devnum);
+        /* Use unit address of first OSA device as control unit address */
+        STORE_HW((rcd+2)->tag,dev->group->memdev[0]->devnum);
 
-        /* Use unit address of OSA read device as control unit address */
-        (rcd+3)->class = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xFF;
-        (rcd+3)->ua = dev->group->memdev[OSA_READ_DEVICE]->devnum & 0xFF;
+        /* Use unit address of first OSA device as control unit address */
+        (rcd+3)->class = (dev->group->memdev[0]->devnum >> 8) & 0xFF;
+        (rcd+3)->ua = dev->group->memdev[0]->devnum & 0xFF;
 
         /* Calculate residual byte count */
         num = (count < sizeof(configuration_data) ? count : sizeof(configuration_data));
@@ -1665,9 +1663,9 @@ int num;                                /* Number of bytes to move   */
         /* Insert chpid & unit address in the device ned */
         STORE_HW((rni+0)->tag,dev->devnum);
 
-        /* Use unit address of OSA read device as control unit address */
-        (rni+1)->class = (dev->group->memdev[OSA_READ_DEVICE]->devnum >> 8) & 0xFF;
-        (rni+1)->ua = dev->group->memdev[OSA_READ_DEVICE]->devnum & 0xFF;
+        /* Use unit address of first OSA device as control unit address */
+        (rni+1)->class = (dev->group->memdev[0]->devnum >> 8) & 0xFF;
+        (rni+1)->ua = dev->group->memdev[0]->devnum & 0xFF;
 
         /* Calculate residual byte count */
         num = (count < sizeof(node_data) ? count : sizeof(node_data));
@@ -1685,13 +1683,10 @@ int num;                                /* Number of bytes to move   */
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
     {
-        OSA_QDR *qdr = (OSA_QDR*)dev->qrspbf;
+        OSA_QDR *qdr = (OSA_QDR*)iobuf;
         OSA_QDES0 *qdes;
         int accerr;
         int i;
-
-        /* Copy QDR from I/O buffer */
-        memcpy(qdr,iobuf,count);
 
         grp->i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
         grp->o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;

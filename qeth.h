@@ -24,17 +24,18 @@
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Port Number                                                   */
+/*-------------------------------------------------------------------*/
+#define OSA_PORTNO 0
+
+
+#if defined(OSA_FIXED_DEVICE_ORDER)
+/*-------------------------------------------------------------------*/
 /* OSA Relative Device Numbers                                       */
 /*-------------------------------------------------------------------*/
 #define OSA_READ_DEVICE         0
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
-
-
-/*-------------------------------------------------------------------*/
-/* OSA Port Number                                                   */
-/*-------------------------------------------------------------------*/
-#define OSA_PORTNO 0
 
 
 #define _IS_OSA_TYPE_DEVICE(_dev, _type) \
@@ -48,6 +49,7 @@
 
 #define IS_OSA_DATA_DEVICE(_dev) \
        _IS_OSA_TYPE_DEVICE((_dev),OSA_DATA_DEVICE)
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -162,6 +164,9 @@ typedef struct _OSA_GRP {
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* File Descriptor pair write pipe   */
+
+    BYTE   *qrspbf;             /* Response Buffer                   */
+    int     qrspsz;             /* Response Buffer Size              */
 
     int   reqpci;               /* PCI has been requested            */
 

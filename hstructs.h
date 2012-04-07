@@ -1484,8 +1484,6 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
 
         /*  Device dependent fields for QDIO devices                 */
-        BYTE   *qrspbf;                 /* Response Buffer           */
-        int     qrspsz;                 /* Response Buffer Size      */
         int     qidxstate;              /* IDX state                 */
         int     thinint;                /* Thin Interrupts on PCI    */
 #define OSA_IDX_STATE_INACTIVE  0x00
