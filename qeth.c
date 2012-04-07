@@ -265,13 +265,13 @@ int i;
 /*-------------------------------------------------------------------*/
 static inline void set_alsi(DEVBLK *dev, BYTE bits)
 {
-    if(dev->qeth.alsi)
+    if(dev->qdio.alsi)
     {
-    BYTE *alsi = dev->mainstor + dev->qeth.alsi;
+    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
 
         obtain_lock(&sysblk.mainlock);
         *alsi |= bits;
-        STORAGE_KEY(dev->qeth.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         release_lock(&sysblk.mainlock);
     }
 }
@@ -282,13 +282,13 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 static inline void clr_alsi(DEVBLK *dev, BYTE bits)
 {
-    if(dev->qeth.alsi)
+    if(dev->qdio.alsi)
     {
-    BYTE *alsi = dev->mainstor + dev->qeth.alsi;
+    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
 
         obtain_lock(&sysblk.mainlock);
         *alsi &= bits;
-        STORAGE_KEY(dev->qeth.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         release_lock(&sysblk.mainlock);
     }
 }
@@ -299,16 +299,16 @@ static inline void clr_alsi(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 static inline void set_dsci(DEVBLK *dev, BYTE bits)
 {
-    if(dev->qeth.dsci)
+    if(dev->qdio.dsci)
     {
-    BYTE *dsci = dev->mainstor + dev->qeth.dsci;
-    BYTE *alsi = dev->mainstor + dev->qeth.alsi;
+    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
+    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
 
         obtain_lock(&sysblk.mainlock);
         *dsci |= bits;
-        STORAGE_KEY(dev->qeth.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         *alsi |= bits;
-        STORAGE_KEY(dev->qeth.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         release_lock(&sysblk.mainlock);
     }
 }
@@ -319,13 +319,13 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 {
-    if(dev->qeth.dsci)
+    if(dev->qdio.dsci)
     {
-    BYTE *dsci = dev->mainstor + dev->qeth.dsci;
+    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
 
         obtain_lock(&sysblk.mainlock);
         *dsci &= bits;
-        STORAGE_KEY(dev->qeth.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
         release_lock(&sysblk.mainlock);
     }
 }
@@ -338,7 +338,7 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_TH  *th = (OSA_TH*)grp->qrspbf;
+OSA_TH  *th = (OSA_TH*)grp->rspbf;
 OSA_RRH *rrh;
 OSA_PH  *ph;
 U16 offset;
@@ -691,7 +691,7 @@ U32 ackseq;
     /* end switch(rrh->type) */
 
     // Set Response
-    grp->qrspsz = rqsize;
+    grp->rspsz = rqsize;
 }
 /* end osa_adapter_cmd */
 
@@ -702,7 +702,7 @@ U32 ackseq;
 static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_IEAR *iear = (OSA_IEAR*)grp->qrspbf;
+OSA_IEAR *iear = (OSA_IEAR*)grp->rspbf;
 U16 reqtype;
 #if defined(OSA_FIXED_DEVICE_ORDER)
 U16 datadev;
@@ -720,19 +720,19 @@ U16 datadev;
         if(!IS_OSA_READ_DEVICE(dev))
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
 #endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -740,7 +740,7 @@ U16 datadev;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qeth.idxstate = OSA_IDX_STATE_ACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
@@ -750,19 +750,19 @@ U16 datadev;
         if(!IS_OSA_WRITE_DEVICE(dev))
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
 #endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
-            dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -770,17 +770,17 @@ U16 datadev;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qeth.idxstate = OSA_IDX_STATE_ACTIVE;
+            dev->qdio.idxstate = OSA_IDX_STATE_ACTIVE;
         }
         break;
 
     default:
         DBGTRC(dev, _("QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n"),reqtype,dev->devnum);
-        dev->qeth.idxstate = OSA_IDX_STATE_INACTIVE;
+        dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
         break;
     }
 
-    grp->qrspsz = sizeof(OSA_IEAR);
+    grp->rspsz = sizeof(OSA_IEAR);
 }
 
 
@@ -820,24 +820,24 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 static void process_input_queue(DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int iq = dev->qeth.i_qpos;
-int mq = dev->qeth.i_qcnt;
+int iq = dev->qdio.i_qpos;
+int mq = dev->qdio.i_qcnt;
 int nobuff = 1;
 
-    DBGTRC(dev, "Input Qpos(%d) Bpos(%d)\n",dev->qeth.i_qpos,dev->qeth.i_bpos[dev->qeth.i_qpos]);
+    DBGTRC(dev, "Input Qpos(%d) Bpos(%d)\n",dev->qdio.i_qpos,dev->qdio.i_bpos[dev->qdio.i_qpos]);
 
     while (mq--)
-        if(dev->qeth.i_qmask & (0x80000000 >> iq))
+        if(dev->qdio.i_qmask & (0x80000000 >> iq))
         {
-        int ib = dev->qeth.i_bpos[iq];
+        int ib = dev->qdio.i_bpos[iq];
         OSA_SLSB *slsb;
         int mb = 128;
-            slsb = (OSA_SLSB*)(dev->mainstor + dev->qeth.i_slsbla[iq]);
+            slsb = (OSA_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[iq]);
 
             while(mb--)
                 if(slsb->slsbe[ib] == SLSBE_INPUT_EMPTY)
                 {
-                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qeth.i_sla[iq]);
+                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qdio.i_sla[iq]);
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
                 OSA_SBAL *sbal;
@@ -848,15 +848,15 @@ int nobuff = 1;
                     DBGTRC(dev, _("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
-                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qeth.i_slk[iq],STORKEY_REF,dev))
+                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qeth.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_QDIO_THININT)
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qeth.i_slk[iq]);
+                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
                         return;
                     }
                     sbal = (OSA_SBAL*)(dev->mainstor + sa);
@@ -867,15 +867,15 @@ int nobuff = 1;
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
                             break;  // Or should this be continue - ie a discontiguous sbal???
-                        if(STORCHK(la,len-1,dev->qeth.i_sbalk[iq],STORKEY_CHANGE,dev))
+                        if(STORCHK(la,len-1,dev->qdio.i_sbalk[iq],STORKEY_CHANGE,dev))
                         {
                             slsb->slsbe[ib] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qeth.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_QDIO_THININT)
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qeth.i_sbalk[iq]);
+                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
@@ -903,7 +903,7 @@ if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
                         OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
                             memset(hdr2, 0, sizeof(OSA_HDR2));
 
-                            dev->qeth.rxcnt++;
+                            dev->qdio.rxcnt++;
 
                             hdr2->id = grp->l3 ? HDR2_ID_LAYER3 : HDR2_ID_LAYER2;
                             STORE_HW(hdr2->pktlen,olen);
@@ -940,17 +940,17 @@ DUMP(dev, "INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
-                        STORAGE_KEY(dev->qeth.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         if(++ib >= 128)
                         {
                             ib = 0;
-                            dev->qeth.i_bpos[iq] = ib;
-                            if(++iq >= dev->qeth.i_qcnt)
+                            dev->qdio.i_bpos[iq] = ib;
+                            if(++iq >= dev->qdio.i_qcnt)
                                 iq = 0;
-                            dev->qeth.i_qpos = iq;
-                            mq = dev->qeth.o_qcnt;
+                            dev->qdio.i_qpos = iq;
+                            mq = dev->qdio.o_qcnt;
                         }
-                        dev->qeth.i_bpos[iq] = ib;
+                        dev->qdio.i_bpos[iq] = ib;
                         mb = 128;
                     }
                     else
@@ -967,16 +967,16 @@ DUMP(dev, "INPUT BUF",hdr2,olen+sizeof(OSA_HDR2));
                     if(++ib >= 128)
                     {
                         ib = 0;
-                        dev->qeth.i_bpos[iq] = ib;
-                        if(++iq >= dev->qeth.i_qcnt)
+                        dev->qdio.i_bpos[iq] = ib;
+                        if(++iq >= dev->qdio.i_qcnt)
                             iq = 0;
-                        dev->qeth.i_qpos = iq;
+                        dev->qdio.i_qpos = iq;
                     }
-                    dev->qeth.i_bpos[iq] = ib;
+                    dev->qdio.i_bpos[iq] = ib;
                 }
         }
         else
-            if(++iq >= dev->qeth.i_qcnt)
+            if(++iq >= dev->qdio.i_qcnt)
                 iq = 0;
 
     if(nobuff)
@@ -1008,21 +1008,21 @@ DUMP(dev, "TAP DROPPED",buff,n);
 static void process_output_queue(DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int oq = dev->qeth.o_qpos;
-int mq = dev->qeth.o_qcnt;
+int oq = dev->qdio.o_qpos;
+int mq = dev->qdio.o_qcnt;
 
     while (mq--)
-        if(dev->qeth.o_qmask & (0x80000000 >> oq))
+        if(dev->qdio.o_qmask & (0x80000000 >> oq))
         {
-        int ob = dev->qeth.o_bpos[oq];
+        int ob = dev->qdio.o_bpos[oq];
         OSA_SLSB *slsb;
         int mb = 128;
-            slsb = (OSA_SLSB*)(dev->mainstor + dev->qeth.o_slsbla[oq]);
+            slsb = (OSA_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[oq]);
 
             while(mb--)
                 if(slsb->slsbe[ob] == SLSBE_OUTPUT_PRIMED)
                 {
-                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qeth.o_sla[oq]);
+                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qdio.o_sla[oq]);
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
                 OSA_SBAL *sbal;
@@ -1031,15 +1031,15 @@ int mq = dev->qeth.o_qcnt;
                     DBGTRC(dev, _("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 
                     FETCH_DW(sa,sl->sbala[ob]);
-                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qeth.o_slk[oq],STORKEY_REF,dev))
+                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qeth.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_QDIO_THININT)
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qeth.o_slk[oq]);
+                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
                         return;
                     }
                     sbal = (OSA_SBAL*)(dev->mainstor + sa);
@@ -1050,15 +1050,15 @@ int mq = dev->qeth.o_qcnt;
                         FETCH_FW(len,sbal->sbale[ns].length);
                         if(!len)
                             break;  // Or should this be continue - ie a discontiguous sbal???
-                        if(STORCHK(la,len-1,dev->qeth.o_sbalk[oq],STORKEY_REF,dev))
+                        if(STORCHK(la,len-1,dev->qdio.o_sbalk[oq],STORKEY_REF,dev))
                         {
                             slsb->slsbe[ob] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qeth.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_QDIO_THININT)
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qeth.o_sbalk[oq]);
+                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
@@ -1081,7 +1081,7 @@ DUMP(dev, "OUTPUT BUF",buf,len);
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", ns, len-sizeof(OSA_HDR2), 0 );
                                 TUNTAP_Write(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", ns, len-sizeof(OSA_HDR2), 0 );
-                                dev->qeth.txcnt++;
+                                dev->qdio.txcnt++;
                             }
 else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
                         }
@@ -1096,30 +1096,30 @@ else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
                     }
 
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
-                    STORAGE_KEY(dev->qeth.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                    STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                     if(++ob >= 128)
                     {
                         ob = 0;
-                        dev->qeth.o_bpos[oq] = ob;
-                        if(++oq >= dev->qeth.o_qcnt)
+                        dev->qdio.o_bpos[oq] = ob;
+                        if(++oq >= dev->qdio.o_qcnt)
                             oq = 0;
-                        dev->qeth.o_qpos = oq;
-                        mq = dev->qeth.o_qcnt;
+                        dev->qdio.o_qpos = oq;
+                        mq = dev->qdio.o_qcnt;
                     }
-                    dev->qeth.o_bpos[oq] = ob;
+                    dev->qdio.o_bpos[oq] = ob;
                     mb = 128;
                 }
                 else
                     if(++ob >= 128)
                     {
                         ob = 0;
-                        if(++oq >= dev->qeth.o_qcnt)
+                        if(++oq >= dev->qdio.o_qcnt)
                             oq = 0;
                     }
 
         }
         else
-            if(++oq >= dev->qeth.o_qcnt)
+            if(++oq >= dev->qdio.o_qcnt)
                 oq = 0;
 }
 
@@ -1173,8 +1173,8 @@ int i;
         socket_set_blocking_mode(grp->ppfd[0],0);
 
         /* Allocate reponse buffer */
-        grp->qrspbf = malloc(RSP_BUFSZ);
-        grp->qrspsz = 0;
+        grp->rspbf = malloc(RSP_BUFSZ);
+        grp->rspsz = 0;
 
         /* Set defaults */
 #if defined( OPTION_W32_CTCI )
@@ -1253,7 +1253,7 @@ int i;
         for(i = 0; i < OSA_GROUP_SIZE; i++)
         {
             dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
-            dev->group->memdev[i]->fla[0] = 0x0101;
+            dev->group->memdev[i]->fla[0] = dev->group->memdev[0]->devnum;
         }
     }
 
@@ -1277,15 +1277,15 @@ char qdiostat[80] = {0};
         snprintf( qdiostat, sizeof(qdiostat), "%s%stx[%u] rx[%u] "
             , grp->ttdevn[0] ? grp->ttdevn : ""
             , grp->ttdevn[0] ? " "         : ""
-            , dev->qeth.txcnt
-            , dev->qeth.rxcnt
+            , dev->qdio.txcnt
+            , dev->qdio.rxcnt
         );
     }
 
     snprintf( buffer, buflen, "QDIO %s%s%sIO[%" I64_FMT "u]"
         , (dev->group->acount == OSA_GROUP_SIZE) ? "" : "*Incomplete "
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qeth.idxstate == OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
+        , (dev->qdio.idxstate == OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
         , dev->excps
     );
 
@@ -1319,8 +1319,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttnetmask);
         if(grp->ttmtu)
             free(grp->ttmtu);
-        if(grp->qrspbf)
-            free(grp->qrspbf);
+        if(grp->rspbf)
+            free(grp->rspbf);
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
@@ -1339,49 +1339,49 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 static int qeth_set_sci ( DEVBLK *dev, void *desc )
 { 
-CHSC_REQ21 *chsc_req21 = (void *)desc;
+CHSC_REQ21 *req21 = (void *)desc;
 RADR alsi, dsci;
 BYTE ks, kc;
 U16 opc;
 
-    FETCH_HW(opc,chsc_req21->opcode);
+    FETCH_HW(opc,req21->opcode);
 
     if(opc)
         return 3; // Invalid operation code
 
-    FETCH_DW(alsi, chsc_req21->alsi); 
-    ks = chsc_req21->sk & CHSC_REQ21_KS;
+    FETCH_DW(alsi, req21->alsi); 
+    ks = req21->sk & CHSC_REQ21_KS;
 
-    FETCH_DW(dsci, chsc_req21->dsci); 
-    kc = (chsc_req21->sk & CHSC_REQ21_KC) << 4;
+    FETCH_DW(dsci, req21->dsci); 
+    kc = (req21->sk & CHSC_REQ21_KC) << 4;
 
     if(alsi && dsci)
     {
         if(STORCHK(alsi,0,ks,STORKEY_CHANGE,dev) 
           || STORCHK(dsci,0,kc,STORKEY_CHANGE,dev))
         {
-            dev->qeth.thinint = 0;
+            dev->qdio.thinint = 0;
             return 3;
         }
         else
-            dev->qeth.thinint = 1;
+            dev->qdio.thinint = 1;
         
     }
     else
-        dev->qeth.thinint = 0;
+        dev->qdio.thinint = 0;
 
 #if 0
     dev->pmcw.flag4 &= ~PMCW4_ISC;
-    dev->pmcw.flag4 |= (chsc_req21->isc & CHSC_REQ21_ISC_MASK) << 3;
+    dev->pmcw.flag4 |= (req21->isc & CHSC_REQ21_ISC_MASK) << 3;
     dev->pmcw.flag25 &= ~PMCW25_VISC;
-    dev->pmcw.flag25 |= (chsc_req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
+    dev->pmcw.flag25 |= (req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
 #endif
 
-    dev->qeth.alsi = alsi;
-    dev->qeth.ks = ks;
+    dev->qdio.alsi = alsi;
+    dev->qdio.ks = ks;
 
-    dev->qeth.dsci = dsci;
-    dev->qeth.kc = kc;
+    dev->qdio.dsci = dsci;
+    dev->qdio.kc = kc;
 
     return 0;
 }
@@ -1393,39 +1393,39 @@ U16 opc;
 /*-------------------------------------------------------------------*/
 static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 {
-    CHSC_RSP24 *chsc_rsp24 = (void *)desc;
+    CHSC_RSP24 *rsp24 = (void *)desc;
 
-    STORE_HW(chsc_rsp24->sch, dev->subchan);
+    STORE_HW(rsp24->sch, dev->subchan);
 
     if(dev->pmcw.flag4 & PMCW4_Q)
     {
 #if 0
-chsc_rsp24->pcnt = 0x10;
-chsc_rsp24->icnt = 0x01;
-chsc_rsp24->ocnt = 0x20;
+rsp24->pcnt = 0x10;
+rsp24->icnt = 0x01;
+rsp24->ocnt = 0x20;
 #endif
-        chsc_rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
+        rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
-        chsc_rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
-        chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
+        rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
+        rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
 
 #if defined(_FEATURE_QEBSM)
         if(FACILITY_ENABLED_DEV(QEBSM))
         {
-            STORE_DW(chsc_rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
-            chsc_rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
+            STORE_DW(rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
+            rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
         }
 #endif /*defined(_FEATURE_QEBSM)*/
 
 #if defined(_FEATURE_QDIO_THININT)
         if(FACILITY_ENABLED_DEV(QDIO_THININT))
-            chsc_rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
+            rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
 #if 1 // ZZTEST
-          chsc_rsp24->icnt = QDIO_MAXQ;
-          chsc_rsp24->ocnt = QDIO_MAXQ;
-          chsc_rsp24->mbccnt = 0x04;
+          rsp24->icnt = QDIO_MAXQ;
+          rsp24->ocnt = QDIO_MAXQ;
+          rsp24->mbccnt = 0x04;
 #endif
     }
 
@@ -1470,7 +1470,7 @@ int num;                                /* Number of bytes to move   */
     OSA_HDR *hdr = (OSA_HDR*)iobuf;
     U16 ddc;
 
-        if(!grp->qrspsz)
+        if(!grp->rspsz)
         {
             FETCH_HW(ddc,hdr->ddc);
 
@@ -1509,22 +1509,22 @@ int num;                                /* Number of bytes to move   */
         int rd_size = 0;
 
         obtain_lock(&grp->qlock);
-        if(grp->qrspsz)
+        if(grp->rspsz)
         {
-            rd_size = grp->qrspsz;
-            memcpy(iobuf,grp->qrspbf,rd_size);
-            grp->qrspsz = 0;
+            rd_size = grp->rspsz;
+            memcpy(iobuf,grp->rspbf,rd_size);
+            grp->rspsz = 0;
         }
         else
         {
-            if(dev->qeth.idxstate == OSA_IDX_STATE_ACTIVE)
+            if(dev->qdio.idxstate == OSA_IDX_STATE_ACTIVE)
             {
                 wait_condition(&grp->qcond, &grp->qlock);
-                if(grp->qrspsz)
+                if(grp->rspsz)
                 {
-                    rd_size = grp->qrspsz;
-                    memcpy(iobuf,grp->qrspbf,rd_size);
-                    grp->qrspsz = 0;
+                    rd_size = grp->rspsz;
+                    memcpy(iobuf,grp->rspbf,rd_size);
+                    grp->rspsz = 0;
                 }
             }
         }
@@ -1691,15 +1691,15 @@ int num;                                /* Number of bytes to move   */
         int accerr;
         int i;
 
-        dev->qeth.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
-        dev->qeth.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
+        dev->qdio.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
+        dev->qdio.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
 
-        FETCH_DW(dev->qeth.qiba,qdr->qiba);
-        dev->qeth.qibk = qdr->qkey & 0xF0;
+        FETCH_DW(dev->qdio.qiba,qdr->qiba);
+        dev->qdio.qibk = qdr->qkey & 0xF0;
 
-        if(!(accerr = STORCHK(dev->qeth.qiba,sizeof(OSA_QIB)-1,dev->qeth.qibk,STORKEY_CHANGE,dev)))
+        if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(OSA_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
         {
-        OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + dev->qeth.qiba);
+        OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + dev->qdio.qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
             if(FACILITY_ENABLED_DEV(QEBSM))
@@ -1709,34 +1709,34 @@ int num;                                /* Number of bytes to move   */
 
         qdes = qdr->qdf0;
 
-        for(i = 0; i < dev->qeth.i_qcnt; i++)
+        for(i = 0; i < dev->qdio.i_qcnt; i++)
         {
-            FETCH_DW(dev->qeth.i_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qeth.i_sla[i],qdes->sla);
-            FETCH_DW(dev->qeth.i_slsbla[i],qdes->slsba);
-            dev->qeth.i_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qeth.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qeth.i_sbalk[i] = qdes->keyp2 & 0xF0;
-            dev->qeth.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
+            FETCH_DW(dev->qdio.i_sliba[i],qdes->sliba);
+            FETCH_DW(dev->qdio.i_sla[i],qdes->sla);
+            FETCH_DW(dev->qdio.i_slsbla[i],qdes->slsba);
+            dev->qdio.i_slibk[i] = qdes->keyp1 & 0xF0;
+            dev->qdio.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
+            dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qeth.i_slsbla[i],sizeof(OSA_SLSB)-1,dev->qeth.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qeth.i_sla[i],sizeof(OSA_SL)-1,dev->qeth.i_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(OSA_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(OSA_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
 
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
         }
 
-        for(i = 0; i < dev->qeth.o_qcnt; i++)
+        for(i = 0; i < dev->qdio.o_qcnt; i++)
         {
-            FETCH_DW(dev->qeth.o_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qeth.o_sla[i],qdes->sla);
-            FETCH_DW(dev->qeth.o_slsbla[i],qdes->slsba);
-            dev->qeth.o_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qeth.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qeth.o_sbalk[i] = qdes->keyp2 & 0xF0;
-            dev->qeth.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
+            FETCH_DW(dev->qdio.o_sliba[i],qdes->sliba);
+            FETCH_DW(dev->qdio.o_sla[i],qdes->sla);
+            FETCH_DW(dev->qdio.o_slsbla[i],qdes->slsba);
+            dev->qdio.o_slibk[i] = qdes->keyp1 & 0xF0;
+            dev->qdio.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
+            dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qeth.o_slsbla[i],sizeof(OSA_SLSB)-1,dev->qeth.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qeth.o_sla[i],sizeof(OSA_SL)-1,dev->qeth.o_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(OSA_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(OSA_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
 
             qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
         }
@@ -1770,7 +1770,7 @@ int num;                                /* Number of bytes to move   */
     fd_set readset;
     int rc;
 
-        dev->qeth.i_qmask = dev->qeth.o_qmask = 0;
+        dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
 
         FD_ZERO( &readset );
 
@@ -1780,7 +1780,7 @@ int num;                                /* Number of bytes to move   */
 
         do {
             /* Process the Input Queue if data has been received */
-            if(dev->qeth.i_qmask && FD_ISSET(grp->ttfd,&readset))
+            if(dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
             {
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0, 0, 0 );
                 process_input_queue(dev);
@@ -1793,7 +1793,7 @@ int num;                                /* Number of bytes to move   */
             char c;
                 read_pipe(grp->ppfd[0],&c,1);
 
-                if(dev->qeth.o_qmask)
+                if(dev->qdio.o_qmask)
                 {
                     PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0, 0, 0 );
                     process_output_queue(dev);
@@ -1801,7 +1801,7 @@ int num;                                /* Number of bytes to move   */
                 }
             }
 
-            if(dev->qeth.i_qmask)
+            if(dev->qdio.i_qmask)
                 FD_SET(grp->ttfd, &readset);
             FD_SET(grp->ppfd[0], &readset);
 
@@ -1864,27 +1864,27 @@ int noselrd;
         return 1;
 
     /* Is there a read select */
-    noselrd = !dev->qeth.i_qmask;
+    noselrd = !dev->qdio.i_qmask;
 
     /* Validate Mask */
-    qmask &= ~(0xffffffff >> dev->qeth.i_qcnt);
+    qmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
 
     /* Reset Queue Positions */
-    if(qmask != dev->qeth.i_qmask)
+    if(qmask != dev->qdio.i_qmask)
     {
     int n;
-        for(n = 0; n < dev->qeth.i_qcnt; n++)
-            if(!(dev->qeth.i_qmask & (0x80000000 >> n)))
-                dev->qeth.i_bpos[n] = 0;
-        if(!dev->qeth.i_qmask)
-            dev->qeth.i_qpos = 0;
+        for(n = 0; n < dev->qdio.i_qcnt; n++)
+            if(!(dev->qdio.i_qmask & (0x80000000 >> n)))
+                dev->qdio.i_bpos[n] = 0;
+        if(!dev->qdio.i_qmask)
+            dev->qdio.i_qpos = 0;
 
         /* Update Read Queue Mask */
-        dev->qeth.i_qmask = qmask;
+        dev->qdio.i_qmask = qmask;
     }
 
     /* Send signal to QDIO thread */
-    if(noselrd && dev->qeth.i_qmask)
+    if(noselrd && dev->qdio.i_qmask)
         write_pipe(grp->ppfd[1],"*",1);
 
     return 0;
@@ -1905,24 +1905,24 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         return 1;
 
     /* Validate Mask */
-    qmask &= ~(0xffffffff >> dev->qeth.o_qcnt);
+    qmask &= ~(0xffffffff >> dev->qdio.o_qcnt);
 
     /* Reset Queue Positions */
-    if(qmask != dev->qeth.o_qmask)
+    if(qmask != dev->qdio.o_qmask)
     {
     int n;
-        for(n = 0; n < dev->qeth.o_qcnt; n++)
-            if(!(dev->qeth.o_qmask & (0x80000000 >> n)))
-                dev->qeth.o_bpos[n] = 0;
-        if(!dev->qeth.o_qmask)
-            dev->qeth.o_qpos = 0;
+        for(n = 0; n < dev->qdio.o_qcnt; n++)
+            if(!(dev->qdio.o_qmask & (0x80000000 >> n)))
+                dev->qdio.o_bpos[n] = 0;
+        if(!dev->qdio.o_qmask)
+            dev->qdio.o_qpos = 0;
 
         /* Update Write Queue Mask */
-        dev->qeth.o_qmask = qmask;
+        dev->qdio.o_qmask = qmask;
     }
 
     /* Send signal to QDIO thread */
-    if(dev->qeth.o_qmask)
+    if(dev->qdio.o_qmask)
         write_pipe(grp->ppfd[1],"*",1);
 
     return 0;

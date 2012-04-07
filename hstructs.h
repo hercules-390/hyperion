@@ -1484,7 +1484,7 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
 
         /*  Device dependent fields for QDIO devices                 */
-        OSA_DEV qeth;
+        QDIO_DEV qdio;
 
         BYTE    blkend[16];             /* eye-end                   */
 };

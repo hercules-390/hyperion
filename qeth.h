@@ -151,7 +151,7 @@ typedef struct _NED {
 /*-------------------------------------------------------------------*/
 /* OSA Device Structure                                              */
 /*-------------------------------------------------------------------*/
-typedef struct _OSA_DEV {
+typedef struct _QDIO_DEV {
     unsigned rxcnt;             /* Receive count                     */
     unsigned txcnt;             /* Transmit count                    */
 
@@ -199,7 +199,7 @@ typedef struct _OSA_DEV {
 #define DSCI_IOCOMP     0x01    /* ZZ TO BE CONFIRMED                */
     BYTE  ks;                   /* alsi storage key                  */
     BYTE  kc;                   /* dsci storage key                  */
-    } OSA_DEV;
+    } QDIO_DEV;
 
 
 /*-------------------------------------------------------------------*/
@@ -219,8 +219,8 @@ typedef struct _OSA_GRP {
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* File Descriptor pair write pipe   */
 
-    BYTE   *qrspbf;             /* Response Buffer                   */
-    int     qrspsz;             /* Response Buffer Size              */
+    BYTE   *rspbf;              /* Response Buffer                   */
+    int     rspsz;              /* Response Buffer Size              */
 
     int   reqpci;               /* PCI has been requested            */
 
