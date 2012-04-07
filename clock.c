@@ -302,7 +302,7 @@ static inline void set_ecps_vtimer(REGS *regs, S32 vtimer)
 #endif /*defined(_FEATURE_ECPSVM)*/
 
 
-S32 int_timer(REGS *regs)
+static inline S32 int_timer(REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
@@ -613,7 +613,7 @@ int clock_hresume(void *file)
 
 
 #if defined(FEATURE_INTERVAL_TIMER)
-static void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
+static inline void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
 {
 S32 itimer;
 S32 vtimer=0;

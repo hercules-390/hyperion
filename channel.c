@@ -3643,7 +3643,7 @@ retry:
 #if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
 #if defined(FEATURE_QDIO_THININT)
     if(unlikely(FACILITY_ENABLED(QDIO_THININT, regs)
-      && (dev->pciscsw.flag2 & SCSW2_Q) && dev->thinint) )
+      && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qeth.thinint) )
     {
         *ioid = *ioparm = 0;
 

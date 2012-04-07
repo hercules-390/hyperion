@@ -114,6 +114,8 @@
 #include "w32util.h"      // (win32 porting functions)
 #include "clock.h"        // (TOD definitions)
 
+#include "qeth.h"         // (QETH device definitions)
+
 #include "codepage.h"
 #include "logger.h"       // (logmsg, etc)
 #include "hdl.h"          // (Hercules Dynamic Loader)

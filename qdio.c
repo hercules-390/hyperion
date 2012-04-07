@@ -237,15 +237,15 @@ U64     slsba;                 /* Storage list state block address   */
     count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
     state = effective_addr2 & 0xFF;
 
-    queues = (U32)(grp->i_qcnt + grp->o_qcnt);
+    queues = (U32)(dev->qeth.i_qcnt + dev->qeth.o_qcnt);
 
     if ( (qidx >= queues) || (bidx > 127) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    if (qidx < (U32)grp->i_qcnt)
-        slsba = grp->i_slsbla[qidx];
+    if (qidx < (U32)dev->qeth.i_qcnt)
+        slsba = dev->qeth.i_slsbla[qidx];
     else
-        slsba = grp->o_slsbla[qidx - grp->i_qcnt];
+        slsba = dev->qeth.o_slsbla[qidx - dev->qeth.i_qcnt];
 
     oldstate = nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
@@ -339,15 +339,15 @@ U64     slsba;                /* Storage list state block address    */
     autoack = (regs->GR_H(r2) & 0x80000000);
     count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
 
-    queues = (U32)(grp->i_qcnt + grp->o_qcnt);
+    queues = (U32)(dev->qeth.i_qcnt + dev->qeth.o_qcnt);
 
     if ( (qidx >= queues) || (bidx > 127) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    if (qidx < (U32)grp->i_qcnt)
-        slsba = grp->i_slsbla[qidx];
+    if (qidx < (U32)dev->qeth.i_qcnt)
+        slsba = dev->qeth.i_slsbla[qidx];
     else
-        slsba = grp->o_slsbla[qidx - grp->i_qcnt];
+        slsba = dev->qeth.o_slsbla[qidx - dev->qeth.i_qcnt];
 
     state = nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
 
