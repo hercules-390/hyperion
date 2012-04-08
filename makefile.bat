@@ -12,6 +12,7 @@
   :: set ASSEMBLY_LISTINGS=1
 
 
+
 ::*****************************************************************************
 ::*****************************************************************************
 ::*****************************************************************************
@@ -29,6 +30,12 @@
 ::*                                                                           *
 ::*      If this batch file works okay then it was written by Fish.           *
 ::*      If it doesn't work then I don't know who the heck wrote it.          *
+::*                                                                           *
+::*****************************************************************************
+::*                                                                           *
+::*      31-March-2012                                                        *
+::*      Couldn't get it to work with new SDK as it uses different            *
+::*      arguments to its "setenv.bat" file so added various hacks to fix     *
 ::*                                                                           *
 ::*****************************************************************************
 ::*                                                                           *
@@ -210,10 +217,14 @@
 :toolkit
 
   :: (see PROGRAMMING NOTE further above!)
+
   setlocal
 
   if /i "%build_env%" == "toolkit" call "%bat_dir%vcvars32.bat"
-  call "%bat_dir%setenv" /%BLD%  /%CFG%
+
+  if /i "%new_sdk%" == "NEW" call "%bat_dir%\bin\setenv" /%BLD%  /%CFG%
+  if /i not "%new_sdk%" == "NEW" call "%bat_dir%\setenv" /%BLD%  /%CFG%
+
   goto :nmake
 
 
@@ -224,6 +235,25 @@
 
   set rc=0
   set build_env=
+  set new_sdk=
+
+:try_sdk
+
+  if "%MSSdk%" == "" goto :try_vs100
+
+  set build_env=sdk
+  set bat_dir=%MSSdk%
+
+:: This is a fiddle by g4ugm
+:: I couldn't find a way to check the SDK versions
+:: however the V7 sdk has the "setenv.cmd" file in the "bin" directory
+:: so using that for now
+
+  if NOT exist "%MSSdk%\bin\setenv.cmd" goto :eof
+  set new_sdk=NEW
+  goto :eof
+
+:try_vs100
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
 
@@ -241,19 +271,12 @@
 
 :try_vs80
 
-  if "%VS80COMNTOOLS%" == "" goto :try_sdk
+  if "%VS80COMNTOOLS%" == "" goto :try_toolkit
 
   set   build_env=vs80
   set VSTOOLSDIR=%VS80COMNTOOLS%
   goto :EOF
 
-:try_sdk
-
-  if "%MSSdk%" == "" goto :try_toolkit
-
-  set build_env=sdk
-  set bat_dir=%MSSdk%
-  goto :EOF
 
 :try_toolkit
 
@@ -316,6 +339,16 @@
   if /i     "%build_type%" == "RETAIL"      set CFG=RETAIL
   if /i     "%build_type%" == "RETAIL-X64"  set CFG=RETAIL
   if /i     "%build_type%" == "RETAIL-IA64" set CFG=RETAIL
+
+:: the latest SDk uses different arguments to the "setenv" batch file
+:: we need "release" not "retail"...
+
+  if /i not "%new_sdk%" == "NEW" goto :cfg_sdk_env
+
+  if /i "%CFG%" == "RETAIL" set CFG=RELEASE
+
+:cfg_sdk_env
+
 
   :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
 
@@ -381,16 +414,28 @@
   if /i "%targ_arch%" == "amd64" set CPU=AMD64
   if /i "%targ_arch%" == "ia64"  set CPU=IA64
 
+  set _WIN64=
+
+  if /i "%targ_arch%" == "amd64" set _WIN64=1
+  if /i "%targ_arch%" == "ia64"  set _WIN64=1
+
   set BLD=
+
+	:: the latest SDk uses different arguments to the "setenv" batch file
+
+  if /i "%new_sdk%" == "NEW" goto :bld_sdk_env
 
   if /i "%targ_arch%" == "x86"   set BLD=XP32
   if /i "%targ_arch%" == "amd64" set BLD=XP64
   if /i "%targ_arch%" == "ia64"  set BLD=IA64
 
-  set _WIN64=
+  goto :EOF
 
-  if /i "%targ_arch%" == "amd64" set _WIN64=1
-  if /i "%targ_arch%" == "ia64"  set _WIN64=1
+:bld_sdk_env
+
+  if /i "%targ_arch%" == "x86"   set BLD=XP /X86
+  if /i "%targ_arch%" == "amd64" set BLD=XP /X64
+  if /i "%targ_arch%" == "ia64"  set BLD=IA64 /2003
 
   goto :EOF
 
@@ -406,6 +451,11 @@
   if /i "%PROCESSOR_ARCHITECTURE%" == "IA64"  set host_arch=ia64
 
   ::  PROGRAMMING NOTE: there MUST NOT be any spaces before the ')'!!!
+
+  :: As there isn't a X64 or IA64 version of the x86 compiler
+  :: when building x86 builds we use the "x86" compiler under WOW
+
+  if /i "%targ_arch%" == "x86" set host_arch=x86
 
   if /i not "%host_arch%" == "%targ_arch%" goto :cross
 
