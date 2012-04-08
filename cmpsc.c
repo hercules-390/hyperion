@@ -19,6 +19,77 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------------*/
+/* Compression optimalization                                                 */
+/*                                                                            */
+/* Dead end determination                                                     */
+/*   Whenever a next character does not match any child in the character      */
+/*   entry and possible sibling descriptors, it is a dead end. This dead      */
+/*   combination is administrated in dea and tested before every start        */
+/*   of finding a index symbol. This prevents many fetches. For example:      */
+/*                                                                            */
+/*   HHC90318D fetch_ch : 01 at 000000001DDDC00F                              */
+/*   HHC90318D fetch_ch : C1 at 000000001DDDC010                              */
+/*   HHC90316D fetch_cce: index 0001                                          */
+/*   HHC90319D   cce    : DF042A001C47500C                                    */
+/*   HHC90320D   cct    : 6                                                   */
+/*   HHC90327D   x1..x5 : 11111                                               */
+/*   HHC90328D   y1..y2 : 00                                                  */
+/*   HHC90329D   d      : False                                               */
+/*   HHC90325D   cptr   : 042A                                                */
+/*   HHC90331D   ccs    : 00 1C 47 50 0C                                      */
+/*   HHC90318D fetch_ch : C1 at 000000001DDDC010                              */
+/*   HHC90339D fetch_sd1: index 042F                                          */
+/*   HHC90332D   sd1    : FBAF40580DD0F07041D3C514C3DD0F5A                    */
+/*   HHC90333D   sct    : 15                                                  */
+/*   HHC90334D   y1..y12: 101110101111                                        */
+/*   HHC90335D   sc(s)  : 40 58 0D D0 F0 70 41 D3 C5 14 C3 DD 0F 5A           */
+/*   HHC90339D fetch_sd1: index 043E                                          */
+/*   HHC90332D   sd1    : E4888006120530011E4A549E42D15734                    */
+/*   HHC90333D   sct    : 14                                                  */
+/*   HHC90334D   y1..y12: 010010001000                                        */
+/*   HHC90335D   sc(s)  : 80 06 12 05 30 01 1E 4A 54 9E 42 D1 57 34           */
+/*   HHC90365D dead_end : 01 C1 found                                         */
+/*                                                                            */
+/*   The above dead end is found after fetching a character entry and 2       */
+/*   sibling entries. These fetches are saved on encountering a 01 C1         */
+/*   combination.                                                             */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* Expansion optimalization                                                   */
+/*                                                                            */
+/* Caching                                                                    */
+/*   Every index symbol is cached after determination. This cache is used     */
+/*   on every second appearance of that index symbol. This saves many fetches */
+/*   of character entries. For expample:                                      */
+/*                                                                            */
+/*   HHC90349D fetch_ece: index 105F                                          */
+/*   HHC90353D   ece    : B05A384040000104                                    */
+/*   HHC90354D   psl    : 5                                                   */
+/*   HHC90355D   pptr   : 105A                                                */
+/*   HHC90356D   ecs    : 38 40 40 00 01                                      */
+/*   HHC90357D   ofst   : 04                                                  */
+/*   HHC90349D fetch_ece: index 105A                                          */
+/*   HHC90353D   ece    : 0458404000000000                                    */
+/*   HHC90354D   psl    : 0                                                   */
+/*   HHC90358D   bit34  : False                                               */
+/*   HHC90359D   csl    : 4                                                   */
+/*   HHC90356D   ecs    : 58 40 40 00                                         */
+/*                                                                            */
+/*   The above index symbol 105F, meaning 584040003840400001 is cached and    */
+/*   used after every next appearance.                                        */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* Common optimalization                                                      */
+/*                                                                            */
+/* 8 index symbol block processing                                            */
+/*   Calculating the cbn after placing or reading an index symbol is heavy.   */
+/*   This implementation uses blocks of 8 index symbols. These 8 symbols fit  */
+/*   in 9, 10, 11, 12 or 13 bytes and the cbn stays unchanged.                */
+/*----------------------------------------------------------------------------*/
 #include "hstdinc.h"
 
 #ifndef _HENGINE_DLL_
@@ -179,6 +250,8 @@ struct cc                              /* Compress context                    */
 {
   BYTE *cce;                           /* Character entry under investigation */
   unsigned dctsz;                      /* Dictionary size                     */
+  BYTE dea[0x100][0x100];              /* Dead end administration             */
+  BYTE dead_end;                       /* Needed for dead end administration  */
   BYTE *dest;                          /* Destination MADDR address           */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   GREG dictor;                         /* Dictionary origin                   */
@@ -412,6 +485,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   srclen = GR_A(r2 + 1, iregs);
 
   /* Initialize compression context */
+  memset(cc.dea, 0, sizeof(cc.dea));
   cc.dctsz = GR0_dctsz(regs);
   cc.dest = NULL;
   for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
@@ -446,13 +520,38 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* We always match the alpabet entry, so set last match */
       ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
-
-      /* Get the alphabet entry as preparation for searching */
       is = ch;
-      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
 
-      /* Try to find a child in compression character entry */
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+      /* Do normal searching on eos or unkown dead end */
+      if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
+      {      
+        cc.dead_end = 1;
+
+        /* Get the alphabet entry as preparation for searching */
+        cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+
+        /* Try to find a child in compression character entry */
+        while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+
+        /* Have we found a dead end */
+        if(is < 0x100 && cc.dead_end)
+        {
+          cc.dea[is][ch] = 1;
+
+#ifdef OPTION_CMPSC_DEBUG
+          WRMSG(HHC90365, "D", is, ch, "found");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+        }
+      }
+      else
+      {
+
+#ifdef OPTION_CMPSC_DEBUG
+        WRMSG(HHC90365, "D", is, ch, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+      }	
 
       /* Write the last match, this can be the alphabet entry */
       if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -482,13 +581,38 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* We always match the alpabet entry, so set last match */
       ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
-
-      /* Get the alphabet entry as preparation for searching */
       is = ch;
-      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
 
-      /* Try to find a child in compression character entry */
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+      /* Do normal searching on eos or unkown dead end */
+      if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
+      {
+        cc.dead_end = 1;
+
+        /* Get the alphabet entry as preparation for searching */
+        cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+
+        /* Try to find a child in compression character entry */
+        while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+
+        /* Have we found a dead end */	
+        if(is < 0x100 && cc.dead_end)
+        {
+          cc.dea[is][ch] = 1;
+
+#ifdef OPTION_CMPSC_DEBUG
+          WRMSG(HHC90365, "D", is, ch, "found");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */      
+
+        }
+      }
+      else
+      {
+
+#ifdef OPTION_CMPSC_DEBUG
+        WRMSG(HHC90365, "D", is, ch, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+      }
 
       /* Write the last match, this can be the alphabet entry */
       cc.is[i] = is;
@@ -524,13 +648,38 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
     /* We always match the alpabet entry, so set last match */
     ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
-
-    /* Get the alphabet entry as preparation for searching */
     is = ch;
-    cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
 
-    /* Try to find a child in compression character entry */
-    while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+    /* Do normal searching on eos or unkown dead end */
+    if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
+    {
+      cc.dead_end = 1;
+
+      /* Get the alphabet entry as preparation for searching */
+      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+
+      /* Try to find a child in compression character entry */
+      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+
+      /* Have we found a dead end */
+      if(is < 0x100 && cc.dead_end)
+      {
+        cc.dea[is][ch] = 1;
+
+#ifdef OPTION_CMPSC_DEBUG
+        WRMSG(HHC90365, "D", is, ch, "found");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+      }
+    }
+    else
+    {
+
+#ifdef OPTION_CMPSC_DEBUG
+      WRMSG(HHC90365, "D", is, ch, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    }
 
     /* Write the last match, this can be the alphabet entry */
     if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -817,6 +966,7 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
       {
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
+        cc->dead_end = 0;
 
         /* Check if child should not be examined */
         if(unlikely(!CCE_x(cc->cce, i)))
@@ -940,6 +1090,7 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
       {
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
+        cc->dead_end = 0;
 
         /* Check if child should not be examined */
         if(unlikely(!SD_ecb(cc->f1, sd1, i, cc->cce, y_in_parent)))
@@ -1252,20 +1403,24 @@ static int ARCH_DEP(test_ec)(struct cc *cc, BYTE *cce)
   int i;
   unsigned ofst;
 
-  for(i = 0; i < CCE_ecs(cce); i++)
+  if(CCE_ecs(cce))
   {
-    if(unlikely(GR_A(cc->r2 + 1, cc->iregs) <= (U32) i + 1))
-      return(0);
-    ofst = (GR_A(cc->r2, cc->iregs) + i + 1) & 0x7ff;
-    if(unlikely(!cc->src || ofst < cc->ofst))
-      ch = ARCH_DEP(vfetchb)((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
-    else
+    cc->dead_end = 0;
+    for(i = 0; i < CCE_ecs(cce); i++)
     {
-      ch = cc->src[ofst];
-      ITIMER_SYNC((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+      if(unlikely(GR_A(cc->r2 + 1, cc->iregs) <= (U32) i + 1))
+        return(0);
+      ofst = (GR_A(cc->r2, cc->iregs) + i + 1) & 0x7ff;
+      if(unlikely(!cc->src || ofst < cc->ofst))
+        ch = ARCH_DEP(vfetchb)((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
+      else
+      {
+        ch = cc->src[ofst];
+        ITIMER_SYNC((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+      }
+      if(unlikely(ch != CCE_ec(cce, i)))
+        return(0);
     }
-    if(unlikely(ch != CCE_ec(cce, i)))
-      return(0);
   }
 
   /* a perfect match */
