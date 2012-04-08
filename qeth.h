@@ -24,17 +24,18 @@
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Port Number                                                   */
+/*-------------------------------------------------------------------*/
+#define OSA_PORTNO 0
+
+
+#if defined(OSA_FIXED_DEVICE_ORDER)
+/*-------------------------------------------------------------------*/
 /* OSA Relative Device Numbers                                       */
 /*-------------------------------------------------------------------*/
 #define OSA_READ_DEVICE         0
 #define OSA_WRITE_DEVICE        1
 #define OSA_DATA_DEVICE         2
-
-
-/*-------------------------------------------------------------------*/
-/* OSA Port Number                                                   */
-/*-------------------------------------------------------------------*/
-#define OSA_PORTNO 0
 
 
 #define _IS_OSA_TYPE_DEVICE(_dev, _type) \
@@ -48,6 +49,7 @@
 
 #define IS_OSA_DATA_DEVICE(_dev) \
        _IS_OSA_TYPE_DEVICE((_dev),OSA_DATA_DEVICE)
+#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -147,26 +149,17 @@ typedef struct _NED {
 
 
 /*-------------------------------------------------------------------*/
-/* OSA Group Structure                                               */
+/* OSA Device Structure                                              */
 /*-------------------------------------------------------------------*/
-typedef struct _OSA_GRP {
-    COND    qcond;              /* Condition for IDX read thread     */
-    LOCK    qlock;              /* Lock for IDX read thread          */
-
-    char *tuntap;               /* Interface path name               */
-    char  ttdevn[IFNAMSIZ];     /* Interface network name            */
-    char *tthwaddr;             /* MAC address of the TAP adapter    */
-    char *ttipaddr;             /* IP address of the TAP adapter     */
-    char *ttnetmask;            /* Netmask of the TAP adapter        */
-    char *ttmtu;                /* MTU of the TAP adapter            */
-
-    int   ttfd;                 /* File Descriptor TUNTAP Device     */
-    int   ppfd[2];              /* File Descriptor pair write pipe   */
-
-    int   reqpci;               /* PCI has been requested            */
-
+typedef struct _QDIO_DEV {
     unsigned rxcnt;             /* Receive count                     */
     unsigned txcnt;             /* Transmit count                    */
+
+    int     idxstate;           /* IDX state                         */
+#define OSA_IDX_STATE_INACTIVE  0x00
+#define OSA_IDX_STATE_ACTIVE    0x01
+
+    int     thinint;            /* Thin Interrupts on PCI            */
 
     int   i_qcnt;               /* Input Queue Count                 */
     int   i_qpos;               /*   Current Queue Position          */
@@ -206,6 +199,30 @@ typedef struct _OSA_GRP {
 #define DSCI_IOCOMP     0x01    /* ZZ TO BE CONFIRMED                */
     BYTE  ks;                   /* alsi storage key                  */
     BYTE  kc;                   /* dsci storage key                  */
+    } QDIO_DEV;
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Group Structure                                               */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_GRP {
+    COND    qcond;              /* Condition for IDX read thread     */
+    LOCK    qlock;              /* Lock for IDX read thread          */
+
+    char *tuntap;               /* Interface path name               */
+    char  ttdevn[IFNAMSIZ];     /* Interface network name            */
+    char *tthwaddr;             /* MAC address of the TAP adapter    */
+    char *ttipaddr;             /* IP address of the TAP adapter     */
+    char *ttnetmask;            /* Netmask of the TAP adapter        */
+    char *ttmtu;                /* MTU of the TAP adapter            */
+
+    int   ttfd;                 /* File Descriptor TUNTAP Device     */
+    int   ppfd[2];              /* File Descriptor pair write pipe   */
+
+    BYTE   *rspbf;              /* Response Buffer                   */
+    int     rspsz;              /* Response Buffer Size              */
+
+    int   reqpci;               /* PCI has been requested            */
 
     int   l3;                   /* Adapter in layer 3 mode           */
 

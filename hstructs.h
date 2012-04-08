@@ -1484,19 +1484,14 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
 
         /*  Device dependent fields for QDIO devices                 */
-        BYTE   *qrspbf;                 /* Response Buffer           */
-        int     qrspsz;                 /* Response Buffer Size      */
-        int     qidxstate;              /* IDX state                 */
-        int     thinint;                /* Thin Interrupts on PCI    */
-#define OSA_IDX_STATE_INACTIVE  0x00
-#define OSA_IDX_STATE_ACTIVE    0x01
+        QDIO_DEV qdio;
 
         BYTE    blkend[16];             /* eye-end                   */
 };
 
 
 /*-------------------------------------------------------------------*/
-/* Device Group Structure     (just a group of related devices)      */
+/* Device Group Structure     (group of related devices eg OSA)      */
 /*-------------------------------------------------------------------*/
 struct DEVGRP {                         /* Device Group Structure    */
         int     members;                /* #of member devices in grp */
