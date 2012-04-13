@@ -52,7 +52,7 @@ static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 int     i;                              /* Array subscript           */
 
     /* Close the existing file, if any */
-    if (dev->fd < 0 || dev->fd > 2)
+    if (dev->fd >= 0)
     {
         (dev->hnd->close)(dev);
     

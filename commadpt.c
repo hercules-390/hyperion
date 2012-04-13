@@ -1787,7 +1787,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     char    bf[4];
 
         /* For re-initialisation, close the existing file, if any */
-        if (dev->fd < 0 || dev->fd > 2)
+        if (dev->fd >= 0)
             (dev->hnd->close)(dev);
 
         dev->excps = 0;

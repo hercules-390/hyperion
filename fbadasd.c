@@ -73,10 +73,6 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 char    pathname[MAX_PATH];             /* file path in host format  */
 char   *strtok_str = NULL;              /* save last position        */
 
-    /* For re-initialisation, close the existing file, if any */
-    if (dev->fd < 0 || dev->fd > 2)
-        (dev->hnd->close)(dev);
-
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;
 

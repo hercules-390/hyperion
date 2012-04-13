@@ -328,7 +328,7 @@ char *nxt;
 int   sockdev = 0;                     /* 1 == is socket device     */
 
     /* For re-initialisation, close the existing file, if any, and raise attention */
-    if (dev->fd < 0 || dev->fd > 2)
+    if (dev->fd >= 0)
     {
         (dev->hnd->close)(dev);
     
