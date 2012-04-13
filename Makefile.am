@@ -93,6 +93,7 @@ dyndev_SRC         = commadpt.c  \
                      tuntap.c    \
                      resolve.c   \
                      qeth.c      \
+                     mpc.c       \
                      con1052c.c
 
 
@@ -254,7 +255,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3525_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3525_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdtqeth_la_SOURCES = qeth.c tuntap.c
+  hdtqeth_la_SOURCES = qeth.c mpc.c tuntap.c
   hdtqeth_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdtqeth_la_LIBADD  = $(DYNMOD_LD_ADD)
 
@@ -735,6 +736,8 @@ noinst_HEADERS = fishhang.h     \
                  service.h      \
                  chsc.h         \
                  qeth.h         \
+                 qdio.h         \
+                 mpc.h          \
                  pttrace.h      \
                  history.h      \
                  sr.h           \

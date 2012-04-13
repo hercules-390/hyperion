@@ -20,7 +20,7 @@
 
 #include "opcode.h"
 
-#include "qeth.h"
+#include "qdio.h"
 
 #include "inline.h"
 
@@ -176,7 +176,6 @@ int     b2;                    /* effective address base             */
 VADR    effective_addr2;       /* effective address                  */
 
 DEVBLK  *dev;                  /* Data device DEVBLK                 */
-OSA_GRP *grp;                  /* OSA Group device structure         */
 
 BYTE    state;                 /* Target buffer state                */
 BYTE    oldstate;              /* Current buffer state               */
@@ -229,9 +228,6 @@ U64     slsba;                 /* Storage list state block address   */
     }
 #endif
 
-    /* Locate the group device block */
-    grp = (OSA_GRP*)dev->group->grp_data;
-
     qidx  = regs->GR_H(r1);       /* Queue index */
     bidx  = regs->GR_L(r1);       /* Buffer index */
     count = regs->GR_L(r3) < 128 ? regs->GR_L(r3) : 128; /* Number of buffers */
@@ -278,7 +274,6 @@ int     r1, r2, r3, m4;       /* Register numbers                    */
 VADR    effective_addr2 = 0;  /* effective address                   */
 
 DEVBLK  *dev;                 /* Data device DEVBLK                  */
-OSA_GRP *grp;                 /* OSA Group device structure          */
 
 int     autoack;              /* Flag for auto-acknowkledgement      */
 BYTE    state;                /* State extracted from first buffer   */
@@ -330,9 +325,6 @@ U64     slsba;                /* Storage list state block address    */
         return;
     }
 #endif
-
-    /* Locate the group device block */
-    grp = (OSA_GRP*)dev->group->grp_data;
 
     qidx  = regs->GR_H(r1);                           /* Queue index */
     bidx  = regs->GR_L(r1);                          /* Buffer index */

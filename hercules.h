@@ -115,6 +115,7 @@
 #include "clock.h"        // (TOD definitions)
 
 #include "qeth.h"         // (QETH device definitions)
+#include "qdio.h"         // (QDIO device definitions)
 
 #include "codepage.h"
 #include "logger.h"       // (logmsg, etc)

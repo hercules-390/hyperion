@@ -1014,22 +1014,22 @@ typedef struct _ORB {
 
 /* Path management control word structure definition */
 typedef struct _PMCW {
-        FWORD   intparm;                /* Interruption parameter    */
-        BYTE    flag4;                  /* Flag byte 4               */
-        BYTE    flag5;                  /* Flag byte 5               */
-        HWORD   devnum;                 /* Device number             */
-        BYTE    lpm;                    /* Logical path mask         */
-        BYTE    pnom;                   /* Path not operational mask */
-        BYTE    lpum;                   /* Last path used mask       */
-        BYTE    pim;                    /* Path installed mask       */
-        HWORD   mbi;                    /* Measurement block index   */
-        BYTE    pom;                    /* Path operational mask     */
-        BYTE    pam;                    /* Path available mask       */
-        BYTE    chpid[8];               /* Channel path identifiers  */
-        BYTE    zone;                   /* SIE zone                  */
-        BYTE    flag25;                 /* Flag byte 25              */
-        BYTE    flag26;                 /* Reserved byte - must be 0 */
-        BYTE    flag27;                 /* Flag byte 27              */
+/*000*/ FWORD   intparm;                /* Interruption parameter    */
+/*004*/ BYTE    flag4;                  /* Flag byte 4               */
+/*005*/ BYTE    flag5;                  /* Flag byte 5               */
+/*006*/ HWORD   devnum;                 /* Device number             */
+/*008*/ BYTE    lpm;                    /* Logical path mask         */
+/*009*/ BYTE    pnom;                   /* Path not operational mask */
+/*00A*/ BYTE    lpum;                   /* Last path used mask       */
+/*00B*/ BYTE    pim;                    /* Path installed mask       */
+/*00C*/ HWORD   mbi;                    /* Measurement block index   */
+/*00E*/ BYTE    pom;                    /* Path operational mask     */
+/*00F*/ BYTE    pam;                    /* Path available mask       */
+/*010*/ BYTE    chpid[8];               /* Channel path identifiers  */
+/*018*/ BYTE    zone;                   /* SIE zone                  */
+/*019*/ BYTE    flag25;                 /* Flag byte 25              */
+/*01A*/ BYTE    flag26;                 /* Reserved byte - must be 0 */
+/*01B*/ BYTE    flag27;                 /* Flag byte 27              */
     } PMCW;
 
 /* Bit definitions for PMCW flag byte 4 */

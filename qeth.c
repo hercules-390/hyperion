@@ -40,6 +40,7 @@
 #include "devtype.h"
 #include "chsc.h"
 #include "qeth.h"
+#include "mpc.h"
 #include "tuntap.h"
 
 #define QETH_DEBUG
@@ -162,10 +163,6 @@ static BYTE qeth_immed_commands [256] =
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
-
-#if defined(OSA_FIXED_DEVICE_ORDER)
-static const char *osa_devtyp[] = { "Read", "Write", "Data" };
-#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
 /*-------------------------------------------------------------------*/
 /* STORCHK macro: check storage access & update ref & change bits    */
@@ -335,12 +332,12 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, OSA_TH *req_th)
+static void osa_adapter_cmd(DEVBLK *dev, MPC_TH *req_th)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_TH  *th = (OSA_TH*)grp->rspbf;
-OSA_RRH *rrh;
-OSA_PH  *ph;
+MPC_TH  *th = (MPC_TH*)grp->rspbf;
+MPC_RRH *rrh;
+MPC_PH  *ph;
 U16 offset;
 U16 rqsize;
 U32 ackseq;
@@ -353,14 +350,14 @@ U32 ackseq;
     if(offset > 0x400)
         return;
     DUMP(dev, "TH",th,offset);
-    rrh = (OSA_RRH*)((BYTE*)th+offset);
+    rrh = (MPC_RRH*)((BYTE*)th+offset);
 
     FETCH_HW(offset,rrh->pduhoff);
     if(offset > 0x400)
         return;
     DUMP(dev, "RRH",rrh,offset);
-    ph = (OSA_PH*)((BYTE*)rrh+offset);
-    DUMP(dev, "PH",ph,sizeof(OSA_PH));
+    ph = (MPC_PH*)((BYTE*)rrh+offset);
+    DUMP(dev, "PH",ph,sizeof(MPC_PH));
 
     /* Update ACK Sequence Number */
     FETCH_FW(ackseq,rrh->ackseq);
@@ -371,16 +368,16 @@ U32 ackseq;
 
     case RRH_TYPE_CM:
         {
-            OSA_PDU *pdu = (OSA_PDU*)(ph+1);
-            DUMP(dev, "PDU CM",pdu,sizeof(OSA_PDU));
+            MPC_PDU *pdu = (MPC_PDU*)(ph+1);
+            DUMP(dev, "PDU CM",pdu,sizeof(MPC_PDU));
             UNREFERENCED(pdu);
         }
         break;
 
     case RRH_TYPE_ULP:
         {
-            OSA_PDU *pdu = (OSA_PDU*)(ph+1);
-            DUMP(dev, "PDU ULP",pdu,sizeof(OSA_PDU));
+            MPC_PDU *pdu = (MPC_PDU*)(ph+1);
+            DUMP(dev, "PDU ULP",pdu,sizeof(MPC_PDU));
 
             switch(pdu->tgt) {
 
@@ -464,18 +461,18 @@ U32 ackseq;
 
     case RRH_TYPE_IPA:
         {
-        OSA_IPA *ipa = (OSA_IPA*)(ph+1);
-            DUMP(dev, "IPA",ipa,sizeof(OSA_IPA));
+        MPC_IPA *ipa = (MPC_IPA*)(ph+1);
+            DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
             FETCH_HW(offset,ph->pdulen);
             if(offset > 0x400)
                 return;
-            DUMP(dev, "REQ",(ipa+1),offset-sizeof(OSA_IPA));
+            DUMP(dev, "REQ",(ipa+1),offset-sizeof(MPC_IPA));
 
             switch(ipa->cmd) {
 
             case IPA_CMD_SETADPPARMS:
                 {
-                OSA_IPA_SAP *sap = (OSA_IPA_SAP*)(ipa+1);
+                MPC_IPA_SAP *sap = (MPC_IPA_SAP*)(ipa+1);
                 U32 cmd;
 
                     FETCH_FW(cmd,sap->cmd);
@@ -563,7 +560,7 @@ U32 ackseq;
 
             case IPA_CMD_SETVMAC:
                 {
-                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+                MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
                     DBGTRC(dev, "Set VMAC\n");
                     if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
@@ -575,7 +572,7 @@ U32 ackseq;
 
             case IPA_CMD_DELVMAC:
                 {
-                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+                MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
                     DBGTRC(dev, "Del VMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
@@ -587,7 +584,7 @@ U32 ackseq;
 
             case IPA_CMD_SETGMAC:
                 {
-                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+                MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
                     DBGTRC(dev, "Set GMAC\n");
                     if(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
@@ -599,7 +596,7 @@ U32 ackseq;
 
             case IPA_CMD_DELGMAC:
                 {
-                OSA_IPA_MAC *ipa_mac = (OSA_IPA_MAC*)(ipa+1);
+                MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
                     DBGTRC(dev, "Del GMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
@@ -679,8 +676,8 @@ U32 ackseq;
 
             ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
 
-            DUMP(dev, "IPA_HDR RSP",ipa,sizeof(OSA_IPA));
-            DUMP(dev, "IPA_REQ RSP",(ipa+1),offset-sizeof(OSA_IPA));
+            DUMP(dev, "IPA_HDR RSP",ipa,sizeof(MPC_IPA));
+            DUMP(dev, "IPA_REQ RSP",(ipa+1),offset-sizeof(MPC_IPA));
         }
         /* end case RRH_TYPE_IPA: */
         break;
@@ -699,40 +696,23 @@ U32 ackseq;
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
-static void osa_device_cmd(DEVBLK *dev, OSA_IEA *iea)
+static void osa_device_cmd(DEVBLK *dev, MPC_IEA *iea)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-OSA_IEAR *iear = (OSA_IEAR*)grp->rspbf;
+MPC_IEAR *iear = (MPC_IEAR*)grp->rspbf;
 U16 reqtype;
-#if defined(OSA_FIXED_DEVICE_ORDER)
-U16 datadev;
-#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
 
-    memset(iear, 0, sizeof(OSA_IEAR));
+    memset(iear, 0, sizeof(MPC_IEAR));
 
     FETCH_HW(reqtype, iea->type);
 
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
-#if defined(OSA_FIXED_DEVICE_ORDER)
-        FETCH_HW(datadev, iea->datadev);
-        if(!IS_OSA_READ_DEVICE(dev))
-        {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
-        }
-        else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
-        {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
-        }
-        else
-#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -740,29 +720,15 @@ U16 datadev;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qdio.idxstate = OSA_IDX_STATE_ACTIVE;
+            dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
         break;
 
     case IDX_ACT_TYPE_WRITE:
-#if defined(OSA_FIXED_DEVICE_ORDER)
-        FETCH_HW(datadev, iea->datadev);
-        if(!IS_OSA_WRITE_DEVICE(dev))
-        {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid for %s Device %4.4x\n"),osa_devtyp[dev->member],dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
-        }
-        else if(datadev != dev->group->memdev[OSA_DATA_DEVICE]->devnum)
-        {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Data Device %d for %s Device %4.4x\n"),datadev,osa_devtyp[dev->member],dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
-        }
-        else
-#endif /*defined(OSA_FIXED_DEVICE_ORDER)*/
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
             DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
-            dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
+            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
         {
@@ -770,17 +736,17 @@ U16 datadev;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
             STORE_HW(iear->flevel, 0x0201);
 
-            dev->qdio.idxstate = OSA_IDX_STATE_ACTIVE;
+            dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
         break;
 
     default:
         DBGTRC(dev, _("QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n"),reqtype,dev->devnum);
-        dev->qdio.idxstate = OSA_IDX_STATE_INACTIVE;
+        dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         break;
     }
 
-    grp->rspsz = sizeof(OSA_IEAR);
+    grp->rspsz = sizeof(MPC_IEAR);
 }
 
 
@@ -830,17 +796,17 @@ int nobuff = 1;
         if(dev->qdio.i_qmask & (0x80000000 >> iq))
         {
         int ib = dev->qdio.i_bpos[iq];
-        OSA_SLSB *slsb;
+        QDIO_SLSB *slsb;
         int mb = 128;
-            slsb = (OSA_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[iq]);
+            slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[iq]);
 
             while(mb--)
                 if(slsb->slsbe[ib] == SLSBE_INPUT_EMPTY)
                 {
-                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qdio.i_sla[iq]);
+                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.i_sla[iq]);
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
-                OSA_SBAL *sbal;
+                QDIO_SBAL *sbal;
                 int olen = 0; int tlen = 0;
                 int ns;
                 int mactype = 0;
@@ -848,7 +814,7 @@ int nobuff = 1;
                     DBGTRC(dev, _("Input Queue(%d) Buffer(%d)\n"),iq,ib);
 
                     FETCH_DW(sa,sl->sbala[ib]);
-                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
+                    if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -859,7 +825,7 @@ int nobuff = 1;
                         DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
                         return;
                     }
-                    sbal = (OSA_SBAL*)(dev->mainstor + sa);
+                    sbal = (QDIO_SBAL*)(dev->mainstor + sa);
 
                     for(ns = 0; ns < 16; ns++)
                     {
@@ -1015,23 +981,23 @@ int mq = dev->qdio.o_qcnt;
         if(dev->qdio.o_qmask & (0x80000000 >> oq))
         {
         int ob = dev->qdio.o_bpos[oq];
-        OSA_SLSB *slsb;
+        QDIO_SLSB *slsb;
         int mb = 128;
-            slsb = (OSA_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[oq]);
+            slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[oq]);
 
             while(mb--)
                 if(slsb->slsbe[ob] == SLSBE_OUTPUT_PRIMED)
                 {
-                OSA_SL *sl = (OSA_SL*)(dev->mainstor + dev->qdio.o_sla[oq]);
+                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.o_sla[oq]);
                 U64 sa; U32 len; BYTE *buf;
                 U64 la;
-                OSA_SBAL *sbal;
+                QDIO_SBAL *sbal;
                 int ns;
 
                     DBGTRC(dev, _("Output Queue(%d) Buffer(%d)\n"),oq,ob);
 
                     FETCH_DW(sa,sl->sbala[ob]);
-                    if(STORCHK(sa,sizeof(OSA_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
+                    if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -1042,7 +1008,7 @@ int mq = dev->qdio.o_qcnt;
                         DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
                         return;
                     }
-                    sbal = (OSA_SBAL*)(dev->mainstor + sa);
+                    sbal = (QDIO_SBAL*)(dev->mainstor + sa);
 
                     for(ns = 0; ns < 16; ns++)
                     {
@@ -1285,7 +1251,7 @@ char qdiostat[80] = {0};
     snprintf( buffer, buflen, "QDIO %s%s%sIO[%" I64_FMT "u]"
         , (dev->group->acount == OSA_GROUP_SIZE) ? "" : "*Incomplete "
         , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qdio.idxstate == OSA_IDX_STATE_INACTIVE) ? "" : "IDX "
+        , (dev->qdio.idxstate == MPC_IDX_STATE_INACTIVE) ? "" : "IDX "
         , dev->excps
     );
 
@@ -1467,7 +1433,7 @@ int num;                                /* Number of bytes to move   */
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
     {
-    OSA_HDR *hdr = (OSA_HDR*)iobuf;
+    MPC_HDR *hdr = (MPC_HDR*)iobuf;
     U16 ddc;
 
         if(!grp->rspsz)
@@ -1476,9 +1442,9 @@ int num;                                /* Number of bytes to move   */
 
             obtain_lock(&grp->qlock);
             if(ddc == IDX_ACT_DDC)
-                osa_device_cmd(dev,(OSA_IEA*)iobuf);
+                osa_device_cmd(dev,(MPC_IEA*)iobuf);
             else
-                osa_adapter_cmd(dev, (OSA_TH*)iobuf);
+                osa_adapter_cmd(dev, (MPC_TH*)iobuf);
             release_lock(&grp->qlock);
 
             signal_condition(&grp->qcond);
@@ -1517,7 +1483,7 @@ int num;                                /* Number of bytes to move   */
         }
         else
         {
-            if(dev->qdio.idxstate == OSA_IDX_STATE_ACTIVE)
+            if(dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
             {
                 wait_condition(&grp->qcond, &grp->qlock);
                 if(grp->rspsz)
@@ -1686,8 +1652,8 @@ int num;                                /* Number of bytes to move   */
     /* ESTABLISH QUEUES                                              */
     /*---------------------------------------------------------------*/
     {
-        OSA_QDR *qdr = (OSA_QDR*)iobuf;
-        OSA_QDES0 *qdes;
+        QDIO_QDR *qdr = (QDIO_QDR*)iobuf;
+        QDIO_QDES0 *qdes;
         int accerr;
         int i;
 
@@ -1697,9 +1663,9 @@ int num;                                /* Number of bytes to move   */
         FETCH_DW(dev->qdio.qiba,qdr->qiba);
         dev->qdio.qibk = qdr->qkey & 0xF0;
 
-        if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(OSA_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
+        if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
         {
-        OSA_QIB *qib = (OSA_QIB*)(dev->mainstor + dev->qdio.qiba);
+        QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
             if(FACILITY_ENABLED_DEV(QEBSM))
@@ -1719,10 +1685,10 @@ int num;                                /* Number of bytes to move   */
             dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
             dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(OSA_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(OSA_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(QDIO_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
 
-            qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
+            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
         }
 
         for(i = 0; i < dev->qdio.o_qcnt; i++)
@@ -1735,16 +1701,16 @@ int num;                                /* Number of bytes to move   */
             dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
             dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(OSA_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(OSA_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
+            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(QDIO_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
 
-            qdes = (OSA_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
+            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
         }
 
         /* Calculate residual byte count */
-        num = (count < sizeof(OSA_QDR)) ? count : sizeof(OSA_QDR);
+        num = (count < sizeof(QDIO_QDR)) ? count : sizeof(QDIO_QDR);
         *residual = count - num;
-        if (count < sizeof(OSA_QDR)) *more = 1;
+        if (count < sizeof(QDIO_QDR)) *more = 1;
 
         if(!accerr)
         {
