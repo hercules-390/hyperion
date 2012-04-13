@@ -48,6 +48,16 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     int sockdev = 0;
 
+    /* For re-initialisarion close the existing file, if any and raise attention */
+    if (dev->fd < 0 || dev->fd > 2)
+    {
+        (dev->hnd->close)(dev);
+    
+        release_lock (&dev->lock);
+        device_attention (dev, CSW_DE);
+        obtain_lock (&dev->lock);
+    }
+
     if (dev->bs)
     {
         if (!unbind_device(dev))

@@ -285,6 +285,10 @@ int             fdflags;                /* File flags                */
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+        (dev->hnd->close)(dev);
+
     /* Initialize the global cckd block if necessary */
     if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)))
         cckddasd_init (0, NULL);

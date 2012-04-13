@@ -46,6 +46,10 @@
 static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int rc;
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+        (dev->hnd->close)(dev);
+
     dev->devtype=0x2880;        /* Temporary until the device is actually initialised */
     while(1)
     {

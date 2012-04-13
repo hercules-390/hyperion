@@ -1441,6 +1441,11 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         int num;
         char text[80];
     } res;
+
+        /* For re-initialisation, close the existing file, if any */
+        if (dev->fd < 0 || dev->fd > 2)
+            (dev->hnd->close)(dev);
+
         dev->devtype=0x3705;
         dev->excps = 0;
         if(dev->ccwtrace)

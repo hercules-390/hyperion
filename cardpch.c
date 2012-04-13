@@ -51,6 +51,16 @@ static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int     i;                              /* Array subscript           */
 
+    /* Close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+    {
+        (dev->hnd->close)(dev);
+    
+        release_lock (&dev->lock);
+        device_attention (dev, CSW_DE);
+        obtain_lock (&dev->lock);
+    }
+
     /* The first argument is the file name */
     if ( argc == 0 )
     {

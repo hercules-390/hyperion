@@ -224,6 +224,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+        (dev->hnd->close)(dev);
+
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
 

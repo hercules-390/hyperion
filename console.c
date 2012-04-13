@@ -2253,6 +2253,10 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac = 0;
 
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+        (dev->hnd->close)(dev);
+
     /* reset excp count */
     dev->excps = 0;
 
@@ -2605,6 +2609,10 @@ static int
 constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac=0;
+
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd < 0 || dev->fd > 2)
+        (dev->hnd->close)(dev);
 
     /* reset excp count */
     dev->excps = 0;
