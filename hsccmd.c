@@ -6190,7 +6190,6 @@ DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
 int      i, rc;
-int      nomountedtapereinit = sysblk.nomountedtapereinit;
 int      init_argc;
 char   **init_argv;
 char   **save_argv = NULL;
@@ -6241,32 +6240,6 @@ char   **save_argv = NULL;
             release_lock (&dev->lock);
             WRMSG(HHC02231, "E", lcss, devnum );
             return -1;
-        }
-    }
-
-    /* Prevent accidental re-init'ing of already loaded tape drives */
-    if (nomountedtapereinit)
-    {
-        char*  devclass;
-
-        ASSERT( dev->hnd && dev->hnd->query );
-        dev->hnd->query( dev, &devclass, 0, NULL );
-
-        if (1
-            && strcmp(devclass,"TAPE") == 0
-            && (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
-               )
-        )
-        {
-            ASSERT( dev->tmh && dev->tmh->tapeloaded );
-            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
-            {
-                release_lock (&dev->lock);
-                WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
-                return -1;
-            }
         }
     }
 

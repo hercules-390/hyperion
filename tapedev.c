@@ -485,7 +485,7 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
+static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int             rc;
 DEVINITTAB*     pDevInitTab;
@@ -493,6 +493,32 @@ DEVINITTAB*     pDevInitTab;
     /* Close current tape */
     if(dev->fd>=0)
     {
+
+    /* Prevent accidental re-init'ing of already loaded tape drives */
+    if (sysblk.nomountedtapereinit)
+    {
+        char*  devclass;
+
+        tapedev_query_device(dev, &devclass, 0, NULL);
+
+        if (1
+            && strcmp(devclass,"TAPE") == 0
+            && (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
+               )
+        )
+        {
+            ASSERT( dev->tmh && dev->tmh->tapeloaded );
+            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
+            {
+                release_lock (&dev->lock);
+                WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                return -1;
+            }
+        }
+    }
+
         dev->tmh->close(dev);
         dev->fd=-1;
     }
@@ -700,7 +726,7 @@ DEVINITTAB*     pDevInitTab;
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int tapedev_close_device ( DEVBLK *dev )
+static int tapedev_close_device ( DEVBLK *dev )
 {
     autoload_close(dev);
     dev->tmh->close(dev);
@@ -1560,7 +1586,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
+static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
     char devparms[ MAX_PATH+1 + 128 ];
     char dispmsg [ 256 ];    
