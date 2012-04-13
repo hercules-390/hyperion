@@ -263,7 +263,7 @@ if OPTION_DYNAMIC_LOAD
   hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdtptp_la_SOURCES  = resolve.c ctc_ptp.c w32ctca.c tuntap.c
+  hdtptp_la_SOURCES  = ctc_ptp.c mpc.c resolve.c w32ctca.c tuntap.c
   hdtptp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
 
