@@ -1082,9 +1082,16 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
     scs = SD_scs(cc->f1, sd1);
     for(i = 0; i < scs; i++)
     {
+
+      /* Prevent warning for sd2 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+
       /* Stop searching when child tested and no consecutive child character */
       if(unlikely(!ind_search_siblings && !SD_ccc(cc->f1, sd1, sd2, i)))
         return(0);
+
+#pragma GCC diagnostic pop
 
       if(unlikely(*ch == SD_sc(cc->f1, sd1, sd2, i)))
       {
@@ -1523,6 +1530,10 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       WRMSG(HHC90347, "D", iss[i], i);
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
+      /* Prevent warning for iss */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+
       if(unlikely(!ec.ecl[iss[i]]))
         ARCH_DEP(expand_is)(&ec, iss[i]);
       else
@@ -1530,6 +1541,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         memcpy(&ec.oc[ec.ocl], &ec.ec[ec.eci[iss[i]]], ec.ecl[iss[i]]);
         ec.ocl += ec.ecl[iss[i]];
       }
+
+#pragma GCC diagnostic pop
+
     }
 
     /* Write and commit, cbn unchanged, so no commit for GR1 needed */
