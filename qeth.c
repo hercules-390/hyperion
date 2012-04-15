@@ -17,6 +17,7 @@
 /*                 netmask <netmask of TAP adapter>                  */
 /*                 mtu     <mtu of TAP adapter>                      */
 /*                 chpid   <channel path id>                         */
+/*                 debug                                             */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
 /* on the QETH device statement.  The tap device will in that case   */
@@ -1129,36 +1130,44 @@ OSA_GRP *grp;
 int grouped;
 int i;
 
-    dev->numdevid = sizeof(sense_id_bytes);
-    memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
-    dev->devtype = dev->devid[1] << 8 | dev->devid[2];
-
-    if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
+    if(!dev->group)
     {
-        dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
-        memset (grp, 0, sizeof(OSA_GRP));
+        dev->numdevid = sizeof(sense_id_bytes);
+        memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
 
-        register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
+        dev->devtype = dev->devid[1] << 8 | dev->devid[2];
 
-        initialize_condition(&grp->qcond);
-        initialize_lock(&grp->qlock);
+        dev->pmcw.flag4 |= PMCW4_Q;
 
-        /* Open write signalling pipe */
-        create_pipe(grp->ppfd);
+        if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
+        {
+            dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
+            memset (grp, 0, sizeof(OSA_GRP));
 
-        /* Set Non-Blocking mode */
-        socket_set_blocking_mode(grp->ppfd[0],0);
+            register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
-        /* Allocate reponse buffer */
-        grp->rspbf = malloc(RSP_BUFSZ);
-        grp->rspsz = 0;
+            initialize_condition(&grp->qcond);
+            initialize_lock(&grp->qlock);
 
-        /* Set defaults */
+            /* Open write signalling pipe */
+            create_pipe(grp->ppfd);
+
+            /* Set Non-Blocking mode */
+            socket_set_blocking_mode(grp->ppfd[0],0);
+
+            /* Allocate reponse buffer */
+            grp->rspbf = malloc(RSP_BUFSZ);
+            grp->rspsz = 0;
+
+            /* Set defaults */
 #if defined( OPTION_W32_CTCI )
-        grp->tuntap = strdup( tt32_get_default_iface() );
+            grp->tuntap = strdup( tt32_get_default_iface() );
 #else /*!defined( OPTION_W32_CTCI )*/
-        grp->tuntap = strdup(TUNTAP_NAME);
+            grp->tuntap = strdup(TUNTAP_NAME);
 #endif /*defined( OPTION_W32_CTCI )*/
+        }
+        else
+            grp = dev->group->grp_data;
     }
     else
         grp = dev->group->grp_data;
@@ -1220,19 +1229,20 @@ int i;
             continue;
         }
         else
+        if(!strcasecmp("nodebug",argv[i]))
+        {
+            grp->debug = 0;
+            continue;
+        }
+        else
 #endif
             logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
 
     }
 
     if(grouped)
-    {
         for(i = 0; i < OSA_GROUP_SIZE; i++)
-        {
-            dev->group->memdev[i]->pmcw.flag4 |= PMCW4_Q;
             dev->group->memdev[i]->fla[0] = dev->group->memdev[0]->devnum;
-        }
-    }
 
     return 0;
 } /* end function qeth_init_handler */

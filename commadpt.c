@@ -1786,6 +1786,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     union   { int num; char text[MAX_PARSER_STRLEN+1];  /* (+1 for null terminator) */ } res;
     char    bf[4];
 
+        /* For re-initialisation, close the existing file, if any */
+        if (dev->fd >= 0)
+            (dev->hnd->close)(dev);
+
         dev->excps = 0;
 
         dev->devtype=0x2703;
