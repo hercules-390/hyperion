@@ -1,18 +1,18 @@
-/* CTC_PTP.C    (c) Copyright Ian Shorter, 2011-2012                 */
-/*              MPC Point-To-Point (PTP)                             */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
+/* CTC_PTP.C    (c) Copyright Ian Shorter, 2011-2012                  */
+/*              MPC Point-To-Point (PTP)                              */
+/*                                                                    */
+/*   Released under "The Q Public License Version 1"                  */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to   */
+/*   Hercules.                                                        */
 
-/* This module contains device handling functions for the            */
-/* MPCPTP and/or MPCPTP6 emulated connection                         */
-/*                                                                   */
-/* Device module hdtptp                                              */
-/*                                                                   */
-/* hercules.cnf:                                                     */
-/* 0E20-0E21 PTP <optional parameters>                               */
-/* See README.NETWORKING for details.                                */
+/* This module contains device handling functions for the             */
+/* MPCPTP and/or MPCPTP6 emulated connection                          */
+/*                                                                    */
+/* Device module hdtptp                                               */
+/*                                                                    */
+/* hercules.cnf:                                                      */
+/* 0E20-0E21 PTP <optional parameters>                                */
+/* See README.NETWORKING for details.                                 */
 
 #include "hstdinc.h"
 
@@ -23,9 +23,9 @@
 #include "tuntap.h"
 #include "resolve.h"
 #include "ctc_ptp.h"
+#include "mpc.h"
 #include "opcode.h"
-/* getopt dynamic linking kludge */
-#include "herc_getopt.h"
+#include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
 
 #if defined(WIN32) && !defined(_MSVC_) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL)
@@ -34,28 +34,28 @@
 #endif
 
 
-/* ----------------------------------------------------------------- */
-/* Various constants used in this module, of which the significance  */
-/* isn't clear.                                                      */
-/* See also the process identifiers later in the source.             */
-/* ----------------------------------------------------------------- */
-#define PTPHX0_SEQNUM   0x00050010  // !!! //
-#define PTPWRH_UNKNOWN1 0x0FFC      // !!! //   |
-#define XDATALEN1       0x0FFC      // !!! //   | Are these related?
-#define LEN_OF_PAGE_ONE 4092        //     //   |
+/* ------------------------------------------------------------------ */
+/* Various constants used in this module, of which the significance   */
+/* isn't clear.                                                       */
+/* See also the process identifiers later in the source.              */
+/* ------------------------------------------------------------------ */
+#define PTPHX0_SEQNUM    0x00050010  // !!! //
+#define MPC_TH_UNKNOWN10 0x0FFC      // !!! //   |
+#define XDATALEN1        0x0FFC      // !!! //   | Are these related?
+#define LEN_OF_PAGE_ONE  4092        //     //   |
 
 
-/* ----------------------------------------------------------------- */
-/* Function Declarations                                             */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* Function Declarations                                              */
+/* ------------------------------------------------------------------ */
 
 static int      ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] );
 
-static void     ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
-                                 BYTE    bFlags,  BYTE  bChained,
-                                 U16     uCount,  BYTE  bPrevCode,
-                                 int     iCCWSeq, BYTE* pIOBuf,
-                                 BYTE*   pMore,   BYTE* pUnitStat,
+static void     ptp_execute_ccw( DEVBLK* pDEVBLK,  BYTE  bCode,
+                                 BYTE    bFlags,   BYTE  bChained,
+                                 U16     uCount,   BYTE  bPrevCode,
+                                 int     iCCWSeq,  BYTE* pIOBuf,
+                                 BYTE*   pMore,    BYTE* pUnitStat,
                                  U16*    pResidual );
 
 static int      ptp_close( DEVBLK* pDEVBLK );
@@ -63,111 +63,111 @@ static int      ptp_close( DEVBLK* pDEVBLK );
 static void     ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                            int     iBufLen, char*  pBuffer );
 
-static void     ptp_write( DEVBLK* pDEVBLK, U16  uCount,
-                           int     iCCWSeq, BYTE* pIOBuf,
-                           BYTE*   pMore,   BYTE* pUnitStat,
+static void     ptp_write( DEVBLK* pDEVBLK,  U16  uCount,
+                           int     iCCWSeq,  BYTE* pIOBuf,
+                           BYTE*   pMore,    BYTE* pUnitStat,
                            U16*    pResidual );
 
-static void     write_wrh( DEVBLK* pDEVBLK, U16  uCount,
-                              int     iCCWSeq, BYTE* pIOBuf,
-                              BYTE*   pMore,   BYTE* pUnitStat,
-                              U16*    pResidual );
+static void     write_th( DEVBLK* pDEVBLK,  U16  uCount,
+                          int     iCCWSeq,  BYTE* pIOBuf,
+                          BYTE*   pMore,    BYTE* pUnitStat,
+                          U16*    pResidual );
 
-static int      write_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH );
+static int      write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static void     ptp_read( DEVBLK* pDEVBLK, U16   uCount,
-                          int     iCCWSeq, BYTE* pIOBuf,
-                          BYTE*   pMore,   BYTE* pUnitStat,
+static void     ptp_read( DEVBLK* pDEVBLK,  U16   uCount,
+                          int     iCCWSeq,  BYTE* pIOBuf,
+                          BYTE*   pMore,    BYTE* pUnitStat,
                           U16*    pResidual );
 
 static void     read_read_buffer( DEVBLK* pDEVBLK,   U16  uCount,
                                   int     iCCWSeq,   BYTE* pIOBuf,
                                   BYTE*   pMore,     BYTE* pUnitStat,
-                                  U16*    pResidual, PPTPHDR pPTPHDR );
+                                  U16*    pResidual, PTPHDR* pPTPHDR );
 
 static void     read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
                                    int     iCCWSeq,   BYTE* pIOBuf,
                                    BYTE*   pMore,     BYTE* pUnitStat,
-                                   U16*    pResidual, PPTPHDR pPTPHDR );
+                                   U16*    pResidual, PTPHDR* pPTPHDR );
 
-static void*    ptp_read_thread( PPTPBLK pPTPBLK );
+static void*    ptp_read_thread( PTPBLK* pPTPBLK );
 
-static void*    add_buffer_to_chain_and_signal_event( PPTPATH pPTPATH, PPTPHDR pPTPHDR );
-static void*    add_buffer_to_chain( PPTPATH pPTPATH, PPTPHDR pPTPHDR );
-static PPTPHDR  remove_buffer_from_chain( PPTPATH pPTPATH );
-static void*    remove_and_free_any_buffers_on_chain( PPTPATH pPTPATH );
+static void*    add_buffer_to_chain_and_signal_event( PTPATH* pPTPATH, PTPHDR* pPTPHDR );
+static void*    add_buffer_to_chain( PTPATH* pPTPATH, PTPHDR* pPTPHDR );
+static PTPHDR*  remove_buffer_from_chain( PTPATH* pPTPATH );
+static void*    remove_and_free_any_buffers_on_chain( PTPATH* pPTPATH );
 
-static PPTPHDR  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize );
+static PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize );
 static void*    alloc_storage( DEVBLK* pDEVBLK, int iSize );
 
 static void     ptpdata_trace( BYTE* PAddr, int iLen, BYTE bDir );
 
-static int      parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
-                           int argc, char** argv );
+static int      parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
+                                 int argc, char** argv );
 
 static int      raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay );
 
-static void*    ptp_unsol_int_thread( PPTPINT pPTPINT );
+static void*    ptp_unsol_int_thread( PTPINT* pPTPINT );
 
 static void     get_tod_clock( BYTE* TodClock );
 
 static void     get_subarea_address( BYTE* SAaddress );
 
-static void     write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
-                              int     iCCWSeq, BYTE* pIOBuf,
-                              BYTE*   pMore,   BYTE* pUnitStat,
+static void     write_hx0_01( DEVBLK* pDEVBLK,  U16  uCount,
+                              int     iCCWSeq,  BYTE* pIOBuf,
+                              BYTE*   pMore,    BYTE* pUnitStat,
                               U16*    pResidual );
 
-static void     write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
-                              int     iCCWSeq, BYTE* pIOBuf,
-                              BYTE*   pMore,   BYTE* pUnitStat,
+static void     write_hx0_00( DEVBLK* pDEVBLK,  U16  uCount,
+                              int     iCCWSeq,  BYTE* pIOBuf,
+                              BYTE*   pMore,    BYTE* pUnitStat,
                               U16*    pResidual );
 
-static void     write_hx2( DEVBLK* pDEVBLK, U16  uCount,
-                           int     iCCWSeq, BYTE* pIOBuf,
-                           BYTE*   pMore,   BYTE* pUnitStat,
+static void     write_hx2( DEVBLK* pDEVBLK,  U16  uCount,
+                           int     iCCWSeq,  BYTE* pIOBuf,
+                           BYTE*   pMore,    BYTE* pUnitStat,
                            U16*    pResidual );
 
-static PPTPHSV  point_CSVcv( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2 );
+static PTPHSV*  point_CSVcv( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2 );
 
-static int      write_msh_417E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH );
+static int      write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static PPTPHDR  build_417E_4102_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH,
-                                      PPTPSUX pPTPSUX, u_int* fxSideWins );
-static PPTPHDR  build_417E_4104_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH );
-static PPTPHDR  build_417E_4106_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH );
-static PPTPHDR  build_417E_4102_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH,
-                                      PPTPSUX pPTPSUX, u_int* fxSideWins );
-static PPTPHDR  build_417E_4104_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH );
-static PPTPHDR  build_417E_4106_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH );
-static PPTPHDR  build_417E_4360_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSH );
+static PTPHDR*  build_417E_4102_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH,
+                                    MPC_PUS* pMPC_PUS, u_int* fxSideWins );
+static PTPHDR*  build_417E_4104_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH );
+static PTPHDR*  build_417E_4106_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH );
+static PTPHDR*  build_417E_4102_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH,
+                                    MPC_PUS* pMPC_PUS, u_int* fxSideWins );
+static PTPHDR*  build_417E_4104_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH );
+static PTPHDR*  build_417E_4106_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH );
+static PTPHDR*  build_417E_4360_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH );
 
-static int      write_msh_C17E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH );
+static int      write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static int      write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH );
+static int      write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static PPTPHDR  build_C108_will_you_start_4( DEVBLK* pDEVBLK );
-static PPTPHDR  build_C108_will_you_start_6( DEVBLK* pDEVBLK );
-static PPTPHDR  build_C108_i_will_start_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC, U16 uRCode );
-static PPTPHDR  build_C108_i_will_start_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC, U16 uRCode );
-static PPTPHDR  build_C108_my_address_4( DEVBLK* pDEVBLK );
-static PPTPHDR  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL );
-static PPTPHDR  build_C108_your_address_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC, U16 uRCode );
-static PPTPHDR  build_C108_your_address_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC, U16 uRCode );
-static PPTPHDR  build_C108_will_you_stop_4( DEVBLK* pDEVBLK );
-static PPTPHDR  build_C108_will_you_stop_6( DEVBLK* pDEVBLK );
-static PPTPHDR  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC );
-static PPTPHDR  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDAC );
+static PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK );
+static PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK );
+static PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX, U16 uRCode );
+static PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX, U16 uRCode );
+static PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK );
+static PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL );
+static PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX, U16 uRCode );
+static PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX, U16 uRCode );
+static PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK );
+static PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK );
+static PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX );
+static PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX );
 
 static void     build_8108_icmpv6_packets( DEVBLK* pDEVBLK );
 
-static void     display_wrh( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, BYTE bDir );
-static void     display_msh( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir );
-static void     display_msh_x17E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir );
-static void     display_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir );
-static void     display_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir );
-static void     display_hx0( DEVBLK* pDEVBLK, PPTPHX0 pPTPHX0, U16 uCount, BYTE bDir );
-static void     display_hx2( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2, U16 uCount, BYTE bDir );
+static void     display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
+static void     display_rrh( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+static void     display_rrh_x17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+static void     display_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+static void     display_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+static void     display_hx0( DEVBLK* pDEVBLK, PTPHX0* pPTPHX0, U16 uCount, BYTE bDir );
+static void     display_hx2( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2, U16 uCount, BYTE bDir );
 
 static void     display_data( const char* cWhat, BYTE* PAddr, int iLen, BYTE bDir );
 
@@ -179,19 +179,19 @@ static void     shift_right_dbl( U32* even, U32* odd, int number );
 static void     calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen );
 
 
-/* ----------------------------------------------------------------- */
-/* Ivan Warren 20040227                                              */
-/* This table is used by channel.c to determine if a CCW code is an  */
-/* immediate command or not                                          */
-/* The table is addressed in the DEVHND structure as 'DEVIMM immed'  */
-/* 0 : Command is NOT an immediate command                           */
-/* 1 : Command is an immediate command                               */
-/* Note : An immediate command is defined as a command which returns */
-/* CE (channel end) during initialisation (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a CCW */
-/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
-/* effect                                                            */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* Ivan Warren 20040227                                               */
+/* This table is used by channel.c to determine if a CCW code is an   */
+/* immediate command or not                                           */
+/* The table is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                            */
+/* 1 : Command is an immediate command                                */
+/* Note : An immediate command is defined as a command which returns  */
+/* CE (channel end) during initialisation (that is, no data is        */
+/* actually transfered). In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in      */
+/* effect                                                             */
+/* ------------------------------------------------------------------ */
 
 static BYTE ptp_immed_commands[256] =
 {
@@ -220,52 +220,52 @@ static BYTE ptp_immed_commands[256] =
 //  0xE3  Prepare
 
 
-/* ----------------------------------------------------------------- */
-/* Device Handler Information Block                                  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* Device Handler Information Block                                   */
+/* ------------------------------------------------------------------ */
 
 // #if defined(OPTION_DYNAMIC_LOAD)
 // static
 // #endif /* defined(OPTION_DYNAMIC_LOAD) */
 DEVHND ptp_device_hndinfo =
 {
-        &ptp_init,                     /* Device Initialisation      */
-        &ptp_execute_ccw,              /* Device CCW execute         */
-        &ptp_close,                    /* Device Close               */
-        &ptp_query,                    /* Device Query               */
-        NULL,                          /* Device Extended Query      */
-        NULL,                          /* Device Start channel pgm   */
-        NULL,                          /* Device End channel pgm     */
-        NULL,                          /* Device Resume channel pgm  */
-        NULL,                          /* Device Suspend channel pgm */
-        NULL,                          /* Device Halt channel pgm    */
-        NULL,                          /* Device Read                */
-        NULL,                          /* Device Write               */
-        NULL,                          /* Device Query used          */
-        NULL,                          /* Device Reserve             */
-        NULL,                          /* Device Release             */
-        NULL,                          /* Device Attention           */
-        ptp_immed_commands,            /* Immediate CCW Codes        */
-        NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Output      */
-        NULL,                          /* Signal Adapter Sync        */
-        NULL,                          /* Signal Adapter Output Mult */
-        NULL,                          /* QDIO subsys desc           */
-        NULL,                          /* QDIO set subchan ind       */
-        NULL,                          /* Hercules suspend           */
-        NULL                           /* Hercules resume            */
+        &ptp_init,                     /* Device Initialisation       */
+        &ptp_execute_ccw,              /* Device CCW execute          */
+        &ptp_close,                    /* Device Close                */
+        &ptp_query,                    /* Device Query                */
+        NULL,                          /* Device Extended Query       */
+        NULL,                          /* Device Start channel pgm    */
+        NULL,                          /* Device End channel pgm      */
+        NULL,                          /* Device Resume channel pgm   */
+        NULL,                          /* Device Suspend channel pgm  */
+        NULL,                          /* Device Halt channel pgm     */
+        NULL,                          /* Device Read                 */
+        NULL,                          /* Device Write                */
+        NULL,                          /* Device Query used           */
+        NULL,                          /* Device Reserve              */
+        NULL,                          /* Device Release              */
+        NULL,                          /* Device Attention            */
+        ptp_immed_commands,            /* Immediate CCW Codes         */
+        NULL,                          /* Signal Adapter Input        */
+        NULL,                          /* Signal Adapter Output       */
+        NULL,                          /* Signal Adapter Sync         */
+        NULL,                          /* Signal Adapter Output Mult  */
+        NULL,                          /* QDIO subsys desc            */
+        NULL,                          /* QDIO set subchan ind        */
+        NULL,                          /* Hercules suspend            */
+        NULL                           /* Hercules resume             */
 };
 
 
-/* ----------------------------------------------------------------- */
-/* Constants                                                         */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* Constants                                                          */
+/* ------------------------------------------------------------------ */
 static const BYTE VTAM_ebcdic[4] = { 0xE5,0xE3,0xC1,0xD4 };
 
 
-/* ----------------------------------------------------------------- */
-/* Process Identifers                                                */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* Process Identifers                                                 */
+/* ------------------------------------------------------------------ */
 // When the connection is being started it seems that the connecting
 // VTAMs set up a pair of processes (or channels or threads or
 // subtasks or paths or ...). I don't know what they should be called,
@@ -306,9 +306,9 @@ static  U32   uTokenUlpConnection  = 0x00011005;
 #define       INCREMENT_TOKEN        0x00000010
 
 
-/* ================================================================= */
-/* ptp_init()                                                        */
-/* ================================================================= */
+/* =================================================================  */
+/* ptp_init()                                                         */
+/* =================================================================  */
 
 // ptp_init is called once for each of the device addresses specified
 // on the configuration statement. When ptp_init is called the number
@@ -318,9 +318,9 @@ static  U32   uTokenUlpConnection  = 0x00011005;
 
 int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
-    PPTPBLK    pPTPBLK;                // PTPBLK
-    PPTPATH    pPTPATHRead;            // PTPATH Read
-    PPTPATH    pPTPATHWrite;           // PTPATH Write
+    PTPBLK*    pPTPBLK;                // PTPBLK
+    PTPATH*    pPTPATHRead;            // PTPATH Read
+    PTPATH*    pPTPATHWrite;           // PTPATH Write
 //  int        nIFType;                // Interface type
     int        nIFFlags;               // Interface flags
     int        rc = 0;                 // Return code
@@ -619,9 +619,9 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 }   /* End function  ptp_init() */
 
 
-/* ================================================================= */
-/* ptp_execute_ccw()                                                 */
-/* ================================================================= */
+/* =================================================================  */
+/* ptp_execute_ccw()                                                  */
+/* =================================================================  */
 // bCode, bFlags and uCount are from the executing CCW.
 // bChained, bPrevCode and iCCWSeq are only meaningful for the second
 // or subsequent CCWs of a chain. bChained contains 0x40, pPrevCode
@@ -641,8 +641,8 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( bChained  );
     UNREFERENCED( bPrevCode );
 
-    PPTPATH   pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK   pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPATH*   pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*   pPTPBLK  = pPTPATH->pPTPBLK;
     int       iNum;                          // Number of bytes to move
 
 
@@ -687,9 +687,9 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0x02:  // MMMMMM10  READ
-        /* --------------------------------------------------------- */
-        /* READ                                                      */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* READ                                                       */
+        /* ---------------------------------------------------------- */
 
         // Process the Read depending on the current State
         ptp_read( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
@@ -697,27 +697,27 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0xE3:  // 11100011  PREPARE
-        /* --------------------------------------------------------- */
-        /* PREPARE                                                   */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* PREPARE                                                    */
+        /* ---------------------------------------------------------- */
 
         *pUnitStat = CSW_CE | CSW_DE;
 
         break;
 
     case 0x17:  // MMMMM111  CONTROL
-        /* --------------------------------------------------------- */
-        /* CONTROL                                                   */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* CONTROL                                                    */
+        /* ---------------------------------------------------------- */
 
         *pUnitStat = CSW_CE | CSW_DE;
 
         break;
 
     case 0x14:  // XXX10100  SENSE COMMAND BYTE
-        /* --------------------------------------------------------- */
-        /* SENSE COMMAND BYTE                                        */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* SENSE COMMAND BYTE                                         */
+        /* ---------------------------------------------------------- */
 
         // We will assume that we (i.e. the x-side) raised an Attention
         // interrupt earlier and that the y-side is determining why.
@@ -733,9 +733,9 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0x04:  // 00000100  SENSE ADAPTOR STATE
-        /* --------------------------------------------------------- */
-        /* SENSE ADAPTER STATE                                       */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* SENSE ADAPTER STATE                                        */
+        /* ---------------------------------------------------------- */
 
         // Calculate residual byte count
         iNum = ( uCount < pDEVBLK->numsense ) ?
@@ -758,9 +758,9 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0xE4:  //  11100100  SENSE ID
-        /* --------------------------------------------------------- */
-        /* SENSE ID                                                  */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* SENSE ID                                                   */
+        /* ---------------------------------------------------------- */
 
         // Calculate residual byte count
         iNum = ( uCount < pDEVBLK->numdevid ) ?
@@ -781,9 +781,9 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
     case 0x03:  // M0MMM011  NO OPERATION
     case 0xC3:  // 11000011  SET EXTENDED MODE
-        /* --------------------------------------------------------- */
-        /* NO OPERATON & SET EXTENDED MODE                           */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* NO OPERATON & SET EXTENDED MODE                            */
+        /* ---------------------------------------------------------- */
 
         // Return unit status
         *pUnitStat = CSW_CE | CSW_DE;
@@ -791,9 +791,9 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     default:
-        /* --------------------------------------------------------- */
-        /* INVALID OPERATION                                         */
-        /* --------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
+        /* INVALID OPERATION                                          */
+        /* ---------------------------------------------------------- */
 
         // Set command reject sense byte, and unit check status
         pDEVBLK->sense[0] = SENSE_CR;
@@ -807,14 +807,14 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 }   /* End function  ptp_execute_ccw() */
 
 
-/* ================================================================= */
-/* ptp_close()                                                       */
-/* ================================================================= */
+/* =================================================================  */
+/* ptp_close()                                                        */
+/* =================================================================  */
 
 int  ptp_close( DEVBLK* pDEVBLK )
 {
-    PPTPATH   pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK   pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPATH*   pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*   pPTPBLK  = pPTPATH->pPTPBLK;
 
 
     // Display various information, maybe
@@ -863,17 +863,17 @@ int  ptp_close( DEVBLK* pDEVBLK )
 }   /* End function  ptp_close() */
 
 
-/* ================================================================= */
-/* ptp_query()                                                       */
-/* ================================================================= */
+/* =================================================================  */
+/* ptp_query()                                                        */
+/* =================================================================  */
 
 // Note: this function is called four times every second!
 
 void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                  int     iBufLen, char*  pBuffer )
 {
-    PPTPATH   pPTPATH;
-    PPTPBLK   pPTPBLK;
+    PTPATH*   pPTPATH;
+    PTPBLK*   pPTPBLK;
 
 
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
@@ -926,9 +926,9 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 }   /* End function  ptp_query() */
 
 
-/* ----------------------------------------------------------------- */
-/* ptp_write()                                                       */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* ptp_write()                                                        */
+/* ------------------------------------------------------------------ */
 // Input:
 //      pDEVBLK   A pointer to the CTC adapter device block
 //      uCount    The I/O buffer length from the read CCW
@@ -945,13 +945,14 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
                  BYTE*   pMore,   BYTE* pUnitStat,
                  U16*    pResidual )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPWRH    pPTPWRH  = (PPTPWRH)pIOBuf;
-    PPTPHX0    pPTPHX0  = (PPTPHX0)pIOBuf;
-    PPTPHX2    pPTPHX2  = (PPTPHX2)pIOBuf;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    MPC_TH*    pMPC_TH  = (MPC_TH*)pIOBuf;
+    PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
+    PTPHX2*    pPTPHX2  = (PTPHX2*)pIOBuf;
 
     int        iTraceLen;
+    U32        uFirst4;
 
 
     // Display various information, maybe
@@ -961,10 +962,12 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "ptp_write()" );
     }
 
+    // Get the first 4-bytes of what was writen by the guest OS.
+    FETCH_FW( uFirst4, pMPC_TH->first4 );
+
     // Process depending on what was writen by the guest OS.
-    if( uCount >= SizeWRH &&
-        pPTPWRH->TH_seg == 0x00 &&
-        pPTPWRH->TH_ch_flag == TH_CH_0xE0 )
+    if( uCount >= SIZE_TH &&
+        uFirst4 == MPC_TH_FIRST4 )
     {
 
         // Display up to 256-bytes of data, if debug is active
@@ -983,8 +986,8 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
             ptpdata_trace( pIOBuf, iTraceLen, '<' );
         }
 
-        // Process the PTPWRH
-       write_wrh( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
+        // Process the MPC_TH
+        write_th( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
     else if( uCount >= SizeHX0 &&
@@ -1068,11 +1071,11 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
 }   /* End function  ptp_write() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_wrh()                                                       */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_th()                                                       */
+/* ------------------------------------------------------------------ */
 
-void  write_wrh( DEVBLK* pDEVBLK, U16  uCount,
+void  write_th( DEVBLK* pDEVBLK, U16  uCount,
                  int     iCCWSeq, BYTE* pIOBuf,
                  BYTE*   pMore,   BYTE* pUnitStat,
                  U16*    pResidual )
@@ -1081,86 +1084,117 @@ void  write_wrh( DEVBLK* pDEVBLK, U16  uCount,
     UNREFERENCED( uCount  );
     UNREFERENCED( iCCWSeq );
 
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPWRH    pPTPWRH  = (PPTPWRH)pIOBuf;     // PTPWRH at start of IObuf
-    PPTPMSH    pPTPMSH  = NULL;                // PTPMSH
-    BYTE*      pBytePtr;
-    int        iForMSH;
-    U32        uDispMSH;
-    U16        uNumMSHs;
-    U16        uTypeMSH;
+    PTPATH*    pPTPATH   = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK   = pPTPATH->pPTPBLK;
+    MPC_TH*    pMPC_TH   = (MPC_TH*)pIOBuf;     // MPC_TH at start of IObuf
+    MPC_RRH*   pMPC_RRH  = NULL;                // MPC_RRH
+    int        iForRRH;
+    U32        uOffRRH;
+    U16        uNumRRH;
     int        rv = 0;
+    int        iWhat;
+#define UNKNOWN_RRH   0
+#define RRH_8108      1
+#define RRH_C108      2
+#define RRH_417E      3
+#define RRH_C17E      4
 
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
         // HHC03991 "%1d:%04X CTC: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_wrh()" );
-        display_wrh( pDEVBLK, pPTPWRH, '<' );
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_th()" );
+        display_th( pDEVBLK, pMPC_TH, '<' );
     }
 
-    // Get the number of PTPMSH and the displacement from the start
-    // of the PTPWRH to the first (or only) PTPMSH.
-    FETCH_HW( uNumMSHs, pPTPWRH->NumMSHs );
-    FETCH_FW( uDispMSH, pPTPWRH->DispMSH );
+    // Get the number of MPC_RRH and the displacement from the start
+    // of the MPC_TH to the first (or only) MPC_RRH.
+    FETCH_HW( uNumRRH, pMPC_TH->numrrh );
+    FETCH_FW( uOffRRH, pMPC_TH->offrrh );
 
-    // Process each of the PTPMSHs.
-    for( iForMSH = 1; iForMSH <= uNumMSHs; iForMSH++ )
+    // Process each of the MPC_RRHs.
+    for( iForRRH = 1; iForRRH <= uNumRRH; iForRRH++ )
     {
 
-        // Point to and process the first or subsequent PTPMSH.
-        pBytePtr = (BYTE*)pPTPWRH + uDispMSH;
-        pPTPMSH = (PPTPMSH)pBytePtr;
-        FETCH_HW( uTypeMSH, pPTPMSH->Type );
+        // Point to the first or subsequent MPC_RRH.
+        pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
 
-        switch( uTypeMSH )
+        // Decide what the RRH contains.
+        iWhat = UNKNOWN_RRH;
+        if( pMPC_RRH->type == RRH_TYPE_CM )
+        {
+            if( pMPC_RRH->proto == PROTOCOL_LAYER2 )
+            {
+                iWhat = RRH_8108;
+            }
+        }
+        else if( pMPC_RRH->type == RRH_TYPE_ULP )
+        {
+            if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+            {
+                iWhat = RRH_417E;
+            }
+        }
+        else if( pMPC_RRH->type == RRH_TYPE_IPA )
+        {
+            if( pMPC_RRH->proto == PROTOCOL_LAYER2 )
+            {
+                iWhat = RRH_C108;
+            }
+            else if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+            {
+                iWhat = RRH_C17E;
+            }
+        }
+
+        // Process what the RRH contains.
+        switch( iWhat )
         {
 
-        // TypeMSH_0x8108
-        case TypeMSH_0x8108:
-            rv = write_msh_8108( pDEVBLK, pPTPWRH, pPTPMSH );
+        // IP packets
+        case RRH_8108:
+            rv = write_rrh_8108( pDEVBLK, pMPC_TH, pMPC_RRH );
             break;
 
-        // TypeMSH_0xC108
-        case TypeMSH_0xC108:
-            rv = write_msh_C108( pDEVBLK, pPTPWRH, pPTPMSH );
+        // Exchange IP information
+        case RRH_C108:
+            rv = write_rrh_C108( pDEVBLK, pMPC_TH, pMPC_RRH );
             break;
 
-        // TypeMSH_0x417E
-        case TypeMSH_0x417E:
-            rv = write_msh_417E( pDEVBLK, pPTPWRH, pPTPMSH );
+        // Establish connections
+        case RRH_417E:
+            rv = write_rrh_417E( pDEVBLK, pMPC_TH, pMPC_RRH );
             break;
 
-        // TypeMSH_0xC17E
-        case TypeMSH_0xC17E:
-            rv = write_msh_C17E( pDEVBLK, pPTPWRH, pPTPMSH );
+        //
+        case RRH_C17E:
+            rv = write_rrh_C17E( pDEVBLK, pMPC_TH, pMPC_RRH );
             break;
 
-        // Type not recognised. This and any following PTPMSH are dropped.
+        // Unknown RRH
         default:
-            // HHC03932 "%1d:%04X CTC: Accept data for device '%s' contains unknown MSH, data dropped"
+            // HHC03932 "%1d:%04X CTC: Accept data for device '%s' contains unknown RRH, data dropped"
             WRMSG(HHC03932, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName );
-            display_msh( pDEVBLK, pPTPWRH, pPTPMSH, '<' );
+            display_rrh( pDEVBLK, pMPC_TH, pMPC_RRH, '<' );
             rv = -2;
             break;
 
         }
 
-        // If the PTPMSH processing was not sucessful, let's stop.
+        // If the MPC_RRH processing was not sucessful, let's stop.
         if( rv != 0 )
             break;
 
-        // Get the displacement from the start of the PTPWRH to the
-        // next PTPMSH. pPTPMSH->DispMSH will contain zero if this
-        // is the last PTPMSH.
-        FETCH_FW( uDispMSH, pPTPMSH->DispMSH );
+        // Get the displacement from the start of the MPC_TH to the
+        // next MPC_RRH. pMPC_RRH->offrrh will contain zero if this
+        // is the last MPC_RRH.
+        FETCH_FW( uOffRRH, pMPC_RRH->offrrh );
 
     }
 
     // Set the residual byte count and unit status depending on
-    // whether the PTPMSHs have been processed sucessfully or not.
+    // whether the MPC_RRHs have been processed sucessfully or not.
     switch( rv )
     {
 
@@ -1192,19 +1226,19 @@ void  write_wrh( DEVBLK* pDEVBLK, U16  uCount,
     }
 
     return;
-}   /* End function  write_wrh() */
+}   /* End function  write_th() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_msh_8108()                                                  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_rrh_8108()                                                   */
+/* ------------------------------------------------------------------ */
 // Note - the Token is xTokenUlpConnection.
-// In all cases that have been seen the PTPMSH type 0x8108 is followed
-// by one or more PTPMDL, which are followed by data.
+// In all cases that have been seen the MPC_RRH type 0x8108 is followed
+// by one or more MPC_PH, which are followed by data.
 // The data in a PTP message is usually, but need not be, in a single,
 // contiguous lump. The length and displacement to the various pieces
-// of data are described by the PTPMDLs. If there are multiple pieces
-// of data (i.e. there is more than one PTPMDL), this function copies
+// of data are described by the MPC_PHs. If there are multiple pieces
+// of data (i.e. there is more than one MPC_PH), this function copies
 // the multiple pieces into a single contiguous lump in a buffer.
 // Return value
 //    0    Successful
@@ -1212,21 +1246,21 @@ void  write_wrh( DEVBLK* pDEVBLK, U16  uCount,
 //   -2    Data problem (i.e. incomplete IP packet)
 //   -3    The TUNTAP_Write failed
 
-int   write_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH )
+int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPMDL    pPTPMDL;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    MPC_PH*    pMPC_PH;
     BYTE*      pData;
     int        iDataLen;
     BYTE*      pDataBuf;
-    U16        uNumMDLs;
-    U16        uDispMDL;
-    int        iForMDLs;
+    U16        uNumPH;
+    U16        uOffPH;
+    int        iForPH;
+    U16        uAllLen;
     U16        uLenData;
-    U32        uDispData;
+    U32        uOffData;
     BYTE*      pData1;
-    BYTE*      pBytePtr;
     PIP4FRM    pIP4FRM;
     PIP6FRM    pIP6FRM;
     U16        uPayLen;
@@ -1242,53 +1276,50 @@ int   write_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
         // HHC03991 "%1d:%04X CTC: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_msh_8108()" );
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_8108()" );
     }
 
-    // Get the number of PTPMDLs and point to the first (or only) PTPMDL
-    // following the PTPMSH.
-    FETCH_HW( uNumMDLs, pPTPMSH->NumMDLs );
-    FETCH_HW( uDispMDL, pPTPMSH->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSH + uDispMDL;
-    pPTPMDL = (PPTPMDL)pBytePtr;
+    // Get the number of MPC_PHs and point to the first (or only) MPC_PH
+    // following the MPC_RRH.
+    FETCH_HW( uNumPH, pMPC_RRH->numph );
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
 
     // Get the length of and the pointer to the data referenced by the
-    // first (or only) PTPMDL
-    FETCH_HW( uLenData, pPTPMDL->LenData );
-    FETCH_FW( uDispData, pPTPMDL->DispData );
-    pData = (BYTE*)pPTPWRH + uDispData;
+    // first (or only) MPC_PH
+    FETCH_HW( uLenData, pMPC_PH->lendata );
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pData = (BYTE*)pMPC_TH + uOffData;
 
-    // Get the total length of the data referenced by all of the PTPMDLs.
-    // Note: pPTPMSH->TotalLenData is a 3-byte field.
-    FETCH_FW( iDataLen, pPTPMSH->TotalLenData-1 );
-    iDataLen &= 0x00ffffff;
+    // Get the total length of the data referenced by all of the MPC_PHs.
+    FETCH_HW( uAllLen, pMPC_RRH->lenalda );
+    iDataLen = uAllLen;
 
-    // Check whether there is more than one PTPMDL.
-    if( uNumMDLs == 1 )
+    // Check whether there is more than one MPC_PH.
+    if( uNumPH == 1 )
     {
         pDataBuf = NULL;
     }
     else
     {
-        // More than one PTPMDL. Allocate a buffer in which all of
-        // the data referenced by the PTPMDLs will be concatanated.
+        // More than one MPC_PH. Allocate a buffer in which all of
+        // the data referenced by the MPC_PHs will be concatanated.
         pDataBuf = alloc_storage( pDEVBLK, iDataLen );   // Allocate buffer
         if( !pDataBuf )              // if the allocate was not successful...
             return -1;
 
-        // Copy and concatanate the data referenced by the PTPMDLs.
+        // Copy and concatanate the data referenced by the MPC_PHs.
         pData = pDataBuf;
-        for( iForMDLs = 1; iForMDLs <= uNumMDLs; iForMDLs++ )
+        for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-            FETCH_HW( uLenData, pPTPMDL->LenData );
-            FETCH_FW( uDispData, pPTPMDL->DispData );
-            pData1 = (BYTE*)pPTPWRH + uDispData;
+            FETCH_HW( uLenData, pMPC_PH->lendata );
+            FETCH_FW( uOffData, pMPC_PH->offdata );
+            pData1 = (BYTE*)pMPC_TH + uOffData;
 
             memcpy( pData, pData1, uLenData );
             pData += uLenData;
 
-            pBytePtr = (BYTE*)pPTPMDL + SizeMDL;
-            pPTPMDL = (PPTPMDL)pBytePtr;
+            pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
         }
 
         // Point to the copied and concatenated data.
@@ -1450,12 +1481,12 @@ int   write_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH )
         free( pDataBuf );
 
     return rv;
-}   /* End function  write_msh_8108() */
+}   /* End function  write_rrh_8108() */
 
 
-/* ----------------------------------------------------------------- */
-/* ptp_read()                                                        */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* ptp_read()                                                         */
+/* ------------------------------------------------------------------ */
 // Input:
 //      pDEVBLK   A pointer to the CTC adapter device block
 //      uCount    The I/O buffer length from the read CCW
@@ -1472,9 +1503,9 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
                 BYTE*   pMore,   BYTE* pUnitStat,
                 U16*    pResidual )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPHDR    pPTPHDR  = NULL;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPHDR*    pPTPHDR  = NULL;
     int        rc       = 0;
     struct timespec waittime;
     struct timeval  now;
@@ -1629,25 +1660,24 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 }   /* End function  ptp_read() */
 
 
-/* ----------------------------------------------------------------- */
-/* read_read_buffer()                                                */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* read_read_buffer()                                                 */
+/* ------------------------------------------------------------------ */
 // Note: The caller must hold the PTPBLK->ReadBufferLock.
 
 void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
                         int     iCCWSeq,   BYTE*   pIOBuf,
                         BYTE*   pMore,     BYTE*   pUnitStat,
-                        U16*    pResidual, PPTPHDR pPTPHDR )
+                        U16*    pResidual, PTPHDR* pPTPHDR )
 {
 
     UNREFERENCED( iCCWSeq );
 
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
-    PPTPWRH    pPTPWRH;                        // PTPWRH follows the PTPHDR
-    PPTPMSH    pPTPMSH;                        // PTPMSH follows the PTPWRH
-    PPTPMDL    pPTPMDL;                        // PTPMDL follows the PTPMSH
-    BYTE*      pBytePtr;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
+    MPC_TH*    pMPC_TH;                        // MPC_TH follows the PTPHDR
+    MPC_RRH*   pMPC_RRH;                       // MPC_RRH follows the MPC_TH
+    MPC_PH*    pMPC_PH;                        // MPC_PH follows the MPC_RRH
     int        iDataLen;
     int        iIOLen;
     int        iLength1;
@@ -1657,24 +1687,21 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
 
 
     // Point to the data and get its length.
-    pBytePtr = (BYTE*)pPTPHDR + SizeHDR;
-    pPTPWRH = (PPTPWRH)pBytePtr;
-    pBytePtr = (BYTE*)pPTPWRH + SizeWRH;
-    pPTPMSH = (PPTPMSH)pBytePtr;
-    pBytePtr = (BYTE*)pPTPMSH + SizeMSH;
-    pPTPMDL = (PPTPMDL)pBytePtr;
+    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+    pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + SIZE_TH);
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + SIZE_RRH);
     iDataLen = pPTPHDR->iDataLen - LEN_OF_PAGE_ONE;
 
     // Set the transmission header sequence number.
-    STORE_FW( pPTPWRH->TH_SeqNum, ++pPTPATH->uSeqNum );
+    STORE_FW( pMPC_TH->seqnum, ++pPTPATH->uSeqNum );
 
     // Set the destination Token.
-    pPTPMSH->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSH->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    pMPC_RRH->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRH->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Check whether all of the data that is currently in page two and
     // onwards will fit into page one.
-    if( iDataLen <= ( LEN_OF_PAGE_ONE - (int)(SizeWRH + SizeMSH + SizeMDL) ) )
+    if( iDataLen <= ( LEN_OF_PAGE_ONE - (int)(SIZE_TH + SIZE_RRH + SIZE_PH) ) )
     {
 
         // All of the data that is currently in page two and onwards
@@ -1684,18 +1711,18 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         // ptp_read_thread().
 
         // Set the residual length and unit status.
-        if( uCount >= (U16)(SizeWRH + SizeMSH + SizeMDL + iDataLen) )
+        if( uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH + iDataLen) )
         {
-            iLength1 = (int)(SizeWRH + SizeMSH + SizeMDL);
+            iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
             iLength2 = iDataLen;
             *pMore     = 0;
             *pResidual = uCount - (U16)(iLength1 + iLength2);
         }
         else
         {
-            if( uCount >= (U16)(SizeWRH + SizeMSH + SizeMDL) )
+            if( uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH) )
             {
-                iLength1 = (int)(SizeWRH + SizeMSH + SizeMDL);
+                iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
                 iLength2 = (int)uCount - iLength1;
             }
             else
@@ -1708,25 +1735,21 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         }
         *pUnitStat = CSW_CE | CSW_DE;
 
-        // Set length field in PTPWRH
-        STORE_FW( pPTPWRH->TotalLen, (U32)(iLength1 + iLength2) );
+        // Set length field in MPC_TH
+        STORE_FW( pMPC_TH->length, (U32)(iLength1 + iLength2) );
 
-        // Set length fields in PTPMSH
-        // Note: pPTPMSH->TotalLenData is a 3-byte field.
-        STORE_HW( pPTPMSH->LenFirstData, (U16)iLength2 );
-        FETCH_FW( uTotalLen, pPTPMSH->TotalLenData-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pPTPMSH->TotalLenData-1, uTotalLen );
+        // Set length fields in MPC_RRH
+        STORE_HW( pMPC_RRH->lenfida, (U16)iLength2 );
+        STORE_HW( pMPC_RRH->lenalda, (U16)iLength2 );
 
-        // Prepare PTPMDL
-        pPTPMDL->LocData = MDL_LOC_1;
-        STORE_HW( pPTPMDL->LenData, (U16)iLength2 );
-        STORE_FW( pPTPMDL->DispData, (U32)(SizeWRH + SizeMSH + SizeMDL) );
+        // Prepare MPC_PH
+        pMPC_PH->locdata = PH_LOC_1;
+        STORE_HW( pMPC_PH->lendata, (U16)iLength2 );
+        STORE_FW( pMPC_PH->offdata, (U32)(SIZE_TH + SIZE_RRH + SIZE_PH) );
 
         // Copy the data to be read to the IO buffer.
-        memcpy( pIOBuf, pPTPWRH, iLength1 );
-        memcpy( pIOBuf + iLength1, (BYTE*)pPTPWRH + LEN_OF_PAGE_ONE, iLength2 );
+        memcpy( pIOBuf, pMPC_TH, iLength1 );
+        memcpy( pIOBuf + iLength1, (BYTE*)pMPC_TH + LEN_OF_PAGE_ONE, iLength2 );
 
         // Set the length of the data copied to the IO buffer.
         iIOLen =  iLength1 + iLength2;
@@ -1766,24 +1789,20 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         }
         *pUnitStat = CSW_CE | CSW_DE;
 
-        // Set length field in PTPWRH
-        STORE_FW( pPTPWRH->TotalLen, (U32)(SizeWRH + SizeMSH + SizeMDL) );
+        // Set length field in MPC_TH
+        STORE_FW( pMPC_TH->length, (U32)(SIZE_TH + SIZE_RRH + SIZE_PH) );
 
-        // Set length fields in PTPMSH
-        // Note: pPTPMSH->TotalLenData is a 3-byte field.
-        STORE_HW( pPTPMSH->LenFirstData, 0 );
-        FETCH_FW( uTotalLen, pPTPMSH->TotalLenData-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pPTPMSH->TotalLenData-1, uTotalLen );
+        // Set length fields in MPC_RRH
+        STORE_HW( pMPC_RRH->lenfida, 0 );
+        STORE_HW( pMPC_RRH->lenalda, (U16)iLength2 );
 
-        // Prepare PTPMDL
-        pPTPMDL->LocData = MDL_LOC_2;
-        STORE_HW( pPTPMDL->LenData, (U16)iLength2 );
-        STORE_FW( pPTPMDL->DispData, (U32)(LEN_OF_PAGE_ONE) );
+        // Prepare MPC_PH
+        pMPC_PH->locdata = PH_LOC_2;
+        STORE_HW( pMPC_PH->lendata, (U16)iLength2 );
+        STORE_FW( pMPC_PH->offdata, (U32)(LEN_OF_PAGE_ONE) );
 
         // Copy the data to be read to the IO buffer.
-        memcpy( pIOBuf, pPTPWRH, iLength1 + iLength2 );
+        memcpy( pIOBuf, pMPC_TH, iLength1 + iLength2 );
 
         // Set the length of the data copied to the IO buffer.
         iIOLen =  iLength1 + iLength2;
@@ -1795,7 +1814,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     {
         // HHC03905 "%1d:%04X CTC: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
-        FETCH_FW( uTotalLen, pPTPWRH->TotalLen );
+        FETCH_FW( uTotalLen, pMPC_TH->length );
         iTraceLen = uTotalLen;
         if( iTraceLen > 256 )
         {
@@ -1810,46 +1829,42 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     // Reset length field in PTPHDR
     pPTPHDR->iDataLen = LEN_OF_PAGE_ONE;
 
-    // Clear length field in PTPWRH
-    STORE_FW( pPTPWRH->TotalLen, 0 );
+    // Clear length field in MPC_TH
+    STORE_FW( pMPC_TH->length, 0 );
 
-    // Clear length fields in PTPMSH
-    // Note: pPTPMSH->TotalLenData is a 3-byte field.
-    STORE_HW( pPTPMSH->LenFirstData, 0 );
-    FETCH_FW( uTotalLen, pPTPMSH->TotalLenData-1 );
-    uTotalLen &= 0xFF000000;
-    STORE_FW( pPTPMSH->TotalLenData-1, uTotalLen );
+    // Clear length fields in MPC_RRH
+    STORE_HW( pMPC_RRH->lenfida, 0 );
+    STORE_HW( pMPC_RRH->lenalda, 0 );
 
-    // Clear location, length and displacement fields in PTPMDL
-    pPTPMDL->LocData = 0;
-    STORE_HW( pPTPMDL->LenData, 0 );
-    STORE_FW( pPTPMDL->DispData, 0 );
+    // Clear location, length and displacement fields in MPC_PH
+    pMPC_PH->locdata = 0;
+    STORE_HW( pMPC_PH->lendata, 0 );
+    STORE_FW( pMPC_PH->offdata, 0 );
 
     return;
 }   /* End function  read_read_buffer() */
 
 
-/* ----------------------------------------------------------------- */
-/* read_chain_buffer()                                               */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* read_chain_buffer()                                                */
+/* ------------------------------------------------------------------ */
 
 void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
                          int     iCCWSeq,   BYTE* pIOBuf,
                          BYTE*   pMore,     BYTE* pUnitStat,
-                         U16*    pResidual, PPTPHDR pPTPHDR )
+                         U16*    pResidual, PTPHDR* pPTPHDR )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
-    PPTPWRH    pPTPWRH;                        // PTPWRH follows the PTPHDR
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
+    MPC_TH*    pMPC_TH;                        // MPC_TH follows the PTPHDR
     int        iDataLen;
     int        iTraceLen;
     int        rc;
-    BYTE*      pBytePtr;
+    U32        uFirst4;
 
 
     // Point to the data and get its length.
-    pBytePtr = (BYTE*)pPTPHDR + SizeHDR;
-    pPTPWRH = (PPTPWRH)pBytePtr;
+    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
     iDataLen = pPTPHDR->iDataLen;
 
     // Set the residual length and unit status.
@@ -1867,14 +1882,14 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     *pUnitStat = CSW_CE | CSW_DE;
 
     // Set the transmission header sequence number, if necessary.
-    if( pPTPWRH->TH_seg == 0x00 &&
-        pPTPWRH->TH_ch_flag == TH_CH_0xE0 )
+    FETCH_FW( uFirst4, pMPC_TH->first4 );
+    if( uFirst4 == MPC_TH_FIRST4 )
     {
-        STORE_FW( pPTPWRH->TH_SeqNum, ++pPTPATH->uSeqNum );
+        STORE_FW( pMPC_TH->seqnum, ++pPTPATH->uSeqNum );
     }
 
     // Copy the data to be read.
-    memcpy( pIOBuf, pPTPWRH, iDataLen );
+    memcpy( pIOBuf, pMPC_TH, iDataLen );
 
     // Display up to 256-bytes of the read data, if debug is active.
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
@@ -1937,9 +1952,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 }   /* End function  read_chain_buffer() */
 
 
-/* ----------------------------------------------------------------- */
-/* ptp_read_thread()                                                 */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* ptp_read_thread()                                                  */
+/* ------------------------------------------------------------------ */
 // The ptp_read_thread() reads data from the TUN device, stores the
 // data in the path read buffer, from where the data is read by the
 // read path of the MPCPTP/MPCPTP6 connection.
@@ -1999,26 +2014,25 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 // forwarding them, we may be forwarding them from something using a
 // larger MTU to something using a smaller MTU.
 
-void*  ptp_read_thread( PPTPBLK pPTPBLK )
+void*  ptp_read_thread( PTPBLK* pPTPBLK )
 {
-    PPTPATH    pPTPATH = pPTPBLK->pPTPATHRead; // PTPATH Read
+    PTPATH*    pPTPATH = pPTPBLK->pPTPATHRead; // PTPATH Read
     DEVBLK*    pDEVBLK = pPTPATH->pDEVBLK;     // DEVBLK
     BYTE*      pTunBuf;                        // TUN/TAP read buffer address
     PIP4FRM    pIP4FRM;                        // IPv4 packet in TUN/TAP read buffer
     PIP6FRM    pIP6FRM;                        // IPv6 packet in TUN/TAP read buffer
     int        iTunLen;                        // TUN/TAP read length
     int        iLength;                        // Length of data in TUN/TAP read buffer
-    PPTPHDR    pPTPHDR;                        // PTPHDR of the path read buffer
-    PPTPWRH    pPTPWRH;                        // PTPWRH follows the PTPHDR
-//  PPTPMSH    pPTPMSH;                        // PTPMSH follows the PTPWRH
-//  PPTPMDL    pPTPMDL;                        // PTPMDL follows the PTPMSH
+    PTPHDR*    pPTPHDR;                        // PTPHDR of the path read buffer
+    MPC_TH*    pMPC_TH;                        // MPC_TH follows the PTPHDR
+//  MPC_RRH*   pMPC_RRH;                       // MPC_RRH follows the MPC_TH
+//  MPC_PH*    pMPC_PH;                        // MPC_PH follows the MPC_RRH
     BYTE*      pData;                          //
     U16        uPayLen;
     int        iPktVer;
     char       cPktVer[8];
     int        iPktLen;
     int        iTraceLen;
-    BYTE*      pBytePtr;
 
 
     // Allocate the TUN/TAP read buffer.
@@ -2245,9 +2259,8 @@ void*  ptp_read_thread( PPTPBLK pPTPBLK )
                 }
 
                 // Fix-up various pointers
-                pBytePtr = (BYTE*)pPTPHDR + SizeHDR;
-                pPTPWRH = (PPTPWRH)pBytePtr;
-                pData   = (BYTE*)pPTPWRH + pPTPHDR->iDataLen;
+                pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+                pData   = (BYTE*)pMPC_TH + pPTPHDR->iDataLen;
 
                 // Copy the IP packet from the TUN/TAP read buffer
                 memcpy( pData, pTunBuf, iLength );
@@ -2284,13 +2297,13 @@ void*  ptp_read_thread( PPTPBLK pPTPBLK )
 }   /* End function  ptp_read_thread() */
 
 
-/* ----------------------------------------------------------------- */
-/* add_buffer_to_chain_and_signal_event(): Add PTPHDR to end of chn. */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* add_buffer_to_chain_and_signal_event(): Add PTPHDR to end of chn.  */
+/* ------------------------------------------------------------------ */
 
-void*    add_buffer_to_chain_and_signal_event( PPTPATH pPTPATH, PPTPHDR pPTPHDR )
+void*    add_buffer_to_chain_and_signal_event( PTPATH* pPTPATH, PTPHDR* pPTPHDR )
 {
-    PPTPBLK  pPTPBLK = pPTPATH->pPTPBLK;               // PTPBLK
+    PTPBLK*  pPTPBLK = pPTPATH->pPTPBLK;               // PTPBLK
 
     // Prepare PTPHDR for adding to chain.
     if( !pPTPHDR )                                     // Any PTPHDR been passed?
@@ -2325,11 +2338,11 @@ void*    add_buffer_to_chain_and_signal_event( PPTPATH pPTPATH, PPTPHDR pPTPHDR 
     return NULL;
 }
 
-/* ----------------------------------------------------------------- */
-/* add_buffer_to_chain(): Add PTPHDR to end of chain.                */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* add_buffer_to_chain(): Add PTPHDR to end of chain.                 */
+/* ------------------------------------------------------------------ */
 
-void*    add_buffer_to_chain( PPTPATH pPTPATH, PPTPHDR pPTPHDR )
+void*    add_buffer_to_chain( PTPATH* pPTPATH, PTPHDR* pPTPHDR )
 {
 
     // Prepare PTPHDR for adding to chain.
@@ -2360,14 +2373,14 @@ void*    add_buffer_to_chain( PPTPATH pPTPATH, PPTPHDR pPTPHDR )
     return NULL;
 }
 
-/* ----------------------------------------------------------------- */
-/* remove_buffer_from_chain(): Remove PTPHDR from start of chain.    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* remove_buffer_from_chain(): Remove PTPHDR from start of chain.     */
+/* ------------------------------------------------------------------ */
 
-PPTPHDR  remove_buffer_from_chain( PPTPATH pPTPATH )
+PTPHDR*  remove_buffer_from_chain( PTPATH* pPTPATH )
 {
 
-    PPTPHDR    pPTPHDR;                                // PTPHDR
+    PTPHDR*    pPTPHDR;                                // PTPHDR
 
     // Obtain the path chain lock.
     obtain_lock( &pPTPATH->ChainLock );
@@ -2395,14 +2408,14 @@ PPTPHDR  remove_buffer_from_chain( PPTPATH pPTPATH )
     return pPTPHDR;
 }
 
-/* ----------------------------------------------------------------- */
-/* remove_and_free_any_buffers_on_chain(): Remove and free PTPHDRs.  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* remove_and_free_any_buffers_on_chain(): Remove and free PTPHDRs.   */
+/* ------------------------------------------------------------------ */
 
-void*    remove_and_free_any_buffers_on_chain( PPTPATH pPTPATH )
+void*    remove_and_free_any_buffers_on_chain( PTPATH* pPTPATH )
 {
 
-    PPTPHDR    pPTPHDR;                                // PTPHDR
+    PTPHDR*    pPTPHDR;                                // PTPHDR
 
     // Obtain the path chain lock.
     obtain_lock( &pPTPATH->ChainLock );
@@ -2428,14 +2441,14 @@ void*    remove_and_free_any_buffers_on_chain( PPTPATH pPTPATH )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* alloc_ptp_buffer(): Allocate storage for a PTPHDR and data        */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* alloc_ptp_buffer(): Allocate storage for a PTPHDR and data         */
+/* ------------------------------------------------------------------ */
 
-PPTPHDR  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
+PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
 {
 
-    PPTPHDR    pPTPHDR;                // PTPHDR
+    PTPHDR*    pPTPHDR;                // PTPHDR
     int        iBufLen;                // Buffer length
     char       etext[40];              // malloc error text
 
@@ -2461,9 +2474,9 @@ PPTPHDR  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* alloc_storage(): Allocate storage                                 */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* alloc_storage(): Allocate storage                                  */
+/* ------------------------------------------------------------------ */
 
 void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
 {
@@ -2493,9 +2506,9 @@ void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* ptpdata_trace()                                                   */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* ptpdata_trace()                                                    */
+/* ------------------------------------------------------------------ */
 // Function to trace PTP data.
 // Other than the message number this function is a copy of
 // packet_trace() in tuntap.c.
@@ -2560,11 +2573,11 @@ void  ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* parse_conf_stmt()                                                 */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* parse_conf_stmt()                                                  */
+/* ------------------------------------------------------------------ */
 
-int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
+int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       int argc, char** argx )
 {
     MAC             mac;                // Work area for MAC address
@@ -3285,9 +3298,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
 }   /* End function  parse_conf_stmt() */
 
 
-/* ----------------------------------------------------------------- */
-/* raise_unsol_int()                                                 */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* raise_unsol_int()                                                  */
+/* ------------------------------------------------------------------ */
 // Return value
 //    0    Successful
 //   -1    No storage available for a PTPINT
@@ -3295,9 +3308,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PPTPBLK pPTPBLK,
 
 int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
-    PPTPINT    pPTPINT;                        // PTPINT
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
+    PTPINT*    pPTPINT;                        // PTPINT
     TID        tid;                            // ptp_unsol_int_thread thread ID
     char       thread_name[32];                // ptp_unsol_int_thread
     int        rc;                             // Return code
@@ -3357,15 +3370,15 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
 }   /* End function  raise_unsol_int() */
 
 
-/* ----------------------------------------------------------------- */
-/* ptp_unsol_int_thread()                                            */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* ptp_unsol_int_thread()                                             */
+/* ------------------------------------------------------------------ */
 
-void*  ptp_unsol_int_thread( PPTPINT pPTPINT )
+void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 {
     DEVBLK*    pDEVBLK  = pPTPINT->pDEVBLK;    // DEVBLK
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
     int        rc;
     int        i;
     int        delay_q;
@@ -3489,9 +3502,9 @@ void*  ptp_unsol_int_thread( PPTPINT pPTPINT )
 }   /* End function  ptp_unsol_int_thread() */
 
 
-/* ----------------------------------------------------------------- */
-/* get_tod_clock()                                                   */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* get_tod_clock()                                                    */
+/* ------------------------------------------------------------------ */
 // Note: the returned TodClock (8-bytes) is in network byte order.
 
 void     get_tod_clock( BYTE* TodClock )
@@ -3510,9 +3523,9 @@ void     get_tod_clock( BYTE* TodClock )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* get_subarea_address()                                             */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* get_subarea_address()                                              */
+/* ------------------------------------------------------------------ */
 // Note: the returned SAaddress (4-bytes) is in network byte order.
 // VTAM creates a 4-byte subarea address from a combination of the
 // output of a STIDP instuction and the output of a STCK
@@ -3527,8 +3540,8 @@ void     get_subarea_address( BYTE* SAaddress )
 {
     REGS    *regs;
     U64     tod;
-    U64     dreg;                       /* Double word workarea      */
-    U16     hreg;                       /* Half word workarea        */
+    U64     dreg;                       /* Double word workarea       */
+    U16     hreg;                       /* Half word workarea         */
 
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -3547,9 +3560,9 @@ void     get_subarea_address( BYTE* SAaddress )
 }
 
 
-/* ----------------------------------------------------------------- */
-/* write_hx0_01()                                                    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_hx0_01()                                                     */
+/* ------------------------------------------------------------------ */
 // When we are handshaking the second CCW in the chain is the guest
 // OS on the y-side writing an PTPHX0 type 0x00 or 0x01.
 
@@ -3563,9 +3576,9 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
     UNREFERENCED( iCCWSeq );
     UNREFERENCED( pIOBuf  );
 
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPHX0    pPTPHX0  = (PPTPHX0)pIOBuf;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
 
 
     // Display various information, maybe
@@ -3713,9 +3726,9 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
 }   /* End function  write_hx0_01() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_hx0_00()                                                    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_hx0_00()                                                     */
+/* ------------------------------------------------------------------ */
 // When we are handshaking the second CCW in the chain is the guest
 // OS on the y-side writing an PTPHX0 type 0x00 or 0x01.
 
@@ -3729,9 +3742,9 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
     UNREFERENCED( iCCWSeq );
     UNREFERENCED( pIOBuf  );
 
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPHX0    pPTPHX0  = (PPTPHX0)pIOBuf;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
 
 
     // Display various information, maybe
@@ -3774,9 +3787,9 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
 }   /* End function  write_hx0_00() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_hx2()                                                       */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_hx2()                                                        */
+/* ------------------------------------------------------------------ */
 // When we are handshaking the third CCW in the chain is the guest
 // OS on the y-side writing an XID2. We must create the PTPHX0, XID2
 // and 'VTAM' to be read by the fourth, fifth and sixth CCW's in the
@@ -3792,24 +3805,23 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
     UNREFERENCED( iCCWSeq );
     UNREFERENCED( pIOBuf  );
 
-    PPTPATH    pPTPATH     = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK     = pPTPATH->pPTPBLK;
-    PPTPHX2    pPTPHX2wr   = (PPTPHX2)pIOBuf;   // PTPHX2 being written
-    PPTPHSV    pPTPHSVwr;                       // PTPHSV being written
+    PTPATH*    pPTPATH     = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK     = pPTPATH->pPTPBLK;
+    PTPHX2*    pPTPHX2wr   = (PTPHX2*)pIOBuf;   // PTPHX2 being written
+    PTPHSV*    pPTPHSVwr;                       // PTPHSV being written
 
-    PPTPHDR    pPTPHDRx0   = NULL;              // PTPHDR before PTPHX0
-    PPTPHX0    pPTPHX0re   = NULL;              // PTPHX0 to be read
-    PPTPHDR    pPTPHDRx2   = NULL;              // PTPHDR before PTPHX2
-    PPTPHX2    pPTPHX2re   = NULL;              // PTPHX2 to be read
-    PPTPHSV    pPTPHSVre   = NULL;              // PTPHSV to be read
-    PPTPHDR    pPTPHDRvt   = NULL;              // PTPHDR before 'VTAM'
+    PTPHDR*    pPTPHDRx0   = NULL;              // PTPHDR before PTPHX0
+    PTPHX0*    pPTPHX0re   = NULL;              // PTPHX0 to be read
+    PTPHDR*    pPTPHDRx2   = NULL;              // PTPHDR before PTPHX2
+    PTPHX2*    pPTPHX2re   = NULL;              // PTPHX2 to be read
+    PTPHSV*    pPTPHSVre   = NULL;              // PTPHSV to be read
+    PTPHDR*    pPTPHDRvt   = NULL;              // PTPHDR before 'VTAM'
     BYTE*      pPTPVTMre   = NULL;              // 'VTAM' to be read
 
     U16        uDataLen1;                       // Data length one
     U16        uMaxReadLen;                     // Maximum read length
-    PPTPHDR    pPTPHDR;                         // PTPHDR
+    PTPHDR*    pPTPHDR;                         // PTPHDR
     U32        uNodeID;
-    BYTE*      pBytePtr;
 
 
     // Display various information, maybe
@@ -3905,36 +3917,34 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
                 // Initialize the existing or new read buffer, if there is one.
                 if( pPTPHDR )
                 {
-                    PPTPWRH    pPTPWRH;        // PTPWRH follows the PTPHDR
-                    PPTPMSH    pPTPMSH;        // PTPMSH follows the PTPWRH
-//                  PPTPMDL    pPTPMDL;        // PTPMDL follows the PTPMSH
+                    MPC_TH*    pMPC_TH;        // MPC_TH follows the PTPHDR
+                    MPC_RRH*   pMPC_RRH;       // MPC_RRH follows the MPC_TH
+//                  MPC_PH*    pMPC_PH;        // MPC_PH follows the MPC_RRH
 
                     // Fix-up various pointers
-                    pBytePtr = (BYTE*)pPTPHDR + SizeHDR;
-                    pPTPWRH = (PPTPWRH)pBytePtr;
-                    pBytePtr = (BYTE*)pPTPWRH + SizeWRH;
-                    pPTPMSH = (PPTPMSH)pBytePtr;
-                    pBytePtr = (BYTE*)pPTPMSH + SizeMSH;
-//                  pPTPMDL = (PPTPMDL)pBytePtr;
+                    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+                    pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + SIZE_TH);
+//                  pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + SIZE_RRH);
 
                     // Prepare PTPHDR
                     pPTPHDR->iDataLen = LEN_OF_PAGE_ONE;
 
                     // Clear the data area.
-                    memset( pPTPWRH, 0, (int)uMaxReadLen );
+                    memset( pMPC_TH, 0, (int)uMaxReadLen );
 
-                    // Prepare PTPWRH
-                    pPTPWRH->TH_ch_flag = TH_CH_0xE0;
-                    STORE_FW( pPTPWRH->DispMSH, SizeWRH );
-                    STORE_HW( pPTPWRH->Unknown1, PTPWRH_UNKNOWN1 );    // !!! //
-                    STORE_HW( pPTPWRH->NumMSHs, 1 );
+                    // Prepare MPC_TH
+                    STORE_FW( pMPC_TH->first4, MPC_TH_FIRST4 );
+                    STORE_FW( pMPC_TH->offrrh, SIZE_TH );
+                    STORE_HW( pMPC_TH->unknown10, MPC_TH_UNKNOWN10 );    // !!! //
+                    STORE_HW( pMPC_TH->numrrh, 1 );
 
-                    // Prepare PTPMSH
-                    STORE_HW( pPTPMSH->Type, TypeMSH_0x8108 );
-                    STORE_HW( pPTPMSH->NumMDLs, 1 );
-                    STORE_HW( pPTPMSH->DispMDL, SizeMSH );
+                    // Prepare MPC_RRH
+                    pMPC_RRH->type = RRH_TYPE_CM;
+                    pMPC_RRH->proto = PROTOCOL_LAYER2;
+                    STORE_HW( pMPC_RRH->numph, 1 );
+                    STORE_HW( pMPC_RRH->offph, SIZE_RRH );
 
-                    // Prepare PTPMDL
+                    // Prepare MPC_PH
 
                     // increment the read buffer generation number
                     pPTPBLK->iReadBufferGen++;
@@ -3995,8 +4005,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         pPTPHDRx0 = alloc_ptp_buffer( pDEVBLK, SizeHX0 );
         if( !pPTPHDRx0 )
             return;
-        pBytePtr = (BYTE*)pPTPHDRx0 + SizeHDR;
-        pPTPHX0re = (PPTPHX0)pBytePtr;
+        pPTPHX0re = (PTPHX0*)((BYTE*)pPTPHDRx0 + SizeHDR);
 
         // Allocate a buffer in which the PTPHX2 and PTPHSV will be build.
         pPTPHDRx2 = alloc_ptp_buffer( pDEVBLK, 255 );
@@ -4006,10 +4015,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
             free( pPTPHDRx0 );
             return;
         }
-        pBytePtr  = (BYTE*)pPTPHDRx2 + SizeHDR;
-        pPTPHX2re = (PPTPHX2)pBytePtr;
-        pBytePtr  = (BYTE*)pPTPHDRx2 + SizeHDR + SizeHX2;
-        pPTPHSVre = (PPTPHSV)pBytePtr;
+        pPTPHX2re = (PTPHX2*)((BYTE*)pPTPHDRx2 + SizeHDR);
+        pPTPHSVre = (PTPHSV*)((BYTE*)pPTPHDRx2 + SizeHDR + SizeHX2);
 
         // Allocate a buffer in which the literal 'VTAM' will be build.
         pPTPHDRvt = alloc_ptp_buffer( pDEVBLK, 4 );
@@ -4128,19 +4135,19 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 }   /* End function  write_hx2() */
 
 
-/* ----------------------------------------------------------------- */
-/* point_CSVcv()                                                     */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* point_CSVcv()                                                      */
+/* ------------------------------------------------------------------ */
 // This function is probably overkill at present while the XID2 is
 // followed immediately by the CSVcv. However, one day, there may be
 // more than one cv...
 
-PPTPHSV  point_CSVcv( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2 )
+PTPHSV*  point_CSVcv( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2 )
 {
 
     UNREFERENCED( pDEVBLK );
 
-    PPTPHSV   pPTPHSV;
+    PTPHSV*   pPTPHSV;
     BYTE*     pCurCv;
     BYTE*     pEndCv;
 
@@ -4152,7 +4159,7 @@ PPTPHSV  point_CSVcv( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2 )
 
     while( pCurCv < pEndCv )
     {
-        pPTPHSV = (PPTPHSV)pCurCv;
+        pPTPHSV = (PTPHSV*)pCurCv;
         if( pPTPHSV->Key == CSV_KEY )
             break;
         pCurCv += pPTPHSV->Length;
@@ -4163,712 +4170,738 @@ PPTPHSV  point_CSVcv( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2 )
 }   /* End function  point_CSVcv() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_msh_417E()                                                  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_rrh_417E()                                                   */
+/* ------------------------------------------------------------------ */
 // Note - the Token is xTokenIssuerRm or xTokenCmConnection.
-// In all cases that have been seen the PTPMSH type 0x417E is
-// followed by a single PTPMDL, which is followed by a single
-// PTPDAX, which is followed by up to four PTPSUXs.
+// In all cases that have been seen the MPC_RRH type 0x417E is
+// followed by a single MPC_PH, which is followed by a single
+// MPC_PUK, which is followed by up to four MPC_PUSs.
 
-int   write_msh_417E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
+int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
-    PPTPATH    pPTPATHRead  = pPTPBLK->pPTPATHRead;
-    PPTPATH    pPTPATHWrite = pPTPBLK->pPTPATHWrite;
-    PPTPMDL    pPTPMDLwr;                      // PTPMDL being written
-    PPTPDAX    pPTPDAXwr;                      // PTPDAX being written
-    PPTPSUX    pPTPSUXwr[6];                   // PTPSUXs being written
-    BYTE       bFoundSUX[2];                   // The PTPSUXs being written
-    U16        uDispMDL;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATHRead  = pPTPBLK->pPTPATHRead;
+    PTPATH*    pPTPATHWrite = pPTPBLK->pPTPATHWrite;
+    MPC_PH*    pMPC_PHwr;                      // MPC_PH being written
+    MPC_PUK*   pMPC_PUKwr;                     // MPC_PUK being written
+    MPC_PUS*   pMPC_PUSwr[6];                  // MPC_PUSs being written
+    BYTE       bFoundPUS[2];                   // The MPC_PUSs being written
+#define FOUND_01  0x80
+#define FOUND_02  0x40
+#define FOUND_03  0x20
+#define FOUND_04  0x10
+#define FOUND_05  0x08
+#define FOUND_06  0x04
+#define FOUND_07  0x02
+#define FOUND_08  0x01
+#define FOUND_09  0x80
+#define FOUND_0C  0x10
+    U16        uOffPH;
 //  U16        uLenData;
-    U32        uDispData;
-    U16        uLenDAX;
-    U16        uTypeDAX;
-    U16        uTotalLenSUX;
-    U16        uLenSUX;
-    U16        uTypeSUX;
-    int        iTotLenSux;
+    U32        uOffData;
+    U16        uLenPUK;
+    U16        uTotalLenPUS;
+    U16        uLenPUS;
+    int        iTotLenPUS;
     int        i;
     u_int      fxSideWins;
     BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;                      // PTPHDR to be read
-
-#define FOUND_0x0401  0x80
-#define FOUND_0x0402  0x40
-#define FOUND_0x0403  0x20
-#define FOUND_0x0404  0x10
-#define FOUND_0x0405  0x08
-#define FOUND_0x0406  0x04
-#define FOUND_0x0407  0x02
-#define FOUND_0x0408  0x01
-#define FOUND_0x0409  0x80
-#define FOUND_0x040C  0x10
+    PTPHDR*    pPTPHDRre;                      // PTPHDR to be read
+    int        iWhat;
+#define UNKNOWN_PUK   0
+#define CM_ENABLE     1
+#define CM_SETUP      2
+#define CM_CONFIRM    3
+#define CM_DOWN_03    4
+#define CM_DOWN_05    5
+#define ULP_ENABLE    6
+#define ULP_SETUP     7
+#define ULP_CONFIRM   8
+#define ULP_DOWN_03   9
+#define ULP_DOWN_05   10
+#define DM_ACT        11
 
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
         // HHC03991 "%1d:%04X CTC: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_msh_417E()" );
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_417E()" );
     }
 
-    // Point to the PTPMDL.
-    FETCH_HW( uDispMDL, pPTPMSHwr->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSHwr + uDispMDL;
-    pPTPMDLwr = (PPTPMDL)pBytePtr;
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRHwr->offph );
+    pMPC_PHwr = (MPC_PH*)((BYTE*)pMPC_RRHwr + uOffPH);
 
     // Get the length of and point to the data referenced by the
-    // PTPMDL. The data contain a PTPDAX and one or more PTPSUXs.
-//  FETCH_HW( uLenData, pPTPMDLwr->LenData );
-    FETCH_FW( uDispData, pPTPMDLwr->DispData );
-    pBytePtr = (BYTE*)pPTPWRHwr + uDispData;
-    pPTPDAXwr = (PPTPDAX)pBytePtr;
+    // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
+//  FETCH_HW( uLenData, pMPC_PHwr->lendata );
+    FETCH_FW( uOffData, pMPC_PHwr->offdata );
+    pMPC_PUKwr = (MPC_PUK*)((BYTE*)pMPC_THwr + uOffData);
 
-    // Get the length of the PTPDAX and the total length of the
-    // following PTPSUXs, then point to the first PTPSUX.
-    FETCH_HW( uLenDAX, pPTPDAXwr->Length );
-    FETCH_HW( uTotalLenSUX, pPTPDAXwr->TotalLenSUX );
-    pBytePtr = (BYTE*)pPTPDAXwr + uLenDAX;
-    iTotLenSux = uTotalLenSUX;
+    // Get the length of the MPC_PUK and the total length of the
+    // following MPC_PUSs, then point to the first MPC_PUS.
+    FETCH_HW( uLenPUK, pMPC_PUKwr->length );
+    FETCH_HW( uTotalLenPUS, pMPC_PUKwr->lenpus );
+    iTotLenPUS = uTotalLenPUS;
+    pBytePtr = (BYTE*)pMPC_PUKwr + uLenPUK;
 
-    // Point to each of the PTPSUXs.
+    // Point to each of the MPC_PUSs and remember what they are.
     // Note: we allow for six, the most that has been seen is four.
     for( i = 0 ; i <= 5 ; i++ )
     {
-        pPTPSUXwr[i] = NULL;
+        pMPC_PUSwr[i] = NULL;
     }
-    bFoundSUX[0] = 0;
-    bFoundSUX[1] = 0;
+    bFoundPUS[0] = 0;
+    bFoundPUS[1] = 0;
     for( i = 0 ; i <= 5 ; i++ )
     {
-        if( iTotLenSux <= 0 )
+        if( iTotLenPUS <= 0 )
             break;
 
-        // Point to the PTPSUX
-        pPTPSUXwr[i] = (PPTPSUX)pBytePtr;
+        // Point to the MPC_PUS
+        pMPC_PUSwr[i] = (MPC_PUS*)pBytePtr;
 
-        // Remember the PTPSUX types found in this message
-        FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-        if( uTypeSUX == TypeSUX_0x0401 )
-            bFoundSUX[0] |= FOUND_0x0401;
-        if( uTypeSUX == TypeSUX_0x0402 )
-            bFoundSUX[0] |= FOUND_0x0402;
-        if( uTypeSUX == TypeSUX_0x0403 )
-            bFoundSUX[0] |= FOUND_0x0403;
-        if( uTypeSUX == TypeSUX_0x0404 )
-            bFoundSUX[0] |= FOUND_0x0404;
-        if( uTypeSUX == TypeSUX_0x0405 )
-            bFoundSUX[0] |= FOUND_0x0405;
-        if( uTypeSUX == TypeSUX_0x0406 )
-            bFoundSUX[0] |= FOUND_0x0406;
-        if( uTypeSUX == TypeSUX_0x0407 )
-            bFoundSUX[0] |= FOUND_0x0407;
-        if( uTypeSUX == TypeSUX_0x0408 )
-            bFoundSUX[0] |= FOUND_0x0408;
-        if( uTypeSUX == TypeSUX_0x0409 )
-            bFoundSUX[1] |= FOUND_0x0409;
-        if( uTypeSUX == TypeSUX_0x040C )
-            bFoundSUX[1] |= FOUND_0x040C;
+        // Remember the MPC_PUS types found in this message
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_01 )
+            bFoundPUS[0] |= FOUND_01;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_02 )
+            bFoundPUS[0] |= FOUND_02;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_03 )
+            bFoundPUS[0] |= FOUND_03;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_04 )
+            bFoundPUS[0] |= FOUND_04;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_05 )
+            bFoundPUS[0] |= FOUND_05;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_06 )
+            bFoundPUS[0] |= FOUND_06;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_07 )
+            bFoundPUS[0] |= FOUND_07;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_08 )
+            bFoundPUS[0] |= FOUND_08;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_09 )
+            bFoundPUS[1] |= FOUND_09;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_0C )
+            bFoundPUS[1] |= FOUND_0C;
 
-        // Get the length of the PTPSUX.
-        FETCH_HW( uLenSUX, pPTPSUXwr[i]->Length );
+        // Get the length of the MPC_PUS.
+        FETCH_HW( uLenPUS, pMPC_PUSwr[i]->length );
 
-        // Point to the next PTPSUX
-        pBytePtr = (BYTE*)pPTPSUXwr[i] + uLenSUX;
+        // Point to the next MPC_PUS
+        pBytePtr = (BYTE*)pMPC_PUSwr[i] + uLenPUS;
 
         //
-        iTotLenSux -= uLenSUX;
+        iTotLenPUS -= uLenPUS;
     }
 
-    // Check whether the 417E is to xTokenIssuerRm.
-    if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
+    // Decide what the PUK contains.
+    iWhat = UNKNOWN_PUK;
+    if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
+    {
+        if( pMPC_PUKwr->what == PUK_WHAT_41 )
+        {
+            if( pMPC_PUKwr->type == PUK_TYPE_ENABLE )
+            {
+                iWhat = CM_ENABLE;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_SETUP )
+            {
+                iWhat = CM_SETUP;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_CONFIRM )
+            {
+                iWhat = CM_CONFIRM;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_03 )
+            {
+                iWhat = CM_DOWN_03;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_05 )
+            {
+                iWhat = CM_DOWN_05;
+            }
+        }
+    }
+    else if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH ) == 0 )
+    {
+        if( pMPC_PUKwr->what == PUK_WHAT_41 )
+        {
+            if( pMPC_PUKwr->type == PUK_TYPE_ENABLE )
+            {
+                iWhat = ULP_ENABLE;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_SETUP )
+            {
+                iWhat = ULP_SETUP;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_CONFIRM )
+            {
+                iWhat = ULP_CONFIRM;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_03 )
+            {
+                iWhat = ULP_DOWN_03;
+            }
+            else if( pMPC_PUKwr->type == PUK_TYPE_05 )
+            {
+                iWhat = ULP_DOWN_05;
+            }
+        }
+        else if( pMPC_PUKwr->what == PUK_WHAT_43 )
+        {
+            if( pMPC_PUKwr->type == PUK_TYPE_ACTIVE )
+            {
+                iWhat = DM_ACT;
+            }
+        }
+    }
+
+    // Process the PUK.
+    switch( iWhat )
     {
 
-        //
-        FETCH_HW( uTypeDAX, pPTPDAXwr->Type );
-        switch( uTypeDAX )
+    // PUK 0x4102 to xTokenIssuerRm
+    case CM_ENABLE:
+
+        // The MPC_PUK should be followed by three MPC_PUSs, the first a type
+        // 0x0401, the second a type 0x0402, and the third a type 0x040c.
+        if( ( bFoundPUS[0] & ( FOUND_01 + FOUND_02 ) ) != ( FOUND_01 + FOUND_02 ) ||
+            ( bFoundPUS[1] & FOUND_0C ) != FOUND_0C )
         {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4102 (CM_ENABLE)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
 
-        // TypeDAX_0x4102 to xTokenIssuerRm
-        case TypeDAX_0x4102:
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-            // The PTPDAX should be followed by three PTPSUXs, the first a type
-            // 0x0401, the second a type 0x0402, and the third a type 0x040c.
-            if( ( bFoundSUX[0] & ( FOUND_0x0401 + FOUND_0x0402 ) ) != ( FOUND_0x0401 + FOUND_0x0402 ) ||
-                ( bFoundSUX[1] & FOUND_0x040C ) != FOUND_0x040C )
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_01 )
             {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4102 (CM_ENABLE)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                memcpy( pPTPBLK->yTokenCmFilter, pMPC_PUSwr[i]->vc.pus_01.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
+                {
+                    display_data( "yTokenCmFilter ......", pPTPBLK->yTokenCmFilter, MPC_TOKEN_LENGTH, ' ' );
+                }
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (Issuer) DAX 0x4102 (CM_ENABLE)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
-            {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0401 )
-                {
-                    memcpy( pPTPBLK->yTokenCmFilter, pPTPSUXwr[i]->vc.sux_0x0401.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenCmFilter ......", pPTPBLK->yTokenCmFilter, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
-                }
-            }
-
-            fxSideWins = FALSE;
-            for( i = 0 ; i <= 5 ; i++ )
-            {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0402 )
-                {
-
-                    // Build MSH 0x417E DAX 0x4102 to yTokenIssuerRm
-                    pPTPHDRre = build_417E_4102_is( pDEVBLK, pPTPMSHwr, pPTPSUXwr[i], &fxSideWins );
-
-                    // Add PTPHDR to chain.
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
-
-                    break;
-                }
-            }
-
-            // If this side 'wins' the 'handedness' this side must now  send
-            // a MSH 0x417E DAX 0x4104 to yTokenIssuerRm on the other side.
-            // If the other side 'wins' the 'handedness' this side must now wait
-            // to receive a MSH 0x417E DAX 0x4104 to xTokenIssuerRm from the
-            // other side.
-            if( fxSideWins )    // if the x-side wins
+        fxSideWins = FALSE;
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_02 )
             {
 
-                // Build MSH 0x417E DAX 0x4104 to yTokenIssuerRm
-                pPTPHDRre = build_417E_4104_is( pDEVBLK, pPTPMSHwr );
+                // Build RRH 0x417E PUK 0x4102 to yTokenIssuerRm
+                pPTPHDRre = build_417E_4102_is( pDEVBLK, pMPC_RRHwr, pMPC_PUSwr[i], &fxSideWins );
 
                 // Add PTPHDR to chain.
                 add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
 
-            }
-
-            break;
-
-        // TypeDAX_0x4104 to xTokenIssuerRm
-        case TypeDAX_0x4104:
-
-            // The PTPDAX should be followed by three PTPSUXs, the first a type
-            // 0x0404, the second a type 0x0405, and the third a type 0x0406.
-            if( ( bFoundSUX[0] & ( FOUND_0x0404 + FOUND_0x0405 + FOUND_0x0406 ) )
-                              != ( FOUND_0x0404 + FOUND_0x0405 + FOUND_0x0406 ) )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4104 (CM_SETUP)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (Issuer) DAX 0x4104 (CM_SETUP)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+        // If this side 'wins' the 'handedness' this side must now  send
+        // a RRH 0x417E PUK 0x4104 to yTokenIssuerRm on the other side.
+        // If the other side 'wins' the 'handedness' this side must now wait
+        // to receive a RRH 0x417E PUK 0x4104 to xTokenIssuerRm from the
+        // other side.
+        if( fxSideWins )    // if the x-side wins
+        {
 
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
-            {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0404 )
-                {
-                    memcpy( pPTPBLK->yTokenCmConnection, pPTPSUXwr[i]->vc.sux_0x0404.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
-                }
-            }
-
-            // Build MSH 0x417E DAX 0x4106 to yTokenIssuerRm
-            pPTPHDRre = build_417E_4106_is( pDEVBLK, pPTPMSHwr );
+            // Build RRH 0x417E PUK 0x4104 to yTokenIssuerRm
+            pPTPHDRre = build_417E_4104_is( pDEVBLK, pMPC_RRHwr );
 
             // Add PTPHDR to chain.
             add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
 
-            // When the y-side receives the MSH 0x417E DAX 0x4106 the control
-            // process between the x-side and the y-side is active. On a connection
-            // between two VTAMs, the x-side VTAM sends messages from xTokenCmFilter
-            // to yTokenCmConnection, and the y-side VTAM sends messages from yTokenCmFilter
-            // to xTokenCmConnection. The x-side (i.e. Hercules) will now wait for the
-            // y-side VTAM to send a MSG 0x417E DAX 0x4102 to xTokenCmConnection to
-            // begin the setup of the communication process.
+        }
 
-            break;
+        break;
 
-        // TypeDAX_0x4106 to xTokenIssuerRm
-        case TypeDAX_0x4106:
+    // PUK 0x4104 to xTokenIssuerRm
+    case CM_SETUP:
 
-            // The PTPDAX should be followed by three PTPSUXs, the first a type
-            // 0x0404, the second a type 0x0408, and the third a type 0x0407.
-            if( ( bFoundSUX[0] & ( FOUND_0x0404 + FOUND_0x0408 + FOUND_0x0407 ) )
-                              != ( FOUND_0x0404 + FOUND_0x0408 + FOUND_0x0407 ) )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4106 (CM_ACTIVE)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
-            }
-
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (Issuer) DAX 0x4106 (CM_ACTIVE)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
-            {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0408 )
-                {
-                    memcpy( pPTPBLK->yTokenCmConnection, pPTPSUXwr[i]->vc.sux_0x0408.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
-                }
-            }
-
-            // The control process between the x-side and the y-side is active. On
-            // a connection between two VTAMs, the x-side VTAM sends messages from
-            // xTokenCmFilter to yTokenCmConnection, and the y-side VTAM sends messages
-            // from yTokenCmFilter to xTokenCmConnection. The x-side (i.e. Hercules)
-            // will now wait for the y-side VTAM to send a MSG 0x417E DAX 0x4102
-            // to xTokenCmConnection to begin the setup of the communication process.
-
-            break;
-
-        // TypeDAX_0x4103 to xTokenIssuerRm
-        case TypeDAX_0x4103:
-
-            // The PTPDAX should be followed by a single PTPSUXs, a type 0x0403.
-            if( ( bFoundSUX[0] & FOUND_0x0403 ) != FOUND_0x0403 )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4103 (down CM)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
-            }
-
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (Issuer) DAX 0x4103 (down CM)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            break;
-
-        // TypeDAX_0x4105 to xTokenIssuerRm
-        case TypeDAX_0x4105:
-
-            // The PTPDAX should be followed by a single PTPSUXs, a type 0x0404.
-            if( ( bFoundSUX[0] & FOUND_0x0404 ) != FOUND_0x0404 )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4105 (down CM)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
-            }
-
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (Issuer) DAX 0x4105 (down CM)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            // The guest OS on the y-side has stopped the device
-
-            break;
-
-        // pPTPDAXwr->Type not recognised to xTokenIssuerRm
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAX" );
-            display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-
-            break;
-
-        }  /* switch( uTypeDAX ) */
-
-    }  /* if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 ) */
-    // Check whether the 417E is to xTokenCmConnection.
-    else if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH ) == 0 )
-    {
-
-        //
-        FETCH_HW( uTypeDAX, pPTPDAXwr->Type );
-        switch( uTypeDAX )
+        // The MPC_PUK should be followed by three MPC_PUSs, the first a type
+        // 0x0404, the second a type 0x0405, and the third a type 0x0406.
+        if( ( bFoundPUS[0] & ( FOUND_04 + FOUND_05 + FOUND_06 ) )
+                          != ( FOUND_04 + FOUND_05 + FOUND_06 ) )
         {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4104 (CM_SETUP)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
 
-        // TypeDAX_0x4102 to xTokenCmConnection
-        case TypeDAX_0x4102:
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-            // The PTPDAX should be followed by two PTPSUXs, the first a type
-            // 0x0401 and the second a type 0x0402.
-            if( ( bFoundSUX[0] & ( FOUND_0x0401 + FOUND_0x0402 ) )
-                              != ( FOUND_0x0401 + FOUND_0x0402 ) )
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_04 )
             {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4102 (ULP_ENABLE)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr[i]->vc.pus_04.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
+                {
+                    display_data( "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, ' ' );
+                }
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4102 (ULP_ENABLE)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+        // Build RRH 0x417E PUK 0x4106 to yTokenIssuerRm
+        pPTPHDRre = build_417E_4106_is( pDEVBLK, pMPC_RRHwr );
 
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
+        // Add PTPHDR to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
+
+        // When the y-side receives the RRH 0x417E PUK 0x4106 the control
+        // process between the x-side and the y-side is active. On a connection
+        // between two VTAMs, the x-side VTAM sends messages from xTokenCmFilter
+        // to yTokenCmConnection, and the y-side VTAM sends messages from yTokenCmFilter
+        // to xTokenCmConnection. The x-side (i.e. Hercules) will now wait for the
+        // y-side VTAM to send a MSG 0x417E PUK 0x4102 to xTokenCmConnection to
+        // begin the setup of the communication process.
+
+        break;
+
+    // PUK 0x4106 to xTokenIssuerRm
+    case CM_CONFIRM:
+
+        // The MPC_PUK should be followed by three MPC_PUSs, the first a type
+        // 0x0404, the second a type 0x0408, and the third a type 0x0407.
+        if( ( bFoundPUS[0] & ( FOUND_04 + FOUND_08 + FOUND_07 ) )
+                          != ( FOUND_04 + FOUND_08 + FOUND_07 ) )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4106 (CM_CONFIRM)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_08 )
             {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0401 )
+                memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr[i]->vc.pus_08.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
                 {
-                    memcpy( pPTPBLK->yTokenUlpFilter, pPTPSUXwr[i]->vc.sux_0x0401.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenUlpFilter .....", pPTPBLK->yTokenUlpFilter, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
+                    display_data( "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, ' ' );
                 }
+                break;
             }
+        }
 
-            fxSideWins = FALSE;
-            for( i = 0 ; i <= 5 ; i++ )
+        // The control process between the x-side and the y-side is active. On
+        // a connection between two VTAMs, the x-side VTAM sends messages from
+        // xTokenCmFilter to yTokenCmConnection, and the y-side VTAM sends messages
+        // from yTokenCmFilter to xTokenCmConnection. The x-side (i.e. Hercules)
+        // will now wait for the y-side VTAM to send a MSG 0x417E PUK 0x4102
+        // to xTokenCmConnection to begin the setup of the communication process.
+
+        break;
+
+    // PUK 0x4103 to xTokenIssuerRm
+    case CM_DOWN_03:
+
+        // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0403.
+        if( ( bFoundPUS[0] & FOUND_03 ) != FOUND_03 )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4103 (down CM)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4103 (down CM)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        break;
+
+    // PUK 0x4105 to xTokenIssuerRm
+    case CM_DOWN_05:
+
+        // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+        if( ( bFoundPUS[0] & FOUND_04 ) != FOUND_04 )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4105 (down CM)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4105 (down CM)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // The guest OS on the y-side has stopped the device
+
+        break;
+
+    // PUK 0x4102 to xTokenCmConnection
+    case ULP_ENABLE:
+
+        // The MPC_PUK should be followed by two MPC_PUSs, the first a type
+        // 0x0401 and the second a type 0x0402.
+        if( ( bFoundPUS[0] & ( FOUND_01 + FOUND_02 ) )
+                          != ( FOUND_01 + FOUND_02 ) )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4102 (ULP_ENABLE)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_01 )
             {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0402 )
+                memcpy( pPTPBLK->yTokenUlpFilter, pMPC_PUSwr[i]->vc.pus_01.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
                 {
-                    // Build MSH 0x417E DAX 0x4102 to yTokenCmConnection
-                    pPTPHDRre = build_417E_4102_cm( pDEVBLK, pPTPMSHwr, pPTPSUXwr[i], &fxSideWins );
-
-                    // Add PTPHDR to chain.
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
-
-                    break;
+                    display_data( "yTokenUlpFilter .....", pPTPBLK->yTokenUlpFilter, MPC_TOKEN_LENGTH, ' ' );
                 }
+                break;
             }
+        }
 
-            // If this side 'wins' the 'handedness' this side must now send
-            // a MSH 0x417E DAX 0x4104 to yTokenCmConnection on the other side.
-            // If the other side 'wins' the 'handedness' this side must now wait
-            // to receive a MSH 0x417E DAX 0x4104 to xTokenCmConnection from the
-            // other side.
-            if( fxSideWins )    // if the x-side wins
+        fxSideWins = FALSE;
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_02 )
             {
-
-                // Build MSH 0x417E DAX 0x4104 to yTokenCmConnection
-                pPTPHDRre = build_417E_4104_cm( pDEVBLK, pPTPMSHwr );
+                // Build RRH 0x417E PUK 0x4102 to yTokenCmConnection
+                pPTPHDRre = build_417E_4102_cm( pDEVBLK, pMPC_RRHwr, pMPC_PUSwr[i], &fxSideWins );
 
                 // Add PTPHDR to chain.
                 add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
 
-            }
-
-            break;
-
-        // TypeDAX_0x4104 to xTokenCmConnection
-        case TypeDAX_0x4104:
-
-            // The PTPDAX should be followed by four PTPSUXs, the first a type
-            // 0x0404, the second a type 0x0405, the third a type 0x0406, and
-            // the fourth a type 0x0402.
-            if( ( bFoundSUX[0] & ( FOUND_0x0404 + FOUND_0x0405 + FOUND_0x0406 + FOUND_0x0402 ) )
-                              != ( FOUND_0x0404 + FOUND_0x0405 + FOUND_0x0406 + FOUND_0x0402 ) )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4104 (ULP_SETUP)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4104 (ULP_SETUP)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+        // If this side 'wins' the 'handedness' this side must now send
+        // a RRH 0x417E PUK 0x4104 to yTokenCmConnection on the other side.
+        // If the other side 'wins' the 'handedness' this side must now wait
+        // to receive a RRH 0x417E PUK 0x4104 to xTokenCmConnection from the
+        // other side.
+        if( fxSideWins )    // if the x-side wins
+        {
 
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
+            // Build RRH 0x417E PUK 0x4104 to yTokenCmConnection
+            pPTPHDRre = build_417E_4104_cm( pDEVBLK, pMPC_RRHwr );
+
+            // Add PTPHDR to chain.
+            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
+
+        }
+
+        break;
+
+    // PUK 0x4104 to xTokenCmConnection
+    case ULP_SETUP:
+
+        // The MPC_PUK should be followed by four MPC_PUSs, the first a type
+        // 0x0404, the second a type 0x0405, the third a type 0x0406, and
+        // the fourth a type 0x0402.
+        if( ( bFoundPUS[0] & ( FOUND_04 + FOUND_05 + FOUND_06 + FOUND_02 ) )
+                          != ( FOUND_04 + FOUND_05 + FOUND_06 + FOUND_02 ) )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4104 (ULP_SETUP)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_04 )
             {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0404 )
+                memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr[i]->vc.pus_04.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
                 {
-                    memcpy( pPTPBLK->yTokenUlpConnection, pPTPSUXwr[i]->vc.sux_0x0404.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
+                    display_data( "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, ' ' );
                 }
-            }
-
-            // Build MSH 0x417E DAX 0x4106 to yTokenCmConnection
-            pPTPHDRre = build_417E_4106_cm( pDEVBLK, pPTPMSHwr );
-
-            // Add PTPHDR to chain.
-            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
-
-            // Build MSH 0x417E DAX 0x4360 to yTokenCmConnection
-            pPTPHDRre = build_417E_4360_cm( pDEVBLK, pPTPMSHwr );
-
-            // Add PTPHDR to chain.
-            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
-
-            break;
-
-        // TypeDAX_0x4106 to xTokenCmConnection
-        case TypeDAX_0x4106:
-
-            // The PTPDAX should be followed by four PTPSUXs, the first a type
-            // 0x0404, the second a type 0x0408, the third a type 0x0407, and
-            // the fourth a type 0x0402.
-            if( ( bFoundSUX[0] & ( FOUND_0x0404 + FOUND_0x0408 + FOUND_0x0407 + FOUND_0x0402 ) )
-                              != ( FOUND_0x0404 + FOUND_0x0408 + FOUND_0x0407 + FOUND_0x0402 ) )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4106 (ULP_ACTIVE)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4106 (ULP_ACTIVE)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+        // Build RRH 0x417E PUK 0x4106 to yTokenCmConnection
+        pPTPHDRre = build_417E_4106_cm( pDEVBLK, pMPC_RRHwr );
 
-            // Remember things from the received message.
-            for( i = 0 ; i <= 5 ; i++ )
+        // Add PTPHDR to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
+
+        // Build RRH 0x417E PUK 0x4360 to yTokenCmConnection
+        pPTPHDRre = build_417E_4360_cm( pDEVBLK, pMPC_RRHwr );
+
+        // Add PTPHDR to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
+
+        break;
+
+    // PUK 0x4106 to xTokenCmConnection
+    case ULP_CONFIRM:
+
+        // The MPC_PUK should be followed by four MPC_PUSs, the first a type
+        // 0x0404, the second a type 0x0408, the third a type 0x0407, and
+        // the fourth a type 0x0402.
+        if( ( bFoundPUS[0] & ( FOUND_04 + FOUND_08 + FOUND_07 + FOUND_02 ) )
+                          != ( FOUND_04 + FOUND_08 + FOUND_07 + FOUND_02 ) )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4106 (ULP_CONFIRM)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // Remember things from the received message.
+        for( i = 0 ; i <= 5 ; i++ )
+        {
+            if( pMPC_PUSwr[i]->type == PUS_TYPE_08 )
             {
-                FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-                if( uTypeSUX == TypeSUX_0x0408 )
+                memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr[i]->vc.pus_08.token, MPC_TOKEN_LENGTH );
+                // Display various information, maybe
+                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
                 {
-                    memcpy( pPTPBLK->yTokenUlpConnection, pPTPSUXwr[i]->vc.sux_0x0408.Token, MPC_TOKEN_LENGTH );
-                    // Display various information, maybe
-                    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                    {
-                        display_data( "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, ' ' );
-                    }
-                    break;
+                    display_data( "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, ' ' );
                 }
-            }
-
-            // Build MSH 0x417E DAX 0x4360 to yTokenCmConnection
-            pPTPHDRre = build_417E_4360_cm( pDEVBLK, pPTPMSHwr );
-            if( !pPTPHDRre )
-                break;
-
-            // Add PTPHDR to chain.
-            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
-
-            break;
-
-        // TypeDAX_0x4360 to xTokenCmConnection
-        case TypeDAX_0x4360:
-
-            // The PTPDAX should be followed by a single PTPSUXs, a type 0x0404.
-            if( ( bFoundSUX[0] & FOUND_0x0404 ) != FOUND_0x0404 )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4360 (DM_ACT)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
                 break;
             }
+        }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4360 (DM_ACT)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
+        // Build RRH 0x417E PUK 0x4360 to yTokenCmConnection
+        pPTPHDRre = build_417E_4360_cm( pDEVBLK, pMPC_RRHwr );
+        if( !pPTPHDRre )
             break;
 
-        // TypeDAX_0x4103 to xTokenCmConnection
-        case TypeDAX_0x4103:
+        // Add PTPHDR to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRre );
 
-            // The PTPDAX should be followed by a single PTPSUXs, a type 0x0403.
-            if( ( bFoundSUX[0] & FOUND_0x0403 ) != FOUND_0x0403 )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4103 (down ULP)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
-            }
+        break;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4103 (down ULP)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+    // PUK 0x4360 to xTokenCmConnection
+    case DM_ACT:
 
+        // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+        if( ( bFoundPUS[0] & FOUND_04 ) != FOUND_04 )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4360 (DM_ACT)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             break;
+        }
 
-        // TypeDAX_0x4105 to xTokenCmConnection
-        case TypeDAX_0x4105:
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-            // The PTPDAX should be followed by a single PTPSUXs, a type 0x0404.
-            if( ( bFoundSUX[0] & FOUND_0x0404 ) != FOUND_0x0404 )
-            {
-                // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4105 (down ULP)", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
-            }
+        break;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0x417E (CmComm) DAX 0x4105 (down ULP)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
+    // PUK 0x4103 to xTokenCmConnection
+    case ULP_DOWN_03:
 
-            // The guest OS on the y-side has stopped the device
-            if( pPTPBLK->fActive4 )
-            {
-                // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
-                WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestIPAddr4 );
-            }
-            pPTPBLK->fActive4 = FALSE;
-            pPTPBLK->bActivate4 = 0x00;
-            pPTPBLK->bTerminate4 = 0x00;
-            if( pPTPBLK->fActive6 )
-            {
-                // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
-                WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestIPAddr6 );
-            }
-            pPTPBLK->fActive6 = FALSE;
-            pPTPBLK->bActivate6 = 0x00;
-            pPTPBLK->bTerminate6 = 0x00;
-            if( pPTPBLK->fActiveLL6 )
-            {
-                // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
-                WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestLLAddr6 );
-            }
-            pPTPBLK->fActiveLL6 = FALSE;
-            pPTPBLK->bActivateLL6 = 0x00;
-            pPTPBLK->bTerminateLL6 = 0x00;
-            // Dispose of any data waiting to be read by the y-side.
-            // Free any PTPHDR on the chain for the read path
-            remove_and_free_any_buffers_on_chain( pPTPATHRead );
-            // Reset the message sequence number
-            pPTPATHRead->uSeqNum = 0;
-            // Free any PTPHDR on the chain for the write path
-            remove_and_free_any_buffers_on_chain( pPTPATHWrite );
-            // Reset the message sequence number
-            pPTPATHWrite->uSeqNum = 0;
-
+        // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0403.
+        if( ( bFoundPUS[0] & FOUND_03 ) != FOUND_03 )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4103 (down ULP)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             break;
+        }
 
-        // pPTPDAXwr->Type not recognised to xTokenCmConnection
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAX" );
-            display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4103 (down ULP)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
+        break;
+
+    // PUK 0x4105 to xTokenCmConnection
+    case ULP_DOWN_05:
+
+        // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+        if( ( bFoundPUS[0] & FOUND_04 ) != FOUND_04 )
+        {
+            // HHC03937 "%1d:%04X CTC: Accept data for device '%s' contains %s that does not contain expected %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4105 (down ULP)", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             break;
+        }
 
-        }  /* switch( uTypeDAX ) */
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4105 (down ULP)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-    }  /* else if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH ) == 0 ) */
-    // Hmm... don't recognise the Token.
-    else
-    {
-        // pPTPMSHwr->Token not recognised
+        // The guest OS on the y-side has stopped the device
+        if( pPTPBLK->fActive4 )
+        {
+            // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
+            WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestIPAddr4 );
+        }
+        pPTPBLK->fActive4 = FALSE;
+        pPTPBLK->bActivate4 = 0x00;
+        pPTPBLK->bTerminate4 = 0x00;
+        if( pPTPBLK->fActive6 )
+        {
+            // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
+            WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestIPAddr6 );
+        }
+        pPTPBLK->fActive6 = FALSE;
+        pPTPBLK->bActivate6 = 0x00;
+        pPTPBLK->bTerminate6 = 0x00;
+        if( pPTPBLK->fActiveLL6 )
+        {
+            // HHC03916 "%1d:%04X CTC: Connection cleared to guest IP address '%s'"
+            WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestLLAddr6 );
+        }
+        pPTPBLK->fActiveLL6 = FALSE;
+        pPTPBLK->bActivateLL6 = 0x00;
+        pPTPBLK->bTerminateLL6 = 0x00;
+        // Dispose of any data waiting to be read by the y-side.
+        // Free any PTPHDR on the chain for the read path
+        remove_and_free_any_buffers_on_chain( pPTPATHRead );
+        // Reset the message sequence number
+        pPTPATHRead->uSeqNum = 0;
+        // Free any PTPHDR on the chain for the write path
+        remove_and_free_any_buffers_on_chain( pPTPATHWrite );
+        // Reset the message sequence number
+        pPTPATHWrite->uSeqNum = 0;
+
+        break;
+
+    // Unknown PUK
+    default:
+
         // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "MSH 0x417E Token" );
-        display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "PUK" );
+        display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
 
-    }  /* else */
+        break;
+
+    }  /* switch( iWhat ) */
+
 
     return 0;
-}   /* End function  write_msh_417E() */
+}   /* End function  write_rrh_417E() */
 
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4102_is()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4102 to yTokenIssuerRm
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4102 to yTokenIssuerRm
 
-PPTPHDR  build_417E_4102_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
-                             PPTPSUX pPTPSUXwr, u_int* fxSideWins )
+PTPHDR*  build_417E_4102_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
+                             MPC_PUS* pMPC_PUSwr, u_int* fxSideWins )
 {
 
-    UNREFERENCED( pPTPMSHwr );
+    UNREFERENCED( pMPC_RRHwr );
 
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[3];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;      // PTPHDR to be read
+    MPC_TH*    pMPC_THre;      // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;     // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;      // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;     // MPC_PUK follows MPC_PH
+    MPC_PUS*   pMPC_PUSre[3];  // MPC_PUSs follow MPC_PUK
     U64        uTod;
     int        rc;
 
@@ -4879,99 +4912,95 @@ PPTPHDR  build_417E_4102_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0401 +              // first PTPSUX (0x0401)
-               SizeSUX_0x0402_a +            // second PTPSUX (0x0402)
-               SizeSUX_0x040C;               // third PTPSUX (0x040c)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_01 +                  // first MPC_PUS (0x0401)
+               SIZE_PUS_02_A +                // second MPC_PUS (0x0402)
+               SIZE_PUS_0C;                   // third MPC_PUS (0x040c)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0401;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0402_a;
-    pPTPSUXre[2] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x040C;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_01);
+    pMPC_PUSre[2] = (MPC_PUS*)((BYTE*)pMPC_PUSre[1] + SIZE_PUS_02_A);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumIssuer );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4102 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_ENABLE;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0401 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0401 );
-    pPTPSUXre[0]->vc.sux_0x0401.ProtType = 0x7e;
-    pPTPSUXre[0]->vc.sux_0x0401.Unknown2 = 0x01;           // !!! //
-    pPTPSUXre[0]->vc.sux_0x0401.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0401.Token, pPTPBLK->xTokenCmFilter, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_01 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_01;
+    pMPC_PUSre[0]->vc.pus_01.proto = PROTOCOL_UNKNOWN;
+    pMPC_PUSre[0]->vc.pus_01.unknown05 = 0x01;           // !!! //
+    pMPC_PUSre[0]->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_01.token, pPTPBLK->xTokenCmFilter, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    // Note: the 8-byte value placed in the second PTPSUX is important.
+    // Prepare second MPC_PUSre
+    // Note: the 8-byte value placed in the second MPC_PUS is important.
     // Whichever side has the highest value 'wins', and dictates the
-    // 'handedness' of the MSH 0x417E exchanges. If this code 'wins'
+    // 'handedness' of the RRH 0x417E exchanges. If this code 'wins'
     // and then acts like a 'loser', confusion reigns, to the extent
     // that VTAM on the y-side will not shutdown because it thinks
     // the link is still active. Presumably we could always return
     // 0xFF's, but hey...
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0402_a );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0402 );
-    get_tod_clock( pPTPSUXre[1]->vc.sux_0x0402.a.Clock );   // x-sides time
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_02_A );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_02;
+    get_tod_clock( pMPC_PUSre[1]->vc.pus_02.a.clock );   // x-sides time
 
-    // Prepare third PTPSUXre
-    STORE_HW( pPTPSUXre[2]->Length, SizeSUX_0x040C );
-    STORE_HW( pPTPSUXre[2]->Type, TypeSUX_0x040C );
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[0] = 0x00;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[1] = 0x09;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[2] = 0x00;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[3] = 0x06;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[4] = 0x04;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[5] = 0x01;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[6] = 0x03;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[7] = 0x04;        // !!! //
-    pPTPSUXre[2]->vc.sux_0x040C.Unknown1[8] = 0x08;        // !!! //
+    // Prepare third MPC_PUSre
+    STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_0C );
+    pMPC_PUSre[2]->what = PUS_WHAT_04;
+    pMPC_PUSre[2]->type = PUS_TYPE_0C;
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[0] = 0x00;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[1] = 0x09;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[2] = 0x00;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[3] = 0x06;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[4] = 0x04;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[5] = 0x01;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[6] = 0x03;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[7] = 0x04;        // !!! //
+    pMPC_PUSre[2]->vc.pus_0C.unknown04[8] = 0x08;        // !!! //
 
-    // Compare the tod clock value in the PTPSUXwr with the tod clock
-    // value in the second PTPSUXre to determine which side wins.
-    rc = memcmp( pPTPSUXwr->vc.sux_0x0402.a.Clock,
-                 pPTPSUXre[1]->vc.sux_0x0402.a.Clock,
-                 sizeof(pPTPSUXwr->vc.sux_0x0402.a.Clock) );
+    // Compare the tod clock value in the MPC_PUSwr with the tod clock
+    // value in the second MPC_PUSre to determine which side wins.
+    rc = memcmp( pMPC_PUSwr->vc.pus_02.a.clock,
+                 pMPC_PUSre[1]->vc.pus_02.a.clock,
+                 sizeof(pMPC_PUSwr->vc.pus_02.a.clock) );
     if( rc < 0 )
         // This should be the normal case; the other side must have
         // obtained the tod clock a few moments ago for it to be in the
@@ -4988,9 +5017,9 @@ PPTPHDR  build_417E_4102_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
         // equal to the tod clock in the message we recently received.
         // Perhaps Hercules hasn't updated the tod clock for ages, though
         // that seems unlikely, so assume it was manipulated somehow.
-        FETCH_DW( uTod, pPTPSUXre[1]->vc.sux_0x0402.a.Clock );  // get x-sides time
+        FETCH_DW( uTod, pMPC_PUSre[1]->vc.pus_02.a.clock );  // get x-sides time
         uTod += 0x0000000000000001;                             // Add a tiny amount
-        STORE_DW( pPTPSUXre[1]->vc.sux_0x0402.a.Clock, uTod );  // set x-sides time
+        STORE_DW( pMPC_PUSre[1]->vc.pus_02.a.clock, uTod );  // set x-sides time
         *fxSideWins = TRUE;                                     // the x-side wins
     }
 
@@ -4998,33 +5027,32 @@ PPTPHDR  build_417E_4102_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (Issuer) DAX 0x4102 (CM_ENABLE)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4102_is() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4104_is()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4104 to yTokenIssuerRm
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4104 to yTokenIssuerRm
 
-PPTPHDR  build_417E_4104_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
+PTPHDR*  build_417E_4104_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[3];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;       // PTPHDR to be read
+    MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;      // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;       // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
+    MPC_PUS*   pMPC_PUSre[3];   // MPC_PUSs follow MPC_PUK
 
 
     // Allocate a buffer.
@@ -5033,110 +5061,105 @@ PPTPHDR  build_417E_4104_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0404 +              // first PTPSUX (0x0404)
-               SizeSUX_0x0405 +              // second PTPSUX (0x0405)
-               SizeSUX_0x0406;               // third PTPSUX (0x0406)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_04 +                  // first MPC_PUS (0x0404)
+               SIZE_PUS_05 +                  // second MPC_PUS (0x0405)
+               SIZE_PUS_06;                   // third MPC_PUS (0x0406)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0404;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0405;
-    pPTPSUXre[2] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0406;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_04);
+    pMPC_PUSre[2] = (MPC_PUS*)((BYTE*)pMPC_PUSre[1] + SIZE_PUS_05);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumIssuer );
-    memcpy( pPTPMSHre->AckSeqNum, pPTPMSHwr->SeqNum, 4 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
+    memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4104 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_SETUP;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0404 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0404 );
-    pPTPSUXre[0]->vc.sux_0x0404.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0404.Token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_04 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_04;
+    pMPC_PUSre[0]->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_04.token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0405 );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0405 );
-    pPTPSUXre[1]->vc.sux_0x0405.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[1]->vc.sux_0x0405.Token, pPTPBLK->yTokenCmFilter, MPC_TOKEN_LENGTH );
+    // Prepare second MPC_PUSre
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_05 );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_05;
+    pMPC_PUSre[1]->vc.pus_05.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[1]->vc.pus_05.token, pPTPBLK->yTokenCmFilter, MPC_TOKEN_LENGTH );
 
-    // Prepare third PTPSUXre
-    STORE_HW( pPTPSUXre[2]->Length, SizeSUX_0x0406 );
-    STORE_HW( pPTPSUXre[2]->Type, TypeSUX_0x0406 );
-    pPTPSUXre[2]->vc.sux_0x0406.Unknown1[0] = 0xC8;        // !!! //
+    // Prepare third MPC_PUSre
+    STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_06 );
+    pMPC_PUSre[2]->what = PUS_WHAT_04;
+    pMPC_PUSre[2]->type = PUS_TYPE_06;
+    pMPC_PUSre[2]->vc.pus_06.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (Issuer) DAX 0x4104 (CM_SETUP)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4104_is() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4106_is()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4106 to yTokenIssuerRm
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4106 to yTokenIssuerRm
 
-PPTPHDR  build_417E_4106_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
+PTPHDR*  build_417E_4106_is( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[3];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;       // PTPHDR to be read
+    MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;      // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;       // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
+    MPC_PUS*   pMPC_PUSre[3];   // MPC_PUSs follow MPC_PUK
 
 
     // Allocate a buffer.
@@ -5145,114 +5168,109 @@ PPTPHDR  build_417E_4106_is( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0404 +              // first PTPSUX (0x0404)
-               SizeSUX_0x0408 +              // second PTPSUX (0x0408)
-               SizeSUX_0x0407;               // third PTPSUX (0x0407)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_04 +                  // first MPC_PUS (0x0404)
+               SIZE_PUS_08 +                  // second MPC_PUS (0x0408)
+               SIZE_PUS_07;                   // third MPC_PUS (0x0407)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0404;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0408;
-    pPTPSUXre[2] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0407;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_04);
+    pMPC_PUSre[2] = (MPC_PUS*)((BYTE*)pMPC_PUSre[1] + SIZE_PUS_08);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumIssuer );
-    memcpy( pPTPMSHre->AckSeqNum, pPTPMSHwr->SeqNum, 4 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
+    memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4104 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_CONFIRM;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0404 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0404 );
-    pPTPSUXre[0]->vc.sux_0x0404.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0404.Token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_04 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_04;
+    pMPC_PUSre[0]->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_04.token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0408 );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0408 );
-    pPTPSUXre[1]->vc.sux_0x0408.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[1]->vc.sux_0x0408.Token, pPTPBLK->xTokenCmFilter, MPC_TOKEN_LENGTH );
+    // Prepare second MPC_PUSre
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_08 );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_08;
+    pMPC_PUSre[1]->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[1]->vc.pus_08.token, pPTPBLK->xTokenCmFilter, MPC_TOKEN_LENGTH );
 
-    // Prepare third PTPSUXre
-    STORE_HW( pPTPSUXre[2]->Length, SizeSUX_0x0407 );
-    STORE_HW( pPTPSUXre[2]->Type, TypeSUX_0x0407 );
-    pPTPSUXre[2]->vc.sux_0x0407.Unknown1[0] = 0xC8;        // !!! //
+    // Prepare third MPC_PUSre
+    STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_07 );
+    pMPC_PUSre[2]->what = PUS_WHAT_04;
+    pMPC_PUSre[2]->type = PUS_TYPE_07;
+    pMPC_PUSre[2]->vc.pus_07.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (Issuer) DAX 0x4106 (CM_ACTIVE)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4106_is() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4102_cm()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4102 to yTokenCmConnection
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4102 to yTokenCmConnection
 
-PPTPHDR  build_417E_4102_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
-                               PPTPSUX pPTPSUXwr, u_int* fxSideWins )
+PTPHDR*  build_417E_4102_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
+                               MPC_PUS* pMPC_PUSwr, u_int* fxSideWins )
 {
 
-    UNREFERENCED( pPTPMSHwr );
+    UNREFERENCED( pMPC_RRHwr );
 
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[2];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;       // PTPHDR to be read
+    MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;      // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;       // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
+    MPC_PUS*    pMPC_PUSre[2];  // MPC_PUSs follow MPC_PUK
     int        rc;
 
 
@@ -5262,96 +5280,89 @@ PPTPHDR  build_417E_4102_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0401 +              // first PTPSUX (0x0401)
-               SizeSUX_0x0402_b;             // second PTPSUX (0x0402)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_01 +                  // first MPC_PUS (0x0401)
+               SIZE_PUS_02_B;                 // second MPC_PUS (0x0402)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0401;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0402_b;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_01);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumCm );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4102 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_ENABLE;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0401 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0401 );
-    pPTPSUXre[0]->vc.sux_0x0401.ProtType = 0x08;
-    pPTPSUXre[0]->vc.sux_0x0401.Unknown2 = 0x01;           // !!! //
-    pPTPSUXre[0]->vc.sux_0x0401.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0401.Token, pPTPBLK->xTokenUlpFilter, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_01 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_01;
+    pMPC_PUSre[0]->vc.pus_01.proto = PROTOCOL_LAYER2;
+    pMPC_PUSre[0]->vc.pus_01.unknown05 = 0x01;           // !!! //
+    pMPC_PUSre[0]->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_01.token, pPTPBLK->xTokenUlpFilter, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    // Note: the 40-bytes placed in the second PTPSUX are important.
+    // Prepare second MPC_PUSre
+    // Note: the 40-bytes placed in the second MPC_PUS are important.
     // Whichever side has the lowest value 'wins', and dictates the
-    // 'handedness' of the MSH 0x417E exchanges. If this code 'wins'
+    // 'handedness' of the RRH 0x417E exchanges. If this code 'wins'
     // and then acts like a 'loser', confusion reigns.
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0402_b );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0402 );
-    pPTPSUXre[1]->vc.sux_0x0402.b.Unknown1 = 0x02;         // !!! //
-    pPTPSUXre[1]->vc.sux_0x0402.b.Unknown2 = 0x90;         // !!! //
-    pPTPSUXre[1]->vc.sux_0x0402.b.Unknown4 = 0x40;         // !!! //
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_02_B );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_02;
+    pMPC_PUSre[1]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
+    pMPC_PUSre[1]->vc.pus_02.b.flags = 0x90;         // !!! //
+    pMPC_PUSre[1]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
     if( pPTPBLK->fIPv4Spec )
     {
-        memcpy( pPTPSUXre[1]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+        memcpy( pMPC_PUSre[1]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
     else
     {
-        pPTPSUXre[1]->vc.sux_0x0402.b.Unknown2 |= 0x08;
-        memcpy( pPTPSUXre[1]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveLLAddr6, 16 );
+        pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
+        memcpy( pMPC_PUSre[1]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
 
-    // Compare the IP address in the PTPSUXwr with the IP address in
-    // the second PTPSUXre to determine which side wins. First, check
+    // Compare the IP address in the MPC_PUSwr with the IP address in
+    // the second MPC_PUSre to determine which side wins. First, check
     // whether both sides are using the same variety of IP address.
-    if( ( pPTPSUXwr->vc.sux_0x0402.b.Unknown2 & 0x08 ) ==
-        ( pPTPSUXre[1]->vc.sux_0x0402.b.Unknown2 & 0x08 ) )
+    if( ( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == ( pMPC_PUSre[1]->vc.pus_02.b.flags & 0x08 ) )
     {
         // Both sides are using the same variety of IP address.
-        rc = memcmp( &pPTPSUXwr->vc.sux_0x0402.b.IPAddr,
-                     &pPTPSUXre[1]->vc.sux_0x0402.b.IPAddr,
-                     sizeof(pPTPSUXwr->vc.sux_0x0402.b.IPAddr) );
+        rc = memcmp( &pMPC_PUSwr->vc.pus_02.b.ipaddr, &pMPC_PUSre[1]->vc.pus_02.b.ipaddr, 16 );
         if( rc < 0 )
             // The y-sides IP address is lower than the x-sides.
             *fxSideWins = TRUE;     // i.e. the x-side wins
@@ -5379,7 +5390,7 @@ PPTPHDR  build_417E_4102_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
         // IPv4 and IPv6 connections, and the other is only starting the
         // IPv6 connection. The side that is using the IPv4 address is
         // the winner. Check the y-sides variety of IP address.
-        if( ( pPTPSUXwr->vc.sux_0x0402.b.Unknown2 & 0x08 ) == 0x08 )
+        if( ( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == 0x08 )
             *fxSideWins = TRUE;     // i.e. the x-side wins, it's using IPv4
         else
             *fxSideWins = FALSE;    // i.e. the y-side wins, it's using IPv4
@@ -5389,33 +5400,32 @@ PPTPHDR  build_417E_4102_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr,
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (CmComm) DAX 0x4102 (ULP_ENABLE)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4102_cm() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4104_cm()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4104 to yTokenCmConnection
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4104 to yTokenCmConnection
 
-PPTPHDR  build_417E_4104_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
+PTPHDR*  build_417E_4104_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[4];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;       // PTPHDR to be read
+    MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;      // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;       // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
+    MPC_PUS*   pMPC_PUSre[4];   // MPC_PUSs follow MPC_PUK
 
 
     // Allocate a buffer in which the response will be build.
@@ -5424,129 +5434,124 @@ PPTPHDR  build_417E_4104_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0404 +              // first PTPSUX (0x0404)
-               SizeSUX_0x0405 +              // second PTPSUX (0x0405)
-               SizeSUX_0x0406 +              // third PTPSUX (0x0406)
-               SizeSUX_0x0402_b;             // fourth PTPSUX (0x0402)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_04 +                  // first MPC_PUS (0x0404)
+               SIZE_PUS_05 +                  // second MPC_PUS (0x0405)
+               SIZE_PUS_06 +                  // third MPC_PUS (0x0406)
+               SIZE_PUS_02_B;                 // fourth MPC_PUS (0x0402)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0404;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0405;
-    pPTPSUXre[2] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0406;
-    pPTPSUXre[3] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0402_b;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_04);
+    pMPC_PUSre[2] = (MPC_PUS*)((BYTE*)pMPC_PUSre[1] + SIZE_PUS_05);
+    pMPC_PUSre[3] = (MPC_PUS*)((BYTE*)pMPC_PUSre[2] + SIZE_PUS_06);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumCm );
-    memcpy( pPTPMSHre->AckSeqNum, pPTPMSHwr->SeqNum, 4 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
+    memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4104 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_SETUP;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0404 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0404 );
-    pPTPSUXre[0]->vc.sux_0x0404.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0404.Token, pPTPBLK->xTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_04 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_04;
+    pMPC_PUSre[0]->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_04.token, pPTPBLK->xTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0405 );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0405 );
-    pPTPSUXre[1]->vc.sux_0x0405.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[1]->vc.sux_0x0405.Token, pPTPBLK->yTokenUlpFilter, MPC_TOKEN_LENGTH );
+    // Prepare second MPC_PUSre
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_05 );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_05;
+    pMPC_PUSre[1]->vc.pus_05.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[1]->vc.pus_05.token, pPTPBLK->yTokenUlpFilter, MPC_TOKEN_LENGTH );
 
-    // Prepare third PTPSUXre
-    STORE_HW( pPTPSUXre[2]->Length, SizeSUX_0x0406 );
-    STORE_HW( pPTPSUXre[2]->Type, TypeSUX_0x0406 );
-    pPTPSUXre[2]->vc.sux_0x0406.Unknown1[0] = 0x40;        // !!! //
+    // Prepare third MPC_PUSre
+    STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_06 );
+    pMPC_PUSre[2]->what = PUS_WHAT_04;
+    pMPC_PUSre[2]->type = PUS_TYPE_06;
+    pMPC_PUSre[2]->vc.pus_06.unknown04[0] = 0x40;        // !!! //
 
-    // Prepare fourth PTPSUXre
-    STORE_HW( pPTPSUXre[3]->Length, SizeSUX_0x0402_b );
-    STORE_HW( pPTPSUXre[3]->Type, TypeSUX_0x0402 );
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown1 = 0x02;         // !!! //
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown2 = 0x90;         // !!! //
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown4 = 0x40;         // !!! //
+    // Prepare fourth MPC_PUSre
+    STORE_HW( pMPC_PUSre[3]->length, SIZE_PUS_02_B );
+    pMPC_PUSre[3]->what = PUS_WHAT_04;
+    pMPC_PUSre[3]->type = PUS_TYPE_02;
+    pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
+    pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
+    pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
     if( pPTPBLK->fIPv4Spec )
     {
-        memcpy( pPTPSUXre[3]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+        memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
     else
     {
-        pPTPSUXre[1]->vc.sux_0x0402.b.Unknown2 |= 0x08;
-        memcpy( pPTPSUXre[3]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveLLAddr6, 16 );
+        pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
+        memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (CmComm) DAX 0x4104 (ULP_SETUP)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4104_cm() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4106_cm()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4106 to yTokenCmConnection
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4106 to yTokenCmConnection
 
-PPTPHDR  build_417E_4106_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
+PTPHDR*  build_417E_4106_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre[4];  // PTPSUXs follow PTPDAX
+    PTPHDR*    pPTPHDRre;       // PTPHDR to be read
+    MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;      // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;       // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
+    MPC_PUS*    pMPC_PUSre[4];  // MPC_PUSs follow MPC_PUK
 
 
     // Allocate a buffer.
@@ -5555,129 +5560,124 @@ PPTPHDR  build_417E_4106_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0404 +              // first PTPSUX (0x0404)
-               SizeSUX_0x0408 +              // second PTPSUX (0x0408)
-               SizeSUX_0x0407 +              // third PTPSUX (0x0407)
-               SizeSUX_0x0402_b;             // fourth PTPSUX (0x0402)
-    uLength3 = SizeDAX + uLength4;           // the PTPDAX and the PTPSUXs (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_04 +                  // first MPC_PUS (0x0404)
+               SIZE_PUS_08 +                  // second MPC_PUS (0x0408)
+               SIZE_PUS_07 +                  // third MPC_PUS (0x0407)
+               SIZE_PUS_02_B;                 // fourth MPC_PUS (0x0402)
+    uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre[0] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0404;
-    pPTPSUXre[1] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0408;
-    pPTPSUXre[2] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0407;
-    pPTPSUXre[3] = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0402_b;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre[0] = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
+    pMPC_PUSre[1] = (MPC_PUS*)((BYTE*)pMPC_PUSre[0] + SIZE_PUS_04);
+    pMPC_PUSre[2] = (MPC_PUS*)((BYTE*)pMPC_PUSre[1] + SIZE_PUS_08);
+    pMPC_PUSre[3] = (MPC_PUS*)((BYTE*)pMPC_PUSre[2] + SIZE_PUS_07);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumCm );
-    memcpy( pPTPMSHre->AckSeqNum, pPTPMSHwr->SeqNum, 4 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
+    memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4106 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_41;
+    pMPC_PUKre->type = PUK_TYPE_CONFIRM;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre[0]->Length, SizeSUX_0x0404 );
-    STORE_HW( pPTPSUXre[0]->Type, TypeSUX_0x0404 );
-    pPTPSUXre[0]->vc.sux_0x0404.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[0]->vc.sux_0x0404.Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre[0]->length, SIZE_PUS_04 );
+    pMPC_PUSre[0]->what = PUS_WHAT_04;
+    pMPC_PUSre[0]->type = PUS_TYPE_04;
+    pMPC_PUSre[0]->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[0]->vc.pus_04.token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare second PTPSUXre
-    STORE_HW( pPTPSUXre[1]->Length, SizeSUX_0x0408 );
-    STORE_HW( pPTPSUXre[1]->Type, TypeSUX_0x0408 );
-    pPTPSUXre[1]->vc.sux_0x0408.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre[1]->vc.sux_0x0408.Token, pPTPBLK->xTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare second MPC_PUSre
+    STORE_HW( pMPC_PUSre[1]->length, SIZE_PUS_08 );
+    pMPC_PUSre[1]->what = PUS_WHAT_04;
+    pMPC_PUSre[1]->type = PUS_TYPE_08;
+    pMPC_PUSre[1]->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre[1]->vc.pus_08.token, pPTPBLK->xTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare third PTPSUXre
-    STORE_HW( pPTPSUXre[2]->Length, SizeSUX_0x0407 );
-    STORE_HW( pPTPSUXre[2]->Type, TypeSUX_0x0407 );
-    pPTPSUXre[2]->vc.sux_0x0407.Unknown1[0] = 0x40;        // !!! //
+    // Prepare third MPC_PUSre
+    STORE_HW( pMPC_PUSre[2]->length, SIZE_PUS_07 );
+    pMPC_PUSre[2]->what = PUS_WHAT_04;
+    pMPC_PUSre[2]->type = PUS_TYPE_07;
+    pMPC_PUSre[2]->vc.pus_07.unknown04[0] = 0x40;        // !!! //
 
-    // Prepare fourth PTPSUXre
-    STORE_HW( pPTPSUXre[3]->Length, SizeSUX_0x0402_b );
-    STORE_HW( pPTPSUXre[3]->Type, TypeSUX_0x0402 );
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown1 = 0x02;         // !!! //
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown2 = 0x90;         // !!! //
-    pPTPSUXre[3]->vc.sux_0x0402.b.Unknown4 = 0x40;         // !!! //
+    // Prepare fourth MPC_PUSre
+    STORE_HW( pMPC_PUSre[3]->length, SIZE_PUS_02_B );
+    pMPC_PUSre[3]->what = PUS_WHAT_04;
+    pMPC_PUSre[3]->type = PUS_TYPE_02;
+    pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
+    pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
+    pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
     if( pPTPBLK->fIPv4Spec )
     {
-        memcpy( pPTPSUXre[3]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+        memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
     else
     {
-        pPTPSUXre[1]->vc.sux_0x0402.b.Unknown2 |= 0x08;
-        memcpy( pPTPSUXre[3]->vc.sux_0x0402.b.IPAddr, &pPTPBLK->iaDriveLLAddr6, 16 );
+        pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
+        memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (CmComm) DAX 0x4106 (ULP_ACTIVE)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4106_cm() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* build_417E_4360_cm()                                            */
-/* ----------------------------------------------------------------- */
-// Build MSH 0x417E DAX 0x4360 to yTokenCmConnection
+/* ------------------------------------------------------------------ */
+// Build RRH 0x417E PUK 0x4360 to yTokenCmConnection
 
-PPTPHDR  build_417E_4360_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
+PTPHDR*  build_417E_4360_cm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAX    pPTPDAXre;     // PTPDAX follows PTPMDL
-    PPTPSUX    pPTPSUXre;     // PTPSUX follows PTPDAX
+    PTPHDR*    pPTPHDRre;      // PTPHDR to be read
+    MPC_TH*    pMPC_THre;      // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;     // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;      // MPC_PH follows MPC_RRH
+    MPC_PUK*   pMPC_PUKre;     // MPC_PUK follows MPC_PH
+    MPC_PUS*   pMPC_PUSre;     // MPC_PUS follows MPC_PUK
 
 
     // Allocate a buffer in which the response will be build.
@@ -5686,652 +5686,662 @@ PPTPHDR  build_417E_4360_cm( DEVBLK* pDEVBLK, PPTPMSH pPTPMSHwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength4 = SizeSUX_0x0404;                 // the PTPSUX
-    uLength3 = SizeDAX + uLength4;             // the PTPDAX and PTPSUX (the data)
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;    // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;            // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength4 = SIZE_PUS_04;                    // the MPC_PUS
+    uLength3 = SIZE_PUK + uLength4;            // the MPC_PUK and MPC_PUS (the data)
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;            // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDAXre = (PPTPDAX)pBytePtr;
-    pBytePtr += SizeDAX;
-    pPTPSUXre = (PPTPSUX)pBytePtr;
-    pBytePtr += SizeSUX_0x0404;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
+    pMPC_PUSre = (MPC_PUS*)((BYTE*)pMPC_PUKre + SIZE_PUK);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x417E );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_FW( pPTPMSHre->SeqNum, ++pPTPBLK->uSeqNumCm );
-    memcpy( pPTPMSHre->AckSeqNum, pPTPMSHwr->SeqNum, 4 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_ULP;
+    pMPC_RRHre->proto = PROTOCOL_UNKNOWN;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
+    memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDAXre
-    STORE_HW( pPTPDAXre->Length, SizeDAX );
-    STORE_HW( pPTPDAXre->Type, TypeDAX_0x4360 );
-    STORE_HW( pPTPDAXre->TotalLenSUX, uLength4 );
+    // Prepare MPC_PUKre
+    STORE_HW( pMPC_PUKre->length, SIZE_PUK );
+    pMPC_PUKre->what = PUK_WHAT_43;
+    pMPC_PUKre->type = PUK_TYPE_ACTIVE;
+    STORE_HW( pMPC_PUKre->lenpus, uLength4 );
 
-    // Prepare first PTPSUXre
-    STORE_HW( pPTPSUXre->Length, SizeSUX_0x0404 );
-    STORE_HW( pPTPSUXre->Type, TypeSUX_0x0404 );
-    pPTPSUXre->vc.sux_0x0404.TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPSUXre->vc.sux_0x0404.Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare first MPC_PUSre
+    STORE_HW( pMPC_PUSre->length, SIZE_PUS_04 );
+    pMPC_PUSre->what = PUS_WHAT_04;
+    pMPC_PUSre->type = PUS_TYPE_04;
+    pMPC_PUSre->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_PUSre->vc.pus_04.token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x417E (CmComm) DAX 0x4360 (DM_ACT)" );
-        display_msh_x17E( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
+        display_rrh_x17E( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_417E_4360_cm() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_msh_C17E()                                                  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_rrh_C17E()                                                   */
+/* ------------------------------------------------------------------ */
 // Note - the Token is xTokenIssuerRm (in all cases that have been seen).
-// In all cases that have been seen the PTPMSH type 0xC17E is followed
-// by a single PTPMDL, which is followed by a single PTPDAX, which is
-// followed by two PTPSUXs.
+// In all cases that have been seen the MPC_RRH type 0xC17E is followed
+// by a single MPC_PH, which is followed by a single MPC_PUK, which is
+// followed by two MPC_PUSs.
 
-int   write_msh_C17E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
+int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
-    PPTPMDL    pPTPMDLwr;                      // PTPMDL being written
-    PPTPDAX    pPTPDAXwr;                      // PTPDAX being written
-    PPTPSUX    pPTPSUXwr[6];                   // PTPSUXs being written
-    BYTE       bFoundSUX[2];                   // The PTPSUXs being written
-    U16        uDispMDL;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
+    MPC_PH*    pMPC_PHwr;                      // MPC_PH being written
+    MPC_PUK*   pMPC_PUKwr;                     // MPC_PUK being written
+    MPC_PUS*   pMPC_PUSwr[6];                  // MPC_PUSs being written
+    BYTE       bFoundPUS[2];                   // The MPC_PUSs being written
+    U16        uOffPH;
 //  U16        uLenData;
-    U32        uDispData;
-    U16        uLenDAX;
-    U16        uTypeDAX;
-    U16        uTotalLenSUX;
-    U16        uLenSUX;
-    U16        uTypeSUX;
-    int        iTotLenSux;
+    U32        uOffData;
+    U16        uLenPUK;
+    U16        uTotalLenPUS;
+    U16        uLenPUS;
+    int        iTotLenPUS;
     BYTE*      pBytePtr;
     int        i;
+    int        iWhat;
+#define PUK_4501      1
 
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
         // HHC03991 "%1d:%04X CTC: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_msh_C17E()" );
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_C17E()" );
     }
 
-    // Point to the PTPMDL.
-    FETCH_HW( uDispMDL, pPTPMSHwr->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSHwr + uDispMDL;
-    pPTPMDLwr = (PPTPMDL)pBytePtr;
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRHwr->offph );
+    pMPC_PHwr = (MPC_PH*)((BYTE*)pMPC_RRHwr + uOffPH);
 
     // Get the length of and point to the data referenced by the
-    // PTPMDL. The data contain a PTPDAX and one or more PTPSUXs.
-//  FETCH_HW( uLenData, pPTPMDLwr->LenData );
-    FETCH_FW( uDispData, pPTPMDLwr->DispData );
-    pBytePtr = (BYTE*)pPTPWRHwr + uDispData;
-    pPTPDAXwr = (PPTPDAX)pBytePtr;
+    // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
+//  FETCH_HW( uLenData, pMPC_PHwr->lendata );
+    FETCH_FW( uOffData, pMPC_PHwr->offdata );
+    pMPC_PUKwr = (MPC_PUK*)((BYTE*)pMPC_THwr + uOffData);
 
-    // Get the length of the PTPDAX and the total length of the
-    // following PTPSUXs, then point to the first PTPSUX.
-    FETCH_HW( uLenDAX, pPTPDAXwr->Length );
-    FETCH_HW( uTotalLenSUX, pPTPDAXwr->TotalLenSUX );
-    pBytePtr = (BYTE*)pPTPDAXwr + uLenDAX;
-    iTotLenSux = uTotalLenSUX;
+    // Get the length of the MPC_PUK and the total length of the
+    // following MPC_PUSs, then point to the first MPC_PUS.
+    FETCH_HW( uLenPUK, pMPC_PUKwr->length );
+    FETCH_HW( uTotalLenPUS, pMPC_PUKwr->lenpus );
+    iTotLenPUS = uTotalLenPUS;
+    pBytePtr = (BYTE*)pMPC_PUKwr + uLenPUK;
 
-    // Point to each of the PTPSUXs.
+    // Point to each of the MPC_PUSs and remember what they are.
     // Note: we allow for six, the most that has been seen is two.
     for( i = 0 ; i <= 5 ; i++ )
     {
-        pPTPSUXwr[i] = NULL;
+        pMPC_PUSwr[i] = NULL;
     }
-    bFoundSUX[0] = 0;
-    bFoundSUX[1] = 0;
+    bFoundPUS[0] = 0;
+    bFoundPUS[1] = 0;
     for( i = 0 ; i <= 5 ; i++ )
     {
-        if( iTotLenSux <= 0 )
+        if( iTotLenPUS <= 0 )
             break;
 
-        // Point to the PTPSUX
-        pPTPSUXwr[i] = (PPTPSUX)pBytePtr;
+        // Point to the MPC_PUS
+        pMPC_PUSwr[i] = (MPC_PUS*)pBytePtr;
 
-        // Remember the PTPSUX types found in this message
-        FETCH_HW( uTypeSUX, pPTPSUXwr[i]->Type );
-        if( uTypeSUX == TypeSUX_0x0401 )
-            bFoundSUX[0] |= FOUND_0x0401;
-        if( uTypeSUX == TypeSUX_0x0402 )
-            bFoundSUX[0] |= FOUND_0x0402;
-        if( uTypeSUX == TypeSUX_0x0403 )
-            bFoundSUX[0] |= FOUND_0x0403;
-        if( uTypeSUX == TypeSUX_0x0404 )
-            bFoundSUX[0] |= FOUND_0x0404;
-        if( uTypeSUX == TypeSUX_0x0405 )
-            bFoundSUX[0] |= FOUND_0x0405;
-        if( uTypeSUX == TypeSUX_0x0406 )
-            bFoundSUX[0] |= FOUND_0x0406;
-        if( uTypeSUX == TypeSUX_0x0407 )
-            bFoundSUX[0] |= FOUND_0x0407;
-        if( uTypeSUX == TypeSUX_0x0408 )
-            bFoundSUX[0] |= FOUND_0x0408;
-        if( uTypeSUX == TypeSUX_0x0409 )
-            bFoundSUX[1] |= FOUND_0x0409;
-        if( uTypeSUX == TypeSUX_0x040C )
-            bFoundSUX[1] |= FOUND_0x040C;
+        // Remember the MPC_PUS types found in this message
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_01 )
+            bFoundPUS[0] |= FOUND_01;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_02 )
+            bFoundPUS[0] |= FOUND_02;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_03 )
+            bFoundPUS[0] |= FOUND_03;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_04 )
+            bFoundPUS[0] |= FOUND_04;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_05 )
+            bFoundPUS[0] |= FOUND_05;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_06 )
+            bFoundPUS[0] |= FOUND_06;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_07 )
+            bFoundPUS[0] |= FOUND_07;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_08 )
+            bFoundPUS[0] |= FOUND_08;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_09 )
+            bFoundPUS[1] |= FOUND_09;
+        if( pMPC_PUSwr[i]->type == PUS_TYPE_0C )
+            bFoundPUS[1] |= FOUND_0C;
 
-        // Get the length of the PTPSUX.
-        FETCH_HW( uLenSUX, pPTPSUXwr[i]->Length );
+        // Get the length of the MPC_PUS.
+        FETCH_HW( uLenPUS, pMPC_PUSwr[i]->length );
 
-        // Point to the next PTPSUX
-        pBytePtr = (BYTE*)pPTPSUXwr[i] + uLenSUX;
+        // Point to the next MPC_PUS
+        pBytePtr = (BYTE*)pMPC_PUSwr[i] + uLenPUS;
 
         //
-        iTotLenSux -= uLenSUX;
+        iTotLenPUS -= uLenPUS;
     }
 
-    // Check whether the C17E is to xTokenIssuerRm.
-    if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
+    // Decide what the PUK contains.
+    iWhat = UNKNOWN_PUK;
+    if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
     {
-
-        //
-        FETCH_HW( uTypeDAX, pPTPDAXwr->Type );
-        switch( uTypeDAX )
+        if( pMPC_PUKwr->what == PUK_WHAT_45 )
         {
-
-        // TypeDAX_0x4501 to xTokenIssuerRm
-        case TypeDAX_0x4501:
-
-            // The PTPDAX should be followed by two PTPSUXs, the first a type
-            // 0x0409 and the second a type 0x0404.
-            if( ( bFoundSUX[0] & FOUND_0x0404 ) != FOUND_0x0404 ||
-                ( bFoundSUX[1] & FOUND_0x0409 ) != FOUND_0x0409 )
+            if( pMPC_PUKwr->type == PUK_TYPE_01 )
             {
-                // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-                WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, "DAX 0x4501", "SUX" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-                break;
+                iWhat = PUK_4501;
             }
+        }
+    }
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC17E (Issuer)" );
-                display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            break;
-
-        // pPTPDAXwr->Type not recognised to xTokenIssuerRm
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAX" );
-            display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-
-            break;
-
-        }  /* switch( uTypeDAX ) */
-
-    }  /* if( memcmp( pPTPMSHwr->Token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 ) */
-    // Hmm... don't recognise the Token.
-    else
+    // Process the PUK.
+    switch( iWhat )
     {
-        // pPTPMSHwr->Token not recognised
+
+    // PUK 0x4501 to xTokenIssuerRm
+    case PUK_4501:
+
+        // The MPC_PUK should be followed by two MPC_PUSs, the first a type
+        // 0x0409 and the second a type 0x0404.
+        if( ( bFoundPUS[0] & FOUND_04 ) != FOUND_04 ||
+            ( bFoundPUS[1] & FOUND_09 ) != FOUND_09 )
+        {
+            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 pPTPBLK->szTUNDevName, "PUK 0x4501", "PUS" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+            break;
+        }
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC17E (Issuer)" );
+            display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        break;
+
+    // Unknown PUK
+    default:
+
         // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "MSH 0xC17E Token" );
-        display_msh_x17E( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-    }  /* else */
+        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "PUK" );
+        display_rrh_x17E( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+
+        break;
+
+    }  /* switch( iWhat ) */
 
     return 0;
-}   /* End function  write_msh_C17E() */
+}   /* End function  write_rrh_C17E() */
 
 
-/* ----------------------------------------------------------------- */
-/* write_msh_C108()                                                  */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* write_rrh_C108()                                                   */
+/* ------------------------------------------------------------------ */
 // Note - the Token is xTokenUlpConnection.
-// In all cases that have been seen the PTPMSH type 0xC108 is followed
-// by a single PTPMDL, which is followed by a single PTPDAC.
+// In all cases that have been seen the MPC_RRH type 0xC108 is followed
+// by a single MPC_PH, which is followed by a single MPC_PIX.
 
-int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
+int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 {
-    PPTPATH    pPTPATH  = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK  = pPTPATH->pPTPBLK;
-    PPTPATH    pPTPATHRead  = pPTPBLK->pPTPATHRead;
-    PPTPMDL    pPTPMDLwr;
-    PPTPDAC    pPTPDACwr;
-    U32        uDispData;
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATHRead  = pPTPBLK->pPTPATHRead;
+    MPC_PH*    pMPC_PHwr;
+    MPC_PIX*   pMPC_PIXwr;
+    U32        uOffData;
 //  U16        uLenData;
-    U16        uDispMDL;
-    U16        uTypeDAC;
-    U16        uIPTypeDAC;
+    U16        uOffPH;
     u_int      fLL;
-    BYTE*      pBytePtr;
     struct in6_addr addr6;
     char       cIPaddr[48];
-    PPTPHDR    pPTPHDRr1;
-    PPTPHDR    pPTPHDRr2;
-    PPTPHDR    pPTPHDRr3;
+    PTPHDR*    pPTPHDRr1;
+    PTPHDR*    pPTPHDRr2;
+    PTPHDR*    pPTPHDRr3;
+    int        iWhat;
+#define UNKNOWN_PIX          0
+#define WILL_YOU_START_IPV4  1
+#define WILL_YOU_START_IPV6  2
+#define I_WILL_START_IPV4    3
+#define I_WILL_START_IPV6    4
+#define MY_ADDRESS_IPV4      5
+#define MY_ADDRESS_IPV6      6
+#define YOUR_ADDRESS_IPV4    7
+#define YOUR_ADDRESS_IPV6    8
+#define WILL_YOU_STOP_IPV4   9
+#define WILL_YOU_STOP_IPV6   10
+#define I_WILL_STOP_IPV4     11
+#define I_WILL_STOP_IPV6     12
 
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
         // HHC03991 "%1d:%04X CTC: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_msh_C108()" );
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_C108()" );
     }
 
-    // Point to the PTPMDL.
-    FETCH_HW( uDispMDL, pPTPMSHwr->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSHwr + uDispMDL;
-    pPTPMDLwr = (PPTPMDL)pBytePtr;
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRHwr->offph );
+    pMPC_PHwr = (MPC_PH*)((BYTE*)pMPC_RRHwr + uOffPH);
 
     // Get the length of and point to the data referenced by the
-    // PTPMDL. The data is a PTPDAC.
-//  FETCH_HW( uLenData, pPTPMDLwr->LenData );
-    FETCH_FW( uDispData, pPTPMDLwr->DispData );
-    pBytePtr = (BYTE*)pPTPWRHwr + uDispData;
-    pPTPDACwr = (PPTPDAC)pBytePtr;
+    // MPC_PH. The data is a MPC_PIX.
+//  FETCH_HW( uLenData, pMPC_PHwr->lendata );
+    FETCH_FW( uOffData, pMPC_PHwr->offdata );
+    pMPC_PIXwr = (MPC_PIX*)((BYTE*)pMPC_THwr + uOffData);
 
-    // Extract various things from the PTPDAC.
-    FETCH_HW( uTypeDAC, pPTPDACwr->Type );
-    uIPTypeDAC = pPTPDACwr->IPType;
+    // Decide what the PIX contains.
+    iWhat = UNKNOWN_PIX;
+    if( pMPC_PIXwr->action == PIX_START )
+    {
+        if( pMPC_PIXwr->askans == PIX_ASK )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = WILL_YOU_START_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = WILL_YOU_START_IPV6;
+        }
+        else if( pMPC_PIXwr->askans == PIX_ANSWER )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = I_WILL_START_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = I_WILL_START_IPV6;
+        }
+    }
+    else if( pMPC_PIXwr->action == PIX_ADDRESS )
+    {
+        if( pMPC_PIXwr->askans == PIX_ASK )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = MY_ADDRESS_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = MY_ADDRESS_IPV6;
+        }
+        if( pMPC_PIXwr->askans == PIX_ANSWER )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = YOUR_ADDRESS_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = YOUR_ADDRESS_IPV6;
+        }
+    }
+    else if( pMPC_PIXwr->action == PIX_STOP )
+    {
+        if( pMPC_PIXwr->askans == PIX_ASK )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = WILL_YOU_STOP_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = WILL_YOU_STOP_IPV6;
+        }
+        else if( pMPC_PIXwr->askans == PIX_ANSWER )
+        {
+            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+                iWhat = I_WILL_STOP_IPV4;
+            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+                iWhat = I_WILL_STOP_IPV6;
+        }
+    }
 
-    //
-    switch( uTypeDAC )
+    // Process what the PIX contains.
+    switch( iWhat )
     {
 
-    // TypeDAC_0x0180  Will you start?
-    case TypeDAC_0x0180:
-        switch( uIPTypeDAC )
+    case WILL_YOU_START_IPV4:
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
+            display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-        // IPv4
-        case 4:
+        // Remember the activation status.
+        pPTPBLK->bActivate4 |= HEASKEDME_START;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        // Build RRH 0xC108 PIX 0x0101 to yTokenUlpConnection (I will start IPv4)
+        pPTPHDRr1 = build_C108_i_will_start_4( pDEVBLK, pMPC_PIXwr, 0 );
+        if( !pPTPHDRr1 )
+            break;
+
+        // Remember the activation status.
+        pPTPBLK->bActivate4 |= IANSWEREDHIM_START;
+
+        // Add PTPHDRs to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+
+        // We have said we will start IPv4, but if IPv4 was not specified
+        // that's all we will do. The y-side will wait patiently for our
+        // will you start IPv4, which will never arrive. He's quite happy,
+        // he just assumes the device/link has not been started on this side
+        // and might be at sometime in the future.
+        if( pPTPBLK->fIPv4Spec )
+        {
+            for( ; ; )
             {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Will you start IPv4?" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
 
-            // Remember the activation status.
-            pPTPBLK->bActivate4 |= HEASKEDME_START;
-
-            // Build MSH 0xC108 DAC 0x0101 to yTokenUlpConnection (I will start IPv4)
-            pPTPHDRr1 = build_C108_i_will_start_4( pDEVBLK, pPTPDACwr, 0 );
-            if( !pPTPHDRr1 )
-                break;
-
-            // Remember the activation status.
-            pPTPBLK->bActivate4 |= IANSWEREDHIM_START;
-
-            // Add PTPHDRs to chain.
-            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-
-            // We have said we will start IPv4, but if IPv4 was not specified
-            // that's all we will do. The y-side will wait patiently for our
-            // will you start IPv4, which will never arrive. He's quite happy,
-            // he just assumes the device/link has not been started on this side
-            // and might be at sometime in the future.
-            if( pPTPBLK->fIPv4Spec )
-            {
-                for( ; ; )
+                // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you start IPv4?)
+                pPTPHDRr1 = build_C108_will_you_start_4( pDEVBLK );
+                if( !pPTPHDRr1 )
                 {
-
-                    // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (Will you start IPv4?)
-                    pPTPHDRr1 = build_C108_will_you_start_4( pDEVBLK );
-                    if( !pPTPHDRr1 )
-                    {
-                        break;
-                    }
-
-                    // Build MSH 0xC108 DAC 0x1180 to yTokenUlpConnection (My address IPv4)
-                    pPTPHDRr2 = build_C108_my_address_4( pDEVBLK );
-                    if( !pPTPHDRr2 )
-                    {
-                        free( pPTPHDRr1 );
-                        break;
-                    }
-
-                    // Remember the activation status.
-                    pPTPBLK->bActivate4 |= IASKEDHIM_START;
-                    pPTPBLK->bActivate4 |= ITOLDHIMMY_ADDRESS;
-
-                    // Add PTPHDRs to chain.
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
-
                     break;
                 }
-            }
 
-            break;
-
-        // IPv6
-        case 6:
-
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Will you start IPv6?" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            // Remember the activation status.
-            pPTPBLK->bActivate6 |= HEASKEDME_START;
-            pPTPBLK->bActivateLL6 |= HEASKEDME_START;
-
-            // Build MSH 0xC108 DAC 0x0101 to yTokenUlpConnection (I will start IPv6)
-            pPTPHDRr1 = build_C108_i_will_start_6( pDEVBLK, pPTPDACwr, 0 );
-            if( !pPTPHDRr1 )
-                break;
-
-            // Remember the activation status.
-            pPTPBLK->bActivate6 |= IANSWEREDHIM_START;
-            pPTPBLK->bActivateLL6 |= IANSWEREDHIM_START;
-
-            // Add PTPHDR to chain.
-            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-
-            // We have said we will start IPv6, but if IPv6 was not specified
-            // that's all we will do. The y-side will wait patiently for our
-            // will you start IPv6, which will never arrive. He's quite happy,
-            // he just assumes the interface has not been started on this side
-            // and might be at sometime in the future.
-            if( pPTPBLK->fIPv6Spec )
-            {
-                for( ; ; )
+                // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv4)
+                pPTPHDRr2 = build_C108_my_address_4( pDEVBLK );
+                if( !pPTPHDRr2 )
                 {
-
-                    // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (Will you start IPv6?)
-                    pPTPHDRr1 = build_C108_will_you_start_6( pDEVBLK );
-                    if( !pPTPHDRr1 )
-                        break;
-
-                    // Build MSH 0xC108 DAC 0x1180 to yTokenUlpConnection (My address IPv6)
-                    pPTPHDRr2 = build_C108_my_address_6( pDEVBLK, TRUE );  // Link local
-                    if( !pPTPHDRr2 )
-                    {
-                        free( pPTPHDRr1 );
-                        break;
-                    }
-
-                    // Build MSH 0xC108 DAC 0x1180 to yTokenUlpConnection (My address IPv6)
-                    pPTPHDRr3 = build_C108_my_address_6( pDEVBLK, FALSE );
-                    if( !pPTPHDRr3 )
-                    {
-                        free( pPTPHDRr2 );
-                        free( pPTPHDRr1 );
-                        break;
-                    }
-
-                    // Remember the activation status.
-                    pPTPBLK->bActivate6 |= IASKEDHIM_START;
-                    pPTPBLK->bActivateLL6 |= IASKEDHIM_START;
-                    pPTPBLK->bActivate6 |= ITOLDHIMMY_ADDRESS;
-                    pPTPBLK->bActivateLL6 |= ITOLDHIMMY_ADDRESS;
-
-                    // Add PTPHDRs to chain.
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
-                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr3 );
-
+                    free( pPTPHDRr1 );
                     break;
                 }
+
+                // Remember the activation status.
+                pPTPBLK->bActivate4 |= IASKEDHIM_START;
+                pPTPBLK->bActivate4 |= ITOLDHIMMY_ADDRESS;
+
+                // Add PTPHDRs to chain.
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
+
+                break;
             }
-
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x0180 Will you start? */
+        }
 
         break;
 
-    // TypeDAC_0x0101  I will start.
-    case TypeDAC_0x0101:
-        switch( uIPTypeDAC )
+    case WILL_YOU_START_IPV6:
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
+            display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-        // IPv4
-        case 4:
+        // Remember the activation status.
+        pPTPBLK->bActivate6 |= HEASKEDME_START;
+        pPTPBLK->bActivateLL6 |= HEASKEDME_START;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-            {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) I will start IPv4" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            }
-
-            // Remember the activation status.
-            pPTPBLK->bActivate4 |= HEANSWEREDME_START;
-
-            // Check whether the connection is active.
-            if( pPTPBLK->bActivate4 == WEAREACTIVE )
-            {
-                // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
-                WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestIPAddr4 );
-                pPTPBLK->fActive4 = TRUE;
-                pPTPBLK->bActivate4 = 0x00;
-                pPTPBLK->bTerminate4 = 0x00;
-            }
-
+        // Build RRH 0xC108 PIX 0x0101 to yTokenUlpConnection (I will start IPv6)
+        pPTPHDRr1 = build_C108_i_will_start_6( pDEVBLK, pMPC_PIXwr, 0 );
+        if( !pPTPHDRr1 )
             break;
 
-        // IPv6
-        case 6:
+        // Remember the activation status.
+        pPTPBLK->bActivate6 |= IANSWEREDHIM_START;
+        pPTPBLK->bActivateLL6 |= IANSWEREDHIM_START;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        // Add PTPHDR to chain.
+        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+
+        // We have said we will start IPv6, but if IPv6 was not specified
+        // that's all we will do. The y-side will wait patiently for our
+        // will you start IPv6, which will never arrive. He's quite happy,
+        // he just assumes the interface has not been started on this side
+        // and might be at sometime in the future.
+        if( pPTPBLK->fIPv6Spec )
+        {
+            for( ; ; )
             {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) I will start IPv6" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+
+                // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you start IPv6?)
+                pPTPHDRr1 = build_C108_will_you_start_6( pDEVBLK );
+                if( !pPTPHDRr1 )
+                    break;
+
+                // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv6)
+                pPTPHDRr2 = build_C108_my_address_6( pDEVBLK, TRUE );  // Link local
+                if( !pPTPHDRr2 )
+                {
+                    free( pPTPHDRr1 );
+                    break;
+                }
+
+                // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv6)
+                pPTPHDRr3 = build_C108_my_address_6( pDEVBLK, FALSE );
+                if( !pPTPHDRr3 )
+                {
+                    free( pPTPHDRr2 );
+                    free( pPTPHDRr1 );
+                    break;
+                }
+
+                // Remember the activation status.
+                pPTPBLK->bActivate6 |= IASKEDHIM_START;
+                pPTPBLK->bActivateLL6 |= IASKEDHIM_START;
+                pPTPBLK->bActivate6 |= ITOLDHIMMY_ADDRESS;
+                pPTPBLK->bActivateLL6 |= ITOLDHIMMY_ADDRESS;
+
+                // Add PTPHDRs to chain.
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr3 );
+
+                break;
             }
-
-            // Remember the activation status.
-            pPTPBLK->bActivate6 |= HEANSWEREDME_START;
-            pPTPBLK->bActivateLL6 |= HEANSWEREDME_START;
-
-            // Check whether the connection is active.
-            if( pPTPBLK->bActivateLL6 == WEAREACTIVE )
-            {
-                // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
-                WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestLLAddr6 );
-                pPTPBLK->fActiveLL6 = TRUE;
-                pPTPBLK->bActivateLL6 = 0x00;
-                pPTPBLK->bTerminateLL6 = 0x00;
-                if( pPTPBLK->fActive6 )
-                    build_8108_icmpv6_packets( pDEVBLK );
-            }
-            if( pPTPBLK->bActivate6 == WEAREACTIVE )
-            {
-                // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
-                WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestIPAddr6 );
-                pPTPBLK->fActive6 = TRUE;
-                pPTPBLK->bActivate6 = 0x00;
-                pPTPBLK->bTerminate6 = 0x00;
-                if( pPTPBLK->fActiveLL6 )
-                    build_8108_icmpv6_packets( pDEVBLK );
-            }
-
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x0101 I will start */
+        }
 
         break;
 
-    // TypeDAC_0x1180  My address.
-    case TypeDAC_0x1180:
+    case I_WILL_START_IPV4:
 
-        switch( uIPTypeDAC )
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv4" );
+            display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
 
-        // IPv4
-        case 4:
+        // Remember the activation status.
+        pPTPBLK->bActivate4 |= HEANSWEREDME_START;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        // Check whether the connection is active.
+        if( pPTPBLK->bActivate4 == WEAREACTIVE )
+        {
+            // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
+            WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestIPAddr4 );
+            pPTPBLK->fActive4 = TRUE;
+            pPTPBLK->bActivate4 = 0x00;
+            pPTPBLK->bTerminate4 = 0x00;
+        }
+
+        break;
+
+    case I_WILL_START_IPV6:
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv6" );
+            display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // Remember the activation status.
+        pPTPBLK->bActivate6 |= HEANSWEREDME_START;
+        pPTPBLK->bActivateLL6 |= HEANSWEREDME_START;
+
+        // Check whether the connection is active.
+        if( pPTPBLK->bActivateLL6 == WEAREACTIVE )
+        {
+            // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
+            WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestLLAddr6 );
+            pPTPBLK->fActiveLL6 = TRUE;
+            pPTPBLK->bActivateLL6 = 0x00;
+            pPTPBLK->bTerminateLL6 = 0x00;
+            if( pPTPBLK->fActive6 )
             {
-                // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) My address IPv4" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                build_8108_icmpv6_packets( pDEVBLK );
             }
-
-            // The y-side is telling us about his IPv4 address, which means
-            // IPv4 is defined in the guest and that the device/link is started.
-            // However, if IPv4 was not specified on the config statement, we
-            // are not interested. We will repond to his message to keep him
-            // happy but that is all.
-            if( pPTPBLK->fIPv4Spec )
+        }
+        if( pPTPBLK->bActivate6 == WEAREACTIVE )
+        {
+            // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
+            WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestIPAddr6 );
+            pPTPBLK->fActive6 = TRUE;
+            pPTPBLK->bActivate6 = 0x00;
+            pPTPBLK->bTerminate6 = 0x00;
+            if( pPTPBLK->fActiveLL6 )
             {
-                // Check whether the guests IPv4 address was specified on config statement.
-                if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaGuestIPAddr4, 4 ) == 0 )
-                {
-                    // The y-side has told us his IPv4 address and it is the guest address
-                    // specified on the config statement, which is of course good news.
-                    // Remember the activation status.
-                    pPTPBLK->bActivate4 |= HETOLDMEHIS_ADDRESS;
+                build_8108_icmpv6_packets( pDEVBLK );
+            }
+        }
 
-                    // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv4)
-                    pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pPTPDACwr, 0 );
+        break;
+
+    case MY_ADDRESS_IPV4:
+
+        // Display various information, maybe
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        {
+            // HHC03951 "%1d:%04X CTC: %s"
+            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv4" );
+            display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
+        }
+
+        // The y-side is telling us about his IPv4 address, which means
+        // IPv4 is defined in the guest and that the device/link is started.
+        // However, if IPv4 was not specified on the config statement, we
+        // are not interested. We will repond to his message to keep him
+        // happy but that is all.
+        if( pPTPBLK->fIPv4Spec )
+        {
+            // Check whether the guests IPv4 address was specified on config statement.
+            if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr4, 4 ) == 0 )
+            {
+                // The y-side has told us his IPv4 address and it is the guest address
+                // specified on the config statement, which is of course good news.
+                // Remember the activation status.
+                pPTPBLK->bActivate4 |= HETOLDMEHIS_ADDRESS;
+
+                // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
+                pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
+                if( !pPTPHDRr1 )
+                    break;
+
+                // Remember the activation status.
+                pPTPBLK->bActivate4 |= IANSWEREDHIS_ADDRESS;
+
+                // Add PTPHDR to chain.
+                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+            }
+            else
+            {
+                // Hmm... the y-side has told us his IPv4 address and it wasn't
+                // the guest IPv4 address specified on the config statement. This
+                // should not happen, unless we have been told the wrong address.
+                // Perhaps the guest and driver IPv4 addresses were transposed on
+                // the config statement.
+                if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0 )
+                {
+                    // Looks like the guest and driver IPv4 addresses were transposed.
+                    inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                    // HHC03912 "%1d:%04X CTC: Guest has the driver IP address '%s'"
+                    WRMSG(HHC03912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, cIPaddr );
+
+                    // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
+                    pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 12 );
                     if( !pPTPHDRr1 )
                         break;
-
-                    // Remember the activation status.
-                    pPTPBLK->bActivate4 |= IANSWEREDHIS_ADDRESS;
 
                     // Add PTPHDR to chain.
                     add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
                 }
                 else
                 {
-                    // Hmm... the y-side has told us his IPv4 address and it wasn't
-                    // the guest IPv4 address specified on the config statement. This
-                    // should not happen, unless we have been told the wrong address.
-                    // Perhaps the guest and driver IPv4 addresses were transposed on
-                    // the config statement.
-                    if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0 )
-                    {
-                        // Looks like the guest and driver IPv4 addresses were transposed.
-                        inet_ntop( AF_INET, &pPTPDACwr->IPAddr, cIPaddr, sizeof(cIPaddr) );
-                        // HHC03912 "%1d:%04X CTC: Guest has the driver IP address '%s'"
-                        WRMSG(HHC03912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                             cIPaddr );
+                    // The guest has an IPv4 address we know nothing about. The guest
+                    // can only have one IPv4 address associated with a link.
+                    inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                    // HHC03913 "%1d:%04X CTC: Guest has IP address '%s'"
+                    WRMSG(HHC03913, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                         cIPaddr );
 
-                        // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv4)
-                        pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pPTPDACwr, 12 );
-                        if( !pPTPHDRr1 )
-                            break;
+                    // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
+                    pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
+                    if( !pPTPHDRr1 )
+                        break;
 
-                        // Add PTPHDR to chain.
-                        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-                    }
-                    else
-                    {
-                        // The guest has an IPv4 address we know nothing about. The guest
-                        // can only have one IPv4 address associated with a link.
-                        inet_ntop( AF_INET, &pPTPDACwr->IPAddr, cIPaddr, sizeof(cIPaddr) );
-                        // HHC03913 "%1d:%04X CTC: Guest has IP address '%s'"
-                        WRMSG(HHC03913, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                             cIPaddr );
-
-                        // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv4)
-                        pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pPTPDACwr, 0 );
-                        if( !pPTPHDRr1 )
-                            break;
-
-                        // Add PTPHDR to chain.
-                        add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-                    }
+                    // Add PTPHDR to chain.
+                    add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
                 }
             }
-            else
-            {
-                // IPv4 was not specified on the config statement, but the guest
-                // has informed us of his IPv4 address. Reply but otherwise ignore.
+        }
+        else
+        {
+            // IPv4 was not specified on the config statement, but the guest
+            // has informed us of his IPv4 address. Reply but otherwise ignore.
 
-                // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv4)
-                pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pPTPDACwr, 0 );
-                if( !pPTPHDRr1 )
-                     break;
+            // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
+            pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
+            if( !pPTPHDRr1 )
+                 break;
 
-                // Add PTPHDR to chain.
-                add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
-            }
+            // Add PTPHDR to chain.
+            add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
+        }
 
-            // Check whether the connection is active.
-            if( pPTPBLK->bActivate4 == WEAREACTIVE )
-            {
-                // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
-                WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                    pPTPBLK->szGuestIPAddr4 );
-                pPTPBLK->fActive4 = TRUE;
-                pPTPBLK->bActivate4 = 0x00;
-                pPTPBLK->bTerminate4 = 0x00;
-            }
+        // Check whether the connection is active.
+        if( pPTPBLK->bActivate4 == WEAREACTIVE )
+        {
+            // HHC03915 "%1d:%04X CTC: Connection active to guest IP address '%s'"
+            WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                pPTPBLK->szGuestIPAddr4 );
+            pPTPBLK->fActive4 = TRUE;
+            pPTPBLK->bActivate4 = 0x00;
+            pPTPBLK->bTerminate4 = 0x00;
+        }
 
-            break;
+        break;
 
-        // IPv6
-        case 6:
+    case MY_ADDRESS_IPV6:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) My address IPv6" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv6" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6339,7 +6349,7 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
             memset( addr6.s6_addr, 0, 16 );
             addr6.s6_addr[0] = 0xFE;
             addr6.s6_addr[1] = 0x80;
-            if( memcmp( pPTPDACwr->IPAddr, &addr6, 8 ) == 0 )
+            if( memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0 )
                 fLL = TRUE;
 
             // The y-side is telling us about his IPv6 address(es), which means
@@ -6354,15 +6364,15 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                     // The y-side has told us about an address that is not his Link
                     // Local address. Check whether the guests IPv6 is the address
                     // that was specified on the config statement.
-                    if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaGuestIPAddr6, 16 ) == 0 )
+                    if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr6, 16 ) == 0 )
                     {
                         // The y-side has told us his IPv6 address and it is the guest address
                         // specified on the config statement, which is of course good news.
                         // Remember the activation status.
                         pPTPBLK->bActivate6 |= HETOLDMEHIS_ADDRESS;
 
-                        // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
-                        pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pPTPDACwr, 0 );
+                        // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
+                        pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
                         if( !pPTPHDRr1 )
                             break;
 
@@ -6380,16 +6390,16 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                         // the other hand, we could have been told the wrong address.
                         // Perhaps the guest and driver IPv6 addresses were transposed on
                         // the config statement.
-                        if( memcmp( pPTPDACwr->IPAddr, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0 )
+                        if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0 )
                         {
                             // Looks like the guest and driver IPv6 addresses were transposed.
-                            inet_ntop( AF_INET, &pPTPDACwr->IPAddr, cIPaddr, sizeof(cIPaddr) );
+                            inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                             // HHC03912 "%1d:%04X CTC: Guest has the driver IP address '%s'"
                             WRMSG(HHC03912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                                  cIPaddr );
 
-                            // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
-                            pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pPTPDACwr, 12 );
+                            // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
+                            pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 12 );
                             if( !pPTPHDRr1 )
                                 break;
 
@@ -6400,13 +6410,13 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                         {
                             // The guest has an IPv6 address we know nothing about. The guest
                             // can have multiple IPv6 addresses associated with an interface.
-                            inet_ntop( AF_INET6, &pPTPDACwr->IPAddr, cIPaddr, sizeof(cIPaddr) );
+                            inet_ntop( AF_INET6, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                             // HHC03914 "%1d:%04X CTC: Guest has IP address '%s'"
                             WRMSG(HHC03914, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                                  cIPaddr );
 
-                            // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
-                            pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pPTPDACwr, 0 );
+                            // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
+                            pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
                             if( !pPTPHDRr1 )
                                 break;
 
@@ -6422,13 +6432,13 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                     pPTPBLK->bActivateLL6 |= HETOLDMEHIS_ADDRESS;
 
                     // Copy the y-sides Link Local address.
-                    memcpy( &pPTPBLK->iaGuestLLAddr6, pPTPDACwr->IPAddr, 16 );
+                    memcpy( &pPTPBLK->iaGuestLLAddr6, pMPC_PIXwr->ipaddr, 16 );
                     inet_ntop( AF_INET6, &pPTPBLK->iaGuestLLAddr6,
                                          pPTPBLK->szGuestLLAddr6,
                                          sizeof(pPTPBLK->szGuestLLAddr6) );
 
-                    // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
-                    pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pPTPDACwr, 0 );
+                    // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
+                    pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
                     if( !pPTPHDRr1 )
                         break;
 
@@ -6444,8 +6454,8 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 // IPv6 was not specified on the config statement, but the guest
                 // has informed us of an IPv6 address. Reply but otherwise ignore.
 
-                // Build MSH 0xC108 DAC 0x1101 to yTokenUlpConnection (Your address IPv6)
-                pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pPTPDACwr, 0 );
+                // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
+                pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
                 if( !pPTPHDRr1 )
                     break;
 
@@ -6481,33 +6491,16 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 }
             }
 
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x1180 My address */
-
         break;
 
-    // TypeDAC_0x1101  Your address.
-    case TypeDAC_0x1101:
-        switch( uIPTypeDAC )
-        {
-
-        // IPv4
-        case 4:
+    case YOUR_ADDRESS_IPV4:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Your address IPv4" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv4" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Remember the activation status.
@@ -6524,17 +6517,16 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 pPTPBLK->bTerminate4 = 0x00;
             }
 
-            break;
+        break;
 
-        // IPv6
-        case 6:
+    case YOUR_ADDRESS_IPV6:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Your address IPv6" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv6" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6542,7 +6534,7 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
             memset( addr6.s6_addr, 0, 16 );
             addr6.s6_addr[0] = 0xFE;
             addr6.s6_addr[1] = 0x80;
-            if( memcmp( pPTPDACwr->IPAddr, &addr6, 8 ) == 0 )
+            if( memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0 )
                 fLL = TRUE;
 
             //
@@ -6585,44 +6577,27 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 }
             }
 
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x1101 Your address */
-
         break;
 
-    // TypeDAC_0x0280  Will you stop?
-    case TypeDAC_0x0280:
-        switch( uIPTypeDAC )
-        {
-
-        // IPv4
-        case 4:
+    case WILL_YOU_STOP_IPV4:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Will you stop IPv4?" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Remember the termination status.
             pPTPBLK->bTerminate4 |= HEASKEDME_STOP;
 
-            // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (I will stop IPv4)
-            pPTPHDRr1 = build_C108_i_will_stop_4( pDEVBLK, pPTPDACwr );
+            // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (I will stop IPv4)
+            pPTPHDRr1 = build_C108_i_will_stop_4( pDEVBLK, pMPC_PIXwr );
             if( !pPTPHDRr1 )
                 break;
 
-            // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (Will you stop IPv4)
+            // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you stop IPv4)
             pPTPHDRr2 = build_C108_will_you_stop_4( pDEVBLK );
             if( !pPTPHDRr2 )
             {
@@ -6638,29 +6613,28 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
             add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
             add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
 
-            break;
+        break;
 
-        // IPv6
-        case 6:
+    case WILL_YOU_STOP_IPV6:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) Will you stop IPv6?" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Remember the termination status.
             pPTPBLK->bTerminate6 |= HEASKEDME_STOP;
             pPTPBLK->bTerminateLL6 |= HEASKEDME_STOP;
 
-            // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (I will stop IPv6)
-            pPTPHDRr1 = build_C108_i_will_stop_6( pDEVBLK, pPTPDACwr );
+            // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (I will stop IPv6)
+            pPTPHDRr1 = build_C108_i_will_stop_6( pDEVBLK, pMPC_PIXwr );
             if( !pPTPHDRr1 )
                 break;
 
-            // Build MSH 0xC108 DAC 0x0180 to yTokenUlpConnection (Will you stop IPv6)
+            // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you stop IPv6)
             pPTPHDRr2 = build_C108_will_you_stop_6( pDEVBLK );
             if( !pPTPHDRr2 )
             {
@@ -6678,33 +6652,16 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
             add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr1 );
             add_buffer_to_chain_and_signal_event( pPTPATHRead, pPTPHDRr2 );
 
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x0280 Will you stop? */
-
         break;
 
-    // TypeDAC_0x0201  I will stop.
-    case TypeDAC_0x0201:
-        switch( uIPTypeDAC )
-        {
-
-        // IPv4
-        case 4:
+    case I_WILL_STOP_IPV4:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) I will stop IPv4" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Remember the termination status.
@@ -6725,17 +6682,16 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 pPTPBLK->bTerminate4 = 0x00;
             }
 
-            break;
+        break;
 
-        // IPv6
-        case 6:
+    case I_WILL_STOP_IPV6:
 
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
                 // HHC03951 "%1d:%04X CTC: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In MSH 0xC108 (UlpComm) I will stop IPv6" );
-                display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
+                display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
             }
 
             // Remember the termination status.
@@ -6770,51 +6726,39 @@ int   write_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRHwr, PPTPMSH pPTPMSHwr )
                 pPTPBLK->bTerminateLL6 = 0x00;
             }
 
-            break;
-
-        // Neither IPv4 or IPv6
-        default:
-            // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-            WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC IPv" );
-            display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
-            break;
-
-        }  /* switch( uIPTypeDAC ) in case TypeDAC_0x0201 I will stop */
-
         break;
 
-    // pPTPDACwr->Type not recognised
     default:
+
         // HHC03936 "%1d:%04X CTC: Accept data for device '%s' contains unknown %s"
-        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "DAC" );
-        display_msh_C108( pDEVBLK, pPTPWRHwr, pPTPMSHwr, '<' );
+        WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName, "PIX" );
+        display_rrh_C108( pDEVBLK, pMPC_THwr, pMPC_RRHwr, '<' );
 
         break;
 
-    }  /* switch( uTypeDAC ) */
+    }
 
     return 0;
-}   /* End function  write_msh_C108() */
+}   /* End function  write_rrh_C108() */
 
 
-/* ----------------------------------------------------------------- */
-/* build_C108_will_you_start_4()                                     */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0180 (Will you start IPv4?)
+/* ------------------------------------------------------------------ */
+/* build_C108_will_you_start_4()                                      */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0180 (Will you start IPv4?)
 
-PPTPHDR  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
+PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -6824,80 +6768,76 @@ PPTPHDR  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0180 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_START;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Will you start IPv4?" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_will_you_start_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_will_you_start_6()                                     */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0180 (Will you start IPv6?)
+/* ------------------------------------------------------------------ */
+/* build_C108_will_you_start_6()                                      */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0180 (Will you start IPv6?)
 
-PPTPHDR  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
+PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -6907,80 +6847,76 @@ PPTPHDR  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0180 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_START;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Will you start IPv6?" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_will_you_start_6() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_i_will_start_4()                                       */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0101 (I will start IPv4)
+/* ------------------------------------------------------------------ */
+/* build_C108_i_will_start_4()                                        */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0101 (I will start IPv4)
 
-PPTPHDR  build_C108_i_will_start_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCode )
+PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uRCode )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the message will be build.
@@ -6989,81 +6925,77 @@ PPTPHDR  build_C108_i_will_start_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCo
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0101 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
-    STORE_HW( pPTPDACre->RCode, uRCode );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_START;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
+    STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) I will start IPv4" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_i_will_start_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_i_will_start_6()                                       */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0101 (I will start IPv6)
+/* ------------------------------------------------------------------ */
+/* build_C108_i_will_start_6()                                        */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0101 (I will start IPv6)
 
-PPTPHDR  build_C108_i_will_start_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCode )
+PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uRCode )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7073,81 +7005,77 @@ PPTPHDR  build_C108_i_will_start_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCo
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0101 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
-    STORE_HW( pPTPDACre->RCode, uRCode );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_START;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
+    STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) I will start IPv6" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_i_will_start_6() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_my_address_4()                                         */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x1180 (My address IPv4)
+/* ------------------------------------------------------------------ */
+/* build_C108_my_address_4()                                          */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x1180 (My address IPv4)
 
-PPTPHDR  build_C108_my_address_4( DEVBLK* pDEVBLK )
+PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7157,81 +7085,77 @@ PPTPHDR  build_C108_my_address_4( DEVBLK* pDEVBLK )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x1180 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
-    memcpy( pPTPDACre->IPAddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_ADDRESS;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
+    memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) My address IPv4" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv4" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_my_address_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_my_address_6()                                         */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x1180 (My address IPv6)
+/* ------------------------------------------------------------------ */
+/* build_C108_my_address_6()                                          */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x1180 (My address IPv6)
 
-PPTPHDR  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
+PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7241,88 +7165,84 @@ PPTPHDR  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x1180 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_ADDRESS;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
     if( fLL )
     {
-        memcpy( pPTPDACre->IPAddr, &pPTPBLK->iaDriveLLAddr6, 16 );
+        memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
     else
     {
-        memcpy( pPTPDACre->IPAddr, &pPTPBLK->iaDriveIPAddr6, 16 );
+        memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 );
     }
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) My address IPv6" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv6" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
 return pPTPHDRre;
 }   /* End function  build_C108_my_address_6() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_your_address_4()                                       */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x1101 (Your address IPv4)
+/* ------------------------------------------------------------------ */
+/* build_C108_your_address_4()                                        */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x1101 (Your address IPv4)
 
-PPTPHDR  build_C108_your_address_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCode )
+PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uRCode )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7332,82 +7252,78 @@ PPTPHDR  build_C108_your_address_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCo
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x1101 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
-    STORE_HW( pPTPDACre->RCode, uRCode );
-    memcpy( pPTPDACre->IPAddr, pPTPDACwr->IPAddr, 4 );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_ADDRESS;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
+    STORE_HW( pMPC_PIXre->rcode, uRCode );
+    memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 4 );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Your address IPv4" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_your_address_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_your_address_6()                                       */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x1101 (Your address IPv6)
+/* ------------------------------------------------------------------ */
+/* build_C108_your_address_6()                                        */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x1101 (Your address IPv6)
 
-PPTPHDR  build_C108_your_address_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCode )
+PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uRCode )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the first reply will be build.
@@ -7417,82 +7333,78 @@ PPTPHDR  build_C108_your_address_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr, U16 uRCo
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x1101 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
-    STORE_HW( pPTPDACre->RCode, uRCode );
-    memcpy( pPTPDACre->IPAddr, pPTPDACwr->IPAddr, 16 );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_ADDRESS;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
+    STORE_HW( pMPC_PIXre->rcode, uRCode );
+    memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 16 );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Your address IPv6" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_your_address_6() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_will_you_stop_4()                                      */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0280 (Will you stop IPv4?)
+/* ------------------------------------------------------------------ */
+/* build_C108_will_you_stop_4()                                       */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0280 (Will you stop IPv4?)
 
-PPTPHDR  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
+PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7502,80 +7414,76 @@ PPTPHDR  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0280 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_STOP;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Will you stop IPv4?" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_will_you_stop_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_will_you_stop_6()                                      */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0280 (Will you stop IPv6?)
+/* ------------------------------------------------------------------ */
+/* build_C108_will_you_stop_6()                                       */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0280 (Will you stop IPv6?)
 
-PPTPHDR  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
+PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7585,80 +7493,76 @@ PPTPHDR  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0280 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    STORE_HW( pPTPDACre->IDNum, ++pPTPBLK->uDACIDNum );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_STOP;
+    pMPC_PIXre->askans = PIX_ASK;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) Will you stop IPv6?" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_will_you_stop_6() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_i_will_stop_4()                                        */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0201 (I will stop IPv4)
+/* ------------------------------------------------------------------ */
+/* build_C108_i_will_stop_4()                                         */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0201 (I will stop IPv4)
 
-PPTPHDR  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr )
+PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7668,80 +7572,76 @@ PPTPHDR  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0201 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x04;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_STOP;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV4;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) I will stop IPv4" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_i_will_stop_4() */
 
-/* ----------------------------------------------------------------- */
-/* build_C108_i_will_stop_6()                                        */
-/* ----------------------------------------------------------------- */
-// Build MSH 0xC108 DAC 0x0201 (I will stop IPv6)
+/* ------------------------------------------------------------------ */
+/* build_C108_i_will_stop_6()                                         */
+/* ------------------------------------------------------------------ */
+// Build RRH 0xC108 PIX 0x0201 (I will stop IPv6)
 
-PPTPHDR  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr )
+PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
-    BYTE*      pBytePtr;
-    PPTPHDR    pPTPHDRre;     // PTPHDR to be read
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
-    PPTPDAC    pPTPDACre;     // PTPDAC follows PTPMDL
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
+    MPC_PIX*   pMPC_PIXre;    // MPC_PIX follows MPC_PH
 
 
     // Allocate a buffer in which the response will be build.
@@ -7751,86 +7651,82 @@ PPTPHDR  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, PPTPDAC pPTPDACwr )
         return NULL;
 
     // Fix-up various lengths
-    uLength3 = SizeDAC;                      // the PTPDAC
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength3 = SIZE_PIX;                     // the MPC_PIX
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr = (BYTE*)pPTPHDRre;
-    pBytePtr += SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr += SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr += SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr += SizeMDL;
-    pPTPDACre = (PPTPDAC)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0xC108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_IPA;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
-    // Prepare PTPDACre
-    STORE_HW( pPTPDACre->Type, TypeDAC_0x0201 );
-    pPTPDACre->NumIPAddrs = 0x01;
-    pPTPDACre->IPType = 0x06;
-    memcpy( pPTPDACre->IDNum, pPTPDACwr->IDNum, 2 );
+    // Prepare MPC_PIXre
+    pMPC_PIXre->action = PIX_STOP;
+    pMPC_PIXre->askans = PIX_ANSWER;
+    pMPC_PIXre->numaddr = PIX_ONEADDR;
+    pMPC_PIXre->iptype = PIX_IPV6;
+    memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0xC108 (UlpComm) I will stop IPv6" );
-        display_msh_C108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
+        display_rrh_C108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     return pPTPHDRre;
 }   /* End function  build_C108_i_will_stop_6() */
 
 
-/* ----------------------------------------------------------------- */
-/* build_8108_icmpv6_packets()                                       */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* build_8108_icmpv6_packets()                                        */
+/* ------------------------------------------------------------------ */
 
 void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
 {
-    PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-    PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
-    PPTPATH    pPTPATHRead  = pPTPBLK->pPTPATHRead;
+    PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
+    PTPATH*    pPTPATHRead  = pPTPBLK->pPTPATHRead;
     U32        uLength1;
     U32        uLength2;
     U16        uLength3;
     U16        uLength4;
     U16        uLength5;
     U16        uLength6;
-    PPTPHDR    pPTPHDRre;     // PTPHDR
-    PPTPWRH    pPTPWRHre;     // PTPWRH follows PTPHDR
-    PPTPMSH    pPTPMSHre;     // PTPMSH follows PTPWRH
-    PPTPMDL    pPTPMDLre;     // PTPMDL follows PTPMSH
+    PTPHDR*    pPTPHDRre;     // PTPHDR to be read
+    MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
+    MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
+    MPC_PH*    pMPC_PHre;     // MPC_PH follows MPC_RRH
     PIP6FRM    pIP6FRMre;     // IPv6 header
     BYTE*      pHopOpt;       // Hop-by-Hop Options follows IPv6 header
     BYTE*      pIcmpHdr;      // ICMPv6 header follows IPv6 header or Hop-by-Hop
-    BYTE*      pBytePtr;
 
 
     // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
@@ -7842,48 +7738,45 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
         return;
 
     // Fix-up various lengths
-    uLength6 = 24;                           // the ICMPv6 packet
-    uLength5 = 0;                            // no Hop-by-Hop Options
-    uLength4 = sizeof(IP6FRM);               // the IPv6 header
-    uLength3 = uLength4 + uLength6;          // the data
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength6 = 24;                            // the ICMPv6 packet
+    uLength5 = 0;                             // no Hop-by-Hop Options
+    uLength4 = sizeof(IP6FRM);                // the IPv6 header
+    uLength3 = uLength4 + uLength6;           // the data
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr  = (BYTE*)pPTPHDRre + SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPWRHre + SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMSHre + SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMDLre + SizeMDL;
-    pIP6FRMre = (PIP6FRM)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
     pHopOpt   = NULL;
     pIcmpHdr  = (BYTE*)pIP6FRMre->bPayload;
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x8108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_CM;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
     pIP6FRMre->bVersTCFlow[0] = 0x60;
@@ -7907,8 +7800,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x8108 (UlpComm) Neighbor advertisment" );
-        display_msh_8108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        display_rrh_8108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     // Add PTPHDR to chain.
@@ -7924,48 +7817,45 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
         return;
 
     // Fix-up various lengths
-    uLength6 = 16;                           // the ICMPv6 packet
-    uLength5 = 0;                            // no Hop-by-Hop Options
-    uLength4 = sizeof(IP6FRM);               // the IPv6 header
-    uLength3 = uLength4 + uLength6;          // the data
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength6 = 16;                            // the ICMPv6 packet
+    uLength5 = 0;                             // no Hop-by-Hop Options
+    uLength4 = sizeof(IP6FRM);                // the IPv6 header
+    uLength3 = uLength4 + uLength6;           // the data
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr  = (BYTE*)pPTPHDRre + SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPWRHre + SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMSHre + SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMDLre + SizeMDL;
-    pIP6FRMre = (PIP6FRM)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
     pHopOpt   = NULL;
     pIcmpHdr  = (BYTE*)pIP6FRMre->bPayload;
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x8108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_CM;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
     pIP6FRMre->bVersTCFlow[0] = 0x60;
@@ -7989,8 +7879,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x8108 (UlpComm) Router solicitation" );
-        display_msh_8108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Router solicitation" );
+        display_rrh_8108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     // Add PTPHDR to chain.
@@ -8006,48 +7896,45 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
         return;
 
     // Fix-up various lengths
-    uLength6 = 24;                           // the ICMPv6 packet
-    uLength5 = 0;                            // no Hop-by-Hop Options
-    uLength4 = sizeof(IP6FRM);               // the IPv6 header
-    uLength3 = uLength4 + uLength6;          // the data
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength6 = 24;                            // the ICMPv6 packet
+    uLength5 = 0;                             // no Hop-by-Hop Options
+    uLength4 = sizeof(IP6FRM);                // the IPv6 header
+    uLength3 = uLength4 + uLength6;           // the data
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr  = (BYTE*)pPTPHDRre + SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPWRHre + SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMSHre + SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMDLre + SizeMDL;
-    pIP6FRMre = (PIP6FRM)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
     pHopOpt   = NULL;
     pIcmpHdr  = (BYTE*)pIP6FRMre->bPayload;
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x8108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_CM;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
     pIP6FRMre->bVersTCFlow[0] = 0x60;
@@ -8071,8 +7958,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x8108 (UlpComm) Neighbor advertisment" );
-        display_msh_8108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        display_rrh_8108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     // Add PTPHDR to chain.
@@ -8089,48 +7976,45 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
         return;
 
     // Fix-up various lengths
-    uLength6 = 24;                           // the ICMPv6 packet
-    uLength5 = 8;                            // the Hop-by-Hop Options
-    uLength4 = sizeof(IP6FRM);               // the IPv6 header
+    uLength6 = 24;                              // the ICMPv6 packet
+    uLength5 = 8;                               // the Hop-by-Hop Options
+    uLength4 = sizeof(IP6FRM);                  // the IPv6 header
     uLength3 = uLength4 + uLength5 + uLength6;  // the data
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;    // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;             // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr  = (BYTE*)pPTPHDRre + SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPWRHre + SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMSHre + SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMDLre + SizeMDL;
-    pIP6FRMre = (PIP6FRM)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
     pHopOpt   = (BYTE*)pIP6FRMre->bPayload;
     pIcmpHdr  = pHopOpt + uLength5;
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x8108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_CM;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
     pIP6FRMre->bVersTCFlow[0] = 0x60;
@@ -8164,8 +8048,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x8108 (UlpComm) Group membership report" );
-        display_msh_8108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
+        display_rrh_8108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     // Add PTPHDR to chain.
@@ -8182,48 +8066,45 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
         return;
 
     // Fix-up various lengths
-    uLength6 = 24;                           // the ICMPv6 packet
-    uLength5 = 8;                            // the Hop-by-Hop Options
-    uLength4 = sizeof(IP6FRM);               // the IPv6 header
+    uLength6 = 24;                              // the ICMPv6 packet
+    uLength5 = 8;                               // the Hop-by-Hop Options
+    uLength4 = sizeof(IP6FRM);                  // the IPv6 header
     uLength3 = uLength4 + uLength5 + uLength6;  // the data
-    uLength2 = SizeWRH + SizeMSH + SizeMDL;  // the PTPWRH/PTPMSH/PTPMDL
-    uLength1 = uLength2 + uLength3;          // the PTPWRH/PTPMSH/PTPMDL and data
+    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;    // the MPC_TH/MPC_RRH/MPC_PH
+    uLength1 = uLength2 + uLength3;             // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pBytePtr  = (BYTE*)pPTPHDRre + SizeHDR;
-    pPTPWRHre = (PPTPWRH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPWRHre + SizeWRH;
-    pPTPMSHre = (PPTPMSH)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMSHre + SizeMSH;
-    pPTPMDLre = (PPTPMDL)pBytePtr;
-    pBytePtr  = (BYTE*)pPTPMDLre + SizeMDL;
-    pIP6FRMre = (PIP6FRM)pBytePtr;
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
+    pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
+    pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
     pHopOpt   = (BYTE*)pIP6FRMre->bPayload;
     pIcmpHdr  = pHopOpt + uLength5;
 
     // Prepare PTPHDRre
     pPTPHDRre->iDataLen = uLength1;
 
-    // Prepare PTPWRHre
-    pPTPWRHre->TH_ch_flag = TH_CH_0xE0;
-    STORE_FW( pPTPWRHre->DispMSH, SizeWRH );
-    STORE_FW( pPTPWRHre->TotalLen, uLength1 );
-    STORE_HW( pPTPWRHre->Unknown1, PTPWRH_UNKNOWN1 );      // !!! //
-    STORE_HW( pPTPWRHre->NumMSHs, 1 );
+    // Prepare MPC_THre
+    STORE_FW( pMPC_THre->first4, MPC_TH_FIRST4 );
+    STORE_FW( pMPC_THre->offrrh, SIZE_TH );
+    STORE_FW( pMPC_THre->length, uLength1 );
+    STORE_HW( pMPC_THre->unknown10, MPC_TH_UNKNOWN10 );      // !!! //
+    STORE_HW( pMPC_THre->numrrh, 1 );
 
-    // Prepare PTPMSHre
-    STORE_HW( pPTPMSHre->Type, TypeMSH_0x8108 );
-    STORE_HW( pPTPMSHre->NumMDLs, 1 );
-    STORE_HW( pPTPMSHre->DispMDL, SizeMSH );
-    STORE_HW( pPTPMSHre->LenFirstData, uLength3 );
-    STORE_HW( pPTPMSHre->TotalLenData+1, uLength3 );
-    pPTPMSHre->TokenX5 = MPC_TOKEN_X5;
-    memcpy( pPTPMSHre->Token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
+    // Prepare MPC_RRHre
+    pMPC_RRHre->type = RRH_TYPE_CM;
+    pMPC_RRHre->proto = PROTOCOL_LAYER2;
+    STORE_HW( pMPC_RRHre->numph, 1 );
+    STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
+    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
+    STORE_HW( pMPC_RRHre->lenalda, uLength3 );
+    pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
+    memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
-    // Prepare PTPMDLre
-    pPTPMDLre->LocData = MDL_LOC_1;
-    STORE_HW( pPTPMDLre->LenData, uLength3 );
-    STORE_FW( pPTPMDLre->DispData, uLength2 );
+    // Prepare MPC_PHre
+    pMPC_PHre->locdata = PH_LOC_1;
+    STORE_HW( pMPC_PHre->lendata, uLength3 );
+    STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
     pIP6FRMre->bVersTCFlow[0] = 0x60;
@@ -8257,8 +8138,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X CTC: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out MSH 0x8108 (UlpComm) Group membership report" );
-        display_msh_8108( pDEVBLK, pPTPWRHre, pPTPMSHre, '>' );
+        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
+        display_rrh_8108( pDEVBLK, pMPC_THre, pMPC_RRHre, '>' );
     }
 
     // Add PTPHDR to chain.
@@ -8268,229 +8149,213 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
 }   /* End function  build_8108_icmpv6_packets() */
 
 
-/* ----------------------------------------------------------------- */
-/* display_wrh()                                                     */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* display_th()                                                     */
+/* ------------------------------------------------------------------ */
 
-void  display_wrh( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, BYTE bDir )
+void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
 
 
-    // Display the PTPWRH.
-    display_data( "WRH", (BYTE*)pPTPWRH, (int)SizeWRH, bDir );
+    // Display the MPC_TH.
+    display_data( " TH", (BYTE*)pMPC_TH, (int)SIZE_TH, bDir );
 
     return;
-}   /* End function  display_wrh() */
+}   /* End function  display_th() */
 
-/* ----------------------------------------------------------------- */
-/* display_msh()                                                     */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* display_rrh()                                                      */
+/* ------------------------------------------------------------------ */
 
-void  display_msh( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir )
+void  display_rrh( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
-    UNREFERENCED( pPTPWRH );
+    UNREFERENCED( pMPC_TH );
 
 
-    // Display the PTPMSH.
-    display_data( "MSH", (BYTE*)pPTPMSH, (int)SizeMSH, bDir );
+    // Display the MPC_RRH.
+    display_data( "RRH", (BYTE*)pMPC_RRH, (int)SIZE_RRH, bDir );
 
     return;
-}   /* End function  display_msh() */
+}   /* End function  display_rrh() */
 
-/* ----------------------------------------------------------------- */
-/* display_msh_8108()                                                */
-/* ----------------------------------------------------------------- */
-// In all cases that have been seen the PTPMSH type 0x8108 is followed
-// by one or more PTPMDL, which are followed by data.
+/* ------------------------------------------------------------------ */
+/* display_rrh_8108()                                                 */
+/* ------------------------------------------------------------------ */
+// In all cases that have been seen the MPC_RRH type 0x8108 is followed
+// by one or more MPC_PH, which are followed by data.
 
-void  display_msh_8108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir )
+void  display_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
 
-    PPTPMDL    pPTPMDL;
-    U16        uNumMDLs;
-    U16        uDispMDL;
-    int        iForMDLs;
+    MPC_PH*    pMPC_PH;
+    U16        uNumPH;
+    U16        uOffPH;
+    int        iForPH;
     U16        uLenData;
-    U32        uDispData;
+    U32        uOffData;
     BYTE*      pData;
-    BYTE*      pBytePtr;
 
 
-    // Display the PTPMSH.
-    display_data( "MSH", (BYTE*)pPTPMSH, (int)SizeMSH, bDir );
+    // Display the MPC_RRH.
+    display_data( "RRH", (BYTE*)pMPC_RRH, (int)SIZE_RRH, bDir );
 
-    // Display the PTPMDL(s).
-    FETCH_HW( uNumMDLs, pPTPMSH->NumMDLs );
-    FETCH_HW( uDispMDL, pPTPMSH->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSH + uDispMDL;
-    for( iForMDLs = 1; iForMDLs <= uNumMDLs; iForMDLs++ )
+    // Display the MPC_PH(s).
+    FETCH_HW( uNumPH, pMPC_RRH->numph );
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+    for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
     {
-        pPTPMDL = (PPTPMDL)pBytePtr;
-        display_data( "MDL", (BYTE*)pPTPMDL, (int)SizeMDL, bDir );
-        pBytePtr = (BYTE*)pPTPMDL + SizeMDL;
+        display_data( " PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+        pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
     }
 
-    // Display the data referenced by the PTPMDL(s).
-    FETCH_HW( uNumMDLs, pPTPMSH->NumMDLs );
-    FETCH_HW( uDispMDL, pPTPMSH->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSH + uDispMDL;
-    for( iForMDLs = 1; iForMDLs <= uNumMDLs; iForMDLs++ )
+    // Display the data referenced by the MPC_PH(s).
+    FETCH_HW( uNumPH, pMPC_RRH->numph );
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+    for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
     {
-        pPTPMDL = (PPTPMDL)pBytePtr;
-        FETCH_HW( uLenData, pPTPMDL->LenData );
-        FETCH_FW( uDispData, pPTPMDL->DispData );
-        pData = (BYTE*)pPTPWRH + uDispData;
+        FETCH_HW( uLenData, pMPC_PH->lendata );
+        FETCH_FW( uOffData, pMPC_PH->offdata );
+        pData = (BYTE*)pMPC_TH + uOffData;
         if( uLenData > 128 )
             uLenData = 128;
         display_data( "Pkt", pData, (int)uLenData, bDir );
-        pBytePtr = (BYTE*)pPTPMDL + SizeMDL;
+        pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
     }
 
     return;
-}   /* End function  display_msh_8108() */
+}   /* End function  display_rrh_8108() */
 
-/* ----------------------------------------------------------------- */
-/* display_msh_x17E()                                                */
-/* ----------------------------------------------------------------- */
-// In all cases that have been seen the PTPMSH types 0x417E/0xC17E are
-// followed by a single PTPMDL, which is followed by a single PTPDAX,
-// which is followed by up to four PTPSUXs.
+/* ------------------------------------------------------------------ */
+/* display_rrh_x17E()                                                 */
+/* ------------------------------------------------------------------ */
+// In all cases that have been seen the MPC_RRH types 0x417E/0xC17E are
+// followed by a single MPC_PH, which is followed by a single MPC_PUK,
+// which is followed by up to four MPC_PUSs.
 
-void  display_msh_x17E( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir )
+void  display_rrh_x17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
 
-//  PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-//  PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
-    PPTPMDL    pPTPMDL;
-    PPTPDAX    pPTPDAX;
-    PPTPSUX    pPTPSUX[6];
-    U16        uDispMDL;
+//  PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+//  PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
+    MPC_PH*    pMPC_PH;
+    MPC_PUK*   pMPC_PUK;
+    MPC_PUS*   pMPC_PUS;
+    U16        uOffPH;
 //  U16        uLenData;
-    U32        uDispData;
-    U16        uLenDAX;
-    U16        uTotalLenSUX;
-    U16        uLenSUX;
-    BYTE*      pBytePtr;
-    int        iTotLenSux;
+    U32        uOffData;
+    U16        uLenPUK;
+    U16        uTotalLenPUS;
+    U16        uLenPUS;
+    int        iTotLenPUS;
     int        i;
 
 
-    // Display the PTPMSH.
-    display_data( "MSH", (BYTE*)pPTPMSH, (int)SizeMSH, bDir );
+    // Display the MPC_RRH.
+    display_data( "RRH", (BYTE*)pMPC_RRH, (int)SIZE_RRH, bDir );
 
-    // Point to the PTPMDL.
-    FETCH_HW( uDispMDL, pPTPMSH->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSH + uDispMDL;
-    pPTPMDL = (PPTPMDL)pBytePtr;
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
 
-    // Display the PTPMDL.
-    display_data( "MDL", (BYTE*)pPTPMDL, (int)SizeMDL, bDir );
+    // Display the MPC_PH.
+    display_data( " PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
 
     // Get the length of and point to the data referenced by the
-    // PTPMDL. The data contain a PTPDAX and one or more PTPSUXs.
-//  FETCH_HW( uLenData, pPTPMDL->LenData );
-    FETCH_FW( uDispData, pPTPMDL->DispData );
-    pBytePtr = (BYTE*)pPTPWRH + uDispData;
-    pPTPDAX = (PPTPDAX)pBytePtr;
+    // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
+//  FETCH_HW( uLenData, pMPC_PH->lendata );
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pMPC_PUK = (MPC_PUK*)((BYTE*)pMPC_TH + uOffData);
 
-    // Display the PTPDAX.
-    display_data( "DAX", (BYTE*)pPTPDAX, (int)SizeDAX, bDir );
+    // Display the MPC_PUK.
+    display_data( "PUK", (BYTE*)pMPC_PUK, (int)SIZE_PUK, bDir );
 
-    // Get the length of the PTPDAX and the total length of the
-    // following PTPSUXs, then point to the first PTPSUX.
-    FETCH_HW( uLenDAX, pPTPDAX->Length );
-    FETCH_HW( uTotalLenSUX, pPTPDAX->TotalLenSUX );
-    pBytePtr = (BYTE*)pPTPDAX + uLenDAX;
-    iTotLenSux = uTotalLenSUX;
+    // Get the length of the MPC_PUK and the total length of the
+    // following MPC_PUSs, then point to the first MPC_PUS.
+    FETCH_HW( uLenPUK, pMPC_PUK->length );
+    FETCH_HW( uTotalLenPUS, pMPC_PUK->lenpus );
+    iTotLenPUS = uTotalLenPUS;
+    pMPC_PUS = (MPC_PUS*)((BYTE*)pMPC_PUK + uLenPUK);
 
-    // Point to each of the PTPSUXs.
+    // Point to each of the MPC_PUSs.
     // Note: we allow for six, the most that has been seen is four.
     for( i = 0 ; i <= 5 ; i++ )
     {
-        pPTPSUX[i] = NULL;
-    }
-    for( i = 0 ; i <= 5 ; i++ )
-    {
-        if( iTotLenSux <= 0 )
+        if( iTotLenPUS <= 0 )
             break;
 
-        // Point to the PTPSUX
-        pPTPSUX[i] = (PPTPSUX)pBytePtr;
+        // Get the length of the MPC_PUS.
+        FETCH_HW( uLenPUS, pMPC_PUS->length );
 
-        // Get the length of the PTPSUX.
-        FETCH_HW( uLenSUX, pPTPSUX[i]->Length );
+        // Display the MPC_PUS.
+        display_data( "PUS", (BYTE*)pMPC_PUS, (int)uLenPUS, bDir );
 
-        // Display the PTPSUX.
-        display_data( "SUX", (BYTE*)pPTPSUX[i], (int)uLenSUX, bDir );
-
-        // Point to the next PTPSUX
-        pBytePtr = (BYTE*)pPTPSUX[i] + uLenSUX;
+        // Point to the next MPC_PUS
+        pMPC_PUS = (MPC_PUS*)((BYTE*)pMPC_PUS + uLenPUS);
 
         //
-        iTotLenSux -= uLenSUX;
+        iTotLenPUS -= uLenPUS;
     }
 
     return;
-}   /* End function  display_msh_x17E() */
+}   /* End function  display_rrh_x17E() */
 
-/* ----------------------------------------------------------------- */
-/* display_msh_C108()                                                */
-/* ----------------------------------------------------------------- */
-// In all cases that have been seen the PTPMSH type 0xC108 is followed
-// by a single PTPMDL, which is followed by a single PTPDAC.
+/* ------------------------------------------------------------------ */
+/* display_rrh_C108()                                                 */
+/* ------------------------------------------------------------------ */
+// In all cases that have been seen the MPC_RRH type 0xC108 is followed
+// by a single MPC_PH, which is followed by a single MPC_PIX.
 
-void  display_msh_C108( DEVBLK* pDEVBLK, PPTPWRH pPTPWRH, PPTPMSH pPTPMSH, BYTE bDir )
+void  display_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
 
-//  PPTPATH    pPTPATH      = pDEVBLK->dev_data;
-//  PPTPBLK    pPTPBLK      = pPTPATH->pPTPBLK;
-    PPTPMDL    pPTPMDL;
-    PPTPDAC    pPTPDAC;
-    U16        uDispMDL;
+//  PTPATH*    pPTPATH      = pDEVBLK->dev_data;
+//  PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
+    MPC_PH*    pMPC_PH;
+    MPC_PIX*   pMPC_PIX;
+    U16        uOffPH;
     U16        uLenData;
-    U32        uDispData;
-    BYTE*      pBytePtr;
+    U32        uOffData;
 
 
-    // Display the PTPMSH.
-    display_data( "MSH", (BYTE*)pPTPMSH, (int)SizeMSH, bDir );
+    // Display the MPC_RRH.
+    display_data( "RRH", (BYTE*)pMPC_RRH, (int)SIZE_RRH, bDir );
 
-    // Point to the PTPMDL.
-    FETCH_HW( uDispMDL, pPTPMSH->DispMDL );
-    pBytePtr = (BYTE*)pPTPMSH + uDispMDL;
-    pPTPMDL = (PPTPMDL)pBytePtr;
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
 
-    // Display the PTPMDL.
-    display_data( "MDL", (BYTE*)pPTPMDL, (int)SizeMDL, bDir );
+    // Display the MPC_PH.
+    display_data( " PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
 
     // Get the length of and point to the data referenced by the
-    // PTPMDL. The data is a PTPDAC.
-    FETCH_HW( uLenData, pPTPMDL->LenData );
-    FETCH_FW( uDispData, pPTPMDL->DispData );
-    pBytePtr = (BYTE*)pPTPWRH + uDispData;
-    pPTPDAC = (PPTPDAC)pBytePtr;
+    // MPC_PH. The data is a MPC_PIX.
+    FETCH_HW( uLenData, pMPC_PH->lendata );
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pMPC_PIX = (MPC_PIX*)((BYTE*)pMPC_TH + uOffData);
 
-    // Display the PTPDAC.
-    display_data( "DAC", (BYTE*)pPTPDAC, (int)uLenData, bDir );
+    // Display the MPC_PIX.
+    display_data( "PIX", (BYTE*)pMPC_PIX, (int)uLenData, bDir );
 
     return;
-}   /* End function  display_msh_C108() */
+}   /* End function  display_rrh_C108() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* display_hx0()                                                    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 
-void  display_hx0( DEVBLK* pDEVBLK, PPTPHX0 pPTPHX0, U16 uCount, BYTE bDir )
+void  display_hx0( DEVBLK* pDEVBLK, PTPHX0* pPTPHX0, U16 uCount, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
@@ -8502,37 +8367,37 @@ void  display_hx0( DEVBLK* pDEVBLK, PPTPHX0 pPTPHX0, U16 uCount, BYTE bDir )
     return;
 }   /* End function  display_hx0() */
 
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 /* display_hx2()                                                    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
 
-void  display_hx2( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2, U16 uCount, BYTE bDir )
+void  display_hx2( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2, U16 uCount, BYTE bDir )
 {
 
     UNREFERENCED( pDEVBLK );
     UNREFERENCED( uCount  );
 
-    PPTPHSV   pPTPHSV;
+    PTPHSV*   pPTPHSV;
     BYTE*     pCurCv;
     BYTE*     pEndCv;
 
 
     // Display the XID2.
-    display_data( "XID2", (BYTE*)pPTPHX2, (int)pPTPHX2->LenXcv, bDir );
+    display_data( "HX2", (BYTE*)pPTPHX2, (int)pPTPHX2->LenXcv, bDir );
 
     // Display the cv's.
     pCurCv = (BYTE*)pPTPHX2 + pPTPHX2->LenXcv;
     pEndCv = (BYTE*)pPTPHX2 + pPTPHX2->Length;
     while( pCurCv < pEndCv )
     {
-        pPTPHSV = (PPTPHSV)pCurCv;
+        pPTPHSV = (PTPHSV*)pCurCv;
         if( pPTPHSV->Key == CSV_KEY )
         {
-            display_data( "CSVcv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
+            display_data( "Scv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
         }
         else
         {
-            display_data( "cv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
+            display_data( " cv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
         }
         pCurCv += pPTPHSV->Length;
     }
@@ -8541,9 +8406,9 @@ void  display_hx2( DEVBLK* pDEVBLK, PPTPHX2 pPTPHX2, U16 uCount, BYTE bDir )
 }   /* End function  display_hx2() */
 
 
-/* ----------------------------------------------------------------- */
-/* display_data()                                                    */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* display_data()                                                     */
+/* ------------------------------------------------------------------ */
 // Function to display storage.
 
 void  display_data( const char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
@@ -8606,9 +8471,9 @@ void  display_data( const char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
 }   /* End function  display_data() */
 
 
-/* ----------------------------------------------------------------- */
-/* gen_csv_sid()                                                     */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* gen_csv_sid()                                                      */
+/* ------------------------------------------------------------------ */
 // If this function is called multiple times with the same input clock
 // values the output token value will always be the same.
 // For example:-
@@ -9790,9 +9655,9 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
     return;
 }   /* End function  gen_csv_sid() */
 
-/* ----------------------------------------------------------------- */
-/* shift_left_dbl() and shift_right_dl()                             */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* shift_left_dbl() and shift_right_dl()                              */
+/* ------------------------------------------------------------------ */
 // These two functions emulate the action of the S/390 SLDL and SRDL
 // machine instructions. The machine instructions treat an even-odd
 // pair of 32-bit registers as a 64-bit value to be shifted left or
@@ -9835,9 +9700,9 @@ void  shift_right_dbl( U32* even, U32* odd, int number )
 }   /* End function  shift_right_dbl() */
 
 
-/* ----------------------------------------------------------------- */
-/* calculate_icmpv6_checksum()                                       */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* calculate_icmpv6_checksum()                                        */
+/* ------------------------------------------------------------------ */
 // This is not a general purpose function, it is solely for calculating
 // the checksum of ICMPv6 packets sent to the guest on the y-side. The
 // following restriction apply:-
@@ -9922,9 +9787,9 @@ void  calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
 }   /* End function  calculate_icmpv6_checksum() */
 
 
-/* ----------------------------------------------------------------- */
-/* HDL stuff                                                         */
-/* ----------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* HDL stuff                                                          */
+/* ------------------------------------------------------------------ */
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )

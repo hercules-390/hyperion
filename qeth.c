@@ -123,7 +123,7 @@ static const NED node_data[] = {
 
     { /* .code     = */ NODE_GNEQ }
 };
-       
+
 
 #define SII_SIZE 4
 
@@ -201,7 +201,7 @@ int i;
 do {                                               \
   if(((OSA_GRP*)((_dev)->group->grp_data))->debug) \
         TRACE(__VA_ARGS__);                        \
-} while(0) 
+} while(0)
 #else
  #define DBGTRC(_dev, ...)
  #define DUMP(_dev, _name, _ptr, _len)
@@ -338,25 +338,28 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 MPC_TH  *th = (MPC_TH*)grp->rspbf;
 MPC_RRH *rrh;
 MPC_PH  *ph;
-U16 offset;
-U16 rqsize;
+U32 offrrh;
+U16 offph;
+U16 lenpus;
+U32 offdata;
+U32 rqsize;
 U32 ackseq;
 
     /* Copy request to response buffer */
-    FETCH_HW(rqsize,req_th->rrlen);
+    FETCH_FW(rqsize,req_th->length);
     memcpy(th,req_th,rqsize < RSP_BUFSZ ? rqsize : RSP_BUFSZ);
 
-    FETCH_HW(offset,th->rroff);
-    if(offset > 0x400)
+    FETCH_FW(offrrh,th->offrrh);
+    if(offrrh > 0x400)
         return;
-    DUMP(dev, "TH",th,offset);
-    rrh = (MPC_RRH*)((BYTE*)th+offset);
+    DUMP(dev, "TH",th,offrrh);
+    rrh = (MPC_RRH*)((BYTE*)th+offrrh);
 
-    FETCH_HW(offset,rrh->pduhoff);
-    if(offset > 0x400)
+    FETCH_HW(offph,rrh->offph);
+    if(offph > 0x400)
         return;
-    DUMP(dev, "RRH",rrh,offset);
-    ph = (MPC_PH*)((BYTE*)rrh+offset);
+    DUMP(dev, "RRH",rrh,offph);
+    ph = (MPC_PH*)((BYTE*)rrh+offph);
     DUMP(dev, "PH",ph,sizeof(MPC_PH));
 
     /* Update ACK Sequence Number */
@@ -368,29 +371,37 @@ U32 ackseq;
 
     case RRH_TYPE_CM:
         {
-            MPC_PDU *pdu = (MPC_PDU*)(ph+1);
-            DUMP(dev, "PDU CM",pdu,sizeof(MPC_PDU));
-            UNREFERENCED(pdu);
+            MPC_PUK *puk;
+            FETCH_FW(offdata,ph->offdata);
+            puk = (MPC_PUK*)((BYTE*)req_th+offdata);
+            FETCH_HW(lenpus,puk->lenpus);
+            DUMP(dev, "PUK CM",puk,(sizeof(MPC_PUK)+lenpus));
+            UNREFERENCED(puk);
         }
         break;
 
     case RRH_TYPE_ULP:
         {
-            MPC_PDU *pdu = (MPC_PDU*)(ph+1);
-            DUMP(dev, "PDU ULP",pdu,sizeof(MPC_PDU));
+            MPC_PUK *puk;
+            MPC_PUS *pus;
+            FETCH_FW(offdata,ph->offdata);
+            puk = (MPC_PUK*)((BYTE*)req_th+offdata);
+            pus = (MPC_PUS*)((BYTE*)puk+SIZE_PUK);        /* Assumes PUS_01 is first */
+            FETCH_HW(lenpus,puk->lenpus);
+            DUMP(dev, "PUK ULP",puk,(sizeof(MPC_PUK)+lenpus));
 
-            switch(pdu->tgt) {
+            switch(puk->what) {
 
-            case PDU_TGT_OSA:
+            case PUK_WHAT_41:
 
-                switch(pdu->cmd) {
+                switch(puk->type) {
 
-                case PDU_CMD_SETUP:
-                    DBGTRC(dev, _("PDU CMD SETUP\n"));
+                case PUK_TYPE_SETUP:
+                    DBGTRC(dev, _("PUK TYPE SETUP\n"));
                     break;
 
-                case PDU_CMD_ENABLE:
-                    grp->l3 = (pdu->proto == PDU_PROTO_L3);
+                case PUK_TYPE_ENABLE:
+                    grp->l3 = (pus->vc.pus_01.proto == PROTOCOL_LAYER3);
 
                     VERIFY
                     (
@@ -432,28 +443,28 @@ U32 ackseq;
                     if(grp->ttmtu)
                         VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
 
-                    /* end case PDU_CMD_ENABLE: */
+                    /* end case PUK_TYPE_ENABLE: */
                     break;
 
-                case PDU_CMD_ACTIVATE:
-                    DBGTRC(dev, _("PDU CMD ACTIVATE\n"));
+                case PUK_TYPE_ACTIVE:
+                    DBGTRC(dev, _("PUK TYPE ACTIVE\n"));
                     break;
 
                 default:
-                    DBGTRC(dev, _("ULP Target OSA Cmd %2.2x\n"),pdu->cmd);
+                    DBGTRC(dev, _("ULP Target OSA Cmd %2.2x\n"),puk->type);
                 }
-                /* end switch(pdu->cmd) */
+                /* end switch(puk->type) */
                 break;
-            /* end case PDU_TGT_OSA: */
+            /* end case PUK_WHAT_41: */
 
-            case PDU_TGT_QDIO:
-                DBGTRC(dev, _("PDU QDIO\n"));
+            case PUK_WHAT_43:
+                DBGTRC(dev, _("PUK QDIO\n"));
                 break;
 
             default:
-                DBGTRC(dev, _("ULP Target %2.2x\n"),pdu->tgt);
+                DBGTRC(dev, _("ULP Target %2.2x\n"),puk->what);
             }
-            /* end switch(pdu->tgt) */
+            /* end switch(puk->what) */
 
         }
         /* end case RRH_TYPE_ULP: */
@@ -463,10 +474,10 @@ U32 ackseq;
         {
         MPC_IPA *ipa = (MPC_IPA*)(ph+1);
             DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
-            FETCH_HW(offset,ph->pdulen);
-            if(offset > 0x400)
+            FETCH_FW(offdata,ph->offdata);
+            if(offdata > 0x400)
                 return;
-            DUMP(dev, "REQ",(ipa+1),offset-sizeof(MPC_IPA));
+            DUMP(dev, "REQ",(ipa+1),offdata-sizeof(MPC_IPA));
 
             switch(ipa->cmd) {
 
@@ -677,7 +688,7 @@ U32 ackseq;
             ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
 
             DUMP(dev, "IPA_HDR RSP",ipa,sizeof(MPC_IPA));
-            DUMP(dev, "IPA_REQ RSP",(ipa+1),offset-sizeof(MPC_IPA));
+            DUMP(dev, "IPA_REQ RSP",(ipa+1),offdata-sizeof(MPC_IPA));
         }
         /* end case RRH_TYPE_IPA: */
         break;
@@ -1304,7 +1315,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /* QDIO Set Subchannel Indicator                                     */
 /*-------------------------------------------------------------------*/
 static int qeth_set_sci ( DEVBLK *dev, void *desc )
-{ 
+{
 CHSC_REQ21 *req21 = (void *)desc;
 RADR alsi, dsci;
 BYTE ks, kc;
@@ -1315,15 +1326,15 @@ U16 opc;
     if(opc)
         return 3; // Invalid operation code
 
-    FETCH_DW(alsi, req21->alsi); 
+    FETCH_DW(alsi, req21->alsi);
     ks = req21->sk & CHSC_REQ21_KS;
 
-    FETCH_DW(dsci, req21->dsci); 
+    FETCH_DW(dsci, req21->dsci);
     kc = (req21->sk & CHSC_REQ21_KC) << 4;
 
     if(alsi && dsci)
     {
-        if(STORCHK(alsi,0,ks,STORKEY_CHANGE,dev) 
+        if(STORCHK(alsi,0,ks,STORKEY_CHANGE,dev)
           || STORCHK(dsci,0,kc,STORKEY_CHANGE,dev))
         {
             dev->qdio.thinint = 0;
@@ -1331,7 +1342,7 @@ U16 opc;
         }
         else
             dev->qdio.thinint = 1;
-        
+
     }
     else
         dev->qdio.thinint = 0;
@@ -1578,7 +1589,7 @@ int num;                                /* Number of bytes to move   */
 
         /* Insert chpid & unit address in the device ned */
         STORE_HW((rcd+0)->tag,dev->devnum);
-        
+
         /* Use unit address of first OSA device as control unit address */
         STORE_HW((rcd+1)->tag,dev->group->memdev[0]->devnum);
 
@@ -1619,7 +1630,7 @@ int num;                                /* Number of bytes to move   */
     }
 
 
-    case OSA_RNI:   
+    case OSA_RNI:
     /*---------------------------------------------------------------*/
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
@@ -1669,7 +1680,7 @@ int num;                                /* Number of bytes to move   */
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
             if(FACILITY_ENABLED_DEV(QEBSM))
-                qib->rflags |= QIB_RFLAGS_QEBSM; 
+                qib->rflags |= QIB_RFLAGS_QEBSM;
 #endif /*defined(_FEATURE_QEBSM)*/
         }
 
