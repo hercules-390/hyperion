@@ -1083,15 +1083,19 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
     for(i = 0; i < scs; i++)
     {
 
-      /* Prevent warning for sd2 */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
+      /* Prevent gcc warning for sd2 */
+#ifdef __GNUC__	    
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wuninitialized"
+#endif /* #ifdef __GNUC__ */
 
       /* Stop searching when child tested and no consecutive child character */
       if(unlikely(!ind_search_siblings && !SD_ccc(cc->f1, sd1, sd2, i)))
         return(0);
 
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+  #pragma GCC diagnostic pop
+#endif /* #ifdef __GNUC__ */
 
       if(unlikely(*ch == SD_sc(cc->f1, sd1, sd2, i)))
       {
@@ -1531,8 +1535,10 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       /* Prevent warning for iss */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
+#ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wuninitialized"
+#endif /* #ifdef __GNUC__ */
 
       if(unlikely(!ec.ecl[iss[i]]))
         ARCH_DEP(expand_is)(&ec, iss[i]);
@@ -1542,7 +1548,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         ec.ocl += ec.ecl[iss[i]];
       }
 
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+  #pragma GCC diagnostic pop
+#endif /* #ifdef __GNUC__ */
 
     }
 
