@@ -3893,6 +3893,7 @@ int ls_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
+#if 0
 /*-------------------------------------------------------------------*/
 /* change directory command                                          */
 /*-------------------------------------------------------------------*/
@@ -3954,6 +3955,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     }
     return -1;
 }
+#endif
 
 #if defined(OPTION_LPP_RESTRICT)
 /*-------------------------------------------------------------------*/
