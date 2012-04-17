@@ -689,7 +689,9 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
         int     bitno;
         char    c;
 
-            if(!strncasecmp("bit",argv[2],3) && sscanf(argv[2]+3,"%d%c",&bitno, &c) == 1)
+            if(!strncasecmp("bit",argv[2],3) 
+              && sscanf(argv[2]+3,"%d%c",&bitno, &c) == 1 
+              && bitno >= 0 && bitno <= STFL_HMAX)
             {
             int fbyte, fbit;
     
@@ -701,7 +703,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
             }
             else
             {
-                logmsg(MSG(HHC00891, "E"));
+                logmsg("HHC00891 Facility %s not found\n",argv[2]);
                 return -1;
             }
         }
