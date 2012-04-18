@@ -802,8 +802,17 @@ struct _PTPHSV                             // PTP Handshake CSVcv
 
 
 /*********************************************************************/
-/* Functions                                                         */
+/* Functions (in mpc.c)                                              */
 /*********************************************************************/
+
+MPC_PUS*  find_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
+void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir );
+void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
+void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
+void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
+void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
 
 
 /*********************************************************************/
