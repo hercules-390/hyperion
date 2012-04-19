@@ -2469,6 +2469,7 @@ BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */
 BYTE    area[64];                       /* Message area              */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
+int     cmdretry = 255;                 /* Limit command retry       */
 
     /* Wait for the device to become available */
     obtain_lock (&dev->lock);
@@ -3182,7 +3183,7 @@ resume_suspend:
         dev->syncio_retry = 0;
 
         /* Check for Command Retry (suggested by Jim Pierson) */
-        if ( unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
+        if ( --cmdretry && unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
         {
             chain    = 1;
             ccwaddr -= 8;   /* (retry same ccw again) */
