@@ -290,6 +290,7 @@ static void  ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static void  ARCH_DEP(expand_is)(struct ec *ec, U16 is);
 static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index);
 static int   ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch);
+static int   ARCH_DEP(fetch_chs_and_adjust)(struct cc *cc, BYTE *ch1, BYTE *ch2);
 static int   ARCH_DEP(fetch_is)(struct ec *ec, U16 *is);
 static void  ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8]);
 #ifdef OPTION_CMPSC_DEBUG
@@ -471,7 +472,8 @@ DEF_INST(compression_call)
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   struct cc cc;                        /* Compression context                 */
-  BYTE ch;                             /* Character read                      */
+  BYTE ch1;                            /* Character read                      */
+  BYTE ch2;
   int i;                               /* Index                               */
   U16 is;                              /* Last matched index symbol           */
   GREG srclen;                         /* Source length                       */
@@ -502,40 +504,34 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   /* Process individual index symbols until cbn bocomes zero */
   while(unlikely(GR1_cbn(iregs)))
   {
-    /* Get the next character, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
+    /* Get the next characters and adjust alphabet entry, return on end of source */
+    if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
       return;
-
-    /* Set last match (alphabet entry) and initiate search */
-    ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
     cc.dead_end = 1;
-    is = ch;
+    is = ch1;
 
-    /* Do normal searching on eos or unknown dead end */
-    if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
-    {      
+    /* Do normal searching on unknown dead end */
+    if(likely(!cc.dea[is][ch2]))
+    {
       /* Get the alphabet entry and try to find a child */
       cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
-      if(cc.dead_end)
+      while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+      if(unlikely(cc.dead_end))
       {
         /* We found a dead end combination */
-        cc.dea[is][ch] = 1;
+        cc.dea[is][ch2] = 1;
 
 #ifdef OPTION_CMPSC_DEBUG
-        WRMSG(HHC90365, "D", is, ch, "found");
+        WRMSG(HHC90365, "D", is, ch2, "found");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       }
     }
+
+#ifdef OPTION_CMPSC_DEBUG    
     else
-    {
-
-#ifdef OPTION_CMPSC_DEBUG
-      WRMSG(HHC90365, "D", is, ch, "encountered");
+      WRMSG(HHC90365, "D", is, ch2, "encountered");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
-
-    }	
 
     /* Write the last match, return on end of destination */
     if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -550,8 +546,8 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
     for(i = 0; i < 8; i++)
     {
-      /* Get the next character, return on end of source */
-      if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
+      /* Get the next characters and adjust alphabet entry, return on end of source */
+      if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
       {
         int j;
 
@@ -561,37 +557,32 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
         COMMITREGS(regs, iregs, r1, r2);
         return;
       }
-
-      /* Set last match (alphabet entry) and initiate search */
-      ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
       cc.dead_end = 1;
-      is = ch;
+      is = ch1;
 
-      /* Do normal searching on eos or unknown dead end */
-      if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
+      /* Do normal searching on unknown dead end */
+      if(likely(!cc.dea[is][ch2]))
       {
         /* Get the alphabet entry and try to find a child */      
         cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
-        while(ARCH_DEP(search_cce)(&cc, &ch, &is));
-        if(cc.dead_end)
+        while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+        if(unlikely(cc.dead_end))
         {
           /* We found a dead end combination */
-          cc.dea[is][ch] = 1;
+          cc.dea[is][ch2] = 1;
 
 #ifdef OPTION_CMPSC_DEBUG
-          WRMSG(HHC90365, "D", is, ch, "found");
+          WRMSG(HHC90365, "D", is, ch2, "found");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */      
 
         }
       }
-      else
-      {
 
 #ifdef OPTION_CMPSC_DEBUG
-        WRMSG(HHC90365, "D", is, ch, "encountered");
+      else
+        WRMSG(HHC90365, "D", is, ch2, "encountered");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-      }
       cc.is[i] = is;
 
 #ifdef OPTION_CMPSC_DEBUG
@@ -619,40 +610,34 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   while(GR_A(r2 + 1, iregs))
   {
-    /* Get the next character, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
+    /* Get the next characters and adjust alphabet entry, return on end of source */
+    if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
       return;
-
-    /* Set last match (alphabet entry) and initiate search */ 
-    ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
     cc.dead_end = 1;
-    is = ch;
+    is = ch1;
 
-    /* Do normal searching on eos or unknown dead end */
-    if(ARCH_DEP(fetch_ch)(&cc, &ch) || !cc.dea[is][ch])
+    /* Do normal searching on unknown dead end */
+    if(unlikely(!cc.dea[is][ch2]))
     {
       /* Get the alphabet entry and try to find a child */
       cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
-      if(cc.dead_end)
+      while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+      if(unlikely(cc.dead_end))
       {
         /* We found a dead end combination */
-        cc.dea[is][ch] = 1;
+        cc.dea[is][ch2] = 1;
 
 #ifdef OPTION_CMPSC_DEBUG
-        WRMSG(HHC90365, "D", is, ch, "found");
+        WRMSG(HHC90365, "D", is, ch2, "found");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
       }
     }
-    else
-    {
 
 #ifdef OPTION_CMPSC_DEBUG
-      WRMSG(HHC90365, "D", is, ch, "encountered");
+    else
+      WRMSG(HHC90365, "D", is, ch2, "encountered");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
-
-    }
 
     /* Write the last match, return on end of destination */
     if(unlikely(ARCH_DEP(store_is)(&cc, is)))
@@ -735,6 +720,67 @@ static int ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch)
 
 #ifdef OPTION_CMPSC_DEBUG
   WRMSG(HHC90318, "D", *ch, GR_A(cc->r2, cc->iregs));
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+  return(0);
+}
+
+/*----------------------------------------------------------------------------*/
+/* fetch_chs_and_adjust (characters)                                          */
+/*----------------------------------------------------------------------------*/
+static int ARCH_DEP(fetch_chs_and_adjust)(struct cc *cc, BYTE *ch1, BYTE *ch2)
+{
+  U64 len;                             /* Source length left                  */
+  unsigned ofst;                       /* Offset within page                  */
+
+  /* Check for end of source condition */
+  len = GR_A(cc->r2 + 1, cc->iregs);
+  if(unlikely(!len))
+  {
+
+#ifdef OPTION_CMPSC_DEBUG
+    WRMSG(HHC90317, "D");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    cc->regs->psw.cc = 0;
+    return(-1);
+  }
+
+  ofst = GR_A(cc->r2, cc->iregs) & 0x7ff;
+  ITIMER_SYNC(GR_A(cc->r2, cc->iregs) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+
+  /* Fingers crossed that we stay within current page */
+  if(unlikely(!cc->src || ofst < cc->ofst))
+    cc->src = MADDR((GR_A(cc->r2, cc->iregs) & ~0x7ff) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+  *ch1 = cc->src[ofst];
+  cc->ofst = ofst;
+
+#ifdef OPTION_CMPSC_DEBUG
+  WRMSG(HHC90318, "D", *ch1, GR_A(cc->r2, cc->iregs));
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+  /* Adjust registers, we always match the alphabet entry */
+  ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
+  len--;
+
+  /* Check if 2nd character available */
+  if(unlikely(!len))
+    return(0);                         /* It is ok when dead_end is detected  */
+
+  ITIMER_SYNC(GR_A(cc->r2, cc->iregs) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+
+  /* Fingers crossed that we stay within current page */
+  ofst++;
+  if(unlikely(ofst == 0x800))
+  {
+    ofst = 0;
+    cc->src = MADDR((GR_A(cc->r2, cc->iregs) & ~0x7ff) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+  }
+  *ch2 = cc->src[ofst];
+  cc->ofst = ofst;
+
+#ifdef OPTION_CMPSC_DEBUG
+   WRMSG(HHC90318, "D", *ch2, GR_A(cc->r2, cc->iregs));
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
   return(0);
