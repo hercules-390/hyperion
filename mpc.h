@@ -37,6 +37,10 @@
 #define PROTOCOL_NCP       0x0A
 #define PROTOCOL_UNKNOWN   0x7E
 
+#define FROM_GUEST         '<'
+#define TO_GUEST           '>'
+#define NO_DIRECTION       ' '
+
 /*===================================================================*/
 /* Structures used by multiple devices                               */
 /*===================================================================*/
@@ -165,13 +169,13 @@ struct _MPC_PUK                    /*                                */
 #define PUK_WHAT_43  0x43          /*                                */
 #define PUK_WHAT_45  0x45          /*                                */
 /*003*/  BYTE   type;              /* Type (See Note 5)              */
-#define PUK_TYPE_01       0x01     /*                                */
-#define PUK_TYPE_ENABLE   0x02     /*                                */
-#define PUK_TYPE_03       0x03     /*                                */
-#define PUK_TYPE_SETUP    0x04     /*                                */
-#define PUK_TYPE_05       0x05     /*                                */
-#define PUK_TYPE_CONFIRM  0x06     /*                                */
-#define PUK_TYPE_ACTIVE   0x60     /*                                */
+#define PUK_TYPE_01        0x01    /*                                */
+#define PUK_TYPE_ENABLE    0x02    /*                                */
+#define PUK_TYPE_DISABLE   0x03    /*                                */
+#define PUK_TYPE_SETUP     0x04    /*                                */
+#define PUK_TYPE_TAKEDOWN  0x05    /*                                */
+#define PUK_TYPE_CONFIRM   0x06    /*                                */
+#define PUK_TYPE_ACTIVE    0x60    /*                                */
 /*004*/  HWORD  lenpus;            /* Total length of the MPC_PUSs   */
                                    /* following the MPC_PUK.         */
 /*006*/  BYTE   reserved06[6];     /* ???, only ever seen nulls.     */
@@ -237,6 +241,10 @@ struct _MPC_PUS                    /*                                */
 /*01C*/      BYTE   unknown1C[16]; /* ???, only seen nulls.          */
            } b;                    /*                                */
 #define SIZE_PUS_02_B  0x002C      /* Size of MPC_PUS_02_B           */
+           struct _c {             /* PUS_02_A contents              */
+/*004*/      BYTE   userdata[8];   /* User data                      */
+           } c;                    /*                                */
+#define SIZE_PUS_02_C  0x000C      /* Size of MPC_PUS_02_C           */
          } pus_02;                 /* PUS_02 contents end            */
 
          struct _pus_03 {          /* PUS_03 contents                */
@@ -282,16 +290,17 @@ struct _MPC_PUS                    /*                                */
 #define SIZE_PUS_09  0x000C        /* Size of MPC_PUS_09             */
 
          struct _pus_0A {          /* PUS_0A contents                */
-/*004*/      BYTE   unknown04[6];  /* ?, seen in QETH ULP_ENABLE     */
-/*00A*/      BYTE   linknum;       /* ?, seen in QETH ULP_ENABLE     */
-/*00B*/      BYTE   lenportname;   /* ?, seen in QETH ULP_ENABLE     */
-/*00C*/      BYTE   portname[8];   /* ?, seen in QETH ULP_ENABLE     */
+/*004*/      BYTE   unknown04[4];  /* ???                            */
+/*008*/      HWORD  mtu;           /* MTU                            */
+/*00A*/      BYTE   linknum;       /* Link number                    */
+/*00B*/      BYTE   lenportname;   /* Length of the port name        */
+/*00C*/      BYTE   portname[8];   /* Port name                      */
          } pus_0A;                 /*                                */
 #define SIZE_PUS_0A  0x0014        /* Size of MPC_PUS_0A             */
 
          struct _pus_0B {          /* PUS_0B contents                */
-/*004*/      BYTE   cua[2];        /* ?, seen in QETH ULP_SETUP      */
-/*006*/      BYTE   rdevaddr[2];   /* ?, seen in QETH ULP_SETUP      */
+/*004*/      BYTE   cua[2];        /*                                */
+/*006*/      BYTE   rdevaddr[2];   /*                                */
          } pus_0B;                 /*                                */
 #define SIZE_PUS_0B  0x0008        /* Size of MPC_PUS_0B             */
 
@@ -805,14 +814,19 @@ struct _PTPHSV                             // PTP Handshake CSVcv
 /* Functions (in mpc.c)                                              */
 /*********************************************************************/
 
-MPC_PUS*  find_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
+MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
+MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
+MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
 void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir );
 void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
 void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
 void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
-void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
-void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
-void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
+void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
+void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
+void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit );
+void  display_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit );
+void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir );
+void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir );
 
 
 /*********************************************************************/

@@ -1891,6 +1891,8 @@ do { \
 #define HHC03978 "%1d:%04X PTP: option '%s' unknown or specified incorrectly"
 #define HHC03981 "%1d:%04X %s: %s: %s %s %s"
 #define HHC03982 "%s: %s %s %s"
+#define HHC03983 "%1d:%04X %s: %s"
+#define HHC03984 "%s"
 #define HHC03991 "%1d:%04X PTP: %s"
 #define HHC03992 "%1d:%04X PTP: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
 
