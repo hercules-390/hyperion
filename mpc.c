@@ -423,36 +423,6 @@ void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
 /* could be replaced with calls to display_rrh_and_pdu(), with a      */
 /* slight loss of functionality.)                                     */
-
-// How to deal with the following!  qeth.c does:-
-//          DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
-//          FETCH_FW(offdata,req_ph->offdata);
-//          if(offdata > 0x400)
-//              return;
-//          DUMP(dev, "REQ",(ipa+1),offdata-sizeof(MPC_IPA));
-//  19:49:32 HHC03983I 0:1E22 QETH: IPA something
-//  19:49:32 HHC03981I 0:1E22 QETH: TH: +0000< 00E00000 00000006 00000014 00000048  ...............H .\..............
-//  19:49:32 HHC03981I 0:1E22 QETH: TH: +0010< 10000001                             ....             ....
-//  19:49:32 HHC03981I 0:1E22 QETH: RRH: +0000< 00000000 C1030001 00000000 00000000  ................ ....A...........
-//  19:49:32 HHC03981I 0:1E22 QETH: RRH: +0010< 001C0010 00001005 12345678           .........4Vx     ............
-//  19:49:32 HHC03981I 0:1E22 QETH: PH: +0000< 01000010 00000038                    .......8         ........
-//  19:49:32 HHC03981I 0:1E22 QETH: PDU: +0000< 01000000 00000100 01000000 00000000  ................ ................
-//  19:49:32 DATA: 0014 IPA
-//  19:49:32 0000: 01 00 00 00 00 00 01 00 01 00 00 00 00 00 00 00
-//  19:49:32 0010: 00 00 00 00
-//  19:49:32 DATA: 0024 REQ
-//  19:49:32 0000: 56 C9 D0 00 00 00 00 00 56 C8 50 00 00 00 00 00
-//  19:49:32 0010: EE EE 00 00 00 00 00 00 56 C7 F8 00 00 00 00 00
-//  19:49:32 0020: 56 C7 E0 00
-//  19:49:32 STARTLAN
-//  19:49:32 DATA: 0014 IPA_HDR RSP
-//  19:49:32 0000: 01 81 00 00 00 00 01 00 01 00 00 00 00 00 00 00
-//  19:49:32 0010: 00 00 00 00
-//  19:49:32 DATA: 0024 IPA_REQ RSP
-//  19:49:32 0000: 56 C9 D0 00 00 00 00 00 56 C8 50 00 00 00 00 00
-//  19:49:32 0010: EE EE 00 00 00 00 00 00 56 C7 F8 00 00 00 00 00
-//  19:49:32 0020: 56 C7 E0 00
-
 void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
