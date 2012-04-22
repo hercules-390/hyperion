@@ -168,6 +168,18 @@ typedef struct _OSA_GRP {
 
     int   debug;                /* Adapter in IFF_DEBUG mode         */
 
+    BYTE  gtissue[4];           /* Guest token issuer                */
+    BYTE  gtcmfilt[4];          /* Guest token cm filter             */
+    BYTE  gtcmconn[4];          /* Guest token cm connection         */
+    BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
+    BYTE  gtulpconn[4];         /* Guest token ulp connection        */
+
+#define ODTOKEN 0x12345678      /* OSA device token                  */
+
+    U32   seqnumth;             /* MPC_TH sequence number            */
+    U32   seqnumis;             /* MPC_RRH sequence number issuer    */
+    U32   seqnumcm;             /* MPC_RRH sequence number cm        */
+
     } OSA_GRP;
 
 

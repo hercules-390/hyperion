@@ -21,13 +21,61 @@
 
 
 /*--------------------------------------------------------------------*/
-/* find_pus():                                                        */
+/* point_ipa():                                                       */
+/*--------------------------------------------------------------------*/
+MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
+{
+    UNREFERENCED( pDEVBLK );
+
+    MPC_PH*    pMPC_PH;
+    MPC_IPA*   pMPC_IPA;
+    U32        uOffData;
+    U16        uOffPH;
+
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+
+    // Get the length of and point to the data referenced by the
+    // MPC_PH. The data contain a MPC_IPA.
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pMPC_IPA = (MPC_IPA*)((BYTE*)pMPC_TH + uOffData);
+
+    return pMPC_IPA;
+}   /* End function  point_ipa() */
+
+/*--------------------------------------------------------------------*/
+/* point_puk():                                                       */
+/*--------------------------------------------------------------------*/
+MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
+{
+    UNREFERENCED( pDEVBLK );
+
+    MPC_PH*    pMPC_PH;
+    MPC_PUK*   pMPC_PUK;
+    U32        uOffData;
+    U16        uOffPH;
+
+    // Point to the MPC_PH.
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+
+    // Get the length of and point to the data referenced by the
+    // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pMPC_PUK = (MPC_PUK*)((BYTE*)pMPC_TH + uOffData);
+
+    return pMPC_PUK;
+}   /* End function  point_puk() */
+
+/*--------------------------------------------------------------------*/
+/* point_pus():                                                       */
 /*--------------------------------------------------------------------*/
 /* Return a pointer to the MPC_PUS of the required type. If the       */
 /* required type is not found a null pointer is returned. Although    */
 /* never seen, if multiple MPC_PUS of the required type exist, only   */
 /* the first MPC_PUS of the required type will ever be returned.      */
-MPC_PUS*  find_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
+MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
 {
     UNREFERENCED( pDEVBLK );
 
@@ -64,7 +112,7 @@ MPC_PUS*  find_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
     }
 
     return NULL;
-}   /* End function  find_pus() */
+}   /* End function  point_pus() */
 
 /*--------------------------------------------------------------------*/
 /* display_stuff()                                                    */
@@ -185,7 +233,7 @@ void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 /* MPC_RRH->proto == PROTOCOL_UNKNOWN (0x7E), the MPC_RRH is followed */
 /* by a single MPC_PH, which is followed by a single MPC_PUK, which   */
 /* is followed by up to four MPC_PUSs.                                */
-void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
+void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PUK*   pMPC_PUK;
@@ -196,6 +244,21 @@ void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
     U16        uLenPUS;
     U16        uLenPUK;
     U16        uOffPH;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -248,13 +311,28 @@ void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* == RRH_TYPE_IPA (0xC1) and MPC_RRH->proto == PROTOCOL_LAYER2       */
 /* (0x08), the MPC_RRH is followed by a single MPC_PH, which is       */
 /* followed by a single MPC_PIX.                                      */
-void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
+void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PIX*   pMPC_PIX;
     U32        uOffData;
     U16        uLenData;
     U16        uOffPH;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -284,7 +362,7 @@ void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
 /* could be replaced with calls to display_rrh_and_pdu(), with a      */
 /* slight loss of functionality.)                                     */
-void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit )
+void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
     U16        uNumPH;
@@ -294,6 +372,21 @@ void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
     U16        uLenData;
     U32        uOffData;
     BYTE*      pData;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
 
     /* Display the MPC_RRH.*/
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -336,4 +429,134 @@ void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 
     return;
 }   /* End function  display_rrh_and_pdu() */
+
+/*--------------------------------------------------------------------*/
+/* display_th_etc():                                                  */
+/*--------------------------------------------------------------------*/
+void  display_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
+{
+    MPC_RRH*   pMPC_RRH;
+    int        iForRRH;
+    U32        uOffRRH;
+    U16        uNumRRH;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    /* Display MPC_TH. */
+    display_th( pDEVBLK, pMPC_TH, bDir );
+
+    /* Get the number of MPC_RRHs and the displacement from    */
+    /* the start of the MPC_TH to the first (or only) MPC_RRH. */
+    FETCH_HW( uNumRRH, pMPC_TH->numrrh );
+    FETCH_FW( uOffRRH, pMPC_TH->offrrh );
+
+    /* Process each of the MPC_RRHs. */
+    for( iForRRH = 1; iForRRH <= uNumRRH; iForRRH++ )
+    {
+
+        /* Point to the first or subsequent MPC_RRH. */
+        pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
+
+        /* Display the MPC_RRH etc. */
+        if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+        {
+
+            /* Display MPC_RRH and following MPC_PUK etc. */
+            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+
+        }
+        else if( pMPC_RRH->proto == PROTOCOL_LAYER2 &&
+                 pMPC_RRH->type == RRH_TYPE_IPA &&
+                 pDEVBLK->ctctype == CTC_PTP &&
+                 pDEVBLK->devtype == 0x3088 )
+        {
+
+            /* Display MPC_RRH and following MPC_PIX etc. */
+            display_rrh_and_pix( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+
+        }
+        else
+        {
+
+            /* Display MPC_RRH and following PDU. */
+            display_rrh_and_pdu( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir, iLimit );
+
+        }
+
+        /* Get the displacement from the start of the MPC_TH to the */
+        /* next MPC_RRH. pMPC_RRH->offrrh will contain zero if this */
+        /* is the last MPC_RRH.                                     */
+        FETCH_FW( uOffRRH, pMPC_RRH->offrrh );
+
+    }
+
+    return;
+}   /* End function  display_th_etc() */
+
+/*--------------------------------------------------------------------*/
+/* display_iea():                                                     */
+/*--------------------------------------------------------------------*/
+void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
+{
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    /* Display MPC_IEA. */
+    display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, (int)sizeof(MPC_IEA), bDir );
+
+    return;
+}   /* End function  display_iea() */
+
+/*--------------------------------------------------------------------*/
+/* display_iear():                                                    */
+/*--------------------------------------------------------------------*/
+void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir )
+{
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    /* Display MPC_IEAR. */
+    display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, (int)sizeof(MPC_IEAR), bDir );
+
+    return;
+}   /* End function  display_iear() */
 
