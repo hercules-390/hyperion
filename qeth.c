@@ -88,6 +88,7 @@ void process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* 
 void process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk );
 void process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk );
 void process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk );
+void process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk );
 
 
 /*-------------------------------------------------------------------*/
@@ -353,27 +354,13 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 static void osa_adapter_cmd(DEVBLK *dev, MPC_TH *req_th)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
 MPC_TH  *rsp_th = (MPC_TH*)grp->rspbf;
-MPC_RRH *rsp_rrh;
-MPC_PH  *rsp_ph;
 
 MPC_RRH *req_rrh;
 MPC_PH  *req_ph;
-MPC_PUK *req_puk;
 
 U32 offrrh;
 U16 offph;
-// U16 lenpuk;
-// U16 lenpus;
-U32 offdata;
-U32 rqsize;
-U32 ackseq;
-
-    /* Copy request to response buffer */
-    FETCH_FW(rqsize,req_th->length);
-    memcpy(rsp_th,req_th,rqsize < RSP_BUFSZ ? rqsize : RSP_BUFSZ);
-    grp->rspsz = rqsize;
 
     /* Point to request MPC_RRH and MPC_PH. */
     FETCH_FW(offrrh,req_th->offrrh);
@@ -381,59 +368,105 @@ U32 ackseq;
     FETCH_HW(offph,req_rrh->offph);
     req_ph = (MPC_PH*)((BYTE*)req_rrh+offph);
 
-    /* Point to response MPC_RRH and MPC_PH. */
-    rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th+offrrh);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh+offph);
-
-    /* Update ACK Sequence Number */
-    FETCH_FW(ackseq,rsp_rrh->ackseq);
-    ackseq++;
-    STORE_FW(rsp_rrh->ackseq,ackseq);
-
     switch(req_rrh->type) {
 
     case RRH_TYPE_CM:
-        req_puk = point_puk(dev,req_th,req_rrh);
+        {
+            MPC_PUK *req_puk;
 
-        switch(req_puk->type) {
+            /* Display the request MPC_TH etc., maybe */
+            if( grp->debug )
+                display_osa_th_etc( dev, req_th, "CM request", FROM_GUEST, 0 );
 
-        case PUK_TYPE_ENABLE:
-            process_cm_enable( dev, req_th, req_rrh, req_puk );
-            break;
+            req_puk = point_puk( dev, req_th, req_rrh );
 
-        case PUK_TYPE_SETUP:
-            process_cm_setup( dev, req_th, req_rrh, req_puk );
-            break;
+            switch(req_puk->type) {
 
-        case PUK_TYPE_TAKEDOWN:
-            process_cm_takedown( dev, req_th, req_rrh, req_puk );
-            break;
+            case PUK_TYPE_ENABLE:
+                process_cm_enable( dev, req_th, req_rrh, req_puk );
+                break;
 
-        case PUK_TYPE_DISABLE:
-            process_cm_disable( dev, req_th, req_rrh, req_puk );
-            break;
+            case PUK_TYPE_SETUP:
+                process_cm_setup( dev, req_th, req_rrh, req_puk );
+                break;
 
-        default:
-            /* Display the request MPC_TH etc. */
-            display_th_etc( dev, req_th, "CM Unknown", FROM_GUEST, 0 );
+            case PUK_TYPE_TAKEDOWN:
+                process_cm_takedown( dev, req_th, req_rrh, req_puk );
+                break;
 
-        /* end switch(puk->type) */
+            case PUK_TYPE_DISABLE:
+                process_cm_disable( dev, req_th, req_rrh, req_puk );
+                break;
+
+            default:
+                process_unknown_puk( dev, req_th, req_rrh, req_puk );
+
+            }
+
+            /* Display the response MPC_TH etc., maybe */
+            if( grp->debug && grp->rspsz )
+                display_osa_th_etc( dev, rsp_th, "CM response", TO_GUEST, 0 );
+
         }
-
-        /* end case RRH_TYPE_CM: */
         break;
 
     case RRH_TYPE_ULP:
-        req_puk = point_puk(dev,req_th,req_rrh);
+        {
+            MPC_PUK *req_puk;
 
-        switch(req_puk->what) {
+            /* Display the request MPC_TH etc., maybe */
+            if( grp->debug )
+                display_osa_th_etc( dev, req_th, "ULP request", FROM_GUEST, 0 );
 
-        case PUK_WHAT_41:
+            req_puk = point_puk(dev,req_th,req_rrh);
 
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
                 process_ulp_enable( dev, req_th, req_rrh, req_puk );
+                if( !grp->rspsz )
+                    break;
+
+                VERIFY
+                (
+                    TUNTAP_CreateInterface
+                    (
+                        grp->tuntap,
+                        0
+                            | IFF_NO_PI
+                            | IFF_OSOCK
+                            | (grp->l3 ? IFF_TUN : IFF_TAP)
+                        ,
+                        &grp->ttfd,
+                        grp->ttdevn
+                    )
+                    == 0
+                );
+
+                /* Set Non-Blocking mode */
+                socket_set_blocking_mode(grp->ttfd,0);
+
+#if defined(IFF_DEBUG)
+                if (grp->debug)
+                    VERIFY(!TUNTAP_SetFlags(grp->ttdevn,IFF_DEBUG));
+#endif /*defined(IFF_DEBUG)*/
+#if defined( OPTION_TUNTAP_SETMACADDR )
+                if(grp->tthwaddr)
+                    VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
+#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+                if(grp->ttipaddr)
+#if defined( OPTION_W32_CTCI )
+                    VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,grp->ttipaddr));
+#else /*!defined( OPTION_W32_CTCI )*/
+                    VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
+#endif /*defined( OPTION_W32_CTCI )*/
+#if defined( OPTION_TUNTAP_SETNETMASK )
+                if(grp->ttnetmask)
+                    VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+                if(grp->ttmtu)
+                    VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
+
                 break;
 
             case PUK_TYPE_SETUP:
@@ -448,53 +481,63 @@ U32 ackseq;
                 process_ulp_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
-            default:
-                /* Display the request MPC_TH etc. */
-                display_th_etc( dev, req_th, "ULP Unknown", FROM_GUEST, 0 );
-
-            /* end switch(puk->type) */
-            }
-            /* end case PUK_WHAT_41: */
-            break;
-
-        case PUK_WHAT_43:
-
-            switch(req_puk->type) {
-
             case PUK_TYPE_ACTIVE:
                 process_dm_act( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
-                /* Display the request MPC_TH etc. */
-                display_th_etc( dev, req_th, "ULP Unknown", FROM_GUEST, 0 );
+                process_unknown_puk( dev, req_th, req_rrh, req_puk );
 
-            /* end switch(puk->type) */
             }
-            /* end case PUK_WHAT_43: */
-            break;
 
-        default:
-            /* Display the request MPC_TH etc. */
-            display_th_etc( dev, req_th, "ULP Unknown", FROM_GUEST, 0 );
+            /* Display the response MPC_TH etc., maybe */
+            if( grp->debug && grp->rspsz )
+                display_osa_th_etc( dev, rsp_th, "ULP response", TO_GUEST, 0 );
 
-        /* end switch(puk->what) */
         }
-
-        /* end case RRH_TYPE_ULP: */
         break;
 
     case RRH_TYPE_IPA:
         {
+            MPC_RRH *rsp_rrh;
+            MPC_PH  *rsp_ph;
             MPC_IPA *ipa;
 
-            ipa = point_ipa(dev,req_th,req_rrh);
+            U32      rqsize;
+//          U32      offdata;
+//          U32      ackseq;
 
-            DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
-            FETCH_FW(offdata,req_ph->offdata);
-            if(offdata > 0x400)
-                return;
-            DUMP(dev, "REQ",(ipa+1),offdata-sizeof(MPC_IPA));
+            /* Display the request MPC_TH etc., maybe */
+            if( grp->debug )
+                display_osa_th_etc( dev, req_th, "IPA request", FROM_GUEST, 0 );
+
+            /* Copy request to response buffer */
+            FETCH_FW(rqsize,req_th->length);
+            memcpy(rsp_th,req_th,rqsize < RSP_BUFSZ ? rqsize : RSP_BUFSZ);
+            grp->rspsz = rqsize;
+
+            /* Point to response MPC_RRH and MPC_PH. */
+            rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th+offrrh);
+            rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh+offph);
+
+            /* Modify the response MPC_TH and MPC_RRH. */
+            STORE_FW( rsp_th->seqnum, ++grp->seqnumth );
+//          STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
+            memcpy( rsp_rrh->token, grp->gtulpconn, MPC_TOKEN_LENGTH );
+
+//          /* Update ACK Sequence Number */
+//          FETCH_FW(ackseq,req_rrh->seqnum);
+//          ackseq++;
+//          STORE_FW(rsp_rrh->ackseq,ackseq);
+
+            /* Point to RESPONSE MPC_IPA. */
+            ipa = point_ipa(dev,rsp_th,rsp_rrh);
+
+//          DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
+//          FETCH_FW(offdata,req_ph->offdata);
+//          if(offdata > 0x400)
+//              return;
+//          DUMP(dev, "REQ",(ipa+1),offdata-sizeof(MPC_IPA));
 
             switch(ipa->cmd) {
 
@@ -556,6 +599,7 @@ U32 ackseq;
                 break;
 
             case IPA_CMD_STARTLAN:
+                /* Note: the MPC_IPA may be 16-bytes in length, not 20-bytes. */
                 {
                     DBGTRC(dev, _("STARTLAN\n"));
 
@@ -704,8 +748,13 @@ U32 ackseq;
 
             ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
 
-            DUMP(dev, "IPA_HDR RSP",ipa,sizeof(MPC_IPA));
-            DUMP(dev, "IPA_REQ RSP",(ipa+1),offdata-sizeof(MPC_IPA));
+//          DUMP(dev, "IPA_HDR RSP",ipa,sizeof(MPC_IPA));
+//          DUMP(dev, "IPA_REQ RSP",(ipa+1),offdata-sizeof(MPC_IPA));
+
+            /* Display the response MPC_TH etc., maybe */
+            if( grp->debug )
+                display_osa_th_etc( dev, rsp_th, "IPA response", TO_GUEST, 0 );
+
         }
         /* end case RRH_TYPE_IPA: */
         break;
@@ -1973,6 +2022,7 @@ static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
 /*-------------------------------------------------------------------*/
 void process_cm_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -1992,10 +2042,6 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "CM_ENABLE", FROM_GUEST, 0 );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
@@ -2071,10 +2117,6 @@ U16 uLength4;
 //  STORE_DW( rsp_pus_02->vc.pus_02.c.userdata, 0x5555555555555555 );
     memcpy( rsp_pus_02, req_pus_02, len_pus_02 );
 
-    /* Display the response MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, rsp_th, "CM_ENABLE", TO_GUEST, 0 );
-
     return;
 }
 
@@ -2083,6 +2125,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_cm_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -2102,10 +2145,6 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "CM_SETUP", FROM_GUEST, 0 );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -2190,10 +2229,6 @@ U16 uLength4;
     memcpy( rsp_pus_07->vc.pus_07.unknown04+0, req_pus_06->vc.pus_06.unknown04, 2 );
     STORE_HW( rsp_pus_07->vc.pus_07.unknown04+2, 0x0000 );
 
-    /* Display the response MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, rsp_th, "CM_CONFIRM", TO_GUEST, 0 );
-
     return;
 }
 
@@ -2202,14 +2237,11 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_cm_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "CM_TAKEDOWN", FROM_GUEST, 0 );
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2222,14 +2254,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_cm_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "CM_DISABLE", FROM_GUEST, 0 );
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2242,6 +2271,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -2265,10 +2295,6 @@ U16 uLength4;
 int iMTU;
 U16 uMTU;
 
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "ULP_ENABLE", FROM_GUEST, 0 );
-
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
     req_pus_0A = point_pus( dev, req_puk, PUS_TYPE_0A );
@@ -2278,6 +2304,9 @@ U16 uMTU;
          return;
     }
     FETCH_HW( len_pus_0A, req_pus_0A->length);
+
+    /* Remember something from request PUS_TYPE_01. */
+    grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_01 +                  // first MPC_PUS
@@ -2350,52 +2379,6 @@ U16 uMTU;
         uMTU = 1500;
     STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, uMTU );
 
-    /* Display the response MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, rsp_th, "ULP_ENABLE", TO_GUEST, 0 );
-
-                grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
-
-                VERIFY
-                (
-                    TUNTAP_CreateInterface
-                    (
-                        grp->tuntap,
-                        0
-                            | IFF_NO_PI
-                            | IFF_OSOCK
-                            | (grp->l3 ? IFF_TUN : IFF_TAP)
-                        ,
-                        &grp->ttfd,
-                        grp->ttdevn
-                    )
-                    == 0
-                );
-
-                /* Set Non-Blocking mode */
-                socket_set_blocking_mode(grp->ttfd,0);
-
-#if defined(IFF_DEBUG)
-                if (grp->debug)
-                    VERIFY(!TUNTAP_SetFlags(grp->ttdevn,IFF_DEBUG));
-#endif /*defined(IFF_DEBUG)*/
-#if defined( OPTION_TUNTAP_SETMACADDR )
-                if(grp->tthwaddr)
-                    VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
-#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-                if(grp->ttipaddr)
-#if defined( OPTION_W32_CTCI )
-                    VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,grp->ttipaddr));
-#else /*!defined( OPTION_W32_CTCI )*/
-                    VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
-#endif /*defined( OPTION_W32_CTCI )*/
-#if defined( OPTION_TUNTAP_SETNETMASK )
-                if(grp->ttnetmask)
-                    VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
-                if(grp->ttmtu)
-                    VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
-
     return;
 }
 
@@ -2404,6 +2387,7 @@ U16 uMTU;
 /*-------------------------------------------------------------------*/
 void process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -2427,10 +2411,6 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "ULP_SETUP", FROM_GUEST, 0 );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -2522,10 +2502,6 @@ U16 uLength4;
     // Prepare fourth MPC_PUS
     memcpy( rsp_pus_0B, req_pus_0B, len_pus_0B );
 
-    /* Display the response MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, rsp_th, "ULP_CONFIRM", TO_GUEST, 0 );
-
     return;
 }
 
@@ -2534,6 +2510,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
 
@@ -2551,10 +2528,6 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-         display_th_etc( dev, req_th, "DM_ACT", FROM_GUEST, 0 );
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_04;                   // first MPC_PUS
@@ -2609,10 +2582,6 @@ U16 uLength4;
     rsp_pus_04->vc.pus_04.tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_pus_04->vc.pus_04.token, grp->gtulpconn, MPC_TOKEN_LENGTH );
 
-    /* Display the response MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, rsp_th, "DM_ACT", TO_GUEST, 0 );
-
     return;
 }
 
@@ -2621,14 +2590,11 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "ULP_TAKEDOWN", FROM_GUEST, 0 );
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2641,14 +2607,30 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
 
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    /* Display the request MPC_TH etc., maybe */
-    if( grp->debug )
-        display_th_etc( dev, req_th, "ULP_DISABLE", FROM_GUEST, 0 );
+    /* There will be no response. */
+    grp->rspsz = 0;
+
+    return;
+}
+
+/*-------------------------------------------------------------------*/
+/* Process unknown from the guest.                                   */
+/*-------------------------------------------------------------------*/
+void process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+{
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
+    UNREFERENCED(req_puk);
+
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+    /* FIXME Error message please. */
 
     /* There will be no response. */
     grp->rspsz = 0;

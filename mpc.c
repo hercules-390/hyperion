@@ -352,6 +352,67 @@ void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 }   /* End function  display_rrh_and_pix() */
 
 /*--------------------------------------------------------------------*/
+/* display_rrh_and_ipa():                                             */
+/*--------------------------------------------------------------------*/
+void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+{
+    MPC_PH*    pMPC_PH;
+    MPC_IPA*   pMPC_IPA;
+    BYTE*      pMPC_IPA_CMD;
+    U32        uOffData;
+    U16        uLenData;
+    U16        uOffPH;
+    int        iLenIPA;
+    int        iLenCmd;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    // Display the MPC_RRH.
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+
+    // Point to and display the MPC_PH.
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+    display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+
+    /* Point to and display the MPC_IPA (and commands, if any). */
+    FETCH_HW( uLenData, pMPC_PH->lendata );
+    if( uLenData > sizeof(MPC_IPA) )
+    {
+        iLenIPA = sizeof(MPC_IPA);
+        iLenCmd = uLenData - sizeof(MPC_IPA);
+    }
+    else
+    {
+        iLenIPA = uLenData;
+        iLenCmd = 0;
+    }
+    FETCH_FW( uOffData, pMPC_PH->offdata );
+    pMPC_IPA = (MPC_IPA*)((BYTE*)pMPC_TH + uOffData);
+    display_stuff( pDEVBLK, "IPA", (BYTE*)pMPC_IPA, iLenIPA, bDir );
+    if( iLenCmd )
+    {
+        pMPC_IPA_CMD = (BYTE*)pMPC_IPA + iLenIPA;
+        display_stuff( pDEVBLK, "Cmd", (BYTE*)pMPC_IPA_CMD, iLenCmd, bDir );
+    }
+
+    return;
+}   /* End function  display_rrh_and_ipa() */
+
+/*--------------------------------------------------------------------*/
 /* display_rrh_and_pdu():                                             */
 /*--------------------------------------------------------------------*/
 /* In all cases that have been seen, only on PTP, when MPC_RRH->type  */
@@ -362,6 +423,36 @@ void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
 /* could be replaced with calls to display_rrh_and_pdu(), with a      */
 /* slight loss of functionality.)                                     */
+
+// How to deal with the following!  qeth.c does:-
+//          DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
+//          FETCH_FW(offdata,req_ph->offdata);
+//          if(offdata > 0x400)
+//              return;
+//          DUMP(dev, "REQ",(ipa+1),offdata-sizeof(MPC_IPA));
+//  19:49:32 HHC03983I 0:1E22 QETH: IPA something
+//  19:49:32 HHC03981I 0:1E22 QETH: TH: +0000< 00E00000 00000006 00000014 00000048  ...............H .\..............
+//  19:49:32 HHC03981I 0:1E22 QETH: TH: +0010< 10000001                             ....             ....
+//  19:49:32 HHC03981I 0:1E22 QETH: RRH: +0000< 00000000 C1030001 00000000 00000000  ................ ....A...........
+//  19:49:32 HHC03981I 0:1E22 QETH: RRH: +0010< 001C0010 00001005 12345678           .........4Vx     ............
+//  19:49:32 HHC03981I 0:1E22 QETH: PH: +0000< 01000010 00000038                    .......8         ........
+//  19:49:32 HHC03981I 0:1E22 QETH: PDU: +0000< 01000000 00000100 01000000 00000000  ................ ................
+//  19:49:32 DATA: 0014 IPA
+//  19:49:32 0000: 01 00 00 00 00 00 01 00 01 00 00 00 00 00 00 00
+//  19:49:32 0010: 00 00 00 00
+//  19:49:32 DATA: 0024 REQ
+//  19:49:32 0000: 56 C9 D0 00 00 00 00 00 56 C8 50 00 00 00 00 00
+//  19:49:32 0010: EE EE 00 00 00 00 00 00 56 C7 F8 00 00 00 00 00
+//  19:49:32 0020: 56 C7 E0 00
+//  19:49:32 STARTLAN
+//  19:49:32 DATA: 0014 IPA_HDR RSP
+//  19:49:32 0000: 01 81 00 00 00 00 01 00 01 00 00 00 00 00 00 00
+//  19:49:32 0010: 00 00 00 00
+//  19:49:32 DATA: 0024 IPA_REQ RSP
+//  19:49:32 0000: 56 C9 D0 00 00 00 00 00 56 C8 50 00 00 00 00 00
+//  19:49:32 0010: EE EE 00 00 00 00 00 00 56 C7 F8 00 00 00 00 00
+//  19:49:32 0020: 56 C7 E0 00
+
 void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
@@ -431,82 +522,6 @@ void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 }   /* End function  display_rrh_and_pdu() */
 
 /*--------------------------------------------------------------------*/
-/* display_th_etc():                                                  */
-/*--------------------------------------------------------------------*/
-void  display_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
-{
-    MPC_RRH*   pMPC_RRH;
-    int        iForRRH;
-    U32        uOffRRH;
-    U16        uNumRRH;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
-
-    /* Display MPC_TH. */
-    display_th( pDEVBLK, pMPC_TH, bDir );
-
-    /* Get the number of MPC_RRHs and the displacement from    */
-    /* the start of the MPC_TH to the first (or only) MPC_RRH. */
-    FETCH_HW( uNumRRH, pMPC_TH->numrrh );
-    FETCH_FW( uOffRRH, pMPC_TH->offrrh );
-
-    /* Process each of the MPC_RRHs. */
-    for( iForRRH = 1; iForRRH <= uNumRRH; iForRRH++ )
-    {
-
-        /* Point to the first or subsequent MPC_RRH. */
-        pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
-
-        /* Display the MPC_RRH etc. */
-        if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
-        {
-
-            /* Display MPC_RRH and following MPC_PUK etc. */
-            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
-
-        }
-        else if( pMPC_RRH->proto == PROTOCOL_LAYER2 &&
-                 pMPC_RRH->type == RRH_TYPE_IPA &&
-                 pDEVBLK->ctctype == CTC_PTP &&
-                 pDEVBLK->devtype == 0x3088 )
-        {
-
-            /* Display MPC_RRH and following MPC_PIX etc. */
-            display_rrh_and_pix( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
-
-        }
-        else
-        {
-
-            /* Display MPC_RRH and following PDU. */
-            display_rrh_and_pdu( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir, iLimit );
-
-        }
-
-        /* Get the displacement from the start of the MPC_TH to the */
-        /* next MPC_RRH. pMPC_RRH->offrrh will contain zero if this */
-        /* is the last MPC_RRH.                                     */
-        FETCH_FW( uOffRRH, pMPC_RRH->offrrh );
-
-    }
-
-    return;
-}   /* End function  display_th_etc() */
-
-/*--------------------------------------------------------------------*/
 /* display_iea():                                                     */
 /*--------------------------------------------------------------------*/
 void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
@@ -559,4 +574,78 @@ void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir
 
     return;
 }   /* End function  display_iear() */
+
+/*--------------------------------------------------------------------*/
+/* display_osa_th_etc():                                              */
+/*--------------------------------------------------------------------*/
+void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
+{
+    MPC_RRH*   pMPC_RRH;
+    int        iForRRH;
+    U32        uOffRRH;
+    U16        uNumRRH;
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    /* Display MPC_TH. */
+    display_th( pDEVBLK, pMPC_TH, bDir );
+
+    /* Get the number of MPC_RRHs and the displacement from    */
+    /* the start of the MPC_TH to the first (or only) MPC_RRH. */
+    FETCH_HW( uNumRRH, pMPC_TH->numrrh );
+    FETCH_FW( uOffRRH, pMPC_TH->offrrh );
+
+    /* Process each of the MPC_RRHs. */
+    for( iForRRH = 1; iForRRH <= uNumRRH; iForRRH++ )
+    {
+
+        /* Point to the first or subsequent MPC_RRH. */
+        pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
+
+        /* Display the MPC_RRH etc. */
+        if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+        {
+
+            /* Display MPC_RRH and following MPC_PUK etc. */
+            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+
+        }
+        else if( pMPC_RRH->proto == PROTOCOL_LAYER3 &&
+                 pMPC_RRH->type == RRH_TYPE_IPA )
+        {
+
+            /* Display MPC_RRH and following MPC_IPA etc. */
+            display_rrh_and_ipa( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+
+        }
+        else
+        {
+
+            /* Display MPC_RRH and following PDU. */
+            display_rrh_and_pdu( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir, iLimit );
+
+        }
+
+        /* Get the displacement from the start of the MPC_TH to the */
+        /* next MPC_RRH. pMPC_RRH->offrrh will contain zero if this */
+        /* is the last MPC_RRH.                                     */
+        FETCH_FW( uOffRRH, pMPC_RRH->offrrh );
+
+    }
+
+    return;
+}   /* End function  display_osa_th_etc() */
 

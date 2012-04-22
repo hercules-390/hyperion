@@ -823,10 +823,11 @@ void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
 void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
 void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
 void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
+void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
 void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit );
-void  display_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit );
 void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir );
 void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir );
+void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit );
 
 
 /*********************************************************************/

@@ -642,10 +642,10 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "ptp_execute_ccw()" );
-        // HHC03992 "%1d:%04X PTP: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
-        WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_execute_ccw()" );
+        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+        WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
             bCode, bFlags, uCount, bChained, bPrevCode, iCCWSeq );
     }
 
@@ -813,8 +813,8 @@ int  ptp_close( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "ptp_close()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_close()" );
     }
 
     // Close the device file (if not already closed)
@@ -951,8 +951,8 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "ptp_write()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_write()" );
     }
 
     // Get the first 4-bytes of what was writen by the guest OS.
@@ -1095,8 +1095,8 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_th()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_th()" );
         display_th( pDEVBLK, pMPC_TH, FROM_GUEST );
     }
 
@@ -1267,8 +1267,8 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_8108()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_8108()" );
     }
 
     // Get the number of MPC_PHs and point to the first (or only) MPC_PH
@@ -1506,8 +1506,8 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "ptp_read()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_read()" );
     }
 
     //
@@ -2613,11 +2613,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //      char    tmp[256];
 //      int     i;
 //      snprintf( (char*)tmp, 256, "Number of arguments: %d", argc );
-//      WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, tmp );
+//      WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
 //      for( i = 0; i < argc; i++ )
 //      {
 //          snprintf( (char*)tmp, 256, "argv[%d]: %s", i, argv[i] );
-//          WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, tmp );
+//          WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
 //      }
 //  }
 
@@ -3311,8 +3311,8 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "raise_unsol_int()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "raise_unsol_int()" );
     }
 
     // Obtain the unsolicited interrupt list lock.
@@ -3576,8 +3576,8 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_hx0_01()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx0_01()" );
     }
 
     // Display various information, maybe
@@ -3739,8 +3739,8 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_hx0_00()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx0_00()" );
     }
 
     // Display various information, maybe
@@ -3816,8 +3816,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_hx2()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx2()" );
     }
 
     // Display various information, maybe
@@ -4188,8 +4188,8 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_417E()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_417E()" );
     }
 
     // Point to the MPC_PH.
@@ -5583,8 +5583,8 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_C17E()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_C17E()" );
     }
 
     // Point to the MPC_PH.
@@ -5686,8 +5686,8 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
     {
-        // HHC03991 "%1d:%04X PTP: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "write_rrh_C108()" );
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_C108()" );
     }
 
     // Point to the MPC_PH.
