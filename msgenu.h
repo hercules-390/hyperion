@@ -2015,7 +2015,7 @@ do { \
 #define HHC90310 "   sttoff: %08X"
 #define HHC90311 "   cbn   : %d"
 #define HHC90312 "*** Registers committed"
-#define HHC90313 "cbn not zero, process individual index symbols"
+#define HHC90313 "fetch_chs: %s at " F_VADR
 #define HHC90314 "compress : is %04X (%d)"
 #define HHC90315 "*** Interrupt pending, commit and return with cc3"
 #define HHC90316 "fetch_cce: index %04X"
