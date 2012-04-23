@@ -62,7 +62,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                service.o scedasd.o opcode.o diagnose.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o losc.o \
-               machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
+               machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o mpc.o \
                timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
                parser.o ieee.o dfp.o httpserv.o bldcfg.o script.o sr.o \
                cgibin.o codepage.o loadmem.o loadparm.o fillfnam.o \

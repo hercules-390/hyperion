@@ -2022,9 +2022,6 @@ static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
 /*-------------------------------------------------------------------*/
 void process_cm_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_01;
@@ -2042,6 +2039,9 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
@@ -2125,9 +2125,6 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_cm_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_04;
@@ -2145,6 +2142,9 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -2237,11 +2237,11 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_cm_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
-
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2254,11 +2254,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_cm_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
-
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2271,9 +2271,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_01;
@@ -2294,6 +2291,9 @@ U16 uLength4;
 
 int iMTU;
 U16 uMTU;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
@@ -2387,9 +2387,6 @@ U16 uMTU;
 /*-------------------------------------------------------------------*/
 void process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_04;
@@ -2411,6 +2408,9 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -2510,10 +2510,6 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-    UNREFERENCED(req_puk);
-
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 //C_PUS *req_pus_04;
@@ -2528,6 +2524,10 @@ U32 uLength1;
 U32 uLength2;
 U16 uLength3;
 U16 uLength4;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
+    UNREFERENCED(req_puk);
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_04;                   // first MPC_PUS
@@ -2590,11 +2590,11 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 void process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
-
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2607,11 +2607,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
-
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* There will be no response. */
     grp->rspsz = 0;
@@ -2624,11 +2624,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 void process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
-
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* FIXME Error message please. */
 

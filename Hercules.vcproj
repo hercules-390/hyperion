@@ -1143,6 +1143,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\mpc.c"
+							>
+						</File>
+						<File
 							RelativePath=".\opcode.c"
 							>
 						</File>
@@ -1483,6 +1487,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\mpc.h"
+							>
+						</File>
+						<File
 							RelativePath=".\msgenu.h"
 							>
 						</File>
@@ -1496,6 +1504,10 @@
 						</File>
 						<File
 							RelativePath=".\pttrace.h"
+							>
+						</File>
+						<File
+							RelativePath=".\qdio.h"
 							>
 						</File>
 						<File
@@ -2239,6 +2251,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\cdgr.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\cdsg.txt"
 						>
 					</File>
 					<File

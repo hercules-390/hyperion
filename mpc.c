@@ -23,14 +23,14 @@
 /*--------------------------------------------------------------------*/
 /* point_ipa():                                                       */
 /*--------------------------------------------------------------------*/
-MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
+DLL_EXPORT MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 {
-    UNREFERENCED( pDEVBLK );
-
     MPC_PH*    pMPC_PH;
     MPC_IPA*   pMPC_IPA;
     U32        uOffData;
     U16        uOffPH;
+
+    UNREFERENCED( pDEVBLK );
 
     // Point to the MPC_PH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -47,14 +47,14 @@ MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 /*--------------------------------------------------------------------*/
 /* point_puk():                                                       */
 /*--------------------------------------------------------------------*/
-MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
+DLL_EXPORT MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 {
-    UNREFERENCED( pDEVBLK );
-
     MPC_PH*    pMPC_PH;
     MPC_PUK*   pMPC_PUK;
     U32        uOffData;
     U16        uOffPH;
+
+    UNREFERENCED( pDEVBLK );
 
     // Point to the MPC_PH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -75,15 +75,15 @@ MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 /* required type is not found a null pointer is returned. Although    */
 /* never seen, if multiple MPC_PUS of the required type exist, only   */
 /* the first MPC_PUS of the required type will ever be returned.      */
-MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
+DLL_EXPORT MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
 {
-    UNREFERENCED( pDEVBLK );
-
     MPC_PUS*   pMPC_PUS;
     int        iTotLenPUS;
     U16        uTotLenPUS;
     U16        uLenPUS;
     U16        uLenPUK;
+
+    UNREFERENCED( pDEVBLK );
 
     /* Get the length of the MPC_PUK, the total length of the */
     /* following MPC_PUSs, then point to the first MPC_PUS.   */
@@ -118,7 +118,7 @@ MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
 /* display_stuff()                                                    */
 /*--------------------------------------------------------------------*/
 /* Function to display storage.                                       */
-void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
+DLL_EXPORT void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
 {
     int           offset;
     unsigned int  i;
@@ -189,7 +189,7 @@ void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE b
 /*--------------------------------------------------------------------*/
 /* display_th(): Display Transport Header (MPC_TH)                    */
 /*--------------------------------------------------------------------*/
-void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
+DLL_EXPORT void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 {
     U32    uOffRRH;
 
@@ -203,7 +203,7 @@ void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 /*--------------------------------------------------------------------*/
 /* display_rrh(): Display Request/Response Header (MPC_RRH)           */
 /*--------------------------------------------------------------------*/
-void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir )
+DLL_EXPORT void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
     U16    uOffPH;
 
@@ -217,7 +217,7 @@ void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir )
 /*--------------------------------------------------------------------*/
 /* display_ph(): Display Protocol Data Unit Header (MPC_PH)           */
 /*--------------------------------------------------------------------*/
-void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
+DLL_EXPORT void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 {
 
     // Display the MPC_PH.
@@ -233,7 +233,7 @@ void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 /* MPC_RRH->proto == PROTOCOL_UNKNOWN (0x7E), the MPC_RRH is followed */
 /* by a single MPC_PH, which is followed by a single MPC_PUK, which   */
 /* is followed by up to four MPC_PUSs.                                */
-void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PUK*   pMPC_PUK;
@@ -311,7 +311,7 @@ void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* == RRH_TYPE_IPA (0xC1) and MPC_RRH->proto == PROTOCOL_LAYER2       */
 /* (0x08), the MPC_RRH is followed by a single MPC_PH, which is       */
 /* followed by a single MPC_PIX.                                      */
-void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PIX*   pMPC_PIX;
@@ -354,7 +354,7 @@ void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /*--------------------------------------------------------------------*/
 /* display_rrh_and_ipa():                                             */
 /*--------------------------------------------------------------------*/
-void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_IPA*   pMPC_IPA;
@@ -423,7 +423,7 @@ void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
 /* could be replaced with calls to display_rrh_and_pdu(), with a      */
 /* slight loss of functionality.)                                     */
-void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
+DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
     U16        uNumPH;
@@ -494,7 +494,7 @@ void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, 
 /*--------------------------------------------------------------------*/
 /* display_iea():                                                     */
 /*--------------------------------------------------------------------*/
-void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
 {
 
     /* Display description, if one has been provided. */
@@ -521,7 +521,7 @@ void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
 /*--------------------------------------------------------------------*/
 /* display_iear():                                                    */
 /*--------------------------------------------------------------------*/
-void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir )
 {
 
     /* Display description, if one has been provided. */
@@ -548,7 +548,7 @@ void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir
 /*--------------------------------------------------------------------*/
 /* display_osa_th_etc():                                              */
 /*--------------------------------------------------------------------*/
-void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
+DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
 {
     MPC_RRH*   pMPC_RRH;
     int        iForRRH;

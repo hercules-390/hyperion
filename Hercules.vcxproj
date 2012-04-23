@@ -508,6 +508,7 @@
     <ClCompile Include="plo.c" />
     <ClCompile Include="pttrace.c" />
     <ClCompile Include="qdio.c" />
+    <ClCompile Include="mpc.c" />
     <ClCompile Include="rexx.c" />
     <ClCompile Include="scedasd.c" />
     <ClCompile Include="script.c" />
@@ -767,6 +768,8 @@
     <ClInclude Include="hdiagf18.h" />
     <ClInclude Include="hercifc.h" />
     <ClInclude Include="qeth.h" />
+    <ClInclude Include="qdio.h" />
+    <ClInclude Include="mpc.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tuntap.h" />
     <ClInclude Include="w32ctca.h" />

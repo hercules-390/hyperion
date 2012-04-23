@@ -144,6 +144,7 @@ hengine_OBJ = \
     $(O)pfpo.obj     \
     $(O)plo.obj      \
     $(O)qdio.obj     \
+    $(O)mpc.obj      \
     $(O)hRexx.obj    \
     $(O)hRexx_o.obj  \
     $(O)hRexx_r.obj  \
