@@ -3893,6 +3893,7 @@ int ls_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
+#if 0
 /*-------------------------------------------------------------------*/
 /* change directory command                                          */
 /*-------------------------------------------------------------------*/
@@ -3954,6 +3955,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
     }
     return -1;
 }
+#endif
 
 #if defined(OPTION_LPP_RESTRICT)
 /*-------------------------------------------------------------------*/
@@ -5702,7 +5704,7 @@ int     rc;
     else
     {
         argv++; argc--;
-        if (argc < 0 || (devascii = argv[0]) == NULL)
+        if (argc <= 0 || (devascii = argv[0]) == NULL)
         {
             missing_devnum();
             return -1;
@@ -6190,7 +6192,6 @@ DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
 int      i, rc;
-int      nomountedtapereinit = sysblk.nomountedtapereinit;
 int      init_argc;
 char   **init_argv;
 char   **save_argv = NULL;
@@ -6219,12 +6220,12 @@ char   **save_argv = NULL;
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
-    /* wait up to 5 seconds for the busy to go away */
+    /* wait up to 0.1 seconds for the busy to go away */
     {
-        int i = 1000;
-        while ( i-- > 0 && ( dev->busy        ||
-                             IOPENDING(dev)   ||
-                             (dev->scsw.flag3 & SCSW3_SC_PEND) ) )
+        int i = 20;
+        while(i-- > 0 && (dev->busy
+                         || IOPENDING(dev)
+                         || (dev->scsw.flag3 & SCSW3_SC_PEND)))
         {
             release_lock(&dev->lock);
             usleep(5000);
@@ -6233,47 +6234,13 @@ char   **save_argv = NULL;
     }
 
     /* Reject if device is busy or interrupt pending */
-    if (dev->busy || IOPENDING(dev)
+    if ((dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
+      && !sysblk.sys_reset)
     {
-        if (!sysblk.sys_reset)      // is the system in a reset status?
-        {
-            release_lock (&dev->lock);
-            WRMSG(HHC02231, "E", lcss, devnum );
-            return -1;
-        }
-    }
-
-    /* Prevent accidental re-init'ing of already loaded tape drives */
-    if (nomountedtapereinit)
-    {
-        char*  devclass;
-
-        ASSERT( dev->hnd && dev->hnd->query );
-        dev->hnd->query( dev, &devclass, 0, NULL );
-
-        if (1
-            && strcmp(devclass,"TAPE") == 0
-            && (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
-               )
-        )
-        {
-            ASSERT( dev->tmh && dev->tmh->tapeloaded );
-            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
-            {
-                release_lock (&dev->lock);
-                WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
-                return -1;
-            }
-        }
-    }
-
-    /* Close the existing file, if any */
-    if (dev->fd < 0 || dev->fd > 2)
-    {
-        (dev->hnd->close)(dev);
+        release_lock (&dev->lock);
+        WRMSG(HHC02231, "E", lcss, devnum );
+        return -1;
     }
 
     /* Build the device initialization arguments array */
@@ -6331,6 +6298,9 @@ char   **save_argv = NULL;
         WRMSG(HHC02245, "I", lcss, devnum );
     }
 
+    /* Release the device lock */
+    release_lock (&dev->lock);
+
     /* Free work memory */
     if (save_argv)
     {
@@ -6340,13 +6310,6 @@ char   **save_argv = NULL;
         free(save_argv);
         free(init_argv);
     }
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
-
-    /* Raise unsolicited device end interrupt for the device */
-    if (rc == 0)
-        rc = device_attention (dev, CSW_DE);
 
     return rc;
 }

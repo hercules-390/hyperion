@@ -19,6 +19,77 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------------*/
+/* Compression optimalization                                                 */
+/*                                                                            */
+/* Dead end determination                                                     */
+/*   Whenever a next character does not match any child in the character      */
+/*   entry and possible sibling descriptors, it is a dead end. This dead      */
+/*   combination is administrated in dea and tested before every start        */
+/*   of finding a index symbol. This prevents many fetches. For example:      */
+/*                                                                            */
+/*   HHC90318D fetch_ch : 01 at 000000001DDDC00F                              */
+/*   HHC90318D fetch_ch : C1 at 000000001DDDC010                              */
+/*   HHC90316D fetch_cce: index 0001                                          */
+/*   HHC90319D   cce    : DF042A001C47500C                                    */
+/*   HHC90320D   cct    : 6                                                   */
+/*   HHC90327D   x1..x5 : 11111                                               */
+/*   HHC90328D   y1..y2 : 00                                                  */
+/*   HHC90329D   d      : False                                               */
+/*   HHC90325D   cptr   : 042A                                                */
+/*   HHC90331D   ccs    : 00 1C 47 50 0C                                      */
+/*   HHC90318D fetch_ch : C1 at 000000001DDDC010                              */
+/*   HHC90339D fetch_sd1: index 042F                                          */
+/*   HHC90332D   sd1    : FBAF40580DD0F07041D3C514C3DD0F5A                    */
+/*   HHC90333D   sct    : 15                                                  */
+/*   HHC90334D   y1..y12: 101110101111                                        */
+/*   HHC90335D   sc(s)  : 40 58 0D D0 F0 70 41 D3 C5 14 C3 DD 0F 5A           */
+/*   HHC90339D fetch_sd1: index 043E                                          */
+/*   HHC90332D   sd1    : E4888006120530011E4A549E42D15734                    */
+/*   HHC90333D   sct    : 14                                                  */
+/*   HHC90334D   y1..y12: 010010001000                                        */
+/*   HHC90335D   sc(s)  : 80 06 12 05 30 01 1E 4A 54 9E 42 D1 57 34           */
+/*   HHC90365D dead_end : 01 C1 found                                         */
+/*                                                                            */
+/*   The above dead end is found after fetching a character entry and 2       */
+/*   sibling entries. These fetches are saved on encountering a 01 C1         */
+/*   combination.                                                             */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* Expansion optimalization                                                   */
+/*                                                                            */
+/* Caching                                                                    */
+/*   Every index symbol is cached after determination. This cache is used     */
+/*   on every second appearance of that index symbol. This saves many fetches */
+/*   of character entries. For expample:                                      */
+/*                                                                            */
+/*   HHC90349D fetch_ece: index 105F                                          */
+/*   HHC90353D   ece    : B05A384040000104                                    */
+/*   HHC90354D   psl    : 5                                                   */
+/*   HHC90355D   pptr   : 105A                                                */
+/*   HHC90356D   ecs    : 38 40 40 00 01                                      */
+/*   HHC90357D   ofst   : 04                                                  */
+/*   HHC90349D fetch_ece: index 105A                                          */
+/*   HHC90353D   ece    : 0458404000000000                                    */
+/*   HHC90354D   psl    : 0                                                   */
+/*   HHC90358D   bit34  : False                                               */
+/*   HHC90359D   csl    : 4                                                   */
+/*   HHC90356D   ecs    : 58 40 40 00                                         */
+/*                                                                            */
+/*   The above index symbol 105F, meaning 584040003840400001 is cached and    */
+/*   used after every next appearance.                                        */
+/*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
+/* Common optimalization                                                      */
+/*                                                                            */
+/* 8 index symbol block processing                                            */
+/*   Calculating the cbn after placing or reading an index symbol is heavy.   */
+/*   This implementation uses blocks of 8 index symbols. These 8 symbols fit  */
+/*   in 9, 10, 11, 12 or 13 bytes and the cbn stays unchanged.                */
+/*----------------------------------------------------------------------------*/
 #include "hstdinc.h"
 
 #ifndef _HENGINE_DLL_
@@ -41,7 +112,7 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options:                                                         */
 /*----------------------------------------------------------------------------*/
-#if 0
+#if 1
 #define OPTION_CMPSC_DEBUG
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 #endif /* #if 0|1 */
@@ -134,9 +205,6 @@
 #define GR0_e(regs)          ((regs)->GR_L(0) & 0x00000100)
 #define GR0_f1(regs)         ((regs)->GR_L(0) & 0x00000200)
 #define GR0_st(regs)         ((regs)->GR_L(0) & 0x00010000)
-/* We recognize the zp flag, but we were running a similar zero padding for   */
-/* years by writing or reading 8 index symbols at a time. 8 index symbols     */
-/* always fit within a byte boundary!                                         */
 #define GR0_zp(regs)         ((regs)->GR_L(0) & 0x00020000)
 
 /*----------------------------------------------------------------------------*/
@@ -179,6 +247,8 @@ struct cc                              /* Compress context                    */
 {
   BYTE *cce;                           /* Character entry under investigation */
   unsigned dctsz;                      /* Dictionary size                     */
+  BYTE dea[0x100][0x100];              /* Dead end administration             */
+  BYTE dead_end;                       /* Needed for dead end administration  */
   BYTE *dest;                          /* Destination MADDR address           */
   BYTE *dict[32];                      /* Dictionary MADDR addresses          */
   GREG dictor;                         /* Dictionary origin                   */
@@ -220,6 +290,7 @@ static void  ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs);
 static void  ARCH_DEP(expand_is)(struct ec *ec, U16 is);
 static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index);
 static int   ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch);
+static int   ARCH_DEP(fetch_chs_and_adjust)(struct cc *cc, BYTE *ch1, BYTE *ch2);
 static int   ARCH_DEP(fetch_is)(struct ec *ec, U16 *is);
 static void  ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8]);
 #ifdef OPTION_CMPSC_DEBUG
@@ -240,8 +311,8 @@ static int   ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len);
 DEF_INST(compression_call)
 {
   REGS iregs;                          /* Intermediate registers              */
-  int r1;
-  int r2;
+  int r1;                              /* Guess what                          */
+  int r2;                              /* Yep                                 */
 
   RRE(inst, regs, r1, r2);
 
@@ -401,18 +472,18 @@ DEF_INST(compression_call)
 static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   struct cc cc;                        /* Compression context                 */
-  BYTE ch;                             /* Character read                      */
-  int eos;                             /* indication end of source            */
-  int i;
+  BYTE ch1;                            /* Character read                      */
+  BYTE ch2;
+  int i;                               /* Index                               */
   U16 is;                              /* Last matched index symbol           */
   GREG srclen;                         /* Source length                       */
 
   /* Initialize values */
-  eos = 0;
   srclen = GR_A(r2 + 1, iregs);
 
   /* Initialize compression context */
   cc.dctsz = GR0_dctsz(regs);
+  memset(cc.dea, 0, sizeof(cc.dea));
   cc.dest = NULL;
   for(i = 0; i < (0x01 << GR0_cdss(regs)); i++)
   {
@@ -431,36 +502,43 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   cc.st = GR0_st(regs);
 
   /* Process individual index symbols until cbn bocomes zero */
-  if(unlikely(GR1_cbn(iregs)))
+  while(unlikely(GR1_cbn(iregs)))
   {
- 
+    /* Get the next characters and adjust alphabet entry, return on end of source */
+    if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
+      return;
+    cc.dead_end = 1;
+    is = ch1;
+
+    /* Do normal searching on unknown dead end */
+    if(likely(!cc.dea[is][ch2]))
+    {
+      /* Get the alphabet entry and try to find a child */
+      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+      while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+      if(unlikely(cc.dead_end))
+      {
+        /* We found a dead end combination */
+        cc.dea[is][ch2] = 1;
+
 #ifdef OPTION_CMPSC_DEBUG
-    WRMSG(HHC90313, "D");
+        WRMSG(HHC90365, "D", is, ch2, "found");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-    while(likely(GR1_cbn(iregs)))
-    {
-      /* Get the next character, return on end of source */
-      if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
-        return;
-
-      /* We always match the alpabet entry, so set last match */
-      ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
-
-      /* Get the alphabet entry as preparation for searching */
-      is = ch;
-      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
-
-      /* Try to find a child in compression character entry */
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
-
-      /* Write the last match, this can be the alphabet entry */
-      if(unlikely(ARCH_DEP(store_is)(&cc, is)))
-        return;
-
-      /* Commit registers, we have completed a full compression */
-      COMMITREGS(regs, iregs, r1, r2);
+      }
     }
+
+#ifdef OPTION_CMPSC_DEBUG    
+    else
+      WRMSG(HHC90365, "D", is, ch2, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    /* Write the last match, return on end of destination */
+    if(unlikely(ARCH_DEP(store_is)(&cc, is)))
+      return;
+
+    /* Commit registers */
+    COMMITREGS(regs, iregs, r1, r2);
   }
 
   /* Block processing, cbn stays zero */
@@ -468,8 +546,8 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
     for(i = 0; i < 8; i++)
     {
-      /* Get the next character, return on end of source */
-      if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
+      /* Get the next characters and adjust alphabet entry, return on end of source */
+      if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
       {
         int j;
 
@@ -479,18 +557,32 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
         COMMITREGS(regs, iregs, r1, r2);
         return;
       }
+      cc.dead_end = 1;
+      is = ch1;
 
-      /* We always match the alpabet entry, so set last match */
-      ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
+      /* Do normal searching on unknown dead end */
+      if(likely(!cc.dea[is][ch2]))
+      {
+        /* Get the alphabet entry and try to find a child */      
+        cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+        while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+        if(unlikely(cc.dead_end))
+        {
+          /* We found a dead end combination */
+          cc.dea[is][ch2] = 1;
 
-      /* Get the alphabet entry as preparation for searching */
-      is = ch;
-      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+#ifdef OPTION_CMPSC_DEBUG
+          WRMSG(HHC90365, "D", is, ch2, "found");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */      
 
-      /* Try to find a child in compression character entry */
-      while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+        }
+      }
 
-      /* Write the last match, this can be the alphabet entry */
+#ifdef OPTION_CMPSC_DEBUG
+      else
+        WRMSG(HHC90365, "D", is, ch2, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
       cc.is[i] = is;
 
 #ifdef OPTION_CMPSC_DEBUG
@@ -498,9 +590,9 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
     }
-    ARCH_DEP(store_iss)(&cc);
 
-    /* Commit registers */
+    /* Write index symbols and commit */
+    ARCH_DEP(store_iss)(&cc);
     COMMITREGS2(regs, iregs, r1, r2);
 
     /* Return with cc3 on interrupt pending after a minumum size of processing */
@@ -518,25 +610,40 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   while(GR_A(r2 + 1, iregs))
   {
-    /* Get the next character, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(&cc, &ch)))
+    /* Get the next characters and adjust alphabet entry, return on end of source */
+    if(unlikely(ARCH_DEP(fetch_chs_and_adjust)(&cc, &ch1, &ch2)))
       return;
+    cc.dead_end = 1;
+    is = ch1;
 
-    /* We always match the alpabet entry, so set last match */
-    ADJUSTREGS(cc.r2, cc.regs, cc.iregs, 1);
+    /* Do normal searching on unknown dead end */
+    if(unlikely(!cc.dea[is][ch2]))
+    {
+      /* Get the alphabet entry and try to find a child */
+      cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+      while(ARCH_DEP(search_cce)(&cc, &ch1, &is));
+      if(unlikely(cc.dead_end))
+      {
+        /* We found a dead end combination */
+        cc.dea[is][ch2] = 1;
 
-    /* Get the alphabet entry as preparation for searching */
-    is = ch;
-    cc.cce = ARCH_DEP(fetch_cce)(&cc, is);
+#ifdef OPTION_CMPSC_DEBUG
+        WRMSG(HHC90365, "D", is, ch2, "found");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-    /* Try to find a child in compression character entry */
-    while(ARCH_DEP(search_cce)(&cc, &ch, &is));
+      }
+    }
 
-    /* Write the last match, this can be the alphabet entry */
+#ifdef OPTION_CMPSC_DEBUG
+    else
+      WRMSG(HHC90365, "D", is, ch2, "encountered");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    /* Write the last match, return on end of destination */
     if(unlikely(ARCH_DEP(store_is)(&cc, is)))
       return;
 
-    /* Commit registers, we have completed a full compression */
+    /* Commit registers */
     COMMITREGS(regs, iregs, r1, r2);
   }
 }
@@ -546,7 +653,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 /*----------------------------------------------------------------------------*/
 static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index)
 {
-  BYTE *cce;
+  BYTE *cce;                           /* Compression child entry             */
   unsigned cct;                        /* Child count                         */
 
   index *= 8;
@@ -560,6 +667,7 @@ static BYTE *ARCH_DEP(fetch_cce)(struct cc *cc, unsigned index)
   print_cce(cce);
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
+  /* Check for data exception */
   cct = CCE_cct(cce);
   if(cct < 2)
   {
@@ -617,6 +725,76 @@ static int ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch)
   return(0);
 }
 
+/*----------------------------------------------------------------------------*/
+/* fetch_chs_and_adjust (characters)                                          */
+/*----------------------------------------------------------------------------*/
+static int ARCH_DEP(fetch_chs_and_adjust)(struct cc *cc, BYTE *ch1, BYTE *ch2)
+{
+#ifdef OPTION_CMPSC_DEBUG
+  char buf[6];                         /* Print buffer for 2 or 1 character   */
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+  U64 len;                             /* Source length left                  */
+  unsigned ofst;                       /* Offset within page                  */
+
+  /* Check for end of source condition */
+  len = GR_A(cc->r2 + 1, cc->iregs);
+  if(unlikely(!len))
+  {
+
+#ifdef OPTION_CMPSC_DEBUG
+    WRMSG(HHC90317, "D");
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    cc->regs->psw.cc = 0;
+    return(-1);
+  }
+
+  ofst = GR_A(cc->r2, cc->iregs) & 0x7ff;
+  ITIMER_SYNC(GR_A(cc->r2, cc->iregs) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+
+  /* Fingers crossed that we stay within current page */
+  if(unlikely(!cc->src || ofst < cc->ofst))
+    cc->src = MADDR((GR_A(cc->r2, cc->iregs) & ~0x7ff) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+  *ch1 = cc->src[ofst];
+  cc->ofst = ofst;
+
+  /* Adjust registers, we always match the alphabet entry */
+  ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
+  len--;
+
+  /* Check if 2nd character available */
+  if(unlikely(!len))
+  {
+
+#ifdef OPTION_CMPSC_DEBUG
+    snprintf(buf, 6, "%02X", *ch1);
+    WRMSG(HHC90313, "D", buf, GR_A(cc->r2, cc->iregs) - 1);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+    return(0);                         /* It is ok when dead_end is detected  */
+  }
+
+  ITIMER_SYNC(GR_A(cc->r2, cc->iregs) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+
+  /* Fingers crossed that we stay within current page */
+  ofst++;
+  if(unlikely(ofst == 0x800))
+  {
+    ofst = 0;
+    cc->src = MADDR((GR_A(cc->r2, cc->iregs) & ~0x7ff) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
+  }
+  *ch2 = cc->src[ofst];
+  cc->ofst = ofst;
+
+#ifdef OPTION_CMPSC_DEBUG
+  snprintf(buf, 6, "%02X %02X", *ch1, *ch2);
+  WRMSG(HHC90313, "D", buf, GR_A(cc->r2, cc->iregs) - 1);
+#endif /* #ifdef OPTION_CMPSC_DEBUG */
+
+  return(0);
+}
+
 #ifndef NO_2ND_COMPILE
 #ifdef OPTION_CMPSC_DEBUG
 /*----------------------------------------------------------------------------*/
@@ -624,9 +802,9 @@ static int ARCH_DEP(fetch_ch)(struct cc *cc, BYTE *ch)
 /*----------------------------------------------------------------------------*/
 static void print_cce(BYTE *cce)
 {
-  char buf[128];
-  int j;
-  int prt_detail;
+  char buf[128];                       /* Buffer                              */
+  int j;                               /* Index                               */
+  int prt_detail;                      /* Switch for detailed printing        */
 
   buf[0] = 0;
   prt_detail = 0;
@@ -708,9 +886,9 @@ static void print_cce(BYTE *cce)
 /*----------------------------------------------------------------------------*/
 static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 {
-  char buf[128];
-  int j;
-  int prt_detail;
+  char buf[128];                       /* Buffer                              */
+  int j;                               /* Index                               */
+  int prt_detail;                      /* Switch for detailed printing        */
 
   if(f1)
   {
@@ -790,9 +968,9 @@ static void print_sd(int f1, BYTE *sd1, BYTE *sd2)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
 {
-  BYTE *ccce;                          /* child compression character entry   */
+  BYTE *ccce;                          /* Child compression character entry   */
   int ccs;                             /* Number of child characters          */
-  int i;                               /* child character index               */
+  int i;                               /* Child character index               */
   int ind_search_siblings;             /* Indicator for searching siblings    */
 
   /* Initialize values */
@@ -818,21 +996,20 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
 
+        /* This is not a dead end */
+        cc->dead_end = 0;
+
         /* Check if child should not be examined */
         if(unlikely(!CCE_x(cc->cce, i)))
         {
           /* No need to examine child, found the last match */
           ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
           *is = CCE_cptr(cc->cce) + i;
-
-          /* Index symbol is found, stop searching */
           return(0);
         }
 
-        /* Found a child get the character entry */
+        /* Found a child get the character entry and check if additional extension characters match */
         ccce = ARCH_DEP(fetch_cce)(cc, CCE_cptr(cc->cce) + i);
-
-        /* Check if additional extension characters match */
         if(likely(ARCH_DEP(test_ec)(cc, ccce)))
         {
           /* Set last match */
@@ -843,10 +1020,8 @@ static int ARCH_DEP(search_cce)(struct cc *cc, BYTE *ch, U16 *is)
           WRMSG(HHC90338, "D", *is);
 #endif  /* #ifdef OPTION_CMPSC_DEBUG */
 
-          /* Found a matching child, make it parent */
+          /* Found a matching child, make it parent and keep searching */
           cc->cce = ccce;
-
-          /* We found a parent, keep searching */
           return(1);
         }
       }
@@ -871,26 +1046,18 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
   U16 index;                           /* Index within dictionary             */
   int ind_search_siblings;             /* Indicator for keep searching        */
   int scs;                             /* Number of sibling characters        */
-  BYTE *sd1 = NULL;                    /* Sibling descriptor fmt-0|1 part 1   */
-  BYTE *sd2 = NULL;                    /* Sibling descriptor fmt-1 part 2     */
+  BYTE *sd1;                           /* Sibling descriptor fmt-0|1 part 1   */
+  BYTE *sd2;                           /* Sibling descriptor fmt-1 part 2     */
   int sd_ptr;                          /* Pointer to sibling descriptor       */
   int searched;                        /* Number of children searched         */
   int y_in_parent;                     /* Indicator if y bits are in parent   */
 
   /* Initialize values */
-
   ind_search_siblings = 1;
-
-  /* For the first sibling descriptor y bits are in the cce parent */
+  sd_ptr = CCE_ccs(cc->cce);
+  searched = sd_ptr;
   y_in_parent = 1;
 
-  /* Sibling follows last possible child */
-  sd_ptr = CCE_ccs(cc->cce);
-
-  /* set searched childs */
-  searched = sd_ptr;
-
-  /* As long there are sibling characters */
   do
   {
     /* Get the sibling descriptor */
@@ -932,14 +1099,21 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
     scs = SD_scs(cc->f1, sd1);
     for(i = 0; i < scs; i++)
     {
+
+//Please ignore following gcc warnings, sd2 is only initialized and used when f1 flag = 1
+//cmpsc.c:1053:10: warning: 'sd2' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:995:9: note: 'sd2' was declared here
+
       /* Stop searching when child tested and no consecutive child character */
       if(unlikely(!ind_search_siblings && !SD_ccc(cc->f1, sd1, sd2, i)))
         return(0);
-
       if(unlikely(*ch == SD_sc(cc->f1, sd1, sd2, i)))
       {
         /* Child is tested, so stop searching for siblings*/
         ind_search_siblings = 0;
+
+	/* this is not a dead end */
+        cc->dead_end = 0;
 
         /* Check if child should not be examined */
         if(unlikely(!SD_ecb(cc->f1, sd1, i, cc->cce, y_in_parent)))
@@ -947,15 +1121,11 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
           /* No need to examine child, found the last match */
           ADJUSTREGS(cc->r2, cc->regs, cc->iregs, 1);
           *is = CCE_cptr(cc->cce) + sd_ptr + i + 1;
-
-          /* Index symbol found */
           return(0);
         }
 
-        /* Found a child get the character entry */
+        /* Found a child get the character entry and check if additional extension characters match */
         ccce = ARCH_DEP(fetch_cce)(cc, CCE_cptr(cc->cce) + sd_ptr + i + 1);
-
-        /* Check if additional extension characters match */
         if(unlikely(ARCH_DEP(test_ec)(cc, ccce)))
         {
           /* Set last match */
@@ -966,10 +1136,8 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
           WRMSG(HHC90341, "D", *is);
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-          /* Found a matching child, make it parent */
+          /* Found a matching child, make it parent and keep searching */
           cc->cce = ccce;
-
-          /* We found a parent */
           return(1);
         }
       }
@@ -996,8 +1164,8 @@ static int ARCH_DEP(search_sd)(struct cc *cc, BYTE *ch, U16 *is)
 static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 {
   unsigned cbn;                        /* Compressed-data bit number          */
-  U32 set_mask;                        /* mask to set the bits                */
-  BYTE work[3];                        /* work bytes                          */
+  U32 set_mask;                        /* Mask to set the bits                */
+  BYTE work[3];                        /* Work bytes                          */
 
   /* Initialize values */
   cbn = GR1_cbn(cc->iregs);
@@ -1074,9 +1242,9 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 static void ARCH_DEP(store_iss)(struct cc *cc)
 {
 #ifdef OPTION_CMPSC_DEBUG
-  char buf[128];
+  char buf[128];                       /* Buffer                              */
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
-  GREG dictor;                         /* dictionary origin                   */ 
+  GREG dictor;                         /* Dictionary origin                   */ 
   int i;
   U16 *is;                             /* Index symbol array                  */
   unsigned len1;                       /* Length in first page                */
@@ -1248,24 +1416,30 @@ static void ARCH_DEP(store_iss)(struct cc *cc)
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP(test_ec)(struct cc *cc, BYTE *cce)
 {
-  BYTE ch;
-  int i;
-  unsigned ofst;
+  BYTE ch;                             /* Character                           */
+  int i;                               /* Index                               */
+  unsigned ofst;                       /* Offset                              */
 
-  for(i = 0; i < CCE_ecs(cce); i++)
+  if(CCE_ecs(cce))
   {
-    if(unlikely(GR_A(cc->r2 + 1, cc->iregs) <= (U32) i + 1))
-      return(0);
-    ofst = (GR_A(cc->r2, cc->iregs) + i + 1) & 0x7ff;
-    if(unlikely(!cc->src || ofst < cc->ofst))
-      ch = ARCH_DEP(vfetchb)((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
-    else
+    /* This is not a dead end */
+    cc->dead_end = 0;
+
+    for(i = 0; i < CCE_ecs(cce); i++)
     {
-      ch = cc->src[ofst];
-      ITIMER_SYNC((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+      if(unlikely(GR_A(cc->r2 + 1, cc->iregs) <= (U32) i + 1))
+        return(0);
+      ofst = (GR_A(cc->r2, cc->iregs) + i + 1) & 0x7ff;
+      if(unlikely(!cc->src || ofst < cc->ofst))
+        ch = ARCH_DEP(vfetchb)((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs);
+      else
+      {
+        ch = cc->src[ofst];
+        ITIMER_SYNC((GR_A(cc->r2, cc->iregs) + i + 1) & ADDRESS_MAXWRAP(cc->regs), 1 - 1, cc->regs);
+      }
+      if(unlikely(ch != CCE_ec(cce, i)))
+        return(0);
     }
-    if(unlikely(ch != CCE_ec(cce, i)))
-      return(0);
   }
 
   /* a perfect match */
@@ -1299,9 +1473,9 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   int dcten;                           /* Number of different symbols         */
   GREG destlen;                        /* Destination length                  */
   struct ec ec;                        /* Expand cache                        */
-  int i;
+  int i;                               /* Index                               */
   U16 is;                              /* Index symbol                        */
-  U16 iss[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; /* Index symbols                   */
+  U16 iss[8];                          /* Index symbols                       */
 
   /* Initialize values */
   dcten = GR0_dcten(regs);
@@ -1332,24 +1506,21 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   ec.src = NULL;
 
   /* Process individual index symbols until cbn becomes zero */
-  if(unlikely(GR1_cbn(iregs)))
+  while(unlikely(GR1_cbn(iregs)))
   {
-    while(likely(GR1_cbn(iregs)))
+    if(unlikely(ARCH_DEP(fetch_is)(&ec, &is)))
+      return;
+    if(likely(!ec.ecl[is]))
     {
-      if(unlikely(ARCH_DEP(fetch_is)(&ec, &is)))
+      ec.ocl = 0;                      /* Initialize output cache             */
+      ARCH_DEP(expand_is)(&ec, is);
+      if(unlikely(ARCH_DEP(vstore)(&ec, ec.oc, ec.ocl)))
         return;
-      if(likely(!ec.ecl[is]))
-      {
-        ec.ocl = 0;                    /* Initialize output cache             */
-        ARCH_DEP(expand_is)(&ec, is);
-        if(unlikely(ARCH_DEP(vstore)(&ec, ec.oc, ec.ocl)))
-          return;
-      }
-      else
-      {
-        if(unlikely(ARCH_DEP(vstore)(&ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
-          return;
-      }
+    }
+    else
+    {
+      if(unlikely(ARCH_DEP(vstore)(&ec, &ec.ec[ec.eci[is]], ec.ecl[is])))
+        return;
     }
 
     /* Commit, including GR1 */
@@ -1363,6 +1534,24 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
     ec.ocl = 0;                        /* Initialize output cache             */
     for(i = 0; i < 8; i++)
     {
+
+//Please ignore following gcc warnings, iss array is filled by fetch_iss!
+//cmpsc.c:1505:10: warning: 'iss[7]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[7]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[6]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[6]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[5]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[5]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[4]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[4]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[3]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[3]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[2]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[2]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[1]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[1]' was declared here
+//cmpsc.c:1505:10: warning: 'iss[0]' may be used uninitialized in this function [-Wuninitialized]
+//cmpsc.c:1423:7: note: 'iss[0]' was declared here
 
 #ifdef OPTION_CMPSC_DEBUG
       WRMSG(HHC90347, "D", iss[i], i);
@@ -1504,8 +1693,8 @@ static void ARCH_DEP(expand_is)(struct ec *ec, U16 is)
 static int ARCH_DEP(fetch_is)(struct ec *ec, U16 *is)
 {
   unsigned cbn;                        /* Compressed-data bit number          */
-  U32 mask;
-  BYTE work[3];
+  U32 mask;                            /* Working mask                        */
+  BYTE work[3];                        /* Working field                       */
 
   /* Initialize values */
   cbn = GR1_cbn(ec->iregs);
@@ -1681,9 +1870,9 @@ static void ARCH_DEP(fetch_iss)(struct ec *ec, U16 is[8])
 /*----------------------------------------------------------------------------*/
 static void print_ece(U16 is, BYTE *ece)
 {
-  char buf[128];
-  int i;
-  int prt_detail;
+  char buf[128];                       /* Buffer                              */
+  int i;                               /* Index                               */
+  int prt_detail;                      /* Switch detailed printing            */
 
   buf[0] = 0;
   prt_detail = 0;
@@ -1739,10 +1928,10 @@ static int ARCH_DEP(vstore)(struct ec *ec, BYTE *buf, unsigned len)
   BYTE *sk;                            /* Storage key                         */
 
 #ifdef OPTION_CMPSC_DEBUG
-  char buf2[256];
-  unsigned i;
-  unsigned j;
-  static BYTE pbuf[2060];
+  char buf2[256];                      /* Buffer                              */
+  unsigned i;                          /* Index                               */
+  unsigned j;                          /* Index                               */
+  static BYTE pbuf[2060];              /* Print buffer                        */
   static unsigned plen = 2061;         /* Impossible value                    */
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 

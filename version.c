@@ -107,13 +107,6 @@ static const char *build_info[] = {
     "Using   static libraries",
 #endif
 
-#if defined(OPTION_CMDSER)
-    "With    'CONSOLE' command serialization",
-#else
-    "Without 'CONSOLE' command serialization",
-#endif
-
-
 #if defined(EXTERNALGUI)
     "With    External GUI support",
 #else

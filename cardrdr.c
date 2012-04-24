@@ -45,8 +45,17 @@ static int cardrdr_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 int     i;                              /* Array subscript           */
 int     fc;                             /* File counter              */
 char    pathname[MAX_PATH];             /* file path in host format  */
+int     sockdev = 0;
+int     attn = 0;
 
-    int sockdev = 0;
+   
+    /* Raise attention for re-init */
+    if(dev->devtype)
+        attn = 1;
+
+    /* For re-initialisarion close the existing file */
+    if (dev->fd >= 0)
+        (dev->hnd->close)(dev);
 
     if (dev->bs)
     {
@@ -300,6 +309,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     // If socket device, create a listening socket
     // to accept connections on.
+
+    if(attn)
+    {
+        release_lock (&dev->lock);
+        device_attention (dev, CSW_DE);
+        obtain_lock (&dev->lock);
+    }
 
     if (sockdev && !bind_device(dev,dev->filename))
     {

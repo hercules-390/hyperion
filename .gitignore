@@ -175,6 +175,7 @@
 /machchk.lo
 /makefile
 /memrchr.lo
+/mpc.lo
 /msvc.AMD64.bin
 /msvc.AMD64.map
 /msvc.AMD64.obj
