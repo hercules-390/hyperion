@@ -174,7 +174,7 @@ typedef struct _OSA_GRP {
     BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
     BYTE  gtulpconn[4];         /* Guest token ulp connection        */
 
-#define ODTOKEN 0x12345678      /* OSA device token                  */
+#define ODTOKEN 0x9885a388      /* OSA device token (qeth lc edcdic) */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */

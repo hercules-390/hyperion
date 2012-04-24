@@ -2275,7 +2275,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_01;
 MPC_PUS *req_pus_0A;
-U16      len_pus_0A;
 
 MPC_TH  *rsp_th = (MPC_TH*)grp->rspbf;
 MPC_RRH *rsp_rrh;
@@ -2283,6 +2282,9 @@ MPC_PH  *rsp_ph;
 MPC_PUK *rsp_puk;
 MPC_PUS *rsp_pus_01;
 MPC_PUS *rsp_pus_0A;
+
+U16      len_req_pus_0A;
+U16      len_rsp_pus_0A;
 
 U32 uLength1;
 U32 uLength2;
@@ -2303,14 +2305,28 @@ U16 uMTU;
          /* FIXME Expected pus not present, error message please. */
          return;
     }
-    FETCH_HW( len_pus_0A, req_pus_0A->length);
 
     /* Remember something from request PUS_TYPE_01. */
     grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
 
+    /* Determine length of request and response PUS_TYPE_0A. */
+    len_rsp_pus_0A = SIZE_PUS_0A_B;
+    FETCH_HW( len_req_pus_0A, req_pus_0A->length);
+    if( len_req_pus_0A > SIZE_PUS_0A_B )
+        len_rsp_pus_0A = len_req_pus_0A;
+
+    /* Determine the MTU. */
+    if(grp->ttmtu)
+    {
+        iMTU = atoi( grp->ttmtu );
+        uMTU = iMTU;
+    }
+    else
+        uMTU = 1500;
+
     // Fix-up various lengths
     uLength4 = SIZE_PUS_01 +                  // first MPC_PUS
-               len_pus_0A;                    // second MPC_PUS
+               len_rsp_pus_0A;                // second MPC_PUS
     uLength3 = SIZE_PUK + uLength4;           // the MPC_PUK and the MPC_PUSs (the data)
     uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;  // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
@@ -2366,18 +2382,10 @@ U16 uMTU;
     STORE_FW( rsp_pus_01->vc.pus_01.token, ODTOKEN );
 
     // Prepare second MPC_PUS
-//  STORE_HW( rsp_pus_0A->length, SIZE_PUS_0A );
-//  rsp_pus_0A->what = PUS_WHAT_04;
-//  rsp_pus_0A->type = PUS_TYPE_0A;
-    memcpy( rsp_pus_0A, req_pus_0A, len_pus_0A );
-    if(grp->ttmtu)
-    {
-        iMTU = atoi( grp->ttmtu );
-        uMTU = iMTU;
-    }
-    else
-        uMTU = 1500;
+    memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
+    STORE_HW( rsp_pus_0A->length, len_rsp_pus_0A );
     STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, uMTU );
+    rsp_pus_0A->vc.pus_0A.linktype = PUS_LINK_TYPE_FAST_ETH;
 
     return;
 }

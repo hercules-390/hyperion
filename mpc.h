@@ -101,7 +101,7 @@ struct _MPC_RRH                    /* Request/Response Header        */
 /*005*/  BYTE   proto;             /* Protocol (See Note 3)          */
 /*006*/  HWORD  numph;             /* The number of MPC_PHs          */
                                    /* following the MPC_RRH.         */
-/*000*/  FWORD  seqnum;            /* Sequence number.               */
+/*008*/  FWORD  seqnum;            /* Sequence number.               */
 /*00C*/  FWORD  ackseq;            /* Ack sequence number.           */
 /*010*/  HWORD  offph;             /* Offset from the start of       */
                                    /* the MPC_RRH to the first       */
@@ -111,14 +111,16 @@ struct _MPC_RRH                    /* Request/Response Header        */
 /*012*/  HWORD  lenfida;           /* Length of the data             */
                                    /* referenced by the first        */
                                    /* MPC_PH. (See Note 2)           */
-/*014*/  BYTE   unknown14;         /* ???.                           */
+/*014*/  BYTE   reserved14;        /* This byte, along with lenalda, */
+                                   /* is a 3-byte length field. Yuk. */
 /*015*/  HWORD  lenalda;           /* Length of the data             */
                                    /* referenced by all of the       */
                                    /* MPC_PHs. (See Note 2)          */
 /*017*/  BYTE   tokenx5;           /* Token length or type or ???.   */
 /*018*/  FWORD  token;             /* Token.                         */
 /*01C*/                            /* End of the MPC_RRH, maybe.     */
-/*01C*/  FWORD  unknown1C;         /* ???.                           */
+/*01C*/  BYTE   unknown1C;         /* ???.                           */
+/*01D*/  BYTE   unknown1D[3];      /* ???.                           */
 /*020*/  FWORD  unknown20;         /* ???. Contains zero in the      */
                                    /* first MPC_RRH, or a number     */
                                    /* in the second MPC_RRH.         */
@@ -139,7 +141,8 @@ struct _MPC_PH                     /* Protocol Data Unit Header      */
                                    /* (See Note 2)                   */
 #define PH_LOC_1  1                /*                                */
 #define PH_LOC_2  2                /*                                */
-/*001*/  BYTE   reserved01;        /* Not used(?).                   */
+/*001*/  BYTE   reserved01;        /* This byte, along with lendata, */
+                                   /* is a 3-byte length field. Yuk. */
 /*002*/  HWORD  lendata;           /* Length of the data             */
                                    /* referenced by this MPC_PH.     */
 /*004*/  FWORD  offdata;           /* Offset from the start of the   */
@@ -187,7 +190,8 @@ struct _MPC_PUK                    /*                                */
 #define PUK_TYPE_ACTIVE    0x60    /*                                */
 /*004*/  HWORD  lenpus;            /* Total length of the MPC_PUSs   */
                                    /* following the MPC_PUK.         */
-/*006*/  BYTE   reserved06[6];     /* ???, only ever seen nulls.     */
+/*006*/  BYTE   unknown06;         /* ???, only ever seen null.      */
+/*007*/  BYTE   unknown07[5];      /* ???, only ever seen nulls.     */
 /*00C*/                            /* End of the MPC_PUK.            */
 } ATTRIBUTE_PACKED;                /*                                */
 #define SIZE_PUK  0x000C           /* Size of MPC_PUK                */
@@ -304,8 +308,20 @@ struct _MPC_PUS                    /*                                */
 /*00A*/      BYTE   linknum;       /* Link number                    */
 /*00B*/      BYTE   lenportname;   /* Length of the port name        */
 /*00C*/      BYTE   portname[8];   /* Port name                      */
+/*014*/      BYTE   linktype;      /* Link type                      */
+#define PUS_LINK_TYPE_FAST_ETH      0x01
+// fine PUS_LINK_TYPE_HSTR          0x02
+#define PUS_LINK_TYPE_GBIT_ETH      0x03
+// fine PUS_LINK_TYPE_OSN           0x04
+#define PUS_LINK_TYPE_10GBIT_ETH    0x10
+// fine PUS_LINK_TYPE_LANE_ETH100   0x81
+// fine PUS_LINK_TYPE_LANE_TR       0x82
+// fine PUS_LINK_TYPE_LANE_ETH1000  0x83
+// fine PUS_LINK_TYPE_LANE          0x88
+// fine PUS_LINK_TYPE_ATM_NATIVE    0x90
          } pus_0A;                 /*                                */
-#define SIZE_PUS_0A  0x0014        /* Size of MPC_PUS_0A             */
+#define SIZE_PUS_0A_A  0x0014      /* Size of MPC_PUS_0A             */
+#define SIZE_PUS_0A_B  0x0015      /* Size of MPC_PUS_0A             */
 
          struct _pus_0B {          /* PUS_0B contents                */
 /*004*/      BYTE   cua[2];        /*                                */
@@ -526,6 +542,7 @@ typedef struct _MPC_IPA {
 #define IPA_SUPP ( 0 \
                  | IPA_PASSTHRU \
                  | IPA_INBOUND_PASSTHRU \
+                 | IPA_ARP_PROCESSING \
                  )
 
 
