@@ -1,15 +1,16 @@
-@REM $Id$
 @if defined TRACEON (@echo on) else (@echo off)
 
-  :: Uncomment the below to set a custom build description.
 
-  ::set CUSTOM_BUILD_STRING="(whatever you want it to be)"
+  ::  Uncomment the below to set a custom build description, or
+  ::  define it via 'set' command before invoking this batch file.
+
+  :: set CUSTOM_BUILD_STRING="(whatever you want it to be)"
 
 
   ::  Uncomment the below to ALWAYS generate assembly (.cod) listings, or
   ::  define it yourself via 'set' command before invoking this batch file.
 
-  :: set ASSEMBLY_LISTINGS=1
+  :: set "ASSEMBLY_LISTINGS=1"
 
 
 
@@ -51,7 +52,7 @@
 ::*                                                                           *
 ::*****************************************************************************
 
-  set rc=0
+  set "rc=0"
   set "TRACE=if defined TRACEON echo"
 
   if "%~1" == ""        goto :help
@@ -60,16 +61,16 @@
   if "%~1" == "-?"      goto :help
   if "%~1" == "--help"  goto :help
 
-  set build_type=%~1
-  set makefile_name=%~2
-  set num_cpus=%~3
-  set extra_nmake_arg=%~4
-  set SolutionDir=%~5
+  set "build_type=%~1"
+  set "makefile_name=%~2"
+  set "num_cpus=%~3"
+  set "extra_nmake_arg=%~4"
+  set "SolutionDir=%~5"
 
 :extra_args
 
   if "%~5" == "" goto :begin
-  set extra_nmake_arg=%extra_nmake_arg% %~5
+  set "extra_nmake_arg=%extra_nmake_arg% %~5"
   shift /1
   goto :extra_args
 
@@ -233,16 +234,16 @@
 ::-----------------------------------------------------------------------------
 :set_build_env
 
-  set rc=0
-  set build_env=
-  set new_sdk=
+  set "rc=0"
+  set "build_env="
+  set "new_sdk="
 
 :try_sdk
 
   if "%MSSdk%" == "" goto :try_vs100
 
-  set build_env=sdk
-  set bat_dir=%MSSdk%
+  set "build_env=sdk"
+  set "bat_dir=%MSSdk%"
 
 :: This is a fiddle by g4ugm
 :: I couldn't find a way to check the SDK versions
@@ -250,31 +251,31 @@
 :: so using that for now
 
   if NOT exist "%MSSdk%\bin\setenv.cmd" goto :eof
-  set new_sdk=NEW
+  set "new_sdk=NEW"
   goto :eof
 
 :try_vs100
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
 
-  set   build_env=vs100
-  set VSTOOLSDIR=%VS100COMNTOOLS%
+  set "build_env=vs100"
+  set "VSTOOLSDIR=%VS100COMNTOOLS%"
   goto :EOF
 
 :try_vs90
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
 
-  set   build_env=vs90
-  set VSTOOLSDIR=%VS90COMNTOOLS%
+  set "build_env=vs90"
+  set "VSTOOLSDIR=%VS90COMNTOOLS%"
   goto :EOF
 
 :try_vs80
 
   if "%VS80COMNTOOLS%" == "" goto :try_toolkit
 
-  set   build_env=vs80
-  set VSTOOLSDIR=%VS80COMNTOOLS%
+  set "build_env=vs80"
+  set "VSTOOLSDIR=%VS80COMNTOOLS%"
   goto :EOF
 
 
@@ -282,36 +283,36 @@
 
   if "%VCToolkitInstallDir%" == "" goto :try_xxxx
 
-  set build_env=toolkit
-  set bat_dir=%VCToolkitInstallDir%
+  set "build_env=toolkit"
+  set "bat_dir=%VCToolkitInstallDir%"
   goto :EOF
 
 :try_xxxx
 
   echo.
   echo %~nx0^(1^) : error C9999 : No suitable Windows development product is installed
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 
 ::-----------------------------------------------------------------------------
 :validate_makefile
 
-  set rc=0
+  set "rc=0"
   if exist "%makefile_name%" goto :EOF
 
   echo.
   echo %~nx0^(1^) : error C9999 : makefile "%makefile_name%" not found
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 
 ::-----------------------------------------------------------------------------
 :validate_num_cpus
 
-  set rc=1
+  set "rc=1"
 
-  for /f "delims=0123456789" %%i in ("%num_cpus%\") do if "%%i" == "\" set rc=0
+  for /f "delims=0123456789" %%i in ("%num_cpus%\") do if "%%i" == "\" set "rc=0"
 
   if %rc% NEQ 0        goto :bad_num_cpus
   if %num_cpus% LSS 1  goto :bad_num_cpus
@@ -322,30 +323,30 @@
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%num_cpus%": Invalid number of cpu engines
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 
 ::-----------------------------------------------------------------------------
 :set_cfg
 
-  set rc=0
-  set CFG=
+  set "rc=0"
+  set "CFG="
 
-  if /i     "%build_type%" == "DEBUG"       set CFG=DEBUG
-  if /i     "%build_type%" == "DEBUG-X64"   set CFG=DEBUG
-  if /i     "%build_type%" == "DEBUG-IA64"  set CFG=DEBUG
+  if /i     "%build_type%" == "DEBUG"       set "CFG=DEBUG"
+  if /i     "%build_type%" == "DEBUG-X64"   set "CFG=DEBUG"
+  if /i     "%build_type%" == "DEBUG-IA64"  set "CFG=DEBUG"
 
-  if /i     "%build_type%" == "RETAIL"      set CFG=RETAIL
-  if /i     "%build_type%" == "RETAIL-X64"  set CFG=RETAIL
-  if /i     "%build_type%" == "RETAIL-IA64" set CFG=RETAIL
+  if /i     "%build_type%" == "RETAIL"      set "CFG=RETAIL"
+  if /i     "%build_type%" == "RETAIL-X64"  set "CFG=RETAIL"
+  if /i     "%build_type%" == "RETAIL-IA64" set "CFG=RETAIL"
 
 :: the latest SDk uses different arguments to the "setenv" batch file
 :: we need "release" not "retail"...
 
   if /i not "%new_sdk%" == "NEW" goto :cfg_sdk_env
 
-  if /i "%CFG%" == "RETAIL" set CFG=RELEASE
+  if /i "%CFG%" == "RETAIL" set "CFG=RELEASE"
 
 :cfg_sdk_env
 
@@ -358,33 +359,33 @@
 
 :multi_cfg
 
-  if /i     "%build_type%" == "DEBUG-ALL"   set CFG=debug
-  if /i     "%build_type%" == "RETAIL-ALL"  set CFG=retail
-  if /i     "%build_type%" == "ALL-ALL"     set CFG=all
+  if /i     "%build_type%" == "DEBUG-ALL"   set "CFG=debug"
+  if /i     "%build_type%" == "RETAIL-ALL"  set "CFG=retail"
+  if /i     "%build_type%" == "ALL-ALL"     set "CFG=all"
   if    not "%CFG%"        == ""            goto :EOF
 
 :bad_cfg
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 
 ::-----------------------------------------------------------------------------
 :set_targ_arch
 
-  set rc=0
-  set targ_arch=
+  set "rc=0"
+  set "targ_arch="
 
-  if /i     "%build_type%" == "DEBUG"       set targ_arch=x86
-  if /i     "%build_type%" == "RETAIL"      set targ_arch=x86
+  if /i     "%build_type%" == "DEBUG"       set "targ_arch=x86"
+  if /i     "%build_type%" == "RETAIL"      set "targ_arch=x86"
 
-  if /i     "%build_type%" == "DEBUG-X64"   set targ_arch=amd64
-  if /i     "%build_type%" == "RETAIL-X64"  set targ_arch=amd64
+  if /i     "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
+  if /i     "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
 
-  if /i     "%build_type%" == "DEBUG-IA64"  set targ_arch=ia64
-  if /i     "%build_type%" == "RETAIL-IA64" set targ_arch=ia64
+  if /i     "%build_type%" == "DEBUG-IA64"  set "targ_arch=ia64"
+  if /i     "%build_type%" == "RETAIL-IA64" set "targ_arch=ia64"
 
   :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
 
@@ -394,48 +395,48 @@
 
 :multi_targ_arch
 
-  if /i     "%build_type%" == "DEBUG-ALL"   set targ_arch=all
-  if /i     "%build_type%" == "RETAIL-ALL"  set targ_arch=all
-  if /i     "%build_type%" == "ALL-ALL"     set targ_arch=all
+  if /i     "%build_type%" == "DEBUG-ALL"   set "targ_arch=all"
+  if /i     "%build_type%" == "RETAIL-ALL"  set "targ_arch=all"
+  if /i     "%build_type%" == "ALL-ALL"     set "targ_arch=all"
   if    not "%targ_arch%"  == ""            goto :EOF
 
 :bad_targ_arch
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 :set_CPU_etc
 
-  set CPU=
+  set "CPU="
 
-  if /i "%targ_arch%" == "x86"   set CPU=i386
-  if /i "%targ_arch%" == "amd64" set CPU=AMD64
-  if /i "%targ_arch%" == "ia64"  set CPU=IA64
+  if /i "%targ_arch%" == "x86"   set "CPU=i386"
+  if /i "%targ_arch%" == "amd64" set "CPU=AMD64"
+  if /i "%targ_arch%" == "ia64"  set "CPU=IA64"
 
-  set _WIN64=
+  set "_WIN64="
 
-  if /i "%targ_arch%" == "amd64" set _WIN64=1
-  if /i "%targ_arch%" == "ia64"  set _WIN64=1
+  if /i "%targ_arch%" == "amd64" set "_WIN64=1"
+  if /i "%targ_arch%" == "ia64"  set "_WIN64=1"
 
-  set BLD=
+  set "BLD="
 
 	:: the latest SDk uses different arguments to the "setenv" batch file
 
   if /i "%new_sdk%" == "NEW" goto :bld_sdk_env
 
-  if /i "%targ_arch%" == "x86"   set BLD=XP32
-  if /i "%targ_arch%" == "amd64" set BLD=XP64
-  if /i "%targ_arch%" == "ia64"  set BLD=IA64
+  if /i "%targ_arch%" == "x86"   set "BLD=XP32"
+  if /i "%targ_arch%" == "amd64" set "BLD=XP64"
+  if /i "%targ_arch%" == "ia64"  set "BLD=IA64"
 
   goto :EOF
 
 :bld_sdk_env
 
-  if /i "%targ_arch%" == "x86"   set BLD=XP /X86
-  if /i "%targ_arch%" == "amd64" set BLD=XP /X64
-  if /i "%targ_arch%" == "ia64"  set BLD=IA64 /2003
+  if /i "%targ_arch%" == "x86"   set "BLD=XP /X86"
+  if /i "%targ_arch%" == "amd64" set "BLD=XP /X64"
+  if /i "%targ_arch%" == "ia64"  set "BLD=IA64 /2003"
 
   goto :EOF
 
@@ -443,29 +444,29 @@
 ::-----------------------------------------------------------------------------
 :set_host_arch
 
-  set rc=0
-  set host_arch=
+  set "rc=0"
+  set "host_arch="
 
-  if /i "%PROCESSOR_ARCHITECTURE%" == "x86"   set host_arch=x86
-  if /i "%PROCESSOR_ARCHITECTURE%" == "AMD64" set host_arch=amd64
-  if /i "%PROCESSOR_ARCHITECTURE%" == "IA64"  set host_arch=ia64
+  if /i "%PROCESSOR_ARCHITECTURE%" == "x86"   set "host_arch=x86"
+  if /i "%PROCESSOR_ARCHITECTURE%" == "AMD64" set "host_arch=amd64"
+  if /i "%PROCESSOR_ARCHITECTURE%" == "IA64"  set "host_arch=ia64"
 
   ::  PROGRAMMING NOTE: there MUST NOT be any spaces before the ')'!!!
 
   :: As there isn't a X64 or IA64 version of the x86 compiler
   :: when building x86 builds we use the "x86" compiler under WOW
 
-  if /i "%targ_arch%" == "x86" set host_arch=x86
+  if /i "%targ_arch%" == "x86" set "host_arch=x86"
 
   if /i not "%host_arch%" == "%targ_arch%" goto :cross
 
-  set host_arch=
+  set "host_arch="
   if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" goto :EOF
   goto :missing
 
 :cross
 
-  set host_arch=x86_
+  set "host_arch=x86_"
 
   if exist "%VSTOOLSDIR%..\..\VC\bin\%host_arch%%targ_arch%\vcvars%host_arch%%targ_arch%.bat" goto :EOF
   goto :missing
@@ -474,7 +475,7 @@
 
   echo.
   echo %~nx0^(1^) : error C9999 : Build support for target architecture %targ_arch% is not installed
-  set rc=1
+  set "rc=1"
   goto :EOF
 
 
@@ -483,9 +484,10 @@
 
   :: ---------------------------------------------------------------
   ::  The following logic determines the Hercules version number,
-  ::  SVN revision number and sets variables VERSION,V1,V2,V3,V4.
-  ::  NOTE: it's OK if we fail, since the Hercules makefile will
-  ::  set the VERSION for itself whenever it's still undefined.
+  ::  git or svn commit/revision information, and sets variables
+  ::  VERSION,V1,V2,V3,V4. NOTE: it's OK if we fail, since the
+  ::  Hercules makefile will set the VERSION for itself whenever
+  ::  it's still undefined.
   :: ---------------------------------------------------------------
 
   if defined VERSION goto :set_VERSION_done
@@ -495,12 +497,15 @@
   set "V3="
   set "V4="
 
+  set "modified_str="
+  set "repo_type="
+
   :: ---------------------------------------------------------------
   ::  First, extract the Hercules version from the "configure.ac"
   ::  file by looking for "AM_INIT_AUTOMAKE=(hercules,x.y[.z])"
   :: ---------------------------------------------------------------
 
-  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac^|find /i "AM_INIT_AUTOMAKE"') do (
+  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac ^| find /i "AM_INIT_AUTOMAKE"') do (
     set "V1=%%c"
     set "V2=%%d"
     set "V3=%%e"
@@ -515,40 +520,100 @@
   if "%V3%" == "#" set "V3=0"
 
   if defined V1 %TRACE% V1.V2.V3 = "%V1%.%V2%.%V3%"
+  if defined V4 goto :set_VERSION_do_set
 
   :: ---------------------------------------------------------------
-  ::  If V4 is not set use the "svn info" command if it exists
-  :: ---------------------------------------------------------------
-
-  set "svn_exe=svn.exe"
-  call :fullpath "%svn_exe%"
-  if "%fullpath%" == "" goto :skip_svn_info
-
-  for /f "tokens=1-2" %%a in ('"%svn_exe%" info^|find /i "Revision:"') do set "V4=%%b"
-
-:skip_svn_info
-
-  :: ---------------------------------------------------------------
-  ::  If V4 is not set use the TortoiseSVN program "SubWCRev.exe"
+  ::  Try TortoiseSVN's "SubWCRev.exe" program, if it exists
   :: ---------------------------------------------------------------
 
   set "SubWCRev_exe=SubWCRev.exe"
   call :fullpath "%SubWCRev_exe%"
-  if "%fullpath%" == "" goto :skip_subwcrev
+  if "%fullpath%" == "" goto :set_VERSION_try_SVN
 
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Updated to revision"') do set "V4=%%j"
+  set "#="
+  for /f %%a in ('%SubWCRev_exe% "." ^| find /i "E155007"') do set "#=1"
+  if defined # goto :set_VERSION_try_GIT
+
+  set "repo_type=svn"
   set "modified_str="
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Local modifications found"') do set "modified_str=  (modified)"
 
-:skip_subwcrev
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=  (modified)"
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Updated to revision"') do set "V4=%%j"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_try_SVN
 
-  if not defined V4 set "V4=0"
+  :: ---------------------------------------------------------------
+  ::  Try the "svn info" command, if it exists
+  :: ---------------------------------------------------------------
 
-  set "VERSION=%V1%.%V2%.%V3%"
+:set_VERSION_try_SVN
 
-  if not "%V4%" == "0" set "VERSION=%VERSION%-svn-%V4%"
+  set "svn_exe=svn.exe"
+  call :fullpath "%svn_exe%"
+  if "%fullpath%" == "" goto :set_VERSION_try_GIT
 
-  set VERSION=\"%VERSION%%modified_str%\"
+  set "#="
+  for /f %%a in ('%svn_exe% info 2^>^&1 ^| find /i "E155007"') do set "#=1"
+  if defined # goto :set_VERSION_try_GIT
+
+  set "repo_type=svn"
+  set "modified_str="
+
+  for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| find /i "Revision:"') do set "V4=%%b"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_do_set
+
+  :: ---------------------------------------------------------------
+  ::  Try the "git log" command, if it exists
+  :: ---------------------------------------------------------------
+
+:set_VERSION_try_GIT
+
+  set "git=git.cmd"
+  call :fullpath "%git%"
+  if not "%fullpath%" == "" goto :set_VERSION_test_git
+
+  set "git=git.exe"
+  call :fullpath "%git%"
+  if "%fullpath%" == "" goto :set_VERSION_try_XXX
+
+:set_VERSION_test_git
+
+  set "call_git=%git%"
+  if /i "%git:~-4%" == ".cmd" set "call_git=call %git%"
+
+  set "#="
+  for /f %%a in ('%git% log --pretty=format:"%h" -n 1 2^>^&1 ^| find /i "Not a git repository"') do set "#=1"
+  if defined # goto :set_VERSION_try_XXX
+
+  set "repo_type=git"
+  set "modified_str="
+
+  for /f %%a in ('%git% rev-parse --verify HEAD') do set "modified_str=%%a"
+  set "modified_str=-g%modified_str:~0,7%"
+  %call_git% diff-index --quiet HEAD
+  if %errorlevel% NEQ 0 set "modified_str=%modified_str%  (modified)"
+  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc -l`) do set "V4=%%a"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_do_set
+
+:set_VERSION_try_XXX
+
+  set "repo_type=unk"
+  set "modified_str="
+  goto :set_VERSION_do_set
+
+:set_VERSION_do_set
+
+  if not defined V4        set "V4=0"
+  if not defined repo_type set "modified_str="
+  if not defined repo_type set "repo_type=unk"
+
+                       set "VERSION=%V1%.%V2%.%V3%"
+  if not "%V4%" == "0" set "VERSION=%VERSION%-%repo_type%-%V4%"
+                       set  VERSION=\"%VERSION%%modified_str%\"
+
+  goto :set_VERSION_done
 
 :set_VERSION_done
 
@@ -563,10 +628,10 @@
   ::  fully qualified path if found. Otherwise return an empty string.
   ::  Note: the below does not work for directories, only files.
 
-  set save_path=%path%
-  set path=.;%path%
-  set fullpath=%~dpnx$PATH:1
-  set path=%save_path%
+  set "save_path=%path%"
+  set "path=.;%path%"
+  set "fullpath=%~dpnx$PATH:1"
+  set "path=%save_path%"
   goto :EOF
 
 
@@ -603,7 +668,7 @@
 ::-----------------------------------------------------------------------------
 :nmake
 
-  set  MAX_CPU_ENGINES=%num_cpus%
+  set  "MAX_CPU_ENGINES=%num_cpus%"
 
 
   ::  Additional nmake arguments (for reference):
@@ -615,12 +680,12 @@
 
 
   nmake -nologo -f "%makefile_name%" -s %extra_nmake_arg%
-  set rc=%errorlevel%
+  set "rc=%errorlevel%"
 
 
 
   :: (see the PROGRAMMING NOTE at the beginning of this batch file!)
-  endlocal  &  set rc=%rc%
+  endlocal  &  set "rc=%rc%"
 
 
   exit /b %rc%
@@ -644,11 +709,11 @@
   ::  Make sure the below defined command exists...
   ::-------------------------------------------------
 
-  set runjobs_cmd=runjobs.exe
+  set "runjobs_cmd=runjobs.exe"
 
   call :fullpath "%runjobs_cmd%"
   if "%fullpath%" == "" goto :no_runjobs
-  set runjobs_cmd=%fullpath%
+  set "runjobs_cmd=%fullpath%"
 
 
   ::-------------------------------------------------------------------
@@ -669,15 +734,15 @@
 
   call :ifallorclean %extra_nmake_arg%
   if defined # (
-    set VCBUILDOPT=/clean
+    set "VCBUILDOPT=/clean"
   ) else if defined @ (
-    set VCBUILDOPT=/rebuild
+    set "VCBUILDOPT=/rebuild"
   ) else (
-    set VCBUILDOPT=/nocolor
+    set "VCBUILDOPT=/nocolor"
   )
 
   "%runjobs_cmd%" %CFG%-%targ_arch%.jobs
-  set rc=%errorlevel%
+  set "rc=%errorlevel%"
 
   exit /b %rc%
 
@@ -686,7 +751,7 @@
 
   echo.
   echo %~nx0^(1^) : error C9999 : Could not find "%runjobs_cmd%" anywhere on your system
-  set rc=1
+  set "rc=1"
   exit /b %rc%
 
 ::-----------------------------------------------------------------------------

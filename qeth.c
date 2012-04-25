@@ -2086,13 +2086,13 @@ U16 uLength4;
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumis );
     STORE_HW( rsp_rrh->offph, SIZE_RRH );
     STORE_HW( rsp_rrh->lenfida, uLength3 );
-    STORE_HW( rsp_rrh->lenalda, uLength3 );
+    STORE_HW( rsp_rrh->lenalda+1, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_rrh->token, grp->gtissue, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PH
     rsp_ph->locdata = PH_LOC_1;
-    STORE_HW( rsp_ph->lendata, uLength3 );
+    STORE_HW( rsp_ph->lendata+1, uLength3 );
     STORE_FW( rsp_ph->offdata, uLength2 );
 
     // Prepare MPC_PUK
@@ -2193,13 +2193,13 @@ U16 uLength4;
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumis );
     STORE_HW( rsp_rrh->offph, SIZE_RRH );
     STORE_HW( rsp_rrh->lenfida, uLength3 );
-    STORE_HW( rsp_rrh->lenalda, uLength3 );
+    STORE_HW( rsp_rrh->lenalda+1, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_rrh->token, grp->gtissue, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PH
     rsp_ph->locdata = PH_LOC_1;
-    STORE_HW( rsp_ph->lendata, uLength3 );
+    STORE_HW( rsp_ph->lendata+1, uLength3 );
     STORE_FW( rsp_ph->offdata, uLength2 );
 
     // Prepare MPC_PUK
@@ -2357,13 +2357,13 @@ U16 uMTU;
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     STORE_HW( rsp_rrh->offph, SIZE_RRH );
     STORE_HW( rsp_rrh->lenfida, uLength3 );
-    STORE_HW( rsp_rrh->lenalda, uLength3 );
+    STORE_HW( rsp_rrh->lenalda+1, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_rrh->token, grp->gtcmconn, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PH
     rsp_ph->locdata = PH_LOC_1;
-    STORE_HW( rsp_ph->lendata, uLength3 );
+    STORE_HW( rsp_ph->lendata+1, uLength3 );
     STORE_FW( rsp_ph->offdata, uLength2 );
 
     // Prepare MPC_PUK
@@ -2471,13 +2471,13 @@ U16 uLength4;
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     STORE_HW( rsp_rrh->offph, SIZE_RRH );
     STORE_HW( rsp_rrh->lenfida, uLength3 );
-    STORE_HW( rsp_rrh->lenalda, uLength3 );
+    STORE_HW( rsp_rrh->lenalda+1, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_rrh->token, grp->gtcmconn, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PH
     rsp_ph->locdata = PH_LOC_1;
-    STORE_HW( rsp_ph->lendata, uLength3 );
+    STORE_HW( rsp_ph->lendata+1, uLength3 );
     STORE_FW( rsp_ph->offdata, uLength2 );
 
     // Prepare MPC_PUK
@@ -2568,13 +2568,13 @@ U16 uLength4;
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     STORE_HW( rsp_rrh->offph, SIZE_RRH );
     STORE_HW( rsp_rrh->lenfida, uLength3 );
-    STORE_HW( rsp_rrh->lenalda, uLength3 );
+    STORE_HW( rsp_rrh->lenalda+1, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
     memcpy( rsp_rrh->token, grp->gtcmconn, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PH
     rsp_ph->locdata = PH_LOC_1;
-    STORE_HW( rsp_ph->lendata, uLength3 );
+    STORE_HW( rsp_ph->lendata+1, uLength3 );
     STORE_FW( rsp_ph->offdata, uLength2 );
 
     // Prepare MPC_PUK

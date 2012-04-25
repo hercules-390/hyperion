@@ -1702,6 +1702,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.REXX.V2"
+						>
+					</File>
+					<File
+						RelativePath=".\README.S37X"
+						>
+					</File>
+					<File
 						RelativePath=".\README.SETUID"
 						>
 					</File>
@@ -1998,6 +2006,10 @@
 						</File>
 						<File
 							RelativePath=".\msvc.makefile.includes\HERC_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\IPV6_FLAGS.msvc"
 							>
 						</File>
 						<File

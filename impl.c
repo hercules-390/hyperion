@@ -361,6 +361,9 @@ int     dll_count;                      /* index into array          */
         destroy_lock    ( &dummy );
     }
 
+    /* Seed the pseudo-random number generator */
+    srand( time(NULL) );
+
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 

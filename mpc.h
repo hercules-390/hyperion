@@ -111,11 +111,10 @@ struct _MPC_RRH                    /* Request/Response Header        */
 /*012*/  HWORD  lenfida;           /* Length of the data             */
                                    /* referenced by the first        */
                                    /* MPC_PH. (See Note 2)           */
-/*014*/  BYTE   reserved14;        /* This byte, along with lenalda, */
-                                   /* is a 3-byte length field. Yuk. */
-/*015*/  HWORD  lenalda;           /* Length of the data             */
+/*014*/  BYTE   lenalda[3];        /* Length of the data             */
                                    /* referenced by all of the       */
                                    /* MPC_PHs. (See Note 2)          */
+                                   /* Note: a 3-byte length field.   */
 /*017*/  BYTE   tokenx5;           /* Token length or type or ???.   */
 /*018*/  FWORD  token;             /* Token.                         */
 /*01C*/                            /* End of the MPC_RRH, maybe.     */
@@ -141,10 +140,9 @@ struct _MPC_PH                     /* Protocol Data Unit Header      */
                                    /* (See Note 2)                   */
 #define PH_LOC_1  1                /*                                */
 #define PH_LOC_2  2                /*                                */
-/*001*/  BYTE   reserved01;        /* This byte, along with lendata, */
-                                   /* is a 3-byte length field. Yuk. */
-/*002*/  HWORD  lendata;           /* Length of the data             */
+/*001*/  BYTE   lendata[3];        /* Length of the data             */
                                    /* referenced by this MPC_PH.     */
+                                   /* Note: a 3-byte length field.   */
 /*004*/  FWORD  offdata;           /* Offset from the start of the   */
                                    /* MPC_TH to the data referenced  */
                                    /* by this MPC_PH.                */

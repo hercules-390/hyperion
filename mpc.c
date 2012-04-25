@@ -316,7 +316,7 @@ DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     MPC_PH*    pMPC_PH;
     MPC_PIX*   pMPC_PIX;
     U32        uOffData;
-    U16        uLenData;
+    U32        uLenData;
     U16        uOffPH;
 
     /* Display description, if one has been provided. */
@@ -343,7 +343,9 @@ DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
 
     // Point to and display the MPC_PIX.
-    FETCH_HW( uLenData, pMPC_PH->lendata );
+    // Note: pMPC_PH->lendata is a 3-byte length field.
+    FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+    uLenData &= 0x00FFFFFF;
     FETCH_FW( uOffData, pMPC_PH->offdata );
     pMPC_PIX = (MPC_PIX*)((BYTE*)pMPC_TH + uOffData);
     display_stuff( pDEVBLK, "PIX", (BYTE*)pMPC_PIX, (int)uLenData, bDir );
@@ -360,7 +362,7 @@ DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     MPC_IPA*   pMPC_IPA;
     BYTE*      pMPC_IPA_CMD;
     U32        uOffData;
-    U16        uLenData;
+    U32        uLenData;
     U16        uOffPH;
     int        iLenIPA;
     int        iLenCmd;
@@ -389,7 +391,9 @@ DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
 
     /* Point to and display the MPC_IPA (and commands, if any). */
-    FETCH_HW( uLenData, pMPC_PH->lendata );
+    // Note: pMPC_PH->lendata is a 3-byte length field.
+    FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+    uLenData &= 0x00FFFFFF;
     if( uLenData > sizeof(MPC_IPA) )
     {
         iLenIPA = sizeof(MPC_IPA);
@@ -430,7 +434,7 @@ DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     U16        uOffPH;
     int        iForPH;
     int        iDone;
-    U16        uLenData;
+    U32        uLenData;
     U32        uOffData;
     BYTE*      pData;
 
@@ -466,13 +470,15 @@ DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     /* if limit is negative or a silly number, don't display the  */
     /* data. If limit is zero, display all of the data, otherwise */
     /* limit the length of the data displayed.                    */
+    /* Note: pMPC_PH->lendata is a 3-byte length field.           */
     iDone = 0;
     if( iLimit >= 0 && iLimit <= 65535 )
     {
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-            FETCH_HW( uLenData, pMPC_PH->lendata );
+            FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+            uLenData &= 0x00FFFFFF;
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData = (BYTE*)pMPC_TH + uOffData;
             if( iLimit > 0 )
