@@ -483,9 +483,10 @@
 
   :: ---------------------------------------------------------------
   ::  The following logic determines the Hercules version number,
-  ::  SVN revision number and sets variables VERSION,V1,V2,V3,V4.
-  ::  NOTE: it's OK if we fail, since the Hercules makefile will
-  ::  set the VERSION for itself whenever it's still undefined.
+  ::  git or svn commit/revision information, and sets variables
+  ::  VERSION,V1,V2,V3,V4. NOTE: it's OK if we fail, since the
+  ::  Hercules makefile will set the VERSION for itself whenever
+  ::  it's still undefined.
   :: ---------------------------------------------------------------
 
   if defined VERSION goto :set_VERSION_done
@@ -495,12 +496,15 @@
   set "V3="
   set "V4="
 
+  set "modified_str="
+  set "repo_type="
+
   :: ---------------------------------------------------------------
   ::  First, extract the Hercules version from the "configure.ac"
   ::  file by looking for "AM_INIT_AUTOMAKE=(hercules,x.y[.z])"
   :: ---------------------------------------------------------------
 
-  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac^|find /i "AM_INIT_AUTOMAKE"') do (
+  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac ^| find /i "AM_INIT_AUTOMAKE"') do (
     set "V1=%%c"
     set "V2=%%d"
     set "V3=%%e"
@@ -515,40 +519,100 @@
   if "%V3%" == "#" set "V3=0"
 
   if defined V1 %TRACE% V1.V2.V3 = "%V1%.%V2%.%V3%"
+  if defined V4 goto :set_VERSION_do_set
 
   :: ---------------------------------------------------------------
-  ::  If V4 is not set use the "svn info" command if it exists
-  :: ---------------------------------------------------------------
-
-  set "svn_exe=svn.exe"
-  call :fullpath "%svn_exe%"
-  if "%fullpath%" == "" goto :skip_svn_info
-
-  for /f "tokens=1-2" %%a in ('"%svn_exe%" info^|find /i "Revision:"') do set "V4=%%b"
-
-:skip_svn_info
-
-  :: ---------------------------------------------------------------
-  ::  If V4 is not set use the TortoiseSVN program "SubWCRev.exe"
+  ::  Try TortoiseSVN's "SubWCRev.exe" program, if it exists
   :: ---------------------------------------------------------------
 
   set "SubWCRev_exe=SubWCRev.exe"
   call :fullpath "%SubWCRev_exe%"
-  if "%fullpath%" == "" goto :skip_subwcrev
+  if "%fullpath%" == "" goto :set_VERSION_try_SVN
 
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Updated to revision"') do set "V4=%%j"
+  set "#="
+  for /f %%a in ('%SubWCRev_exe% "." ^| find /i "E155007"') do set "#=1"
+  if defined # goto :set_VERSION_try_GIT
+
+  set "repo_type=svn"
   set "modified_str="
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f^|find /i "Local modifications found"') do set "modified_str=  (modified)"
 
-:skip_subwcrev
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=  (modified)"
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Updated to revision"') do set "V4=%%j"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_try_SVN
 
-  if not defined V4 set "V4=0"
+  :: ---------------------------------------------------------------
+  ::  Try the "svn info" command, if it exists
+  :: ---------------------------------------------------------------
 
-  set "VERSION=%V1%.%V2%.%V3%"
+:set_VERSION_try_SVN
 
-  if not "%V4%" == "0" set "VERSION=%VERSION%-svn-%V4%"
+  set "svn_exe=svn.exe"
+  call :fullpath "%svn_exe%"
+  if "%fullpath%" == "" goto :set_VERSION_try_GIT
 
-  set VERSION=\"%VERSION%%modified_str%\"
+  set "#="
+  for /f %%a in ('%svn_exe% info 2^>^&1 ^| find /i "E155007"') do set "#=1"
+  if defined # goto :set_VERSION_try_GIT
+
+  set "repo_type=svn"
+  set "modified_str="
+
+  for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| find /i "Revision:"') do set "V4=%%b"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_do_set
+
+  :: ---------------------------------------------------------------
+  ::  Try the "git log" command, if it exists
+  :: ---------------------------------------------------------------
+
+:set_VERSION_try_GIT
+
+  set "git=git.cmd"
+  call :fullpath "%git%"
+  if not "%fullpath%" == "" goto :set_VERSION_test_git
+
+  set "git=git.exe"
+  call :fullpath "%git%"
+  if "%fullpath%" == "" goto :set_VERSION_try_XXX
+
+:set_VERSION_test_git
+
+  set "call_git=%git%"
+  if /i "%git:~-4%" == ".cmd" set "call_git=call %git%"
+
+  set "#="
+  for /f %%a in ('%git% log --pretty=format:"%h" -n 1 2^>^&1 ^| find /i "Not a git repository"') do set "#=1"
+  if defined # goto :set_VERSION_try_XXX
+
+  set "repo_type=git"
+  set "modified_str="
+
+  for /f %%a in ('%git% rev-parse --verify HEAD') do set "modified_str=%%a"
+  set "modified_str=-g%modified_str:~0,7%"
+  %call_git% diff-index --quiet HEAD
+  if %errorlevel% NEQ 0 set "modified_str=%modified_str%  (modified)"
+  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc -l`) do set "V4=%%a"
+  if defined V4 goto :set_VERSION_do_set
+  goto :set_VERSION_do_set
+
+:set_VERSION_try_XXX
+
+  set "repo_type=unk"
+  set "modified_str="
+  goto :set_VERSION_do_set
+
+:set_VERSION_do_set
+
+  if not defined V4        set "V4=0"
+  if not defined repo_type set "modified_str="
+  if not defined repo_type set "repo_type=unk"
+
+                       set "VERSION=%V1%.%V2%.%V3%"
+  if not "%V4%" == "0" set "VERSION=%VERSION%-%repo_type%-%V4%"
+                       set  VERSION=\"%VERSION%%modified_str%\"
+
+  goto :set_VERSION_done
 
 :set_VERSION_done
 
