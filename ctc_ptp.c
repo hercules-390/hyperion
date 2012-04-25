@@ -2592,8 +2592,6 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     int             iIOBuff;
 #endif /* defined(OPTION_W32_CTCI) */
     HRB             hrb;
-    BYTE            bTod[8];
-    U64             uTod;
     char            *argn[MAX_ARGS];
     char            **argv = argn;
 
@@ -3239,49 +3237,33 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     }
 
     // If IPv6 addresses were specified create a Driver Link Local IPv6
-    // address from the current TOD clock.
+    // address using pseudo-random numbers.
     if( pPTPBLK->fIPv6Spec )
     {
-        get_tod_clock( bTod );
-
-        memset( addr6.s6_addr, 0, 16 );
         addr6.s6_addr[0] = 0xFE;
         addr6.s6_addr[1] = 0x80;
-        memcpy( &addr6.s6_addr[8], &bTod, 8 );
+        memset( &addr6.s6_addr[2], 0, 6 );
+        for( j = 8; j < 16; j++ )
+            addr6.s6_addr[j] = (int)((rand()/(RAND_MAX+1.0))*256);
 
         inet_ntop( AF_INET6, &addr6, pPTPBLK->szDriveLLAddr6, sizeof(pPTPBLK->szDriveLLAddr6) );
         memcpy( &pPTPBLK->iaDriveLLAddr6, &addr6, sizeof(pPTPBLK->iaDriveLLAddr6) );
     }
 
     // If the MAC address was not specified in the configuration
-    // statement, create a MAC address from bits 19 to 40 of the
-    // current TOD clock. See build_herc_iface_mac() in tuntap.c
-    // for some helpful notes. Note: a duplicate can occur every
-    // 143 minutes, approximately.
+    // statement, create a MAC address using pseudo-random numbers.
     if( !pPTPBLK->szMACAddress[0] )
     {
-        get_tod_clock( bTod );
-        FETCH_DW( uTod, bTod );
-        uTod <<= 19;
-        STORE_DW( bTod, uTod );
-
-        mac[0]  = 0x00;
-        mac[1]  = 0x00;
-        mac[2]  = 0x5E;
-        mac[3]  = bTod[0] | 0x80;
-        mac[4]  = bTod[1];
-        mac[5]  = bTod[2];
+        for( j = 0; j < 6; j++ )
+            mac[j] = (int)((rand()/(RAND_MAX+1.0))*256);
+        mac[0] &= 0xFE;  /* Clear multicast bit. */
+        mac[0] |= 0x02;  /* Set local assignment bit. */
 
         snprintf
         (
             pPTPBLK->szMACAddress,  sizeof(pPTPBLK->szMACAddress),
             "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
-            mac[0],
-            mac[1],
-            mac[2],
-            mac[3],
-            mac[4],
-            mac[5]
+            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );
     }
 
