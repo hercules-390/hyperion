@@ -965,7 +965,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         {
             // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
             WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-            display_ptp_th_etc( pDEVBLK, pMPC_TH, FROM_GUEST, 64 );
+            mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, FROM_GUEST, 64 );
         }
 
         // Process the MPC_TH
@@ -1129,7 +1129,7 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
         default:
             // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
             WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "RRH" );
-            display_rrh( pDEVBLK, pMPC_RRH, FROM_GUEST );
+            mpc_display_rrh( pDEVBLK, pMPC_RRH, FROM_GUEST );
             rv = -2;
             break;
 
@@ -1773,7 +1773,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
-        display_ptp_th_etc( pDEVBLK, (MPC_TH*)pIOBuf, TO_GUEST, 64 );
+        mpc_display_ptp_th_etc( pDEVBLK, (MPC_TH*)pIOBuf, TO_GUEST, 64 );
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
@@ -1870,7 +1870,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
-        display_ptp_th_etc( pDEVBLK, pMPC_TH, TO_GUEST, 64 );
+        mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, TO_GUEST, 64 );
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
@@ -4197,24 +4197,24 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenCmFilter.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_01" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmFilter, pMPC_PUSwr->vc.pus_01.token, MPC_TOKEN_LENGTH );
 
         // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenIssuerRm
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_02" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         fxSideWins = FALSE;
@@ -4254,12 +4254,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenCmConnection.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_SETUP)", "PUS_04" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr->vc.pus_04.token, MPC_TOKEN_LENGTH );
@@ -4293,12 +4293,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenCmConnection.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_CONFIRM)", "PUS_08" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr->vc.pus_08.token, MPC_TOKEN_LENGTH );
@@ -4353,24 +4353,24 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenUlpFilter.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_01" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpFilter, pMPC_PUSwr->vc.pus_01.token, MPC_TOKEN_LENGTH );
 
         // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenCmConnection
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_02" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         fxSideWins = FALSE;
@@ -4411,12 +4411,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_SETUP)", "PUS_04" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr->vc.pus_04.token, MPC_TOKEN_LENGTH );
@@ -4449,12 +4449,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_CONFIRM)", "PUS_08" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr->vc.pus_08.token, MPC_TOKEN_LENGTH );
@@ -4549,7 +4549,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+        mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
@@ -5494,7 +5494,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+        mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
@@ -6311,7 +6311,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PIX" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
+        mpc_display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
