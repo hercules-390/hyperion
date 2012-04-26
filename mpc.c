@@ -115,6 +115,30 @@ DLL_EXPORT MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType )
 }   /* End function  point_pus() */
 
 /*--------------------------------------------------------------------*/
+/* display_description():                                             */
+/*--------------------------------------------------------------------*/
+DLL_EXPORT void  display_description( DEVBLK* pDEVBLK, char* pDesc )
+{
+
+    /* Display description, if one has been provided. */
+    if( pDesc )
+    {
+        if( pDEVBLK )
+        {
+            // HHC03983 "%1d:%04X %s: %s
+            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+        }
+        else
+        {
+            // HHC03984 "%s"
+            WRMSG(HHC03984, "I", pDesc );
+        }
+    }
+
+    return;
+}   /* End function  display_description() */
+
+/*--------------------------------------------------------------------*/
 /* display_stuff()                                                    */
 /*--------------------------------------------------------------------*/
 /* Function to display storage.                                       */
@@ -233,7 +257,7 @@ DLL_EXPORT void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 /* MPC_RRH->proto == PROTOCOL_UNKNOWN (0x7E), the MPC_RRH is followed */
 /* by a single MPC_PH, which is followed by a single MPC_PUK, which   */
 /* is followed by up to four MPC_PUSs.                                */
-DLL_EXPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PUK*   pMPC_PUK;
@@ -244,21 +268,6 @@ DLL_EXPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     U16        uLenPUS;
     U16        uLenPUK;
     U16        uOffPH;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -311,28 +320,13 @@ DLL_EXPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
 /* == RRH_TYPE_IPA (0xC1) and MPC_RRH->proto == PROTOCOL_LAYER2       */
 /* (0x08), the MPC_RRH is followed by a single MPC_PH, which is       */
 /* followed by a single MPC_PIX.                                      */
-DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_PIX*   pMPC_PIX;
     U32        uOffData;
     U32        uLenData;
     U16        uOffPH;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -356,7 +350,7 @@ DLL_EXPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
 /*--------------------------------------------------------------------*/
 /* display_rrh_and_ipa():                                             */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
     MPC_PH*    pMPC_PH;
     MPC_IPA*   pMPC_IPA;
@@ -366,21 +360,6 @@ DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     U16        uOffPH;
     int        iLenIPA;
     int        iLenCmd;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -417,17 +396,9 @@ DLL_EXPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
 }   /* End function  display_rrh_and_ipa() */
 
 /*--------------------------------------------------------------------*/
-/* display_rrh_and_pdu():                                             */
+/* display_rrh_and_pkt():                                             */
 /*--------------------------------------------------------------------*/
-/* In all cases that have been seen, only on PTP, when MPC_RRH->type  */
-/* == RRH_TYPE_CM (0x81) and MPC_RRH->proto == PROTOCOL_LAYER2        */
-/* (0x08), the MPC_RRH is followed by one or more MPC_PH, which are   */
-/* followed by IP packet data. The function is not restricted to the  */
-/* narrow case described above however, it is intended to be general  */
-/* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
-/* could be replaced with calls to display_rrh_and_pdu(), with a      */
-/* slight loss of functionality.)                                     */
-DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit )
+DLL_EXPORT void  display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
     U16        uNumPH;
@@ -437,21 +408,6 @@ DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
     U32        uLenData;
     U32        uOffData;
     BYTE*      pData;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     /* Display the MPC_RRH.*/
     FETCH_HW( uOffPH, pMPC_RRH->offph );
@@ -485,7 +441,73 @@ DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
             {
                 if( iDone >= iLimit )
                     break;
-                if( uLenData > ( iLimit - iDone ) )
+                if( (int)uLenData > ( iLimit - iDone ) )
+                    uLenData = ( iLimit - iDone );
+                iDone =+ uLenData;
+            }
+            display_stuff( pDEVBLK, "Pkt", pData, (int)uLenData, bDir );
+            pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
+        }
+    }
+
+    return;
+}   /* End function  display_rrh_and_pkt() */
+
+/*--------------------------------------------------------------------*/
+/* display_rrh_and_pdu():                                             */
+/*--------------------------------------------------------------------*/
+/* In all cases that have been seen, only on PTP, when MPC_RRH->type  */
+/* == RRH_TYPE_CM (0x81) and MPC_RRH->proto == PROTOCOL_LAYER2        */
+/* (0x08), the MPC_RRH is followed by one or more MPC_PH, which are   */
+/* followed by IP packet data. The function is not restricted to the  */
+/* narrow case described above however, it is intended to be general  */
+/* purpose. (Calls to display_rrh_and_puk() or display_rrh_and_pix()  */
+/* could be replaced with calls to display_rrh_and_pdu(), with a      */
+/* slight loss of functionality.)                                     */
+DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit )
+{
+    MPC_PH*    pMPC_PH;
+    U16        uNumPH;
+    U16        uOffPH;
+    int        iForPH;
+    int        iDone;
+    U32        uLenData;
+    U32        uOffData;
+    BYTE*      pData;
+
+    /* Display the MPC_RRH.*/
+    FETCH_HW( uOffPH, pMPC_RRH->offph );
+    display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+
+    /* Display the MPC_PH(s). */
+    FETCH_HW( uNumPH, pMPC_RRH->numph );
+    pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+    for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
+    {
+        display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+        pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
+    }
+
+    /* Display the data referenced by the MPC_PH(s).              */
+    /* if limit is negative or a silly number, don't display the  */
+    /* data. If limit is zero, display all of the data, otherwise */
+    /* limit the length of the data displayed.                    */
+    /* Note: pMPC_PH->lendata is a 3-byte length field.           */
+    iDone = 0;
+    if( iLimit >= 0 && iLimit <= 65535 )
+    {
+        pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
+        for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
+        {
+            FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+            uLenData &= 0x00FFFFFF;
+            FETCH_FW( uOffData, pMPC_PH->offdata );
+            pData = (BYTE*)pMPC_TH + uOffData;
+            if( iLimit > 0 )
+            {
+                if( iDone >= iLimit )
+                    break;
+                if( (int)uLenData > ( iLimit - iDone ) )
                     uLenData = ( iLimit - iDone );
                 iDone =+ uLenData;
             }
@@ -500,23 +522,8 @@ DLL_EXPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH*
 /*--------------------------------------------------------------------*/
 /* display_iea():                                                     */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir )
 {
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     /* Display MPC_IEA. */
     display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, (int)sizeof(MPC_IEA), bDir );
@@ -527,23 +534,8 @@ DLL_EXPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, B
 /*--------------------------------------------------------------------*/
 /* display_iear():                                                    */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir )
+DLL_EXPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir )
 {
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     /* Display MPC_IEAR. */
     display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, (int)sizeof(MPC_IEAR), bDir );
@@ -554,27 +546,12 @@ DLL_EXPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc
 /*--------------------------------------------------------------------*/
 /* display_osa_th_etc():                                              */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit )
+DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit )
 {
     MPC_RRH*   pMPC_RRH;
     int        iForRRH;
     U32        uOffRRH;
     U16        uNumRRH;
-
-    /* Display description, if one has been provided. */
-    if( pDesc )
-    {
-        if( pDEVBLK )
-        {
-            // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
-        }
-        else
-        {
-            // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
-        }
-    }
 
     /* Display MPC_TH. */
     display_th( pDEVBLK, pMPC_TH, bDir );
@@ -596,7 +573,7 @@ DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDe
         {
 
             /* Display MPC_RRH and following MPC_PUK etc. */
-            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, bDir );
 
         }
         else if( pMPC_RRH->proto == PROTOCOL_LAYER3 &&
@@ -604,14 +581,14 @@ DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDe
         {
 
             /* Display MPC_RRH and following MPC_IPA etc. */
-            display_rrh_and_ipa( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir );
+            display_rrh_and_ipa( pDEVBLK, pMPC_TH, pMPC_RRH, bDir );
 
         }
         else
         {
 
             /* Display MPC_RRH and following PDU. */
-            display_rrh_and_pdu( pDEVBLK, pMPC_TH, pMPC_RRH, NULL, bDir, iLimit );
+            display_rrh_and_pdu( pDEVBLK, pMPC_TH, pMPC_RRH, bDir, iLimit );
 
         }
 
@@ -624,4 +601,63 @@ DLL_EXPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDe
 
     return;
 }   /* End function  display_osa_th_etc() */
+
+/*--------------------------------------------------------------------*/
+/* display_ptp_th_etc():                                              */
+/*--------------------------------------------------------------------*/
+DLL_EXPORT void  display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit )
+{
+    MPC_RRH*   pMPC_RRH;
+    int        iForRRH;
+    U32        uOffRRH;
+    U16        uNumRRH;
+
+    /* Display MPC_TH. */
+    display_th( pDEVBLK, pMPC_TH, bDir );
+
+    /* Get the number of MPC_RRHs and the displacement from    */
+    /* the start of the MPC_TH to the first (or only) MPC_RRH. */
+    FETCH_HW( uNumRRH, pMPC_TH->numrrh );
+    FETCH_FW( uOffRRH, pMPC_TH->offrrh );
+
+    /* Process each of the MPC_RRHs. */
+    for( iForRRH = 1; iForRRH <= uNumRRH; iForRRH++ )
+    {
+
+        /* Point to the first or subsequent MPC_RRH. */
+        pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
+
+        /* Display the MPC_RRH etc. */
+        if( pMPC_RRH->proto == PROTOCOL_LAYER2 &&
+            pMPC_RRH->type == RRH_TYPE_CM )
+        {
+            /* Display MPC_RRH and following packet data. */
+            display_rrh_and_pkt( pDEVBLK, pMPC_TH, pMPC_RRH, bDir, iLimit );
+        }
+        else if( pMPC_RRH->proto == PROTOCOL_LAYER2 &&
+                 pMPC_RRH->type == RRH_TYPE_IPA )
+        {
+            /* Display MPC_RRH and following MPC_PIX etc. */
+            display_rrh_and_pix( pDEVBLK, pMPC_TH, pMPC_RRH, bDir );
+        }
+        else if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+        {
+            /* Display MPC_RRH and following MPC_PUK etc. */
+            display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, bDir );
+        }
+        else
+        {
+            /* Display MPC_RRH */
+            display_rrh( pDEVBLK, pMPC_RRH, bDir );
+        }
+
+        /* Get the displacement from the start of the MPC_TH to the */
+        /* next MPC_RRH. pMPC_RRH->offrrh will contain zero if this */
+        /* is the last MPC_RRH.                                     */
+        FETCH_FW( uOffRRH, pMPC_RRH->offrrh );
+
+    }
+
+    return;
+}   /* End function  display_ptp_th_etc() */
 

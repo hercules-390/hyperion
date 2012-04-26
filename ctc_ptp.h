@@ -185,12 +185,12 @@ struct  _PTPBLK
 #define IANSWEREDHIS_ADDRESS  0x04         // I answered his Address
 #define ITOLDHIMMY_ADDRESS    0x02         // I told him my Address
 #define HEANSWEREDMY_ADDRESS  0x01         // He answered my Address
-#define WEAREACTIVE           0xff         // Are we active?
+#define WEAREACTIVE           0xFF         // Are we active?
 #define HEASKEDME_STOP        0x80         // He asked me Stop
 #define IANSWEREDHIM_STOP     0x40         // I answered him Stop
 #define IASKEDHIM_STOP        0x20         // I asked him Stop
 #define HEANSWEREDME_STOP     0x10         // He answered me Stop
-#define WEARETERMINATED       0xf0         // Are we terminated?
+#define WEARETERMINATED       0xF0         // Are we terminated?
 
 #define DEBUGPACKET           0x00000001   // Packet
                                            // (i.e. the IP packets sent to
@@ -202,22 +202,20 @@ struct  _PTPBLK
                                            // devices in network byte order
                                            // Note: a maximun of 256 bytes is
                                            // displayed)
-#define DEBUGCONFVALUE        0x00000004   // Configuration value
-                                           // (i.e. values specified on, or
-                                           // derived from, the config stmt)
-#define DEBUGUPVALUE          0x00000008   // Connection up value
-                                           // (i.e. values extracted from,
-                                           // or placed into, the messages
-                                           // exchanged to establish the
-                                           // connection to the guest
-                                           // in host byte order)
+#define DEBUGEXPAND           0x00000004   // Data expanded
+                                           // (i.e. the messages presented
+                                           // to or accepted from the CTC
+                                           // devices in network byte order
+                                           // showing the MPC_TH etc.
+                                           // Note: a maximun of 64 bytes
+                                           // of data is displayed)
 #define DEBUGUPDOWN           0x00000010   // Connection up and down
-                                           // (i.e. a partial expansion
-                                           // of the messages exchanged
-                                           // to establish or terminate
-                                           // the connection to the guest
-                                           // in network byte order)
-#define DEBUGCALLED           0x00000020   // Called routine
+#define DEBUGCCW              0x00000020   // CCWs executed
+#define DEBUGCONFVALUE        0x00000080   // Configuration value
+                                           // (i.e. values specified on, or
+                                           // derived from, the config stmt.
+                                           // Note: only available from
+                                           // config stmt -d parameter)
 
 /* ----------------------------------------------------------------- */
 /* PTPATH: There are two PTPATH blocks for each PTP device pair,     */

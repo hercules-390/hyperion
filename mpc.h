@@ -841,17 +841,20 @@ struct _PTPHSV                             // PTP Handshake CSVcv
 MPC_DLL_IMPORT MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 MPC_DLL_IMPORT MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 MPC_DLL_IMPORT MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
+MPC_DLL_IMPORT void  display_description( DEVBLK* pDEVBLK, char* pDesc );
 MPC_DLL_IMPORT void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir );
 MPC_DLL_IMPORT void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
 MPC_DLL_IMPORT void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
 MPC_DLL_IMPORT void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit );
-MPC_DLL_IMPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir );
+MPC_DLL_IMPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir );
+MPC_DLL_IMPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
 
 
 /*********************************************************************/

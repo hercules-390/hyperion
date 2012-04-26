@@ -376,7 +376,8 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "CM request", FROM_GUEST, 0 );
+                display_description( dev, "CM request" );
+                display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
             req_puk = point_puk( dev, req_th, req_rrh );
 
@@ -405,7 +406,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug && grp->rspsz )
-                display_osa_th_etc( dev, rsp_th, "CM response", TO_GUEST, 0 );
+                display_description( dev, "CM response" );
+                display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         break;
@@ -416,7 +418,8 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "ULP request", FROM_GUEST, 0 );
+                display_description( dev, "ULP request" );
+                display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
             req_puk = point_puk(dev,req_th,req_rrh);
 
@@ -492,7 +495,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug && grp->rspsz )
-                display_osa_th_etc( dev, rsp_th, "ULP response", TO_GUEST, 0 );
+                display_description( dev, "ULP response" );
+                display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         break;
@@ -509,7 +513,8 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "IPA request", FROM_GUEST, 0 );
+                display_description( dev, "IPA request" );
+                display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
             /* Copy request to response buffer */
             FETCH_FW(rqsize,req_th->length);
@@ -753,7 +758,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, rsp_th, "IPA response", TO_GUEST, 0 );
+                display_description( dev, "IPA response" );
+                display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         /* end case RRH_TYPE_IPA: */
@@ -779,7 +785,8 @@ U16 reqtype;
 
             /* Display the IEA, maybe */
             if( grp->debug )
-                display_iea( dev, iea, "IDX ACTIVATE", FROM_GUEST );
+                display_description( dev, "IDX ACTIVATE request" );
+                display_iea( dev, iea, FROM_GUEST );
 
     memset(iear, 0, sizeof(MPC_IEAR));
 
@@ -834,7 +841,8 @@ U16 reqtype;
 
             /* Display the IEAR, maybe */
             if( grp->debug )
-                display_iear( dev, iear, "IDX ACTIVATE response", TO_GUEST );
+                display_description( dev, "IDX ACTIVATE response" );
+                display_iear( dev, iear, TO_GUEST );
 }
 
 
