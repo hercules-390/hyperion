@@ -153,6 +153,8 @@ and how they are used.
     0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
 
     0023      <a href="#comline">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
+    00C3      <a href="#remtty">2703</a>     lport=32003 dial=IN tty=1
+
 
 </pre></code>
 </td></tr></table>
@@ -1895,6 +1897,11 @@ and how they are used.
                 <td>TCP Socket</td>
             </tr>
 
+            <tr><td>2703</td>
+                <td><a href="#remtty">Remote Teletype</a></td>
+                <td>TCP Socket</td>
+            </tr>
+           
             </table>
 
         </td>
@@ -3499,7 +3506,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 <hr width="50%"><p>
 
 <a name="comline"></a>
-<dt><em>Communication Line</em>
+<dt><em>Communication Line - BSC</em>
 <dd><p>
     ( Preliminary 2703 BSC Support )
     <p>
@@ -3591,6 +3598,41 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <p>
 
     </dl> <!-- end Communication Adapter tuning options -->
+
+<a name="remtty"></a>
+<dt><em>Communication Line - TTY</em>
+<dd><p>
+    ( Preliminary 2703 TELE2 TTY Support )
+    <p>
+
+    Describes a 2703 Telegraph Terminal Control Type II (TTY 33/35) stop/start line, providing access to the Host OS via a standard TELNET client.
+
+    <p>
+    To the host OS the line emulates an asynchronous TELE2 connection.  The communication is emulated over a TELNET connection. 
+    <p>
+
+    The following options define the line emulation behaviour:
+    <p>
+
+    <dl> <!-- begin Communication Adapter parms -->
+
+    <dt><code>lport=<em>port number</em></code>
+    <dd><p>
+        Specifies the TCPIP port to listen on for incoming TCP calls.
+        <p>
+
+    <dt><code>dial=IN</code>
+    <dd><p>
+        Specifies that this line is for in-bound calls. Required.
+        <p>
+
+    <dt><code>tty=1</code>
+    <dd><p>
+        Specifies that this definition is for a TTY port. Required
+        <p>
+
+    </dl> <!-- end Communication Adapter parms -->
+
 
 </dl> <!-- end Arguments for each device type -->
 
