@@ -161,9 +161,6 @@ static PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX );
 
 static void     build_8108_icmpv6_packets( DEVBLK* pDEVBLK );
 
-static void     display_hx0( DEVBLK* pDEVBLK, PTPHX0* pPTPHX0, U16 uCount, BYTE bDir );
-static void     display_hx2( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2, U16 uCount, BYTE bDir );
-
 static void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken );
 
 static void     shift_left_dbl( U32* even, U32* odd, int number );
@@ -640,10 +637,8 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
+    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCCW ) )
     {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_execute_ccw()" );
         // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
         WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
             bCode, bFlags, uCount, bChained, bPrevCode, iCCWSeq );
@@ -810,13 +805,6 @@ int  ptp_close( DEVBLK* pDEVBLK )
     PTPBLK*   pPTPBLK  = pPTPATH->pPTPBLK;
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_close()" );
-    }
-
     // Close the device file (if not already closed)
     if( pPTPBLK->fd >= 0 )
     {
@@ -948,35 +936,36 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
     U32        uFirst4;
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_write()" );
-    }
-
-    // Get the first 4-bytes of what was writen by the guest OS.
+    // Get the first 4-bytes of what was writen by the guest.
     FETCH_FW( uFirst4, pMPC_TH->first4 );
 
-    // Process depending on what was writen by the guest OS.
+    // Display up to 256-bytes of data, if debug is active
+    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
+    {
+        // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
+        WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
+        iTraceLen = uCount;
+        if( iTraceLen > 256 )
+        {
+            iTraceLen = 256;
+            // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                 iTraceLen, (int)(uCount - iTraceLen) );
+        }
+        ptpdata_trace( pIOBuf, iTraceLen, FROM_GUEST );
+    }
+
+    // Process depending on what was writen by the guest.
     if( uCount >= SIZE_TH &&
         uFirst4 == MPC_TH_FIRST4 )
     {
 
-        // Display up to 256-bytes of data, if debug is active
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
+        // Display TH etc. structured, if debug is active
+        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) )
         {
             // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
             WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-            iTraceLen = uCount;
-            if( iTraceLen > 256 )
-            {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     iTraceLen, (int)(uCount - iTraceLen) );
-            }
-            ptpdata_trace( pIOBuf, iTraceLen, '<' );
+            mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, FROM_GUEST, 64 );
         }
 
         // Process the MPC_TH
@@ -988,14 +977,6 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
              pPTPHX0->TH_ch_flag == TH_CH_0x00 )
     {
 
-        // Display the PTPHX0 type 0x00, if debug is active
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
-        {
-            // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-            WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-            ptpdata_trace( pIOBuf, (int)uCount, '<' );
-        }
-
         // Process the PTPHX0 type 0x00
         write_hx0_00( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
@@ -1004,14 +985,6 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
              pPTPHX0->TH_seg == 0x00 &&
              pPTPHX0->TH_ch_flag == TH_CH_0x01 )
     {
-
-        // Display the PTPHX0 type 0x01, if debug is active
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
-        {
-            // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-            WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-            ptpdata_trace( pIOBuf, (int)uCount, '<' );
-        }
 
         // Process the PTPHX0 type 0x01
         write_hx0_01( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
@@ -1022,14 +995,6 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
              pPTPHX2->NodeID[0] == 0xFF )
     {
 
-        // Display the XID2, if debug is active
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
-        {
-            // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-            WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-            ptpdata_trace( pIOBuf, (int)uCount, '<' );
-        }
-
         // Process the PTPHX2
         write_hx2( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
@@ -1037,18 +1002,22 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
     else
     {
 
-        // Display up to 256-bytes of the unknown data.
         // HHC03931 "%1d:%04X PTP: Accept data of size %d bytes contains unknown data"
         WRMSG(HHC03931, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
-        iTraceLen = uCount;
-        if( iTraceLen > 256 )
+
+        // Display up to 256-bytes of data, if debug is not active
+        if( !pPTPBLK->fDebug && !( pPTPBLK->uDebugMask & DEBUGDATA ) )
         {
-            iTraceLen = 256;
-            // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 iTraceLen, (int)(uCount - iTraceLen) );
+            iTraceLen = uCount;
+            if( iTraceLen > 256 )
+            {
+                iTraceLen = 256;
+                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                     iTraceLen, (int)(uCount - iTraceLen) );
+            }
+            ptpdata_trace( pIOBuf, iTraceLen, FROM_GUEST );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, '<' );
 
         // None of the accepted data was sucessfully processed, and it will
         // now be dropped as though it never existed. Inform the guest that
@@ -1068,16 +1037,16 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
 /* ------------------------------------------------------------------ */
 
 void  write_th( DEVBLK* pDEVBLK, U16  uCount,
-                 int     iCCWSeq, BYTE* pIOBuf,
-                 BYTE*   pMore,   BYTE* pUnitStat,
-                 U16*    pResidual )
+                int     iCCWSeq, BYTE* pIOBuf,
+                BYTE*   pMore,   BYTE* pUnitStat,
+                U16*    pResidual )
 {
 
     UNREFERENCED( uCount  );
     UNREFERENCED( iCCWSeq );
 
-    PTPATH*    pPTPATH   = pDEVBLK->dev_data;
-    PTPBLK*    pPTPBLK   = pPTPATH->pPTPBLK;
+//  PTPATH*    pPTPATH   = pDEVBLK->dev_data;
+//  PTPBLK*    pPTPBLK   = pPTPATH->pPTPBLK;
     MPC_TH*    pMPC_TH   = (MPC_TH*)pIOBuf;     // MPC_TH at start of IObuf
     MPC_RRH*   pMPC_RRH  = NULL;                // MPC_RRH
     int        iForRRH;
@@ -1091,14 +1060,6 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
 #define RRH_417E      3
 #define RRH_C17E      4
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_th()" );
-        display_th( pDEVBLK, pMPC_TH, FROM_GUEST );
-    }
 
     // Get the number of MPC_RRH and the displacement from the start
     // of the MPC_TH to the first (or only) MPC_RRH.
@@ -1168,7 +1129,7 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
         default:
             // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
             WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "RRH" );
-            display_rrh( pDEVBLK, pMPC_RRH, FROM_GUEST );
+            mpc_display_rrh( pDEVBLK, pMPC_RRH, FROM_GUEST );
             rv = -2;
             break;
 
@@ -1263,13 +1224,6 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     int        rv;
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_8108()" );
-    }
-
     // Get the number of MPC_PHs and point to the first (or only) MPC_PH
     // following the MPC_RRH.
     FETCH_HW( uNumPH, pMPC_RRH->numph );
@@ -1355,7 +1309,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
                 WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, '<' );
+            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
             rv = -2;
             break;
         }
@@ -1401,7 +1355,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
                 WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, '<' );
+            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
             rv = -2;
             break;
         }
@@ -1418,7 +1372,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
                 WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, '<' );
+            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
             rv = -2;
             break;
         }
@@ -1506,13 +1460,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
     struct timespec waittime;
     struct timeval  now;
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "ptp_read()" );
-    }
 
     //
     if( pPTPATH->bDLCtype == DLCTYPE_READ )    // Read from the y-sides Read path?
@@ -1821,6 +1768,14 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
 
     }
 
+    // Display TH etc. structured, if debug is active
+    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) )
+    {
+        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
+        WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
+        mpc_display_ptp_th_etc( pDEVBLK, (MPC_TH*)pIOBuf, TO_GUEST, 64 );
+    }
+
     // Display up to 256-bytes of the read data, if debug is active.
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
     {
@@ -1835,7 +1790,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
             WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  iTraceLen, (int)(uTotalLen - iTraceLen) );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, '>' );
+        ptpdata_trace( pIOBuf, iTraceLen, TO_GUEST );
     }
 
     // Reset length field in PTPHDR
@@ -1884,6 +1839,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
     iDataLen = pPTPHDR->iDataLen;
 
+    // Get the first 4-bytes of the data.
+    FETCH_FW( uFirst4, pMPC_TH->first4 );
+
     // Set the residual length and unit status.
     if( uCount >= iDataLen )
     {
@@ -1899,7 +1857,6 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     *pUnitStat = CSW_CE | CSW_DE;
 
     // Set the transmission header sequence number, if necessary.
-    FETCH_FW( uFirst4, pMPC_TH->first4 );
     if( uFirst4 == MPC_TH_FIRST4 )
     {
         STORE_FW( pMPC_TH->seqnum, ++pPTPATH->uSeqNum );
@@ -1907,6 +1864,14 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 
     // Copy the data to be read.
     memcpy( pIOBuf, pMPC_TH, iDataLen );
+
+    // Display TH etc. structured, if debug is active
+    if( uFirst4 == MPC_TH_FIRST4 && ( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) ) )
+    {
+        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
+        WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
+        mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, TO_GUEST, 64 );
+    }
 
     // Display up to 256-bytes of the read data, if debug is active.
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
@@ -1921,7 +1886,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
             WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  iTraceLen, iDataLen - iTraceLen );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, '>' );
+        ptpdata_trace( pIOBuf, iTraceLen, TO_GUEST );
     }
 
     // When we are handshaking the sixth CCW in the chain marks the
@@ -3315,13 +3280,6 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
     int        rc;                             // Return code
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "raise_unsol_int()" );
-    }
-
     // Obtain the unsolicited interrupt list lock.
     obtain_lock( &pPTPBLK->UnsolListLock );
 
@@ -3577,22 +3535,14 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
 
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
-    PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
+//  PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx0_01()" );
-    }
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX0" );
-        display_hx0( pDEVBLK, pPTPHX0, uCount, FROM_GUEST );
     }
 
     // PTPHX0 type 0x01's should only be written when handshaking is being
@@ -3679,16 +3629,6 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
             pPTPBLK->uSeqNumIssuer = 0;
             pPTPBLK->uSeqNumCm = 0;
 
-            // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-            {
-                display_stuff( pDEVBLK, "xTokenIssuerRm ......", pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH, NO_DIRECTION );
-                display_stuff( pDEVBLK, "xTokenCmFilter ......", pPTPBLK->xTokenCmFilter, MPC_TOKEN_LENGTH, NO_DIRECTION );
-                display_stuff( pDEVBLK, "xTokenCmConnection ..", pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-                display_stuff( pDEVBLK, "xTokenUlpFilter .....", pPTPBLK->xTokenUlpFilter, MPC_TOKEN_LENGTH, NO_DIRECTION );
-                display_stuff( pDEVBLK, "xTokenUlpConnection .", pPTPBLK->xTokenUlpConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-            }
-
         }
         else
         {
@@ -3740,22 +3680,14 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
 
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
-    PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
+//  PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx0_00()" );
-    }
 
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX0" );
-        display_hx0( pDEVBLK, pPTPHX0, uCount, FROM_GUEST );
     }
 
     // PTPHX0 type 0x00 should only be written when handshaking is in progress.
@@ -3821,18 +3753,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_hx2()" );
-    }
-
-    // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX2" );
-        display_hx2( pDEVBLK, pPTPHX2wr, uCount, FROM_GUEST );
     }
 
     // Point to the CSVcv following the XID2.
@@ -3869,14 +3793,6 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
                 gen_csv_sid( pPTPBLK->yStartTime, pPTPBLK->xStartTime,
                              pPTPBLK->xSecondCsvSID2 );
-
-                // Display various information, maybe
-                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-                {
-                    display_stuff( pDEVBLK, "xStartTime ..........", pPTPBLK->xStartTime, 8, NO_DIRECTION );
-                    display_stuff( pDEVBLK, "yStartTime ..........", pPTPBLK->yStartTime, 8, NO_DIRECTION );
-                    display_stuff( pDEVBLK, "yTokenIssuerRm ......", pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH, NO_DIRECTION );
-                }
 
             }
 
@@ -4093,10 +4009,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out HX0" );
-            display_hx0( pDEVBLK, pPTPHX0re, SizeHX0, TO_GUEST );
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out HX2" );
-            display_hx2( pDEVBLK, pPTPHX2re, 255, TO_GUEST );
         }
 
         // Add PTPHDRs to chain.
@@ -4192,13 +4106,6 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 #define DM_ACT        11
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_417E()" );
-    }
-
     // Point to the MPC_PH.
     FETCH_HW( uOffPH, pMPC_RRHwr->offph );
     pMPC_PHwr = (MPC_PH*)((BYTE*)pMPC_RRHwr + uOffPH);
@@ -4287,34 +4194,27 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenCmFilter from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
+        // Find the PUS and copy the yTokenCmFilter.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_01" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmFilter, pMPC_PUSwr->vc.pus_01.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenCmFilter ......", pPTPBLK->yTokenCmFilter, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
-        // Find the appropriate PUS that contains the 'bid' value.
+        // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenIssuerRm
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_02" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         fxSideWins = FALSE;
@@ -4351,24 +4251,18 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenCmConnection from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
+        // Find the PUS and copy the yTokenCmConnection.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_SETUP)", "PUS_04" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr->vc.pus_04.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
         // Build RRH 0x417E PUK 0x4106 to yTokenIssuerRm
         pPTPHDRre = build_417E_cm_confirm( pDEVBLK, pMPC_RRHwr );
@@ -4396,24 +4290,18 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenCmConnection from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
+        // Find the PUS and copy the yTokenCmConnection.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_CONFIRM)", "PUS_08" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenCmConnection, pMPC_PUSwr->vc.pus_08.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenCmConnection ..", pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
         // The control process between the x-side and the y-side is active. On
         // a connection between two VTAMs, the x-side VTAM sends messages from
@@ -4425,7 +4313,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         break;
 
     // PUK 0x4103 to xTokenIssuerRm
-    // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0403.
+    // The MPC_PUK should be followed by a single MPC_PUS, a type 0x0403.
     case CM_DISABLE:
 
         // Display various information, maybe
@@ -4433,13 +4321,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4103 (CM_DISABLE)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         break;
 
     // PUK 0x4105 to xTokenIssuerRm
-    // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+    // The MPC_PUK should be followed by a single MPC_PUS, a type 0x0404.
     case CM_TAKEDOWN:
 
         // Display various information, maybe
@@ -4447,7 +4334,6 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4105 (CM_TAKEDOWN)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // The guest OS on the y-side has stopped the device
@@ -4464,34 +4350,27 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenUlpFilter from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
+        // Find the PUS and copy the yTokenUlpFilter.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_01" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpFilter, pMPC_PUSwr->vc.pus_01.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenUlpFilter .....", pPTPBLK->yTokenUlpFilter, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
-        // Find the appropriate PUS that contains the 'bid' value.
+        // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenCmConnection
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_02" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         fxSideWins = FALSE;
@@ -4529,24 +4408,18 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenUlpConnection from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
+        // Find the PUS and copy the yTokenUlpConnection.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_SETUP)", "PUS_04" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr->vc.pus_04.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
         // Build RRH 0x417E PUK 0x4106 to yTokenCmConnection
         pPTPHDRre = build_417E_ulp_confirm( pDEVBLK, pMPC_RRHwr );
@@ -4573,24 +4446,18 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
-        // Find the appropriate PUS and copy the yTokenUlpConnection from the received message.
-        pMPC_PUSwr = point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
+        // Find the PUS and copy the yTokenUlpConnection.
+        pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
         if( !pMPC_PUSwr )
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK", "PUS" );
-            if( !pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
-                display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+            WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_CONFIRM)", "PUS_08" );
+            mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
             break;
         }
         memcpy( pPTPBLK->yTokenUlpConnection, pMPC_PUSwr->vc.pus_08.token, MPC_TOKEN_LENGTH );
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPVALUE ) )
-        {
-            display_stuff( pDEVBLK, "yTokenUlpConnection .", pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH, NO_DIRECTION );
-        }
 
         // Build RRH 0x417E PUK 0x4360 to yTokenCmConnection
         pPTPHDRre = build_417E_dm_act( pDEVBLK, pMPC_RRHwr );
@@ -4601,7 +4468,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         break;
 
     // PUK 0x4360 to xTokenCmConnection
-    // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+    // The MPC_PUK should be followed by a single MPC_PUS, a type 0x0404.
     case DM_ACT:
 
         // Display various information, maybe
@@ -4609,13 +4476,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         break;
 
     // PUK 0x4103 to xTokenCmConnection
-    // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0403.
+    // The MPC_PUK should be followed by a single MPC_PUS, a type 0x0403.
     case ULP_DISABLE:
 
         // Display various information, maybe
@@ -4623,13 +4489,12 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4103 (ULP_DISABLE)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         break;
 
     // PUK 0x4105 to xTokenCmConnection
-    // The MPC_PUK should be followed by a single MPC_PUSs, a type 0x0404.
+    // The MPC_PUK should be followed by a single MPC_PUS, a type 0x0404.
     case ULP_TAKEDOWN:
 
         // Display various information, maybe
@@ -4637,7 +4502,6 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4105 (ULP_TAKEDOWN)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // The guest OS on the y-side has stopped the device
@@ -4685,7 +4549,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+        mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
@@ -4845,7 +4709,6 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -4952,7 +4815,6 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5059,7 +4921,6 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5218,7 +5079,6 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5344,7 +5204,6 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5470,7 +5329,6 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5560,7 +5418,6 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -5588,13 +5445,6 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     int        iWhat;
 #define PUK_4501      1
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_C17E()" );
-    }
 
     // Point to the MPC_PH.
     FETCH_HW( uOffPH, pMPC_RRHwr->offph );
@@ -5635,7 +5485,6 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC17E (Issuer)" );
-            display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         break;
@@ -5645,7 +5494,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK" );
-        display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+        mpc_display_rrh_and_puk( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
@@ -5693,13 +5542,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 #define I_WILL_STOP_IPV4     11
 #define I_WILL_STOP_IPV6     12
 
-
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCALLED ) )
-    {
-        // HHC03991 "%1d:%04X %s: %s"
-        WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, "write_rrh_C108()" );
-    }
 
     // Point to the MPC_PH.
     FETCH_HW( uOffPH, pMPC_RRHwr->offph );
@@ -5778,7 +5620,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
-            display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // Remember the activation status.
@@ -5841,7 +5682,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
-            display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // Remember the activation status.
@@ -5916,7 +5756,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv4" );
-            display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // Remember the activation status.
@@ -5942,7 +5781,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv6" );
-            display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // Remember the activation status.
@@ -5986,7 +5824,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         {
             // HHC03951 "%1d:%04X PTP: %s"
             WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv4" );
-            display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
         }
 
         // The y-side is telling us about his IPv4 address, which means
@@ -6090,7 +5927,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv6" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6249,7 +6085,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv4" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Remember the activation status.
@@ -6275,7 +6110,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv6" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6335,7 +6169,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Remember the termination status.
@@ -6371,7 +6204,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Remember the termination status.
@@ -6410,7 +6242,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Remember the termination status.
@@ -6440,7 +6271,6 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             {
                 // HHC03951 "%1d:%04X PTP: %s"
                 WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
-                display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
             }
 
             // Remember the termination status.
@@ -6481,7 +6311,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
         WRMSG(HHC03936, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PIX" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, NULL, FROM_GUEST );
+        mpc_display_rrh_and_pix( pDEVBLK, pMPC_THwr, pMPC_RRHwr, FROM_GUEST );
 
         break;
 
@@ -6564,7 +6394,6 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -6643,7 +6472,6 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -6722,7 +6550,6 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -6802,7 +6629,6 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -6882,7 +6708,6 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv4" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -6969,7 +6794,6 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv6" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
 return pPTPHDRre;
@@ -7050,7 +6874,6 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7131,7 +6954,6 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7210,7 +7032,6 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7289,7 +7110,6 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7368,7 +7188,6 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7447,7 +7266,6 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
-        display_rrh_and_pix( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST );
     }
 
     return pPTPHDRre;
@@ -7550,7 +7368,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
-        display_rrh_and_pdu( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST, 0 );
     }
 
     // Add PTPHDR to chain.
@@ -7629,7 +7446,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Router solicitation" );
-        display_rrh_and_pdu( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST, 0 );
     }
 
     // Add PTPHDR to chain.
@@ -7708,7 +7524,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
-        display_rrh_and_pdu( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST, 0 );
     }
 
     // Add PTPHDR to chain.
@@ -7798,7 +7613,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
-        display_rrh_and_pdu( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST, 0 );
     }
 
     // Add PTPHDR to chain.
@@ -7888,7 +7702,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     {
         // HHC03951 "%1d:%04X PTP: %s"
         WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
-        display_rrh_and_pdu( pDEVBLK, pMPC_THre, pMPC_RRHre, NULL, TO_GUEST, 0 );
     }
 
     // Add PTPHDR to chain.
@@ -7896,61 +7709,6 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
 
     return;
 }   /* End function  build_8108_icmpv6_packets() */
-
-
-/* ------------------------------------------------------------------ */
-/* display_hx0()                                                    */
-/* ------------------------------------------------------------------ */
-
-void  display_hx0( DEVBLK* pDEVBLK, PTPHX0* pPTPHX0, U16 uCount, BYTE bDir )
-{
-
-    UNREFERENCED( pDEVBLK );
-
-
-    // Display the PTPHX0
-    display_stuff( pDEVBLK, "HX0", (BYTE*)pPTPHX0, (int)uCount, bDir );
-
-    return;
-}   /* End function  display_hx0() */
-
-/* ------------------------------------------------------------------ */
-/* display_hx2()                                                    */
-/* ------------------------------------------------------------------ */
-
-void  display_hx2( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2, U16 uCount, BYTE bDir )
-{
-
-    UNREFERENCED( pDEVBLK );
-    UNREFERENCED( uCount  );
-
-    PTPHSV*   pPTPHSV;
-    BYTE*     pCurCv;
-    BYTE*     pEndCv;
-
-
-    // Display the XID2.
-    display_stuff( pDEVBLK, "HX2", (BYTE*)pPTPHX2, (int)pPTPHX2->LenXcv, bDir );
-
-    // Display the cv's.
-    pCurCv = (BYTE*)pPTPHX2 + pPTPHX2->LenXcv;
-    pEndCv = (BYTE*)pPTPHX2 + pPTPHX2->Length;
-    while( pCurCv < pEndCv )
-    {
-        pPTPHSV = (PTPHSV*)pCurCv;
-        if( pPTPHSV->Key == CSV_KEY )
-        {
-            display_stuff( pDEVBLK, "Scv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
-        }
-        else
-        {
-            display_stuff( pDEVBLK, " cv", (BYTE*)pPTPHSV, (int)pPTPHSV->Length, bDir );
-        }
-        pCurCv += pPTPHSV->Length;
-    }
-
-    return;
-}   /* End function  display_hx2() */
 
 
 /* ------------------------------------------------------------------ */

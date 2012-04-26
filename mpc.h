@@ -407,85 +407,6 @@ typedef struct _MPC_IEAR {
     } MPC_IEAR;
 
 
-// ! /*-------------------------------------------------------------------*/
-// ! /* Transport Header                                                  */
-// ! /*-------------------------------------------------------------------*/
-// ! typedef struct _MPC_TH {
-// ! /*000*/ MPC_HDR hdr;
-// ! /*008*/ HWORD   resv008;        /*                                   */
-// ! /*00A*/ HWORD   rroff;          /* Offset to request/response struct */
-// ! /*00C*/ HWORD   resv00c;        /*                                   */
-// ! /*00E*/ HWORD   rrlen;          /* Length of request/response struct */
-// ! /*010*/ FWORD   end;            /* X'10000001'                       */
-// !     } MPC_TH;
-
-
-// ! /*-------------------------------------------------------------------*/
-// ! /* Request/Response Header                                           */
-// ! /*-------------------------------------------------------------------*/
-// ! typedef struct _MPC_RRH {
-// ! /*000*/ FWORD   resv000;        /*                                   */
-// ! /*004*/ BYTE    type;           /* Request type                      */
-// ! #define RRH_TYPE_CM     0x81
-// ! #define RRH_TYPE_ULP    0x41
-// ! #define RRH_TYPE_IPA    0xC1
-// ! /*005*/ BYTE    proto;          /* Protocol type                     */
-// ! #define RRH_PROTO_L2    0x08
-// ! #define RRH_PROTO_L3    0x03
-// ! #define RRH_PROTO_NCP   0x0A
-// ! #define RRH_PROTO_UNK   0x7E
-// ! /*006*/ HWORD   unkn006;        /* X'0001'                           */
-// ! /*008*/ FWORD   pduseq;         /* PDU Sequence Number               */
-// ! /*00C*/ FWORD   ackseq;         /* ACK Sequence Number               */
-// ! /*010*/ HWORD   pduhoff;        /* Offset to PDU Header              */
-// ! /*012*/ HWORD   pduhlen;        /* Length of PDU Header              */
-// ! /*014*/ BYTE    resv014;        /*                                   */
-// ! /*015*/ HWORD   reqlen;         /* Request length                    */
-// ! /*017*/ BYTE    unkn016;        /* X'05'                             */
-// ! /*018*/ FWORD   token;          /*                                   */
-// ! /*01C*/ FWORD   resv020;        /*                                   */
-// ! /*020*/ FWORD   resv024;        /*                                   */
-// !     } MPC_RRH;
-
-
-// ! /*-------------------------------------------------------------------*/
-// ! /* Protocol Data Unit Header                                         */
-// ! /*-------------------------------------------------------------------*/
-// ! typedef struct _MPC_PH {
-// ! /*000*/ HWORD   type;           /*                                   */
-// ! /*002*/ HWORD   pdulen;         /* Length of request                 */
-// ! /*004*/ HWORD   resv004;        /*                                   */
-// ! /*006*/ HWORD   hdrlen;         /* Total Header lenght               */
-// !     } MPC_PH;
-
-
-// ! /*-------------------------------------------------------------------*/
-// ! /* Protocol Data Unit                                                */
-// ! /*-------------------------------------------------------------------*/
-// ! typedef struct _MPC_PDU {
-// ! /*000*/ HWORD   len;            /*                                   */
-// ! /*002*/ BYTE    tgt;            /* Command target                    */
-// ! #define PDU_TGT_OSA     0x41
-// ! #define PDU_TGT_QDIO    0x43
-// ! /*003*/ BYTE    cmd;            /* Command                           */
-// ! #define PDU_CMD_ENABLE  0x02
-// ! #define PDU_CMD_SETUP   0x04
-// ! #define PDU_CMD_ACTIVATE 0x60
-// ! /*004*/ HWORD   rlen;           /* Request length                    */
-// ! /*006*/ HWORD   resv006;        /*                                   */
-// ! /*008*/ FWORD   resv008;        /*                                   */
-// ! /*00C*/ HWORD   ilen;           /*                                   */
-// ! /*00E*/ BYTE    unkn00e;        /*                                   */
-// ! /*00F*/ BYTE    unkn00f;        /*                                   */
-// ! /*010*/ BYTE    proto;          /*                                   */
-// ! #define PDU_PROTO_L2    0x08
-// ! #define PDU_PROTO_L3    0x03
-// ! #define PDU_PROTO_NCP   0x0A
-// ! #define PDU_PROTO_UNK   0x7E
-// ! // ZZ INCOMPLETE
-// !     } MPC_PDU;
-
-
 /*-------------------------------------------------------------------*/
 /* IP Assist Header                                                  */
 /*-------------------------------------------------------------------*/
@@ -838,20 +759,23 @@ struct _PTPHSV                             // PTP Handshake CSVcv
 /* Functions (in mpc.c)                                              */
 /*********************************************************************/
 
-MPC_DLL_IMPORT MPC_IPA*  point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
-MPC_DLL_IMPORT MPC_PUK*  point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
-MPC_DLL_IMPORT MPC_PUS*  point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
-MPC_DLL_IMPORT void  display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir );
-MPC_DLL_IMPORT void  display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
-MPC_DLL_IMPORT void  display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, char* pDesc, BYTE bDir, int iLimit );
-MPC_DLL_IMPORT void  display_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, char* pDesc, BYTE bDir );
-MPC_DLL_IMPORT void  display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, char* pDesc, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT MPC_IPA*  mpc_point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
+MPC_DLL_IMPORT MPC_PUK*  mpc_point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
+MPC_DLL_IMPORT MPC_PUS*  mpc_point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bType );
+MPC_DLL_IMPORT void  mpc_display_description( DEVBLK* pDEVBLK, char* pDesc );
+MPC_DLL_IMPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
+MPC_DLL_IMPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
 
 
 /*********************************************************************/

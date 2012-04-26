@@ -376,9 +376,10 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "CM request", FROM_GUEST, 0 );
+                mpc_display_description( dev, "CM request" );
+                mpc_display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
-            req_puk = point_puk( dev, req_th, req_rrh );
+            req_puk = mpc_point_puk( dev, req_th, req_rrh );
 
             switch(req_puk->type) {
 
@@ -405,7 +406,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug && grp->rspsz )
-                display_osa_th_etc( dev, rsp_th, "CM response", TO_GUEST, 0 );
+                mpc_display_description( dev, "CM response" );
+                mpc_display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         break;
@@ -416,9 +418,10 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "ULP request", FROM_GUEST, 0 );
+                mpc_display_description( dev, "ULP request" );
+                mpc_display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
-            req_puk = point_puk(dev,req_th,req_rrh);
+            req_puk = mpc_point_puk(dev,req_th,req_rrh);
 
             switch(req_puk->type) {
 
@@ -492,7 +495,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug && grp->rspsz )
-                display_osa_th_etc( dev, rsp_th, "ULP response", TO_GUEST, 0 );
+                mpc_display_description( dev, "ULP response" );
+                mpc_display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         break;
@@ -509,7 +513,8 @@ U16 offph;
 
             /* Display the request MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, req_th, "IPA request", FROM_GUEST, 0 );
+                mpc_display_description( dev, "IPA request" );
+                mpc_display_osa_th_etc( dev, req_th, FROM_GUEST, 0 );
 
             /* Copy request to response buffer */
             FETCH_FW(rqsize,req_th->length);
@@ -531,7 +536,7 @@ U16 offph;
 //          STORE_FW(rsp_rrh->ackseq,ackseq);
 
             /* Point to RESPONSE MPC_IPA. */
-            ipa = point_ipa(dev,rsp_th,rsp_rrh);
+            ipa = mpc_point_ipa(dev,rsp_th,rsp_rrh);
 
 //          DUMP(dev, "IPA",ipa,sizeof(MPC_IPA));
 //          FETCH_FW(offdata,req_ph->offdata);
@@ -753,7 +758,8 @@ U16 offph;
 
             /* Display the response MPC_TH etc., maybe */
             if( grp->debug )
-                display_osa_th_etc( dev, rsp_th, "IPA response", TO_GUEST, 0 );
+                mpc_display_description( dev, "IPA response" );
+                mpc_display_osa_th_etc( dev, rsp_th, TO_GUEST, 0 );
 
         }
         /* end case RRH_TYPE_IPA: */
@@ -779,7 +785,8 @@ U16 reqtype;
 
             /* Display the IEA, maybe */
             if( grp->debug )
-                display_iea( dev, iea, "IDX ACTIVATE", FROM_GUEST );
+                mpc_display_description( dev, "IDX ACTIVATE request" );
+                mpc_display_osa_iea( dev, iea, FROM_GUEST );
 
     memset(iear, 0, sizeof(MPC_IEAR));
 
@@ -834,7 +841,8 @@ U16 reqtype;
 
             /* Display the IEAR, maybe */
             if( grp->debug )
-                display_iear( dev, iear, "IDX ACTIVATE response", TO_GUEST );
+                mpc_display_description( dev, "IDX ACTIVATE response" );
+                mpc_display_osa_iear( dev, iear, TO_GUEST );
 }
 
 
@@ -2044,8 +2052,8 @@ U16 uLength4;
     UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
-    req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
-    req_pus_02 = point_pus( dev, req_puk, PUS_TYPE_02 );
+    req_pus_01 = mpc_point_pus( dev, req_puk, PUS_TYPE_01 );
+    req_pus_02 = mpc_point_pus( dev, req_puk, PUS_TYPE_02 );
     if( !req_pus_01 || !req_pus_02 )
     {
          /* FIXME Expected pus not present, error message please. */
@@ -2147,8 +2155,8 @@ U16 uLength4;
     UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
-    req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
-    req_pus_06 = point_pus( dev, req_puk, PUS_TYPE_06 );
+    req_pus_04 = mpc_point_pus( dev, req_puk, PUS_TYPE_04 );
+    req_pus_06 = mpc_point_pus( dev, req_puk, PUS_TYPE_06 );
     if( !req_pus_04 || !req_pus_06 )
     {
          /* FIXME Expected pus not present, error message please. */
@@ -2298,8 +2306,8 @@ U16 uMTU;
     UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
-    req_pus_01 = point_pus( dev, req_puk, PUS_TYPE_01 );
-    req_pus_0A = point_pus( dev, req_puk, PUS_TYPE_0A );
+    req_pus_01 = mpc_point_pus( dev, req_puk, PUS_TYPE_01 );
+    req_pus_0A = mpc_point_pus( dev, req_puk, PUS_TYPE_0A );
     if( !req_pus_01 || !req_pus_0A )
     {
          /* FIXME Expected pus not present, error message please. */
@@ -2421,9 +2429,9 @@ U16 uLength4;
     UNREFERENCED(req_rrh);
 
     /* Point to the expected MPC_PUS and check they are present. */
-    req_pus_04 = point_pus( dev, req_puk, PUS_TYPE_04 );
-    req_pus_06 = point_pus( dev, req_puk, PUS_TYPE_06 );
-    req_pus_0B = point_pus( dev, req_puk, PUS_TYPE_0B );
+    req_pus_04 = mpc_point_pus( dev, req_puk, PUS_TYPE_04 );
+    req_pus_06 = mpc_point_pus( dev, req_puk, PUS_TYPE_06 );
+    req_pus_0B = mpc_point_pus( dev, req_puk, PUS_TYPE_0B );
     if( !req_pus_04 || !req_pus_06 || !req_pus_0B )
     {
          /* FIXME Expected pus not present, error message please. */
