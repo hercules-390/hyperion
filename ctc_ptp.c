@@ -1232,16 +1232,12 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 
     // Get the length of and the pointer to the data referenced by the
     // first (or only) MPC_PH
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-    FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-    uLenData &= 0x00FFFFFF;
+    FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PH->offdata );
     pData = (BYTE*)pMPC_TH + uOffData;
 
     // Get the total length of the data referenced by all of the MPC_PHs.
-    // Note: pMPC_RRH->lenalda is a 3-byte length field.
-    FETCH_FW( iDataLen, pMPC_RRH->lenalda-1 );
-    iDataLen &= 0x00FFFFFF;
+    FETCH_F3( iDataLen, pMPC_RRH->lenalda );
 
     // Check whether there is more than one MPC_PH.
     if( uNumPH == 1 )
@@ -1257,12 +1253,10 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             return -1;
 
         // Copy and concatanate the data referenced by the MPC_PHs.
-        // Note: pMPC_PH->lendata is a 3-byte length field.
         pData = pDataBuf;
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-            FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-            uLenData &= 0x00FFFFFF;
+            FETCH_F3( uLenData, pMPC_PH->lendata );
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData1 = (BYTE*)pMPC_TH + uOffData;
 
@@ -1682,20 +1676,12 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         STORE_FW( pMPC_TH->length, (U32)(iLength1 + iLength2) );
 
         // Set length fields in MPC_RRH
-        // Note: pMPC_RRH->lenalda is a 3-byte length field.
         STORE_HW( pMPC_RRH->lenfida, (U16)iLength2 );
-        FETCH_FW( uTotalLen, pMPC_RRH->lenalda-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pMPC_RRH->lenalda-1, uTotalLen );
+        STORE_F3( pMPC_RRH->lenalda, (U32)iLength2 );
 
         // Prepare MPC_PH
-        // Note: pMPC_PH->lendata is a 3-byte length field.
         pMPC_PH->locdata = PH_LOC_1;
-        FETCH_FW( uTotalLen, pMPC_PH->lendata-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pMPC_PH->lendata-1, uTotalLen );
+        STORE_F3( pMPC_PH->lendata, (U32)iLength2 );
         STORE_FW( pMPC_PH->offdata, (U32)(SIZE_TH + SIZE_RRH + SIZE_PH) );
 
         // Copy the data to be read to the IO buffer.
@@ -1744,20 +1730,12 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         STORE_FW( pMPC_TH->length, (U32)(SIZE_TH + SIZE_RRH + SIZE_PH) );
 
         // Set length fields in MPC_RRH
-        // Note: pMPC_RRH->lenalda is a 3-byte length field.
         STORE_HW( pMPC_RRH->lenfida, 0 );
-        FETCH_FW( uTotalLen, pMPC_RRH->lenalda-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pMPC_RRH->lenalda-1, uTotalLen );
+        STORE_F3( pMPC_RRH->lenalda, (U32)iLength2 );
 
         // Prepare MPC_PH
-        // Note: pMPC_PH->lendata is a 3-byte length field.
         pMPC_PH->locdata = PH_LOC_2;
-        FETCH_FW( uTotalLen, pMPC_PH->lendata-1 );
-        uTotalLen &= 0xFF000000;
-        uTotalLen |= iLength2;
-        STORE_FW( pMPC_PH->lendata-1, uTotalLen );
+        STORE_F3( pMPC_PH->lendata, (U32)iLength2 );
         STORE_FW( pMPC_PH->offdata, (U32)(LEN_OF_PAGE_ONE) );
 
         // Copy the data to be read to the IO buffer.
@@ -1800,17 +1778,12 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     STORE_FW( pMPC_TH->length, 0 );
 
     // Clear length fields in MPC_RRH
-    // Note: pMPC_RRH->lenalda is a 3-byte length field.
     STORE_HW( pMPC_RRH->lenfida, 0 );
-    FETCH_FW( uTotalLen, pMPC_RRH->lenalda-1 );
-    uTotalLen &= 0xFF000000;
-    STORE_FW( pMPC_RRH->lenalda-1, uTotalLen );
+    STORE_F3( pMPC_RRH->lenalda, 0 );
 
     // Clear location, length and displacement fields in MPC_PH
     pMPC_PH->locdata = 0;
-    FETCH_FW( uTotalLen, pMPC_PH->lendata-1 );
-    uTotalLen &= 0xFF000000;
-    STORE_FW( pMPC_PH->lendata-1, uTotalLen );
+    STORE_F3( pMPC_PH->lendata, 0 );
     STORE_FW( pMPC_PH->offdata, 0 );
 
     return;
@@ -4112,9 +4085,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Get the length of and point to the data referenced by the
     // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-//  FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//  uLenData &= 0x00FFFFFF;
+//  FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PHwr->offdata );
     pMPC_PUKwr = (MPC_PUK*)((BYTE*)pMPC_THwr + uOffData);
 
@@ -4575,7 +4546,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;      // PTPHDR to be read
     MPC_TH*    pMPC_THre;      // MPC_TH follows PTPHDR
@@ -4625,14 +4596,14 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -4725,7 +4696,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;       // PTPHDR to be read
     MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
@@ -4774,14 +4745,14 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
     memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -4831,7 +4802,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;       // PTPHDR to be read
     MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
@@ -4880,14 +4851,14 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumIssuer );
     memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -4941,7 +4912,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;       // PTPHDR to be read
     MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
@@ -4988,14 +4959,14 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -5095,7 +5066,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;       // PTPHDR to be read
     MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
@@ -5146,14 +5117,14 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
     memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -5220,7 +5191,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;       // PTPHDR to be read
     MPC_TH*    pMPC_THre;       // MPC_TH follows PTPHDR
@@ -5271,14 +5242,14 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
     memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -5345,7 +5316,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     PTPHDR*    pPTPHDRre;      // PTPHDR to be read
     MPC_TH*    pMPC_THre;      // MPC_TH follows PTPHDR
@@ -5390,14 +5361,14 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     STORE_FW( pMPC_RRHre->seqnum, ++pPTPBLK->uSeqNumCm );
     memcpy( pMPC_RRHre->ackseq, pMPC_RRHwr->seqnum, 4 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenCmConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PUKre
@@ -5452,9 +5423,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Get the length of and point to the data referenced by the
     // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-//  FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//  uLenData &= 0x00FFFFFF;
+//  FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PHwr->offdata );
     pMPC_PUKwr = (MPC_PUK*)((BYTE*)pMPC_THwr + uOffData);
 
@@ -5549,9 +5518,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Get the length of and point to the data referenced by the
     // MPC_PH. The data is a MPC_PIX.
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-//  FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//  uLenData &= 0x00FFFFFF;
+//  FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PHwr->offdata );
     pMPC_PIXwr = (MPC_PIX*)((BYTE*)pMPC_THwr + uOffData);
 
@@ -6332,7 +6299,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6372,14 +6339,14 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6410,7 +6377,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6450,14 +6417,14 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6488,7 +6455,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6527,14 +6494,14 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6566,7 +6533,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6606,14 +6573,14 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6645,7 +6612,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6685,14 +6652,14 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6724,7 +6691,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6764,14 +6731,14 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6810,7 +6777,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6850,14 +6817,14 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6890,7 +6857,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -6930,14 +6897,14 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -6970,7 +6937,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -7010,14 +6977,14 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -7048,7 +7015,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -7088,14 +7055,14 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -7126,7 +7093,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -7166,14 +7133,14 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -7204,7 +7171,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     PTPHDR*    pPTPHDRre;     // PTPHDR to be read
     MPC_TH*    pMPC_THre;     // MPC_TH follows PTPHDR
     MPC_RRH*   pMPC_RRHre;    // MPC_RRH follows MPC_TH
@@ -7244,14 +7211,14 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare MPC_PIXre
@@ -7283,7 +7250,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     PTPATH*    pPTPATHre = pPTPBLK->pPTPATHRead;
     U32        uLength1;
     U32        uLength2;
-    U16        uLength3;
+    U32        uLength3;
     U16        uLength4;
     U16        uLength5;
     U16        uLength6;
@@ -7335,14 +7302,14 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
@@ -7413,14 +7380,14 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
@@ -7491,14 +7458,14 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
@@ -7570,14 +7537,14 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header
@@ -7659,14 +7626,14 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     pMPC_RRHre->proto = PROTOCOL_LAYER2;
     STORE_HW( pMPC_RRHre->numph, 1 );
     STORE_HW( pMPC_RRHre->offph, SIZE_RRH );
-    STORE_HW( pMPC_RRHre->lenfida, uLength3 );
-    STORE_HW( pMPC_RRHre->lenalda+1, uLength3 );
+    STORE_HW( pMPC_RRHre->lenfida, (U16)uLength3 );
+    STORE_F3( pMPC_RRHre->lenalda, uLength3 );
     pMPC_RRHre->tokenx5 = MPC_TOKEN_X5;
     memcpy( pMPC_RRHre->token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Prepare MPC_PHre
     pMPC_PHre->locdata = PH_LOC_1;
-    STORE_HW( pMPC_PHre->lendata+1, uLength3 );
+    STORE_F3( pMPC_PHre->lendata, uLength3 );
     STORE_FW( pMPC_PHre->offdata, uLength2 );
 
     // Prepare IP6FRMre, i.e. IPv6 header

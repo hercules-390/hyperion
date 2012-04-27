@@ -219,7 +219,7 @@ DLL_EXPORT void  mpc_display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 
     // Display the MPC_TH.
     FETCH_FW( uOffRRH, pMPC_TH->offrrh );
-    mpc_display_stuff( pDEVBLK, "TH", (BYTE*)pMPC_TH, (int)uOffRRH, bDir );
+    mpc_display_stuff( pDEVBLK, "TH", (BYTE*)pMPC_TH, uOffRRH, bDir );
 
     return;
 }   /* End function  mpc_display_th() */
@@ -233,7 +233,7 @@ DLL_EXPORT void  mpc_display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir 
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     return;
 }   /* End function  mpc_display_rrh() */
@@ -245,7 +245,7 @@ DLL_EXPORT void  mpc_display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 {
 
     // Display the MPC_PH.
-    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     return;
 }   /* End function  mpc_display_ph() */
@@ -271,11 +271,11 @@ DLL_EXPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     // Point to and display the MPC_PH.
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
-    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     // Get the length of and point to the data referenced by the
     // MPC_PH. The data contain a MPC_PUK and one or more MPC_PUSs.
@@ -284,7 +284,7 @@ DLL_EXPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     // Display the MPC_PUK.
     FETCH_HW( uLenPUK, pMPC_PUK->length );
-    mpc_display_stuff( pDEVBLK, "PUK", (BYTE*)pMPC_PUK, (int)uLenPUK, bDir );
+    mpc_display_stuff( pDEVBLK, "PUK", (BYTE*)pMPC_PUK, uLenPUK, bDir );
 
     // Get the total length of the following MPC_PUSs, then point to
     // the first MPC_PUS.
@@ -301,7 +301,7 @@ DLL_EXPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
             break;
 
         // Display the MPC_PUS.
-        mpc_display_stuff( pDEVBLK, "PUS", (BYTE*)pMPC_PUS, (int)uLenPUS, bDir );
+        mpc_display_stuff( pDEVBLK, "PUS", (BYTE*)pMPC_PUS, uLenPUS, bDir );
 
         // Point to the next MPC_PUS
         pMPC_PUS = (MPC_PUS*)((BYTE*)pMPC_PUS + uLenPUS);
@@ -330,19 +330,20 @@ DLL_EXPORT void  mpc_display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     // Point to and display the MPC_PH.
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
-    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     // Point to and display the MPC_PIX.
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-    FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-    uLenData &= 0x00FFFFFF;
+//! // Note: pMPC_PH->lendata is a 3-byte length field.
+//! FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+//! uLenData &= 0x00FFFFFF;
+    FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PH->offdata );
     pMPC_PIX = (MPC_PIX*)((BYTE*)pMPC_TH + uOffData);
-    mpc_display_stuff( pDEVBLK, "PIX", (BYTE*)pMPC_PIX, (int)uLenData, bDir );
+    mpc_display_stuff( pDEVBLK, "PIX", (BYTE*)pMPC_PIX, uLenData, bDir );
 
     return;
 }   /* End function  mpc_display_rrh_and_pix() */
@@ -363,16 +364,18 @@ DLL_EXPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     // Display the MPC_RRH.
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     // Point to and display the MPC_PH.
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
-    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+    mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     /* Point to and display the MPC_IPA (and commands, if any). */
-    // Note: pMPC_PH->lendata is a 3-byte length field.
-    FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-    uLenData &= 0x00FFFFFF;
+//! // Note: pMPC_PH->lendata is a 3-byte length field.
+//! FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+//! uLenData &= 0x00FFFFFF;
+    FETCH_F3( uLenData, pMPC_PH->lendata );
+    FETCH_FW( uOffData, pMPC_PH->offdata );
     if( uLenData > sizeof(MPC_IPA) )
     {
         iLenIPA = sizeof(MPC_IPA);
@@ -383,7 +386,6 @@ DLL_EXPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
         iLenIPA = uLenData;
         iLenCmd = 0;
     }
-    FETCH_FW( uOffData, pMPC_PH->offdata );
     pMPC_IPA = (MPC_IPA*)((BYTE*)pMPC_TH + uOffData);
     mpc_display_stuff( pDEVBLK, "IPA", (BYTE*)pMPC_IPA, iLenIPA, bDir );
     if( iLenCmd )
@@ -411,14 +413,14 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     /* Display the MPC_RRH.*/
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     /* Display the MPC_PH(s). */
     FETCH_HW( uNumPH, pMPC_RRH->numph );
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
     for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
     {
-        mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+        mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
     }
 
@@ -426,15 +428,16 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     /* if limit is negative or a silly number, don't display the  */
     /* data. If limit is zero, display all of the data, otherwise */
     /* limit the length of the data displayed.                    */
-    /* Note: pMPC_PH->lendata is a 3-byte length field.           */
+//! /* Note: pMPC_PH->lendata is a 3-byte length field.           */
     iDone = 0;
     if( iLimit >= 0 && iLimit <= 65535 )
     {
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-            FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-            uLenData &= 0x00FFFFFF;
+//!         FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+//!         uLenData &= 0x00FFFFFF;
+            FETCH_F3( uLenData, pMPC_PH->lendata );
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData = (BYTE*)pMPC_TH + uOffData;
             if( iLimit > 0 )
@@ -445,7 +448,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
                     uLenData = ( iLimit - iDone );
                 iDone =+ uLenData;
             }
-            mpc_display_stuff( pDEVBLK, "Pkt", pData, (int)uLenData, bDir );
+            mpc_display_stuff( pDEVBLK, "Pkt", pData, uLenData, bDir );
             pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
         }
     }
@@ -477,14 +480,14 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 
     /* Display the MPC_RRH.*/
     FETCH_HW( uOffPH, pMPC_RRH->offph );
-    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, (int)uOffPH, bDir );
+    mpc_display_stuff( pDEVBLK, "RRH", (BYTE*)pMPC_RRH, uOffPH, bDir );
 
     /* Display the MPC_PH(s). */
     FETCH_HW( uNumPH, pMPC_RRH->numph );
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
     for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
     {
-        mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, (int)SIZE_PH, bDir );
+        mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
     }
 
@@ -492,15 +495,16 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     /* if limit is negative or a silly number, don't display the  */
     /* data. If limit is zero, display all of the data, otherwise */
     /* limit the length of the data displayed.                    */
-    /* Note: pMPC_PH->lendata is a 3-byte length field.           */
+//! /* Note: pMPC_PH->lendata is a 3-byte length field.           */
     iDone = 0;
     if( iLimit >= 0 && iLimit <= 65535 )
     {
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-            FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-            uLenData &= 0x00FFFFFF;
+//!         FETCH_FW( uLenData, pMPC_PH->lendata-1 );
+//!         uLenData &= 0x00FFFFFF;
+            FETCH_F3( uLenData, pMPC_PH->lendata );
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData = (BYTE*)pMPC_TH + uOffData;
             if( iLimit > 0 )
@@ -511,7 +515,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
                     uLenData = ( iLimit - iDone );
                 iDone =+ uLenData;
             }
-            mpc_display_stuff( pDEVBLK, "PDU", pData, (int)uLenData, bDir );
+            mpc_display_stuff( pDEVBLK, "PDU", pData, uLenData, bDir );
             pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
         }
     }
@@ -526,7 +530,7 @@ DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE b
 {
 
     /* Display MPC_IEA. */
-    mpc_display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, (int)sizeof(MPC_IEA), bDir );
+    mpc_display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, sizeof(MPC_IEA), bDir );
 
     return;
 }   /* End function  mpc_display_osa_iea() */
@@ -538,7 +542,7 @@ DLL_EXPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYT
 {
 
     /* Display MPC_IEAR. */
-    mpc_display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, (int)sizeof(MPC_IEAR), bDir );
+    mpc_display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, sizeof(MPC_IEAR), bDir );
 
     return;
 }   /* End function  mpc_display_osa_iear() */
