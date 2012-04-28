@@ -21,7 +21,7 @@
 
 
 /*--------------------------------------------------------------------*/
-/* mpc_point_ipa():                                                       */
+/* mpc_point_ipa():                                                   */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT MPC_IPA*  mpc_point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 {
@@ -45,7 +45,7 @@ DLL_EXPORT MPC_IPA*  mpc_point_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* p
 }   /* End function  mpc_point_ipa() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_point_puk():                                                       */
+/* mpc_point_puk():                                                   */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT MPC_PUK*  mpc_point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 {
@@ -69,7 +69,7 @@ DLL_EXPORT MPC_PUK*  mpc_point_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* p
 }   /* End function  mpc_point_puk() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_point_pus():                                                       */
+/* mpc_point_pus():                                                   */
 /*--------------------------------------------------------------------*/
 /* Return a pointer to the MPC_PUS of the required type. If the       */
 /* required type is not found a null pointer is returned. Although    */
@@ -115,7 +115,7 @@ DLL_EXPORT MPC_PUS*  mpc_point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bTy
 }   /* End function  mpc_point_pus() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_description():                                             */
+/* mpc_display_description():                                         */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_description( DEVBLK* pDEVBLK, char* pDesc )
 {
@@ -139,7 +139,7 @@ DLL_EXPORT void  mpc_display_description( DEVBLK* pDEVBLK, char* pDesc )
 }   /* End function  mpc_display_description() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_stuff()                                                    */
+/* mpc_display_stuff()                                                */
 /*--------------------------------------------------------------------*/
 /* Function to display storage.                                       */
 DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
@@ -211,7 +211,7 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
 }   /* End function  mpc_display_stuff() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_th(): Display Transport Header (MPC_TH)                    */
+/* mpc_display_th(): Display Transport Header (MPC_TH)                */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 {
@@ -225,7 +225,7 @@ DLL_EXPORT void  mpc_display_th( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir )
 }   /* End function  mpc_display_th() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh(): Display Request/Response Header (MPC_RRH)           */
+/* mpc_display_rrh(): Display Request/Response Header (MPC_RRH)       */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
@@ -239,7 +239,7 @@ DLL_EXPORT void  mpc_display_rrh( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRH, BYTE bDir 
 }   /* End function  mpc_display_rrh() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_ph(): Display Protocol Data Unit Header (MPC_PH)           */
+/* mpc_display_ph(): Display Protocol Data Unit Header (MPC_PH)       */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 {
@@ -251,7 +251,7 @@ DLL_EXPORT void  mpc_display_ph( DEVBLK* pDEVBLK, MPC_PH* pMPC_PH, BYTE bDir )
 }   /* End function  mpc_display_ph() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh_and_puk():                                             */
+/* mpc_display_rrh_and_puk():                                         */
 /*--------------------------------------------------------------------*/
 /* In all cases that have been seen, on both OSA and PTP, when        */
 /* MPC_RRH->proto == PROTOCOL_UNKNOWN (0x7E), the MPC_RRH is followed */
@@ -314,7 +314,7 @@ DLL_EXPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 }   /* End function  mpc_display_rrh_and_puk() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh_and_pix():                                             */
+/* mpc_display_rrh_and_pix():                                         */
 /*--------------------------------------------------------------------*/
 /* In all cases that have been seen, only on PTP, when MPC_RRH->type  */
 /* == RRH_TYPE_IPA (0xC1) and MPC_RRH->proto == PROTOCOL_LAYER2       */
@@ -337,9 +337,6 @@ DLL_EXPORT void  mpc_display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     // Point to and display the MPC_PIX.
-//! // Note: pMPC_PH->lendata is a 3-byte length field.
-//! FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//! uLenData &= 0x00FFFFFF;
     FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PH->offdata );
     pMPC_PIX = (MPC_PIX*)((BYTE*)pMPC_TH + uOffData);
@@ -349,7 +346,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 }   /* End function  mpc_display_rrh_and_pix() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh_and_ipa():                                             */
+/* mpc_display_rrh_and_ipa():                                         */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir )
 {
@@ -371,9 +368,6 @@ DLL_EXPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     mpc_display_stuff( pDEVBLK, "PH", (BYTE*)pMPC_PH, SIZE_PH, bDir );
 
     /* Point to and display the MPC_IPA (and commands, if any). */
-//! // Note: pMPC_PH->lendata is a 3-byte length field.
-//! FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//! uLenData &= 0x00FFFFFF;
     FETCH_F3( uLenData, pMPC_PH->lendata );
     FETCH_FW( uOffData, pMPC_PH->offdata );
     if( uLenData > sizeof(MPC_IPA) )
@@ -398,7 +392,7 @@ DLL_EXPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 }   /* End function  mpc_display_rrh_and_ipa() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh_and_pkt():                                             */
+/* mpc_display_rrh_and_pkt():                                         */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit )
 {
@@ -428,15 +422,12 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     /* if limit is negative or a silly number, don't display the  */
     /* data. If limit is zero, display all of the data, otherwise */
     /* limit the length of the data displayed.                    */
-//! /* Note: pMPC_PH->lendata is a 3-byte length field.           */
     iDone = 0;
     if( iLimit >= 0 && iLimit <= 65535 )
     {
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-//!         FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//!         uLenData &= 0x00FFFFFF;
             FETCH_F3( uLenData, pMPC_PH->lendata );
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData = (BYTE*)pMPC_TH + uOffData;
@@ -457,16 +448,8 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 }   /* End function  mpc_display_rrh_and_pkt() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_rrh_and_pdu():                                             */
+/* mpc_display_rrh_and_pdu():                                         */
 /*--------------------------------------------------------------------*/
-/* In all cases that have been seen, only on PTP, when MPC_RRH->type  */
-/* == RRH_TYPE_CM (0x81) and MPC_RRH->proto == PROTOCOL_LAYER2        */
-/* (0x08), the MPC_RRH is followed by one or more MPC_PH, which are   */
-/* followed by IP packet data. The function is not restricted to the  */
-/* narrow case described above however, it is intended to be general  */
-/* purpose. (Calls to mpc_display_rrh_and_puk() or display_rrh_and_pix()  */
-/* could be replaced with calls to mpc_display_rrh_and_pdu(), with a      */
-/* slight loss of functionality.)                                     */
 DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit )
 {
     MPC_PH*    pMPC_PH;
@@ -495,15 +478,12 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     /* if limit is negative or a silly number, don't display the  */
     /* data. If limit is zero, display all of the data, otherwise */
     /* limit the length of the data displayed.                    */
-//! /* Note: pMPC_PH->lendata is a 3-byte length field.           */
     iDone = 0;
     if( iLimit >= 0 && iLimit <= 65535 )
     {
         pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + uOffPH);
         for( iForPH = 1; iForPH <= uNumPH; iForPH++ )
         {
-//!         FETCH_FW( uLenData, pMPC_PH->lendata-1 );
-//!         uLenData &= 0x00FFFFFF;
             FETCH_F3( uLenData, pMPC_PH->lendata );
             FETCH_FW( uOffData, pMPC_PH->offdata );
             pData = (BYTE*)pMPC_TH + uOffData;
@@ -524,7 +504,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 }   /* End function  mpc_display_rrh_and_pdu() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_osa_iea():                                                     */
+/* mpc_display_osa_iea():                                             */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir )
 {
@@ -536,7 +516,7 @@ DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE b
 }   /* End function  mpc_display_osa_iea() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_osa_iear():                                                    */
+/* mpc_display_osa_iear():                                            */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir )
 {
@@ -548,7 +528,7 @@ DLL_EXPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYT
 }   /* End function  mpc_display_osa_iear() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_osa_th_etc():                                              */
+/* mpc_display_osa_th_etc():                                          */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit )
 {
@@ -607,7 +587,7 @@ DLL_EXPORT void  mpc_display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE 
 }   /* End function  mpc_display_osa_th_etc() */
 
 /*--------------------------------------------------------------------*/
-/* mpc_display_ptp_th_etc():                                              */
+/* mpc_display_ptp_th_etc():                                          */
 /*--------------------------------------------------------------------*/
 DLL_EXPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit )
 {
