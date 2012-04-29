@@ -148,12 +148,12 @@
 #
 #         Experimental fcp support
 #         Device statement
-  0C00    ZFCP
+# 0C00    ZFCP
 #
 #         Specify the location of the scsi bootstrap 
 #         to be used for an IPL of a FCP device
-  HWLDR   SCSIBOOT /usr/local/share/hercules/scsiboot
+# HWLDR   SCSIBOOT /usr/local/share/hercules/scsiboot
 #
 #         Specify wwpn, lun and optional parameter for the FCP IPL
-# loaddev portname 8001020304050607 lun 08090a0b0c0d0e0f
+# LOADDEV PORTNAME 8001020304050607 LUN 08090a0b0c0d0e0f
 
