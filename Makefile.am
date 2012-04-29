@@ -94,6 +94,7 @@ dyndev_SRC         = commadpt.c  \
                      resolve.c   \
                      qeth.c      \
                      mpc.c       \
+                     zfcp.c      \
                      con1052c.c
 
 
@@ -167,6 +168,7 @@ endif
              hdt2880.la  \
              hdt3525.la  \
              hdtqeth.la  \
+             hdtzfcp.la  \
              hdt1052c.la \
              hdtptp.la
 
@@ -258,6 +260,10 @@ if OPTION_DYNAMIC_LOAD
   hdtqeth_la_SOURCES = qeth.c mpc.c tuntap.c
   hdtqeth_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdtqeth_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  hdtzfcp_la_SOURCES = zfcp.c
+  hdtzfcp_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdtzfcp_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt1052c_la_SOURCES = con1052c.c
   hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
@@ -363,6 +369,7 @@ endif
                        decimal.c    \
                        service.c    \
                        scedasd.c    \
+                       scescsi.c    \
                        losc.c       \
                        chsc.c       \
                        opcode.c     \
@@ -453,6 +460,7 @@ else
              -dlopen hdt3505.la   \
              -dlopen hdt3525.la   \
              -dlopen hdtqeth.la   \
+             -dlopen hdtzfcp.la   \
              -dlopen hdt1052c.la  \
              -dlopen hdtptp.la
 
@@ -469,6 +477,7 @@ else
              hdt3505.la   \
              hdt3525.la   \
              hdtqeth.la   \
+             hdtzfcp.la   \
              hdt1052c.la  \
              hdtptp.la    \
              libherc.la   \
@@ -737,6 +746,7 @@ noinst_HEADERS = fishhang.h     \
                  chsc.h         \
                  qeth.h         \
                  qdio.h         \
+                 zfcp.h         \
                  mpc.h          \
                  pttrace.h      \
                  history.h      \

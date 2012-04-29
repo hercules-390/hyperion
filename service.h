@@ -1,4 +1,5 @@
 /* SERVICE.H    (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              Service Processor Architectured fields               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -260,6 +261,13 @@ typedef struct _SCCB_CPU_INFO {
         sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "IP" :  \
         "<unknown processor type>")
 
+/* Macro converts event type to event mask */
+#define EVDMASK(_type) \
+        (0x80000000 >> (SCCB_EVD_TYPE_ ## _type - 1))
+
+#define SCLP_RECV_ENABLED(_type) \
+    (servc_cp_recv_mask & EVDMASK(_type))
+
 /* Definitions for crypto unit identifier */
 #define SCCB_KSID_CRYPTO_UNIT_ID                        0x01
 
@@ -335,6 +343,10 @@ typedef struct _SCCB_EVD_HDR {
 #define SCCB_EVD_TYPE_STATECH   0x08    /* State Change              */
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
 #define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
+// #endif defined(_FEATURE_HARDWARE_LOADER)
+#define SCCB_EVD_TYPE_HWL       0x0C    /* Hardware Loader           */
+#define SCCB_EVD_TYPE_SDIAS     0x1C    /* Dump retrieval            */
+// #endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 #define SCCB_EVD_TYPE_VT220     0x1A    /* VT220 Msg                 */
 #define SCCB_EVD_TYPE_SYSG      0x1B    /* 3270 Msg (SYSG console)   */
 #define SCCB_EVD_TYPE_SIGQ      0x1D    /* SigQuiesce                */

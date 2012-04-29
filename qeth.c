@@ -1221,6 +1221,8 @@ int i;
 
         dev->devtype = dev->devid[1] << 8 | dev->devid[2];
 
+        dev->chptype[0] = CHP_TYPE_OSD;
+
         dev->pmcw.flag4 |= PMCW4_Q;
 
         if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
@@ -1303,6 +1305,7 @@ int i;
 
             else
                 dev->pmcw.chpid[0] = chpid;
+
             continue;
         }
         else

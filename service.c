@@ -55,9 +55,6 @@ static  U16     servc_signal_quiesce_count;
 static  BYTE    servc_signal_quiesce_unit;
 static  BYTE    servc_sysg_cmdcode;     /* Pending SYSG read command */
 
-#define SCLP_RECV_ENABLED(_type) \
-    (servc_cp_recv_mask & (0x80000000 >> ((_type)-1)))
-
 /*-------------------------------------------------------------------*/
 /* Reset the service processor to its initial state                  */
 /*-------------------------------------------------------------------*/
@@ -170,14 +167,14 @@ U32 pending;
 void scp_command (char *command, int priomsg, int echo)
 {
     /* Error if disabled for priority messages */
-    if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
+    if (priomsg && !SCLP_RECV_ENABLED(PRIOR))
     {
         WRMSG (HHC00002, "E", "priority commands");
         return;
     }
 
     /* Error if disabled for commands */
-    if (!priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD))
+    if (!priomsg && !SCLP_RECV_ENABLED(OPCMD))
     {
         WRMSG (HHC00002, "E", "operator commands");
         return;
@@ -395,7 +392,7 @@ U64  syslevel;
 /*-------------------------------------------------------------------*/
 int can_signal_quiesce()
 {
-    return SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ);
+    return SCLP_RECV_ENABLED(SIGQ);
 }
 
 /*-------------------------------------------------------------------*/
@@ -410,7 +407,7 @@ int can_signal_quiesce()
 /*-------------------------------------------------------------------*/
 int can_send_command()
 {
-    return SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD);
+    return SCLP_RECV_ENABLED(OPCMD);
 }
 
 /*-------------------------------------------------------------------*/
@@ -427,7 +424,7 @@ int can_send_command()
 int signal_quiesce (U16 count, BYTE unit)
 {
     /* Error if disabled for commands */
-    if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ))
+    if (!SCLP_RECV_ENABLED(SIGQ))
     {
         WRMSG (HHC00002, "E", "quiesce signals" );
         return -1;
@@ -1046,35 +1043,45 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0, 0, 0, 0, 0, 0
                             } ;
 
-U32  ARCH_DEP(sclp_recv_mask) =
-        (0x80000000 >> (SCCB_EVD_TYPE_MSG-1)) |
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) |
+U32  ARCH_DEP(sclp_recv_mask) = 0
+                              | EVDMASK(MSG)
+                              | EVDMASK(PRIOR)
 #if defined(FEATURE_SCEDIO)
-        (0x80000000 >> (SCCB_EVD_TYPE_SCEDIO-1)) |
+                              | EVDMASK(SCEDIO)
 #endif /*defined(FEATURE_SCEDIO)*/
+#if defined(FEATURE_HARDWARE_LOADER)
+                              | EVDMASK(HWL)
+                              | EVDMASK(SDIAS)
+#endif /*defined(FEATURE_HARDWARE_LOADER)*/
 #if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
-        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) |
+                              | EVDMASK(VT220)
 #endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
 #if defined(FEATURE_INTEGRATED_3270_CONSOLE)
-        (0x80000000 >> (SCCB_EVD_TYPE_SYSG-1)) |
+                              | EVDMASK(SYSG)
 #endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
-        (0x80000000 >> (SCCB_EVD_TYPE_CPIDENT-1)) ;
+                              | EVDMASK(CPIDENT)
+                              ;
 
-U32  ARCH_DEP(sclp_send_mask) =
-        (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) |
-        (0x80000000 >> (SCCB_EVD_TYPE_STATECH-1)) |
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) |
-        (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)) |
+U32  ARCH_DEP(sclp_send_mask) = 0
+                              | EVDMASK(OPCMD)
+                              | EVDMASK(STATECH)
+                              | EVDMASK(PRIOR)
+                              | EVDMASK(SIGQ)
 #if defined(FEATURE_SCEDIO)
-        (0x80000000 >> (SCCB_EVD_TYPE_SCEDIO-1)) |
+                              | EVDMASK(SCEDIO)
 #endif /*defined(FEATURE_SCEDIO)*/
+#if defined(_FEATURE_HARDWARE_LOADER)
+                              | EVDMASK(HWL)
+                              | EVDMASK(SDIAS)
+#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 #if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
-        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) |
+                              | EVDMASK(VT220)
 #endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
 #if defined(FEATURE_INTEGRATED_3270_CONSOLE)
-        (0x80000000 >> (SCCB_EVD_TYPE_SYSG-1)) |
+                              | EVDMASK(SYSG)
 #endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
-        (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) ;
+                              | EVDMASK(CPCMD)
+                              ;
 
 
 /*-------------------------------------------------------------------*/
@@ -1596,6 +1603,16 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
 #endif /*defined(FEATURE_SCEDIO)*/
 
+#if defined(_FEATURE_HARDWARE_LOADER)
+        case SCCB_EVD_TYPE_HWL:
+            ARCH_DEP(sclp_hwl_request)(sccb);
+            break;
+
+        case SCCB_EVD_TYPE_SDIAS:
+            ARCH_DEP(sclp_sdias_request)(sccb);
+            break;
+#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+
 #if defined(FEATURE_INTEGRATED_3270_CONSOLE)
         case SCCB_EVD_TYPE_SYSG:
             sclp_sysg_write(sccb);
@@ -1644,13 +1661,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR) && sclp_attn_pending(SCCB_EVD_TYPE_PRIOR))
+        if(SCLP_RECV_ENABLED(PRIOR) && sclp_attn_pending(SCCB_EVD_TYPE_PRIOR))
         {
             sclp_opcmd_event(sccb, SCCB_EVD_TYPE_PRIOR);
             break;
         }
 
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD) && sclp_attn_pending(SCCB_EVD_TYPE_OPCMD))
+        if(SCLP_RECV_ENABLED(OPCMD) && sclp_attn_pending(SCCB_EVD_TYPE_OPCMD))
         {
             sclp_opcmd_event(sccb, SCCB_EVD_TYPE_OPCMD);
             break;
@@ -1658,16 +1675,29 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 
 #if defined(FEATURE_SCEDIO)
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SCEDIO) && sclp_attn_pending(SCCB_EVD_TYPE_SCEDIO))
+        if(SCLP_RECV_ENABLED(SCEDIO) && sclp_attn_pending(SCCB_EVD_TYPE_SCEDIO))
         {
             ARCH_DEP(sclp_scedio_event)(sccb);
             break;
         }
 #endif /*defined(FEATURE_SCEDIO)*/
 
+#if defined(_FEATURE_HARDWARE_LOADER)
+        if(SCLP_RECV_ENABLED(HWL) && sclp_attn_pending(SCCB_EVD_TYPE_HWL))
+        {
+            ARCH_DEP(sclp_hwl_event)(sccb);
+            break;
+        }
+
+        if(SCLP_RECV_ENABLED(SDIAS) && sclp_attn_pending(SCCB_EVD_TYPE_SDIAS))
+        {
+            ARCH_DEP(sclp_sdias_event)(sccb);
+            break;
+        }
+#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 
 #if defined(FEATURE_INTEGRATED_3270_CONSOLE)
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SYSG) && sclp_attn_pending(SCCB_EVD_TYPE_SYSG))
+        if(SCLP_RECV_ENABLED(SYSG) && sclp_attn_pending(SCCB_EVD_TYPE_SYSG))
         {
             sclp_sysg_poll(sccb);
             break;
@@ -1676,14 +1706,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 
 #if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_VT220) && sclp_attn_pending(SCCB_EVD_TYPE_VT220))
+        if(SCLP_RECV_ENABLED(VT220) && sclp_attn_pending(SCCB_EVD_TYPE_VT220))
         {
             sclp_sysa_poll(sccb);
             break;
         }
 #endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
 
-        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ) && sclp_attn_pending(SCCB_EVD_TYPE_SIGQ))
+        if(SCLP_RECV_ENABLED(SIGQ) && sclp_attn_pending(SCCB_EVD_TYPE_SIGQ))
         {
             sclp_sigq_event(sccb);
             break;

@@ -1,4 +1,6 @@
 /* HSCPUFUN.C   (c) Copyright Roger Bowler, 1999-2012                */
+/*              (c) Copyright Jan Jaeger, 1999-2012                  */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              (c) Copyright TurboHercules, SAS 2010-2011           */
 /*              CPU functions                                        */
 /*                                                                   */
@@ -439,6 +441,10 @@ int  rest_loadparm = FALSE;
         rc = load_hmc(strtok_r(cmdline+3+clear," \t", &strtok_str ), sysblk.pcpu, clear);
     else
     {
+#if defined(_FEATURE_SCSI_IPL)
+        DEVBLK *dev;
+#endif /*defined(_FEATURE_SCSI_IPL)*/
+
         *--cdev = '\0';
 
         if (clcss)
@@ -453,16 +459,13 @@ int  rest_loadparm = FALSE;
         else
             lcss = 0;
 
-        if((rc = load_ipl (lcss, devnum, sysblk.pcpu, clear)))
-        {
-            switch (rc)
-            {
-            case HERRCPUOFF:
-                WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-                rc = 5;
-                break;
-            }
-        }
+#if defined(_FEATURE_SCSI_IPL)
+        if((dev = find_device_by_devnum(lcss,devnum))
+          && support_boot(dev) >= 0)
+            rc = load_boot(dev, sysblk.pcpu, clear, 0);
+        else
+#endif /*defined(_FEATURE_SCSI_IPL)*/
+            rc = load_ipl (lcss, devnum, sysblk.pcpu, clear);
     }
 
     RELEASE_INTLOCK(NULL);
@@ -909,6 +912,10 @@ REGS *regs;
 
     /* Store status in 512 byte block at absolute location 0 */
     store_status (regs, 0);
+
+#if defined(_FEATURE_HARDWARE_LOADER)
+    ARCH_DEP(sdias_store_status)(regs);
+#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
