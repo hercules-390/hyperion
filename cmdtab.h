@@ -959,6 +959,37 @@
   "              force     This option will terminate the emulator\n"            \
   "                        immediately.\n"
 
+#define hwldr_cmd_desc          "Specify boot loader filename"
+#define hwldr_cmd_help          \
+                                \
+  "Format: \"hwldr scsiboot [filename]\"  Specifies the bootstrap loader\n"      \
+  "                                     to be used for FCP attached SCSI\n"      \
+  "                                     devices.\n"
+
+#define loaddev_cmd_desc        "Specify bootstrap loader IPL parameters"
+#define loaddev_cmd_help        \
+                                \
+  "Format: \"loaddev [options]\"  Specifies optional parameters to be\n"         \
+  "                             passed to be bootstrap loader.\n"                \
+  "  Valid options are:\n\n"                          \
+  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"    \
+  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"           \
+  "  \"bootprog [number]\"        The boot program number to be loaded\n"        \
+  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"    \
+  "  \"scpdata  [data]\"          Information to be passed to the OS\n"
+
+#define dumpdev_cmd_desc        "Specify bootstrap loader DUMP parameters"
+#define dumpdev_cmd_help        \
+                                \
+  "Format: \"dumpdev [options]\"  Specifies optional parameters to be\n"         \
+  "                             passed to be bootstrap loader.\n"                \
+  "  Valid options are:\n\n"                          \
+  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"    \
+  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"           \
+  "  \"bootprog [number]\"        The boot program number to be loaded\n"        \
+  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"    \
+  "  \"scpdata  [data]\"          Information to be passed to the OS\n"
+
 #define quit_cmd_desc           "Terminate the emulator"
 #define quit_cmd_help           \
                                 \
@@ -1533,6 +1564,11 @@ COMMAND( "scpecho",                 scpecho_cmd,            SYSCMD,             
 COMMAND( "scpimply",                scpimply_cmd,           SYSCMD,             scpimply_cmd_desc,      scpimply_cmd_help   )
 COMMAND( "ssd",                     ssd_cmd,                SYSCMD,             ssd_cmd_desc,           ssd_cmd_help        )
 #endif
+#if defined( _FEATURE_SCSI_IPL )
+COMMAND( "hwldr",                   hwldr_cmd,              SYSCMDNOPER,        hwldr_cmd_desc,         hwldr_cmd_help      )
+COMMAND( "loaddev",                 lddev_cmd,              SYSCMD,             loaddev_cmd_desc,       loaddev_cmd_help    )
+COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             dumpdev_cmd_desc,       dumpdev_cmd_help    )
+#endif
 #if defined( FISH_HANG )
 COMMAND( "FishHangReport",          hang_cmd,               SYSCMDNOPER,        fish_hang_cmd_desc,     NULL                )
 COMMAND( "hangrpt",                 hang_cmd,               SYSCMDNOPER,        hang_cmd_desc,          hang_cmd_help       )
@@ -1554,10 +1590,12 @@ COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        
 COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          rexx_cmd_desc,          rexx_cmd_help       )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#if 0
 #if defined( _MSVC_ )
 COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       dir_cmd_desc,           NULL                )
 #else
 COMMAND( "ls",                      ls_cmd,                 SYSCMDNDIAG8,       ls_cmd_desc,            NULL                )
+#endif
 #endif
 #if defined( OPTION_CAPPING )
 COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )

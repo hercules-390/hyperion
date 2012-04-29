@@ -68,6 +68,7 @@ extern DEVHND cardpch_device_hndinfo;
 extern DEVHND printer_device_hndinfo;
 extern DEVHND tapedev_device_hndinfo;
 extern DEVHND qeth_device_hndinfo;
+extern DEVHND zfcp_device_hndinfo;
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
 CKD_DLL_IMPORT DEVHND ckddasd_device_hndinfo;
 FBA_DLL_IMPORT DEVHND fbadasd_device_hndinfo;

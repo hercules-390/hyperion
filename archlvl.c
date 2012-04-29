@@ -613,7 +613,8 @@ BYTE als =
         set_facility(tb, enable, als );
     else
     if(!strncasecmp("bit",argv[2],3)
-      && sscanf( argv[2]+3, "%d%c", &bitno, &c ) == 1
+      && isdigit(*(argv[2]+3))
+      && sscanf(argv[2]+3, "%d%c", &bitno, &c ) == 1
       && bitno >= 0 && bitno <= STFL_HMAX)
         force_facbit(bitno,enable,als);
     else
@@ -690,6 +691,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
         char    c;
 
             if(!strncasecmp("bit",argv[2],3) 
+              && isdigit(*(argv[2]+3))
               && sscanf(argv[2]+3,"%d%c",&bitno, &c) == 1 
               && bitno >= 0 && bitno <= STFL_HMAX)
             {

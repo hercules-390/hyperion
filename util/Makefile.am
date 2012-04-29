@@ -2,6 +2,7 @@ bin_SCRIPTS = dasdlist bldlvlck
 
 dist_pkgdata_DATA = cckddump.hla awswrite.jcl rawstape.jcl tapeconv.jcl\
                     TMOUNT.txt \
-                    zzsacard.bin awssl-v19g cckdload.hla
+                    zzsacard.bin awssl-v19g cckdload.hla \
+                    scsiboot
 
 EXTRA_DIST = dasdlist  dasdlist.bat bldlvlck

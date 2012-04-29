@@ -227,6 +227,33 @@ typedef struct _CHSC_RSP10 {
     } CHSC_RSP10;
 
 
+typedef struct _CHSC_REQ12 {
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    flags;
+#define CHSC_CI_FLAGS_M         0x40
+#define CHSC_CI_FLAGS_FMT       0x0F
+/*005*/ BYTE    cssid;
+/*006*/ BYTE    ssid;
+#define CHSC_CI_SSID_MASK       0x03
+/*007*/ BYTE    resv007;
+/*008*/ DBLWRD  resv008;
+    } CHSC_REQ12;
+
+
+typedef struct _CHSC_RSP12 {
+/*000*/ HWORD   len1;
+/*002*/ HWORD   resv002;
+/*004*/ FWORD   resv004[6];
+/*01C*/ FWORD   info1;
+/*020*/ FWORD   info2;
+/*024*/ FWORD   info3;
+/*028*/ FWORD   resv028[2];
+/*030*/ FWORD   test;
+/*034*/ FWORD   resv034[551];
+    } CHSC_RSP12;
+
+
 typedef struct _CHSC_RSP24 {
 /*000*/ BYTE    flags;
 /* flags for st qdio sch data */

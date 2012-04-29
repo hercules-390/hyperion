@@ -1068,6 +1068,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    pgid[11];               /* Path Group ID             */
         BYTE    reserved2[4];           /* (pad/align/unused/avail)  */
         U16     fla[8];                 /* Full Link Address Array   */
+        BYTE    chptype[8];             /* Channel Path Type         */
         COND    resumecond;             /* Resume condition          */
         COND    iocond;                 /* I/O active condition      */
         int     iowaiters;              /* Number of I/O waiters     */

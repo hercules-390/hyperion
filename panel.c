@@ -3434,7 +3434,7 @@ FinishShutdown:
                     state = "RED";
 
                     if ( cnt_online > cnt_stopped && cnt_disabled == 0 )
-                        state = "YELLOW";
+                        state = "AMBER";
                     if ( cnt_stopped == 0 && cnt_disabled == 0 )
                         state = "GREEN";
                     set_console_title(state);

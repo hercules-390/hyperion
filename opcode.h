@@ -2965,6 +2965,19 @@ void ARCH_DEP(sclp_scedio_request) (SCCB_HEADER *);
 void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *);
 
 
+/* Functions in module scescsi.c */
+void ARCH_DEP(sclp_hwl_request) (SCCB_HEADER *);
+void ARCH_DEP(sclp_hwl_event) (SCCB_HEADER *);
+void ARCH_DEP(sclp_sdias_request) (SCCB_HEADER *);
+void ARCH_DEP(sclp_sdias_event) (SCCB_HEADER *);
+void ARCH_DEP(sdias_store_status_clear) (REGS *);
+void ARCH_DEP(sdias_store_status) (REGS *);
+int support_boot (DEVBLK *);
+int load_boot (DEVBLK *, int, int, int);
+int hwldr_cmd (int, char **, char *);
+int lddev_cmd (int, char **, char *);
+
+
 /* Functions in module machchk.c */
 int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
     RADR *fsta);

@@ -30,6 +30,43 @@
 
 #if defined(FEATURE_CHSC)
 
+#if 0
+static int ARCH_DEP(chsc_get_conf_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+U16 req_len, rsp_len;
+
+CHSC_REQ12 *chsc_req12 = (CHSC_REQ12 *)(chsc_req);
+CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
+
+    /* Fetch length of request field */
+    FETCH_HW(req_len, chsc_req12->length);
+
+    rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
+
+    memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
+
+    STORE_HW(chsc_rsp12->len1,80);
+    STORE_FW(chsc_rsp12->info1,0x10);
+    STORE_FW(chsc_rsp12->info2,0x10);
+    STORE_FW(chsc_rsp12->info3,0xFF);
+ 
+    STORE_FW(chsc_rsp12->test,0xE3C5E2E3);
+
+    /* Store response length */
+    STORE_HW(chsc_rsp->length,rsp_len);
+
+    /* Store request OK */
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
+
+    /* No reaon code */
+    STORE_FW(chsc_rsp->info,0);
+
+    return 0;
+
+}
+#endif
+
+
 static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
@@ -97,7 +134,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 }
 
 
-#if 1 // ZZTEST
+#if 0
 static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
@@ -210,7 +247,9 @@ U16 req_len, rsp_len;
     CHSC_SB(chsc_rsp10->general_char,41);         /* Adapter Int Fac */
 
     CHSC_SB(chsc_rsp10->chsc_char,1);            /* 0x0002 Supported */
+#if 0
     CHSC_SB(chsc_rsp10->chsc_char,2);            /* 0x0006 Supported */
+#endif
     CHSC_SB(chsc_rsp10->chsc_char,3);            /* 0x0004 Supported */
     CHSC_SB(chsc_rsp10->chsc_char,8);            /* 0x0024 Supported */
 
@@ -436,15 +475,11 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
                 if (dev->allocated
-                  && (dev->pmcw.chpid[0] == chp))
+                  && (dev->pmcw.chpid[0] == chp) 
+                  && dev->chptype[0])
                 {
                     chsc_rsp2->flags  = 0x80;
-// ZZ TEMP SOLUTION WIP
-                    switch(dev->devtype) {
-                        case 0x1731:
-                            chsc_rsp2->chp_type = CHP_TYPE_OSD;
-                            break;
-                    }
+                    chsc_rsp2->chp_type = dev->chptype[0];
 //                  chsc_rsp2->lsn    = 0;
 //                  chsc_rsp2->swla   = 0;
 //                  chsc_rsp2->chla   = 0;
@@ -460,15 +495,11 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
                 if (dev->allocated
-                  && (dev->pmcw.chpid[0] == chp))
+                  && (dev->pmcw.chpid[0] == chp)
+                  && dev->chptype[0])
                 {
                     chsc_rsp2f1->flags  = 0x80;
-// ZZ TEMP SOLUTION WIP
-                    switch(dev->devtype) {
-                        case 0x1731:
-                            chsc_rsp2f1->chp_type = CHP_TYPE_OSD;
-                            break;
-                    }
+                    chsc_rsp2f1->chp_type = dev->chptype[0];
 //                  chsc_rsp2f1->lsn    = 0;
 //                  chsc_rsp2f1->chpp   = 0;
 //                  STORE_HW(chsc_rsp2f1->mdc,0x0000);
@@ -543,7 +574,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             regs->psw.cc = ARCH_DEP(chsc_get_sch_desc) (chsc_req, chsc_rsp);
             break;
 
-#if 1
+#if 0
         case CHSC_REQ_CUDESC:  // 0x0006
             regs->psw.cc = ARCH_DEP(chsc_get_cu_desc) (chsc_req, chsc_rsp);
             break;
@@ -552,6 +583,12 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         case CHSC_REQ_CSSINFO: // 0x0010
             regs->psw.cc = ARCH_DEP(chsc_get_css_info) (regs, chsc_req, chsc_rsp);
             break;
+
+#if 0
+        case 0x0012: // 0x0012
+            regs->psw.cc = ARCH_DEP(chsc_get_conf_info) (chsc_req, chsc_rsp);
+            break;
+#endif
 
 #if defined(_FEATURE_QDIO_THININT)
         case CHSC_REQ_SETSSSI: // 0x0021
