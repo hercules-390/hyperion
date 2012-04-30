@@ -49,8 +49,6 @@ typedef struct _SCSI_BOOT_BK {
 /*174*/ DBLWRD  brlba;                  /* br_lba                    */
 /*17C*/ FWORD   scp_len;                /* Length of SCP Data        */
 /*180*/ FWORD   resv180[65];
-/*284*/ BYTE    scpdata[0];             /* SCPDATA                   */
-/*294*/ BYTE    xml[0];                 /* XML                       */
     } SCSI_BOOT_BK;
 
 
@@ -594,7 +592,7 @@ int scp_len;
         if(scp_len > 256)
             scp_len = 256; // Sanity check
         STORE_FW(sb_bk->scp_len,scp_len);
-        memcpy(sb_bk->scpdata, scsi_lddev_scpdata[ldind], scp_len);
+        memcpy((BYTE*)(sb_bk+1), scsi_lddev_scpdata[ldind], scp_len);
     }
     else
         scp_len = 0;
@@ -606,7 +604,7 @@ int scp_len;
 
     STORE_FW(sb_bk->scp_off,sizeof(SCSI_BOOT_BK) + scp_len - 8); // ZZ:???
 
-    xml = (BYTE*)(sb_bk->scpdata) + scp_len;
+    xml = (BYTE*)(sb_bk+1) + scp_len;
 
     xml += sprintf((char*)xml, "<?xml version=\"1.0\" encoding =\"UTF-8\"?>\n" );
     xml += sprintf((char*)xml, "<eServer_ipl_script version=\"1.0\">\n" );
