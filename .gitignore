@@ -131,6 +131,7 @@
 /hdteq.lo
 /hdtptp.la
 /hdtqeth.la
+/hdtzfcp.la
 /hercifc
 /herclin
 /hercules
@@ -200,6 +201,7 @@
 /s37x.lo
 /s37xmod.lo
 /scedasd.lo
+/scescsi.lo
 /script.lo
 /scsitape.lo
 /service.lo
@@ -233,6 +235,7 @@
 /w32util.lo
 /winbuild
 /xstore.lo
+/zfcp.lo
 
 # /hRexx/
 /hRexx.lo
