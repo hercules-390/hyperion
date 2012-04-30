@@ -3,37 +3,8 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  What object code goes in what module...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.7  2008/12/29 11:03:11  jj
-# Move HMC disk I/O functions to scedasd.c
-#
-# Revision 1.6  2008/12/01 20:28:21  rbowler
-# Add new module losc.c in build process
-#
-# Revision 1.5  2008/05/22 19:25:58  fish
-# Flex FakeTape support
-#
-# Revision 1.4  2008/03/25 11:41:32  fish
-# SCSI TAPE MODS part 1: groundwork: non-functional changes:
-# rename some functions, comments, general restructuring, etc.
-# New source modules awstape.c, omatape.c, hettape.c and
-# tapeccws.c added, but not yet used (all will be used in a future
-# commit though when tapedev.c code is eventually split)
-#
-# Revision 1.3  2008/03/03 22:33:44  rbowler
-# Add new module general3.c for general-instructions-extension facility
-#
-# Revision 1.2  2007/06/02 13:46:42  rbowler
-# PFPO framework
-#
-# DD/MM/YY Description
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
 
@@ -150,6 +121,7 @@ hengine_OBJ = \
     $(O)hRexx_r.obj  \
     $(O)service.obj  \
     $(O)scedasd.obj  \
+    $(O)scescsi.obj  \
     $(O)sie.obj      \
     $(O)sr.obj       \
     $(O)stack.obj    \
@@ -162,29 +134,3 @@ hengine_OBJ = \
     $(O)w32chan.obj  \
     $(O)xstore.obj   \
     $(O)s37x.obj
-
-hmodule_OBJ = \
-    $(O)cardpch.obj  \
-    $(O)cardrdr.obj  \
-    $(O)comm3705.obj \
-    $(O)commadpt.obj \
-    $(O)console.obj  \
-    $(O)ctc_ctci.obj \
-    $(O)ctc_lcs.obj  \
-    $(O)ctc_ptp.obj  \
-    $(O)ctcadpt.obj  \
-    $(O)printer.obj  \
-    $(O)qeth.obj     \
-    $(O)resolve.obj  \
-    $(O)sockdev.obj  \
-    $(O)tuntap.obj   \
-    $(O)w32ctca.obj
-
-hdt3420_OBJ = \
-    $(O)tapedev.obj  \
-    $(O)tapeccws.obj \
-    $(O)awstape.obj  \
-    $(O)faketape.obj  \
-    $(O)hettape.obj  \
-    $(O)omatape.obj  \
-    $(O)scsitape.obj

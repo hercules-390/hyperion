@@ -1874,7 +1874,6 @@ do { \
 #define HHC03935 "%1d:%04X PTP: Accept data for device %s contains IP packet larger than MTU, data dropped"
 #define HHC03936 "%1d:%04X PTP: Accept data contains unknown %s"
 #define HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
-#define HHC03951 "%1d:%04X PTP: %s"
 #define HHC03952 "%1d:%04X PTP: MAC: %s"
 #define HHC03953 "%1d:%04X PTP: IPv4: Drive %s: Guest %s/%s (%s)"
 #define HHC03954 "%1d:%04X PTP: IPv6: Drive %s/%s %s/%s: Guest %s"

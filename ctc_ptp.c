@@ -3514,8 +3514,7 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX0" );
+        mpc_display_description( pDEVBLK, "In HX0" );
     }
 
     // PTPHX0 type 0x01's should only be written when handshaking is being
@@ -3659,8 +3658,7 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX0" );
+        mpc_display_description( pDEVBLK, "In HX0" );
     }
 
     // PTPHX0 type 0x00 should only be written when handshaking is in progress.
@@ -3728,8 +3726,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In HX2" );
+        mpc_display_description( pDEVBLK, "In HX2" );
     }
 
     // Point to the CSVcv following the XID2.
@@ -3980,10 +3977,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out HX0" );
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out HX2" );
+            mpc_display_description( pDEVBLK, "Out HX0" );
+            mpc_display_description( pDEVBLK, "Out HX2" );
         }
 
         // Add PTPHDRs to chain.
@@ -4163,8 +4158,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
         }
 
         // Find the PUS and copy the yTokenCmFilter.
@@ -4220,8 +4214,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
         }
 
         // Find the PUS and copy the yTokenCmConnection.
@@ -4259,8 +4252,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
         }
 
         // Find the PUS and copy the yTokenCmConnection.
@@ -4290,8 +4282,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4103 (CM_DISABLE)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4103 (CM_DISABLE)" );
         }
 
         break;
@@ -4303,8 +4294,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (Issuer) PUK 0x4105 (CM_TAKEDOWN)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4105 (CM_TAKEDOWN)" );
         }
 
         // The guest OS on the y-side has stopped the device
@@ -4319,8 +4309,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
         }
 
         // Find the PUS and copy the yTokenUlpFilter.
@@ -4377,8 +4366,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
@@ -4415,8 +4403,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
@@ -4445,8 +4432,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
         }
 
         break;
@@ -4458,8 +4444,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4103 (ULP_DISABLE)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4103 (ULP_DISABLE)" );
         }
 
         break;
@@ -4471,8 +4456,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0x417E (CmComm) PUK 0x4105 (ULP_TAKEDOWN)" );
+            mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4105 (ULP_TAKEDOWN)" );
         }
 
         // The guest OS on the y-side has stopped the device
@@ -4678,8 +4662,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
     }
 
     return pPTPHDRre;
@@ -4784,8 +4767,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
     }
 
     return pPTPHDRre;
@@ -4890,8 +4872,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
     }
 
     return pPTPHDRre;
@@ -5048,8 +5029,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
     }
 
     return pPTPHDRre;
@@ -5173,8 +5153,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
     }
 
     return pPTPHDRre;
@@ -5298,8 +5277,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
     }
 
     return pPTPHDRre;
@@ -5387,8 +5365,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
     }
 
     return pPTPHDRre;
@@ -5452,8 +5429,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC17E (Issuer)" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC17E (Issuer)" );
         }
 
         break;
@@ -5585,8 +5561,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
         }
 
         // Remember the activation status.
@@ -5647,8 +5622,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
         }
 
         // Remember the activation status.
@@ -5721,8 +5695,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv4" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv4" );
         }
 
         // Remember the activation status.
@@ -5746,8 +5719,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will start IPv6" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv6" );
         }
 
         // Remember the activation status.
@@ -5789,8 +5761,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Display various information, maybe
         if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
         {
-            // HHC03951 "%1d:%04X PTP: %s"
-            WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv4" );
+            mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv4" );
         }
 
         // The y-side is telling us about his IPv4 address, which means
@@ -5892,8 +5863,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) My address IPv6" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv6" );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6050,8 +6020,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv4" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv4" );
             }
 
             // Remember the activation status.
@@ -6075,8 +6044,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Your address IPv6" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv6" );
             }
 
             // Check whether the y-side is telling us about a Link Local address.
@@ -6134,8 +6102,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
             }
 
             // Remember the termination status.
@@ -6169,8 +6136,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
             }
 
             // Remember the termination status.
@@ -6207,8 +6173,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
             }
 
             // Remember the termination status.
@@ -6236,8 +6201,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // Display various information, maybe
             if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
             {
-                // HHC03951 "%1d:%04X PTP: %s"
-                WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
+                mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
             }
 
             // Remember the termination status.
@@ -6359,8 +6323,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
     }
 
     return pPTPHDRre;
@@ -6437,8 +6400,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
     }
 
     return pPTPHDRre;
@@ -6515,8 +6477,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
     }
 
     return pPTPHDRre;
@@ -6594,8 +6555,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
     }
 
     return pPTPHDRre;
@@ -6673,8 +6633,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv4" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv4" );
     }
 
     return pPTPHDRre;
@@ -6759,8 +6718,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) My address IPv6" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv6" );
     }
 
 return pPTPHDRre;
@@ -6839,8 +6797,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
     }
 
     return pPTPHDRre;
@@ -6919,8 +6876,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
     }
 
     return pPTPHDRre;
@@ -6997,8 +6953,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
     }
 
     return pPTPHDRre;
@@ -7075,8 +7030,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
     }
 
     return pPTPHDRre;
@@ -7153,8 +7107,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
     }
 
     return pPTPHDRre;
@@ -7231,8 +7184,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
+        mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
     }
 
     return pPTPHDRre;
@@ -7333,8 +7285,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
 
     // Add PTPHDR to chain.
@@ -7411,8 +7362,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Router solicitation" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Router solicitation" );
     }
 
     // Add PTPHDR to chain.
@@ -7489,8 +7439,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
 
     // Add PTPHDR to chain.
@@ -7578,8 +7527,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
 
     // Add PTPHDR to chain.
@@ -7667,8 +7615,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Display various information, maybe
     if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
     {
-        // HHC03951 "%1d:%04X PTP: %s"
-        WRMSG(HHC03951, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "Out RRH 0x8108 (UlpComm) Group membership report" );
+        mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
 
     // Add PTPHDR to chain.

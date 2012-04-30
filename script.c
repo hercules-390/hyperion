@@ -905,7 +905,15 @@ int     rc;                             /* (work)                    */
             struct timespec ts  = {0,0};  /* (nanosleep arg) */
             U64 i, nsecs        =   0;    /* (nanoseconds)   */
 
+#if defined( OPTION_CONFIG_SYMBOLS )
+            {
+                char *secs = resolve_symbol_string( p+6 );
+                pauseamt = atof( secs );
+                free( secs );
+            }
+#else /* !defined( OPTION_CONFIG_SYMBOLS ) */
             pauseamt = atof( p+6 );
+#endif /* defined( OPTION_CONFIG_SYMBOLS ) */
 
             if (pauseamt < 0.0 || pauseamt > 999.0)
             {
