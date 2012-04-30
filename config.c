@@ -155,7 +155,9 @@ int cpu;
 
         if (storkeys == NULL)
         {
-            logmsg(MSG(HHC01430, "S", "malloc()", strerror(errno)));
+            char buf[64];
+            MSGBUF( buf, "configure_storage( %dMB )", mainsize );
+            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
             return -1;
         }
         else
@@ -263,7 +265,9 @@ int  cpu;
 
         if (xpndstor == NULL)
         {
-            logmsg(MSG(HHC01430, "S", "malloc()", strerror(errno)));
+            char buf[64];
+            MSGBUF( buf, "configure_xstorage( %dMB )", configure_xstorage );
+            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
             return -1;
         }
         else
