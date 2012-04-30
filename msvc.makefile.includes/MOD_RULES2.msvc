@@ -3,23 +3,8 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  Individual hercules modules build rules...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.2  2008/03/25 11:41:32  fish
-# SCSI TAPE MODS part 1: groundwork: non-functional changes:
-# rename some functions, comments, general restructuring, etc.
-# New source modules awstape.c, omatape.c, hettape.c and
-# tapeccws.c added, but not yet used (all will be used in a future
-# commit though when tapedev.c code is eventually split)
-#
-#
-# DD/MM/YY Description
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
 
@@ -92,6 +77,9 @@ $(X)hdtqeth.dll: $(O)qeth.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)hengine.lib $(O
     $(linkdll)
 
 $(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
+    $(linkdll)
+
+$(X)hdtzfcp.dll: $(O)zfcp.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)dyngui.dll: $(O)dyngui.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res

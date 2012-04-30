@@ -49,8 +49,10 @@ typedef struct _SCSI_BOOT_BK {
 /*174*/ DBLWRD  brlba;                  /* br_lba                    */
 /*17C*/ FWORD   scp_len;                /* Length of SCP Data        */
 /*180*/ FWORD   resv180[65];
-/*284*/ BYTE    scpdata[0];             /* SCPDATA                   */
-/*294*/ BYTE    xml[0];                 /* XML                       */
+        union   {
+/*284*/ BYTE    scpdata[FLEXIBLE_ARRAY];/* SCPDATA                   */
+/*294*/ BYTE    xml[FLEXIBLE_ARRAY];    /* XML                       */
+                };
     } SCSI_BOOT_BK;
 
 

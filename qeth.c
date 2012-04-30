@@ -2747,10 +2747,6 @@ END_RESOLVER_SECTION
 
 HDL_REGISTER_SECTION;
 {
-  #if defined( OPTION_W32_CTCI )
-    HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
-    HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
-  #endif
 }
 END_REGISTER_SECTION
 

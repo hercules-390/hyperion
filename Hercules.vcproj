@@ -867,6 +867,18 @@
 							</File>
 						</Filter>
 					</Filter>
+					<Filter
+						Name="zFCP"
+						>
+						<File
+							RelativePath=".\zfcp.c"
+							>
+						</File>
+						<File
+							RelativePath=".\zfcp.h"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="Emulation"
@@ -1188,6 +1200,10 @@
 						</File>
 						<File
 							RelativePath=".\scedasd.c"
+							>
+						</File>
+						<File
+							RelativePath=".\scescsi.c"
 							>
 						</File>
 						<File
@@ -2176,6 +2192,10 @@
 				</File>
 				<File
 					RelativePath=".\util\rawstape.jcl"
+					>
+				</File>
+				<File
+					RelativePath=".\util\scsiboot"
 					>
 				</File>
 				<File
