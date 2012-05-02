@@ -7,65 +7,85 @@
 #
 # --------------------------------------------------------------------------
 #
-#  Check to see if the directories specified by the user
-#  contain the headers for the relative REXX package
+#  Check to see if the directories specified by the user contain the
+#  headers for the relative REXX package.
 #
-#  since the support might be bimodal, no default is assumed...
+#  Since the support might be bimodal, no default is assumed.
 #
-#  if REGINA_REXX_DIR and OBJECT_REXX_DIR are not set.
-#  no rexx support will be generated
+#  If neither 'REGINA_REXX_DIR' nor 'OBJECT_REXX_DIR' are defined,
+#  then support for rexx will NOT be generated.
 #
 #
-#  REXX NOTE
+#                          **  NOTE **
 #
-#  the standard/default OBJECT REXX installation will install everything in
-#  <program files directory>\ooRexx
+#  The standard/default OBJECT REXX installation will install everything in
+#
+#       <program files directory>\ooRexx
+#
 #  and the headers will be located in
-#  <program files directory>\ooRexx\api
 #
-#  the standard/default  REGINA REXX installation will offer to install in
-#  c:\Regina ( very silly IMNSHO )
-#  for simmetry I rather suggest to use the OBJECT REXX approach !
-#  when regina asks, instead of hitting enter, use
-#  <program files directory>\Regina
-#  and the headers will be located in
-#  <program files directory>\Regina\include
+#       <program files directory>\ooRexx\api
 #
-#  both installations will update the PATH environment variable
-#  make sure that the object rexx path comes first...
-#  i' ll let the happy crowd find why by him/her-self
+#  The standard/default REGINA REXX installation will offer to install in
 #
-#  if somebody has the skills to use a non standard installation
-#  he/she should be able to find out everything else him/her-self
+#       C:\Regina
 #
-# $Id: $
+#  Which is very silly IMNSHO. Rather, for symmetry, I suggest using the
+#  OBJECT REXX approach instead: when Regina asks for a install directory,
+#  instead of hitting enter to accept its default, OVERRIDE the directory
+#  to specify the following directory instead:
+#
+#       <program files directory>\Regina
+#
+#  Then the headers will be located in:
+#
+#       <program files directory>\Regina\include
+#
+#  NOTE: Both installations will update the PATH environment variable,
+#  so make sure that the OBJECT REXX path comes first. I'll let the
+#  happy crowd discover the reason why by himself/herself. :)
+#
+#  If somebody has the skills to use a non standard installation, then
+#  he/she should be able to find out everything else by himself/herself.
 #
 # ***************************************************************************
 
-
 !IFDEF OBJECT_REXX_DIR
-OBJECT_REXX_HEADER1  = $(OBJECT_REXX_DIR)\rexx.h
-OBJECT_REXX_HEADER2  = $(OBJECT_REXX_DIR)\oorexxapi.h
+
+OBJECT_REXX_HDR_DIR = $(OBJECT_REXX_DIR)\api
+OBJECT_REXX_HEADER1 = $(OBJECT_REXX_HDR_DIR)\rexx.h
+OBJECT_REXX_HEADER2 = $(OBJECT_REXX_HDR_DIR)\oorexxapi.h
 
 !IF EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER2)")
 !MESSAGE OBJECT REXX support will be included from "$(OBJECT_REXX_DIR)"
 !ELSE
-!MESSAGE OBJECT REXX headers not found, support will not be generated
+!MESSAGE OBJECT REXX headers not found, support will not be generated.
+!UNDEF OBJECT_REXX_DIR
+!UNDEF OBJECT_REXX_HDR_DIR
+!UNDEF OBJECT_REXX_HEADER1
+!UNDEF OBJECT_REXX_HEADER2
 !ENDIF
 
+!ENDIF
+
+# --------------------------------------------------------------------------
 
 !IFDEF REGINA_REXX_DIR
-REGINA_REXX_HEADER1  = $(REGINA_REXX_DIR)\rexxsaa.h
+
+REGINA_REXX_HDR_DIR = $(REGINA_REXX_DIR)\include
+REGINA_REXX_HEADER1 = $(REGINA_REXX_HDR_DIR)\rexxsaa.h
 
 !IF EXIST("$(REGINA_REXX_HEADER1)")
 !MESSAGE REGINA REXX support will be included from "$(REGINA_REXX_DIR)"
 !ELSE
-!MESSAGE REGINA REXX headers not found, support will not be generated
+!MESSAGE REGINA REXX headers not found, support will not be generated.
+!UNDEF REGINA_REXX_DIR
+!UNDEF REGINA_REXX_HDR_DIR
+!UNDEF REGINA_REXX_HEADER1
 !ENDIF
 
 !ENDIF
 
-
-!ENDIF
+# --------------------------------------------------------------------------
 
 # End of Rexx Dirs for REXX support

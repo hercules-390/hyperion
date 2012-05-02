@@ -22,6 +22,7 @@ _RETC_ = 0;\
 } while (0)
 
 #define INCL_REXXSAA
+
 #if defined(HAVE_REGINA_REXXSAA_H)
  #include "regina/rexxsaa.h"
 #else

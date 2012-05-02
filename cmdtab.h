@@ -1049,7 +1049,7 @@
   "Errp[refix]        - set the prefix for trace/error messages\n"               \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
-#else /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#else /* !defined(ENABLE_OBJECT_REXX) || !defined(ENABLE_REGINA_REXX) */
 #define rexx_cmd_desc           "display Rexx interpreter settings"
 #define rexx_cmd_help           \
                                 \

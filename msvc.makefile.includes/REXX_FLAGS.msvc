@@ -13,36 +13,31 @@
 
 !IFDEF OBJECT_REXX_DIR
 
-OBJECT_REXX_HEADER1 = $(OBJECT_REXX_DIR)\rexx.h
-OBJECT_REXX_HEADER2 = $(OBJECT_REXX_DIR)\oorexxapi.h
-
-!IF EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER2)")
-
 oorexx_flags =
-oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_DIR)"
+oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_HDR_DIR)"
 oorexx_flags = $(oorexx_flags) /D HAVE_REXX_H
 oorexx_flags = $(oorexx_flags) /D HAVE_OOREXXAPI_H
+
 !MESSAGE OBJECT REXX FLAGS $(oorexx_flags)
+
 cflags = $(cflags) $(oorexx_flags)
 
 !ENDIF
 
-!ENDIF
+# --------------------------------------------------------------------------
 
 !IFDEF REGINA_REXX_DIR
 
-REGINA_REXX_HEADER1 = $(REGINA_REXX_DIR)\rexxsaa.h
-
-!IF EXISTS("$(REGINA_REXX_HEADER1)")
-
 regina_flags =
-regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_DIR)"
+regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_HDR_DIR)"
 regina_flags = $(regina_flags) /D HAVE_REXXSAA_H
+
 !MESSAGE REGINA REXX FLAGS $(regina_flags)
+
 cflags = $(cflags) $(regina_flags)
 
 !ENDIF
 
-!ENDIF
+# --------------------------------------------------------------------------
 
 # End of Rexx Flags for REXX support

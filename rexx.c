@@ -16,13 +16,13 @@
 #define RX_STRONGTYPING
 
 #if defined( _MSVC_ )
-#include "rexxsaa.h"
+  #include "rexxsaa.h"
 #else
-#if defined(HAVE_REGINA_REXXSAA_H)
-#include <regina/rexxsaa.h>
-#else
-#include <rexxsaa.h>
-#endif
+  #if defined(HAVE_REGINA_REXXSAA_H)
+    #include <regina/rexxsaa.h>
+  #else
+    #include <rexxsaa.h>
+  #endif
 #endif
 
 #define hSubcom  "HERCULES"

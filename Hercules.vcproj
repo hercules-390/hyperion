@@ -1067,6 +1067,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hRexx.c"
+							>
+						</File>
+						<File
+							RelativePath=".\hRexx_o.c"
+							>
+						</File>
+						<File
+							RelativePath=".\hRexx_r.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hsccmd.c"
 							>
 						</File>
@@ -1444,6 +1456,10 @@
 						</File>
 						<File
 							RelativePath=".\hostopts.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hRexx.h"
 							>
 						</File>
 						<File
@@ -2069,7 +2085,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\msvc.makefile.includes\REXX_DIR.msvc"
+							RelativePath=".\msvc.makefile.includes\REXX_DIRS.msvc"
 							>
 						</File>
 						<File
