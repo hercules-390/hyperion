@@ -38,26 +38,41 @@
   #endif
 #endif
 
-struct dirent {
-        long            d_ino;
-        char            d_name[FILENAME_MAX + 1];
+struct dirent
+{
+    long    d_ino;
+    char    d_name[FILENAME_MAX + 1];
 };
 
-typedef unsigned __int32 in_addr_t;
-typedef unsigned char   u_char;
-typedef unsigned int    u_int;
-typedef unsigned long   u_long;
-typedef unsigned __int8  u_int8_t;
-typedef unsigned __int16 u_int16_t;
-typedef unsigned __int32 u_int32_t;
-typedef unsigned __int64 u_int64_t;
-typedef signed __int8   int8_t;
-typedef signed __int16  int16_t;
-typedef signed __int32  int32_t;
-typedef signed __int64  int64_t;
-typedef int             ssize_t;
-typedef int             pid_t;
-typedef int             mode_t;
+typedef unsigned char       u_char;
+typedef unsigned int        u_int;
+typedef unsigned long       u_long;
+
+typedef unsigned __int8     u_int8_t;
+typedef   signed __int8       int8_t;
+
+typedef unsigned __int16    u_int16_t;
+typedef   signed __int16      int16_t;
+
+typedef unsigned __int32    u_int32_t;
+typedef   signed __int32      int32_t;
+
+typedef unsigned __int64    u_int64_t;
+typedef   signed __int64      int64_t;
+
+typedef   int32_t           pid_t;
+typedef   int32_t           mode_t;
+typedef u_int32_t           in_addr_t;
+
+#if defined( _WIN64 )
+  #define  SIZEOF_INT_P     8
+  #define  SIZEOF_SIZE_T    8
+  typedef  int64_t          ssize_t;
+#else
+  #define  SIZEOF_INT_P     4
+  #define  SIZEOF_SIZE_T    4
+  typedef  int32_t          ssize_t;
+#endif
 
 #include <io.h>
 #include <share.h>
@@ -172,14 +187,6 @@ typedef int             mode_t;
       // extern __declspec(dllimport)
   #include PCRE_INCNAME                 // (passed by makefile)
   #define  OPTION_HAO                   // Hercules Automatic Operator
-#endif
-
-#if defined( _WIN64 )
-  #define  SIZEOF_INT_P       8
-  #define  SIZEOF_SIZE_T      8
-#else
-  #define  SIZEOF_INT_P       4
-  #define  SIZEOF_SIZE_T      4
 #endif
 
 #endif /*!defined(_HERCWIND_H)*/
