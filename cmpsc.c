@@ -14,6 +14,12 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
+/* Implemented copyrighted features                                           */
+/*   - Expanding index symbol caching                                         */
+/*   - Compression dead end elimination                                       */
+/*   - 8 index symbol fetching                                                */
+/*   - 8 index symbol store                                                   */
+/*                                                                            */
 /*                              (c) Copyright Bernard van der Helm, 2000-2012 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
