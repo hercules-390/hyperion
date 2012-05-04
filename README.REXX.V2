@@ -134,8 +134,14 @@ HHC17504I REXX(<package name>) Exec/Script '<script name>' RetValue'0'
 MSGP[REFIX] a <string>  up to 9 chars ( no blanks allowed ) / reset
 ERRP[REFIX]
 
-I guess that no further details are needed
+-- define the argument passing mode to the invoked script
+see the hbasics example in the script directory
+and read the rexx documentation - no reason to retype the manuals :-)
 
+MODE    com[mand]
+        sub[routine] ( support arg() construct )
+
+I guess that no further details are needed
 
 
 for each command issued at the end a status of the rexx interface is displayed
@@ -153,6 +159,7 @@ HHC17500I REXX(ooRexx) Resolver  : (ON)
 HHC17500I REXX(ooRexx) Msg Level : 0
 HHC17500I REXX(ooRexx) Msg Prefix: (OFF)
 HHC17500I REXX(ooRexx) Err Prefix: (OFF)
+HHC17500I REXX(ooRexx) Mode      : (Command)
 HHC17500I REXX(ooRexx) REXX-ooRexx_4.2.0(MT) 6.04 21 Mar 2012
 HHC17500I REXX(ooRexx) MACOSX FUNCTION Instore
 
@@ -164,6 +171,7 @@ HHC17500I REXX(Regina) Resolver  : (ON)
 HHC17500I REXX(Regina) Msg Level : 0
 HHC17500I REXX(Regina) Msg Prefix: (OFF)
 HHC17500I REXX(Regina) Err Prefix: (OFF)
+HHC17500I REXX(Regina) Mode      : (Command)
 HHC17500I REXX(Regina) REXX-Regina_3.6(MT) 5.00 31 Dec 2011
 HHC17500I REXX(Regina) UNIX FUNCTION Instore
 
@@ -177,6 +185,7 @@ HHC17500I REXX() Resolver  : (ON)
 HHC17500I REXX() Msg Level : 0
 HHC17500I REXX() Msg Prefix: (OFF)
 HHC17500I REXX() Err Prefix: (OFF)
+HHC17500I REXX() Mode      : (Command)
 HHC17521I REXX() Support not started/enabled
 
 
@@ -187,7 +196,6 @@ REXX stop/disable
 
 REXX start/enable  without any operands will enable the default Rexx interpreter
 and as expected specifyng oorexx/regina will override the default
-
 
 NOTE the start/stop command are not available if hercules has been built with just
 one package available
@@ -210,6 +218,7 @@ wher to find the rexx scripts
 
 HREXX_EXTENSIONS=<a  well formed extensions list >
 
+HREXX_MODE=command/subroutine
 
 when issuing a
 REXX <some option> reset
