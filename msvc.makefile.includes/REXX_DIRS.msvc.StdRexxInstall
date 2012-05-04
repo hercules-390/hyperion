@@ -80,7 +80,7 @@ REGINA_REXX_HDR_DIR = $(REGINA_LANG_DIR)\include
 REGINA_REXX_HEADER1 = $(REGINA_REXX_HDR_DIR)\rexxsaa.h
 
 !IF EXIST("$(REGINA_REXX_HEADER1)")
-!MESSAGE REGINA REXX support will be included from "$(REGINA_REXX_DIR)"
+!MESSAGE REGINA REXX support will be included from "$(REGINA_LANG_DIR)"
 !ELSE
 !MESSAGE REGINA REXX headers not found, support will not be generated.
 !UNDEF REGINA_REXX_HDR_DIR
