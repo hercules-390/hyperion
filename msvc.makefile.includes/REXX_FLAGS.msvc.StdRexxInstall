@@ -1,0 +1,50 @@
+# ***************************************************************************
+#     REXX_FLAGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Enrico Sorichetti, 2012
+#
+# based on the previous REXX_FLAGS.msvc (c) Copyright Roger Bowler, 2010-2011
+#
+# --------------------------------------------------------------------------
+#
+#   Set compiler and linker flags for REXX support
+#
+# ***************************************************************************
+
+# changed to use the environment variables provides by the <REXX> installers
+# which point to the <base> install directory of rexx packages 
+
+# changed the names and deleted the relevant undefs
+
+# using the <include> directory name as indicator
+
+!IFDEF OBJECT_REXX_HDR_DIR
+
+oorexx_flags =
+oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_HDR_DIR)"
+oorexx_flags = $(oorexx_flags) /D HAVE_REXX_H
+oorexx_flags = $(oorexx_flags) /D HAVE_OOREXXAPI_H
+
+!MESSAGE OBJECT REXX FLAGS $(oorexx_flags)
+
+cflags = $(cflags) $(oorexx_flags)
+
+!ENDIF
+
+# --------------------------------------------------------------------------
+
+!IFDEF REGINA_REXX_HDR_DIR
+
+regina_flags =
+regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_HDR_DIR)"
+regina_flags = $(regina_flags) /D HAVE_REXXSAA_H
+
+!MESSAGE REGINA REXX FLAGS $(regina_flags)
+
+cflags = $(cflags) $(regina_flags)
+
+!ENDIF
+
+# --------------------------------------------------------------------------
+
+# End of Rexx Flags for REXX support
