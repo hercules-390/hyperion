@@ -11,7 +11,7 @@
 #
 # ***************************************************************************
 
-!IFDEF OBJECT_REXX_DIR
+!IFDEF OBJECT_REXX_HDR_DIR
 
 oorexx_flags =
 oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_HDR_DIR)"
@@ -26,7 +26,7 @@ cflags = $(cflags) $(oorexx_flags)
 
 # --------------------------------------------------------------------------
 
-!IFDEF REGINA_REXX_DIR
+!IFDEF REGINA_REXX_HDR_DIR
 
 regina_flags =
 regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_HDR_DIR)"
