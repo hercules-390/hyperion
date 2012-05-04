@@ -2879,6 +2879,50 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="scripts"
+				>
+				<File
+					RelativePath=".\scripts\hbasic1.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hbasic2.rex"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hbasic3.cmd"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hbasic4.rx"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hbasic5.ext1"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hbasics"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hcommand.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hexecio.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hlinein.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\scripts\hrecurs.rexx"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
