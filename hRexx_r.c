@@ -8,21 +8,18 @@
 /*  inspired by the previous Rexx implementation by Jan Jaeger       */
 
 #include "hstdinc.h"
-#define _HENGINE_DLL_
-#include "hercules.h"
 
 #ifndef _HREXX_R_C_
 #define _HREXX_R_C_
 
 #if defined(ENABLE_REGINA_REXX)
 
-#define LOG_CAPTURE( _RETC_ , _RESP_, _FCNM_, _BUFF_) do { \
-_RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
-_RETC_ = 0;\
-} while (0)
+#define _HENGINE_DLL_
+#include "hercules.h"
+
+#include "hRexx.h"
 
 #define INCL_REXXSAA
-
 #if defined(HAVE_REGINA_REXXSAA_H)
  #include "regina/rexxsaa.h"
 #else
@@ -30,8 +27,6 @@ _RETC_ = 0;\
 #endif
 
 #define RXAPI_MEMFAIL   1002
-
-#include "hRexx.h"
 
 extern void *hRexxLibHandle;        /* Library handle */
 extern void *hRexxApiLibHandle;     /* Api Library handle */
@@ -49,6 +44,7 @@ extern int (*RexxDynamicLoader)();
 extern int (*RexxRegisterHandlers)();
 extern int (*RexxExecCmd)();
 extern int (*RexxExecInstoreCmd)();
+extern int (*RexxExecSub)();
 
 typedef APIRET APIENTRY PFNREXXSTART( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING );
 typedef APIRET APIENTRY PFNREXXREGISTERSUBCOMEXE( PCSZ, PFN, PUCHAR);
@@ -413,7 +409,7 @@ int rc=0;
 }
 
 /*-------------------------------------------------------------------*/
-/* exec Command - execute a rexx script ( regina rexx )              */
+/* exec Command - execute a rexx script (regina rexx)              */
 /*-------------------------------------------------------------------*/
 int ReginaRexxExecCmd(char *Command, char *Args, int argc, char *argv[] )
 {
@@ -478,7 +474,7 @@ RXSTRING       RetValue;
 }
 
 /*-------------------------------------------------------------------*/
-/* exec Command - execute an Instore rexx script ( regina rexx )     */
+/* exec Command - execute an Instore rexx script (regina rexx)     */
 /*-------------------------------------------------------------------*/
 int ReginaRexxExecInstoreCmd(char *Command, char *Args,
                             short RetRC, char *Result )
@@ -543,5 +539,69 @@ RXSTRING       RetValue;
     return rc;
 
 }
+
+/*-------------------------------------------------------------------*/
+/* exec Command - execute a rexx script (regina rexx) AS SUBROUTINE  */
+/*-------------------------------------------------------------------*/
+int ReginaRexxExecSub(char *Command, char *Args, int argc, char *argv[] )
+{
+int   iarg ;
+int   rc;
+short RetRC;
+long  ArgCount;
+RXSTRING       wArgs[MAX_ARGS_TO_REXXSTART];
+RXSYSEXIT      ExitList[2];
+RXSTRING       RetValue;
+
+    UNREFERENCED(argc);
+
+    if ( (*RexxRegisterHandlers)() != 0 )
+        return -1;
+
+    for (ArgCount=0, iarg=2;
+         ArgCount < MAX_ARGS_TO_REXXSTART && iarg < argc;
+         ArgCount++, iarg++)
+        MAKERXSTRING( wArgs[ArgCount], argv[iarg], strlen( argv[iarg] ));
+
+    ExitList[0].sysexit_name = hSIOExit;
+    ExitList[0].sysexit_code = RXSIO;
+    ExitList[1].sysexit_code = RXENDLST;
+
+    RetValue.strptr = NULL;       /* initialize return-pointer to empty */
+    RetValue.strlength = 0;       /* initialize return-length to zero   */
+
+    rc= (*hRexxStart)( ArgCount,                     /* number of arguments   */
+                       wArgs,                        /* array of arguments    */
+                       Command,                      /* name of Rexx file     */
+                       NULL,                         /* No Instore used       */
+                       hSubcom,                      /* Command env. name     */
+                       RXSUBROUTINE,                 /* Code for how invoked  */
+                       ExitList,                     /* EXITs on this call    */
+                       &RetRC,                       /* converted return code */
+                       &RetValue);                   /* Rexx program output   */
+
+    if ( rc !=  0 )
+    {
+        WRMSG( HHC17502, "E", RexxPackage, RexxPackage, rc);
+    }
+    else
+    {
+        if ( MessageLevel > 0)
+        {
+            WRMSG( HHC17503, "I", RexxPackage, argv[1], RetRC);
+            if (RetValue.strptr != NULL)
+            {
+                WRMSG( HHC17504, "I", RexxPackage, argv[1], RetValue.strptr);
+            }
+        }
+        if (RetValue.strptr != NULL)
+        {
+            (*hRexxFreeMemory)(RetValue.strptr);
+        }
+
+    }
+    return rc;
+}
+
 #endif /* defined(ENABLE_REGINA_REXX) */
 #endif /* #ifndef _HREXX_R_C_  */

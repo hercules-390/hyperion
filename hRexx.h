@@ -10,6 +10,10 @@
 #ifndef _HREXX_H_
 #define _HREXX_H_
 
+#ifndef MAX_ARGS_TO_REXXSTART
+#define MAX_ARGS_TO_REXXSTART   32
+#endif
+
 #ifdef  _HREXX_C_
 #define _HREXX_EXTERN
 #else
@@ -61,6 +65,7 @@
 #define REXX_VARIABLE_POOL     "RexxVariablePool"
 
 #if defined ( _MSVC_ )
+
 #define HDLOPEN( _LIBHND_, _LIBNAM_ , _LIBPAR_ ) do {\
     _LIBHND_  = LoadLibrary( ( _LIBNAM_ ) );\
     if (! ( _LIBHND_ )  ) { \
@@ -68,6 +73,7 @@
         return -1; \
     } \
 } while (0)
+
 #define HDLCLOSE( _LIBHND_) do {\
     if ( FreeLibrary( ( _LIBHND_ ) ) == 0 ) { \
         WRMSG( HHC17532, "E", RexxPackage, ( _LIBHND_ ) ) ; \
@@ -75,6 +81,7 @@
     } \
     ( _LIBHND_ ) = NULL; \
 } while (0)
+
 #define HDLSYM(_SYMHND_, _LIBHND_, _SYMNAM_ ) do {\
     ( _SYMHND_ ) = (void *) GetProcAddress( ( _LIBHND_ ), ( _SYMNAM_ ) ) ; \
     if (! ( _SYMHND_ )  ) { \
@@ -84,6 +91,11 @@
 } while (0)
 
 #else
+
+#if !defined ( OPTION_DYNAMIC_LOAD )
+#include <dlfcn.h>
+#endif
+
 #define HDLOPEN( _LIBHND_, _LIBNAM_, _LIBPAR_ ) do {\
     ( _LIBHND_ )  = dlopen( ( _LIBNAM_ ), ( _LIBPAR_ ) );\
     if (! ( _LIBHND_ )  ) { \
@@ -91,6 +103,7 @@
         return -1; \
     } \
 } while (0)
+
 #define HDLCLOSE( _LIBHND_) do {\
     if ( dlclose( ( _LIBHND_ ) ) != 0 ) { \
         WRMSG( HHC17530, "E", RexxPackage, dlerror() ) ; \
@@ -98,6 +111,7 @@
     } \
     ( _LIBHND_ ) = NULL; \
 } while (0)
+
 #define HDLSYM(_SYMHND_, _LIBNAM_, _SYMNAM_ ) do {\
     ( _SYMHND_ )  = dlsym( ( _LIBNAM_ ), ( _SYMNAM_ ) );\
     if (! ( _SYMHND_ ) ) { \
@@ -108,6 +122,10 @@
 
 #endif
 
+#define LOG_CAPTURE( _RETC_ , _RESP_, _FCNM_, _BUFF_) do { \
+_RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
+_RETC_ = 0;\
+} while (0)
 
 #ifndef _HREXX_TRIM_C
 #define _HREXX_TRIM_C

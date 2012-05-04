@@ -413,9 +413,13 @@
 #define exec_cmd_desc           "Execute a Rexx script"
 #define exec_cmd_help           \
                                 \
-  "Format: \"exec rexx_exec [args...]\" where 'rexx_exec' is the name of\n"      \
-  "the Rexx script, and 'args' are arguments (separated by spaces) to be\n"      \
-  "passed to the script.\n"
+  "Format: \"exec [mode] rexx_exec [args...]\" where 'rexx_exec' \n"             \
+  "is the name of the Rexx script, \n"                                           \
+  "and 'args' are arguments (separated by spaces) to be passed to the script.\n" \
+  "the arguments passing style is determined by the REXX Mode settings\n"        \
+  "it can be overridden for the current exec invocation specifying the mode\n"   \
+  "as ... \"exec com rexx_exec [args...]\" for command style arguments\n"        \
+  "or ... \"exec sub rexx_exec [args...]\" for subroutine style arguments\n"
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
@@ -1047,6 +1051,8 @@
   "Msgl[evel]         - 0/1 disable/enable HHC17503I and HHC17504I messages \n"  \
   "Msgp[refix]        - set the prefix for normal messages\n"                    \
   "Errp[refix]        - set the prefix for trace/error messages\n"               \
+  "Mode               - define the argument passing style\n"                     \
+  "                   - command/subroutine\n"                                    \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
 #else /* !defined(ENABLE_OBJECT_REXX) || !defined(ENABLE_REGINA_REXX) */
@@ -1067,6 +1073,8 @@
   "Msgl[evel]         - 0/1 disable/enable HHC17503I and HHC17504I messages \n"  \
   "Msgp[refix]        - set the prefix for normal messages\n"                    \
   "Errp[refix]        - set the prefix for trace/error messages\n"               \
+  "Mode               - define the argument passing style\n"                     \
+  "                   - command/subroutine\n"                                    \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
 #endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
