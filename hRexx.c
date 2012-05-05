@@ -8,11 +8,12 @@
 /*  inspired by the previous Rexx implementation by Jan Jaeger       */
 
 #include "hstdinc.h"
-#define _HENGINE_DLL_
-#include "hercules.h"
 
 #ifndef _HREXX_C_
 #define _HREXX_C_
+
+#define _HENGINE_DLL_
+#include "hercules.h"
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
@@ -125,34 +126,39 @@ int (*RexxExecSub)() = NULL;
 
 #endif
 
-int   PathsInitialized = FALSE;
-int   useRexxPath = TRUE;
-char *RexxPath = NULL;
-char *RexxPathArray[32];
-int   RexxPathCount = 0;
-int   useSysPath = TRUE;
-char *SysPath = NULL;
-char *SysPathArray[32];
-int   SysPathCount = 0;
+int    PathsInitialized = FALSE;
 
-int   ExtensionsInitialized = FALSE;
-char *Extensions = NULL;
-char *ExtensionsArray[32];
-int   ExtensionsCount = 0;
+int    useRexxPath = TRUE;
+char  *RexxPath = NULL;
+char **RexxPathArray=NULL;
+int    RexxPathMax = 0;
+int    RexxPathCount = 0;
 
-int   OptionsInitialized = FALSE;
-int   useResolver = TRUE;
-int   MessageLevel = 0;
-char *MessagePrefix = NULL;
-char *ErrorPrefix = NULL;
+int    useSysPath = TRUE;
+char  *SysPath = NULL;
+char **SysPathArray=NULL;
+int    SysPathMax = 0;
+int    SysPathCount = 0;
+
+int    ExtensionsInitialized = FALSE;
+char  *Extensions = NULL;
+char **ExtensionsArray=NULL;
+int    ExtensionsMax = 0;
+int    ExtensionsCount = 0;
+
+int    OptionsInitialized = FALSE;
+int    useResolver = TRUE;
+int    MessageLevel = 0;
+char  *MessagePrefix = NULL;
+char  *ErrorPrefix = NULL;
+
 #define _COMMAND_ 1
 #define _SUBROUTINE_ 2
-int   RexxMode = _COMMAND_ ;
+int    RexxMode = _COMMAND_ ;
 
 #define _ENABLED_ 0
 #define _DISABLED_ 1
-int   RexxStatus = _ENABLED_ ;
-
+int    RexxStatus = _ENABLED_ ;
 
 /*-------------------------------------------------------------------*/
 /* rexx Command - manage the Rexx environment                        */
@@ -640,6 +646,8 @@ Enabl_Rexx_Loaded:
     if ( !PathsInitialized )
         InitializePaths(NULL);
     strcpy(Result, "Rexx Path : " );
+    sprintf(temp,"Paths(%d) ",RexxPathCount);
+    strcat(Result,temp);
     for (i=0; i<RexxPathCount; i++)
     {
         strcat(Result,RexxPathArray[i]);
@@ -647,13 +655,14 @@ Enabl_Rexx_Loaded:
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result, "Sys Path  : ");
-    strcat(Result, useSysPath ? "(ON)" : "(OFF)" );
+    MSGBUF( Result, "Sys Path  : Paths(%d) %s ", SysPathCount, useSysPath ? "(ON)" : "(OFF)");
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
     if ( !ExtensionsInitialized )
         InitializeExtensions(NULL);
     strcpy(Result, "Extensions: ");
+    sprintf(temp,"Extns(%d) ",ExtensionsCount);
+    strcat(Result,temp);
     for (i=0; i<ExtensionsCount; i++)
     {
         strcat(Result, ExtensionsArray[i]);
@@ -664,25 +673,20 @@ Enabl_Rexx_Loaded:
     if ( !OptionsInitialized )
         InitializeOptions();
 
-    strcpy(Result, "Resolver  : ");
-    strcat(Result, useResolver ? "(ON)" : "(OFF)" );
+    MSGBUF( Result, "Resolver  : %s", useResolver ? "(ON)" : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result, "Msg Level : ");
-    sprintf(temp,"%d",MessageLevel);
-    strcat(Result,temp);
+    MSGBUF( Result, "Msg Level : %d", MessageLevel);
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result, "Msg Prefix: ");
-    strcat(Result, MessagePrefix ? MessagePrefix : "(OFF)" );
-        WRMSG( HHC17500, "I", RexxPackage,Result);
-
-    strcpy(Result, "Err Prefix: ");
-    strcat(Result, ErrorPrefix ? ErrorPrefix : "(OFF)" );
+    MSGBUF( Result, "Msg Prefix: %s", MessagePrefix ? MessagePrefix : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    strcpy(Result, "Mode      : ");
-    strcat(Result, ( RexxMode == _COMMAND_ ) ? "(Command)" : "(Subroutine)" );
+    MSGBUF( Result, "Err Prefix: %s", ErrorPrefix ? ErrorPrefix : "(OFF)" );
+    WRMSG( HHC17500, "I", RexxPackage,Result);
+
+    MSGBUF( Result, "Mode      : %s",
+            ( RexxMode == _COMMAND_ ) ? "(Command)" : "(Subroutine)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
@@ -1008,6 +1012,15 @@ void InitializePaths(char * wPath)
 {
 char *ptr;
 char *envvar;
+
+    if ( RexxPathArray )
+    {
+        free(RexxPathArray) ;
+        RexxPathArray = NULL;
+        RexxPathMax = 0;
+        RexxPathCount = 0;
+    }
+
     if ( wPath )
     {
         RexxPath = strdup(wPath);
@@ -1028,19 +1041,30 @@ char *envvar;
 
     if ( RexxPath )
     {
+        RexxPathMax = tkcount(RexxPath) + 8 ;
+        RexxPathArray = malloc(RexxPathMax * sizeof(char*));
+
         for (RexxPathCount = 0, ptr = strtok(RexxPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
         {
             RexxPathArray[RexxPathCount] = ptr;
             RexxPathCount++;
         }
     }
-    else
+
+    if ( SysPathArray )
     {
-        RexxPathCount = 0 ;
+        free(SysPathArray) ;
+        SysPathArray = NULL;
+        SysPathMax = 0;
+        SysPathCount = 0;
     }
 
     envvar = getenv("PATH");
     SysPath = strdup(envvar);
+
+    SysPathMax = tkcount(SysPath) + 8 ;
+    SysPathArray = malloc(SysPathMax * sizeof(char*));
+
     for (SysPathCount= 0,ptr = strtok(SysPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
     {
         SysPathArray[SysPathCount] = ptr;
@@ -1055,6 +1079,14 @@ void InitializeExtensions(char * wExtns)
 {
 char *ptr;
 char *envvar;
+
+    if ( ExtensionsArray )
+    {
+        free(ExtensionsArray) ;
+        ExtensionsArray = NULL;
+        ExtensionsMax = 0;
+        ExtensionsCount = 0;
+    }
 
     if ( wExtns )
     {
@@ -1074,6 +1106,9 @@ char *envvar;
         else
             Extensions = strdup(EXTENSIONS);
     }
+
+    ExtensionsMax = tkcount(Extensions) + 8;
+    ExtensionsArray = malloc(ExtensionsMax * sizeof(char*));
 
     ExtensionsArray[0] = "";
     ExtensionsCount = 1 ;

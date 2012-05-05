@@ -10,6 +10,24 @@
 #ifndef _HREXX_H_
 #define _HREXX_H_
 
+#if defined(PATH_MAX)
+# define MAXIMUM_PATH_LENGTH PATH_MAX + 1
+#elif defined(_POSIX_PATH_MAX)
+# define MAXIMUM_PATH_LENGTH _POSIX_PATH_MAX + 1
+#else
+# define MAXIMUM_PATH_LENGTH
+#endif
+
+#if defined(FILENAME_MAX)
+# define MAXIMUM_FILENAME_LENGTH FILENAME_MAX + 1
+#elif defined(_MAX_FNAME)
+# define MAXIMUM_FILENAME_LENGTH _MAX_FNAME + 1
+#elif defined(_POSIX_NAME_MAX)
+# define MAXIMUM_FILENAME_LENGTH _POSIX_NAME_MAX + 1
+#else
+# define MAXIMUM_FILENAME_LENGTH 256
+#endif
+
 #ifndef MAX_ARGS_TO_REXXSTART
 #define MAX_ARGS_TO_REXXSTART   32
 #endif
@@ -126,6 +144,27 @@
 _RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
 _RETC_ = 0;\
 } while (0)
+
+#ifndef _HREXX_TKCOUNT_C
+#define _HREXX_TKCOUNT_C
+
+#ifdef  _HREXX_C_
+int tkcount(char *str)
+{
+char *w,*p;
+int   k;
+    w = strdup(str);
+    for (k=0, p = strtok(w, EXTNDELIM ); p; p = strtok(NULL, EXTNDELIM), k++);
+    free (w);
+    return (k) ;
+}
+
+#else
+int tkcount(char *str) ;
+
+#endif /* #ifdef  _HREXX_C_  */
+
+#endif /* #ifndef _HREXX_TKCOUNT_C */
 
 #ifndef _HREXX_TRIM_C
 #define _HREXX_TRIM_C

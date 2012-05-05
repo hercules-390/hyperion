@@ -167,10 +167,6 @@ char *wResp = NULL;
 int   iarg,argc;
 char *argv[MAX_OPTS];
 
-#if 0
-int   haveecho;
-int   echo;
-#endif
 int   haveStemKeyw;
 int   needStemName;
 int   haveStemName;
@@ -194,10 +190,7 @@ char temp[33];
         *Flags = RXSUBCOM_ERROR;
         return -1;
     }
-#if 0
-    haveecho = 0;
-    echo = 0;
-#endif
+
     haveStemKeyw = 0;
     needStemName = 0;
     haveStemName = 0;
@@ -222,20 +215,6 @@ char temp[33];
             continue;
         }
 
-#if 0
-        if ( !haveecho && ( strcasecmp(argv[iarg], "echo" ) == 0 ) )
-        {
-            haveecho = 1;
-            echo = 1;
-            continue;
-        }
-        if ( !haveecho && ( strcasecmp(argv[iarg], "noecho" ) == 0 ) )
-        {
-            haveecho = 1;
-            echo = 0;
-            continue;
-        }
-#endif
         if ( !haveStemKeyw && ( strcasecmp(argv[iarg], "stem" ) == 0 ) )
         {
             haveStemKeyw = 1;
@@ -261,18 +240,6 @@ char temp[33];
     if ( wCommand )
     {
         strcpy(wCommand, argv[0]);
-#if 0
-        if ( echo )
-        {
-            wCommand[0] = '\0';
-        }
-        else
-        {
-            wCommand[0] = '-';
-            wCommand[1] = '\0';
-        }
-        strcat( wCommand, argv[0] );
-#endif
 
         if ( haveStemName )
         {
