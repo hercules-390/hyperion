@@ -7,22 +7,21 @@
 #
 # --------------------------------------------------------------------------
 #
-#  Check to see if the directories specified by the user contain the
-#  headers for the relative REXX package.
+#  Check to see if the directories created by the installation of the only
+#  two supported REXX packages (Open Object Rexx and Regina Rexx) contain
+#  the expected header file(s) for the respective package.
 #
-#  Since the support might be bimodal, no default is assumed.
+#  If either the 'REXX_HOME' or 'REGINA_LANG_DIR' (or both) environment
+#  variables are defined (which are the environment variable names that
+#  each package automatically defines when it is installed), then support
+#  for REXX will be generated. Installing both packages causes bimodal
+#  support to be generated wherein both packages are then supported.
 #
-#  If neither 'REGINA_REXX_DIR' nor 'OBJECT_REXX_DIR' are defined,
-#  then support for rexx will NOT be generated.
-#
-#
-#                          **  NOTE **
-#
-#  The standard/default OBJECT REXX installation will install everything in
+#  The standard/default OBJECT REXX installation installs everything into
 #
 #       <program files directory>\ooRexx
 #
-#  and the headers will be located in
+#  with the headers being located in
 #
 #       <program files directory>\ooRexx\api
 #
@@ -30,14 +29,14 @@
 #
 #       C:\Regina
 #
-#  Which is very silly IMNSHO. Rather, for symmetry, I suggest using the
+#  which is very silly IMNSHO. Rather, for symmetry, I suggest using the
 #  OBJECT REXX approach instead: when Regina asks for a install directory,
-#  instead of hitting enter to accept its default, OVERRIDE the directory
+#  instead of clicking Next to accept its default, OVERRIDE the directory
 #  to specify the following directory instead:
 #
 #       <program files directory>\Regina
 #
-#  Then the headers will be located in:
+#  The headers will then be located in:
 #
 #       <program files directory>\Regina\include
 #
@@ -50,17 +49,16 @@
 #
 # ***************************************************************************
 
-!IFDEF OBJECT_REXX_DIR
+!IFDEF REXX_HOME
 
-OBJECT_REXX_HDR_DIR = $(OBJECT_REXX_DIR)\api
+OBJECT_REXX_HDR_DIR = $(REXX_HOME)\api
 OBJECT_REXX_HEADER1 = $(OBJECT_REXX_HDR_DIR)\rexx.h
 OBJECT_REXX_HEADER2 = $(OBJECT_REXX_HDR_DIR)\oorexxapi.h
 
 !IF EXISTS("$(OBJECT_REXX_HEADER1)") && EXISTS("$(OBJECT_REXX_HEADER2)")
-!MESSAGE OBJECT REXX support will be included from "$(OBJECT_REXX_DIR)"
+!MESSAGE OBJECT REXX support will be included from "$(REXX_HOME)"
 !ELSE
 !MESSAGE OBJECT REXX headers not found, support will not be generated.
-!UNDEF OBJECT_REXX_DIR
 !UNDEF OBJECT_REXX_HDR_DIR
 !UNDEF OBJECT_REXX_HEADER1
 !UNDEF OBJECT_REXX_HEADER2
@@ -70,16 +68,15 @@ OBJECT_REXX_HEADER2 = $(OBJECT_REXX_HDR_DIR)\oorexxapi.h
 
 # --------------------------------------------------------------------------
 
-!IFDEF REGINA_REXX_DIR
+!IFDEF REGINA_LANG_DIR
 
-REGINA_REXX_HDR_DIR = $(REGINA_REXX_DIR)\include
+REGINA_REXX_HDR_DIR = $(REGINA_LANG_DIR)\include
 REGINA_REXX_HEADER1 = $(REGINA_REXX_HDR_DIR)\rexxsaa.h
 
 !IF EXIST("$(REGINA_REXX_HEADER1)")
-!MESSAGE REGINA REXX support will be included from "$(REGINA_REXX_DIR)"
+!MESSAGE REGINA REXX support will be included from "$(REGINA_LANG_DIR)"
 !ELSE
 !MESSAGE REGINA REXX headers not found, support will not be generated.
-!UNDEF REGINA_REXX_DIR
 !UNDEF REGINA_REXX_HDR_DIR
 !UNDEF REGINA_REXX_HEADER1
 !ENDIF
