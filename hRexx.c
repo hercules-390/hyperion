@@ -645,8 +645,8 @@ Enabl_Rexx_Loaded:
 
     if ( !PathsInitialized )
         InitializePaths(NULL);
-    strcpy(Result, "Rexx Path : " );
-    sprintf(temp,"Paths(%d) ",RexxPathCount);
+    strcpy(Result, "Rexx Path " );
+    sprintf(temp,"(%2d) -",RexxPathCount);
     strcat(Result,temp);
     for (i=0; i<RexxPathCount; i++)
     {
@@ -655,13 +655,13 @@ Enabl_Rexx_Loaded:
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    MSGBUF( Result, "Sys Path  : Paths(%d) %s ", SysPathCount, useSysPath ? "(ON)" : "(OFF)");
+    MSGBUF( Result, "Sys Path  (%2d) - %s ", SysPathCount, useSysPath ? "(ON)" : "(OFF)");
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
     if ( !ExtensionsInitialized )
         InitializeExtensions(NULL);
-    strcpy(Result, "Extensions: ");
-    sprintf(temp,"Extns(%d) ",ExtensionsCount);
+    strcpy(Result, "Extensions");
+    sprintf(temp,"(%2d) - ",ExtensionsCount);
     strcat(Result,temp);
     for (i=0; i<ExtensionsCount; i++)
     {
@@ -673,19 +673,23 @@ Enabl_Rexx_Loaded:
     if ( !OptionsInitialized )
         InitializeOptions();
 
-    MSGBUF( Result, "Resolver  : %s", useResolver ? "(ON)" : "(OFF)" );
+    MSGBUF( Result, "Resolver       - %s",
+            useResolver ? "(ON)" : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    MSGBUF( Result, "Msg Level : %d", MessageLevel);
+    MSGBUF( Result, "Msg Level      - %d",
+            MessageLevel);
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    MSGBUF( Result, "Msg Prefix: %s", MessagePrefix ? MessagePrefix : "(OFF)" );
+    MSGBUF( Result, "Msg Prefix     - %s",
+            MessagePrefix ? MessagePrefix : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    MSGBUF( Result, "Err Prefix: %s", ErrorPrefix ? ErrorPrefix : "(OFF)" );
+    MSGBUF( Result, "Err Prefix     - %s",
+            ErrorPrefix ? ErrorPrefix : "(OFF)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-    MSGBUF( Result, "Mode      : %s",
+    MSGBUF( Result, "Mode           - %s",
             ( RexxMode == _COMMAND_ ) ? "(Command)" : "(Subroutine)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
@@ -727,7 +731,7 @@ short RetRC = 0;
 int   iPath,iExtn;
 int   haveResolvedCommand = FALSE;
 
-char  wCommand[1024];
+char  wCommand[MAX_FILENAME_LENGTH];
 char *wArgs;
 
 struct stat fstat;
@@ -851,7 +855,7 @@ exec_cmd_Rexx_Loaded:
     if (strcmp(basename(wCommand),wCommand) != 0)
         goto endResolver;
 
-    if ( useRexxPath )
+    if ( RexxPathArray && useRexxPath )
     {
         for( iPath = 0; iPath<RexxPathCount; iPath++)
         {
@@ -871,17 +875,18 @@ exec_cmd_Rexx_Loaded:
             }
         }
     }
-    if ( useSysPath )
+
+    if ( SysPathArray && useSysPath )
     {
         for( iPath = 0; iPath<SysPathCount; iPath++)
         {
-            rc = stat( RexxPathArray[iPath] , &fstat );
+            rc = stat( SysPathArray[iPath] , &fstat );
             if ( ( rc != 0 ) || ( ! S_ISDIR(fstat.st_mode) ) )
                 continue ;
 
             for( iExtn = 0;iExtn<ExtensionsCount;iExtn++)
             {
-                sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1],ExtensionsArray[iExtn]);
+                sprintf(wCommand, PATHFORMAT, SysPathArray[iPath], argv[1], ExtensionsArray[iExtn]);
                 rc = stat( wCommand, &fstat );
                 if ( ( rc == 0 ) && S_ISREG(fstat.st_mode) )
                 {
