@@ -29,7 +29,11 @@
 #endif
 
 #ifndef MAX_ARGS_TO_REXXSTART
-#define MAX_ARGS_TO_REXXSTART   32
+#define MAX_ARGS_TO_REXXSTART   64
+#endif
+
+#ifndef MAX_ARGS_TO_SUBCOMHANDLER
+#define MAX_ARGS_TO_SUBCOMHANDLER   64
 #endif
 
 #ifdef  _HREXX_C_

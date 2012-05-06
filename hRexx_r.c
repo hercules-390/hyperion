@@ -99,7 +99,7 @@ int ReginaRexxFetchVar (
    else {
       /* allocate a new buffer for the Rexx variable pool value */
       pszTemp = (char *) (*hRexxAllocateMemory)(RxVarBlock.shvvalue.strlength + 1);
-      if (pszTemp == NULL) {
+      if ( !pszTemp ) {
          /* no buffer available so return a NULL Rexx value */
          prxVar -> strptr = NULL;
          prxVar -> strlength = 0;
@@ -155,7 +155,6 @@ static APIRET APIENTRY hSubcomHandler(
   PUSHORT Flags,                        /* Returned Error/Failure Flags       */
   PRXSTRING RetValue )                  /* Returned RC string                 */
 {
-#define MAX_OPTS 16
 
 short rc;
 char *line = NULL;
@@ -165,7 +164,7 @@ char *wCommand = NULL;
 char *wResp = NULL;
 
 int   iarg,argc;
-char *argv[MAX_OPTS];
+char *argv[MAX_ARGS_TO_SUBCOMHANDLER + 1 ];
 
 int   haveStemKeyw;
 int   needStemName;
@@ -180,7 +179,7 @@ char temp[33];
     zCommand = malloc( RXSTRLEN( *Command) +1);
     strncpy( zCommand, RXSTRPTR( *Command), RXSTRLEN( *Command));
     zCommand[RXSTRLEN(*Command)] = '\0';
-    parse_command( zCommand, MAX_OPTS, argv, &argc);
+    parse_command( zCommand, MAX_ARGS_TO_SUBCOMHANDLER, argv, &argc);
 
     if ( argc == 0 )
     {
@@ -516,7 +515,7 @@ int   iarg ;
 int   rc;
 short RetRC;
 long  ArgCount;
-RXSTRING       wArgs[MAX_ARGS_TO_REXXSTART];
+RXSTRING       wArgs[MAX_ARGS_TO_REXXSTART + 1];
 RXSYSEXIT      ExitList[2];
 RXSTRING       RetValue;
 
