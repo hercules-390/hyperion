@@ -27,6 +27,15 @@ htape_OBJ = \
     $(O)sllib.obj    \
     $(O)w32stape.obj
 
+hdt3420_OBJ = \
+    $(O)tapedev.obj  \
+    $(O)tapeccws.obj \
+    $(O)awstape.obj  \
+    $(O)faketape.obj  \
+    $(O)hettape.obj  \
+    $(O)omatape.obj  \
+    $(O)scsitape.obj
+
 hutil_OBJ = \
     $(O)codepage.obj \
     $(O)fthreads.obj \
