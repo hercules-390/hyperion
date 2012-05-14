@@ -63,6 +63,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o losc.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o mpc.o \
+               cmpsc_2012.o cmpscdbg.o cmpscdct.o cmpscget.o cmpscmem.o cmpscput.o \
                timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
                parser.o ieee.o dfp.o httpserv.o bldcfg.o script.o sr.o \
                cgibin.o codepage.o loadmem.o loadparm.o fillfnam.o \
@@ -181,6 +182,7 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
+           cmpsc.h cmpscbit.h cmpscdbg.h cmpscdct.h cmpscget.h cmpscmem.h cmpscput.h \
            milieu.h                \
            ccfixme.h               \
            ccnowarn.h              \

@@ -96,11 +96,18 @@ static const char *build_info[] = {
     "Using   FishIO",
 #endif
 
+#if defined(OPTION_CMPSC_2012)
+    "Using   Compression Call 2012",
+#else
+    "Using   Legacy Compress Call",
+#endif
+
 #if defined(OPTION_DYNAMIC_LOAD)
     "With    Dynamic loading support",
 #else
     "Without Dynamic loading support",
 #endif
+
 #if defined(HDL_BUILD_SHARED)
     "Using   shared libraries",
 #else
@@ -169,14 +176,14 @@ static const char *build_info[] = {
 #endif
 
 #if defined(ENABLE_OBJECT_REXX)
-    "With    Object REXX",
+    "With    Object REXX support",
 #else
-    "Without Object REXX",
+    "Without Object REXX support",
 #endif
 #if defined(ENABLE_REGINA_REXX)
-    "With    Regina REXX",
+    "With    Regina REXX support",
 #else
-    "Without Regina REXX",
+    "Without Regina REXX support",
 #endif
 
 #if defined(OPTION_HAO)

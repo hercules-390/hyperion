@@ -387,6 +387,12 @@ endif
                        vector.c     \
                        xstore.c     \
                        cmpsc.c      \
+                       cmpsc_2012.c \
+                       cmpscdbg.c   \
+                       cmpscdct.c   \
+                       cmpscget.c   \
+                       cmpscmem.c   \
+                       cmpscput.c   \
                        sie.c        \
                        qdio.c       \
                        clock.c      \
@@ -781,6 +787,13 @@ noinst_HEADERS = fishhang.h     \
                  chain.h        \
                  extstring.h    \
                  hRexx.h        \
+                 cmpsc.h        \
+                 cmpscbit.h     \
+                 cmpscdbg.h     \
+                 cmpscdct.h     \
+                 cmpscget.h     \
+                 cmpscmem.h     \
+                 cmpscput.h     \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
