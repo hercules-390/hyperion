@@ -127,7 +127,7 @@ struct _MPC_TH                     /* Transport Header               */
                                    /* (Or, if you prefer, the        */
                                    /* length of the MPC_TH.)         */
 /*00C*/  FWORD  length;            /* Total length of the MPC_TH     */
-                                   /* the data transported with      */
+                                   /* and the data transported with  */
                                    /* the MPC_TH. (See Note 2)       */
 /*010*/  HWORD  unknown10;         /* This field always seems to     */
                                    /* contain 0x1000 for OSA, or     */
@@ -168,10 +168,9 @@ struct _MPC_RRH                    /* Request/Response Header        */
                                    /* referenced by the first        */
                                    /* MPC_PH. (See Note 2)           */
 /*014*/  BYTE   lenalda[3];        /* Length of the data             */
-                                   /* referenced by all of the       */
-                                   /* MPC_PHs. (See Note 2)          */
+                                   /* referenced by the MPC_PHs.     */
                                    /* Note: a 3-byte length field.   */
-/*017*/  BYTE   tokenx5;           /* Token length or type or ???.   */
+/*017*/  BYTE   tokenx5;           /* Token length or type or ...    */
 /*018*/  FWORD  token;             /* Token.                         */
 /*01C*/                            /* End of the MPC_RRH, maybe.     */
 /*01C*/  BYTE   unknown1C;         /* ???.                           */
@@ -212,16 +211,18 @@ typedef struct _MPC_PH MPC_PH, *PMPC_PH;
 
 
 /*-------------------------------------------------------------------*/
-/* Protocol Data Unit data                                           */
+/* Protocol Data Unit                                                */
 /*-------------------------------------------------------------------*/
-
-// When MPC_RRH->type contains 0x81 and
-//  MPC_RRH->proto contains 0x08 (0x8108) the PDU is one or more IP packets.
-// When MPC_RRH->type contains 0xC1 and
-//  MPC_RRH->proto contains 0x08 (0xC108) the PDU is a MPC_PIX
-// When MPC_RRH->type contains 0x41 or 0xC17 and
-//  MPC_RRH->proto contains 0x7E (0x417E or 0xC17E) the PDU is a MPC_PUK
-// followed by one or more MPC_PUS.
+/* For PTP devices:-                                                 */
+/* - when MPC_RRH->type contains 0x81 and                            */
+/*        MPC_RRH->proto contains 0x08 (0x8108)                      */
+/*   the PDU is one or more IP packets.                              */
+/* - when MPC_RRH->type contains 0xC1 and                            */
+/*        MPC_RRH->proto contains 0x08 (0xC108)                      */
+/*   the PDU is an MPC_PIX                                           */
+/* - when MPC_RRH->type contains 0x41 or 0xC1 and                    */
+/*        MPC_RRH->proto contains 0x7E (0x417E or 0xC17E)            */
+/*   the PDU is an MPC_PUK with one or more MPC_PUS.                 */
 
 
 /*-------------------------------------------------------------------*/
@@ -230,11 +231,11 @@ typedef struct _MPC_PH MPC_PH, *PMPC_PH;
 struct _MPC_PUK                    /*                                */
 {                                  /*                                */
 /*000*/  HWORD  length;            /* Length of the MPC_PUK.         */
-/*002*/  BYTE   what;              /* What (See Note 5)              */
+/*002*/  BYTE   what;              /* What (See Note 4)              */
 #define PUK_WHAT_41  0x41          /*                                */
 #define PUK_WHAT_43  0x43          /*                                */
 #define PUK_WHAT_45  0x45          /*                                */
-/*003*/  BYTE   type;              /* Type (See Note 5)              */
+/*003*/  BYTE   type;              /* Type (See Note 4)              */
 #define PUK_TYPE_01        0x01    /*                                */
 #define PUK_TYPE_ENABLE    0x02    /*                                */
 #define PUK_TYPE_DISABLE   0x03    /*                                */
@@ -257,9 +258,9 @@ typedef struct _MPC_PUK MPC_PUK, *PMPC_PUK;
 struct _MPC_PUS                    /*                                */
 {                                  /*                                */
 /*000*/  HWORD  length;            /* Length of the MPC_PUS.         */
-/*002*/  BYTE   what;              /* What (See Note 6)              */
+/*002*/  BYTE   what;              /* What (See Note 5)              */
 #define PUS_WHAT_04  0x04          /*                                */
-/*003*/  BYTE   type;              /* Type (See Note 6)              */
+/*003*/  BYTE   type;              /* Type (See Note 5)              */
 #define PUS_TYPE_01  0x01          /*                                */
 #define PUS_TYPE_02  0x02          /*                                */
 #define PUS_TYPE_03  0x03          /*                                */
@@ -279,7 +280,7 @@ struct _MPC_PUS                    /*                                */
 /*004*/    BYTE   proto;           /* Protocol.                      */
 /*005*/    BYTE   unknown05;       /* ?, PTP uses 0x01               */
                                    /*    QETH uses 0x04              */
-/*006*/    BYTE   tokenx5;         /* Token length or type or ???.   */
+/*006*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*007*/    BYTE   token[4];        /* Filter token                   */
          } pus_01;                 /*                                */
 #define SIZE_PUS_01  0x000B        /* Size of MPC_PUS_01             */
@@ -315,19 +316,19 @@ struct _MPC_PUS                    /*                                */
          } pus_02;                 /* PUS_02 contents end            */
 
          struct _pus_03 {          /* PUS_03 contents                */
-/*004*/    BYTE   tokenx5;         /* Token length or type or ???.   */
+/*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Filter token                   */
          } pus_03;                 /*                                */
 #define SIZE_PUS_03  0x0009        /* Size of MPC_PUS_03             */
 
          struct _pus_04 {          /* PUS_04 contents                */
-/*004*/    BYTE   tokenx5;         /* Token length or type or ???.   */
+/*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Connection token               */
          } pus_04;                 /*                                */
 #define SIZE_PUS_04  0x0009        /* Size of MPC_PUS_04             */
 
          struct _pus_05 {          /* PUS_05 contents                */
-/*004*/    BYTE   tokenx5;         /* Token length or type or ???.   */
+/*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Filter token                   */
          } pus_05;                 /*                                */
 #define SIZE_PUS_05  0x0009        /* Size of MPC_PUS_05             */
@@ -345,7 +346,7 @@ struct _MPC_PUS                    /*                                */
 #define SIZE_PUS_07  0x0008        /* Size of MPC_PUS_07             */
 
          struct _pus_08 {          /* PUS_08 contents                */
-/*004*/      BYTE   tokenx5;       /* Token length or type or ???.   */
+/*004*/      BYTE   tokenx5;       /* Token length or type or ...    */
 /*005*/      BYTE   token[4];      /* Connection token               */
          } pus_08;                 /*                                */
 #define SIZE_PUS_08  0x0009        /* Size of MPC_PUS_08             */
@@ -363,16 +364,16 @@ struct _MPC_PUS                    /*                                */
 /*00B*/      BYTE   lenportname;   /* Length of the port name        */
 /*00C*/      BYTE   portname[8];   /* Port name                      */
 /*014*/      BYTE   linktype;      /* Link type                      */
-#define PUS_LINK_TYPE_FAST_ETH      0x01
-// fine PUS_LINK_TYPE_HSTR          0x02
-#define PUS_LINK_TYPE_GBIT_ETH      0x03
-// fine PUS_LINK_TYPE_OSN           0x04
-#define PUS_LINK_TYPE_10GBIT_ETH    0x10
-// fine PUS_LINK_TYPE_LANE_ETH100   0x81
-// fine PUS_LINK_TYPE_LANE_TR       0x82
-// fine PUS_LINK_TYPE_LANE_ETH1000  0x83
-// fine PUS_LINK_TYPE_LANE          0x88
-// fine PUS_LINK_TYPE_ATM_NATIVE    0x90
+#define PUS_LINK_TYPE_FAST_ETH      0x01   /*                        */
+// fine PUS_LINK_TYPE_HSTR          0x02   /*                        */
+#define PUS_LINK_TYPE_GBIT_ETH      0x03   /*                        */
+// fine PUS_LINK_TYPE_OSN           0x04   /*                        */
+#define PUS_LINK_TYPE_10GBIT_ETH    0x10   /*                        */
+// fine PUS_LINK_TYPE_LANE_ETH100   0x81   /*                        */
+// fine PUS_LINK_TYPE_LANE_TR       0x82   /*                        */
+// fine PUS_LINK_TYPE_LANE_ETH1000  0x83   /*                        */
+// fine PUS_LINK_TYPE_LANE          0x88   /*                        */
+// fine PUS_LINK_TYPE_ATM_NATIVE    0x90   /*                        */
          } pus_0A;                 /*                                */
 #define SIZE_PUS_0A_A  0x0014      /* Size of MPC_PUS_0A             */
 #define SIZE_PUS_0A_B  0x0015      /* Size of MPC_PUS_0A             */
@@ -384,10 +385,12 @@ struct _MPC_PUS                    /*                                */
 #define SIZE_PUS_0B  0x0008        /* Size of MPC_PUS_0B             */
 
          struct _pus_0C {          /* PUS_0C contents                */
-/*004*/      BYTE   unknown04[9];  // ?, only seen 0x000900060401030408
-                                   // ?, is the 0x0009 a length? If so,
-                                   //    does this mean there could be
-                                   //    other stuctures?
+/*004*/      BYTE   unknown04[9];  /* ???, only seen                 */
+                                   /*      0x000900060401030408      */
+                                   /*      Is the 0x0009 a length?   */
+                                   /*      If so, does this mean     */
+                                   /*      there could be other      */
+                                   /*      stuctures?                */
          } pus_0C;                 /*                                */
 #define SIZE_PUS_0C  0x000D        /* Size of MPC_PUS_0C             */
 
@@ -395,6 +398,24 @@ struct _MPC_PUS                    /*                                */
 } ATTRIBUTE_PACKED;                /*                                */
 typedef struct _MPC_PUS MPC_PUS, *PMPC_PUS;
 
+//      PUS_TYPE 01 02 03 04 05 06 07 08 09 0A 0B 0C
+//
+// CM_ENABLE      x  x                             x
+// CM_SETUP                x  x  x
+// CM_CONFIRM              x       x   x
+// CM_TAKEDOWN             x
+// CM_DISABLE           x
+//
+// ULP_ENABLE     x  x
+// ULP_SETUP         x     x  x  x
+// ULP_CONFIRM       x     x       x   x
+// ULP_TAKEDOWN            x
+// ULP_DISABLE          x
+//
+// DM_ACT                  x
+//
+// 4501                    x              x
+//
 
 /*===================================================================*/
 /* Structures used by OSA devices                                    */
@@ -709,106 +730,109 @@ typedef struct _MPC_PIX MPC_PIX, *PMPC_PIX;
 // When an MPCPTP/MPCPTP6 link is activated handshaking messages
 // are exchanged which are described by the following structures.
 
-struct _PTPHX0;                            // PTP Handshake
-struct _PTPHX2;                            // PTP Handshake XID2
-struct _PTPHSV;                            // PTP Handshake XID2 CSVcv
+struct _PTPHX0;                    // PTP Handshake
+struct _PTPHX2;                    // PTP Handshake XID2
+struct _PTPHSV;                    // PTP Handshake XID2 CSVcv
 
 typedef struct _PTPHX0 PTPHX0, *PPTPHX0;
 typedef struct _PTPHX2 PTPHX2, *PPTPHX2;
 typedef struct _PTPHSV PTPHSV, *PPTPHSV;
 
-struct _PTPHX0                             // PTP Handshake
+struct _PTPHX0                     // PTP Handshake
 {
-    BYTE    TH_seg;                  // 00 // Only seen 0x00
-    BYTE    TH_ch_flag;              // 01 // Only seen 0x00 or 0x01
+/*000*/  BYTE   TH_seg;            // Only seen 0x00
+/*001*/  BYTE   TH_ch_flag;        // Only seen 0x00 or 0x01
 #define TH_CH_0x00  0x00
 #define TH_CH_0x01  0x01
 #define TH_IS_XID   0x01
-    BYTE    TH_blk_flag;             // 02 // Only seen 0x80 or 0xC0
+/*002*/  BYTE   TH_blk_flag;       // Only seen 0x80 or 0xC0
 #define TH_DATA_IS_XID  0x80
 #define TH_RETRY  0x40
 #define TH_DISCONTACT 0xC0
-    BYTE    TH_is_xid;               // 03 // Only seen 0x01
+/*003*/  BYTE   TH_is_xid;         // Only seen 0x01
 #define TH_IS_0x01  0x01
-    BYTE    TH_SeqNum[4];            // 04 // Only seen 0x00050010
+/*004*/  BYTE   TH_SeqNum[4];      // Only seen 0x00050010
 } ATTRIBUTE_PACKED;
-#define SizeHX0  0x0008              // 08 // Size of PTPHX0
+#define SizeHX0  0x0008            // Size of PTPHX0
 
-struct _PTPHX2                             // PTP Handshake XID2
-{
-                                           // The first 31-bytes of the PTPHX2
-                                           // is an XID2, defined in SNA Formats.
+struct _PTPHX2                     /* PTP Handshake XID2             */
+{                                  /*                                */
+                                   /* Note: The first 31-bytes       */
+                                   /* of the PTPHX2 are an XID2,     */
+                                   /* defined in SNA Formats.        */
+                                   /*                                */
+/*000*/  BYTE   Ft;                // Format of XID (4-bits),
+                                   // Type of XID-sending node (4-bits)
+#define XID2_FORMAT_MASK  0xF0     // Mask out Format from Ft
+/*001*/  BYTE   Length;            // Length of the XID2
+/*002*/  BYTE   NodeID[4];         // Node identification:
+                                   // Block number (12 bits),
+                                   // ID number (20-bits)
+                                   /* Note: the block number is      */
+                                   /* always 0xFFF, the ID number is */
+                                   /* the high order 5-digits of the */
+                                   /* CPU serial number, i.e. if the */
+                                   /* serial number is 123456, the   */
+                                   /* nodeid will be 0xFFF12345.     */
+/*006*/  BYTE   LenXcv;            // Length of the XID2 exclusive
+                                   // of any control vectors
+/*007*/  BYTE   MiscFlags;         // Miscellaneous flags
+/*008*/  BYTE   TGstatus;          // TG status
+/*009*/  BYTE   FIDtypes;          // FID types supported
+/*00A*/  BYTE   ULPuse;            // Upper-layer protocol use
+/*00B*/  BYTE   LenMaxPIU[2];      // Length of the maximum PIU that
+                                   // the XID sender can receive
+/*00D*/  BYTE   TGNumber;          // Transmission group number (TGN)
+/*00E*/  BYTE   SAaddress[4];      // Subarea address of the XID sender
+                                   // (right-justified with leading 0's)
+/*012*/  BYTE   Flags;             // Flags
+/*013*/  BYTE   CLstatus;          // CONTACT or load status of XID sender
+/*014*/  BYTE   IPLname[8];        // IPL load module name
+/*01C*/  BYTE   ESAsupp;           // Extended Subarea Address support
+/*01D*/  BYTE   Reserved1D;        // Reserved
+/*01E*/  BYTE   DLCtype;           // DLC type
+#define DLCTYPE_WRITE 0x04         // DLC type: write path from sender
+#define DLCTYPE_READ  0x05         // DLC type: read path from sender
 
-    BYTE    Ft;                      // 00 // Format of XID (4-bits),
-                                           // Type of XID-sending node (4-bits)
-#define XID2_FORMAT_MASK  0xF0             // Mask out Format from Ft
-    BYTE    Length;                  // 01 // Length of the XID2
-    BYTE    NodeID[4];               // 02 // Node identification:
-                                           // Block number (12 bits),
-                                           // ID number (20-bits)
-                                           // Note - the block number is always
-                                           // 0xFFF, the ID number is the high
-                                           // order 5-digits of the CPU serial
-                                           // number, i.e. if the serial number
-                                           // is 123456, the nodeid will be
-                                           // 0xFFF12345.
-    BYTE    LenXcv;                  // 06 // Length of the XID2 exclusive
-                                           // of any control vectors
-    BYTE    MiscFlags;               // 07 // Miscellaneous flags
-    BYTE    TGstatus;                // 08 // TG status
-    BYTE    FIDtypes;                // 09 // FID types supported
-    BYTE    ULPuse;                  // 0A // Upper-layer protocol use
-    BYTE    LenMaxPIU[2];            // 0B // Length of the maximum PIU that
-                                           // the XID sender can receive
-    BYTE    TGNumber;                // 0D // Transmission group number (TGN)
-    BYTE    SAaddress[4];            // 0E // Subarea address of the XID sender
-                                           // (right-justified with leading 0's)
-    BYTE    Flags;                   // 12 // Flags
-    BYTE    CLstatus;                // 13 // CONTACT or load status of XID sender
-    BYTE    IPLname[8];              // 14 // IPL load module name
-    BYTE    ESAsupp;                 // 1C // Extended Subarea Address support
-    BYTE    Reserved1D;              // 1D // Reserved
-    BYTE    DLCtype;                 // 1E // DLC type
-#define DLCTYPE_WRITE 0x04                 // DLC type: write path from sender
-#define DLCTYPE_READ  0x05                 // DLC type: read path from sender
+                                   /* Note: SNA Formats defines the  */
+                                   /* first 31-bytes of an XID2, any */
+                                   /* following bytes are DLC type   */
+                                   /* specific. SNA Formats defines  */
+                                   /* the following bytes for some   */
+                                   /* DLC types, but not for DLC     */
+                                   /* types 0x04 and 0x05,           */
+                                   /* 'Multipath channel to channel; */
+                                   /* write path from sender' and    */
+                                   /* 'Multipath channel to channel; */
+                                   /* read path from sender'.        */
 
-                                           // Note - SNA Formats defines the
-                                           // preceeding 31-bytes, any following
-                                           // bytes are DLC type specific. SNA
-                                           // Formats defines the following bytes
-                                           // for some DLC types, but not for DLC
-                                           // types 0x04 and 0x05, 'Multipath
-                                           // channel to channel; write path from
-                                           // sender' and 'Multipath channel to
-                                           // channel; read path from sender'.
-
-    BYTE    DataLen1[2];             // 1F // ?  Data length?
-    BYTE    MpcFlag;                 // 21 // Always contains 0x27
-    BYTE    Unknown22;               // 22 // ?, only seen nulls
-    BYTE    MaxReadLen[2];           // 23 // Maximum read length
-    BYTE    TokenX5;               /* Token length or type or ???.   */
-    BYTE    Token[4];                // 26 // Token
-    BYTE    Unknown2A[7];            // 2A // ?, only seen nulls
+/*01F*/  BYTE   DataLen1[2];       // ?  Data length?
+/*021*/  BYTE   MpcFlag;           // Always contains 0x27
+/*022*/  BYTE   Unknown22;         // ?, only seen nulls
+/*023*/  BYTE   MaxReadLen[2];     // Maximum read length
+/*025*/  BYTE   TokenX5;           /* Token length or type or ...    */
+/*026*/  BYTE   Token[4];          // Token
+/*02A*/  BYTE   Unknown2A[7];      // ?, only seen nulls
 } ATTRIBUTE_PACKED;
-#define SizeHX2  0x0031              // 31 // Size of PTPHX2
+#define SizeHX2  0x0031            // Size of PTPHX2
 
 // Call Security Verification (x'56') Control Vector
 struct _PTPHSV                             // PTP Handshake CSVcv
 {
-    BYTE    Length;                  // 00 // Vector length
-                                           // (including this length field)
-    BYTE    Key;                     // 01 // Vector key
-#define CSV_KEY 0x56                       // CSVcv key
-    BYTE    reserved02;              // 02 // Reserved
-    BYTE    LenSIDs;                 // 03 // Length of Security IDs
-                                           // (including this length field)
-    BYTE    SID1[8];                 // 04 // First 8-byte Security ID
-                                           // (random data or enciphered random data)
-    BYTE    SID2[8];                 // 0C // Second 8-byte Security ID
-                                           // (random data or enciphered random data
-                                           //  or space characters)
+/*000*/  BYTE   Length;            // Vector length
+                                   // (including this length field)
+/*001*/  BYTE   Key;               // Vector key
+#define CSV_KEY 0x56               // CSVcv key
+/*002*/  BYTE   reserved02;        // Reserved
+/*003*/  BYTE   LenSIDs;           // Length of Security IDs
+                                   // (including this length field)
+/*004*/  BYTE   SID1[8];           // First 8-byte Security ID
+                                   // (random data or enciphered random data)
+/*00C*/  BYTE   SID2[8];           // Second 8-byte Security ID
+                                   // (random data or enciphered random data
+                                   //  or space characters)
 } ATTRIBUTE_PACKED;
-#define SizeHSV  0x0014              // 14 // Size of PTPHSV
+#define SizeHSV  0x0014            // Size of PTPHSV
 
 
 /*********************************************************************/
@@ -838,80 +862,72 @@ MPC_DLL_IMPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, B
 /* Notes                                                             */
 /*********************************************************************/
 
-// Note 1
-// The transferred data contains a MPC_TH and one or more MPC_RRHs.
-// When there are multiple MPC_RRHs each MPC_RRH starts on a fullword
-// (4-byte) boundary, so there may be between 0 and 3 unused bytes
-// between the preceeding data and a following MPC_RRH. Each MPC_RRH
-// is followed by one or more MPC_PHs and some or all of the data,
-// e.g. just the IP header of a packet or the whole IP packet.
+/* Note 1.                                                           */
+/* The transferred data contains a MPC_TH and one or more MPC_RRHs.  */
+/* The first MPC_RRH immediately follows the MPC_TH. When there are  */
+/* multiple MPC_RRHs, the second and subsequent MPC_RRHs starts on a */
+/* fullword (4-byte) boundary. Each MPC_RRH is immediately followed  */
+/* by one or more MPC_PHs. The MPC_PH(s) may be immediately followed */
+/* by none, some or all of the data related to the MPC_RRH, e.g.     */
+/* just the IP header of a packet or the whole IP packet.            */
 
-// Note 2
-// struct _MPC_TH                     /* Transport Header               */
-// /*00C*/  FWORD  length;            /* Total length of the MPC_TH and */
-//                                    /* all of the data transported    */
-//                                    /* with this MPC_TH. (See Note 2) */
-//                                    /* (The comment above is true     */
-//                                    /* but it may not be that simple. */
-//                                    /* Occasionally the only MPC_PH   */
-//                                    /* has the number 2 in the first  */
-//                                    /* byte (see comments below). In  */
-//                                    /* that case this field contains  */
-//                                    /* the total length of the MPC_TH,*/
-//                                    /* the MPC_RRH and the MPC_PH.)   */
-// struct _MPC_RRH                    /* Request/Response Header        */
-// /*012*/  HWORD  lenfida;           /* The length of the data referenced */
-//                                    /* by the first MPC_PH.  Why?     */
-//                                    /* Hmm... it may not be that simple. */
-//                                    /* Occasionally the only MPC_PH has*/
-//                                    /* the number 2 (see comments below).*/
-//                                    /* In that case this field contains*/
-//                                    /* a value of zero.               */
-// /*015*/  HWORD  lenalda;           /* The total length of all of the data    */
-//                                    /* associated with the MPC_RRH.   */
-//                                    /* The total length of the data   */
-//                                    /* referenced by all of the MPC_PHs*/
-//                                    /* should equal this value.       */
-// struct _MPC_PH                     /* Protocol Data Unit Header      */
-// /*000*/  BYTE   locdata;           // The location of the data referenced
-//                                    // by this MPC_PH.
-//                                    // When this field contains 1 the
-//                                    // data is in the first 4K
-//                                    // When this field contains 2 the data
-//                                    // is in the second and subsequent 4K.
-//                                    // Only one or two MPC_PH have been seen
-//                                    // in a message, so it isn't clear if
-//                                    // other values could be encountered.
-//                                    // Fortunately, this field isn't used
-//                                    // in messages from the guest, and in
-//                                    // messages to the guest we usually
-//                                    // build a single MPC_PH with the
-//                                    // data following immediately after.
-//                                    // One day this byte may be renamed.
+/* Note 2.                                                           */
+/* Each MPC_RRH is immediately followed by one or more MPC_PHs,      */
+/* which refer to the data related to the MPC_RRH. Some or all of    */
+/* the data may immediately follow the MPC_PH(s), or the data may be */
+/* located some distance away. The location of the data has some     */
+/* effect upon the values contained in various length fields.        */
+/*                                                                   */
+/* When the field MPC_PH->locdata contains a value of 0x01, the data */
+/* referenced by the MPC_PH immediately follows the MPC_PH(s),       */
+/* usually in the first 4K of the transferred data. When             */
+/* MPC_PH->locdata contains a value of 0x02, the data referenced by  */
+/* the MPC_PH does not follow the MPC_PH(s), it is located some      */
+/* distance away, usually in the second or subsequent 4K of the      */
+/* transferred data. (0x01 and 0x02 are the only values that have    */
+/* been seen in MPC_PH->locdata, perhaps other values exist.)        */
+/*                                                                   */
+/* Usually there are only one or two MPC_PHs. When there is a single */
+/* MPC_PH, MPC_PH->locdata usually contains a value of 0x01. When    */
+/* there are multiple MPC_PHs, MPC_PH->locdata in the first MPC_PH   */
+/* contains a value of 0x01, and MPC_PH->locdata in the second       */
+/* MPC_PH contains a value of 0x02. Occasionally there is a single   */
+/* MPC_PH where MPC_PH->locdata contains a value of 0x02.            */
+/*                                                                   */
+/* Single MPC_PH, MPC_PH->locdata = 0x01                             */
+/*   The whole of the data referenced by the MPC_PH immediately      */
+/*   follows the MPC_PH, e.g. an MPC_PUK, or a complete IP packet.   */
+/* Multiple MPC_PHs, MPC_PH->locdata = 0x01 and 0x02                 */
+/*   The data referenced by the first MPC_PH immediately follows the */
+/*   second MPC_PH, e.g. the IP header of an IP packet, and the data */
+/*   referenced by the second MPC_PH is located some distance away,  */
+/*   e.g. the data of the IP packet.                                 */
+/* Single MPC_PH, MPC_PH->locdata = 0x02                             */
+/*   The whole of the data referenced by the MPC_PH is located some  */
+/*   distance away, e.g. a complete IP packet.                       */
+/*                                                                   */
+/* Normally MPC_TH->length contains the total length of the MPC_TH   */
+/* and all of the data transported with the MPC_TH. However, if      */
+/* there is a single MPC_RRH with single MPC_PH and MPC_PH->locdata  */
+/* contains 0x02, MPC_TH->length contains only the length of the     */
+/* MPC_TH, the MPC_RRH and the MPC_PH.                               */
+/*                                                                   */
+/* Normally MPC_RRH->lenfida contains the length of the data         */
+/* referenced by the first MPC_PH following the MPC_RRH. (Why?)      */
+/* However, if there is a single MPC_PH following the MPC_RRH and    */
+/* MPC_PH->locdata contains 0x02, MPC_RRH->lenfida contains zero.    */
 
-// Note 3
-                                   /*    #define QETH_PROT_LAYER2 0x08*/
-                                   /*    #define QETH_PROT_TCPIP  0x03*/
-                                   /*    #define QETH_PROT_OSN2   0x0a*/
+
+// Note 3  RRH type & proto
 // #define TypeRRH_0x417E  0x417E     /*    0x417E   VTAM/SNA info?      */
 // #define TypeRRH_0xC17E  0xC17E     /*    0xC17E   VTAM/SNA info?      */
 // #define TypeRRH_0xC108  0xC108     /*    0xC108   IP link/address info? */
 // #define TypeRRH_0x8108  0x8108     /*    0x8108   IP packet           */
 
-// Note 4
-// /*000*/  FWORD  seqnum;            /* When Type contains 0x417E, this*/
-//                                    /* is the sequence number of the  */
-//                                    /* message being send to the other*/
-//                                    /* side. Otherwise only seen zero.*/
-// /*00C*/  FWORD  ackseq;            /* When Type contains 0x417E, this*/
-//                                    /* is the sequence number of the  */
-//                                    /* last message received from the */
-//                                    /* other side. Otherwise only seen zero. */
-
-// Note 5
+// Note 4  PUK what & type
 // struct _MPC_PUK                    /*                                */
-// /*002*/  BYTE   what;              /* What (See Note 4)              */
-// /*003*/  BYTE   type;              /* Type (See Note 4)              */
+// /*002*/  BYTE   what;              /* What                           */
+// /*003*/  BYTE   type;              /* Type                           */
 //                                    /* (This is almost certainly      */
 //                                    /* two 1-byte (8-bit) values,     */
 //                                    /* but until we understand more   */
@@ -925,37 +941,13 @@ MPC_DLL_IMPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, B
 // #define PUK_0x4360  0x4360         /*    complete                    */
 // #define PUK_0x4501  0x4501         /*                                */
 
-// Note 6
-// struct _MPC_PUS                    /*                                */
-// /*002*/  BYTE   what;              /* What (See Note 6)              */
-// /*003*/  BYTE   type;              /* Type (See Note 6)              */
-//                                            // (May be two 1-byte (bit) fields).
-// #define TypeSUX_0x0401  0x0401             //   0x0401
-// #define TypeSUX_0x0402  0x0402             //   0x0402
-// #define TypeSUX_0x0403  0x0403             //   0x0403
-// #define TypeSUX_0x0404  0x0404             //   0x0404
-// #define TypeSUX_0x0405  0x0405             //   0x0405
-// #define TypeSUX_0x0406  0x0406             //   0x0406
-// #define TypeSUX_0x0407  0x0407             //   0x0407
-// #define TypeSUX_0x0408  0x0408             //   0x0408
-// #define TypeSUX_0x0409  0x0409             //   0x0409
-// #define TypeSUX_0x040C  0x040C             //   0x040C
-//                                            // At least one other type has been
-//                                            // seen, it contained an SNA sense
-//                                            // code. Perhaps others exist that
-//                                            // have not been seen. Some exist
-//                                            // that have been seen with QETH.
+/* Note 5.                                                              */
+/* MPC_PUS->what has only been seen to contain 0x04.                    */
+/* MPC_PUS->type shows the type of data in the MPC_PUS. Some types are  */
+/* common to multiple device, e.g. 0x02 is used by PTP and QETH, some   */
+/* types are unique to a single device, e.g. 0x0C is used by PTP, 0x0A  */
+/* is used by QETH. There are presumably other types not yet seen.      */
 
-// The recent work on QETH by Jan Jeager et al has show that most of
-// the following structures are not PTP specific, they are also used
-// by OSA devices, and are possibly used for other MPC connections.
-// The equivalent stucture names in qeth.h are:-
-//   MPC_TH  = OSA_TH
-//   MPC_RRH = OSA_RRH
-//   MPC_PH  = OSA_PH
-//   MPC_PUK  = OSA_PDU  (OSA_PDU is not
-//   PTPSUX  = OSA_PDU  ..yet complete)
-//   MPC_PIX    no equivalent
 
 #if defined(_MSVC_)
  #pragma pack(pop)

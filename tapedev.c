@@ -489,6 +489,13 @@ static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int             rc;
 DEVINITTAB*     pDevInitTab;
+int             attn = 0;
+
+    /* Set flag so attention will be raised for re-init */
+    if(dev->devtype)
+    {
+        attn = 1;
+    }
 
     /* Close current tape */
     if(dev->fd>=0)
@@ -717,6 +724,14 @@ DEVINITTAB*     pDevInitTab;
         dev->syncio = 0;  // (SCSI i/o too slow; causes Machine checks)
     else
         dev->syncio = 2;  // (aws/het/etc are fast; syncio likely safe)
+
+    /* Make attention pending if necessary */
+    if(attn)
+    {
+        release_lock (&dev->lock);
+        device_attention (dev, CSW_DE);
+        obtain_lock (&dev->lock);
+    }
 
     return rc;
 
