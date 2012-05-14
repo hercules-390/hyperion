@@ -72,6 +72,12 @@ decNumber_OBJ = \
     $(O)decPacked.obj
 
 hengine_OBJ = \
+    $(O)cmpsc_2012.obj \
+    $(O)cmpscdbg.obj \
+    $(O)cmpscdct.obj \
+    $(O)cmpscget.obj \
+    $(O)cmpscmem.obj \
+    $(O)cmpscput.obj \
     $(O)archlvl.obj  \
     $(O)assist.obj   \
     $(O)bldcfg.obj   \
