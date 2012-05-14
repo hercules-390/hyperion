@@ -1,0 +1,12 @@
+#---------------------------------------------------
+# Comment lines starting with '#'
+# should NEVER be shown on the console
+# since they are supposed to be QUIET comments
+#---------------------------------------------------
+
+*---------------------------------------------------
+* Comment lines starting with '*' however
+* should ALWAYS be shown on the console
+* since they are supposed to be LOUD comments
+*---------------------------------------------------
+
