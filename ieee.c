@@ -243,7 +243,7 @@ enum {
     float_class_signaling_nan  = 0x00000002
 };
 
-INLINE U32 float128_class( float128 op )
+static INLINE U32 float128_class( float128 op )
 {
     int neg =
        (  op.high & LIT64( 0x8000000000000000 )) ? 1 : 0;
@@ -256,7 +256,7 @@ INLINE U32 float128_class( float128 op )
                                                              return float_class_subnormal     >> neg;
 }
 
-INLINE U32 float64_class( float64 op )
+static INLINE U32 float64_class( float64 op )
 {
     int neg =
        (  op & LIT64( 0x8000000000000000 )) ? 1 : 0;
@@ -269,7 +269,7 @@ INLINE U32 float64_class( float64 op )
                                              return float_class_subnormal     >> neg;
 }
 
-INLINE U32 float32_class( float32 op )
+static INLINE U32 float32_class( float32 op )
 {
     int neg =
        (  op & 0x80000000) ? 1 : 0;
@@ -307,13 +307,13 @@ struct sbfp {
 /*                                                                           */
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
-INLINE void ARCH_DEP(get_float128)( float128 *op, U32 *fpr )
+static INLINE void ARCH_DEP(get_float128)( float128 *op, U32 *fpr )
 {
     op->high = ((U64)fpr[0]     << 32) | fpr[1];
     op->low  = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
 }
 
-INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
+static INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
 {
     fpr[0]       = (U32) (op->high >> 32);
     fpr[1]       = (U32) (op->high & 0xFFFFFFFF);
@@ -321,23 +321,23 @@ INLINE void ARCH_DEP(put_float128)( float128 *op, U32 *fpr )
     fpr[FPREX+1] = (U32) (op->low  & 0xFFFFFFFF);
 }
 
-INLINE void ARCH_DEP(get_float64)( float64 *op, U32 *fpr )
+static INLINE void ARCH_DEP(get_float64)( float64 *op, U32 *fpr )
 {
     *op = ((U64)fpr[0] << 32) | fpr[1];
 }
 
-INLINE void ARCH_DEP(put_float64)( float64 *op, U32 *fpr )
+static INLINE void ARCH_DEP(put_float64)( float64 *op, U32 *fpr )
 {
     fpr[0] = (U32) (*op >> 32);
     fpr[1] = (U32) (*op & 0xFFFFFFFF);
 }
 
-INLINE void ARCH_DEP(get_float32)( float32 *op, U32 *fpr )
+static INLINE void ARCH_DEP(get_float32)( float32 *op, U32 *fpr )
 {
     *op = *fpr;
 }
 
-INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
+static INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
 {
     *fpr = *op;
 }
@@ -378,7 +378,7 @@ INLINE void ARCH_DEP(put_float32)( float32 *op, U32 *fpr )
         GET_FLOAT32_OP( op2, r2, regs );            \
     } while (0)
 
-INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float128 op2 )
+static INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float128 op2 )
 {
     return float128_is_nan(        op1      ) ||
            float128_is_nan(             op2 ) ? 3 :
@@ -386,7 +386,7 @@ INLINE BYTE ARCH_DEP(float128_cc_quiet)( void* ctx, float128 op1, float128 op2 )
            float128_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128 op2 )
+static INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128 op2 )
 {
     if (float128_is_signaling_nan( op1 ) ||
         float128_is_signaling_nan( op2 ))
@@ -394,7 +394,7 @@ INLINE BYTE ARCH_DEP(float128_compare)( void* ctx, float128 op1, float128 op2 )
     return ARCH_DEP(float128_cc_quiet)( ctx, op1, op2 );
 }
 
-INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1, float128 op2 )
+static INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1, float128 op2 )
 {
     if (float128_is_nan( op1 ) ||
         float128_is_nan( op2 ))
@@ -402,7 +402,7 @@ INLINE BYTE ARCH_DEP(float128_signaling_compare)( void* ctx, float128 op1, float
     return ARCH_DEP(float128_cc_quiet)( ctx, op1, op2 );
 }
 
-INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 op2 )
+static INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 op2 )
 {
     return float64_is_nan(        op1      ) ||
            float64_is_nan(             op2 ) ? 3 :
@@ -410,7 +410,7 @@ INLINE BYTE ARCH_DEP(float64_cc_quiet)( void* ctx, float64 op1, float64 op2 )
            float64_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op2 )
+static INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op2 )
 {
     if (float64_is_signaling_nan( op1 ) ||
         float64_is_signaling_nan( op2 ))
@@ -418,7 +418,7 @@ INLINE BYTE ARCH_DEP(float64_compare)( void* ctx, float64 op1, float64 op2 )
     return ARCH_DEP(float64_cc_quiet)( ctx, op1, op2 );
 }
 
-INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, float64 op2 )
+static INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, float64 op2 )
 {
     if (float64_is_nan( op1 ) ||
         float64_is_nan( op2 ))
@@ -426,7 +426,7 @@ INLINE BYTE ARCH_DEP(float64_signaling_compare)( void* ctx, float64 op1, float64
     return ARCH_DEP(float64_cc_quiet)( ctx, op1, op2 );
 }
 
-INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 op2 )
+static INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 op2 )
 {
     return float32_is_nan(        op1      ) ||
            float32_is_nan(             op2 ) ? 3 :
@@ -434,7 +434,7 @@ INLINE BYTE ARCH_DEP(float32_cc_quiet)( void* ctx, float32 op1, float32 op2 )
            float32_lt_quiet( ctx, op1, op2 ) ? 1 : 2;
 }
 
-INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op2 )
+static INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op2 )
 {
     if (float32_is_signaling_nan( op1 ) ||
         float32_is_signaling_nan( op2 ))
@@ -442,7 +442,7 @@ INLINE BYTE ARCH_DEP(float32_compare)( void* ctx, float32 op1, float32 op2 )
     return ARCH_DEP(float32_cc_quiet)( ctx, op1, op2 );
 }
 
-INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, float32 op2 )
+static INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, float32 op2 )
 {
     if (float32_is_nan( op1 ) ||
         float32_is_nan( op2 ))

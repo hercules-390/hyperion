@@ -21,7 +21,7 @@
 /*-------------------------------------------------------------------*/
 #if !defined(INLINE)
   #if defined(__GNUC__)
-    #define INLINE static __inline__ __attribute__((always_inline))
+    #define INLINE __inline__ __attribute__((always_inline))
   #elif defined(_MSVC_)
     #define INLINE __forceinline
   #else

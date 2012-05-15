@@ -25,14 +25,14 @@
 /*-------------------------------------------------------------------*/
 
 
-INLINE char asciitoupper(char c)
+static INLINE char asciitoupper(char c)
 {
   if (c < 'a' || c > 'z')
       return c;
   return (c - 32);
 }
 
-INLINE char asciitolower(char c)
+static INLINE char asciitolower(char c)
 {
   if (c < 'A' || c > 'Z')
       return c;
@@ -65,7 +65,7 @@ INLINE char asciitolower(char c)
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
+static INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
 {
     register char *s = string;
     register char *a = abbrev;
@@ -87,7 +87,7 @@ INLINE u_int strabbrev(char *string, char *abbrev, const u_int n)
     return 0;
 }
 
-INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n)
+static INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n)
 {
     register const char *s = string;
     register const char *a = abbrev;
@@ -124,7 +124,7 @@ INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const u_int n
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-INLINE void strlower(char *result, char *string)
+static INLINE void strlower(char *result, char *string)
 {
     register char *r = result;
     register char *s = string;
@@ -136,7 +136,7 @@ INLINE void strlower(char *result, char *string)
     return;
 }
 
-INLINE void strnlower(char *result, char *string, const u_int n)
+static INLINE void strnlower(char *result, char *string, const u_int n)
 {
     register char *r = result;
     register char *s = string;
@@ -149,7 +149,7 @@ INLINE void strnlower(char *result, char *string, const u_int n)
     return;
 }
 
-INLINE void strupper(char *result, char *string)
+static INLINE void strupper(char *result, char *string)
 {
     register char *r = result;
     register char *s = string;
@@ -161,7 +161,7 @@ INLINE void strupper(char *result, char *string)
     return;
 }
 
-INLINE void strnupper(char *result, char *string, const u_int n)
+static INLINE void strnupper(char *result, char *string, const u_int n)
 {
     register char *r = result;
     register char *s = string;

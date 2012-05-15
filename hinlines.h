@@ -9,7 +9,7 @@
 #define _HINLINES_H
 
 #if !defined(round_to_hostpagesize)
-INLINE U64 round_to_hostpagesize(U64 n)
+static INLINE U64 round_to_hostpagesize(U64 n)
 {
     register U64 factor = (U64)hostinfo.hostpagesz - 1;
     return ((n + factor) & ~factor);
@@ -47,7 +47,7 @@ INLINE U64 round_to_hostpagesize(U64 n)
 #endif
 
 #if defined(_GCC_SSE2_)
-INLINE void __clear_page( void *addr, size_t pgszmod64 )
+static INLINE void __clear_page( void *addr, size_t pgszmod64 )
 {
     unsigned char xmm_save[16];
     register unsigned int i;
@@ -75,7 +75,7 @@ INLINE void __clear_page( void *addr, size_t pgszmod64 )
     return;
 }
 #elif defined (_MSVC_)
-INLINE void __clear_page( void* addr, size_t pgszmod64 )
+static INLINE void __clear_page( void* addr, size_t pgszmod64 )
 {
     // Variables of type __m128 map to one of the XMM[0-7] registers
     // and are used with SSE and SSE2 instructions intrinsics defined
@@ -110,7 +110,7 @@ INLINE void __clear_page( void* addr, size_t pgszmod64 )
 #endif
 
 #if defined(_GCC_SSE2_)
-INLINE void __optimize_clear(void *addr, size_t n)
+static INLINE void __optimize_clear(void *addr, size_t n)
 {
     register char *mem = addr;
 
@@ -125,7 +125,7 @@ INLINE void __optimize_clear(void *addr, size_t n)
 #endif
 
 #if defined(_GCC_SSE2_) || defined (_MSVC_)
-INLINE void __clear_io_buffer(void *addr, size_t n)
+static INLINE void __clear_io_buffer(void *addr, size_t n)
 {
     register unsigned int x;
     register void *limit;

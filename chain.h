@@ -58,12 +58,12 @@ typedef struct _CHAIN {                 /* Chain member definition   */
 /* Chain management inline routines                                  */
 /*-------------------------------------------------------------------*/
 
-INLINE uintptr_t *chain_container(CHAIN *entry)
+static INLINE uintptr_t *chain_container(CHAIN *entry)
 {
     return ((uintptr_t *)entry + entry->offset);
 }
 
-INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
+static INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
 {
 
     /* Ensure valid entry pointers */
@@ -81,7 +81,7 @@ INLINE CHAINBLK *chain_validate_entry_header(CHAIN *entry)
     return entry->anchor;
 }
 
-INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
+static INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatcher, const u_int containersize)
 {
     chain_validate_pointer(container);
     chain_validate_pointer(anchor);
@@ -104,7 +104,7 @@ INLINE void chain_init_anchor(void *container, CHAINBLK *anchor, char *eyecatche
     anchor->offset = (uintptr_t) container - (uintptr_t) anchor;
 }
 
-INLINE void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
+static INLINE void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
 {
     chain_validate_pointer(container);
     chain_validate_pointer(anchor);
@@ -117,7 +117,7 @@ INLINE void chain_init_entry(CHAINBLK *anchor, void *container, CHAIN *entry)
 }
 
 
-INLINE void chain_first(CHAIN *entry)
+static INLINE void chain_first(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if (!anchor->first)
@@ -130,7 +130,7 @@ INLINE void chain_first(CHAIN *entry)
     }
 }
 
-INLINE void chain_first_locked(CHAIN *entry)
+static INLINE void chain_first_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -138,7 +138,7 @@ INLINE void chain_first_locked(CHAIN *entry)
     release_lock(&anchor->lock);
 }
 
-INLINE void chain_before(CHAIN *entry, CHAIN *before)
+static INLINE void chain_before(CHAIN *entry, CHAIN *before)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if ((!before->prev && anchor->first != (uintptr_t *)before) ||
@@ -151,7 +151,7 @@ INLINE void chain_before(CHAIN *entry, CHAIN *before)
         anchor->first = (uintptr_t *)entry;
 }
 
-INLINE void chain_after(CHAIN *entry, CHAIN *after)
+static INLINE void chain_after(CHAIN *entry, CHAIN *after)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if ((!after->next && anchor->last != (uintptr_t *)after) ||
@@ -164,7 +164,7 @@ INLINE void chain_after(CHAIN *entry, CHAIN *after)
         anchor->last = (uintptr_t *)entry;
 }
 
-INLINE void chain_last(CHAIN *entry)
+static INLINE void chain_last(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if (!anchor->last)
@@ -177,7 +177,7 @@ INLINE void chain_last(CHAIN *entry)
     }
 }
 
-INLINE void chain_last_locked(CHAIN *entry)
+static INLINE void chain_last_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -185,7 +185,7 @@ INLINE void chain_last_locked(CHAIN *entry)
     release_lock(&anchor->lock);
 }
 
-INLINE void unchain(CHAIN *entry)
+static INLINE void unchain(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     if (entry->prev)
@@ -207,7 +207,7 @@ INLINE void unchain(CHAIN *entry)
     entry->prev = entry->next = 0;
 }
 
-INLINE uintptr_t *unchain_first(CHAINBLK *anchor)
+static INLINE uintptr_t *unchain_first(CHAINBLK *anchor)
 {
     register CHAIN *entry = (CHAIN *)anchor->first;
     if (!entry)
@@ -216,7 +216,7 @@ INLINE uintptr_t *unchain_first(CHAINBLK *anchor)
     return chain_container(entry);
 }
 
-INLINE uintptr_t *unchain_first_locked(CHAINBLK *anchor)
+static INLINE uintptr_t *unchain_first_locked(CHAINBLK *anchor)
 {
     register CHAIN *entry = (CHAIN *)anchor->first;
     if (!entry)
@@ -229,7 +229,7 @@ INLINE uintptr_t *unchain_first_locked(CHAINBLK *anchor)
     return chain_container(entry);
 }
 
-INLINE uintptr_t *unchain_last(CHAINBLK *anchor)
+static INLINE uintptr_t *unchain_last(CHAINBLK *anchor)
 {
     register CHAIN *entry = (CHAIN *)anchor->last;
     if (!entry)
@@ -238,7 +238,7 @@ INLINE uintptr_t *unchain_last(CHAINBLK *anchor)
     return chain_container(entry);
 }
 
-INLINE uintptr_t *unchain_last_locked(CHAINBLK *anchor)
+static INLINE uintptr_t *unchain_last_locked(CHAINBLK *anchor)
 {
     register CHAIN *entry = (CHAIN *)anchor->last;
     if (!entry)
@@ -251,7 +251,7 @@ INLINE uintptr_t *unchain_last_locked(CHAINBLK *anchor)
     return chain_container(entry);
 }
 
-INLINE void unchain_locked(CHAIN *entry)
+static INLINE void unchain_locked(CHAIN *entry)
 {
     register CHAINBLK *anchor = chain_validate_entry_header(entry);
     obtain_lock(&anchor->lock);
@@ -264,7 +264,7 @@ INLINE void unchain_locked(CHAIN *entry)
 /* Chain aliases                                                     */
 /*-------------------------------------------------------------------*/
 
-INLINE void chain(CHAIN *entry)
+static INLINE void chain(CHAIN *entry)
 {chain_last(entry);}
 
 
@@ -275,25 +275,25 @@ INLINE void chain(CHAIN *entry)
 #define QUEUEBLK    CHAINBLK
 #define QUEUE       CHAIN
 
-INLINE void queue_init_anchor(void *container, QUEUEBLK *anchor, char *eyecatcher, const u_int containersize)
+static INLINE void queue_init_anchor(void *container, QUEUEBLK *anchor, char *eyecatcher, const u_int containersize)
 {chain_init_anchor(container, anchor, eyecatcher, containersize);}
 
-INLINE void queue_init_entry(QUEUEBLK *anchor, void *container, QUEUE *entry)
+static INLINE void queue_init_entry(QUEUEBLK *anchor, void *container, QUEUE *entry)
 {chain_init_entry(anchor, container, entry);}
 
-INLINE void queue(QUEUE *entry)
+static INLINE void queue(QUEUE *entry)
 {chain_last(entry);}
 
-INLINE void queue_fifo(QUEUE *entry)
+static INLINE void queue_fifo(QUEUE *entry)
 {chain_last(entry);}
 
-INLINE void queue_lifo(QUEUE *entry)
+static INLINE void queue_lifo(QUEUE *entry)
 {chain_first(entry);}
 
-INLINE uintptr_t *dequeue_locked(QUEUEBLK *anchor)
+static INLINE uintptr_t *dequeue_locked(QUEUEBLK *anchor)
 {return unchain_first_locked(anchor);}
 
-INLINE uintptr_t *dequeue(QUEUEBLK *anchor)
+static INLINE uintptr_t *dequeue(QUEUEBLK *anchor)
 {return unchain_first(anchor);}
 
 
