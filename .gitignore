@@ -1,4 +1,3 @@
-
 # /
 /*.bin
 /*.o
@@ -34,6 +33,12 @@
 /clock.lo
 /cmdtab.lo
 /cmpsc.lo
+/cmpsc_2012.lo
+/cmpscdbg.lo
+/cmpscdct.lo
+/cmpscget.lo
+/cmpscmem.lo
+/cmpscput.lo
 /codepage.lo
 /comm3705.lo
 /commadpt.lo
