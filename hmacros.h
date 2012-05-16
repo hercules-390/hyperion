@@ -34,6 +34,13 @@
   #endif
 #endif
 
+#if !defined(min)
+ #define min(_x, _y) ((_x) < (_y) ? (_x) : (_y))
+#endif
+
+#if !defined(max)
+ #define max(_x, _y) ((_x) > (_y) ? (_x) : (_y))
+#endif
 
 /*-------------------------------------------------------------------*/
 /* "Portability" macros for handling _MSVC_ port...                  */
