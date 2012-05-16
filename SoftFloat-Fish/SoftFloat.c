@@ -175,7 +175,7 @@ static int64 roundAndPackInt64( void* ctx, flag zSign, bits64 absZ0, bits64 absZ
 | Returns the fraction bits of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE bits32 extractFloat32Frac( float32 a )
+static INLINE bits32 extractFloat32Frac( float32 a )
 {
 
     return a & 0x007FFFFF;
@@ -186,7 +186,7 @@ INLINE bits32 extractFloat32Frac( float32 a )
 | Returns the exponent bits of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE int16 extractFloat32Exp( float32 a )
+static INLINE int16 extractFloat32Exp( float32 a )
 {
 
     return ( a>>23 ) & 0xFF;
@@ -197,7 +197,7 @@ INLINE int16 extractFloat32Exp( float32 a )
 | Returns the sign bit of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE flag extractFloat32Sign( float32 a )
+static INLINE flag extractFloat32Sign( float32 a )
 {
 
     return a>>31;
@@ -233,7 +233,7 @@ static void
 | significand.
 *----------------------------------------------------------------------------*/
 
-INLINE float32 packFloat32( flag zSign, int16 zExp, bits32 zSig )
+static INLINE float32 packFloat32( flag zSign, int16 zExp, bits32 zSig )
 {
 
     return ( ( (bits32) zSign )<<31 ) + ( ( (bits32) zExp )<<23 ) + zSig;
@@ -337,7 +337,7 @@ static float32
 | Returns the fraction bits of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE bits64 extractFloat64Frac( float64 a )
+static INLINE bits64 extractFloat64Frac( float64 a )
 {
 
     return a & LIT64( 0x000FFFFFFFFFFFFF );
@@ -348,7 +348,7 @@ INLINE bits64 extractFloat64Frac( float64 a )
 | Returns the exponent bits of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE int16 extractFloat64Exp( float64 a )
+static INLINE int16 extractFloat64Exp( float64 a )
 {
 
     return ( a>>52 ) & 0x7FF;
@@ -359,7 +359,7 @@ INLINE int16 extractFloat64Exp( float64 a )
 | Returns the sign bit of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE flag extractFloat64Sign( float64 a )
+static INLINE flag extractFloat64Sign( float64 a )
 {
 
     return a>>63;
@@ -395,7 +395,7 @@ static void
 | significand.
 *----------------------------------------------------------------------------*/
 
-INLINE float64 packFloat64( flag zSign, int16 zExp, bits64 zSig )
+static INLINE float64 packFloat64( flag zSign, int16 zExp, bits64 zSig )
 {
 
     return ( ( (bits64) zSign )<<63 ) + ( ( (bits64) zExp )<<52 ) + zSig;
@@ -502,7 +502,7 @@ static float64
 | floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE bits64 extractFloat128Frac1( float128 a )
+static INLINE bits64 extractFloat128Frac1( float128 a )
 {
 
     return a.low;
@@ -514,7 +514,7 @@ INLINE bits64 extractFloat128Frac1( float128 a )
 | floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE bits64 extractFloat128Frac0( float128 a )
+static INLINE bits64 extractFloat128Frac0( float128 a )
 {
 
     return a.high & LIT64( 0x0000FFFFFFFFFFFF );
@@ -526,7 +526,7 @@ INLINE bits64 extractFloat128Frac0( float128 a )
 | `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE int32 extractFloat128Exp( float128 a )
+static INLINE int32 extractFloat128Exp( float128 a )
 {
 
     return ( a.high>>48 ) & 0x7FFF;
@@ -537,7 +537,7 @@ INLINE int32 extractFloat128Exp( float128 a )
 | Returns the sign bit of the quadruple-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-INLINE flag extractFloat128Sign( float128 a )
+static INLINE flag extractFloat128Sign( float128 a )
 {
 
     return a.high>>63;
@@ -598,7 +598,7 @@ static void
 | significand.
 *----------------------------------------------------------------------------*/
 
-INLINE float128
+static INLINE float128
  packFloat128( flag zSign, int32 zExp, bits64 zSig0, bits64 zSig1 )
 {
     float128 z;

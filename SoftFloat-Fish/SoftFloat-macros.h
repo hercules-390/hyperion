@@ -52,7 +52,7 @@ these four paragraphs for those parts of this code that are retained.
 | The result is stored in the location pointed to by `zPtr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void shift32RightJamming( bits32 a, int16 count, bits32 *zPtr )
+static INLINE void shift32RightJamming( bits32 a, int16 count, bits32 *zPtr )
 {
     bits32 z;
 
@@ -78,7 +78,7 @@ INLINE void shift32RightJamming( bits32 a, int16 count, bits32 *zPtr )
 | The result is stored in the location pointed to by `zPtr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void shift64RightJamming( bits64 a, int16 count, bits64 *zPtr )
+static INLINE void shift64RightJamming( bits64 a, int16 count, bits64 *zPtr )
 {
     bits64 z;
 
@@ -112,7 +112,7 @@ INLINE void shift64RightJamming( bits64 a, int16 count, bits64 *zPtr )
 | described above, and is returned at the location pointed to by `z1Ptr'.)
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shift64ExtraRightJamming(
      bits64 a0, bits64 a1, int16 count, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -149,7 +149,7 @@ INLINE void
 | which are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shift128Right(
      bits64 a0, bits64 a1, int16 count, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -184,7 +184,7 @@ INLINE void
 | the locations pointed to by `z0Ptr' and `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shift128RightJamming(
      bits64 a0, bits64 a1, int16 count, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -235,7 +235,7 @@ INLINE void
 | `z2Ptr'.)
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shift128ExtraRightJamming(
      bits64 a0,
      bits64 a1,
@@ -293,7 +293,7 @@ INLINE void
 | pieces which are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shortShift128Left(
      bits64 a0, bits64 a1, int16 count, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -312,7 +312,7 @@ INLINE void
 | `z1Ptr', and `z2Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  shortShift192Left(
      bits64 a0,
      bits64 a1,
@@ -347,7 +347,7 @@ INLINE void
 | are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  add128(
      bits64 a0, bits64 a1, bits64 b0, bits64 b1, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -367,7 +367,7 @@ INLINE void
 | `z1Ptr', and `z2Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  add192(
      bits64 a0,
      bits64 a1,
@@ -405,7 +405,7 @@ INLINE void
 | `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  sub128(
      bits64 a0, bits64 a1, bits64 b0, bits64 b1, bits64 *z0Ptr, bits64 *z1Ptr )
 {
@@ -423,7 +423,7 @@ INLINE void
 | pointed to by `z0Ptr', `z1Ptr', and `z2Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  sub192(
      bits64 a0,
      bits64 a1,
@@ -459,7 +459,7 @@ INLINE void
 | `z0Ptr' and `z1Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void mul64To128( bits64 a, bits64 b, bits64 *z0Ptr, bits64 *z1Ptr )
+static INLINE void mul64To128( bits64 a, bits64 b, bits64 *z0Ptr, bits64 *z1Ptr )
 {
     bits32 aHigh, aLow, bHigh, bLow;
     bits64 z0, zMiddleA, zMiddleB, z1;
@@ -489,7 +489,7 @@ INLINE void mul64To128( bits64 a, bits64 b, bits64 *z0Ptr, bits64 *z1Ptr )
 | `z2Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  mul128By64To192(
      bits64 a0,
      bits64 a1,
@@ -517,7 +517,7 @@ INLINE void
 | the locations pointed to by `z0Ptr', `z1Ptr', `z2Ptr', and `z3Ptr'.
 *----------------------------------------------------------------------------*/
 
-INLINE void
+static INLINE void
  mul128To256(
      bits64 a0,
      bits64 a1,
@@ -685,7 +685,7 @@ static int8 countLeadingZeros64( bits64 a )
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag eq128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
+static INLINE flag eq128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 {
 
     return ( a0 == b0 ) && ( a1 == b1 );
@@ -698,7 +698,7 @@ INLINE flag eq128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag le128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
+static INLINE flag le128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 {
 
     return ( a0 < b0 ) || ( ( a0 == b0 ) && ( a1 <= b1 ) );
@@ -711,7 +711,7 @@ INLINE flag le128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 | returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag lt128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
+static INLINE flag lt128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 {
 
     return ( a0 < b0 ) || ( ( a0 == b0 ) && ( a1 < b1 ) );
@@ -724,7 +724,7 @@ INLINE flag lt128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
+static INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 {
 
     return ( a0 != b0 ) || ( a1 != b1 );

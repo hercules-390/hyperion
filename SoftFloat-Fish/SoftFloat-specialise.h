@@ -67,7 +67,7 @@ typedef struct {
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float32_is_nan( float32 a )
+static INLINE flag float32_is_nan( float32 a )
 {
     return ( 0xFF000000 < (bits32) ( a<<1 ) );
 }
@@ -77,7 +77,7 @@ INLINE flag float32_is_nan( float32 a )
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float32_is_signaling_nan( float32 a )
+static INLINE flag float32_is_signaling_nan( float32 a )
 {
     return ( ( ( a>>22 ) & 0x1FF ) == 0x1FE ) && ( a & 0x003FFFFF );
 }
@@ -104,7 +104,7 @@ static commonNaNT float32ToCommonNaN( void* ctx, float32 a )
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-INLINE float32 commonNaNToFloat32( commonNaNT a )
+static INLINE float32 commonNaNToFloat32( commonNaNT a )
 {
     return ( ( (bits32) a.sign )<<31 ) | 0x7FC00000 | ( a.high>>41 );
 }
@@ -152,7 +152,7 @@ static float32 propagateFloat32NaN( void* ctx, float32 a, float32 b )
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float64_is_nan( float64 a )
+static INLINE flag float64_is_nan( float64 a )
 {
     return ( LIT64( 0xFFE0000000000000 ) < (bits64) ( a<<1 ) );
 }
@@ -162,7 +162,7 @@ INLINE flag float64_is_nan( float64 a )
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float64_is_signaling_nan( float64 a )
+static INLINE flag float64_is_signaling_nan( float64 a )
 {
     return
            ( ( ( a>>51 ) & 0xFFF ) == 0xFFE )
@@ -191,7 +191,7 @@ static commonNaNT float64ToCommonNaN( void* ctx, float64 a )
 | precision floating-point format.
 *----------------------------------------------------------------------------*/
 
-INLINE float64 commonNaNToFloat64( commonNaNT a )
+static INLINE float64 commonNaNToFloat64( commonNaNT a )
 {
     return
           ( ( (bits64) a.sign )<<63 )
@@ -246,7 +246,7 @@ static float64 propagateFloat64NaN( void* ctx, float64 a, float64 b )
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float128_is_nan( float128 a )
+static INLINE flag float128_is_nan( float128 a )
 {
     return
            ( LIT64( 0xFFFE000000000000 ) <= (bits64) ( a.high<<1 ) )
@@ -258,7 +258,7 @@ INLINE flag float128_is_nan( float128 a )
 | signaling NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-INLINE flag float128_is_signaling_nan( float128 a )
+static INLINE flag float128_is_signaling_nan( float128 a )
 {
     return
            ( ( ( a.high>>47 ) & 0xFFFF ) == 0xFFFE )
