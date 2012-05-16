@@ -1629,29 +1629,29 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="SoftFloat"
+					Name="SoftFloat-Fish"
 					>
 					<File
-						RelativePath=".\SoftFloat\Makefile.am"
+						RelativePath=".\SoftFloat-Fish\Makefile.am"
 						>
 					</File>
 					<Filter
 						Name="Doc Files"
 						>
 						<File
-							RelativePath=".\SoftFloat\README.txt"
+							RelativePath=".\SoftFloat-Fish\README.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-history.txt"
+							RelativePath=".\SoftFloat-Fish\SoftFloat-history.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-source.txt"
+							RelativePath=".\SoftFloat-Fish\SoftFloat-source.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat.txt"
+							RelativePath=".\SoftFloat-Fish\SoftFloat.txt"
 							>
 						</File>
 					</Filter>
@@ -1659,23 +1659,23 @@
 						Name="Header Files"
 						>
 						<File
-							RelativePath=".\SoftFloat\milieu.h"
+							RelativePath=".\SoftFloat-Fish\milieu.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-macros.h"
+							RelativePath=".\SoftFloat-Fish\SoftFloat-macros.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-specialise.h"
+							RelativePath=".\SoftFloat-Fish\SoftFloat-specialise.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat-types.h"
+							RelativePath=".\SoftFloat-Fish\SoftFloat-types.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat.h"
+							RelativePath=".\SoftFloat-Fish\SoftFloat.h"
 							>
 						</File>
 					</Filter>
@@ -1683,7 +1683,7 @@
 						Name="Source Files"
 						>
 						<File
-							RelativePath=".\SoftFloat\SoftFloat.c"
+							RelativePath=".\SoftFloat-Fish\SoftFloat.c"
 							>
 						</File>
 					</Filter>
