@@ -8,6 +8,8 @@
 #ifndef _CMPSCPUT_H_
 #define _CMPSCPUT_H_    // Code to be compiled ONLY ONCE goes after here
 
+#include "cmpscmem.h"   // (need MEMBLK)
+
 ///////////////////////////////////////////////////////////////////////////////
 // COMPRESSION: Put Next output DST Index
 //
@@ -15,8 +17,6 @@
 //           any more index values (i.e. it's TRUE that we HAVE reached the
 //           end of our buffer), otherwise FALSE (i.e. there is still room
 //           remaining in the DST buffer for additional index values).
-
-typedef struct MEMBLK MEMBLK; // (forward reference)
 
 struct PIBLK                // PutIndex parameters block
 {
