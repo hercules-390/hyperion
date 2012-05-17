@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /* des.c - implementation of DES
  * http://www.tartarus.org/~simon-anonsvn/viewcvs.cgi/putty/
  * modified for use with dyncrypt
@@ -39,8 +37,6 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-// $Log$
 
 #include "hstdinc.h"
 

@@ -1,4 +1,4 @@
-* LPP test $Id$
+* LPP test
 sysclear
 archmode ESAME
 archlvl  ena load_prog_param

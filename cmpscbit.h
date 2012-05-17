@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscbit.h 2422 2012-04-18 00:38:09Z Fish $
-
 #ifndef _CMPSCBIT_H_
 #define _CMPSCBIT_H_
 

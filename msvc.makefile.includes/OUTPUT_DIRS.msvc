@@ -3,25 +3,15 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2009
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  Define the build output directories...
-#
-#
-#                           CHANGE HISTORY
-# $Log$
-# Revision 1.2  2008/10/11 23:46:01  fish
-# Add CVS "Id" and "Log"
-#
-#
-# DD/MM/YY Description
-#
-# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # SET PREFIX=NONE to generate output directories named bin,obj,pdb,map,cod
 # (this is for nmake version 6 which barfs if the command line is too long)
 # Otherwise the output directories are named:
-# msvc.[debug.]yyy.bin/obj/pdb/map/cod
+#
+#      msvc.[debug.]yyy.bin/obj/pdb/map/cod
+#
 # where yyy is "dllmod" (for i386), or "AMD64" or "IA64"
 # (this naming convention is to avoid breaking existing build procedures)
 # ***************************************************************************

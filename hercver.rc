@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // HercVer.rc  --  defines the Windows resources to be linked into the product
 //                 (c) Copyright "Fish" (David B. Trout), 2009

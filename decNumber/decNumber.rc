@@ -1,10 +1,8 @@
-/* $Id$
+/*
  * Resource-definition script file for decNumber DLL (MSVC)
  *
  * This file was added by the Hercules project.
  * It is not part of the original decNumber distribution.
- *
- * $Log$
  *
  * the IBM copyright info was different in many modules
  * here the most comprehensive one is used

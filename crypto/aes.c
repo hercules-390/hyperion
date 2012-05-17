@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /* $OpenBSD: rijndael.c,v 1.18 2005/05/25 05:47:53 markus Exp $ */
 /* modified for use by dyncrypt */
 
@@ -35,8 +33,6 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-// $Log$
 
 #include "hstdinc.h"
 

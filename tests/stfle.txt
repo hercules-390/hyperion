@@ -1,4 +1,4 @@
-* STFL/STFLE test $Id$
+* STFL/STFLE test
 sysclear           
 archmode ESAME
 r 000=0008000000000200                 # EC mode restart PSW

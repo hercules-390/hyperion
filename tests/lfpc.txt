@@ -1,4 +1,4 @@
-* LFPC test $Id$
+* LFPC test
 sysclear
 archmode esa/390
 r 000=0008000080000200                 # ESA/390 restart PSW

@@ -3,7 +3,6 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  Sets appropriate compiler/linker flags (cdebug & ldebug) depending on
 #  whether a normal retail release or debugging version of the product is

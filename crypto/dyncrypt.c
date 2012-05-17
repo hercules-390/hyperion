@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id$
-
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Implementation of the z/Architecture crypto instructions described in      */

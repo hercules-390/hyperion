@@ -1,4 +1,4 @@
-* EXRL test $Id$
+* EXRL test
 stopall
 pause 1
 sysclear

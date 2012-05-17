@@ -1,4 +1,4 @@
-* TDGDT test $Id$
+* TDGDT test
 sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW

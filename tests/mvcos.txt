@@ -1,4 +1,4 @@
-* MVCOS test $Id$
+* MVCOS test
 sysclear
 archmode esame
 r 01a0=00000001800000000000000000002000 # z/Arch restart PSW

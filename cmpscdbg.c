@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscdbg.c 2462 2012-04-29 17:57:15Z Fish $
-
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
 #if !defined(_HENGINE_DLL_)
@@ -136,9 +134,11 @@ HHHHHHHH.9  HHHH    HHHHHHHH.9  HHHH    HHHHHHHH.9  HHHH    HHHHHHHH.9  HHHH
 */
 
 ///////////////////////////////////////////////////////////////////////////////
+// (future/todo)
 
 int (CMPSC_FASTCALL ARCH_DEP( cmpsc_Report ))( void* dbg )
 {
+    UNREFERENCED( dbg );
     return 0;
 }
 

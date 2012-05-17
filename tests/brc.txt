@@ -1,4 +1,4 @@
-* BRC test $Id$
+* BRC test
 sysclear           
 archmode s/370
 r 000=0008000000000200                 # EC mode restart PSW

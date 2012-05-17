@@ -3,7 +3,6 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  Handles support for PCRE (Perl Compatible Regular Expressions),
 #  for MSVC, needed by HAO (Hercules Automatic Operator) facility

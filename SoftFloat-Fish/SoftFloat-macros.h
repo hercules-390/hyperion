@@ -5,8 +5,6 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
-
 /* This module is an UNMODIFIED version of John R. Hauser's          */
 /* 'softfloat-macros.h' module, and is wholly copyright by him.      */
 /* Refer to the documents "SoftFloat.txt", "SoftFloat-source.txt",   */

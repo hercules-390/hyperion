@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscput.c 2462 2012-04-29 17:57:15Z Fish $
-
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
 #if !defined(_HENGINE_DLL_)

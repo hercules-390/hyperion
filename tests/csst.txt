@@ -1,4 +1,4 @@
-* CSST test $Id$
+* CSST test
 sysclear
 archmode esame
 r 1a0=00000000000000000000000000000200 # z/Arch restart PSW

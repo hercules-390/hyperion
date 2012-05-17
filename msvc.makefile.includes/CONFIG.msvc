@@ -3,7 +3,6 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
-# $Id$
 #
 #  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
 #  and attempt to determine the Visual Studio compiler version

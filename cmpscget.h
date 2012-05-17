@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscget.h 2462 2012-04-29 17:57:15Z Fish $
-
 #ifndef _CMPSCGET_H_
 #define _CMPSCGET_H_    // Code to be compiled ONLY ONCE goes after here
 

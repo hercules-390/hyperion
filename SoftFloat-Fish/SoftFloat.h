@@ -6,8 +6,6 @@
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
-// $Id$
-
 /* This module is a SLIGHTLY modified version of John R. Hauser's    */
 /* original 'softfloat.h' module, and is largely copyright by him.   */
 /* I (i.e. "Fish", David B. Trout) simply enhanced it to interface   */
