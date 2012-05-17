@@ -21,7 +21,11 @@ struct MEMBLK           // Operand memory access control block
     int    arn;         // Operand register number
     U8     pkey;        // PSW key
 };
+
+#ifndef _MEMBLK_TYPEDEFFED_
+#define _MEMBLK_TYPEDEFFED_
 typedef struct MEMBLK MEMBLK;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // (simple helper macros with more descriptive names)

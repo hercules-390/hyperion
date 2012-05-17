@@ -16,7 +16,10 @@
 // Returns:  Number of SRC bytes consumed, or '0' if the
 //           end of SRC data i/p buffer has been reached.
 
-typedef struct MEMBLK MEMBLK; // (forward reference)
+#ifndef _MEMBLK_TYPEDEFFED_
+#define _MEMBLK_TYPEDEFFED_
+typedef struct MEMBLK MEMBLK;
+#endif
 
 struct GIBLK                // GetIndex parameters block
 {
