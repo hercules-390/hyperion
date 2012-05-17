@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscdct.h 2462 2012-04-29 17:57:15Z Fish $
-
 #ifndef _CMPSCDCT_H_
 #define _CMPSCDCT_H_    // Code to be compiled ONLY ONCE goes after here
 
@@ -37,8 +35,12 @@ typedef struct DCTBLK DCTBLK;
 
 struct ECE              //  Portable Expansion Character Entry
 {
+    union { struct {
     U8      ec[7];      //  0:7  Additional Extension characters
     U8      pad1[1];    //  7:1  (always garbage)
+    };      struct {
+    U64     ec_dw;      //  0:8  (same thing accessed as U64)
+    };};
 
     U16     pptr;       //  8:2  Predecessor pointer
     U8      csl;        // 10:1  Complete-symbol length
@@ -52,11 +54,19 @@ typedef struct ECE ECE;
 
 struct CCE              //  Portable Compression Character Entry
 {
+    union { struct {
     U8      ec[4];      //  0:4  Additional Extension characters
     U8      pad1[4];    //  4:4  (always garbage)
+    };      struct {
+    U64     ec_dw;      //  0:8  (same thing accessed as U64)
+    };};
 
+    union { struct {
     U8      cc[5];      //  8:5  Child characters (first EC of child)
     U8      pad2[3];    // 13:3  (always garbage)
+    };      struct {
+    U64     cc_dw;      //  8:8  (same thing accessed as U64)
+    };};
 
     U16     cptr;       // 16:2  Child pointer
     U16     ecb;        // 18:2  Examine-child bits for children 1-5
@@ -73,8 +83,13 @@ typedef struct CCE CCE;
 
 struct SDE              //  Portable Sibling Descriptor Entry
 {
+    union { struct {
     U8      sc[14];     // 0:14  Sibling characters (first EC of sibling)
     U8      pad2[2];    // 14:2  (always garbage)
+    };      struct {
+    U64     sc_dw;      //  0:8  (same thing accessed as U64)
+    U64     sc_dw2;     //  8:8  (same thing accessed as U64)
+    };};
 
     U16     ecb;        // 16:2  Examine-child bits for children 1-7 or 1-14
     U8      sct;        // 18:1  Sibling count

@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscdct.c 2461 2012-04-29 17:56:56Z Fish $
-
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
 #if !defined(_HENGINE_DLL_)
@@ -61,7 +59,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetECE ))( U16 index, ECEBLK* pECEBLK )
     {
         if (!(pECE->csl = ECE_U8R( 5, 3 )))
             return FALSE;
-        *(U64*)&pECE->ec[0] = CSWAP64( ece << 8 );
+        pECE->ec_dw = CSWAP64( ece << 8 );
     }
     else if (pECE->psl > 5)
         return FALSE;
@@ -70,7 +68,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetECE ))( U16 index, ECEBLK* pECEBLK )
         if ((pECE->pptr = ECE_U16R( 3, 13 )) > pECEBLK->max_index)
             return FALSE;
         pECE->ofst = (U8)(ece);
-        *(U64*)&pECE->ec[0] = CSWAP64( ece << 16 );
+        pECE->ec_dw = CSWAP64( ece << 16 );
         pECE->csl = 0;
     }
 
@@ -95,7 +93,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
             return FALSE;
 
         if (pCCE->act)
-            *(U64*)&pCCE->ec[0] = CSWAP64( cce << 24 );
+            pCCE->ec_dw = CSWAP64( cce << 24 );
 
         return TRUE;
     }
@@ -111,7 +109,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
         pCCE->cc[0] = CCE_U8R( 24 + wrk, 8 );
 
         if (pCCE->act)
-            *(U64*)&pCCE->ec[0] = CSWAP64( cce << 24 );
+            pCCE->ec_dw = CSWAP64( cce << 24 );
 
         pCCE->cptr = CCE_U16R( 11, 13 );
         pCCE->ecb  = CCE_U16L(  3,  1 );
@@ -138,7 +136,8 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
         }
 
         wrk = (pCCE->act << 3);      // (cc start bit - 24)
-        *(U64*)&pCCE->cc[0] = CSWAP64( cce << (24 + wrk) );
+
+        pCCE->cc_dw = CSWAP64( cce << (24 + wrk) );
 
         pCCE->cptr = CCE_U16R( 11, 13 );
         pCCE->ecb  = CCE_U16L(  3,  5 );
@@ -189,7 +188,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD0 ))( U16 index, SDEBLK* pSDEBLK )
         pSDE->ecb |= 0xFFFF >> 5;
     }
 
-    *(U64*)&pSDE->sc[0] = CSWAP64( sd1 << 8 );
+    pSDE->sc_dw = CSWAP64( sd1 << 8 );
 
     return TRUE;
 }
@@ -238,16 +237,16 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD1 ))( U16 index, SDEBLK* pSDEBLK )
     sd1 <<= 16;                               // (first 6 bytes)
 
     if (pSDE->sct <= 6)
-        *(U64*)&pSDE->sc[0] = CSWAP64( sd1 ); // (only 6 bytes)
+        pSDE->sc_dw = CSWAP64( sd1 );         // (only 6 bytes)
     else
     {
         register U64 sd2 = ARCH_DEP( GetDCT )( index, pSDEBLK->pDCTBLK2 );
 
         sd1 |= sd2 >> (64-16);                // (append 2 more)
-        *(U64*)&pSDE->sc[0] = CSWAP64( sd1 ); // (store first 8)
+        pSDE->sc_dw= CSWAP64( sd1 );          // (store first 8)
 
         sd2 <<= 16;                           // (next 6 bytes)
-        *(U64*)&pSDE->sc[8] = CSWAP64( sd2 ); // (store next 6)
+        pSDE->sc_dw2 = CSWAP64( sd2 );        // (store next 6)
     }
 
     return TRUE;
