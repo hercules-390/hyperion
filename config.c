@@ -113,6 +113,7 @@ RADR  storsize;
 RADR  skeysize;
 BYTE *dofree = NULL;
 char *mfree = NULL;
+REGS *regs;
 int cpu;
 
     OBTAIN_INTLOCK(NULL);
@@ -216,6 +217,14 @@ int cpu;
 #endif
 
     configure_region_reloc();
+
+    /* Call initial_cpu_reset for every online processor */
+    for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+      if (IS_CPU_ONLINE(cpu))
+      {
+        regs=sysblk.regs[cpu];
+        ARCH_DEP(initial_cpu_reset) (regs) ;
+      }
 
     return 0;
 }
