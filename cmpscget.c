@@ -5,8 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// $Id: cmpscget.c 2462 2012-04-29 17:57:15Z Fish $
-
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
 #if !defined(_HENGINE_DLL_)
@@ -417,14 +415,14 @@ U8  (CMPSC_FASTCALL ARCH_DEP( Get8Index009 )) ( GIBLK* pGIBLK )
     b  = fetch_op_b ( pGIBLK->pCMPSCBLK->pOp2 + 8, pGIBLK->pMEMBLK );
     dw = fetch_op_dw( pGIBLK->pCMPSCBLK->pOp2 + 0, pGIBLK->pMEMBLK );
 
-    *(pGIBLK->pIndex + 7) = (U16) (b) | (U16) (dw << 8) & 0x01FF; dw >>= 1;
-    *(pGIBLK->pIndex + 6) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 5) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 4) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 3) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 2) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 1) =             (U16) (dw)      & 0x01FF; dw >>= 9;
-    *(pGIBLK->pIndex + 0) =             (U16) (dw);
+    *(pGIBLK->pIndex + 7) = ( ((U16) b) | (((U16) dw) << 8) ) & 0x01FF; dw >>= 1;
+    *(pGIBLK->pIndex + 6) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 5) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 4) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 3) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 2) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 1) = (               (U16) dw        ) & 0x01FF; dw >>= 9;
+    *(pGIBLK->pIndex + 0) = (               (U16) dw        );
 
     return  9;
 }
@@ -448,14 +446,14 @@ U8  (CMPSC_FASTCALL ARCH_DEP( Get8Index010 )) ( GIBLK* pGIBLK )
     hw = fetch_op_hw( pGIBLK->pCMPSCBLK->pOp2 + 8, pGIBLK->pMEMBLK );
     dw = fetch_op_dw( pGIBLK->pCMPSCBLK->pOp2 + 0, pGIBLK->pMEMBLK );
 
-    *(pGIBLK->pIndex + 7) = (U16) (hw)                   & 0x03FF; hw >>= 10;
-    *(pGIBLK->pIndex + 6) = (U16) (hw) | (U16) (dw << 6) & 0x03FF; dw >>=  4;
-    *(pGIBLK->pIndex + 5) =              (U16) (dw)      & 0x03FF; dw >>= 10;
-    *(pGIBLK->pIndex + 4) =              (U16) (dw)      & 0x03FF; dw >>= 10;
-    *(pGIBLK->pIndex + 3) =              (U16) (dw)      & 0x03FF; dw >>= 10;
-    *(pGIBLK->pIndex + 2) =              (U16) (dw)      & 0x03FF; dw >>= 10;
-    *(pGIBLK->pIndex + 1) =              (U16) (dw)      & 0x03FF; dw >>= 10;
-    *(pGIBLK->pIndex + 0) =              (U16) (dw);
+    *(pGIBLK->pIndex + 7) = ( hw                     ) & 0x03FF; hw >>= 10;
+    *(pGIBLK->pIndex + 6) = ( hw | (((U16) dw) << 6) ) & 0x03FF; dw >>=  4;
+    *(pGIBLK->pIndex + 5) = (        (U16) dw        ) & 0x03FF; dw >>= 10;
+    *(pGIBLK->pIndex + 4) = (        (U16) dw        ) & 0x03FF; dw >>= 10;
+    *(pGIBLK->pIndex + 3) = (        (U16) dw        ) & 0x03FF; dw >>= 10;
+    *(pGIBLK->pIndex + 2) = (        (U16) dw        ) & 0x03FF; dw >>= 10;
+    *(pGIBLK->pIndex + 1) = (        (U16) dw        ) & 0x03FF; dw >>= 10;
+    *(pGIBLK->pIndex + 0) = (        (U16) dw        );
 
     return  10;
 }
@@ -485,14 +483,14 @@ U8  (CMPSC_FASTCALL ARCH_DEP( Get8Index011 )) ( GIBLK* pGIBLK )
     hw = fetch_op_hw( pGIBLK->pCMPSCBLK->pOp2 +  8, pGIBLK->pMEMBLK );
     dw = fetch_op_dw( pGIBLK->pCMPSCBLK->pOp2 +  0, pGIBLK->pMEMBLK );
 
-    *(pGIBLK->pIndex + 7) = (U16) (b)  | (U16) (hw << 8) & 0x07FF; hw >>=  3;
-    *(pGIBLK->pIndex + 6) = (U16) (hw)                   & 0x07FF; hw >>= 11;
-    *(pGIBLK->pIndex + 5) = (U16) (hw) | (U16) (dw << 2) & 0x07FF; dw >>=  9;
-    *(pGIBLK->pIndex + 4) =              (U16) (dw)      & 0x07FF; dw >>= 11;
-    *(pGIBLK->pIndex + 3) =              (U16) (dw)      & 0x07FF; dw >>= 11;
-    *(pGIBLK->pIndex + 2) =              (U16) (dw)      & 0x07FF; dw >>= 11;
-    *(pGIBLK->pIndex + 1) =              (U16) (dw)      & 0x07FF; dw >>= 11;
-    *(pGIBLK->pIndex + 0) =              (U16) (dw);
+    *(pGIBLK->pIndex + 7) = ( ((U16) b) | (       hw  << 8) ) & 0x07FF; hw >>=  3;
+    *(pGIBLK->pIndex + 6) = (    hw                         ) & 0x07FF; hw >>= 11;
+    *(pGIBLK->pIndex + 5) = (    hw     | (((U16) dw) << 2) ) & 0x07FF; dw >>=  9;
+    *(pGIBLK->pIndex + 4) = (               (U16) dw        ) & 0x07FF; dw >>= 11;
+    *(pGIBLK->pIndex + 3) = (               (U16) dw        ) & 0x07FF; dw >>= 11;
+    *(pGIBLK->pIndex + 2) = (               (U16) dw        ) & 0x07FF; dw >>= 11;
+    *(pGIBLK->pIndex + 1) = (               (U16) dw        ) & 0x07FF; dw >>= 11;
+    *(pGIBLK->pIndex + 0) = (               (U16) dw        );
 
     return  11;
 }
@@ -517,14 +515,14 @@ U8  (CMPSC_FASTCALL ARCH_DEP( Get8Index012 )) ( GIBLK* pGIBLK )
     fw = fetch_op_fw( pGIBLK->pCMPSCBLK->pOp2 + 8, pGIBLK->pMEMBLK );
     dw = fetch_op_dw( pGIBLK->pCMPSCBLK->pOp2 + 0, pGIBLK->pMEMBLK );
 
-    *(pGIBLK->pIndex + 7) = (U16) (fw)                   & 0x0FFF; fw >>= 12;
-    *(pGIBLK->pIndex + 6) = (U16) (fw)                   & 0x0FFF; fw >>= 12;
-    *(pGIBLK->pIndex + 5) = (U16) (fw) | (U16) (dw << 8) & 0x0FFF; dw >>=  4;
-    *(pGIBLK->pIndex + 4) =              (U16) (dw)      & 0x0FFF; dw >>= 12;
-    *(pGIBLK->pIndex + 3) =              (U16) (dw)      & 0x0FFF; dw >>= 12;
-    *(pGIBLK->pIndex + 2) =              (U16) (dw)      & 0x0FFF; dw >>= 12;
-    *(pGIBLK->pIndex + 1) =              (U16) (dw)      & 0x0FFF; dw >>= 12;
-    *(pGIBLK->pIndex + 0) =              (U16) (dw);
+    *(pGIBLK->pIndex + 7) = (  (U16) fw                      ) & 0x0FFF; fw >>= 12;
+    *(pGIBLK->pIndex + 6) = (  (U16) fw                      ) & 0x0FFF; fw >>= 12;
+    *(pGIBLK->pIndex + 5) = ( ((U16) fw) | (((U16) dw) << 8) ) & 0x0FFF; dw >>=  4;
+    *(pGIBLK->pIndex + 4) = (                (U16) dw        ) & 0x0FFF; dw >>= 12;
+    *(pGIBLK->pIndex + 3) = (                (U16) dw        ) & 0x0FFF; dw >>= 12;
+    *(pGIBLK->pIndex + 2) = (                (U16) dw        ) & 0x0FFF; dw >>= 12;
+    *(pGIBLK->pIndex + 1) = (                (U16) dw        ) & 0x0FFF; dw >>= 12;
+    *(pGIBLK->pIndex + 0) = (                (U16) dw        );
 
     return  12;
 }
@@ -554,14 +552,14 @@ U8  (CMPSC_FASTCALL ARCH_DEP( Get8Index013 )) ( GIBLK* pGIBLK )
     fw = fetch_op_fw( pGIBLK->pCMPSCBLK->pOp2 +  8, pGIBLK->pMEMBLK );
     dw = fetch_op_dw( pGIBLK->pCMPSCBLK->pOp2 +  0, pGIBLK->pMEMBLK );
 
-    *(pGIBLK->pIndex + 7) = (U16) (b)  | (U16) (fw << 8) & 0x1FFF; fw >>=  5;
-    *(pGIBLK->pIndex + 6) = (U16) (fw)                   & 0x1FFF; fw >>= 13;
-    *(pGIBLK->pIndex + 5) = (U16) (fw)                   & 0x1FFF; fw >>= 13;
-    *(pGIBLK->pIndex + 4) = (U16) (fw) | (U16) (dw << 1) & 0x1FFF; dw >>= 12;
-    *(pGIBLK->pIndex + 3) =              (U16) (dw)      & 0x1FFF; dw >>= 13;
-    *(pGIBLK->pIndex + 2) =              (U16) (dw)      & 0x1FFF; dw >>= 13;
-    *(pGIBLK->pIndex + 1) =              (U16) (dw)      & 0x1FFF; dw >>= 13;
-    *(pGIBLK->pIndex + 0) =              (U16) (dw);
+    *(pGIBLK->pIndex + 7) = ( ((U16) b)  | (((U16) fw) << 8) ) & 0x1FFF; fw >>=  5;
+    *(pGIBLK->pIndex + 6) = (  (U16) fw                      ) & 0x1FFF; fw >>= 13;
+    *(pGIBLK->pIndex + 5) = (  (U16) fw                      ) & 0x1FFF; fw >>= 13;
+    *(pGIBLK->pIndex + 4) = ( ((U16) fw) | (((U16) dw) << 1) ) & 0x1FFF; dw >>= 12;
+    *(pGIBLK->pIndex + 3) = (                (U16) dw        ) & 0x1FFF; dw >>= 13;
+    *(pGIBLK->pIndex + 2) = (                (U16) dw        ) & 0x1FFF; dw >>= 13;
+    *(pGIBLK->pIndex + 1) = (                (U16) dw        ) & 0x1FFF; dw >>= 13;
+    *(pGIBLK->pIndex + 0) = (                (U16) dw        );
 
     return  13;
 }
