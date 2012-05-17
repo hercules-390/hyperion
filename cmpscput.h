@@ -18,7 +18,10 @@
 //           end of our buffer), otherwise FALSE (i.e. there is still room
 //           remaining in the DST buffer for additional index values).
 
-typedef struct MEMBLK MEMBLK; // (forward reference)
+#ifndef _MEMBLK_TYPEDEFFED_
+#define _MEMBLK_TYPEDEFFED_
+typedef struct MEMBLK MEMBLK;
+#endif
 
 struct PIBLK                // PutIndex parameters block
 {
