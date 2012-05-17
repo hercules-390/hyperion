@@ -1255,6 +1255,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\SoftFloat.c"
+							>
+						</File>
+						<File
 							RelativePath=".\sr.c"
 							>
 						</File>
@@ -1596,6 +1600,26 @@
 						</File>
 						<File
 							RelativePath=".\service.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat-macros.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat-milieu.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat-specialise.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat-types.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat.h"
 							>
 						</File>
 						<File
