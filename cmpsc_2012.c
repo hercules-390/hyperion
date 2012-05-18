@@ -46,18 +46,10 @@
 #define _HENGINE_DLL_
 #endif
 
-#if !defined( NOT_HERC )        // (building Hercules?)
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#if !defined( OPTION_CMPSC_2012 )
-#undef FEATURE_COMPRESSION
-#endif // !defined( OPTION_CMPSC_2012 )
-#else                           // (building utility)
-#ifndef compression_call
-#define compression_call    compression_call_0      // (we're the 0 default)
-#endif
-#endif
+
 #include "cmpsc.h"              // (Master header)
 
 #ifdef FEATURE_COMPRESSION
@@ -978,7 +970,7 @@ cmp16:
 /*---------------------------------------------------------------------------*/
 /* B263 CMPSC - Compression Call                                       [RRE] */
 /*---------------------------------------------------------------------------*/
-DEF_INST( compression_call )
+DEF_INST( alt_compression_call )
 {
     CMPSCBLK cmpsc;                     /* Compression Call parameters block  */
     int  r1, r2, rc;                    /* Operand reg numbers, return code  */
@@ -1104,4 +1096,21 @@ static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEX
     #define _GEN_ARCH _ARCHMODE3
     #include "cmpsc_2012.c"
   #endif /* #ifdef _ARCHMODE3 */
+
+
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(REGS);
+
+} END_DEPENDENCY_SECTION;
+
+
+HDL_INSTRUCTION_SECTION;
+{
+    HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB263,alt_compression_call);
+}
+END_INSTRUCTION_SECTION;
+
+
 #endif /* #ifndef _GEN_ARCH */

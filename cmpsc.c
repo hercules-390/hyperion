@@ -106,19 +106,9 @@
 #define _CMPSC_C_
 #endif /* #ifndef _CMPSC_C_ */
 
-#if !defined( NOT_HERC )        // (building Hercules?)
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#if defined( OPTION_CMPSC_2012 )
-#undef FEATURE_COMPRESSION
-#endif // !defined( OPTION_CMPSC_2012 )
-#else // !NOT_HERC              // (building Utility)
-#ifndef compression_call
-#define compression_call    compression_call_1    // (alternate algorithm 1)
-#endif
-#include "cmpscmem.h"           // (Memory access functions)
-#endif
 
 #ifdef FEATURE_COMPRESSION
 /*============================================================================*/
