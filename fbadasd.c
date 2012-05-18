@@ -791,7 +791,7 @@ void fbadasd_end (DEVBLK *dev)
 BYTE            unitstat;
 
     /* Forces updated buffer to be written */
-    fbadasd_read_blkgrp (dev, -1, &unitstat);
+    (dev->hnd->read) (dev, -1, &unitstat);
 }
 
 /*-------------------------------------------------------------------*/
@@ -818,7 +818,7 @@ int fbadasd_close_device ( DEVBLK *dev )
 BYTE            unitstat;
 
     /* Forces updated buffer to be written */
-    fbadasd_read_blkgrp (dev, -1, &unitstat);
+    (dev->hnd->read) (dev, -1, &unitstat);
 
     /* Free the cache */
     cache_lock(CACHE_DEVBUF);
