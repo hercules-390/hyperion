@@ -10,16 +10,13 @@
 #ifndef _CMPSCGET_H_
 #define _CMPSCGET_H_    // Code to be compiled ONLY ONCE goes after here
 
+#include "cmpscmem.h"   // (need MEMBLK)
+
 ///////////////////////////////////////////////////////////////////////////////
 // EXPANSION: Get Next input SRC Index
 //
 // Returns:  Number of SRC bytes consumed, or '0' if the
 //           end of SRC data i/p buffer has been reached.
-
-#ifndef _MEMBLK_TYPEDEFFED_
-#define _MEMBLK_TYPEDEFFED_
-typedef struct MEMBLK MEMBLK;
-#endif
 
 struct GIBLK                // GetIndex parameters block
 {
