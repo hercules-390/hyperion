@@ -90,7 +90,6 @@ struct EXPBLK                 // EXPAND Index Symbol parameters block
     U8          SRC_bytes;    // Number of bytes to adjust the SRC ptr/len by
     U8          rc;           // TRUE == success (cc), FALSE == failure (pic)
 };
-typedef struct EXPBLK EXPBLK;
 
 #endif // EXP_ONCE
 ///////////////////////////////////////////////////////////////////////////////
@@ -1064,6 +1063,8 @@ static CMPSC_INLINE U8 (CMPSC_FASTCALL CC0)( CMPSCBLK* pCMPSCBLK )
 
 static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPOK)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
 {
+    UNREFERENCED( pCMPSCBLK );
+    UNREFERENCED( pEXPBLK   );
     return TRUE; // (success; keep going)
 }
 static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPERR)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
