@@ -108,10 +108,10 @@ extern U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress))( CMPSCBLK* pCMPSCBLK );
 // headers too so all modules just need to #include ours and not any others.
 
 #include "cmpscbit.h"       // (Bit Extraction Macros)
+#include "cmpscmem.h"       // (Memory Access Functions)
 #include "cmpscget.h"       // (Get Next Index Functions)
 #include "cmpscput.h"       // (Put Next Index Functions)
 #include "cmpscdct.h"       // (Get Dictionary Entry Functions)
-#include "cmpscmem.h"       // (Memory Access Functions)
 #include "cmpscdbg.h"       // (Debugging Functions)
 
 ///////////////////////////////////////////////////////////////////////////////
