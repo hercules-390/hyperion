@@ -96,12 +96,6 @@ static const char *build_info[] = {
     "Using   FishIO",
 #endif
 
-#if defined(OPTION_CMPSC_2012)
-    "Using   Compression Call 2012",
-#else
-    "Using   Legacy Compress Call",
-#endif
-
 #if defined(OPTION_DYNAMIC_LOAD)
     "With    Dynamic loading support",
 #else
