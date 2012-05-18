@@ -170,7 +170,8 @@ endif
              hdtqeth.la  \
              hdtzfcp.la  \
              hdt1052c.la \
-             hdtptp.la
+             hdtptp.la   \
+             altcmpsc.la
 
 if OPTION_DYNAMIC_LOAD
   modexec_LTLIBRARIES = $(HERCMODS)
@@ -272,6 +273,11 @@ if OPTION_DYNAMIC_LOAD
   hdtptp_la_SOURCES  = ctc_ptp.c mpc.c resolve.c w32ctca.c tuntap.c
   hdtptp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
+
+  altcmpsc_la_SOURCES  = cmpsc_2012.c cmpscdbg.c cmpscdct.c cmpscget.c cmpscmem.c cmpscput.c
+
+  altcmpsc_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
+  altcmpsc_la_LIBADD   = $(DYNMOD_LD_ADD)
 
 endif
 
@@ -387,12 +393,6 @@ endif
                        vector.c     \
                        xstore.c     \
                        cmpsc.c      \
-                       cmpsc_2012.c \
-                       cmpscdbg.c   \
-                       cmpscdct.c   \
-                       cmpscget.c   \
-                       cmpscmem.c   \
-                       cmpscput.c   \
                        sie.c        \
                        qdio.c       \
                        clock.c      \
@@ -468,7 +468,8 @@ else
              -dlopen hdtqeth.la   \
              -dlopen hdtzfcp.la   \
              -dlopen hdt1052c.la  \
-             -dlopen hdtptp.la
+             -dlopen hdtptp.la    \
+             -dlopen altcmpsc.la
 
   HDEPS    = dyngui.la    \
              dyninst.la   \
@@ -486,6 +487,7 @@ else
              hdtzfcp.la   \
              hdt1052c.la  \
              hdtptp.la    \
+             altcmpsc.la  \
              libherc.la   \
              libherct.la  \
              libhercd.la
