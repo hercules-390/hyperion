@@ -71,13 +71,15 @@ decNumber_OBJ = \
     $(O)decNumber.obj  \
     $(O)decPacked.obj
 
-hengine_OBJ = \
+altcmpsc_OBJ = \
     $(O)cmpsc_2012.obj \
     $(O)cmpscdbg.obj \
     $(O)cmpscdct.obj \
     $(O)cmpscget.obj \
     $(O)cmpscmem.obj \
-    $(O)cmpscput.obj \
+    $(O)cmpscput.obj
+
+hengine_OBJ = \
     $(O)archlvl.obj  \
     $(O)assist.obj   \
     $(O)bldcfg.obj   \

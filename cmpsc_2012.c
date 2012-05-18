@@ -52,10 +52,6 @@
 
 #include "cmpsc.h"              // (Master header)
 
-#if defined(WIN32)
- extern SYSBLK *psysblk;
-#endif
-
 #ifdef FEATURE_COMPRESSION
 ///////////////////////////////////////////////////////////////////////////////
 // Symbols Cache Control Entry
@@ -1115,14 +1111,6 @@ HDL_INSTRUCTION_SECTION;
     HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB263,alt_compression_call);
 }
 END_INSTRUCTION_SECTION;
-
-
-HDL_RESOLVER_SECTION;
-{
-#if defined(WIN32)
-    HDL_RESOLVE_PTRVAR(psysblk,sysblk);
-#endif
-} END_RESOLVER_SECTION;
 
 
 #endif /* #ifndef _GEN_ARCH */

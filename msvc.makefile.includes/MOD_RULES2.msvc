@@ -11,6 +11,8 @@
 # -------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
+$(O)altcmpsc.lib:   $(X)altcmpsc.dll
+
 $(O)decNumber.lib:  $(X)decNumber.dll
 
 $(O)hdasd.lib:      $(X)hdasd.dll
@@ -91,6 +93,9 @@ $(X)dyninst.dll: $(O)dyninst.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)
 $(X)s37x.dll: $(O)s37xmod.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
+# -------------------------------------------------------------
+# Additional loadable modules
+
 !IFNDEF NOCRYPTO
 crypto: $(X)dyncrypt.dll
 
@@ -101,6 +106,9 @@ $(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O
 
 $(X)decNumber.dll: $(decNumber_OBJ) $(O)decNumber.res
     $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) /def:decNumber\decNumber.def -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
+
+$(X)altcmpsc.dll: $(altcmpsc_OBJ) $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+    $(linkdll)
 
 # -------------------------------------------------------------
 # Main product executables

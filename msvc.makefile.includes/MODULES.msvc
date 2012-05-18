@@ -31,6 +31,7 @@ MODULES = \
     $(X)dyninst.dll  \
     $(X)s37x.dll     \
     $(X)decNumber.dll \
+    $(X)altcmpsc.dll \
     $(DYNCRYPT_DLL)
 
 EXECUTABLES = \
