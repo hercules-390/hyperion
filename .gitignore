@@ -8,6 +8,7 @@
 /Makefile
 /Makefile.in
 /aclocal.m4
+/altcmpsc.la
 /archlvl.lo
 /assist.lo
 /autogen.log
