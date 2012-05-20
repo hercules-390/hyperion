@@ -831,7 +831,7 @@ cmp10:
     // Enough SRC chars for comparison?
     // No, goto cmp11;
 
-    if (unlikely( pCMPSCBLK->nLen2 < (1 + child.act)))
+    if (unlikely( pCMPSCBLK->nLen2 < (child.act + 1)))
         goto cmp11;
 
     // Chars equal?
@@ -890,7 +890,7 @@ cmp12:
     // Enough SRC chars for comparison?
     // No, goto cmp8;
 
-    if (pCMPSCBLK->nLen2 < (1 + child.act))
+    if (pCMPSCBLK->nLen2 < (child.act + 1))
         goto cmp8;
 
     // Chars equal?
