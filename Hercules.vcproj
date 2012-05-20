@@ -1027,10 +1027,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\fishhang.c"
-							>
-						</File>
-						<File
 							RelativePath=".\float.c"
 							>
 						</File>
@@ -1435,10 +1431,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\fishhang.h"
-							>
-						</File>
-						<File
 							RelativePath=".\fthreads.h"
 							>
 						</File>
@@ -1667,11 +1659,11 @@
 						Name="Header Files"
 						>
 						<File
-							RelativePath=".\SoftFloat-milieu.h"
+							RelativePath=".\SoftFloat-macros.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-macros.h"
+							RelativePath=".\SoftFloat-milieu.h"
 							>
 						</File>
 						<File

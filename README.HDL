@@ -812,7 +812,6 @@ new source member. Be sure to update BOTH files, e.g.:
                             pttrace.c    \
                             xxxxxxxx.c   \
                             $(FTHREADS)  \
-                            $(FISHHANG)  \
                             $(LTDL)
 
 

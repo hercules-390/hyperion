@@ -463,7 +463,6 @@
     <ClCompile Include="esame.c" />
     <ClCompile Include="external.c" />
     <ClCompile Include="fillfnam.c" />
-    <ClCompile Include="fishhang.c" />
     <ClCompile Include="float.c" />
     <ClCompile Include="fthreads.c" />
     <ClCompile Include="general1.c" />
@@ -802,7 +801,6 @@
     <ClInclude Include="featchk.h" />
     <ClInclude Include="feature.h" />
     <ClInclude Include="fillfnam.h" />
-    <ClInclude Include="fishhang.h" />
     <ClInclude Include="fthreads.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="hbyteswp.h" />

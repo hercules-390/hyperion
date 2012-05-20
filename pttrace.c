@@ -58,11 +58,7 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
         ptttotid = 0;
 #if defined(OPTION_FTHREADS)
         fthread_mutex_init (&ptttolock, NULL);
- #if defined(FISH_HANG)
-        fthread_cond_init (__FILE__, __LINE__, &ptttocond);
- #else
         fthread_cond_init (&ptttocond);
- #endif
 #else
         pthread_mutex_init (&ptttolock, NULL);
         pthread_cond_init (&ptttocond, NULL);

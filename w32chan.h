@@ -28,13 +28,6 @@ extern void  TrimDeviceThreads();
 extern void  KillAllDeviceThreads();
 
 /////////////////////////////////////////////////////////////////////////////
-// Debugging...   (called by panel.c "FishHangReport" command...)
-
-#if defined(FISH_HANG)
-extern void  PrintAllDEVTHREADPARMSs();
-#endif // defined(FISH_HANG)
-
-/////////////////////////////////////////////////////////////////////////////
 // I/O Scheduler variables...
 
 extern long   ios_devtwait;     // #of threads currently idle

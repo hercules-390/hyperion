@@ -399,12 +399,6 @@ int     dll_count;                      /* index into array          */
 
     SET_THREAD_NAME("impl");
 
-#if defined(FISH_HANG)
-    /* "FishHang" debugs lock/cond/threading logic. Thus it must
-     * be initialized BEFORE any lock/cond/threads are created. */
-    FishHangInit(__FILE__,__LINE__);
-#endif
-
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
 
@@ -1133,9 +1127,6 @@ int     dll_count;                      /* index into array          */
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
-#if defined(FISH_HANG)
-    FishHangAtExit();
-#endif
 #ifdef _MSVC_
     SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
     socket_deinit();

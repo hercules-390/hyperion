@@ -77,10 +77,6 @@ static FT_MUTEX*  MallocFT_MUTEX ( )
 
 static BOOL  InitializeFT_MUTEX
 (
-#ifdef FISH_HANG
-    const char*   pszFile,
-    const int     nLine,
-#endif
     FT_MUTEX*     pFT_MUTEX,
     DWORD         dwMutexType
 )
@@ -107,10 +103,6 @@ static BOOL  InitializeFT_MUTEX
 
 static BOOL  UninitializeFT_MUTEX
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     FT_MUTEX*    pFT_MUTEX
 )
 {
@@ -141,10 +133,6 @@ static FT_COND_VAR*  MallocFT_COND_VAR ( )
 
 static BOOL  InitializeFT_COND_VAR
 (
-#ifdef FISH_HANG
-    const char*   pszFile,
-    const int     nLine,
-#endif
     FT_COND_VAR*  pFT_COND_VAR
 )
 {
@@ -175,10 +163,6 @@ static BOOL  InitializeFT_COND_VAR
 
 static BOOL  UninitializeFT_COND_VAR
 (
-#ifdef FISH_HANG
-    const char*   pszFile,
-    const int     nLine,
-#endif
     FT_COND_VAR*  pFT_COND_VAR
 )
 {
@@ -203,10 +187,6 @@ static BOOL  UninitializeFT_COND_VAR
 
 static BOOL  TryEnterFT_MUTEX
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     FT_MUTEX*    pFT_MUTEX
 )
 {
@@ -250,10 +230,6 @@ static BOOL  TryEnterFT_MUTEX
 
 static void  EnterFT_MUTEX
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     FT_MUTEX*    pFT_MUTEX
 )
 {
@@ -289,10 +265,6 @@ static void  EnterFT_MUTEX
 
 static void  LeaveFT_MUTEX
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     FT_MUTEX*    pFT_MUTEX
 )
 {
@@ -335,10 +307,6 @@ static void  LeaveFT_MUTEX
 
 static int  BeginWait
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     FT_COND_VAR*      pFT_COND_VAR,
     fthread_mutex_t*  pFTUSER_MUTEX
 )
@@ -436,10 +404,6 @@ static int  BeginWait
         (
             rc = fthread_mutex_unlock
             (
-#ifdef FISH_HANG
-                pszFile,
-                nLine,
-#endif
                 pFTUSER_MUTEX
             )
         )
@@ -453,13 +417,9 @@ static int  BeginWait
         // iable lock before returning our error (i.e. we essentially
         // need to back out what we previously did just above).
 
-#ifdef FISH_HANG
-        logmsg("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
-            ,pszFile ,nLine ,rc );
-#else
         logmsg("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
             ,rc );
-#endif
+
         pFT_COND_VAR->nNumWaiting--;    // (de-register wait request)
 
         MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
@@ -482,10 +442,6 @@ static int  BeginWait
 
 static int  WaitForTransmission
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     FT_COND_VAR*      pFT_COND_VAR,
     struct timespec*  pTimeTimeout     // (NULL == INFINITE wait)
 )
@@ -592,13 +548,8 @@ static int  WaitForTransmission
     // it or not, actually been completed (although not as they expected it
     // would in all likelihood!)...
 
-#ifdef FISH_HANG
-    logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
-        ,pszFile ,nLine ,dwWaitRetCode ,dwWaitRetCode );
-#else
     logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
         ,dwWaitRetCode ,dwWaitRetCode );
-#endif
 
     return RC(EFAULT);
 }
@@ -608,10 +559,6 @@ static int  WaitForTransmission
 
 static int  QueueTransmission
 (
-#ifdef FISH_HANG
-    const char*   pszFile,
-    const int     nLine,
-#endif
     FT_COND_VAR*  pFT_COND_VAR,
     BOOL          bXmitType
 )
@@ -667,10 +614,6 @@ static int  QueueTransmission
 
 static void  ReceiveXmission
 (
-#ifdef FISH_HANG
-    const char*   pszFile,
-    const int     nLine,
-#endif
     FT_COND_VAR*  pFT_COND_VAR
 )
 {
@@ -718,10 +661,6 @@ static void  ReceiveXmission
 
 static int  ReturnFromWait
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     FT_COND_VAR*      pFT_COND_VAR,
     fthread_mutex_t*  pFTUSER_MUTEX,
     int               nRetCode
@@ -752,10 +691,6 @@ static int  ReturnFromWait
         (
             rc = fthread_mutex_lock
             (
-#ifdef FISH_HANG
-                pszFile,
-                nLine,
-#endif
                 pFTUSER_MUTEX
             )
         )
@@ -769,13 +704,8 @@ static int  ReturnFromWait
         // we can do about this; the system is essentially hosed at this point.
         // Just log the fact that something went wrong and return. <shrug>
 
-#ifdef FISH_HANG
-        logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
-            ,pszFile ,nLine ,rc );
-#else
         logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
             ,rc );
-#endif
 
         return RC(rc);        // (what went wrong)
     }
@@ -917,10 +847,6 @@ static DWORD  __stdcall  FTWin32ThreadFunc
 DLL_EXPORT
 HANDLE fthread_get_handle
 (
-#ifdef FISH_HANG
-    const char*     pszFile,
-    const int       nLine,
-#endif
     fthread_t       pdwThreadID             // Thread ID
 )
 {    
@@ -945,10 +871,6 @@ HANDLE fthread_get_handle
 DLL_EXPORT
 int  fthread_create
 (
-#ifdef FISH_HANG
-    const char*      pszFile,
-    const int        nLine,
-#endif
     fthread_t*       pdwThreadID,
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
@@ -998,11 +920,7 @@ int  fthread_create
 
     if ( !pCallTheirThreadParms )
     {
-#ifdef FISH_HANG
-        logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
-#else
         logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
-#endif
         return RC(ENOMEM);      // (out of memory)
     }
 
@@ -1011,11 +929,7 @@ int  fthread_create
 
     if ( !pFTHREAD )
     {
-#ifdef FISH_HANG
-        logmsg("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
-#else
         logmsg("fthread_create: malloc(FTHREAD) failed\n");
-#endif
         free ( pCallTheirThreadParms );
         return RC(ENOMEM);      // (out of memory)
     }
@@ -1041,11 +955,7 @@ int  fthread_create
     if ( !hThread )
     {
         UnlockThreadsList();
-#ifdef FISH_HANG
-        logmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
-#else
         logmsg("fthread_create: MyCreateThread failed\n");
-#endif
         free ( pCallTheirThreadParms );
         free ( pFTHREAD );
         return RC(EAGAIN);      // (unable to obtain required resources)
@@ -1084,10 +994,6 @@ void  fthread_exit
 DLL_EXPORT
 int  fthread_join
 (
-#ifdef FISH_HANG
-    const char*     pszFile,
-    const int       nLine,
-#endif
     fthread_t       dwThreadID,
     void**          pExitVal
 )
@@ -1114,13 +1020,12 @@ int  fthread_join
     pFTHREAD->nJoinedCount++;
     hThread = pFTHREAD->hThreadHandle;
 
+    // Wait for thread to exit...
+
     UnlockThreadsList();
-
-    // FishHang doesn't support waiting on thread objects,
-    // only event objects. Thus we do a normal Win32 call here...
-
-    WaitForSingleObject ( hThread, INFINITE );
-
+    {
+        WaitForSingleObject ( hThread, INFINITE );
+    }
     LockThreadsList();
 
     if ( pExitVal )
@@ -1399,10 +1304,6 @@ int  fthread_equal
 DLL_EXPORT
 int  fthread_mutex_init
 (
-#ifdef FISH_HANG
-    const char*                 pszFile,
-    const int                   nLine,
-#endif
           fthread_mutex_t*      pFTUSER_MUTEX,
     const fthread_mutexattr_t*  pFT_MUTEX_ATTR
 )
@@ -1423,10 +1324,6 @@ int  fthread_mutex_init
 
     if ( !InitializeFT_MUTEX
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFTUSER_MUTEX->hMutex,
         pFT_MUTEX_ATTR ? dwMutexType : FTHREAD_MUTEX_DEFAULT
     ))
@@ -1450,10 +1347,6 @@ int  fthread_mutex_init
 DLL_EXPORT
 int  fthread_mutex_destroy
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
@@ -1465,10 +1358,6 @@ int  fthread_mutex_destroy
 
     if ( !UninitializeFT_MUTEX
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFTUSER_MUTEX->hMutex
     ))
         return RC(EBUSY);       // (still in use)
@@ -1487,10 +1376,6 @@ int  fthread_mutex_destroy
 DLL_EXPORT
 int  fthread_mutex_trylock
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
@@ -1506,10 +1391,6 @@ int  fthread_mutex_trylock
     (
         !TryEnterFT_MUTEX
         (
-#ifdef FISH_HANG
-            pszFile,
-            nLine,
-#endif
             pFTUSER_MUTEX->hMutex
         )
     )
@@ -1537,10 +1418,6 @@ int  fthread_mutex_trylock
 
     LeaveFT_MUTEX
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFTUSER_MUTEX->hMutex
     );
 
@@ -1553,10 +1430,6 @@ int  fthread_mutex_trylock
 DLL_EXPORT
 int  fthread_mutex_lock
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
@@ -1572,10 +1445,6 @@ int  fthread_mutex_lock
     (
         !TryEnterFT_MUTEX
         (
-#ifdef FISH_HANG
-            pszFile,
-            nLine,
-#endif
             pFTUSER_MUTEX->hMutex
         )
     )
@@ -1586,10 +1455,6 @@ int  fthread_mutex_lock
 
         EnterFT_MUTEX
         (
-#ifdef FISH_HANG
-            pszFile,
-            nLine,
-#endif
             pFTUSER_MUTEX->hMutex
         );
 
@@ -1616,10 +1481,6 @@ int  fthread_mutex_lock
 
     LeaveFT_MUTEX
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFTUSER_MUTEX->hMutex
     );
 
@@ -1632,10 +1493,6 @@ int  fthread_mutex_lock
 DLL_EXPORT
 int  fthread_mutex_unlock
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
@@ -1656,10 +1513,6 @@ int  fthread_mutex_unlock
 
     LeaveFT_MUTEX
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFTUSER_MUTEX->hMutex
     );
 
@@ -1672,10 +1525,6 @@ int  fthread_mutex_unlock
 DLL_EXPORT
 int  fthread_cond_init
 (
-#ifdef FISH_HANG
-    const char*      pszFile,
-    const int        nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 )
 {
@@ -1690,10 +1539,6 @@ int  fthread_cond_init
 
     if ( !InitializeFT_COND_VAR
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar
     ))
     {
@@ -1716,10 +1561,6 @@ int  fthread_cond_init
 DLL_EXPORT
 int  fthread_cond_destroy
 (
-#ifdef FISH_HANG
-    const char*      pszFile,
-    const int        nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 )
 {
@@ -1731,10 +1572,6 @@ int  fthread_cond_destroy
 
     if ( !UninitializeFT_COND_VAR
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar
     ))
         return RC(EBUSY);       // (still in use)
@@ -1753,10 +1590,6 @@ int  fthread_cond_destroy
 DLL_EXPORT
 int  fthread_cond_signal
 (
-#ifdef FISH_HANG
-    const char*      pszFile,
-    const int        nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 )
 {
@@ -1768,10 +1601,6 @@ int  fthread_cond_signal
 
     return QueueTransmission
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar,
         FALSE               // (FALSE == not "broadcast")
     );
@@ -1783,10 +1612,6 @@ int  fthread_cond_signal
 DLL_EXPORT
 int  fthread_cond_broadcast
 (
-#ifdef FISH_HANG
-    const char*      pszFile,
-    const int        nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 )
 {
@@ -1798,10 +1623,6 @@ int  fthread_cond_broadcast
 
     return QueueTransmission
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar,
         TRUE                // (TRUE == "broadcast" type)
     );
@@ -1813,10 +1634,6 @@ int  fthread_cond_broadcast
 DLL_EXPORT
 int  fthread_cond_wait
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFTUSER_MUTEX
 )
@@ -1847,10 +1664,6 @@ int  fthread_cond_wait
         (
             rc = BeginWait
             (
-#ifdef FISH_HANG
-                pszFile,
-                nLine,
-#endif
                 pFT_COND_VAR -> hCondVar,
                 pFTUSER_MUTEX
             )
@@ -1874,10 +1687,6 @@ int  fthread_cond_wait
 
     rc = WaitForTransmission    // (wait for "signal" or "broadcast"...)
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar,
         NULL
     );
@@ -1894,10 +1703,6 @@ int  fthread_cond_wait
 
     ReceiveXmission         // (reset transmitter)
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar
     );
 
@@ -1908,10 +1713,6 @@ int  fthread_cond_wait
 
     return ReturnFromWait
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR -> hCondVar,
         pFTUSER_MUTEX,
         rc
@@ -1932,10 +1733,6 @@ int  fthread_cond_wait
 DLL_EXPORT
 int  fthread_cond_timedwait
 (
-#ifdef FISH_HANG
-    const char*       pszFile,
-    const int         nLine,
-#endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFTUSER_MUTEX,
     struct timespec*  pTimeTimeout
@@ -1957,10 +1754,6 @@ int  fthread_cond_timedwait
         (
             rc = BeginWait
             (
-#ifdef FISH_HANG
-                pszFile,
-                nLine,
-#endif
                 pFT_COND_VAR -> hCondVar,
                 pFTUSER_MUTEX
             )
@@ -1971,29 +1764,17 @@ int  fthread_cond_timedwait
 
     rc = WaitForTransmission
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar,
         pTimeTimeout
     );
 
     ReceiveXmission
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR->hCondVar
     );
 
     return ReturnFromWait
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
         pFT_COND_VAR -> hCondVar,
         pFTUSER_MUTEX,
         rc

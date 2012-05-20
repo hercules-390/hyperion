@@ -166,9 +166,6 @@ static void do_shutdown_now()
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
        )
     {
-#if defined(FISH_HANG)
-        FishHangAtExit();
-#endif
 #ifdef _MSVC_
         socket_deinit();
 #endif

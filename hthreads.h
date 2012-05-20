@@ -134,75 +134,39 @@ typedef fthread_cond_t       COND;
 typedef fthread_attr_t       ATTR;
 typedef fthread_mutexattr_t  MATTR;
 
-    #define hthread_mutexattr_init(pla)            fthread_mutexattr_init((pla))
-    #define hthread_mutexattr_destroy(pla)         fthread_mutexattr_destroy((pla))
-    #define hthread_mutexattr_settype(pla,typ)     fthread_mutexattr_settype((pla),(typ))
+#define hthread_mutexattr_init(pla)            fthread_mutexattr_init((pla))
+#define hthread_mutexattr_destroy(pla)         fthread_mutexattr_destroy((pla))
+#define hthread_mutexattr_settype(pla,typ)     fthread_mutexattr_settype((pla),(typ))
 
-#if defined(FISH_HANG)
+#define hthread_mutex_init(plk,pla)            fthread_mutex_init((plk),(pla))
 
-    #define hthread_mutex_init(plk,pla)            fthread_mutex_init(PTT_LOC,(plk),(pla))
+#define create_thread(ptid,pat,fn,arg,nm)      fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),nm)
+#define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
+#define destroy_lock(plk)                      fthread_mutex_destroy((plk))
+#define obtain_lock(plk)                       fthread_mutex_lock((plk))
+#define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
+#define test_lock(plk) \
+        (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
+#define release_lock(plk)                      fthread_mutex_unlock((plk))
 
-    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create(PTT_LOC,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm))
-    #define join_thread(tid,pcode)                 fthread_join(PTT_LOC,(tid),(pcode))
-    #define destroy_lock(plk)                      fthread_mutex_destroy(PTT_LOC,(plk))
-    #define obtain_lock(plk)                       fthread_mutex_lock(PTT_LOC,(plk))
-    #define try_obtain_lock(plk)                   fthread_mutex_trylock(PTT_LOC,(plk))
-    #define test_lock(plk) \
-            (fthread_mutex_trylock(PTT_LOC,(plk)) ? 1 : fthread_mutex_unlock(PTT_LOC,(plk)) )
-    #define release_lock(plk)                      fthread_mutex_unlock(PTT_LOC,(plk))
+// The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
+#define RWLOCK                                 LOCK
+#define initialize_rwlock(plk)                 initialize_lock((plk))
+#define destroy_rwlock(plk)                    destroy_lock((plk))
+#define obtain_rdlock(plk)                     obtain_lock((plk))
+#define obtain_wrlock(plk)                     obtain_lock((plk))
+#define release_rwlock(plk)                    release_lock((plk))
+#define try_obtain_rdlock(plk)                 try_obtain_lock((plk))
+#define try_obtain_wrlock(plk)                 try_obtain_lock((plk))
+#define test_rdlock(plk)                       test_lock((plk))
+#define test_wrlock(plk)                       test_lock((plk))
 
-    // The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
-    #define RWLOCK                                 LOCK
-    #define initialize_rwlock(plk)                 initialize_lock((plk))
-    #define destroy_rwlock(plk)                    destroy_lock((plk))
-    #define obtain_rdlock(plk)                     obtain_lock((plk))
-    #define obtain_wrlock(plk)                     obtain_lock((plk))
-    #define release_rwlock(plk)                    release_lock((plk))
-    #define try_obtain_rdlock(plk)                 try_obtain_lock((plk))
-    #define try_obtain_wrlock(plk)                 try_obtain_lock((plk))
-    #define test_rdlock(plk)                       test_lock((plk))
-    #define test_wrlock(plk)                       test_lock((plk))
-
-    #define initialize_condition(pcond)            fthread_cond_init(PTT_LOC,(pcond))
-    #define destroy_condition(pcond)               fthread_cond_destroy(PTT_LOC,(pcond))
-    #define signal_condition(pcond)                fthread_cond_signal(PTT_LOC,(pcond))
-    #define broadcast_condition(pcond)             fthread_cond_broadcast(PTT_LOC,(pcond))
-    #define wait_condition(pcond,plk)              fthread_cond_wait(PTT_LOC,(pcond),(plk))
-    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(PTT_LOC,(pcond),(plk),(tm))
-
-#else // !defined(FISH_HANG)
-
-    #define hthread_mutex_init(plk,pla)            fthread_mutex_init((plk),(pla))
-
-    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),nm)
-    #define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
-    #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
-    #define obtain_lock(plk)                       fthread_mutex_lock((plk))
-    #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
-    #define test_lock(plk) \
-            (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
-    #define release_lock(plk)                      fthread_mutex_unlock((plk))
-
-    // The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
-    #define RWLOCK                                 LOCK
-    #define initialize_rwlock(plk)                 initialize_lock((plk))
-    #define destroy_rwlock(plk)                    destroy_lock((plk))
-    #define obtain_rdlock(plk)                     obtain_lock((plk))
-    #define obtain_wrlock(plk)                     obtain_lock((plk))
-    #define release_rwlock(plk)                    release_lock((plk))
-    #define try_obtain_rdlock(plk)                 try_obtain_lock((plk))
-    #define try_obtain_wrlock(plk)                 try_obtain_lock((plk))
-    #define test_rdlock(plk)                       test_lock((plk))
-    #define test_wrlock(plk)                       test_lock((plk))
-
-    #define initialize_condition(pcond)            fthread_cond_init((pcond))
-    #define destroy_condition(pcond)               fthread_cond_destroy((pcond))
-    #define signal_condition(pcond)                fthread_cond_signal((pcond))
-    #define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
-    #define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
-    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
-
-#endif // defined(FISH_HANG)
+#define initialize_condition(pcond)            fthread_cond_init((pcond))
+#define destroy_condition(pcond)               fthread_cond_destroy((pcond))
+#define signal_condition(pcond)                fthread_cond_signal((pcond))
+#define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
+#define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
+#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
 
 #define initialize_detach_attr(pat) \
     do { \

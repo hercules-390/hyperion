@@ -49,13 +49,6 @@ cflags = $(cflags) /D HOST_ARCH=$(CPU)
 # The following instructs the declaration of DLL export symbols
 cflags = $(cflags) /D HDL_BUILD_SHARED /D OPTION_DYNAMIC_LOAD
 
-# fish test
-##FISH_HANG = yes
-
-!IFDEF FISH_HANG
-cflags = $(cflags) -D FISH_HANG
-!ENDIF
-
 # Suppress some deprecation warnings that aren't really deprecation warnings
 cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE

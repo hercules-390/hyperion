@@ -431,7 +431,6 @@
   "Reset the fcb to the standard one\n"                                          \
   "Load a fcb image\n"
 
-#define fish_hang_cmd_desc      "(deprecated; use 'hangrpt' instead)"
 #define fpc_cmd_desc            "Display or alter floating point control register"
 #define fpc_cmd_help            \
                                 \
@@ -457,18 +456,6 @@
   "value in hexadecimal (1-8 hex digits for 32-bit registers or 1-16 hex\n"      \
   "digits for 64-bit registers). Enter \"gpr\" by itself to display the\n"       \
   "register values without altering them.\n"
-
-#define hang_cmd_desc           "Display thread/lock/event objects (DEBUG)"
-#define hang_cmd_help           \
-                                \
-  "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"            \
-  "every thread, lock and event that is created is maintained for debugging purposes.\n"   \
-  "If a lock is accessed before it has been initialized or if a thread exits while\n"      \
-  "still holding a lock, etc (including deadlock situations), the FishHang logic will\n"   \
-  "detect and report it. If you suspect one of hercules's threads is hung waiting for\n"   \
-  "a condition to be signalled for example, entering \"FishHangReport\" will display\n"    \
-  "the internal list of thread, locks and events to possibly help you determine where\n"   \
-  "it's hanging and what event (condition) it's hung on.\n"
 
 #define hao_cmd_desc            "Hercules Automatic Operator"
 #define hao_cmd_help            \
@@ -1576,10 +1563,6 @@ COMMAND( "ssd",                     ssd_cmd,                SYSCMD,             
 COMMAND( "hwldr",                   hwldr_cmd,              SYSCMDNOPER,        hwldr_cmd_desc,         hwldr_cmd_help      )
 COMMAND( "loaddev",                 lddev_cmd,              SYSCMD,             loaddev_cmd_desc,       loaddev_cmd_help    )
 COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             dumpdev_cmd_desc,       dumpdev_cmd_help    )
-#endif
-#if defined( FISH_HANG )
-COMMAND( "FishHangReport",          hang_cmd,               SYSCMDNOPER,        fish_hang_cmd_desc,     NULL                )
-COMMAND( "hangrpt",                 hang_cmd,               SYSCMDNOPER,        hang_cmd_desc,          hang_cmd_help       )
 #endif
 #if !defined( _FW_REF )
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             NULL                )

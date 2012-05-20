@@ -82,10 +82,8 @@
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 
-#ifndef FISH_HANG
-  #ifndef OPTION_WTHREADS
-    #define OPTION_PTTRACE              /* Pthreads tracing          */
-  #endif
+#ifndef OPTION_WTHREADS
+  #define OPTION_PTTRACE                /* Pthreads tracing          */
 #endif
 
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */

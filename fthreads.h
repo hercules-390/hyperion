@@ -9,7 +9,6 @@
 #define _FTHREADS_H_
 
 #include "hercules.h"
-#include "fishhang.h"
 
 #ifndef _FTHREADS_C_
 #ifndef _HUTIL_DLL_
@@ -25,6 +24,30 @@
 // Just a handy macro to have around...
 
 #define RC(rc)  (rc)
+
+////////////////////////////////////////////////////////////////////////////////////
+
+#define MyInitializeCriticalSection(pCS)                (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
+#define MyEnterCriticalSection(pCS)                     (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyTryEnterCriticalSection(pCS)                  (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
+
+#ifdef _MSVC_
+#define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(unsigned)(stack),(start),(parm),(flags),(tid)))
+#define MyExitThread(code)                              (_endthreadex((code)))
+#else // (Cygwin)
+#define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
+#define MyExitThread(code)                              (ExitThread((code)))
+#endif // _MSVC_
+
+#define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
+#define MySetEvent(h)                                   (SetEvent((h)))
+#define MyResetEvent(h)                                 (ResetEvent((h)))
+#define MyDeleteEvent(h)                                (CloseHandle((h)))
+#define MyCloseHandle(h)                                (CloseHandle((h)))
+
+#define MyWaitForSingleObject(h,millisecs)              (WaitForSingleObject((h),(millisecs)))
 
 ////////////////////////////////////////////////////////////////////////////////////
 // (need struct timespec for fthread_cond_timedwait)
@@ -143,10 +166,6 @@ int  fthread_attr_getstacksize
 FT_DLL_IMPORT
 int  fthread_join
 (
-#ifdef FISH_HANG
-    const char*     pszFile,
-    const int       nLine,
-#endif
     fthread_t       dwThreadID,
     void**          pExitVal
 );
@@ -166,10 +185,6 @@ int  fthread_detach
 DLL_EXPORT
 HANDLE fthread_get_handle
 (
-#ifdef FISH_HANG
-    const char*     pszFile,
-    const int       nLine,
-#endif
     fthread_t       pdwThreadID             // Thread ID
 );
 
@@ -179,10 +194,6 @@ HANDLE fthread_get_handle
 FT_DLL_IMPORT
 int  fthread_create
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_t*       pdwThreadID,
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
@@ -233,10 +244,6 @@ int  fthread_kill   // FIXME: TODO:
 FT_DLL_IMPORT
 int  fthread_mutex_init
 (
-#ifdef FISH_HANG
-    const char*                 pszFile,
-    const int                   nLine,
-#endif
           fthread_mutex_t*      pFT_MUTEX,
     const fthread_mutexattr_t*  pFT_MUTEX_ATTR
 );
@@ -247,10 +254,6 @@ int  fthread_mutex_init
 FT_DLL_IMPORT
 int  fthread_mutex_destroy
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
@@ -260,10 +263,6 @@ int  fthread_mutex_destroy
 FT_DLL_IMPORT
 int  fthread_mutex_lock
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
@@ -273,10 +272,6 @@ int  fthread_mutex_lock
 FT_DLL_IMPORT
 int  fthread_mutex_trylock
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
@@ -286,10 +281,6 @@ int  fthread_mutex_trylock
 FT_DLL_IMPORT
 int  fthread_mutex_unlock
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
@@ -299,10 +290,6 @@ int  fthread_mutex_unlock
 FT_DLL_IMPORT
 int  fthread_cond_init
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
@@ -312,10 +299,6 @@ int  fthread_cond_init
 FT_DLL_IMPORT
 int  fthread_cond_destroy
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
@@ -325,10 +308,6 @@ int  fthread_cond_destroy
 FT_DLL_IMPORT
 int  fthread_cond_signal
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
@@ -338,10 +317,6 @@ int  fthread_cond_signal
 FT_DLL_IMPORT
 int  fthread_cond_broadcast
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
@@ -351,10 +326,6 @@ int  fthread_cond_broadcast
 FT_DLL_IMPORT
 int  fthread_cond_wait
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFT_MUTEX
 );
@@ -365,10 +336,6 @@ int  fthread_cond_wait
 FT_DLL_IMPORT
 int  fthread_cond_timedwait
 (
-#ifdef FISH_HANG
-    const char*  pszFile,
-    const int    nLine,
-#endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFT_MUTEX,
     struct timespec*  pTimeTimeout

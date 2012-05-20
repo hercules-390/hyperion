@@ -4819,23 +4819,6 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if defined(FISH_HANG)
-/*-------------------------------------------------------------------*/
-/* FishHangReport - verify/debug proper Hercules LOCK handling...    */
-/*-------------------------------------------------------------------*/
-int hang_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    FishHangReport();
-#if defined(OPTION_FISHIO)
-    PrintAllDEVTHREADPARMSs();
-#endif
-    return 0;
-}
-#endif // defined(FISH_HANG)
-
 
 static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
 {
