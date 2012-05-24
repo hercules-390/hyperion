@@ -4976,11 +4976,11 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
         break;
 
     case 2:                     /* Check topology-change status */
-        OBTAIN_INTLOCK(NULL);
+        OBTAIN_INTLOCK(regs);
         regs->psw.cc = sysblk.topchnge ? 1    /* (report was pending) */
                                        : 0;   /* (report not pending) */
         sysblk.topchnge = 0;                  /* (clear pending flag) */
-        RELEASE_INTLOCK(NULL);
+        RELEASE_INTLOCK(regs);
         break;
 
     default:

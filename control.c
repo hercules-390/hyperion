@@ -6945,9 +6945,9 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 regs->psw.cc = 0;
 
                 /* Clear topology-change-report-pending condition */
-                OBTAIN_INTLOCK(NULL);
+                OBTAIN_INTLOCK(regs);
                 sysblk.topchnge = 0;
-                RELEASE_INTLOCK(NULL);
+                RELEASE_INTLOCK(regs);
                 break;
 
             default:

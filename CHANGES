@@ -1,3 +1,6 @@
+23 May 2012 Fix INTLOCK bug in PTF and STSI instructions causing deadlock
+            during SYNCHRONIZE_CPUS leading to eventual Machine Check
+            identified by Neale Ferguson [neale@sinenomine.net] -- Fish
 16 May 2012 Do initial CPU reset when MAINSIZE is changed - Kevin Leonard
 11 May 2012 CMPSC_2012 - Fish
 02 Oct 2011 STSI made aware of facilities LOGICAL_PARTITION and VIRTUAL_MACHINE
