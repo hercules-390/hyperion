@@ -29,18 +29,19 @@ end
 --signal on failure name hfailure
 --signal on error   name herror
 
-Address HERCULES args
+Address HERCULES args "# some useless comment"
 
 say _who "RC = " RC
 
 parse lower var args . "(" opts
 
-if  strip(opts) = "" then do
+parse lower var opts . "stem" stem .
+
+if  strip(stem) = "" then do
     say _who "No output requested "
     exit 0
 end
 
-parse lower var opts z stem
 stem = strip(stem,,".") || "."
 
 coun = value(stem || 0)

@@ -17,9 +17,6 @@
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
-#define  CMPARG( _VALUE_ )  strcasecmp( _VALUE_, argv[iarg])
-#define CMPARGL( _VALUE_ ) strncasecmp( _VALUE_, argv[iarg], argl)
-
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
 #define REXX_TRY_OOREXX( _FOUND_ ) do \
 { \
@@ -236,7 +233,7 @@ int   wRexxMode = 0;
             {
                 case _NEEDPACKAGE :
                 {
-                    if ( CMPARG( REGINA_PACKAGE ) == 0 || CMPARG( OOREXX_PACKAGE ) == 0 )
+                    if ( HAVKEYW( REGINA_PACKAGE ) || HAVKEYW( OOREXX_PACKAGE ) )
                         wPackage = strdup(argv[iarg]);
                     else
                     {
@@ -254,15 +251,15 @@ int   wRexxMode = 0;
 
                 case _NEEDSYSPATH :
                 {
-                    if ( CMPARG( "reset" ) == 0 )
+                    if ( HAVKEYW( "reset" ) )
                     {
                         wSysPath = TRUE;
                     }
-                    else if ( CMPARG( "enable" ) == 0 || CMPARG( "on" ) == 0 )
+                    else if ( HAVKEYW( "enable" ) || HAVKEYW( "on" ) )
                     {
                         wSysPath = TRUE;
                     }
-                    else if ( CMPARG( "disable" ) == 0 || CMPARG( "off" ) == 0 )
+                    else if ( HAVKEYW( "disable" ) || HAVKEYW( "off" ) )
                     {
                         wSysPath = FALSE;
                     }
@@ -282,15 +279,15 @@ int   wRexxMode = 0;
 
                 case _NEEDRESOLVER :
                 {
-                    if ( CMPARG( "reset" ) == 0 )
+                    if ( HAVKEYW( "reset" ) )
                     {
                         wResolver = TRUE;
                     }
-                    else if ( CMPARG( "enable" ) == 0 || CMPARG( "on" ) == 0 )
+                    else if ( HAVKEYW( "enable" ) || HAVKEYW( "on" ) )
                     {
                         wResolver = TRUE;
                     }
-                    else if ( CMPARG( "disable" ) == 0 || CMPARG( "off" ) == 0 )
+                    else if ( HAVKEYW( "disable" ) || HAVKEYW( "off" ) )
                     {
                         wResolver = FALSE;
                     }
@@ -304,7 +301,7 @@ int   wRexxMode = 0;
 
                 case _NEEDMSGLEVL :
                 {
-                    if ( CMPARG( "reset" ) == 0 )
+                    if ( HAVKEYW( "reset" ) )
                     {
                         wMsgLevl = 0;
                     }
@@ -346,11 +343,11 @@ int   wRexxMode = 0;
 
                 case _NEEDMODE :
                 {
-                    if ( argl >= 3 && argl <= 7 && CMPARGL( "command" ) == 0 )
+                    if ( argl >= 3 && argl <= 7 && HAVABBR( "command" ) )
                     {
                         wRexxMode = _COMMAND_;
                     }
-                    else if ( argl >= 3 && argl <= 10 && CMPARGL( "subroutine" ) == 0 )
+                    else if ( argl >= 3 && argl <= 10 && HAVABBR( "subroutine" ) )
                     {
                         wRexxMode = _SUBROUTINE_;
                     }
@@ -367,7 +364,7 @@ int   wRexxMode = 0;
             continue;
         }
 
-        if ( !haveMode && CMPARG( "mode" ) == 0 )
+        if ( !haveMode && HAVKEYW( "mode" ) )
         {
             haveMode = TRUE;
             whatValue = _NEEDMODE;
@@ -375,8 +372,8 @@ int   wRexxMode = 0;
         }
 
         if ( !haveDisable &&
-             ( ( argl >= 3 && argl <= 7 && CMPARGL( "disable" ) == 0 ) ||
-               ( argl >= 3 && argl <= 4 && CMPARGL( "stop" ) == 0 ) ))
+             ( ( argl >= 3 && argl <= 7 && HAVABBR( "disable" ) ) ||
+               ( argl >= 3 && argl <= 4 && HAVABBR( "stop"    ) ) ) )
         {
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
             haveDisable = TRUE;
@@ -388,8 +385,8 @@ int   wRexxMode = 0;
         }
 
         if ( !havePath &&
-           ( ( argl >= 4 && argl <=  5 && CMPARGL( "paths" ) == 0 ) ||
-             ( argl >= 5 && argl <=  9 && CMPARGL( "rexxpaths" ) == 0 ) ) )
+           ( ( argl >= 4 && argl <=  5 && HAVABBR( "paths"     ) ) ||
+             ( argl >= 5 && argl <=  9 && HAVABBR( "rexxpaths" ) ) ) )
         {
             havePath = TRUE;
             whatValue = _NEEDPATH;
@@ -397,7 +394,7 @@ int   wRexxMode = 0;
         }
 
         if ( !haveSysPath &&
-             ( argl >= 4 && argl <=  7 && CMPARGL( "syspath" ) == 0 ) )
+             ( argl >= 4 && argl <=  7 && HAVABBR( "syspath" ) ) )
         {
             haveSysPath = TRUE;
             whatValue = _NEEDSYSPATH;
@@ -405,8 +402,8 @@ int   wRexxMode = 0;
         }
 
         if ( !haveExtensions &&
-           ( ( argl >= 3 && argl <= 10 && CMPARGL( "extensions" ) == 0 ) ||
-             ( argl >= 3 && argl <=  8 && CMPARGL( "suffixes" ) == 0 ) ) )
+           ( ( argl >= 3 && argl <= 10 && HAVABBR( "extensions" ) ) ||
+             ( argl >= 3 && argl <=  8 && HAVABBR( "suffixes"   ) ) ) )
         {
             haveExtensions = TRUE;
             whatValue = _NEEDEXTENSIONS;
@@ -414,7 +411,7 @@ int   wRexxMode = 0;
         }
 
         if ( !haveResolver &&
-             ( argl >= 5 && argl <=  8 && CMPARGL( "resolver" ) == 0 ) )
+             ( argl >= 5 && argl <=  8 && HAVABBR( "resolver" ) ) )
         {
             haveResolver = TRUE;
             whatValue = _NEEDRESOLVER;
@@ -422,7 +419,7 @@ int   wRexxMode = 0;
         }
 
         if ( !haveMsgLevl &&
-             ( argl >= 4 && argl <=  8 && CMPARGL( "msglevel" ) == 0 ) )
+             ( argl >= 4 && argl <=  8 && HAVABBR( "msglevel" ) ) )
         {
             haveMsgLevl = TRUE;
             whatValue = _NEEDMSGLEVL;
@@ -430,7 +427,7 @@ int   wRexxMode = 0;
         }
 
         if ( !haveMsgPref &&
-             ( argl >= 4 && argl <=  9 && CMPARGL( "msgprefix" ) == 0 ) )
+             ( argl >= 4 && argl <=  9 && HAVABBR( "msgprefix" ) ) )
         {
             haveMsgPref = TRUE;
             whatValue = _NEEDMSGPREF;
@@ -438,7 +435,7 @@ int   wRexxMode = 0;
         }
 
         if ( !haveErrPref &&
-             ( argl >= 4 && argl <=  9 && CMPARGL( "errprefix" ) == 0 ) )
+             ( argl >= 4 && argl <=  9 && HAVABBR( "errprefix" ) ) )
         {
             haveErrPref = TRUE;
             whatValue = _NEEDERRPREF;
@@ -446,8 +443,8 @@ int   wRexxMode = 0;
         }
 
         if ( !haveEnable &&
-           ( ( argl >= 3 && argl <=  6 && CMPARGL( "enable" ) == 0 ) ||
-             ( argl >= 3 && argl <=  5 && CMPARGL( "start" ) == 0 ) ) )
+           ( ( argl >= 3 && argl <=  6 && HAVABBR( "enable" ) ) ||
+             ( argl >= 3 && argl <=  5 && HAVABBR( "start"  ) ) ) )
         {
 #if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
             if ( hRexxLibHandle )
@@ -802,12 +799,12 @@ exec_cmd_Rexx_Loaded:
     if ( argc >= 2 )
     {
         iarg = 1 ;
-        if ( CMPARG( "cmd" ) == 0 || CMPARG( "-cmd" ) == 0 || CMPARG( "/cmd" ) == 0 )
+        if ( HAVKEYW( "cmd" ) || HAVKEYW( "-cmd" ) || HAVKEYW( "/cmd" ) )
         {
             wRexxMode = _COMMAND_;
             haveMode = TRUE ;
         }
-        else if ( CMPARG( "sub" ) == 0 || CMPARG( "-sub" ) == 0 || CMPARG( "/sub" ) == 0 )
+        else if ( HAVKEYW( "sub" ) || HAVKEYW( "-sub" ) || HAVKEYW( "/sub" ) )
         {
             wRexxMode = _SUBROUTINE_;
             haveMode = TRUE ;

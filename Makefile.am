@@ -782,6 +782,7 @@ noinst_HEADERS = hostinfo.h     \
                  chain.h        \
                  extstring.h    \
                  hRexx.h        \
+                 hRexxapi.h     \
                  cmpsc.h        \
                  cmpscbit.h     \
                  cmpscdbg.h     \

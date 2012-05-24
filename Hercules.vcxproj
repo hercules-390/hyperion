@@ -508,7 +508,9 @@
     <ClCompile Include="pttrace.c" />
     <ClCompile Include="qdio.c" />
     <ClCompile Include="mpc.c" />
-    <ClCompile Include="rexx.c" />
+    <ClCompile Include="hRexx.c" />
+    <ClCompile Include="hRexx_o.c" />
+    <ClCompile Include="hRexx_r.c" />
     <ClCompile Include="scedasd.c" />
     <ClCompile Include="script.c" />
     <ClCompile Include="service.c" />
@@ -819,6 +821,8 @@
     <ClInclude Include="hmacros.h" />
     <ClInclude Include="hostinfo.h" />
     <ClInclude Include="hostopts.h" />
+    <ClInclude Include="hRexx.h" />
+    <ClInclude Include="hRexxapi.h" />
     <ClInclude Include="hscutl.h" />
     <ClInclude Include="hsocket.h" />
     <ClInclude Include="hstdinc.h" />

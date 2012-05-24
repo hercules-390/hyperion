@@ -1,14 +1,21 @@
-/* HREXX.H      (c)Copyright Enrico Sorichetti, 2012                 */
-/*              Rexx Interpreter Support                             */
-/*                                                                   */
-/*  Released under "The Q Public License Version 1"                  */
-/*  (http://www.hercules-390.org/herclic.html) as modifications to   */
-/*  Hercules.                                                        */
+/* HREXX.H      (c)Copyright Enrico Sorichetti, 2012                          */
+/*              Rexx Interpreter Support                                      */
+/*                                                                            */
+/*  Released under "The Q Public License Version 1"                           */
+/*  (http://www.hercules-390.org/herclic.html) as modifications to            */
+/*  Hercules.                                                                 */
 
-/*  inspired by the previous Rexx implementation by Jan Jaeger       */
+/*  inspired by the previous Rexx implementation by Jan Jaeger                */
 
 #ifndef _HREXX_H_
 #define _HREXX_H_
+
+#define HAVKEYW( _T_ )       (  strcasecmp( _T_, argv[iarg]) == 0 )
+#define HAVABBR( _T_ )       ( strncasecmp( _T_, argv[iarg], argl) == 0 )
+
+// #define  CMPARG( _VALUE_ )  strcasecmp( _VALUE_, argv[iarg])
+// #define CMPARGL( _VALUE_ ) strncasecmp( _VALUE_, argv[iarg], argl)
+
 
 #if defined(PATH_MAX)
 # define MAX_PATHNAME_LENGTH PATH_MAX + 1
@@ -34,6 +41,10 @@
 
 #ifndef MAX_ARGS_TO_SUBCOMHANDLER
 #define MAX_ARGS_TO_SUBCOMHANDLER   64
+#endif
+
+#ifndef WRK_AREA_SIZE
+#define WRK_AREA_SIZE 33
 #endif
 
 #ifdef  _HREXX_C_
@@ -144,11 +155,6 @@
 
 #endif
 
-#define LOG_CAPTURE( _RETC_ , _RESP_, _FCNM_, _BUFF_) do { \
-_RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
-_RETC_ = 0;\
-} while (0)
-
 #ifndef _HREXX_TKCOUNT_C
 #define _HREXX_TKCOUNT_C
 
@@ -206,28 +212,60 @@ char *trim(char *str) ;
 #ifdef  _HREXX_C_
 int parse_command(char *p, int argm, char **argv, int *argc)
 {
+#define QUOTE   '\"'
+#define APOST   '\''
+#define OPENPAR '\('
+#define COMMSEP '#'
+
+char strDelim;
+
     *argc = 0;
 
-    // extract argv[0]
+// Hercules parse_args cannot be used ( # processing )
+//
+// arg[0] is defined as the <command> string to be passed verbatim to the
+// Hercules command processor canned commments included
+// the <string> terminated by the "null" char  or by the <open text> "("
+//
+// an extra blank is left at the end of the command when the options are present
+// some purist might object but it' s presence is irrelevant
+
+    // special arg[0] processing
+
+    // skip leading blanks
     while ( *p && isspace(*p) ) p++;
     if  ( !*p ) return (*argc) ;
 
-    *argv = p ;
-    (*argc)++ ;
-    while (*p && *p != '(' ) p++;
-    if  ( !*p ) return (*argc) ;
+    *argv = p ; (*argc)++ ;
+    while ( *p )
+    {
+        if ( *p == QUOTE || *p == APOST )
+        {
+            strDelim = *p;
+            p++;
+            while ( *p && *p != strDelim ) p++ ; //find end of <string>
+            if ( ! *p ) return (*argc) ;
+        }
+        else if ( *p == OPENPAR )
+            break;
+        p++;
+    }
+    if ( !*p ) return (*argc) ;
 
     *p++ = 0 ;
-    while (*p && *argc < argm )
+
+// standard processing for the rest of the parms ( WORDS... only WORDS )
+// stop at the first occurrence of a # ( comment start )
+
+    while ( *p && *argc < argm )
     {
         argv++ ;
         while ( *p && isspace(*p) ) p++;
-        if  ( ! *p ) return (*argc) ;
+        if  ( !*p || *p == COMMSEP ) return (*argc) ;
 
-        *argv = p;
-        (*argc)++ ;
-        while ( *p && !isspace(*p) ) p++;
-        if (!*p) return (*argc);
+        *argv = p; (*argc)++ ;
+        while ( *p && !isspace(*p) && *p != COMMSEP ) p++;
+        if  ( !*p || *p == COMMSEP ) return (*argc) ;
 
         *p++ = 0;
     }
