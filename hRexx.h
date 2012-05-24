@@ -144,6 +144,11 @@
 
 #endif
 
+#define LOG_CAPTURE( _RETC_ , _RESP_, _FCNM_, _BUFF_) do { \
+_RESP_ = log_capture( _FCNM_ , _BUFF_ ); \
+_RETC_ = 0;\
+} while (0)
+
 #ifndef _HREXX_TKCOUNT_C
 #define _HREXX_TKCOUNT_C
 
