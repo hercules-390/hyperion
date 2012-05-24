@@ -214,7 +214,7 @@ int parse_command(char *p, int argm, char **argv, int *argc)
 {
 #define QUOTE   '\"'
 #define APOST   '\''
-#define OPENPAR '\('
+#define OPENPAR '('
 #define COMMSEP '#'
 
 char strDelim;
