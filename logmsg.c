@@ -620,6 +620,17 @@ DLL_EXPORT char *log_capture(void *(*fun)(void *),void *p)
     return(cd.obfr);
 }
 
+DLL_EXPORT int command_capture(int(*hcmdline)(char *),char *cmd,char **resp)
+{
+    int rc;
+    struct log_capture_data cd = {0};
+    log_open(log_capture_writer,log_capture_closer,&cd);
+    rc = hcmdline(cmd);
+    log_close();
+    *resp = cd.obfr;
+    return rc;
+}
+
 #if defined( OPTION_MSGCLR )
 /*-------------------------------------------------------------------*/
 /* Skip past "<pnl ...>" message prefix...                           */

@@ -91,5 +91,6 @@ LOG_DLL_IMPORT void log_write(int,char *);
 
 /* Log routing utility */
 LOG_DLL_IMPORT char *log_capture(void *(*)(void *),void *);
+LOG_DLL_IMPORT int command_capture(int(*)(char*),char*,char**);
 
 #endif /* __LOGGER_H__ */
