@@ -242,7 +242,7 @@ char temp[33];
 
         if ( haveStemName )
         {
-            LOG_CAPTURE( rc, wResp, panel_command, wCommand);
+            rc = command_capture( HercCmdLine, wCommand, &wResp );
             coun = 0;
             if (wResp )
             {
@@ -258,8 +258,7 @@ char temp[33];
             sprintf(temp,"%d",coun);
             ReginaRexxSetVar(RespStemName, temp, strlen(temp));
             free(RespStemName);
-            *Flags = RXSUBCOM_OK;
-
+            *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
         }
         else
         {
