@@ -150,6 +150,14 @@ unsigned long ulRetc;
 
 }
 
+static int hSubcomError( int rc, int flag, unsigned short *Flags, PRXSTRING RetValue )
+{
+    sprintf( RetValue->strptr, "%d", rc );
+    RetValue->strlength = strlen( RetValue->strptr );
+    *Flags = flag;
+    return rc;
+}
+
 static APIRET APIENTRY hSubcomHandler(
   PRXSTRING Command,                    /* Command string from Rexx           */
   PUSHORT Flags,                        /* Returned Error/Failure Flags       */
@@ -164,118 +172,128 @@ char *wCommand = NULL;
 char *wResp = NULL;
 
 int   iarg,argc;
-char *argv[MAX_ARGS_TO_SUBCOMHANDLER + 1 ];
+char *argv[MAX_ARGS_TO_SUBCOMHANDLER + 1];
 
+int   haveOptParen;
 int   haveStemKeyw;
-int   needStemName;
 int   haveStemName;
 
 char *RespStemName;
 int   RespStemLength;
 char *RespStemOffset;
 
-char temp[33];
+#define   TEMPSIZE     33
+char temp[TEMPSIZE];
 
-    zCommand = malloc( RXSTRLEN( *Command) +1);
-    strncpy( zCommand, RXSTRPTR( *Command), RXSTRLEN( *Command));
+    zCommand = malloc( RXSTRLEN( *Command ) + 1 );
+    strncpy( zCommand, RXSTRPTR( *Command ), RXSTRLEN( *Command ));
     zCommand[RXSTRLEN(*Command)] = '\0';
-    parse_command( zCommand, MAX_ARGS_TO_SUBCOMHANDLER, argv, &argc);
 
-    if ( argc == 0 )
+    wCommand = strdup( zCommand );
+
+    if (!wCommand)
     {
-        free(zCommand);
-        sprintf(RetValue->strptr, "%d", -1);
-        RetValue->strlength = strlen(RetValue->strptr);
-        *Flags = RXSUBCOM_ERROR;
-        return -1;
+        free( zCommand );
+        return hSubcomError( -4, RXAPI_MEMFAIL, Flags, RetValue );
     }
 
+    // Use Hercules standard command-line parser
+
+    parse_args( zCommand, MAX_ARGS_TO_SUBCOMHANDLER, argv, &argc );
+
+    if (argc <= 0)
+    {
+        free( zCommand );
+        free( wCommand );
+        return hSubcomError( -1, RXSUBCOM_ERROR, Flags, RetValue );
+    }
+
+    haveOptParen = 0;
     haveStemKeyw = 0;
-    needStemName = 0;
     haveStemName = 0;
+
+    // Locate and remove the optional stem option
 
     for (iarg = 1; iarg < argc; iarg++)
     {
-        if ( !haveStemName && haveStemKeyw )
+        if (!haveOptParen)
+        {
+            if (*argv[iarg] != '(')
+                continue;
+            haveOptParen = 1;
+            {
+                char* p = wCommand + (argv[iarg] - zCommand);
+                do --p; while (p >= wCommand && *p && isspace(*p));
+                *++p = '\0'; // (mark end of command)
+            }
+            do ++argv[iarg]; // (skip past paren)
+            while(*argv[iarg] && isspace(*argv[iarg]));
+        }
+
+        if (!haveStemName && haveStemKeyw)
         {
             haveStemName = 1;
-            RespStemName = malloc(strlen(argv[iarg]) + 33);
-            strcpy(RespStemName, argv[iarg]);
-            RespStemLength = strlen(RespStemName);
-            if  ( RespStemName[RespStemLength-1] != '.' )
+            RespStemName = malloc( strlen( argv[iarg] ) + TEMPSIZE );
+            strcpy( RespStemName, argv[iarg] );
+            RespStemLength = strlen( RespStemName );
+            if (RespStemName[RespStemLength-1] != '.')
             {
                 RespStemName[RespStemLength]   = '.';
                 RespStemName[RespStemLength+1] = '\0';
             }
-            RespStemOffset = RespStemName + strlen(RespStemName);
-            sprintf(RespStemOffset,"%d",0);
-            sprintf(temp,"%d",0);
-            ReginaRexxSetVar(RespStemName, temp, strlen(temp));
+            RespStemOffset = RespStemName + strlen( RespStemName );
+            sprintf( RespStemOffset, "%d", 0 );
+            sprintf( temp, "%d", 0 );
+            ReginaRexxSetVar( RespStemName, temp, strlen( temp ));
             continue;
         }
 
-        if ( !haveStemKeyw && ( strcasecmp(argv[iarg], "stem" ) == 0 ) )
+        if (!haveStemKeyw && strcasecmp( argv[iarg], "stem" ) == 0)
         {
             haveStemKeyw = 1;
-            needStemName = 1;
             continue;
         }
 
-        if ( haveStemName )
-        {
-            free( RespStemName);
-        }
+        if (haveStemName)
+            free( RespStemName );
 
-        free( zCommand);
-        sprintf( RetValue->strptr, "%d", -2);
-        RetValue->strlength = strlen( RetValue->strptr);
-        *Flags = RXSUBCOM_ERROR;
-        return -2;
+        free( zCommand );
+        free( wCommand );
 
+        return hSubcomError( -2, RXSUBCOM_ERROR, Flags, RetValue );
     }
 
-    wCommand = NULL;
-    wCommand = malloc(strlen(argv[0])+33);
-    if ( wCommand )
+    if (haveStemName)
     {
-        strcpy(wCommand, argv[0]);
-
-        if ( haveStemName )
+        rc = command_capture( HercCmdLine, wCommand, &wResp );
+        coun = 0;
+        if (wResp)
         {
-            rc = command_capture( HercCmdLine, wCommand, &wResp );
-            coun = 0;
-            if (wResp )
+            for (coun=0, line=strtok( wResp, "\n" ); line; line=strtok( NULL, "\n" ))
             {
-                for (coun=0, line=strtok(wResp, "\n"); line; line = strtok(NULL, "\n"))
-                {
-                    coun++;
-                    sprintf(RespStemOffset,"%d",coun);
-                    ReginaRexxSetVar(RespStemName, line, strlen(line));
-                }
-                free(wResp);
+                coun++;
+                sprintf( RespStemOffset, "%d", coun );
+                ReginaRexxSetVar( RespStemName, line, strlen( line ));
             }
-            sprintf(RespStemOffset,"%d",0);
-            sprintf(temp,"%d",coun);
-            ReginaRexxSetVar(RespStemName, temp, strlen(temp));
-            free(RespStemName);
-            *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
+            free( wResp );
         }
-        else
-        {
-            rc = HercCmdLine(wCommand);
-            *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
-        }
-        free(wCommand);
-        free(zCommand);
+        sprintf( RespStemOffset, "%d", 0 );
+        sprintf( temp, "%d", coun );
+        ReginaRexxSetVar( RespStemName, temp, strlen( temp ));
+        free( RespStemName );
+        *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
     }
     else
     {
-        rc = -4;
-        *Flags = RXAPI_MEMFAIL;
+        rc = HercCmdLine( wCommand );
+        *Flags = rc < 0 ? RXSUBCOM_ERROR : rc > 0 ? RXSUBCOM_FAILURE : RXSUBCOM_OK;
     }
 
-    sprintf(RetValue->strptr, "%d", rc);
-    RetValue->strlength = strlen(RetValue->strptr);
+    free( wCommand );
+    free( zCommand );
+
+    sprintf( RetValue->strptr, "%d", rc );
+    RetValue->strlength = strlen( RetValue->strptr );
 
     return rc;
 }
