@@ -1038,7 +1038,6 @@ static const U32 g_nDictSize[ MAX_CDSS ] =
 static CMPSC_INLINE U8 (CMPSC_FASTCALL ERR)( CMPSCBLK* pCMPSCBLK )
 {
     pCMPSCBLK->pic = 7;
-    pCMPSCBLK->cc = 2;      // (purposely invalid)
     return FALSE;
 }
 static CMPSC_INLINE U8 (CMPSC_FASTCALL CC3)( CMPSCBLK* pCMPSCBLK )
