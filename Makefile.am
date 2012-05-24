@@ -620,6 +620,9 @@ vmfplc2_LDFLAGS       = $(tools_LD_FLAGS)
 
 EXTRA_DIST = autoconf/config.rpath \
              autoconf/mkinstalldirs \
+             scripts/cmpsc.cnf     \
+             scripts/cmpsc.rexx    \
+             util/CMPSC.txt        \
              COPYRIGHT             \
              hercules.cnf          \
              cckdfix.c             \
