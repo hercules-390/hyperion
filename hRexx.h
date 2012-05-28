@@ -87,15 +87,17 @@
 #define OOREXX_API_LIBRARY    "librexxapi.so"
 #endif
 
-#define REXX_START             "RexxStart"
-#define REXX_REGISTER_SUBCOM   "RexxRegisterSubcomExe"
-#define REXX_DEREGISTER_SUBCOM "RexxDeregisterSubcom"
-#define REXX_REGISTER_EXIT     "RexxRegisterExitExe"
-#define REXX_DEREGISTER_EXIT   "RexxDeregisterExit"
-#define REXX_ALLOCATE_MEMORY   "RexxAllocateMemory"
-#define REXX_FREE_MEMORY       "RexxFreeMemory"
+#define REXX_START                  "RexxStart"
+#define REXX_REGISTER_FUNCTION      "RexxRegisterFunctionExe"
+#define REXX_DEREGISTER_FUNCTION    "RexxDeregisterFunction"
+#define REXX_REGISTER_SUBCOM        "RexxRegisterSubcomExe"
+#define REXX_DEREGISTER_SUBCOM      "RexxDeregisterSubcom"
+#define REXX_REGISTER_EXIT          "RexxRegisterExitExe"
+#define REXX_DEREGISTER_EXIT        "RexxDeregisterExit"
+#define REXX_ALLOCATE_MEMORY        "RexxAllocateMemory"
+#define REXX_FREE_MEMORY            "RexxFreeMemory"
 
-#define REXX_VARIABLE_POOL     "RexxVariablePool"
+#define REXX_VARIABLE_POOL          "RexxVariablePool"
 
 #if defined ( _MSVC_ )
 
@@ -205,78 +207,5 @@ char *trim(char *str) ;
 #endif /* #ifdef  _HREXX_C_  */
 
 #endif /* #ifndef _HREXX_TRIM_C */
-
-#ifndef _HREXX_PARSE_COMMAND_C
-#define _HREXX_PARSE_COMMAND_C
-
-#ifdef  _HREXX_C_
-int parse_command(char *p, int argm, char **argv, int *argc)
-{
-#define QUOTE   '\"'
-#define APOST   '\''
-#define OPENPAR '('
-#define COMMSEP '#'
-
-char strDelim;
-
-    *argc = 0;
-
-// Hercules parse_args cannot be used ( # processing )
-//
-// arg[0] is defined as the <command> string to be passed verbatim to the
-// Hercules command processor canned commments included
-// the <string> terminated by the "null" char  or by the <open text> "("
-//
-// an extra blank is left at the end of the command when the options are present
-// some purist might object but it' s presence is irrelevant
-
-    // special arg[0] processing
-
-    // skip leading blanks
-    while ( *p && isspace(*p) ) p++;
-    if  ( !*p ) return (*argc) ;
-
-    *argv = p ; (*argc)++ ;
-    while ( *p )
-    {
-        if ( *p == QUOTE || *p == APOST )
-        {
-            strDelim = *p;
-            p++;
-            while ( *p && *p != strDelim ) p++ ; //find end of <string>
-            if ( ! *p ) return (*argc) ;
-        }
-        else if ( *p == OPENPAR )
-            break;
-        p++;
-    }
-    if ( !*p ) return (*argc) ;
-
-    *p++ = 0 ;
-
-// standard processing for the rest of the parms ( WORDS... only WORDS )
-// stop at the first occurrence of a # ( comment start )
-
-    while ( *p && *argc < argm )
-    {
-        argv++ ;
-        while ( *p && isspace(*p) ) p++;
-        if  ( !*p || *p == COMMSEP ) return (*argc) ;
-
-        *argv = p; (*argc)++ ;
-        while ( *p && !isspace(*p) && *p != COMMSEP ) p++;
-        if  ( !*p || *p == COMMSEP ) return (*argc) ;
-
-        *p++ = 0;
-    }
-    return (*argc);
-}
-
-#else
-int parse_command(char *p, int argm, char **argv, int *argc) ;
-
-#endif /* #ifdef  _HREXX_C_  */
-
-#endif /* #ifndef _HREXX_PARSE_COMMAND_C */
 
 #endif /* #ifndef _HREXX_H_  */

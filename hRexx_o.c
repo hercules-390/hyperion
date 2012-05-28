@@ -14,11 +14,17 @@
 
 #if defined(ENABLE_OBJECT_REXX)
 
+#define HREXXDROPVAR            ObjectRexxDropVar
 #define HREXXFETCHVAR           ObjectRexxFetchVar
 #define HREXXSETVAR             ObjectRexxSetVar
 #define HREXXEXECCMD            ObjectRexxExecCmd
 #define HREXXEXECINSTORECMD     ObjectRexxExecInstoreCmd
 #define HREXXEXECSUB            ObjectRexxExecSub
+
+#define HREXXREGISTERFUNCTIONS  ObjectRexxRegisterFunctions
+#define HREXXEXTERNALFUNCTION_T size_t REXXENTRY
+
+#define HREXXAWSCMD             ObjectRexxawscmd
 
 #define HREXXREGISTERHANDLERS   ObjectRexxRegisterHandlers
 #define HREXXPFN                REXXPFN
@@ -51,19 +57,22 @@ extern char *MessagePrefix;
 extern char *ErrorPrefix;
 
 extern int (*RexxDynamicLoader)();
+extern int (*RexxRegisterFunctions)();
 extern int (*RexxRegisterHandlers)();
 extern int (*RexxExecCmd)();
 extern int (*RexxExecInstoreCmd)();
 extern int (*RexxExecSub)();
 
-static PFNREXXSTART             hRexxStart;
-static PFNREXXREGISTERSUBCOMEXE hRexxRegisterSubcom;
-static PFNREXXDEREGISTERSUBCOM  hRexxDeregisterSubcom;
-static PFNREXXREGISTEREXITEXE   hRexxRegisterExit;
-static PFNREXXDEREGISTEREXIT    hRexxDeregisterExit;
-static PFNREXXALLOCATEMEMORY    hRexxAllocateMemory;
-static PFNREXXFREEMEMORY        hRexxFreeMemory;
-static PFNREXXVARIABLEPOOL      hRexxVariablePool;
+static PFNREXXSTART                 hRexxStart;
+static PFNREXXREGISTERFUNCTIONEXE   hRexxRegisterFunction;
+static PFNREXXDEREGISTERFUNCTION    hRexxDeregisterFunction;
+static PFNREXXREGISTERSUBCOMEXE     hRexxRegisterSubcom;
+static PFNREXXDEREGISTERSUBCOM      hRexxDeregisterSubcom;
+static PFNREXXREGISTEREXITEXE       hRexxRegisterExit;
+static PFNREXXDEREGISTEREXIT        hRexxDeregisterExit;
+static PFNREXXALLOCATEMEMORY        hRexxAllocateMemory;
+static PFNREXXFREEMEMORY            hRexxFreeMemory;
+static PFNREXXVARIABLEPOOL          hRexxVariablePool;
 
 int ObjectRexxDynamicLoader()
 {
@@ -72,6 +81,10 @@ int ObjectRexxDynamicLoader()
     HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY);
 
     HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
+
+    HDLSYM ( hRexxRegisterFunction, hRexxApiLibHandle, REXX_REGISTER_FUNCTION);
+
+    HDLSYM ( hRexxDeregisterFunction, hRexxApiLibHandle, REXX_DEREGISTER_FUNCTION);
 
     HDLSYM ( hRexxRegisterSubcom, hRexxApiLibHandle, REXX_REGISTER_SUBCOM);
 

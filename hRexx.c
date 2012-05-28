@@ -22,6 +22,7 @@
 { \
     RexxPackage = OOREXX_PACKAGE; \
     RexxDynamicLoader = &ObjectRexxDynamicLoader; \
+    RexxRegisterFunctions = &ObjectRexxRegisterFunctions; \
     RexxRegisterHandlers = &ObjectRexxRegisterHandlers; \
     RexxExecCmd = &ObjectRexxExecCmd; \
     RexxExecInstoreCmd = &ObjectRexxExecInstoreCmd; \
@@ -39,6 +40,7 @@
 { \
     RexxPackage = REGINA_PACKAGE; \
     RexxDynamicLoader = &ReginaRexxDynamicLoader; \
+    RexxRegisterFunctions = &ReginaRexxRegisterFunctions; \
     RexxRegisterHandlers = &ReginaRexxRegisterHandlers; \
     RexxExecCmd = &ReginaRexxExecCmd; \
     RexxExecInstoreCmd = &ReginaRexxExecInstoreCmd; \
@@ -56,6 +58,7 @@
 { \
     RexxPackage = ""; \
     RexxDynamicLoader = NULL; \
+    RexxRegisterFunctions = NULL; \
     RexxRegisterHandlers = NULL; \
     RexxExecCmd = NULL; \
     RexxExecInstoreCmd = NULL; \
@@ -75,6 +78,7 @@ void InitializeOptions(void);
 
 #if defined(ENABLE_OBJECT_REXX)
 int ObjectRexxDynamicLoader();
+int ObjectRexxRegisterFunctions();
 int ObjectRexxRegisterHandlers();
 int ObjectRexxExecCmd();
 int ObjectRexxExecInstoreCmd();
@@ -82,6 +86,7 @@ int ObjectRexxExecSub();
 #endif
 #if defined(ENABLE_REGINA_REXX)
 int ReginaRexxDynamicLoader();
+int ReginaRexxRegisterFunctions();
 int ReginaRexxRegisterHandlers();
 int ReginaRexxExecCmd();
 int ReginaRexxExecInstoreCmd();
@@ -96,6 +101,7 @@ char *RexxPackage = OOREXX_PACKAGE;
 char *RexxLibrary = OOREXX_LIBRARY;
 char *RexxApiLibrary = OOREXX_API_LIBRARY;
 int (*RexxDynamicLoader)() = &ObjectRexxDynamicLoader;
+int (*RexxRegisterFunctions)() = &ObjectRexxRegisterFunctions;
 int (*RexxRegisterHandlers)() = &ObjectRexxRegisterHandlers;
 int (*RexxExecCmd)() = &ObjectRexxExecCmd;
 int (*RexxExecInstoreCmd)() = &ObjectRexxExecInstoreCmd;
@@ -106,6 +112,7 @@ char *RexxPackage = REGINA_PACKAGE;
 char *RexxLibrary = REGINA_LIBRARY;
 char *RexxApiLibrary = "";
 int (*RexxDynamicLoader)() = &ReginaRexxDynamicLoader;
+int (*RexxRegisterFunctions)() = &ReginaRexxRegisterFunctions;
 int (*RexxRegisterHandlers)() = &ReginaRexxRegisterHandlers;
 int (*RexxExecCmd)() = &ReginaRexxExecCmd;
 int (*RexxExecInstoreCmd)() = &ReginaRexxExecInstoreCmd;
@@ -116,6 +123,7 @@ char *RexxPackage = "";
 char *RexxLibrary = "";
 char *RexxApiLibrary = "";
 int (*RexxDynamicLoader)() = NULL;
+int (*RexxRegisterFunctions)() = NULL;
 int (*RexxRegisterHandlers)() = NULL;
 int (*RexxExecCmd)() = NULL;
 int (*RexxExecInstoreCmd)() = NULL;

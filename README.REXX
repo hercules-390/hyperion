@@ -1,5 +1,9 @@
                             Hercules REXX support
 
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+NOTE the changes in the Address HERCULES invocation
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 This is a full rewrite of the original Rexx implementation by Jan Jaeger
 
 the Rexx packages supported are
@@ -38,21 +42,64 @@ to invoke a rexx script the command is
 
 EXEC <scriptname> <script arguments>
 
-within the Rexx script Hercules commands can be issued using the construct
+within the Rexx script Hercules commands can be issued using the constructs
 
-format (1) without reply
-Address Hercules <command> <command arguments>
+1 - ...Address <ENVIRONMENT> interface
+* the original implementation was forced to do parsing/subparsing
+of the <string> passed to extract the <command> options
 
-when the above format (1) is used the Rexx variable RC contains the return code
-from the hercules command
+since the <command string> might/ contain arbitrary char sequences
+the subparsing was prone to errors
 
-format (2) with a reply
-Address Hercules <command> <command arguments> (STEM <stemname>
-( The format is mimicked after the EXECIO format )
+now  Address Hercules has as only parameter the command
+all the <local> option are defined/passed thru predefined and reserved rexx variables
+( even IBM used this approach in the original RXSQL interface :-) )
 
-when the above format (2) is used the RC will alway be 0
-and the <stemname> wiil contain the reply with the usual convention that
+and here they are
+
+HREXX.ERRORHANDLING "RETCODE"/"SYSTEM"
+to determine how error situations must be handled
+( usually a non 0 return code from the command )
+
+for example a devlist with no devices present exits with a return code 1
+from the subcommand interface point of view it should not be considered an error
+( also RXSQL when no rows satify the query does not raise an error condition )
+
+just play around a bit with the different situations to understand better the reason
+why I let the user choose
+
+HREXX.RESPSTEMNAME
+to tell the stem <root> to be used for the response
+
+the variable is dropped at every call so that each Address HERCULES invocation
+will find an unbiased environment
+
+if on the other side a response is alway wanted the variable
+HREXX.PERSISTENTRESPSTEMNAME will provide such facility
+
+
+as usual the Rexx variable RC contains the return code from the hercules command
+
+the <stemname> will contain the reply with the usual convention that
 <stemname>.0 will contain the number of lines returned
+
+NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW
+2 - external function interface ( much cleaner IMO )
+the parameter passing does nor depend on any parsing/subparsing
+
+the function name is awscmd
+( I liked the name, but if somebody feels that it infringes some IP I will change it )
+
+the format and the parameters are
+
+<rc> = awscmd(<command>,[<stemname>],[<error handling mode>])
+or
+call awscmd <command>, [<stemname>], [<error handling mode>]
+
+
+in both cases ( command and external function )
+the error handling default is "RETCODE"
+
 
 to manage the Rexx environment the command is
 

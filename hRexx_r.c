@@ -14,11 +14,17 @@
 
 #if defined(ENABLE_REGINA_REXX)
 
+#define HREXXDROPVAR            ReginaRexxDropVar
 #define HREXXFETCHVAR           ReginaRexxFetchVar
 #define HREXXSETVAR             ReginaRexxSetVar
 #define HREXXEXECCMD            ReginaRexxExecCmd
 #define HREXXEXECINSTORECMD     ReginaRexxExecInstoreCmd
 #define HREXXEXECSUB            ReginaRexxExecSub
+
+#define HREXXREGISTERFUNCTIONS  ReginaRexxRegisterFunctions
+#define HREXXEXTERNALFUNCTION_T ULONG APIENTRY
+
+#define HREXXAWSCMD             ReginaRexxawscmd
 
 #define HREXXREGISTERHANDLERS   ReginaRexxRegisterHandlers
 #define HREXXPFN                PFN
@@ -57,12 +63,15 @@ extern char *MessagePrefix;
 extern char *ErrorPrefix;
 
 extern int (*RexxDynamicLoader)();
+extern int (*RexxRegisterFunctions)();
 extern int (*RexxRegisterHandlers)();
 extern int (*RexxExecCmd)();
 extern int (*RexxExecInstoreCmd)();
 extern int (*RexxExecSub)();
 
 typedef APIRET APIENTRY PFNREXXSTART( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING );
+typedef APIRET APIENTRY PFNREXXREGISTERFUNCTIONEXE( PCSZ, PFN);
+typedef APIRET APIENTRY PFNREXXDEREGISTERFUNCTION( PCSZ );
 typedef APIRET APIENTRY PFNREXXREGISTERSUBCOMEXE( PCSZ, PFN, PUCHAR);
 typedef APIRET APIENTRY PFNREXXDEREGISTERSUBCOM( PCSZ, PCSZ);
 typedef APIRET APIENTRY PFNREXXREGISTEREXITEXE( PSZ, PFN , PUCHAR );
@@ -72,20 +81,26 @@ typedef APIRET APIENTRY PFNREXXFREEMEMORY( PVOID);
 
 typedef APIRET APIENTRY PFNREXXVARIABLEPOOL( PSHVBLOCK );
 
-static PFNREXXSTART             *hRexxStart;
-static PFNREXXREGISTERSUBCOMEXE *hRexxRegisterSubcom;
-static PFNREXXDEREGISTERSUBCOM  *hRexxDeregisterSubcom;
-static PFNREXXREGISTEREXITEXE   *hRexxRegisterExit;
-static PFNREXXDEREGISTEREXIT    *hRexxDeregisterExit;
-static PFNREXXALLOCATEMEMORY    *hRexxAllocateMemory;
-static PFNREXXFREEMEMORY        *hRexxFreeMemory;
-static PFNREXXVARIABLEPOOL      *hRexxVariablePool;
+static PFNREXXSTART                 *hRexxStart;
+static PFNREXXREGISTERFUNCTIONEXE   *hRexxRegisterFunction;
+static PFNREXXDEREGISTERFUNCTION    *hRexxDeregisterFunction;
+static PFNREXXREGISTERSUBCOMEXE     *hRexxRegisterSubcom;
+static PFNREXXDEREGISTERSUBCOM      *hRexxDeregisterSubcom;
+static PFNREXXREGISTEREXITEXE       *hRexxRegisterExit;
+static PFNREXXDEREGISTEREXIT        *hRexxDeregisterExit;
+static PFNREXXALLOCATEMEMORY        *hRexxAllocateMemory;
+static PFNREXXFREEMEMORY            *hRexxFreeMemory;
+static PFNREXXVARIABLEPOOL          *hRexxVariablePool;
 
 int ReginaRexxDynamicLoader()
 {
     HDLOPEN( hRexxLibHandle, REGINA_LIBRARY, RTLD_LAZY);
 
     HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
+
+    HDLSYM ( hRexxRegisterFunction, hRexxLibHandle, REXX_REGISTER_FUNCTION);
+
+    HDLSYM ( hRexxDeregisterFunction, hRexxLibHandle, REXX_DEREGISTER_FUNCTION);
 
     HDLSYM ( hRexxRegisterSubcom, hRexxLibHandle, REXX_REGISTER_SUBCOM);
 
