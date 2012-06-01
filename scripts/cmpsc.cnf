@@ -5,4 +5,4 @@ cpuserial 000000
 panrate   fast
 archlvl   s/390           # (cmpsc.txt needed execution arch)
 mainsize  16              # (cmpsc.txt test program minimum)
-0000 3215 noprompt        # (at least one device is required)
+0000 3215-C noprompt      # (at least one device is required)

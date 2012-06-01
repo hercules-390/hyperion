@@ -42,7 +42,7 @@ U64  (CMPSC_FASTCALL ARCH_DEP( GetDCT ))( U16 index, DCTBLK* pDCTBLK )
             pDCTBLK->pkey
         );
     }
-    return CSWAP64(*(U64*)(&pDCTBLK->maddr[ pagenum ][ pageidx ]));
+    return CSWAP64(*(U64*)(uintptr_t)(&pDCTBLK->maddr[ pagenum ][ pageidx ]));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

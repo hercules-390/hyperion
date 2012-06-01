@@ -2,68 +2,175 @@
 
 Trace "O"
 
-parse arg args
-args = space(args)
-argc = words(args)
+/* Initialization */
 
-parse   version _ver
-parse   source  _src
-_env    = Address()
+parse version _ver
+parse source _src
+_env = Address()
 
-parse   var     _src . . _cmd
-_who    = filespec("n",_cmd)
-parse	var _who  _who "." .
-
-
-say _who "started  "
-say _who "version  " _ver
-say _who "source   " _src
-say _who "HOSTENV  " _env
-say _who "date     " date()
-say _who "time     " time()
-if  args = "" then do
-    say _who "No command entered "
-    exit 4
-end
+parse var _src . _mode .
+parse var _src . . _cmd
+_nx0 = filespec("n",_cmd)
+parse var _nx0 _n0 "." .
 
 --signal on failure name hfailure
 --signal on error   name herror
 
-Address HERCULES args "# some useless comment"
+/* Techniques... */
 
-say _who "RC = " RC
+technique.desc.1  = 'HREXX.RESPSTEMNAME = "foo";           Address HERCULES command'
+technique.desc.2  = 'HREXX.PERSISTENTRESPSTEMNAME = "foo"; Address HERCULES command'
+technique.desc.3  = '_rc = awscmd( command, "foo", "RETCODE" )'
+technique.desc.4  = '_rc = awscmd( command, "foo", "SYSTEM" )'
+technique.desc.5  = '_rc = awscmd( command, "foo" )'
+technique.desc.6  = '_rc = awscmd( command )'
+technique.desc.7  = 'call awscmd command, "foo", "RETCODE"'
+technique.desc.8  = 'call awscmd command, "foo", "SYSTEM"'
+technique.desc.9  = 'call awscmd command, "foo"'
+technique.desc.10 = 'call awscmd command'
 
-parse lower var args . "(" opts
+techniques  =  10
 
-parse lower var opts . "stem" stem .
+/* Parse and validate arguments */
 
-if  strip(stem) = "" then do
-    say _who "No output requested "
-    exit 0
+if  _mode = "COMMAND" then do
+    parse arg argv
+    technique = word(argv,1)
+    command = strip(substr(argv,wordindex(argv,2)))
+    drop argv
+end
+else do -- "SUBROUTINE"
+    if arg() >= 1 then technique = arg(1)
+    command = ""
+    if arg() >= 2 then do i = 2 for arg() - 1
+        argx = arg(i)
+        if pos(" ",argx) > 0 then argx = '"' || argx || '"'
+        command ||= " " || argx
+    end
+    command = strip(command)
 end
 
-stem = strip(stem,,".") || "."
+if  technique = "" | \datatype(technique,"N")  | technique < 1 | technique > techniques | command = "" then do
 
-coun = value(stem || 0)
-if  coun = 0 then ,
-    say _who "No output returned"
-else ,
-    do  i = 1 to coun
-        say value(stem || i )
+    if  technique = "" | \datatype(technique,"N")  | technique < 1 | technique > techniques then ,
+        say _n0 "ERROR: Invalid technique"
+
+    if  command = "" then ,
+        say _n0 "ERROR: Missing command"
+
+    /* Display HELP information */
+
+    say _n0 ""
+    say _n0 'Format:   "' || _nx0 || '  <technique>  <command>"'
+    say _n0 'Example:  "' || _nx0 || '       5        defsym"'
+    say _n0 ""
+    say _n0 "    technique   Which technique to use:"
+    say _n0 ""
+    width = length(techniques)
+    do i = 1 for techniques
+    say _n0 '                'right("  "||i,width)'  =  ' || technique.desc.i
     end
-say _who "ended  "
+    say _n0 ""
+    say _n0 "    command     The Hercules command to be issued."
+    say _n0 ""
 
-exit 0
+    exit
+end
 
+say _n0 "Started"
+say _n0 "Version  " _ver
+say _n0 "Source   " _src
+say _n0 "HOSTENV  " _env
+say _n0 "Date     " date()
+say _n0 "Time     " time()
+say _n0 "Mode     " _mode
+
+/* Issue Hercules command using the requested technique */
+
+command ||= "    # (test command-line comment)"  -- (test!)
+
+say _n0 "Technique = " || technique || ": " || technique.desc.technique
+say _n0 "Command   = " || command
+
+labelname = upper("technique_" || technique)
+signal value labelname
+
+technique_1:
+
+    HREXX.RESPSTEMNAME = "foo"; Address HERCULES command
+    say _n0 "RC = "RC
+    signal show_results
+
+technique_2:
+
+    HREXX.PERSISTENTRESPSTEMNAME = "foo"; Address HERCULES command
+    say _n0 "RC = "RC
+    signal show_results
+
+technique_3:
+
+    _rc = awscmd( command, "foo", "RETCODE" )
+    say _n0 "_rc = "_rc
+    signal show_results
+
+technique_4:
+
+    _rc = awscmd( command, "foo", "SYSTEM" )
+    say _n0 "_rc = "_rc
+    signal show_results
+
+technique_5:
+
+    _rc = awscmd( command, "foo" )
+    say _n0 "_rc = "_rc
+    signal show_results
+
+technique_6:
+
+    _rc = awscmd( command )
+    say _n0 "_rc = "_rc
+    signal show_results
+
+technique_7:
+
+    call awscmd command, "foo", "RETCODE"
+    signal show_results
+
+technique_8:
+
+    call awscmd command, "foo", "SYSTEM"
+    signal show_results
+
+technique_9:
+
+    call awscmd command, "foo"
+    signal show_results
+
+technique_10:
+
+    call awscmd command
+    signal show_results
+
+/* Show captured response if applicable */
+
+show_results:
+
+if datatype(foo.0,"NUM") then do
+    width = length(foo.0)
+    do  i = 0 for (foo.0 + 1)
+        say _n0 || " foo." || right("   "||i,width) || " = " || foo.i
+    end
+end
+
+say _n0 "Ended"
+exit
 
 herror:
-say _who "signal on error   trapped"
-say _who "ended  "
-exit 0
+    say _n0 "signal on error trapped"
+    say _n0 "Ended"
+    exit
 
 hfailure:
-say _who "signal on failure trapped"
-say _who "ended  "
-exit 0
-
-
+    say _n0 "signal on failure trapped"
+    say _n0 "Ended"
+    exit

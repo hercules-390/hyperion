@@ -7199,12 +7199,13 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int scp_cmd(int argc, char *argv[], char *cmdline)
 {
+  int rc;
   UNREFERENCED(argv);
   if (argc == 1)
-    scp_command(" ", 0, TRUE);          // echo command
+    rc = scp_command(" ", 0, TRUE);          // echo command
   else
-    scp_command(&cmdline[4], 0, TRUE);  // echo command
-  return 0;
+    rc = scp_command(&cmdline[4], 0, TRUE);  // echo command
+  return rc;
 }
 
 
@@ -7213,12 +7214,13 @@ int scp_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int prioscp_cmd(int argc, char *argv[], char *cmdline)
 {
+  int rc;
   UNREFERENCED(argv);
   if (argc == 1)
-    scp_command(" ", 1, TRUE);
+    rc = scp_command(" ", 1, TRUE);
   else
-    scp_command(&cmdline[5], 1, TRUE);
-  return 0;
+    rc = scp_command(&cmdline[5], 1, TRUE);
+  return rc;
 }
 
 

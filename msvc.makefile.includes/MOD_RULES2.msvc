@@ -122,9 +122,14 @@ $(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.li
 # -------------------------------------------------------------
 # System utilities
 
+$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
 $(X)conspawn.exe: $(O)$(@B).obj                                          $(O)hercver.res
 
-$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)cmpsctst.exe: $(cmpsctst_OBJ)                                        $(O)hercver.res
+    $(linkexe)
+    XCOPY  cmpsctst.cmd     $(X)    /V /C /F /H /R /K /Y
+    XCOPY  cmpsctst.rexx    $(X)    /V /C /F /H /R /K /Y
 
 # -------------------------------------------------------------
 # Dasd utilities

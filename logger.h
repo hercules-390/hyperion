@@ -90,7 +90,8 @@ LOG_DLL_IMPORT void log_write(int,char *);
 /* End of log routing section */
 
 /* Log routing utility */
-LOG_DLL_IMPORT char *log_capture(void *(*)(void *),void *);
-LOG_DLL_IMPORT int command_capture(int(*)(char*),char*,char**);
+typedef void* CAPTUREFUNC(void*);
+LOG_DLL_IMPORT char *log_capture(CAPTUREFUNC *,void *);
+LOG_DLL_IMPORT int log_capture_rc(CAPTUREFUNC *,char*,char**);
 
 #endif /* __LOGGER_H__ */
