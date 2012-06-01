@@ -462,7 +462,7 @@ int HercCmdLine (char* pszCmdLine)
 #if defined( _FEATURE_SYSTEM_CONSOLE )
     /* See if maybe it's a command that the guest understands. */
     if ( sysblk.scpimply && can_send_command() )
-        scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
+        rc = scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
     else
 #endif
         /* Error: unknown/unsupported command */
@@ -725,6 +725,7 @@ void *panel_command (void *cmdline)
     char *pCmdLine;
     unsigned i;
     int hercecho = 1;                   /* Default echo to console   */
+    int rc = 0;                         /* Return Code from command  */
 
     pCmdLine = cmdline; ASSERT( pCmdLine );
     /* Every command will be stored in history list,
@@ -801,8 +802,8 @@ void *panel_command (void *cmdline)
     {
         if (hercecho)
             EchoHercCmdLine( cmd );
-        HercCmdLine( cmd );
-        return NULL;
+        rc = HercCmdLine( cmd );
+        return (void*)rc;
     }
 
     /* Send the command to the currently active command target */
@@ -822,7 +823,7 @@ void *panel_command (void *cmdline)
                     cmd[1] = ' ';   /* (must send something!) */
                     cmd[2] = 0;
                 }
-                scp_command( cmd+1, priomsg, scpecho );
+                rc = scp_command( cmd+1, priomsg, scpecho );
             }
             else
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
@@ -838,7 +839,7 @@ void *panel_command (void *cmdline)
                 set_symbol( "DEVN", "$(DEVN)" );
                 {
                 char *cl = resolve_symbol_string( cmd );
-                HercCmdLine( cl );
+                rc = HercCmdLine( cl );
                 free( cl );
                 }
 #else /* !defined( OPTION_CONFIG_SYMBOLS ) */
@@ -856,7 +857,7 @@ void *panel_command (void *cmdline)
                 cmd[0] = ' ';   /* (MUST send something!) */
                 cmd[1] = 0;
             }
-            scp_command( cmd, priomsg, scpecho );
+            rc = scp_command( cmd, priomsg, scpecho );
             break;
         }
         case CMDTGT_PSCP:       /* Priority SCP */
@@ -867,12 +868,12 @@ void *panel_command (void *cmdline)
                 cmd[0] = ' ';   /* (MUST send something!) */
                 cmd[1] = 0;
             }
-            scp_command( cmd, priomsg, scpecho );
+            rc = scp_command( cmd, priomsg, scpecho );
             break;
         }
     }
 #endif /* defined( OPTION_CMDTGT ) */
 
-    return NULL;
+    return (void*)rc;
 }
 /* end panel_command / panel_command_r */
