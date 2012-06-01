@@ -18,7 +18,7 @@
 --
 --  SYNOPSIS
 --
---      <scriptname>  inbuff  outbuff  infile  indict  [workdir]
+--      <scriptname> inbuff outbuff infile indict [workdir] [-d]
 --
 --  ARGUMENTS
 --
@@ -46,6 +46,13 @@
 --                 work files created during processing are called
 --                 "cmpout.bin" and "expout.txt" respectively.
 --
+--      -d         Debug option to force echoing of all internally
+--                 issued Hercules commands to the console as well
+--                 as whatever message(s) those commands generate.
+--                 The normal behavior is for <scriptname> to issue
+--                 all internal Hercules commands silently. The -d
+--                 option overrides this silent behavior.
+--
 --  NOTES
 --
 --      <scriptname> simply performs a series of defsyms to define the
@@ -61,11 +68,11 @@
 
 Trace Off
 
-parse source _src
-parse var _src . _mode .                    -- (command or subroutine)
-parse var _src . . _cmdpath
-_scriptname = filespec("name",_cmdpath)     -- (name with extension)
-parse var _scriptname _who "." .            -- (name without extension))
+parse source src
+parse var src . mode .                      -- (command or subroutine)
+parse var src . . cmdpath
+scriptname = filespec("name",cmdpath)       -- (name with extension)
+parse var scriptname who "." .              -- (name without extension))
 
 --signal on failure name hfailure           -- (debugging)
 --signal on error name herror               -- (debugging)
@@ -87,7 +94,7 @@ if pos("\",curdir) > 0 then pathsep = "\"
 
 /* Gather arguments */
 
-if  _mode = "COMMAND" then do
+if  mode = "COMMAND" then do
     parse arg args
     args = space(args)
     arg.0 = words(args)
@@ -104,7 +111,7 @@ end
 
 if  arg.0 <= 0 then do
     call help
-    exit
+    exit 1
 end
 
 /* Parse arguments */
@@ -124,6 +131,8 @@ have_outbuff  = 0
 have_infile   = 0
 have_indict   = 0
 have_workdir  = 0
+
+debug = 0
 
 do  i = 1 for arg.0
     argv = arg.i
@@ -165,30 +174,36 @@ do  i = 1 for arg.0
         iterate
     end
 
-    say _who '** ERROR ** arg 'i': extraneous argument: "'argv'"'
-    exit
+    if  argv = "/d" | ,
+        argv = "-d" then do
+        debug = 1
+        iterate
+    end
+
+    call logmsg '** ERROR ** arg 'i': extraneous argument: "'argv'"'
+    exit 1
 end
 
 /* Make sure we have all needed arguments */
 
 if \have_inbuff then do
-    say _who "** ERROR ** Required argument 'inbuff' not specified."
-    exit
+    call logmsg "** ERROR ** Required argument 'inbuff' not specified."
+    exit 1
 end
 
 if \have_outbuff then do
-    say _who "** ERROR ** Required argument 'outbuff' not specified."
-    exit
+    call logmsg "** ERROR ** Required argument 'outbuff' not specified."
+    exit 1
 end
 
 if \have_infile then do
-    say _who "** ERROR ** Required argument 'infile' not specified."
-    exit
+    call logmsg "** ERROR ** Required argument 'infile' not specified."
+    exit 1
 end
 
 if \have_indict then do
-    say _who "** ERROR ** Required argument 'indict' not specified."
-    exit
+    call logmsg "** ERROR ** Required argument 'indict' not specified."
+    exit 1
 end
 
 if \have_workdir then do
@@ -204,26 +219,26 @@ if  in_buffer_offset  = "" then in_buffer_offset  = 0
 if  out_buffer_offset = "" then out_buffer_offset = 0
 
 if  \isnum(ib) | \isnum(in_buffer_offset) then do
-    say _who '** ERROR ** non-numeric inbuff:offset "'in_buffer_size'"'
-    exit
+    call logmsg '** ERROR ** non-numeric inbuff:offset "'in_buffer_size'"'
+    exit 1
 end
 
 if  \isnum(ob) | \isnum(out_buffer_offset) then do
-    say _who '** ERROR ** non-numeric outbuff:offset "'out_buffer_size'"'
-    exit
+    call logmsg '** ERROR ** non-numeric outbuff:offset "'out_buffer_size'"'
+    exit 1
 end
 
 in_buffer_size  = ib
 out_buffer_size = ob
 
 if  fullpath(in_file) = "" then do
-    say _who '** ERROR ** infile "'in_file'" not found.'
-    exit
+    call logmsg '** ERROR ** infile "'in_file'" not found.'
+    exit 1
 end
 
 if  fullpath(indict) = "" then do
-    say _who '** ERROR ** indict "'indict'" not found.'
-    exit
+    call logmsg '** ERROR ** indict "'indict'" not found.'
+    exit 1
 end
 
 if  right(indict,1) = "C" then do
@@ -244,7 +259,7 @@ else do
         the compression dictionary normally would be. We do this because
         our test program is designed to point GR1 to what it thinks is a
         compression dictionary, but because this is an expansion and not
-        a compression, causes it to tned up pointing to our expansion
+        a compression, causes it to end up pointing to our expansion
         dictionary instead, which is exactly what we want.
     */
     exp_dict_name = indict
@@ -252,18 +267,18 @@ else do
 end
 
 if  fullpath(cmp_dict_name) = "" then do
-    say _who '** ERROR ** cmp_dict_name "'cmp_dict_name'" not found.'
-    exit
+    call logmsg '** ERROR ** cmp_dict_name "'cmp_dict_name'" not found.'
+    exit 1
 end
 
 if  fullpath(exp_dict_name) = "" then do
-    say _who '** ERROR ** exp_dict_name "'exp_dict_name'" not found.'
-    exit
+    call logmsg '** ERROR ** exp_dict_name "'exp_dict_name'" not found.'
+    exit 1
 end
 
 if  fullpath(workdir) = "" then do
-    say _who '** ERROR ** workdir "'workdir'" not found.'
-    exit
+    call logmsg '** ERROR ** workdir "'workdir'" not found.'
+    exit 1
 end
 workdir = dirnamefmt(workdir)
 
@@ -370,11 +385,11 @@ do_test:
         -- HHC02269I GR12=80000200 GR13=00110AAB GR14=800002B8 GR15=00000038
 
         if msgs.0 < 6 then do
-            say _who ""
-            say _who "*** "test_type" Test SUCCESS ***"
-            say _who ""
-            say _who "** ERROR ** 'gpr' command parsing failure; test aborted."
-            exit 0
+            call logmsg ""
+            call logmsg "*** "test_type" Test SUCCESS ***"
+            call logmsg ""
+            call logmsg "** ERROR ** 'gpr' command parsing failure; test aborted."
+            exit 1
         end
         parse var msgs.5 . " GR11=" gpr11 .
 
@@ -385,12 +400,12 @@ do_test:
         call delfile(out_file)
         call panel_command "savecore $(out_file) $(out_file_addr) " || d2x(out_file_end_addr)
 
-        say _who ""
-        say _who "    *** "test_type" Test SUCCESS ***"
-        say _who ""
-        say _who '    outfile name: "' || out_file || '"'
-        say _who "    outfile size:  " || out_file_size || " bytes"
-        say _who ""
+        call logmsg ""
+        call logmsg "    *** "test_type" Test SUCCESS ***"
+        call logmsg ""
+        call logmsg '    outfile name: "' || out_file || '"'
+        call logmsg "    outfile size:  " || out_file_size || " bytes"
+        call logmsg ""
 
     end
     return
@@ -416,8 +431,8 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
         -- HHC02300I sm=00 pk=0 cmwp=0 as=pri cc=0 pm=0 am=24 ia=0
 
         if msgs.0 < 3 then do
-            say _who "** ERROR ** 'psw' command parsing failure; test aborted."
-            exit 0
+            call logmsg "** ERROR ** 'psw' command parsing failure; test aborted."
+            exit 1
         end
         parse var msgs.3 . "cmwp=" cmwp " " . "ia=" psw_ia
 
@@ -427,16 +442,16 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
         end
 
         if psw_ia = "C4" then do
-            say _who ""
-            say _who "*** "test_type" Test FAILED ***   (Buffer Overflow Detected)"
-            say _who ""
+            call logmsg ""
+            call logmsg "*** "test_type" Test FAILED ***   (Buffer Overflow Detected)"
+            call logmsg ""
             leave
         end
 
         if psw_ia = "BADCC" then do
-            say _who ""
-            say _who "*** "test_type" Test FAILED ***   (Invalid cc=2 from CMPSC)"
-            say _who ""
+            call logmsg ""
+            call logmsg "*** "test_type" Test FAILED ***   (Invalid cc=2 from CMPSC)"
+            call logmsg ""
             leave
         end
 
@@ -448,7 +463,8 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
             -- HHC02290I R:000000000000008E:K:00=0000 00000000 00000000 00000000 0000 ................
 
             if msgs.0 < 2 then do
-                say _who "** ERROR ** 'r 8e.2' command parsing failure; test aborted."
+                call logmsg "** ERROR ** 'r 8e.2' command parsing failure; test aborted."
+                exit 1
             end
             parse upper var msgs.2 . "=" code " " .
 
@@ -456,16 +472,16 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
             if code = "00C7" then reason = "0C7 Data Exception"       ; else ,
                                   reason = "Program Interrupt Code " || code
 
-            say _who ""
-            say _who "*** "test_type" Test FAILED ***   ("reason")"
-            say _who ""
+            call logmsg ""
+            call logmsg "*** "test_type" Test FAILED ***   ("reason")"
+            call logmsg ""
             leave
         end
 
         if cmwp = "A" then do
-            say _who ""
-            say _who "*** "test_type" Test FAILED ***   (Unexpected disabled wait PSW)"
-            say _who ""
+            call logmsg ""
+            call logmsg "*** "test_type" Test FAILED ***   (Unexpected disabled wait PSW)"
+            call logmsg ""
             leave
         end
     end
@@ -493,35 +509,27 @@ defsym_filename: -- (wrap value yet again within apostrophes if needed)
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-panel_command: procedure expose msgs. -- (silently issue Hercules panel command)
+panel_command: procedure expose who msgs. debug -- (issue Hercules command)
 
     cmdline = arg(1)
-    Address HERCULES cmdline || " (stem foo."
-    if RC \= 0 then do
-        say _who "** ERROR ** 'panel_command()' failed; aborting."
-        say _who "ended"
-        exit 0
+    rc = awscmd(cmdline,"msgs")
+    if debug then do
+        do i=1 for msgs.0
+            say msgs.i
+        end
     end
-    msgs.0 = value("foo.0")
-    do  i = 1 for msgs.0
-        msgs.i = value("foo."||i)
-    end
-    return
-
-loud_panel_command: procedure expose msgs. -- (issue Hercules panel command with echo)
-
-    cmdline = arg(1)
-    call panel_command(cmdline)
-    do i = 1 for msgs.0
-        say msgs.i
-    end
-    return
+    return rc
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+logmsg: procedure expose who -- (say something prefixed with our name)
+
+    say who": "arg(1)
+    return
+
 isnum: procedure -- (is it a number?)
 
-    return arg(1) <> "" & verify(arg(1),"0123456789") = 0;
+    return arg(1) <> "" & datatype(arg(1),"N");
 
 fullpath: procedure -- (locate file or dir, return full path or null)
 
@@ -569,25 +577,25 @@ help:
         if  \found_start then ,
             iterate i
 
-        srcline = changestr("<scriptname>",srcline,_scriptname)
-        say strip(srcline,"T")
+        srcline = changestr("<scriptname>",srcline,scriptname)
+        say strip(srcline,"T") -- (use 'say' here, *NOT* 'logmsg'!)
 
     end
-    exit 0
+    exit 1
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 herror:
 
-    say _who "signal on error trapped"
-    say _who "ended"
-    exit 0
+    call logmsg "signal on error trapped"
+    call logmsg "ended"
+    exit 1
 
 hfailure:
 
-    say _who "signal on failure trapped"
-    say _who "ended"
-    exit 0
+    call logmsg "signal on failure trapped"
+    call logmsg "ended"
+    exit 1
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /*

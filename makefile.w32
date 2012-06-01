@@ -79,7 +79,7 @@ CFLAGS  += -DNO_SETUID
 CFLAGS  += -DEXTERNALGUI
 DFLAGS  += hercules.a -shared -dll
 
-EXEFILES = hercules \
+EXEFILES = cmpsctst hercules \
            dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
            tapecopy tapemap tapesplt \
            cckdcdsk cckdcomp cckddiag cckdswap \
@@ -206,6 +206,15 @@ hetupd_OBJ   = hetupd.o hetlib.o ftlib.o sllib.o codepage.o hostinfo.o version.o
 
 dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
+cmpsctst_OBJ = cmpsctst.o             \
+               cmpsctst_cmpsc.o       \
+               cmpsctst_cmpsc_2012.o  \
+               cmpsctst_cmpscdbg.o    \
+               cmpsctst_cmpscdct.o    \
+               cmpsctst_cmpscget.o    \
+               cmpsctst_cmpscmem.o    \
+               cmpsctst_cmpscput.o
+
 dyninst_OBJ = dyninst.o
 
 dyngui_OBJ = dyngui.o
@@ -325,6 +334,9 @@ hetupd:   $(hetupd_OBJ)
 
 dmap2hrc: $(dmap2hrc_OBJ)
 	  $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
+
+cmpsctst: $(cmpsctst_OBJ)
+	  $(CC) -o cmpsctst $(cmpsctst_OBJ) $(LFLAGS)
 
 dyninst:  $(dyninst_OBJ) hercules.a
 	  $(CC) -o dyninst.dll $(dyninst_OBJ) $(DFLAGS)

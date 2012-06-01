@@ -45,12 +45,12 @@ typedef struct MEMBLK MEMBLK;
       memcpy( (U8*)ptr, (U8*)&value, 2 );
     }
   #else
-    #define fetch_hw_noswap( p )        (*(U16*)(p))
-    #define store_hw_noswap( p, v )     (*(U16*)(p) = (U16)(v))
+    #define fetch_hw_noswap( p )        (*(U16*)(uintptr_t)(p))
+    #define store_hw_noswap( p, v )     (*(U16*)(uintptr_t)(p) = (U16)(v))
   #endif
 
-  #define   fetch_hw( p )               CSWAP16(fetch_hw_noswap((p)))
-  #define   store_hw( p, v )            store_hw_noswap((p),CSWAP16((v)))
+  #define   fetch_hw( p )               CSWAP16(fetch_hw_noswap((void*)(uintptr_t)(p)))
+  #define   store_hw( p, v )            store_hw_noswap((void*)(uintptr_t)(p),CSWAP16((v)))
 
 // ----------------------------------------------------------------------------
 
@@ -66,8 +66,8 @@ typedef struct MEMBLK MEMBLK;
       memcpy( (U8*)ptr, (U8*)&value, 4 );
     }
   #else
-    #define fetch_fw_noswap( p )        (*(U32*)(p))
-    #define store_fw_noswap( p, v )     (*(U32*)(p) = (U32)(v))
+    #define fetch_fw_noswap( p )        (*(U32*)(uintptr_t)(p))
+    #define store_fw_noswap( p, v )     (*(U32*)(uintptr_t)(p) = (U32)(v))
   #endif
 
   #define   fetch_fw( p )               CSWAP32(fetch_fw_noswap((p)))
@@ -87,8 +87,8 @@ typedef struct MEMBLK MEMBLK;
       memcpy( (U8*)ptr, (U8*)&value, 8 );
     }
   #else
-    #define fetch_dw_noswap( p )        (*(U64*)(p))
-    #define store_dw_noswap( p, v )     (*(U64*)(p) = (U64)(v))
+    #define fetch_dw_noswap( p )        (*(U64*)(uintptr_t)(p))
+    #define store_dw_noswap( p, v )     (*(U64*)(uintptr_t)(p) = (U64)(v))
   #endif
 
   #define   fetch_dw( p )               CSWAP64(fetch_dw_noswap((p)))
@@ -141,16 +141,16 @@ typedef struct MEMBLK MEMBLK;
 #undef  vfetchc
 #undef  vstorec
 
-#define vfetchb(           addr, arn, regs )   (*(U8*)(addr))
-#define vstoreb( byt,      addr, arn, regs )   (*(U8*)(addr)) = ((U8)byt)
+#define vfetchb(           addr, arn, regs )   (*(U8*)(uintptr_t)(addr))
+#define vstoreb( byt,      addr, arn, regs )   (*(U8*)(uintptr_t)(addr)) = ((U8)byt)
 #define vfetch2(           addr, arn, regs )   fetch_hw((addr))
 #define vstore2( val,      addr, arn, regs )   store_hw((addr),(val))
 #define vfetch4(           addr, arn, regs )   fetch_fw((addr))
 #define vstore4( val,      addr, arn, regs )   store_fw((addr),(val))
 #define vfetch8(           addr, arn, regs )   fetch_dw((addr))
 #define vstore8( val,      addr, arn, regs )   store_dw((addr),(val))
-#define vfetchc( dst, len, addr, arn, regs )   memcpy( (U8*)(dst),  (U8*)(addr), (len)+1 )
-#define vstorec( src, len, addr, arn, regs )   memcpy( (U8*)(addr), (U8*)(src),  (len)+1 )
+#define vfetchc( dst, len, addr, arn, regs )   memcpy( (U8*)(uintptr_t)(dst),  (U8*)(uintptr_t)(addr), (len)+1 )
+#define vstorec( src, len, addr, arn, regs )   memcpy( (U8*)(uintptr_t)(addr), (U8*)(uintptr_t)(src),  (len)+1 )
 
 #undef  wfetchb
 #undef  wfetch2

@@ -106,9 +106,13 @@
 #define _CMPSC_C_
 #endif /* #ifndef _CMPSC_C_ */
 
+#if !defined( NOT_HERC )                          // (building Hercules?)
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#else                                             // (building utility)
+#define compression_call    legacy_cmpsc
+#endif
 
 #ifdef FEATURE_COMPRESSION
 /*============================================================================*/

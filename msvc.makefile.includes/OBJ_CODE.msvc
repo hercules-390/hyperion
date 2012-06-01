@@ -79,6 +79,16 @@ altcmpsc_OBJ = \
     $(O)cmpscmem.obj \
     $(O)cmpscput.obj
 
+cmpsctst_OBJ =                  \
+    $(O)cmpsctst.obj            \
+    $(O)cmpsctst_cmpsc.obj      \
+    $(O)cmpsctst_cmpsc_2012.obj \
+    $(O)cmpsctst_cmpscdbg.obj   \
+    $(O)cmpsctst_cmpscdct.obj   \
+    $(O)cmpsctst_cmpscget.obj   \
+    $(O)cmpsctst_cmpscmem.obj   \
+    $(O)cmpsctst_cmpscput.obj
+
 hengine_OBJ = \
     $(O)archlvl.obj  \
     $(O)assist.obj   \

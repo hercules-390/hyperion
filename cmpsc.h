@@ -61,33 +61,6 @@ struct CMPSCBLK             // CMPSC instruction control block
 typedef struct CMPSCBLK CMPSCBLK;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Separate return functions for easier debugging...
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL ERR)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC3)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC1)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC0)( CMPSCBLK* pCMPSCBLK );
-
-#define RETERR() return ERR( pCMPSCBLK ) // (failure)
-#define RETCC3() return CC3( pCMPSCBLK ) // (stop)
-#define RETCC1() return CC1( pCMPSCBLK ) // (stop)
-#define RETCC0() return CC0( pCMPSCBLK ) // (stop)
-
-typedef struct EXPBLK EXPBLK; // (fwd ref)
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPOK )( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPERR)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC3)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC1)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-
-#define EXP_RETOK()  return EXPOK ( pCMPSCBLK, pEXPBLK ) // (success; keep going)
-#define EXP_RETERR() return EXPERR( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC3() return EXPCC3( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC1() return EXPCC1( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC0() return EXPCC0( pCMPSCBLK, pEXPBLK ) // (break)
-
-///////////////////////////////////////////////////////////////////////////////
 #endif // _CMPSC_H_     // Place all 'ARCH_DEP' code after this statement
 
 ///////////////////////////////////////////////////////////////////////////////
