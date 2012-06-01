@@ -1,0 +1,260 @@
+-------------------------------------------------------------------------------
+
+    NAME
+
+        cmpsctst  -  CMPSC Instruction Testing Tool helper script.
+
+    SYNOPSIS
+
+        cmpsctst.rexx    filesdir  dictsdir  [workdir]  [options]
+
+    DESCRIPTION
+
+        Uses the "CMPSCTST.EXE" Instruction Test Tool to verify
+        the sanity of the given compression algorithm to within
+        an acceptably high degree of confidence depending on the
+        number and variety of files and dictionaries used.
+
+    ARGUMENTS
+
+        filesdir   The name of the directory tree where the set of
+                   test files reside. All of the test files in the
+                   specified directory and all subdirectories will
+                   be processed against all dictionaries found in
+                   the dictsdir directory.
+
+        dictsdir   The name of the directory tree where the set of
+                   test dictionaries reside. All of the dictionaries
+                   in the specified directory and all subdirectories
+                   will be processed against all of the test files
+                   found in the filesdir directory.
+
+        workdir    The name of a directory where temporary files
+                   created during processing should be written. If
+                   not specified the current directory is used. The
+                   work files created during processing are called
+                   "cmpout.bin" and "expout.txt".
+
+    OPTIONS
+
+        -t      Translate ASCII/EBCDIC             (default = no)
+        -a      Algorithm to be used               (default = 0)
+        -r      Number of random tests             (default = 100)
+        -n      No hard-coded test cases           (default = all)
+        -bn     Use only buffer sizes set 'n'      (default = all)
+        -on     Use only buffer offsets set 'n'    (default = all)
+        -speed  Speed test; -r = repeats           (see NOTES below)
+
+    EXAMPLES
+
+        cmpsctst  .\files        .\dicts  .\work  > EXTREMELY-long-test.log
+        cmpsctst  .\files\small  .\dicts  .\work  -r 0 > non-random-test.log
+        cmpsctst  .\files\small  .\dicts  .\work  -n -r 16 > randoms-test.log
+        cmpsctst  .\files\large  .\dicts  .\work  -speed -r 1000 > speed-test.log
+
+    NOTES
+
+        Unless a timing run (speed test) is being done, cmpsctst
+        repeatedly calls the CMPSCTST.EXE test tool for every test
+        file and dictionary found in the two specified directories
+        and all of their subdirectories first asking it to compress
+        the test file to a temporary work file, then expanding the
+        work file to a second work file, and finally comparing the
+        MD5 hash of the final expanded output to make sure that it
+        matches bit-for-bit with the original input file.
+
+        A series of several compress/expand cycles are performed,
+        first using a hard-coded range of buffer size and offset
+        values known to have caused problems in the past as well
+        as a series of randomly generated input and output buffer
+        size and offset values. If either of the compression or
+        expansion calls fail or if the expanded output fails to
+        exactly match the original input a diagnostic message is
+        displayed describing the problem but the command does not
+        abort. Rather, it continues on with the next set of files
+        and dictionaries and does not end until after all passes
+        are made against all files and dictionaries using all of
+        of the previously mentioned buffer size and offset values.
+
+                             ** WARNING! **
+
+        cmpsctst.rexx produces a VERY large number of messages
+        as it runs since the CMPSCTST.EXE tool is always called
+        with the '-v' verbose option specified.
+
+        It is therefore HIGHLY RECOMMENDED you redirect its stdout
+        output to a log file. Redirecting stderr to a log file is
+        optional but not recommended since the volume of progress
+        messages written to stderr is quite small, being limited
+        to notification when each new test is about to start and
+        which dictionary it is using. It does NOT notify you when
+        each new buffer size and offset value is used however.
+
+                               - Note -
+
+        Because a default test using the many built-in (hard-coded)
+        buffer size and offset values can cause cmpsctst to run for
+        an *VERY* long time since there are so many of them (24336,
+        times #of test files, times #of test dictionaries = total
+        number of tests, each of which does a full compression and
+        expansion) the -n (no-non-random) option allows you to skip
+        these tests to allow cmpsctst to finish much more quickly.
+
+        You can also use the -bn and -on options to choose a smaller
+        subset of buffer size and/or offset values too. There are 3
+        buffer size sets with 2, 6 and 4 values in each of their sets
+        respectively, and 2 sets of offset values with 9 and 6 values
+        in each of their sets, respectively.
+
+        The -r value defines either the number of random buffer size
+        and offset tests to perform or else the number of repeats to
+        perform when the -speed option is specified.
+
+        If the -speed option is not specified (default) the -r value
+        defines the number of random generated buffer size and offset
+        tests to perform for each file and dictionary pair. Specify 0
+        to skip all randomly generated buffer size and offset tests
+        and do only the built-in (non-random) tests instead.
+
+        When the -speed option is specified it forces all hard-coded
+        built-in and randomly generated buffer size and offset tests
+        to be skipped, thereby altering the meaning of the -r option.
+        When -speed is specified, the -r option instead defines the
+        number of repeated compress and expand cycles to perform for
+        each file, each of which always uses default buffer size and
+        offset values. To perform a custom timing/speed test using
+        specific buffer size and offset values, you need to call the
+        CMPSCTST.EXE tool yourself (i.e. don't use cmpsctst.rexx).
+
+        All dictionaries must be in RAW BINARY format and MUST use
+        the following file naming convention:
+
+                     <filename>.FST
+
+        Where:
+
+             F       Dictionary Format     0/1
+             S       Symbol Size           1-5
+             T       Dictionary Type       C/E
+
+        Thus, for a 13-bit CDSS format-1 dictionary there must be
+        two files with whatever name you want, but with filename
+        extensions of:
+
+             .15C        Compression dictionary
+             .15E        Expansion dictonary
+
+        For example:
+
+            mydict.03C
+            mydict.03E
+            foobar.15C
+            foobar.15E
+            ...etc...
+
+        Each dictionary pair MUST have the same name and each MUST
+        be in raw binary format.
+
+    EXIT STATUS
+
+        0    Success.
+        1    Failure.
+
+    AUTHOR
+
+        "Fish" (David B. Trout)
+
+    VERSION
+
+        2.1  (May 22, 2012)
+
+-------------------------------------------------------------------------------
+
+CMPSC Instruction Testing Tool, version 2.1.0
+Copyright (C) 2012 Software Development Laboratories
+
+Options:
+
+  -c  Compress (default)
+  -e  Expand
+  -a  Algorithm (optional)
+  -r  Repeat Count
+
+  -i  [buffer size:[offset:]] Input filename
+  -o  [buffer size:[offset:]] Output Filename
+
+  -d  Compression Dictionary Filename
+  -x  Expansion Dictionary Filename
+
+  -0  Format-0 (default)
+  -1  Format-1
+  -s  Symbol Size (1-5 or 9-13; default = 2)
+
+  -t  Translate (ASCII <-> EBCDIC as needed)
+  -v  Verbose [filename]
+  -q  Quiet
+
+Returns:
+
+   0  Success
+   4  Protection Exception
+   7  Data Exception
+   n  Other (i/o error, help requested, etc)
+
+Examples:
+
+  CMPSCTST -c -i 8192:*:foo.txt -o *:4095:foo.cmpsc -r 1000 \
+        -t -d cdict.bin -x edict.bin -1 -s 10 -v rpt.log
+
+  CMPSCTST -e -i foo.cmpsc -o foo.txt -t -x edict.bin -s 10 -q
+
+Notes:
+
+  You may specify the buffer size to be used for input or output by
+  preceding the filename with a number followed by a colon. Use the
+  value '*' for a randomly generated buffer size to be used instead.
+  If not specified a default buffer size of 16 MB is used instead.
+
+  Additionally, you may also optionally specify how you want your
+  input or output buffer aligned by following a buffer size with a
+  page offset value from 0-4095 indicating how many bytes past the
+  beginning of the page that you wish the specified buffer to begin.
+
+  Like the buffer size option using an '*' causes a random value to
+  be generated instead. Please note however that not specifying an
+  offset value does not mean your buffer will then be automatically
+  page aligned. To the contrary it will most likely *not* be aligned.
+  If you want your buffers to always be page aligned then you need to
+  specify 0 for the offset. Dictionaries will always be page aligned.
+
+  Use the '-t' (Translate) option when testing using ASCII test files
+  since most dictionaries are intended for EBCDIC data. If specified,
+  the test data is first internally translated from ASCII to EBCDIC
+  before being compressed and then from EBCDIC back into ASCII after
+  being expanded. Specifying the '-t' option with EBCDIC test files
+  will very likely cause erroneous compression/expansion results.
+
+  The '-a' (Algorithm) option allows you to choose between different
+  Compression Call algorithms to allow you to compare implementations
+  to see which one is better/faster. The currently defined algorithms
+  are as follows:
+
+        default algorithm    0  =  CMPSC 2012
+        alternate algorithm  1  =  Legacy CMPSC
+
+  If you specify the -a option without also specifying which algorithm
+  to use then the default alternate algorithm 1 will always be chosen.
+
+  The '-r' (Repeat) option repeats each compression or expansion call
+  the number of times specified. The input/output files are still read
+  from and written to however. The repeat option only controls how many
+  times to repeatedly call the chosen algorithm for each data block. It
+  can be used to either exercise a given algorithm or perform a timing
+  run on it for comparison with an alternate algorithm.
+
+  The return code value, CPU time consumed and elapsed time are printed
+  at the end of the run when the '-v' verbose option is specified. Else
+  only the amount of data read/written and compression ratios are shown.
+  The '-q' (Quiet) option runs silently without displaying anything.
+
+-------------------------------------------------------------------------------

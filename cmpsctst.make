@@ -1,7 +1,3 @@
-#
-#  Note: We use the same 'config.h' that Hercules uses.
-#  If config.h does not exist yet, then run ./configure
-#
 
 CC     = gcc
 EXE    = cmpsctst
@@ -47,17 +43,9 @@ CMPSCTST_HEADER_FILES =   \
   hstdinc.h
 
 ALL_OTHER_FILES = \
-  _TODO.txt       \
-  NOTES.txt       \
-  README.txt      \
   cmpsctst.cmd    \
   cmpsctst.rexx   \
-  makefile        \
-  _me.cmd         \
-  _herc.cmd       \
-  _both.cmd       \
-  _errors.cmd     \
-  ff.cmd
+  makefile
 
 ALL_HEADER_FILES  = $(CMPSC_HEADER_FILES) $(CMPSC_2012_HEADER_FILES) $(CMPSCTST_HEADER_FILES)
 ALL_SOURCE_FILES  = $(CMPSC_SOURCE_FILES) $(CMPSC_2012_SOURCE_FILES) $(CMPSCTST_SOURCE_FILES)
