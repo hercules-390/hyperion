@@ -46,13 +46,48 @@
 #define _HENGINE_DLL_
 #endif
 
+#if !defined( NOT_HERC )                          // (building Hercules?)
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-
-#include "cmpsc.h"              // (Master header)
+#else                                             // (building utility)
+#define alt_cmpsc           cmpsc_2012
+#endif
+#include "cmpsc.h"                                // (Master header for both)
 
 #ifdef FEATURE_COMPRESSION
+///////////////////////////////////////////////////////////////////////////////
+// Separate return functions for easier debugging...
+
+#ifndef RETFUNCS_ONCE
+#define RETFUNCS_ONCE
+
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ERR)( CMPSCBLK* pCMPSCBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL CC3)( CMPSCBLK* pCMPSCBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL CC1)( CMPSCBLK* pCMPSCBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL CC0)( CMPSCBLK* pCMPSCBLK );
+
+#define RETERR() return ERR( pCMPSCBLK ) // (failure)
+#define RETCC3() return CC3( pCMPSCBLK ) // (stop)
+#define RETCC1() return CC1( pCMPSCBLK ) // (stop)
+#define RETCC0() return CC0( pCMPSCBLK ) // (stop)
+
+typedef struct EXPBLK EXPBLK; // (fwd ref)
+
+static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPOK )( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPERR)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC3)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC1)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
+static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
+
+#define EXP_RETOK()  return EXPOK ( pCMPSCBLK, pEXPBLK ) // (success; keep going)
+#define EXP_RETERR() return EXPERR( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC3() return EXPCC3( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC1() return EXPCC1( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC0() return EXPCC0( pCMPSCBLK, pEXPBLK ) // (break)
+
+#endif // RETFUNCS_ONCE
+
 ///////////////////////////////////////////////////////////////////////////////
 // Symbols Cache Control Entry
 
@@ -831,7 +866,7 @@ cmp10:
     // Enough SRC chars for comparison?
     // No, goto cmp11;
 
-    if (unlikely( pCMPSCBLK->nLen2 < (child.act + 1)))
+    if (unlikely( pCMPSCBLK->nLen2 < (U64)(1 + child.act)))
         goto cmp11;
 
     // Chars equal?
@@ -890,7 +925,7 @@ cmp12:
     // Enough SRC chars for comparison?
     // No, goto cmp8;
 
-    if (pCMPSCBLK->nLen2 < (child.act + 1))
+    if (pCMPSCBLK->nLen2 < (U64)(1 + child.act))
         goto cmp8;
 
     // Chars equal?
@@ -969,7 +1004,7 @@ cmp16:
 /*---------------------------------------------------------------------------*/
 /* B263 CMPSC - Compression Call                                       [RRE] */
 /*---------------------------------------------------------------------------*/
-DEF_INST( alt_compression_call )
+DEF_INST( alt_cmpsc )
 {
     CMPSCBLK cmpsc;                     /* Compression Call parameters block  */
     int  r1, r2, rc;                    /* Operand reg numbers, return code  */
@@ -1097,20 +1132,21 @@ static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEX
     #include "cmpsc_2012.c"
   #endif /* #ifdef _ARCHMODE3 */
 
+#if !defined( NOT_HERC )        // (building Hercules?)
 
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY(HERCULES);
-     HDL_DEPENDENCY(REGS);
-
-} END_DEPENDENCY_SECTION;
-
+     HDL_DEPENDENCY( HERCULES );
+     HDL_DEPENDENCY( REGS );
+}
+END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
-    HDL_DEFINST(HDL_INSTARCH_390|HDL_INSTARCH_900,0xB263,alt_compression_call);
+    HDL_DEFINST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB263, alt_cmpsc );
 }
 END_INSTRUCTION_SECTION;
 
+#endif // !defined( NOT_HERC )  // (building Hercules?)
 
 #endif /* #ifndef _GEN_ARCH */

@@ -609,23 +609,23 @@ DLL_EXPORT void log_capture_closer(void *vcd)
     return;
 }
 
-DLL_EXPORT char *log_capture(void *(*fun)(void *),void *p)
+DLL_EXPORT char *log_capture(CAPTUREFUNC *func,void *p)
 {
     struct log_capture_data cd;
     cd.obfr=NULL;
     cd.sz=0;
     log_open(log_capture_writer,log_capture_closer,&cd);
-    fun(p);
+    func(p);
     log_close();
     return(cd.obfr);
 }
 
-DLL_EXPORT int command_capture(int(*hcmdline)(char *),char *cmd,char **resp)
+DLL_EXPORT int log_capture_rc(CAPTUREFUNC *func,char *p,char **resp)
 {
     int rc;
     struct log_capture_data cd = {0};
     log_open(log_capture_writer,log_capture_closer,&cd);
-    rc = hcmdline(cmd);
+    rc = (int)func(p);
     log_close();
     *resp = cd.obfr;
     return rc;

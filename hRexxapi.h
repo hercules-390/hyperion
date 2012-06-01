@@ -127,7 +127,6 @@ unsigned long ulRetc;
         ulRetc = RXSHV_OK;
 
     return (int)ulRetc;
-
 }
 
 /*--------------------------------------------------------------------*/
@@ -173,7 +172,8 @@ RXSTRING hErrorHandler;
 RXSTRING hPersistentRespStemName ;
 RXSTRING hRespStemName ;
 
-    HREXXFETCHVAR( "HREXX.ERRORHANDLER", &hErrorHandler );
+    HREXXFETCHVAR( HREXX_ERRORHANDLER_VARNAME, &hErrorHandler );
+
     if ( RXVALIDSTRING( hErrorHandler ) )
     {
         if ( strcasecmp( RXSTRPTR(hErrorHandler), "retcode" ) == 0 )
@@ -182,14 +182,15 @@ RXSTRING hRespStemName ;
             ReturnFlag = 0 ; // let the system take care of them
         else
             ReturnFlag = 1 ; // let the user process the errors
-        (*hRexxFreeMemory)( RXSTRPTR(hErrorHandler) );
+        (*hRexxFreeMemory)( RXSTRPTR( hErrorHandler ) );
         RXSTRPTR(hErrorHandler) = NULL;
     }
     else
         ReturnFlag = 1 ; // let the user process the errors
 
-    HREXXFETCHVAR( "HREXX.PERSISTENTRESPSTEMNAME", &hPersistentRespStemName );
-    HREXXFETCHVAR( "HREXX.RESPSTEMNAME", &hRespStemName );
+    HREXXFETCHVAR( HREXX_PERSISTENTRESPSTEMNAME_VARNAME, &hPersistentRespStemName );
+    HREXXFETCHVAR( HREXX_RESPSTEMNAME_VARNAME,           &hRespStemName           );
+
     if ( RXVALIDSTRING( hRespStemName ) )
     {
         RespStemLength = hRespStemName.strlength ;
@@ -211,8 +212,8 @@ RXSTRING hRespStemName ;
 
         (*hRexxFreeMemory)( RXSTRPTR( hRespStemName ) );
         RXSTRPTR( hRespStemName ) = NULL;
+        HREXXDROPVAR( HREXX_RESPSTEMNAME_VARNAME );
 
-        HREXXDROPVAR( "HREXX.RESPSTEMNAME");
     }
     else if ( RXVALIDSTRING( hPersistentRespStemName ) )
     {
@@ -255,7 +256,7 @@ RXSTRING hRespStemName ;
 
     if ( RespStemName )
     {
-        rc = command_capture( HercCmdLine, wCommand, &wResp );
+        rc = log_capture_rc( panel_command, wCommand, &wResp );
         coun = 0;
         if ( wResp )
         {
@@ -278,7 +279,7 @@ RXSTRING hRespStemName ;
     }
     else
     {
-        rc = HercCmdLine( wCommand );
+        rc = (int)panel_command( wCommand );
         if ( ReturnFlag )
             *Flags = RXSUBCOM_OK;
         else
@@ -730,7 +731,7 @@ UNREFERENCED(Queuename);
 
     if ( RespStemName )
     {
-        rc = command_capture( HercCmdLine, wCommand, &wResp );
+        rc = log_capture_rc( panel_command, wCommand, &wResp );
         coun = 0;
         if ( wResp )
         {
@@ -740,7 +741,7 @@ UNREFERENCED(Queuename);
                 sprintf( RespStemOffset, "%d", coun );
                 HREXXSETVAR( RespStemName, line, strlen(line) );
             }
-            (*hRexxFreeMemory)( wResp );
+            free( wResp );
         }
         sprintf( RespStemOffset, "%d", 0 );
         sprintf( temp, "%d", coun );
@@ -749,7 +750,7 @@ UNREFERENCED(Queuename);
     }
     else
     {
-        rc = HercCmdLine( wCommand );
+        rc = (int)panel_command( wCommand );
     }
 
     (*hRexxFreeMemory)( wCommand );

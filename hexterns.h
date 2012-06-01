@@ -454,7 +454,7 @@ int configure_yroffset(int);
 int configure_tzoffset(int);
 
 /* Functions in module service.c */
-void scp_command (char *command, int priomsg, int echo);
+int scp_command (char *command, int priomsg, int echo);
 int can_signal_quiesce ();
 int can_send_command ();
 int signal_quiesce (U16 count, BYTE unit);

@@ -261,13 +261,11 @@ CBNBITS  DC    A(7)               r1 cbn bits mask
 PADPARMS DC   0D'0'               o/p buffer padding
 ENDOUTBF DC    A(0)               end of o/p buffer
 LEFTOVER DC    A(0)               leftover page bytes
-GR0EXBIT DC    A(X'100')          r0 'E'pansion bit
+GR0EXBIT DC    A(X'100')          r0 'E'xpansion bit
 *
 CMPSCKEY EQU   X'10'              cmpsc testing psw key
 NOACCKEY EQU   X'38'              no-access storage key
 PADCHAR  EQU   X'CD'              buffer pad character
-CMPTEST  EQU   C'C'               compression test
-EXPTEST  EQU   C'E'               expansion test
 PADBYTE  DC    AL1(PADCHAR)       buffer padding byte
 CC       DC    X'00'              condition code flag
          SPACE

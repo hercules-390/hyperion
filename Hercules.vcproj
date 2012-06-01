@@ -343,106 +343,182 @@
 			<Filter
 				Name="Utilities"
 				>
-				<File
-					RelativePath=".\cckdcdsk.c"
+				<Filter
+					Name="disk"
 					>
-				</File>
-				<File
-					RelativePath=".\cckdcomp.c"
+					<File
+						RelativePath=".\cckdcdsk.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckdcomp.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckddiag.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckdfix.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckdswap.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdcat.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdconv.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdcopy.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdinit.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdisup.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdload.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdls.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdpdsu.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdseq.c"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="tape"
 					>
-				</File>
-				<File
-					RelativePath=".\cckddiag.c"
+					<File
+						RelativePath=".\hetget.c"
+						>
+					</File>
+					<File
+						RelativePath=".\hetinit.c"
+						>
+					</File>
+					<File
+						RelativePath=".\hetmap.c"
+						>
+					</File>
+					<File
+						RelativePath=".\hetupd.c"
+						>
+					</File>
+					<File
+						RelativePath=".\tapecopy.c"
+						>
+					</File>
+					<File
+						RelativePath=".\tapemap.c"
+						>
+					</File>
+					<File
+						RelativePath=".\tapesplt.c"
+						>
+					</File>
+					<File
+						RelativePath=".\vmfplc2.c"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="other"
 					>
-				</File>
-				<File
-					RelativePath=".\cckdfix.c"
-					>
-				</File>
-				<File
-					RelativePath=".\cckdswap.c"
-					>
-				</File>
-				<File
-					RelativePath=".\conspawn.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdcat.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdconv.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdcopy.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdinit.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdisup.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdload.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdls.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdpdsu.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dasdseq.c"
-					>
-				</File>
-				<File
-					RelativePath=".\dmap2hrc.c"
-					>
-				</File>
-				<File
-					RelativePath=".\herclin.c"
-					>
-				</File>
-				<File
-					RelativePath=".\hetget.c"
-					>
-				</File>
-				<File
-					RelativePath=".\hetinit.c"
-					>
-				</File>
-				<File
-					RelativePath=".\hetmap.c"
-					>
-				</File>
-				<File
-					RelativePath=".\hetupd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\tapecopy.c"
-					>
-				</File>
-				<File
-					RelativePath=".\tapemap.c"
-					>
-				</File>
-				<File
-					RelativePath=".\tapesplt.c"
-					>
-				</File>
-				<File
-					RelativePath=".\vmfplc2.c"
-					>
-				</File>
+					<File
+						RelativePath=".\conspawn.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dmap2hrc.c"
+						>
+					</File>
+					<File
+						RelativePath=".\herclin.c"
+						>
+					</File>
+					<Filter
+						Name="cmpsctst"
+						>
+						<File
+							RelativePath=".\cmpsctst.cmd"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpsctst.make"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpsctst.rexx"
+							>
+						</File>
+						<Filter
+							Name="Source Files"
+							>
+							<File
+								RelativePath=".\cmpsctst.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpsc.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpsc_2012.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpscdbg.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpscdct.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpscget.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpscmem.c"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_cmpscput.c"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="Header Files"
+							>
+							<File
+								RelativePath=".\cmpsctst.h"
+								>
+							</File>
+							<File
+								RelativePath=".\cmpsctst_stdinc.h"
+								>
+							</File>
+						</Filter>
+					</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Hercules"
@@ -935,30 +1011,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\cmpsc_2012.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdbg.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdct.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscget.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscmem.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscput.c"
-							>
-						</File>
-						<File
 							RelativePath=".\codepage.c"
 							>
 						</File>
@@ -1343,34 +1395,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\cmpsc.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscbit.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdbg.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdct.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscget.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscmem.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscput.h"
-							>
-						</File>
-						<File
 							RelativePath=".\codepage.h"
 							>
 						</File>
@@ -1649,13 +1673,41 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="SoftFloat"
+					Name="Original SoftFloat-2b"
+					>
+					<File
+						RelativePath=".\SoftFloat-2b.zip"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="altcmpsc"
 					>
 					<Filter
-						Name="Original Distribution File"
+						Name="Source Files"
 						>
 						<File
-							RelativePath=".\SoftFloat-2b.zip"
+							RelativePath=".\cmpsc_2012.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdbg.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdct.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscget.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscmem.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscput.c"
 							>
 						</File>
 					</Filter>
@@ -1663,31 +1715,31 @@
 						Name="Header Files"
 						>
 						<File
-							RelativePath=".\SoftFloat-macros.h"
+							RelativePath=".\cmpsc.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-milieu.h"
+							RelativePath=".\cmpscbit.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-specialise.h"
+							RelativePath=".\cmpscdbg.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-types.h"
+							RelativePath=".\cmpscdct.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat.h"
+							RelativePath=".\cmpscget.h"
 							>
 						</File>
-					</Filter>
-					<Filter
-						Name="Source Files"
-						>
 						<File
-							RelativePath=".\SoftFloat.c"
+							RelativePath=".\cmpscmem.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscput.h"
 							>
 						</File>
 					</Filter>
@@ -1735,6 +1787,10 @@
 					>
 					<File
 						RelativePath=".\README.AIX"
+						>
+					</File>
+					<File
+						RelativePath=".\README.CMPSCTST"
 						>
 					</File>
 					<File

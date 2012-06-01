@@ -96,8 +96,11 @@
 #define REXX_DEREGISTER_EXIT        "RexxDeregisterExit"
 #define REXX_ALLOCATE_MEMORY        "RexxAllocateMemory"
 #define REXX_FREE_MEMORY            "RexxFreeMemory"
-
 #define REXX_VARIABLE_POOL          "RexxVariablePool"
+
+#define HREXX_ERRORHANDLER_VARNAME            "HREXX.ERRORHANDLER"
+#define HREXX_PERSISTENTRESPSTEMNAME_VARNAME  "HREXX.PERSISTENTRESPSTEMNAME"
+#define HREXX_RESPSTEMNAME_VARNAME            "HREXX.RESPSTEMNAME"
 
 #if defined ( _MSVC_ )
 

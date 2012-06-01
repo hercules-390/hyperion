@@ -176,7 +176,7 @@ endif
 # The following causes the dyanmic modules to not even get built
 # unless support for building dynamic modules exists on the build system
 
-bin_PROGRAMS = hercules \
+bin_PROGRAMS = cmpsctst hercules \
                dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
                tapecopy tapemap tapesplt \
                cckdcdsk cckdcomp cckddiag cckdswap \
@@ -268,7 +268,6 @@ if OPTION_DYNAMIC_LOAD
   hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
 
   altcmpsc_la_SOURCES  = cmpsc_2012.c cmpscdbg.c cmpscdct.c cmpscget.c cmpscmem.c cmpscput.c
-
   altcmpsc_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   altcmpsc_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -611,6 +610,17 @@ dmap2hrc_LDFLAGS      = $(tools_LD_FLAGS)
 vmfplc2_SOURCES       = vmfplc2.c
 vmfplc2_LDADD         = $(tools_ADDLIBS)
 vmfplc2_LDFLAGS       = $(tools_LD_FLAGS)
+
+cmpsctst_SOURCES      = cmpsctst.c             \
+                        cmpsctst_cmpsc.c       \
+                        cmpsctst_cmpsc_2012.c  \
+                        cmpsctst_cmpscdbg.c    \
+                        cmpsctst_cmpscdct.c    \
+                        cmpsctst_cmpscget.c    \
+                        cmpsctst_cmpscmem.c    \
+                        cmpsctst_cmpscput.c
+cmpsctst_LDADD        = $(tools_ADDLIBS)
+cmpsctst_LDFLAGS      = $(tools_LD_FLAGS)
 #
 # files that are not 'built' per-se
 #
@@ -628,6 +638,7 @@ EXTRA_DIST = autoconf/config.rpath \
              cckdfix.c             \
              license_dyn76.txt     \
              README.COMMADPT       \
+             README.CMPSCTST       \
              README.SVN            \
              README.DYNMOD         \
              README.ECPSVM         \
@@ -683,8 +694,9 @@ EXTRA_DIST = autoconf/config.rpath \
              getopt.c              \
              wthreads.c            \
              herclogo.txt          \
-             hercules.ico
-
+             hercules.ico          \
+             cmpsctst.cmd          \
+             cmpsctst.rexx
 
 #
 # Source Header files. No 'build' for those
@@ -790,6 +802,8 @@ noinst_HEADERS = hostinfo.h     \
                  cmpscget.h     \
                  cmpscmem.h     \
                  cmpscput.h     \
+                 cmpsctst.h         \
+                 cmpsctst_stdinc.h  \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

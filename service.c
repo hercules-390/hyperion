@@ -164,27 +164,29 @@ U32 pending;
 /*      command Null-terminated ASCII command string                 */
 /*      priomsg 0=SCP command, 1=SCP priority message                */
 /*-------------------------------------------------------------------*/
-void scp_command (char *command, int priomsg, int echo)
+int scp_command (char *command, int priomsg, int echo)
 {
+    int rc = 0;
+
     /* Error if disabled for priority messages */
     if (priomsg && !SCLP_RECV_ENABLED(PRIOR))
     {
         WRMSG (HHC00002, "E", "priority commands");
-        return;
+        return -1;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !SCLP_RECV_ENABLED(OPCMD))
     {
         WRMSG (HHC00002, "E", "operator commands");
-        return;
+        return -1;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
         WRMSG (HHC00003, "E");
-        return;
+        return -1;
     }
 
     if (echo)
@@ -201,9 +203,12 @@ void scp_command (char *command, int priomsg, int echo)
 
     /* Raise attention service signal */
     sclp_attention( priomsg ? SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD );
+    rc = 0;
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(NULL);
+
+    return rc;
 
 } /* end function scp_command */
 
