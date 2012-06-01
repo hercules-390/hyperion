@@ -51,7 +51,7 @@ of the <string> passed to extract the <command> options
 since the <command string> might/ contain arbitrary char sequences
 the subparsing was prone to errors
 
-now  Address Hercules has as only parameter the command
+now  Address Hercules has as the ONLY parameter the command
 all the <local> option are defined/passed thru predefined and reserved rexx variables
 ( even IBM used this approach in the original RXSQL interface :-) )
 
@@ -99,6 +99,20 @@ call awscmd <command>, [<stemname>], [<error handling mode>]
 
 in both cases ( command and external function )
 the error handling default is "RETCODE"
+
+NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+
+When a response stemname is not specified, Hercules will display the command
+results normally, just like it always does.
+When a response stemname is used however, Hercules does NOT display the results
+of the command.
+Instead, the results of the command are captured and returned in the specified
+REXX stem variable, and it is Your prerogative to preocess in any way You feel
+appropriate... ( for example )
+
+display them yourself using the REXX 'say/lineout' statement."
+write them to a file using lineout ( for ooRexx EXECIO or the stream class )
+analyze the content to process accordingly
 
 
 to manage the Rexx environment the command is

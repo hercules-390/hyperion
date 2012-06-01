@@ -182,7 +182,7 @@ RXSTRING hRespStemName ;
             ReturnFlag = 0 ; // let the system take care of them
         else
             ReturnFlag = 1 ; // let the user process the errors
-        free( RXSTRPTR(hErrorHandler) );
+        (*hRexxFreeMemory)( RXSTRPTR(hErrorHandler) );
         RXSTRPTR(hErrorHandler) = NULL;
     }
     else
@@ -209,7 +209,7 @@ RXSTRING hRespStemName ;
         sprintf(temp,"%d",0);
         HREXXSETVAR( RespStemName, temp, strlen(temp) );
 
-        free( RXSTRPTR( hRespStemName ) );
+        (*hRexxFreeMemory)( RXSTRPTR( hRespStemName ) );
         RXSTRPTR( hRespStemName ) = NULL;
 
         HREXXDROPVAR( "HREXX.RESPSTEMNAME");
@@ -242,6 +242,9 @@ RXSTRING hRespStemName ;
         RespStemLength = 0;
         RespStemOffset = NULL;
     }
+
+    if ( ! RXVALIDSTRING( *Command ) )
+        return hSubcomError( -4, RXSUBCOM_ERROR, Flags, RetValue );
 
     wCommand = (*hRexxAllocateMemory)( RXSTRLEN( *Command ) + WRK_AREA_SIZE );
     if ( !wCommand )
@@ -291,7 +294,7 @@ RXSTRING hRespStemName ;
 }
 
 /*--------------------------------------------------------------------*/
-/* the core of the whole shebang, the exit handler                    */
+/* the exit handler                                                   */
 /*--------------------------------------------------------------------*/
 static HREXXEXITHANDLER_T hExitHandler(
     HREXXLONG ExitNumber,       /* code defining the exit function    */
@@ -311,7 +314,7 @@ static HREXXEXITHANDLER_T hExitHandler(
                     break;
                 case RXSIOTRC:
                     if (MessagePrefix)
-                        logmsg("%-9s %s\n", MessagePrefix, RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
+                        logmsg("%-9s %s\n", ErrorPrefix, RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
                     else
                         logmsg("%s\n", RXSTRPTR(((RXSIOTRC_PARM *)ParmBlock)->rxsio_string));
                     return RXEXIT_HANDLED;
@@ -364,6 +367,9 @@ int rc=0;
 
 }
 
+/*--------------------------------------------------------------------*/
+/*  Forward reference                                                 */
+/*--------------------------------------------------------------------*/
 static HREXXEXTERNALFUNCTION_T HREXXAWSCMD(
     const char *Name,
     long argc,
