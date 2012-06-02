@@ -39,7 +39,6 @@ EXECUTABLES = \
     $(X)cckdcomp.exe \
     $(X)cckddiag.exe \
     $(X)cckdswap.exe \
-    $(X)cmpsctst.exe \
     $(X)conspawn.exe \
     $(X)dasdcat.exe  \
     $(X)dasdconv.exe \
