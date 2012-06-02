@@ -193,10 +193,6 @@ extern void ALT_ALGORITHM( REGS* regs );
 
   #if defined( _MSVC_ )
 
-    #pragma intrinsic ( _byteswap_ushort )
-    #pragma intrinsic ( _byteswap_ulong  )
-    #pragma intrinsic ( _byteswap_uint64 )
-
     static INLINE  U16  ATTR_REGPARM(1)  bswap_16 (U16 x)
     {
       return _byteswap_ushort((x));

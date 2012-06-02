@@ -26,7 +26,6 @@
 #define _CRT_SECURE_NO_WARNINGS     // (I know what I'm doing thankyouverymuch)
 
 #include <Windows.h>        // (Master include file for Windows applications)
-#include <intrin.h>         // (intrinsics support)
 #include <stddef.h>         // (common constants, types, variables)
 #include <stdlib.h>         // (commonly used library functions)
 #include <stdio.h>          // (standard I/O routines)
