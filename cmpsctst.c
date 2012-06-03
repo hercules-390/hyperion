@@ -142,6 +142,7 @@ jmp_buf   g_except   = {0};         // Jump buff for __try / __except
 U64       g_nAddrTransCtr = 0;      // MADDR macro calls count
 U64       g_nTotAddrTrans = 0;      // Total MADDR macro calls
 U16       g_nPIC          = 0;      // Program Interruption Code
+U8        g_bHWPIC04      = FALSE;  // Hardware Detected PIC 04
 
 #ifndef _MSVC_
 struct timeval beg_time;            // (time-of-day test began)
@@ -1362,6 +1363,7 @@ void CallCMPSC()
     )
     {
         g_nPIC = PGM_PROTECTION_EXCEPTION;
+        g_bHWPIC04 = TRUE;
     }
 
 #else // !_MSVC_
@@ -1381,6 +1383,7 @@ void CallCMPSC()
     else
     {
         g_nPIC = PGM_PROTECTION_EXCEPTION;
+        g_bHWPIC04 = TRUE;
 
         if (bRepeat)                    // (if doing a timing run)
             __debugbreak();             // (then we need to debug)
@@ -1474,8 +1477,9 @@ void program_interrupt( REGS* regs, U16 pcode )
     // Log the problem...
 
     FPRINTF( g_cmpsc.dbg ? g_cmpsc.dbg : stderr,
-        "\nERROR: Program Interruption Code 0x%04.4X\n",
-        pcode );
+        "\nERROR: Program Interruption Code 0x%04.4X%s\n",
+        pcode, g_bHWPIC04 ? "  ** Hardware Detected **"
+                          : "  ** Software Detected **" );
 
     if (regs != &g_regs)            // (sanity check)
         __debugbreak();             // (WTF?!)
