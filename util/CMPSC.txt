@@ -70,7 +70,7 @@ PROTLOOP DS    0H
          LA    R6,2048(,R6)       ..next page
 *
          CLR   R6,R13             past last page yet?
-         BNH   PROTLOOP           no, keep allowing
+         BL    PROTLOOP           no, keep allowing
 *
          SSKE  R15,R6             protect fence page
          BR    R14                return to caller
