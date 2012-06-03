@@ -153,7 +153,7 @@ help:
   say ""
   say "        "_nx0" produces a VERY large number of messages"
   say "        as it runs since the CMPSCTST.EXE tool is always called"
-  say "        with the "-v" verbose option specified."
+  say "        with the '-v' verbose option specified."
   say ""
   say "        It is therefore HIGHLY RECOMMENDED you redirect its stdout"
   say "        output to a log file. Redirecting stderr to a log file is"
@@ -235,7 +235,7 @@ help:
   say ""
   say "    AUTHOR"
   say ""
-  say "        "Fish" (David B. Trout)"
+  say '        "Fish" (David B. Trout)'
   say ""
   say "    VERSION"
   say ""
