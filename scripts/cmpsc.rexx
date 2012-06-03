@@ -377,21 +377,20 @@ do_test:
 
         call panel_command "gpr"
 
-        -- HHC01603I gpr
         -- HHC02269I General purpose registers
         -- HHC02269I GR00=00005200 GR01=00000004 GR02=00110AAB GR03=00000261
         -- HHC02269I GR04=00101FD7 GR05=00000000 GR06=00201C01 GR07=00000000
         -- HHC02269I GR08=00110AAB GR09=00000000 GR10=00000000 GR11=00001C02
         -- HHC02269I GR12=80000200 GR13=00110AAB GR14=800002B8 GR15=00000038
 
-        if msgs.0 < 6 then do
+        if msgs.0 < 5 then do
             call logmsg ""
             call logmsg "*** "test_type" Test SUCCESS ***"
             call logmsg ""
             call logmsg "** ERROR ** 'gpr' command parsing failure; test aborted."
             exit 1
         end
-        parse var msgs.5 . " GR11=" gpr11 .
+        parse var msgs.4 . " GR11=" gpr11 .
 
         -- save output file
 
@@ -426,15 +425,14 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
         call SysSleep 1.0
         call panel_command "psw"
 
-        -- HHC01603I psw
         -- HHC02278I Program status word: 0000000000000000 0000000000000000
         -- HHC02300I sm=00 pk=0 cmwp=0 as=pri cc=0 pm=0 am=24 ia=0
 
-        if msgs.0 < 3 then do
+        if msgs.0 < 2 then do
             call logmsg "** ERROR ** 'psw' command parsing failure; test aborted."
             exit 1
         end
-        parse var msgs.3 . "cmwp=" cmwp " " . "ia=" psw_ia
+        parse var msgs.2 . "cmwp=" cmwp " " . "ia=" psw_ia
 
         if psw_ia = "0" then do
             ok = 1 -- (success)
@@ -459,14 +457,13 @@ test_wait: -- (wait for test to complete; return success/failure boolean)
 
             call panel_command "r 8e.2" -- (program interrupt code)
 
-            -- HHC01603I r 8e.2
             -- HHC02290I R:000000000000008E:K:00=0000 00000000 00000000 00000000 0000 ................
 
-            if msgs.0 < 2 then do
+            if msgs.0 < 1 then do
                 call logmsg "** ERROR ** 'r 8e.2' command parsing failure; test aborted."
                 exit 1
             end
-            parse upper var msgs.2 . "=" code " " .
+            parse upper var msgs.1 . "=" code " " .
 
             if code = "00C4" then reason = "0C4 Protection Exception" ; else ,
             if code = "00C7" then reason = "0C7 Data Exception"       ; else ,
@@ -512,7 +509,7 @@ defsym_filename: -- (wrap value yet again within apostrophes if needed)
 panel_command: procedure expose who msgs. debug -- (issue Hercules command)
 
     cmdline = arg(1)
-    rc = awscmd(cmdline,"msgs")
+    rc = awscmd("-"||cmdline,"msgs")
     if debug then do
         do i=1 for msgs.0
             say msgs.i
@@ -771,6 +768,7 @@ hfailure:
 -- r 854=CD
 -- r 855=00
 
+-- msglevel -debug
 -- restart
 
 -- test:end
