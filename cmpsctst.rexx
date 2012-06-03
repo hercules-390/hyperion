@@ -291,12 +291,12 @@ initialize:
      are known to have caused problems in the past
      with certain files on some implementations. */
 
-  bs1 = "8160 8183"
+  bs1 = "500 8160 8183"
   bs2 = "8161 8182 8162 8181 8163 8180"
   bs3 = "16964 4665 4243 27881"
 
   of1 = "0 1 2 3 7 8 9 10 15"
-  of2 = "1695 1771 3126 4052"
+  of2 = "3596 1695 1771 3126 4052"
 
 
   /* The following values are modifiable options */
