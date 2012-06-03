@@ -843,7 +843,7 @@ void *panel_command (void *cmdline)
                 free( cl );
                 }
 #else /* !defined( OPTION_CONFIG_SYMBOLS ) */
-                HercCmdLine( cmd );
+                rc = HercCmdLine( cmd );
 #endif /* defined( OPTION_CONFIG_SYMBOLS ) */
             }
 #if defined( OPTION_CMDTGT )
