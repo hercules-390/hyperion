@@ -77,6 +77,17 @@ if  technique = "" | \datatype(technique,"N")  | technique < 1 | technique > tec
     exit
 end
 
+/*
+  Prevent our command from appearing in the command recall
+  history list by prefixing it with a '-' to make it silent
+  and add a command-line comment so we can test that too
+*/
+command = strip(command)
+if left(command,1) \= "-" then command = "-" || command
+command ||= "   # (command issued by " || _nx0 || ")"
+
+/* Show our environment */
+
 say _n0 "Started"
 say _n0 "Version  " _ver
 say _n0 "Source   " _src
@@ -86,8 +97,6 @@ say _n0 "Time     " time()
 say _n0 "Mode     " _mode
 
 /* Issue Hercules command using the requested technique */
-
-command ||= "    # (test command-line comment)"  -- (test!)
 
 say _n0 "Technique = " || technique || ": " || technique.desc.technique
 say _n0 "Command   = " || command
