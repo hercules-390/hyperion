@@ -279,7 +279,7 @@ RXSTRING hRespStemName ;
     }
     else
     {
-        rc = (int)panel_command( wCommand );
+        rc = (int)(uintptr_t)panel_command( wCommand );
         if ( ReturnFlag )
             *Flags = RXSUBCOM_OK;
         else
@@ -750,7 +750,7 @@ UNREFERENCED(Queuename);
     }
     else
     {
-        rc = (int)panel_command( wCommand );
+        rc = (int)(uintptr_t)panel_command( wCommand );
     }
 
     (*hRexxFreeMemory)( wCommand );
