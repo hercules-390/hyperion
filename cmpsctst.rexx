@@ -122,7 +122,7 @@ help:
   say ""
   say "        "_n0"  .\files        .\dicts  .\work  > EXTREMELY-long-test.log"
   say "        "_n0"  .\files\small  .\dicts  .\work  -r 0 > non-random-test.log"
-  say "        "_n0"  .\files\small  .\dicts  .\work  -n -r 16 > randoms-test.log"
+  say "        "_n0"  .\files\small  .\dicts  .\work  -n -r 4 > randoms-test.log"
   say "        "_n0"  .\files\large  .\dicts  .\work  -speed -r 1000 > speed-test.log"
   say ""
   say "    NOTES"
@@ -340,6 +340,7 @@ initialize:
       arg.i = word(args,i)
     end
   end
+
   /*
       Check if Help was requested...
 
@@ -378,7 +379,6 @@ initialize:
 
 read_args:                -- (subroutine)
 
-  cmdline = qif(reltodir(_0))                       -- (reconstructed cmdline)
   args_file = strip(arg(1),,'"')                    -- (raw name of args file)
   arg.0 = 0;                                        -- (number of arguments)
 
@@ -391,7 +391,6 @@ read_args:                -- (subroutine)
     do i=1 by 1 while lines(args_file)              -- (for each file stmt)
       arg.0 = i                                     -- (count)
       arg.i = strip(strip(linein(args_file)),,'"')  -- (unquoted)
-      cmdline ||= " " || qif(reltodir(arg.i))       -- (reconstructed cmdline)
       arg.i = changestr('""',arg.i,'"')             -- (correct escaped quotes)
     end
 
@@ -637,6 +636,29 @@ validate_arguments:
   if _rc <> 0 then
     signal exit
 
+  /* Gather all of the files that we'll be using and convert all of their
+     absolute path values to be relative to the current directory instead. */
+
+  call SysFileTree filespec("location",files_dir) || "*.*",   "files", "SFO"
+  call SysFileTree filespec("location",dicts_dir) || "*.??C", "dicts", "SFO"
+
+  if files.0 <= 0 then do
+    call errmsg 'No files found in "'files_dir'"'
+    _rc = 1
+  end; else do i=1 for files.0
+    files.i = reltodir(files.i)   -- (makes the filename much shorter)
+  end
+
+  if dicts.0 <= 0 then do
+    call errmsg 'No dictionaries found in "'dicts_dir'"'
+    _rc = 1
+  end; else do i=1 for dicts.0
+    dicts.i = reltodir(dicts.i)   -- (makes the filename much shorter)
+  end
+
+  if _rc <> 0 then
+    signal exit
+
   -- signal begin
 
 /*----------------------------------------------------------------------------
@@ -645,23 +667,20 @@ validate_arguments:
 
 begin:
 
+  /* Show them the test we will be running */
+
+  cmdline   =        qif(reltodir(_0))
+  cmdline ||= " " || qif(reltodir(files_dir))
+  cmdline ||= " " || qif(reltodir(dicts_dir))
+  cmdline ||= " " || qif(reltodir(work_dir))
+
+  do i=beg_argnum to arg.0
+    cmdline ||= " " || qif(arg.i)
+  end
+
   call bothmsg ""
   call bothmsg cmdline    -- (show them the test they are running)
   call bothmsg ""
-
-
-  /* Gather all of the files that we'll be using and convert all of their
-     absolute path values to be relative to the current directory instead. */
-
-  call SysFileTree filespec("location",files_dir) || "*.*",   "files", "SFO"
-  call SysFileTree filespec("location",dicts_dir) || "*.??C", "dicts", "SFO"
-
-  do i=1 for files.0
-    files.i = reltodir(files.i)   -- (makes the filename much shorter)
-  end
-  do i=1 for dicts.0
-    dicts.i = reltodir(dicts.i)   -- (makes the filename much shorter)
-  end
 
 
   /* Now perform the test(s) using those files... */
@@ -1012,7 +1031,7 @@ reltodir: procedure expose pathsep
 
   if i <= 1 then return arg(1)    -- (nothing in common)
   if i >= length(other) then      -- (everything in common)
-    return substr(result,length(other)+1)
+    return "." || pathsep || substr(result,length(other)+1)
 
   /* Backup to start of directory where inequality was found.
      (Needed in case inequality in middle of directory name) */
@@ -1031,7 +1050,10 @@ reltodir: procedure expose pathsep
      that they wanted their path to be relative to. */
 
   updirs = countstr(pathsep,other)
-  result = copies(".."||pathsep,updirs) || result
+  if updirs > 0 then
+    result = copies(".."||pathsep,updirs) || result
+  else
+    result = "." || pathsep || result
   if length(result) > length(absolute) then
     result = absolute
   return result
