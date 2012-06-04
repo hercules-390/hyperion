@@ -8,7 +8,7 @@
 
 #define PRODUCT_NAME        "CMPSCTST"
 #define PRODUCT_DESC        "CMPSC Instruction Testing Tool"
-#define VERSION_STR         "2.1.0"
+#define VERSION_STR         "2.3.0"
 #define COPYRIGHT           "Copyright (C) 2012"
 #define COMPANY             "Software Development Laboratories"
 

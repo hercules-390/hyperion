@@ -1478,8 +1478,9 @@ void program_interrupt( REGS* regs, U16 pcode )
 
     FPRINTF( g_cmpsc.dbg ? g_cmpsc.dbg : stderr,
         "\nERROR: Program Interruption Code 0x%04.4X%s\n",
-        pcode, g_bHWPIC04 ? "  ** Hardware Detected **"
-                          : "  ** Software Detected **" );
+        pcode, PGM_PROTECTION_EXCEPTION == pcode ?
+            (g_bHWPIC04 ? "  (Hardware Detected)"
+                        : "  (Software Detected)") : "");
 
     if (regs != &g_regs)            // (sanity check)
         __debugbreak();             // (WTF?!)

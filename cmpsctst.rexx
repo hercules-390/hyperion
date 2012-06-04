@@ -11,8 +11,8 @@
 
 \*****************************************************************************/
 
-  ver      = "2.1"              -- (version of this script)
-  ver_date = "May 22, 2012"     -- (version of this script)
+  ver      = "2.3"              -- (version of this script)
+  ver_date = "June 3, 2012"     -- (version of this script)
 
   Trace Off
   signal initialize
@@ -44,8 +44,11 @@ check_rexx_support: procedure expose  _rc
 
 platform_unique:          -- (subroutine)
 
-                /* Set platform specific variables */
-
+  /*  Set platform specific variables...
+  
+        PROGRAMMING NOTE: all of these values are CASE SENSITIVE!
+        On Windows the case doesn't matter, but on Linux IT DOES!
+  */
   rexxutil_dll = "rexxutil"
   cmpsctst_bin = "cmpsctst"
   md5sum_bin   = "md5sum"
@@ -106,7 +109,7 @@ help:
   say "                   created during processing should be written. If"
   say "                   not specified the current directory is used. The"
   say "                   work files created during processing are called"
-  say '                   "'cmpout_bin'" and "'expout_txt'".'
+  say '                   "'cmpout_bin'", "'expout_txt'" and "'md5sum_txt'".'
   say ""
   say "    OPTIONS"
   say ""
@@ -274,6 +277,7 @@ initialize:
 
   cmpout_bin   = "cmpout.bin"
   expout_txt   = "expout.txt"
+  md5sum_txt   = "md5sum.txt"
 
   num_algorithms = 3
 
@@ -630,6 +634,7 @@ validate_arguments:
       work_dir = reltodir(work_dir)       -- (make relative to curr dir)
       cmpout_bin = work_dir || cmpout_bin
       expout_txt = work_dir || expout_txt
+      md5sum_txt = work_dir || md5sum_txt
     end
   end
 
@@ -916,23 +921,27 @@ count_errors:  -- (exp: 0=compression, 1=expansion, err: 4=prot, 7=data, 5=md5)
                          CALCULATE MD5 HASH
  ----------------------------------------------------------------------------*/
 
-MD5: procedure expose md5sum_bin
+MD5: procedure expose md5sum_bin md5sum_txt
 
-  qif(md5sum_bin)" -b "qif(arg(1))" 2>&1 | RXQUEUE /FIFO"
-
-  if \queued() then
-    return 0
-
-  parse pull hash .
-  "RXQUEUE /CLEAR"
-
-  do while hash <> "" & \ishex(hash)
+  qif(md5sum_bin) || " -b " || qif(arg(1)) || " > " || md5sum_txt
+  if rc <> 0 then do
+    -- say "****** MD5SUM FAILED! ******"
+    hash = ""
+  end; else do
+    rc = stream( md5sum_txt, "Command", "OPEN READ" )
+    if rc = "READY:" then do
+      hash = left(linein(md5sum_txt),32)
+      call stream md5sum_txt, "Command", "CLOSE"
+    end; else do
+      -- say "****** OPEN STREAM MD5SUM.TXT FAILED! ******"
+      hash = ""
+    end
+  end
+  do while length(hash) > 0 & \ishex(hash)
     hash = substr(hash,2)
   end
-
-  if hash = "" then
-    hash = "???"
-
+  -- if hash = "" then hash = random()
+  if hash = "" then hash = 0
   return hash
 
 /*----------------------------------------------------------------------------
@@ -1133,6 +1142,7 @@ exit:
 
   call delfile cmpout_bin
   call delfile expout_txt
+  call delfile md5sum_txt
 
   exit _rc
 
