@@ -9,7 +9,7 @@
 --
 --  VERSION
 --
---      1.0  (May 23, 2012)
+--      1.1  (Jun 03, 2012)
 --
 --  DESCRIPTION
 --
