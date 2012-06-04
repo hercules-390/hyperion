@@ -57,8 +57,9 @@ PROTECT  DS    0H                 R6 -> beg, R7 = end
          SLL   R6,12              first page
 *
          LR    R13,R7             last page
-         SRL   R13,12             last page
-         SLL   R13,12             last page
+         LA    R13,4095(,R13)     round up
+         SRL   R13,12             next page
+         SLL   R13,12             prot page
 *
          LA    R10,CMPSCKEY       allowed access key
          LA    R15,NOACCKEY       protected page key
