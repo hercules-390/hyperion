@@ -2,10 +2,15 @@
 /*              Feature definition consistency checks                */
 
 /*-------------------------------------------------------------------*/
-/*  Perform various checks on feature combinations, and set          */
+/*  Perform various checks on feature combinations, and sets         */
 /*  additional flags to percolate certain features such as           */
-/*  SIE down to lower architecture levels such that these            */
-/*  can include emulation support                                    */
+/*  SIE down to lower architecture levels such that they             */
+/*  can then include emulation support.                              */
+/*                                                                   */
+/*  FEATURE_XXXX is defined per architecture mode, and               */
+/*  _FEATURE_XXXX is defined across all architectures                */
+/*  if FEATURE_ XXXX is defined for any architecture mode.           */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #if defined(FEATCHK_CHECK_ALL)
@@ -128,178 +133,178 @@
 #if defined(FEATURE_DAT_ENHANCEMENT)
  #define _FEATURE_DAT_ENHANCEMENT
 #endif
- 
+
 #if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
  #define _FEATURE_STORE_FACILITY_LIST_EXTENDED
 #endif
- 
+
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
  #define _FEATURE_ENHANCED_DAT_FACILITY
 #endif
- 
+
 #if defined(FEATURE_SENSE_RUNNING_STATUS)
  #define _FEATURE_SENSE_RUNNING_STATUS
 #endif
- 
+
 #if defined(FEATURE_CONDITIONAL_SSKE)
  #define _FEATURE_CONDITIONAL_SSKE
 #endif
- 
+
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
  #define _FEATURE_CONFIGURATION_TOPOLOGY_FACILITY
 #endif
- 
+
 #if defined(FEATURE_IPTE_RANGE_FACILITY)
  #define _FEATURE_IPTE_RANGE_FACILITY
 #endif
- 
+
 #if defined(FEATURE_NONQUIESCING_KEY_SETTING_FACILITY)
  #define _FEATURE_NONQUIESCING_KEY_SETTING_FACILITY
 #endif
- 
+
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
  #define _FEATURE_EXTENDED_TRANSLATION_FACILITY_2
 #endif
- 
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  #define _FEATURE_MESSAGE_SECURITY_ASSIST
 #endif
- 
+
 #if defined(FEATURE_LONG_DISPLACEMENT)
  #define _FEATURE_LONG_DISPLACEMENT
 #endif
- 
+
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
  #define _FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 #endif
- 
+
 #if defined(FEATURE_EXTENDED_IMMEDIATE)
  #define _FEATURE_EXTENDED_IMMEDIATE
 #endif
- 
+
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
  #define _FEATURE_EXTENDED_TRANSLATION_FACILITY_3
 #endif
- 
+
 #if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
  #define _FEATURE_HFP_UNNORMALIZED_EXTENSION
 #endif
- 
+
 #if defined(FEATURE_ETF2_ENHANCEMENT)
  #define _FEATURE_ETF2_ENHANCEMENT
 #endif
- 
+
 #if defined(FEATURE_STORE_CLOCK_FAST)
  #define _FEATURE_STORE_CLOCK_FAST
 #endif
- 
+
 #if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
  #define _FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS
 #endif
- 
+
 #if defined(FEATURE_TOD_CLOCK_STEERING)
  #define _FEATURE_TOD_CLOCK_STEERING
 #endif
- 
+
 #if defined(FEATURE_ETF3_ENHANCEMENT)
  #define _FEATURE_ETF3_ENHANCEMENT
 #endif
- 
+
 #if defined(FEATURE_EXTRACT_CPU_TIME)
  #define _FEATURE_EXTRACT_CPU_TIME
 #endif
- 
+
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
  #define _FEATURE_COMPARE_AND_SWAP_AND_STORE
 #endif
- 
+
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
  #define _FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2
 #endif
- 
+
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
  #define _FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY
 #endif
- 
+
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
  #define _FEATURE_EXECUTE_EXTENSIONS_FACILITY
 #endif
- 
+
 #if defined(FEATURE_ENHANCED_MONITOR_FACILITY)
  #define _FEATURE_ENHANCED_MONITOR_FACILITY
 #endif
- 
+
 #if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
  #define _FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY
 #endif
- 
+
 #if defined(FEATURE_FPS_ENHANCEMENT)
  #define _FEATURE_FPS_ENHANCEMENT
 #endif
- 
+
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
  #define _FEATURE_DECIMAL_FLOATING_POINT
 #endif
- 
+
 #if defined(FEATURE_PFPO)
  #define _FEATURE_PFPO
 #endif
- 
+
 #if defined(FEATURE_FAST_BCR_SERIALIZATION_FACILITY)
  #define _FEATURE_FAST_BCR_SERIALIZATION_FACILITY
 #endif
- 
+
 #if defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
  #define _FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY
 #endif
- 
+
 #if defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
  #define _FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY
 #endif
- 
+
 #if defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
  #define _FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY
 #endif
- 
+
 #if defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)
  #define _FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION
 #endif
- 
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
  #define _FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 #endif
- 
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
  #define _FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 #endif
- 
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1)
  #define _FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 #endif
- 
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2)
  #define _FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #endif
- 
+
 #if defined(FEATURE_VM_BLOCKIO)
  #define _FEATURE_VM_BLOCKIO
-#endif 
+#endif
 
 #if defined(FEATURE_QEBSM)
  #define _FEATURE_QEBSM
-#endif 
+#endif
 
 #if defined(FEATURE_QDIO_THININT)
  #define _FEATURE_QDIO_THININT
-#endif 
+#endif
 
 #if defined(FEATURE_SVS)
  #define _FEATURE_SVS
-#endif 
+#endif
 
 #if defined(FEATURE_QDIO_TDD)
  #define _FEATURE_QDIO_TDD
-#endif 
+#endif
 
 #if defined(FEATURE_HYPERVISOR)
  #define _FEATURE_HYPERVISOR
@@ -323,7 +328,7 @@
 #if defined(FEATURE_EMULATE_VM)
  #define _FEATURE_EMULATE_VM
 #endif
- 
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline
@@ -662,7 +667,7 @@
 #if defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)\
     || defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
   #if !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
-    #error CPU Measurement facilities requires Load Program Parameter facility 
+    #error CPU Measurement facilities requires Load Program Parameter facility
   #endif
 #endif
 
