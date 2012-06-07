@@ -2,10 +2,10 @@
 /*              Feature definition consistency checks                */
 
 /*-------------------------------------------------------------------*/
-/*  Perform various checks on feature combinations, and sets         */
+/*  Perform various checks on feature combinations, and set          */
 /*  additional flags to percolate certain features such as           */
-/*  SIE down to lower architecture levels such that they             */
-/*  can then include emulation support.                              */
+/*  SIE down to lower architecture levels such that these            */
+/*  can include emulation support                                    */
 /*                                                                   */
 /*  FEATURE_XXXX is defined per architecture mode, and               */
 /*  _FEATURE_XXXX is defined across all architectures                */
