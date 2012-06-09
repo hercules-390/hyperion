@@ -273,8 +273,8 @@ int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
 int  configure_memlock(int);
 int  configure_memfree(int);
-int  configure_storage(U32);
-int  configure_xstorage(U32);
+int  configure_storage(U64);
+int  configure_xstorage(U64);
 int  configure_capping(U32 value);
 
 int  configure_herc_priority(int prio);

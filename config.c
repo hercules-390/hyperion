@@ -39,7 +39,7 @@ int rc;
 
     if(flags)
         rc = mlockall(MCL_CURRENT | MCL_FUTURE);
-    else 
+    else
         rc = munlockall();
 
     return rc ? errno : 0;
@@ -90,103 +90,139 @@ int i;
 
 }
 
-static RADR config_mfree = 200 << 20;
+static U64 config_mfree = 200 << SHIFT_MEGABYTE;
 int configure_memfree(int mfree)
 {
-    if(mfree < 0)
-        return config_mfree >> 20;
-    else
-        config_mfree = (RADR)mfree << 20;
+    if (mfree < 0)
+        return config_mfree >> SHIFT_MEGABYTE;
 
+    config_mfree = (RADR)mfree << SHIFT_MEGABYTE;
     return 0;
 }
 
 /* storage configuration */
-static RADR config_allocmsize = 0;
-int configure_storage(U32 mbstor)
+static U64 config_allocmsize = 0;
+int configure_storage(U64 mainsize)
 {
-int off;
 BYTE *mainstor;
 BYTE *storkeys;
-RADR  mainsize;
-RADR  storsize;
-RADR  skeysize;
 BYTE *dofree = NULL;
 char *mfree = NULL;
 REGS *regs;
+U64   storsize;
+U32   skeysize;
 int cpu;
 
-    OBTAIN_INTLOCK(NULL);
-    if(sysblk.cpus)
-        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
-            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                return HERRCPUONL;
-            }
-    RELEASE_INTLOCK(NULL);
+    /* Ensure all CPUs have been stopped */
+    if (sysblk.cpus)
+    {
+      OBTAIN_INTLOCK(NULL);
+      for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+      {
+        if (IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+        {
+          RELEASE_INTLOCK(NULL);
+          return HERRCPUONL;
+        }
+      }
+      RELEASE_INTLOCK(NULL);
+    }
 
-    /* Convert from configuration units to bytes */
-    mainsize = (RADR)mbstor << 20;
-    /* Adjust for alignment */
-    storsize = mainsize + 8192;
-    /* Storage key array size */
-    skeysize = storsize / STORAGE_KEY_UNITSIZE;
+    /* Release storage and return if deconfiguring */
+    if (mainsize == ~0ULL)
+    {
+      if (sysblk.storkeys)
+        free(sysblk.storkeys);
+      sysblk.storkeys = 0;
+      sysblk.mainstor = 0;
+      sysblk.mainsize = 0;
+      return 0;
+    }
+
+    /* Round requested storage size to architectural segment boundaries */
+    if (mainsize)
+    {
+     if (sysblk.arch_mode == ARCH_370)
+       storsize = (mainsize + 65535) & ~0xFFFFULL;
+     else
+       storsize = (mainsize + ONE_MEGABYTE - 1) & ~((U64)ONE_MEGABYTE - 1);
+    }
+    else                                                                // Adjust zero storage case for a subsystem/device server (MAXCPU 0)
+      storsize = 65536;                                                 // Allocate minimum storage of one segment
+
+    /* Storage key array size rounded to next page boundary */
+    skeysize = (((storsize + STORAGE_KEY_UNITSIZE - 1) / STORAGE_KEY_UNITSIZE) + 4095) & ~0x0FFF;
+
     /* Add Storage key array size */
     storsize += skeysize;
 
-    if(storsize > config_allocmsize)
+    /* Adjust for possible page misalignment */
+    storsize += 4096;
+
+
+    /*
+     * Note: Using the current algorithm, storage on a 32-bit host OS
+     *       is normally limited to a guest total of 1326M, split
+     *       between main and expanded storage. The most either may
+     *       specify is 919M. For example, one may specify MAINSIZE
+     *       919M and XPNDSIZE 407M, for a total of 1326M.
+     *
+     *       Please understand that the results on any individual
+     *       32-bit host OS may vary from the note above, and the note
+     *       does not apply to any 64-bit host OS.
+     *
+     */
+
+    if (storsize > config_allocmsize)
     {
-        if(config_mfree)
-            mfree = malloc(config_mfree);
+      if (config_mfree)
+        mfree = malloc(config_mfree);
 
-        /* Obtain storage */
-        storkeys = calloc((size_t)(storsize >> 10), 1024);
+      /* Obtain storage */
+      storkeys = calloc((size_t)(storsize >> 12), 4096);                // Hint to page size for cleanest allocation
 
-        if (storkeys != NULL)
-            sysblk.main_clear = 1;
-        else
-        {
-            sysblk.main_clear = 0;
-            storkeys = malloc((size_t)(storsize));
-        }
+      if (mfree)
+        free(mfree);
 
-        if(mfree)
-            free(mfree);
+      if (storkeys == NULL)
+      {
+        char buf[64];
+        sysblk.main_clear = 0;
+        MSGBUF( buf, "configure_storage( %uMB )", mainsize >> SHIFT_MEGABYTE );
+        logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
+        return -1;
+      }
 
-        if (storkeys == NULL)
-        {
-            char buf[64];
-            MSGBUF( buf, "configure_storage( %dMB )", mainsize );
-            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
-            return -1;
-        }
-        else
-            config_allocmsize = storsize;
+      sysblk.main_clear = 1;
+      config_allocmsize = storsize;
 
-        /* Free previously allocated storage */
-        dofree = sysblk.storkeys;
+      /* Free previously allocated storage */
+      dofree = sysblk.storkeys;
     }
     else
     {
-        storkeys = sysblk.storkeys;
-        sysblk.main_clear = 0;
-        dofree = NULL;
+      storkeys = sysblk.storkeys;
+      sysblk.main_clear = 0;
+      dofree = NULL;
     }
 
-    /* Mainstor is located beyond the storage key array */
-    mainstor = storkeys + skeysize;
-
-    /* Trying to get mainstor aligned to the next 4K boundary - Greg */
-    off = (uintptr_t)mainstor & 0xFFF;
-    mainstor += off ? 4096 - off : 0;
+    /* Mainstor is located beyond the storage key array on a page boundary */
+    mainstor = (BYTE*)((U64)(storkeys + skeysize + 4095) & ~0x0FFFULL);
 
     /* Set in sysblk */
     sysblk.storkeys = storkeys;
     sysblk.mainstor = mainstor;
     sysblk.mainsize = mainsize;
 
-    if(dofree)
+    /*
+     *  Free prior storage in use
+     *
+     *  FIXME: The storage ordering further limits the amount of storage
+     *         that may be allocated following the initial storage
+     *         allocation when compiled for 32-bit host OS.
+     *
+     */
+    if (dofree)
         free(dofree);
 
     /* Initial power-on reset for main storage */
@@ -219,94 +255,138 @@ int cpu;
     configure_region_reloc();
 
     /* Call initial_cpu_reset for every online processor */
-    for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
-      if (IS_CPU_ONLINE(cpu))
+    if (sysblk.cpus)
+    {
+      for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
       {
-        regs=sysblk.regs[cpu];
-        ARCH_DEP(initial_cpu_reset) (regs) ;
+        if (IS_CPU_ONLINE(cpu))
+        {
+          regs=sysblk.regs[cpu];
+          ARCH_DEP(initial_cpu_reset) (regs) ;
+        }
       }
-
+    }
     return 0;
 }
 
-static U32 config_allocxsize = 0;
-int configure_xstorage(U32 mbxstor)
+static U64 config_allocxsize = 0;
+int configure_xstorage(U64 xpndsize)
 {
+#ifdef _FEATURE_EXPANDED_STORAGE
 BYTE *xpndstor;
-RADR  xpndsize;
 BYTE *dofree = NULL;
 char *mfree = NULL;
 int  cpu;
 
-#ifdef _FEATURE_EXPANDED_STORAGE
-    OBTAIN_INTLOCK(NULL);
-    if(sysblk.cpus)
-        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
-            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                return HERRCPUONL;
-            }
-    RELEASE_INTLOCK(NULL);
+    /* Ensure all CPUs have been stopped */
+    if (sysblk.cpus)
+    {
+      OBTAIN_INTLOCK(NULL);
+      for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+      {
+        if (IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
+        {
+          RELEASE_INTLOCK(NULL);
+          return HERRCPUONL;
+        }
+      }
+      RELEASE_INTLOCK(NULL);
+    }
 
-    /* Convert from configuration units to bytes */
-    xpndsize = (RADR)mbxstor << 20;
-    /* Adjust for alignment */
+    /* Release storage and return if deconfiguring */
+    if (xpndsize == ~0ULL)
+    {
+      if (sysblk.xpndstor)
+        free(sysblk.xpndstor);
+      sysblk.xpndsize = 0;
+      return 0;
+    }
+
+
+    /*
+     * Note: Using the current algorithm, storage on a 32-bit host OS
+     *       is normally limited to a guest total of 1326M, split
+     *       between main and expanded storage. The most either may
+     *       specify is 919M. For example, one may specify MAINSIZE
+     *       407M and XPNDSIZE 919M, for a total of 1326M.
+     *
+     *       Please understand that the results on any individual
+     *       32-bit host OS may vary from the note above, and the note
+     *       does not apply to any 64-bit host OS.
+     *
+     */
 
     if (xpndsize > config_allocxsize)
     {
-        if(config_mfree)
-            mfree = malloc(config_mfree);
+      if (config_mfree)
+          mfree = malloc(config_mfree);
 
-        /* Obtain expanded storage */
-        xpndstor = calloc((size_t)(xpndsize >> 10), 1024);
+      /* Obtain expanded storage */
+      xpndstor = calloc((size_t)(xpndsize >> 12), 4096);                // Hint to page boundary
 
-        if (xpndstor)
-            sysblk.xpnd_clear = 1;
-        else
-        {
-            sysblk.xpnd_clear = 0;
-            xpndstor = malloc((size_t)xpndsize);
-        }
+      if (mfree)
+        free(mfree);
 
-        if(mfree)
-            free(mfree);
+      if (xpndstor == NULL)
+      {
+        char buf[64];
+        sysblk.xpnd_clear = 0;
+        MSGBUF( buf, "configure_xstorage( %uMB )", xpndsize >> SHIFT_MEGABYTE );
+        logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
+        return -1;
+      }
 
-        if (xpndstor == NULL)
-        {
-            char buf[64];
-            MSGBUF( buf, "configure_xstorage( %dMB )", configure_xstorage );
-            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
-            return -1;
-        }
-        else
-            config_allocxsize = xpndsize;
+      sysblk.xpnd_clear = 1;
+      config_allocxsize = xpndsize;
 
-        /* Free previously allocated storage */
-        dofree = sysblk.xpndstor;
+      /* Free previously allocated storage */
+      dofree = sysblk.xpndstor;
     }
     else
     {
-        xpndstor = sysblk.xpndstor;
-        sysblk.xpnd_clear = 0;
-        dofree = NULL;
+      xpndstor = sysblk.xpndstor;
+      sysblk.xpnd_clear = 0;
+      dofree = NULL;
     }
-
 
     sysblk.xpndstor = xpndstor;
     sysblk.xpndsize = xpndsize / XSTORE_PAGESIZE;
 
-    if(dofree)
+
+    /*
+     *  Free prior storage in use
+     *
+     *  FIXME: The storage ordering further limits the amount of storage
+     *         that may be allocated following the initial storage
+     *         allocation when compiled for 32-bit host OS.
+     *
+     */
+
+    if (dofree)
         free(dofree);
 
     /* Initial power-on reset for expanded storage */
     xstorage_clear();
 
-#else /*!_FEATURE_EXPANDED_STORAGE*/
-        WRMSG(HHC01431, "I");
-#endif /*!_FEATURE_EXPANDED_STORAGE*/
-
     configure_region_reloc();
+
+    /* Call initial_cpu_reset for every online processor */
+    if (sysblk.cpus)
+    {
+      for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+      {
+        if (IS_CPU_ONLINE(cpu))
+        {
+          regs=sysblk.regs[cpu];
+          ARCH_DEP(initial_cpu_reset) (regs) ;
+        }
+      }
+    }
+
+#else /*!_FEATURE_EXPANDED_STORAGE*/
+    UNREFERENCED(xpndsize);
+    WRMSG(HHC01431, "I");
+#endif /*!_FEATURE_EXPANDED_STORAGE*/
 
     return 0;
 }
@@ -394,7 +474,7 @@ CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
 CHPBLK *chp;
 
     for (chp = sysblk.firstchp; chp != NULL; chp = chp->nextchp)
-        if (chp->chpid == chpid && chp->css == css) 
+        if (chp->chpid == chpid && chp->css == css)
             return chp;
     return NULL;
 }
@@ -561,7 +641,7 @@ void ret_devblk(DEVBLK *dev)
 static int detach_devblk (DEVBLK *dev)
 {
 int     i;                              /* Loop index                */
-    
+
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
@@ -682,11 +762,11 @@ int     cpu;
 
     /* release storage          */
     sysblk.lock_mainstor = 0;
-    WRMSG( HHC01427, "I", "Main", !configure_storage(0) ? "" : "not " );
+    WRMSG( HHC01427, "I", "Main", !configure_storage(~0ULL) ? "" : "not " );
 
     /* release expanded storage */
     sysblk.lock_xpndstor = 0;
-    WRMSG( HHC01427, "I", "Expanded", !configure_xstorage(0) ? "" : "not ");
+    WRMSG( HHC01427, "I", "Expanded", !configure_xstorage(~0ULL) ? "" : "not ");
 
     WRMSG(HHC01422, "I");
 
@@ -708,7 +788,7 @@ int configure_capping(U32 value)
                 sysblk.capvalue = 0;
                 usleep(10000);          // give the thread a chance to wake
             }
-            else 
+            else
                 break;
         }
 
@@ -898,7 +978,7 @@ int configure_cpu(int cpu)
 int   i;
 int   rc;
 char  thread_name[32];
-            
+
     if(IS_CPU_ONLINE(cpu))
         return -1;
 

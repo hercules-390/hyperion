@@ -2850,58 +2850,130 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
     return rc;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
 /*-------------------------------------------------------------------*/
 int mainsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32 mainsize;
-BYTE c;
-int rc;
+char   *q_argv[2] = { "qstor", "main" };
+int     rc;
+u_int   i;
+u_int   lockreq = 0;
+u_int   locktype = 0;
+U64     mainsize;
+char    check[16];
+BYTE    f = ' ', c = '\0';
+
 
     UNREFERENCED(cmdline);
 
-    /* Parse main storage size operand */
-    if ( argc == 2 )
+    if ( argc < 2 )
     {
-        if (sscanf(argv[1], "%u%c", &mainsize, &c) != 1
-         || mainsize < 2
-         || (mainsize > 4095 && sizeof(sysblk.mainsize) < 8)
-         || (mainsize > 4095 && sizeof(size_t) < 8))
+        return qstor_cmd( 2, q_argv, "qstor main" );
+    }
+
+    /* Parse main storage size operand */
+    rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c);
+
+    if ( rc < 1 || rc > 2 )
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if ( rc == 2 )
+    {
+        switch (toupper(f))
         {
-            logmsg(MSG(HHC01451, "E", argv[1], argv[0]));
+        case 'B':
+            break;
+        case 'K':
+            mainsize <<= SHIFT_KIBIBYTE;
+            break;
+        case 'M':
+            mainsize <<= SHIFT_MEBIBYTE;
+            break;
+        case 'G':
+            mainsize <<= SHIFT_GIBIBYTE;
+            break;
+#if SIZEOF_SIZE_T >= 8
+        case 'T':
+            mainsize <<= SHIFT_TEBIBYTE;
+            break;
+        case 'P':
+            mainsize <<= SHIFT_PEBIBYTE;
+            break;
+        case 'E':
+            mainsize <<= SHIFT_EXBIBYTE;
+            break;
+#endif
+        default:
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
             return -1;
+        }
+    }
+    else
+        mainsize <<= SHIFT_MEGABYTE;
+
+    if ( ( ( mainsize || sysblk.maxcpu ) &&                                             // 0 only valid if MAXCPU 0
+           ( (sysblk.arch_mode == ARCH_370 && mainsize < (U64)(_64_KILOBYTE) ) ||       // 64K minimum for S/370
+             (sysblk.arch_mode != ARCH_370 && mainsize < (U64)(ONE_MEGABYTE) ) ) ) ||   // Else 1M minimum
+         ( (mainsize > (U64)(((U64)ONE_MEGABYTE << 12)-1)) &&                           // Check for 32-bit addressing limits
+           ( sizeof(sysblk.mainsize) < 8 || sizeof(size_t) < 8 ) ) )
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0]);
+        return -1;
+    }
+
+    /* Process options */
+    for (i = 2; (int)i < argc; i++)
+    {
+        strnupper(check, argv[i], (u_int)sizeof(check));
+#if 0   // Interim - Storage is not locked yet in config.c
+        if (strabbrev("LOCKED", check, 1) &&
+            mainsize)
+        {
+            lockreq = 1;
+            locktype = 1;
+        }
+        else
+#endif
+        if (strabbrev("UNLOCKED", check, 3))
+        {
+            lockreq = 1;
+            locktype = 0;
         }
         else
         {
-            if((rc = configure_storage(mainsize)))
-            {
-                switch(rc) {
-                case HERRCPUONL:
-                    logmsg("CPU's must be offline or stopped\n");
-                    break;
-                default:
-                    logmsg("Configure storage error %d\n",rc);
-                }
-                return rc;
-            }
-
-            if (MLVL(VERBOSE))
-                logmsg(MSG(HHC02204, "I", argv[0], argv[1]));
+            WRMSG( HHC01451, "E", argv[i], argv[0] );
+            return -1;
         }
     }
-    else if(argc < 2)
+
+    /* Set lock request; if mainsize 0, storage is always UNLOCKED */
+    if (!mainsize)
+        sysblk.lock_mainstor = 0;
+    else if (lockreq)
+        sysblk.lock_mainstor = locktype;
+
+    /* Update main storage size */
+    rc = configure_storage(mainsize);
+    if ( rc >= 0 )
     {
-        logmsg("%s %d\n", argv[0], sysblk.mainsize >> 20);
-        return -1;
+        if (MLVL(VERBOSE))
+            qstor_cmd( 2, q_argv, "qstor main" );
+    }
+    else if ( rc == HERRCPUONL )
+    {
+        WRMSG( HHC02389, "E" );
     }
     else
     {
-        logmsg(MSG(HHC01455, "E", argv[0]));
-        return -1;
+        WRMSG( HHC02388, "E", rc );
     }
 
-    return 0;
+    return rc;
 }
 
 
@@ -2910,53 +2982,128 @@ int rc;
 /*-------------------------------------------------------------------*/
 int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 {
-U32 xpndsize;
-BYTE c;
-int rc;
+RADR    xpndsize;
+BYTE    f = ' ', c = '\0';
+int     rc;
+u_int   i;
+char    check[16];
+char   *q_argv[2] = { "qstor", "xpnd" };
+u_int   lockreq = 0;
+u_int   locktype = 0;
 
     UNREFERENCED(cmdline);
 
-    /* Parse priority value */
-    if ( argc == 2 )
+    if ( argc == 1 )
     {
-        /* Parse expanded storage size operand */
-        if (sscanf(argv[1], "%u%c", &xpndsize, &c) != 1
-            || xpndsize > (0x100000000ULL / XSTORE_PAGESIZE) - 1
-            || (xpndsize > 4095 && sizeof(size_t) < 8))
+        return qstor_cmd( 2, q_argv, "qstor xpnd" );
+    }
+
+    /* Parse expanded storage size operand */
+    rc = sscanf(argv[1], "%"FRADR"u%c%c", &xpndsize, &f, &c);
+
+    if (rc > 2 )
+    {
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if ( rc == 2 )
+    {
+        switch (toupper(f))
         {
-            logmsg(MSG(HHC01451, "E", argv[1], argv[0]));
+        case 'M':
+            xpndsize <<= SHIFT_MEGABYTE;
+            break;
+        case 'G':
+            if ( sizeof(xpndsize) < 8  && xpndsize > 2 )                // Check limit for 32-bit addressing
+            {
+                WRMSG( HHC01451, "E", argv[1], argv[0]);
+                return -1;
+            }
+            xpndsize <<= SHIFT_GIGABYTE;
+            break;
+#if SIZEOF_SIZE_T >= 8
+        case 'T':
+            xpndsize <<= SHIFT_TERABYTE;
+            break;
+#endif
+        default:
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
             return -1;
+        }
+    }
+    else
+        xpndsize <<= SHIFT_MEGABYTE;
+
+    if ( sizeof(xpndsize) < 8 || sizeof(size_t) < 8 )                   // Check limits for 32-bit addressing
+    {
+        if (xpndsize > (RADR)(2 << SHIFT_GIGABYTE) )
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+#if SIZEOF_SIZE_T >= 8
+    else
+    {
+        if (xpndsize > (RADR)((RADR)16 << SHIFT_TERABYTE) )             // Check limits for 64-bit addressing
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return -1;
+        }
+    }
+#endif
+
+    /* Process options */
+    for (i = 2; (int)i < argc; i++)
+    {
+        strnupper(check, argv[i], (u_int)sizeof(check));
+#if 0   // Interim - Storage is not locked yet in config.c
+        if (strabbrev("LOCKED", check, 1) &&
+            xpndsize)
+        {
+            lockreq = 1;
+            locktype = 1;
+        }
+        else
+#endif
+        if (strabbrev("UNLOCKED", check, 3))
+        {
+            lockreq = 1;
+            locktype = 0;
         }
         else
         {
-            if((rc = configure_xstorage(xpndsize)))
-            {
-                switch(rc) {
-                case HERRCPUONL:
-                    logmsg("CPU's must be offline or stopped\n");
-                    break;
-                default:
-                    logmsg("Configure xstorage error %d\n",rc);
-                }
-                return rc;
-            }
-
-            if (MLVL(VERBOSE))
-                logmsg(MSG(HHC02204, "I", argv[0], argv[1]));
+            WRMSG( HHC01451, "E", argv[i], argv[0] );
+            return -1;
         }
     }
-    else if(argc < 2)
+    if (!xpndsize)
+        sysblk.lock_xpndstor = 0;
+    else if (lockreq)
+        sysblk.lock_xpndstor = locktype;
+
+    rc = configure_xstorage(xpndsize);
+    if ( rc >= 0 )
     {
-        logmsg("%s %d\n", argv[0], sysblk.xpndsize >> (20 - XSTORE_PAGESHIFT));
-        return -1;
+        if (MLVL(VERBOSE))
+        {
+            qstor_cmd( 2, q_argv, "qstor xpnd" );
+        }
     }
     else
     {
-        logmsg(MSG(HHC01455, "E", argv[0]));
-        return -1;
+        if ( rc == HERRCPUONL )
+        {
+            WRMSG( HHC02389, "E" );
+        }
+        else
+        {
+            WRMSG( HHC02387, "E", rc );
+        }
     }
 
-    return 0;
+    return rc;
 }
 
 
