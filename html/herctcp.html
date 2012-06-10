@@ -168,6 +168,11 @@ but if you cannot or will not, Hercules supplies a utility
 <p><code>openvpn</code> (<a href="http://openvpn.net/">http://openvpn.net/</a>)
 is a utility that can open a tunnel device permanently.
 In addition you are likely to need a udev rule as described above.
+Openvpn is usually installed as a package (<code>yum install openvpn</code> on Fedora);
+if not refer to <a href="http://openvpn.net/index.php/open-source/documentation/howto.html#install">
+http://openvpn.net/index.php/open-source/documentation/howto.html</a>.
+Noter, however, that <code>openvpn</code> is just one way to create a permanent tunnel device;
+if you have another favourite, go ahead and use it.
 <p>
 To create permanent a tunnel device, add this to rc.local
 (or as appropriate for
