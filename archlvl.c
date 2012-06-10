@@ -218,7 +218,9 @@ FACILITY(PFPO,             Z390,         NONE,      Z390,          ALS2|ALS3)
 #if defined(_FEATURE_FAST_BCR_SERIALIZATION_FACILITY)
 FACILITY(FAST_BCR_SERIAL,  Z390,         NONE,      Z390,          ALS3)
 #endif
-//FACILITY(CMPSC_ENH,        Z390,         NONE,      Z390,          ALS3)
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+FACILITY(CMPSC_ENH,        ZARCH,        NONE,      ZARCH,         ALS3)
+#endif
 #if defined(_FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
 FACILITY(RES_REF_BITS_MUL, Z390,         NONE,      Z390,          ALS3)
 #endif
