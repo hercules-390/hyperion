@@ -329,6 +329,10 @@
  #define _FEATURE_EMULATE_VM
 #endif
 
+#if defined(FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+ #define   _FEATURE_CMPSC_ENHANCEMENT_FACILITY
+#endif
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline

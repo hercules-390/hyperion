@@ -188,7 +188,7 @@ int cpu;
       {
         char buf[64];
         sysblk.main_clear = 0;
-        MSGBUF( buf, "configure_storage( %uMB )", mainsize >> SHIFT_MEGABYTE );
+        MSGBUF( buf, "configure_storage( %"I64_FMT"uMB )", mainsize >> SHIFT_MEGABYTE );
         logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
         return -1;
       }
@@ -332,7 +332,7 @@ int  cpu;
       {
         char buf[64];
         sysblk.xpnd_clear = 0;
-        MSGBUF( buf, "configure_xstorage( %uMB )", xpndsize >> SHIFT_MEGABYTE );
+        MSGBUF( buf, "configure_xstorage( %"I64_FMT"uMB )", xpndsize >> SHIFT_MEGABYTE );
         logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
         return -1;
       }
@@ -985,7 +985,7 @@ char  thread_name[32];
 
     MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
 
-    rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
+    rc = create_thread (&sysblk.cputid[cpu], JOINABLE, cpu_thread,
                         &cpu, thread_name);
     if (rc)
     {
@@ -1007,6 +1007,11 @@ char  thread_name[32];
 
     if (i < sysblk.maxcpu)
         sysblk.regs[i]->intwait = 0;
+
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Set topology-change-report-pending condition */
+    sysblk.topchnge = 1;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     return 0;
 } /* end function configure_cpu */
@@ -1063,6 +1068,11 @@ int   i;
     }
 
     sysblk.cputid[cpu] = 0;
+
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Set topology-change-report-pending condition */
+    sysblk.topchnge = 1;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     return 0;
 
