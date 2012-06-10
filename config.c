@@ -332,7 +332,7 @@ int  cpu;
       {
         char buf[64];
         sysblk.xpnd_clear = 0;
-        MSGBUF( buf, "configure_xstorage( %u"I64_FMT"MB )", xpndsize >> SHIFT_MEGABYTE );
+        MSGBUF( buf, "configure_xstorage( %"I64_FMT"uMB )", xpndsize >> SHIFT_MEGABYTE );
         logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
         return -1;
       }
