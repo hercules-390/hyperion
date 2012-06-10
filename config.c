@@ -188,7 +188,7 @@ int cpu;
       {
         char buf[64];
         sysblk.main_clear = 0;
-        MSGBUF( buf, "configure_storage( %uMB )", mainsize >> SHIFT_MEGABYTE );
+        MSGBUF( buf, "configure_storage( %"I64_FMT"uMB )", mainsize >> SHIFT_MEGABYTE );
         logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
         return -1;
       }
@@ -276,6 +276,7 @@ int configure_xstorage(U64 xpndsize)
 BYTE *xpndstor;
 BYTE *dofree = NULL;
 char *mfree = NULL;
+REGS *regs;
 int  cpu;
 
     /* Ensure all CPUs have been stopped */
@@ -331,7 +332,7 @@ int  cpu;
       {
         char buf[64];
         sysblk.xpnd_clear = 0;
-        MSGBUF( buf, "configure_xstorage( %uMB )", xpndsize >> SHIFT_MEGABYTE );
+        MSGBUF( buf, "configure_xstorage( %u"I64_FMT"MB )", xpndsize >> SHIFT_MEGABYTE );
         logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
         return -1;
       }
