@@ -985,7 +985,7 @@ char  thread_name[32];
 
     MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
 
-    rc = create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
+    rc = create_thread (&sysblk.cputid[cpu], JOINABLE, cpu_thread,
                         &cpu, thread_name);
     if (rc)
     {
