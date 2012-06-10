@@ -276,6 +276,7 @@ int configure_xstorage(U64 xpndsize)
 BYTE *xpndstor;
 BYTE *dofree = NULL;
 char *mfree = NULL;
+REGS *regs;
 int  cpu;
 
     /* Ensure all CPUs have been stopped */
