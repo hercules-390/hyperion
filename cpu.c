@@ -1361,11 +1361,6 @@ int i;
 
     release_lock (&sysblk.cpulock[cpu]);
 
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
-    /* Set topology-change-report-pending condition */
-    sysblk.topchnge = 1;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
-
     return 0;
 }
 
@@ -1401,11 +1396,6 @@ void *cpu_uninit (int cpu, REGS *regs)
         sysblk.regs[cpu] = NULL;
         release_lock (&sysblk.cpulock[cpu]);
     }
-
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
-    /* Set topology-change-report-pending condition */
-    sysblk.topchnge = 1;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     return NULL;
 }

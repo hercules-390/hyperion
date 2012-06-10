@@ -1008,6 +1008,11 @@ char  thread_name[32];
     if (i < sysblk.maxcpu)
         sysblk.regs[i]->intwait = 0;
 
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Set topology-change-report-pending condition */
+    sysblk.topchnge = 1;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+
     return 0;
 } /* end function configure_cpu */
 
@@ -1063,6 +1068,11 @@ int   i;
     }
 
     sysblk.cputid[cpu] = 0;
+
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Set topology-change-report-pending condition */
+    sysblk.topchnge = 1;
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     return 0;
 
