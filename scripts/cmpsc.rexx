@@ -248,7 +248,7 @@ if  in_buffer_offset >= maxoffset then do
     exit 1
 end
 if  out_buffer_offset >= maxoffset then do
-    call logmsg '** ERROR ** output offset value must be < 'maxoffset' "'in_buffer_size'"'
+    call logmsg '** ERROR ** output offset must be < 'maxoffset' "'out_buffer_size'"'
     exit 1
 end
 
