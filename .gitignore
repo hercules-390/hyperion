@@ -53,6 +53,7 @@
 /configure
 /console.lo
 /control.lo
+cmpsctst
 /cpu.lo
 /crypto.lo
 /ctc_ctci.lo
