@@ -1,6 +1,7 @@
 rexx
 maxcpu    1
 numcpu    1
+cpumodel  2097
 cpuserial 000000
 panrate   fast
 archlvl   s/390           # (cmpsc.txt needed execution arch)
