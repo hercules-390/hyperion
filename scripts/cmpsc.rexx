@@ -27,6 +27,8 @@
 --
 --      outbuff    Output buffer size and offset in the same format
 --                 as the in_buffer_size argument (e.g. "8160:15").
+--                 Buffer sizes must be greater than 260 bytes, and
+--                 page offset values must be less than 4096 bytes.
 --
 --      infile     The name of the file used as input to the test.
 --
@@ -219,12 +221,34 @@ if  in_buffer_offset  = "" then in_buffer_offset  = 0
 if  out_buffer_offset = "" then out_buffer_offset = 0
 
 if  \isnum(ib) | \isnum(in_buffer_offset) then do
-    call logmsg '** ERROR ** non-numeric inbuff:offset "'in_buffer_size'"'
+    call logmsg '** ERROR ** non-numeric input buffer size or offset  "'in_buffer_size'"'
     exit 1
 end
 
 if  \isnum(ob) | \isnum(out_buffer_offset) then do
-    call logmsg '** ERROR ** non-numeric outbuff:offset "'out_buffer_size'"'
+    call logmsg '** ERROR ** non-numeric output buffer size or offset "'out_buffer_size'"'
+    exit 1
+end
+
+minbufsize = 260
+maxoffset = 4096
+
+if  ib <= minbufsize then do
+    call logmsg '** ERROR ** input buffer size must be > 'minbufsize' "'in_buffer_size'"'
+    exit 1
+end
+
+if  ob <= minbufsize then do
+    call logmsg '** ERROR ** output buffer size must be > 'minbufsize' "'out_buffer_size'"'
+    exit 1
+end
+
+if  in_buffer_offset >= maxoffset then do
+    call logmsg '** ERROR ** input offset must be < 'maxoffset' "'in_buffer_size'"'
+    exit 1
+end
+if  out_buffer_offset >= maxoffset then do
+    call logmsg '** ERROR ** output offset value must be < 'maxoffset' "'in_buffer_size'"'
     exit 1
 end
 
