@@ -197,43 +197,71 @@ CMPGET20 DS    0H
 CMPFLUSH DS    0H
          LM    R8,R9,CMPR2        o/p buffer begin and size
          SLR   R9,R3              calc r9 = o/p data amount
+*
          L     R6,CMPOUTPT        r6 -> output "file"
          LR    R7,R9              r7 = o/p data amount
          ALR   R11,R9             update o/p "file" length
          LR    R13,R8             save o/p buff begin
+*
          MVCL  R6,R8              flush o/p to "file"
          ST    R6,CMPOUTPT        update o/p "file" addr
+*
          MVC   0(1,R13),0(R2)     keep partial byte
          LM    R2,R3,CMPR2        reset o/p buffer
          BR    R14                return to caller
-         SPACE 2
-*--------------------------------------------------------------------
-*   Pad output buffer with pad char to catch buffer overflows
-*--------------------------------------------------------------------
-         SPACE
-PADOFLOW DS    0H                 pad the output buffer
-         LM    R6,R7,PADPARMS     end of buff, pad amt
-         LTR   R7,R7              any padding needed?
-         BZR   R14                no, return to caller
-         SLR   R9,R9              zero source length
-         ICM   R9,B'1000',PADBYTE padding character
-         MVCL  R6,R8              pad output buffer
-         BR    R14                return to caller
-         SPACE 2
+         SPACE 3
 *--------------------------------------------------------------------
 *   Check the output buffer for any possible buffer overflows
 *--------------------------------------------------------------------
          SPACE
 CHKOFLOW DS    0H                 check buffer overflow
          LM    R6,R7,PADPARMS     end of buff, pad amt
+*         
          LTR   R7,R7              any padding to check?
          BZR   R14                no, return to caller
+*
          SLR   R9,R9              zero operand-2 len
          ICM   R9,B'1000',PADBYTE get padding character
+*
          CLCL  R6,R8              any buffer overflow?
          BNE   BUFOFLOW           yes, load 0C4 PSW
+*
          BR    R14                no, return to caller
+*
 BUFOFLOW LPSW  OFLOWPSW           o/p buffer overflow!
+         EJECT
+*--------------------------------------------------------------------
+*   Pad output buffer with pad char to catch buffer overflows
+*--------------------------------------------------------------------
+         SPACE
+PADOFLOW DS    0H                 catch cmp cbn errors
+         LR    R9,R0              R9 = cmpsc parameters
+         N     R9,GR0EXBIT        is this expansion?
+         BO    PADOFLW2           yes then forget it
+*
+**    Set unused bits in partial-byte to catch CBN errors
+*
+         LR    R9,R1              R9 = dict addr + cbn
+         N     R9,CBNBITS         just the cbn field please
+         LA    R6,X'FF'           R6 = all bits of byte set on
+         SRL   R6,0(R9)           R6 = unused partial byte bits
+*
+         L     R8,CMPR2           R8 -> output buffer
+         IC    R9,0(,R8)          turn on the partial...
+         OR    R9,R6              ... byte's unused bits
+         STC   R9,0(,R8)          catch compress cbn errors
+*
+**    Pad output buffer to catch buffer-overflow errors
+*
+PADOFLW2 DS    0H                 pad the output buffer
+         LM    R6,R7,PADPARMS     end of buff, pad amt
+         LTR   R7,R7              any padding needed?
+         BZR   R14                no, return to caller
+*
+         SLR   R9,R9              zero source length
+         ICM   R9,B'1000',PADBYTE padding character
+         MVCL  R6,R8              pad output buffer
+         BR    R14                return to caller
          EJECT
 *--------------------------------------------------------------------
 *   Working Storage...
