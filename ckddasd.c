@@ -225,7 +225,7 @@ char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
     /* For re-initialisation, close the existing file, if any */
-    if (dev->fd > 0)
+    if (dev->fd >= 0)
         (dev->hnd->close)(dev);
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
