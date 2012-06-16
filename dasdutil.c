@@ -531,6 +531,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Initialize the devblk */
     dev = &cif->devblk;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
+    dev->fd = -1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
     dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
