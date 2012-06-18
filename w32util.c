@@ -429,43 +429,52 @@ static LARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
     return liRetVal;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// (INTERNAL) Nanosecond resolution GTOD (getimeofday)...
 
-static int w32_nanogtod( struct timespec* pTS )
+//////////////////////////////////////////////////////////////////////////////////////////
+// (PUBLIC) Nanosecond resolution TOD clock (clock_gettime)
+
+DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 {
     LARGE_INTEGER           liWork;                   // (high-performance-counter tick count)
+    static LARGE_INTEGER    liHPCTicksPerSecond;      // (high-performance-counter ticks per second)
     static LARGE_INTEGER    liStartingHPCTick;        // (high-performance-counter tick count)
     static LARGE_INTEGER    liStartingNanoTime;       // (time of last resync in nanoseconds)
     static struct timespec  tsPrevSyncVal = {0};      // (time of last resync as timespec)
     static struct timespec  tsPrevRetVal  = {0};      // (previously returned value)
-    static double           dHPCTicksPerNanosecond;   // (just what it says)
     static BOOL             bInSync = FALSE;          // (work flag)
 
     // Validate parameters...
 
-    ASSERT( pTS );
-    if (unlikely( !pTS ))
+    ASSERT( tp );
+    if (unlikely( clk_id > CLOCK_MONOTONIC ||
+                  !tp ))
     {
-        errno = EINVAL;
-        return -1;
+      errno = EINVAL;
+      return -1;
     }
+
+
+    // Query current high-performance counter value...
+
+    VERIFY( QueryPerformanceCounter( &liWork ) );
+
 
     // Perform (re-)initialization...
 
     if (unlikely( !bInSync ))
     {
         FILETIME       ftStartingSystemTime;
-        LARGE_INTEGER  liHPCTicksPerSecond;
 
         // The "GetSystemTimeAsFileTime" function obtains the current system date
         // and time. The information is in Coordinated Universal Time (UTC) format.
 
         GetSystemTimeAsFileTime( &ftStartingSystemTime );
-        VERIFY( QueryPerformanceCounter( &liStartingHPCTick ) );
+        liStartingHPCTick.QuadPart = liWork.QuadPart;
 
+        // FIXME: Performance frequency may change more frequently than once
+        //        every 30 seconds. Possible to receive notification of
+        //        frequency change?
         VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
-        dHPCTicksPerNanosecond = (double) liHPCTicksPerSecond.QuadPart / 1000000000.0;
 
         liStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
 
@@ -475,18 +484,14 @@ static int w32_nanogtod( struct timespec* pTS )
         bInSync = TRUE;
     }
 
-    // Query current high-performance counter value...
-
-    VERIFY( QueryPerformanceCounter( &liWork ) );
-
     // Calculate elapsed HPC ticks...
 
     liWork.QuadPart -= liStartingHPCTick.QuadPart;
 
     // Convert to elapsed nanoseconds...
 
-    liWork.QuadPart = (LONGLONG)
-        ( (double) liWork.QuadPart / dHPCTicksPerNanosecond );
+    liWork.QuadPart *= 1000000000;
+    liWork.QuadPart /= liHPCTicksPerSecond.QuadPart;
 
     // Add starting time to yield current TOD in nanoseconds...
 
@@ -494,8 +499,8 @@ static int w32_nanogtod( struct timespec* pTS )
 
     // Build results...
 
-    pTS->tv_sec   =  (long) (liWork.QuadPart / 1000000000);
-    pTS->tv_nsec  =  (long) (liWork.QuadPart % 1000000000);
+    tp->tv_sec   =  (time_t) (liWork.QuadPart / 1000000000);
+    tp->tv_nsec  =  (long) (liWork.QuadPart % 1000000000);
 
     // Re-sync to system clock every so often to prevent clock drift
     // since high-performance timer updated independently from clock.
@@ -506,54 +511,66 @@ static int w32_nanogtod( struct timespec* pTS )
 
     if (unlikely( !tsPrevSyncVal.tv_sec ))
     {
-        tsPrevSyncVal.tv_sec  = pTS->tv_sec;
-        tsPrevSyncVal.tv_nsec = pTS->tv_nsec;
+        tsPrevSyncVal.tv_sec  = tp->tv_sec;
+        tsPrevSyncVal.tv_nsec = tp->tv_nsec;
     }
 
     // (is is time to resync again?)
 
-    if (unlikely( (pTS->tv_sec - tsPrevSyncVal.tv_sec) > RESYNC_GTOD_EVERY_SECS ))
+    if (unlikely( (tp->tv_sec - tsPrevSyncVal.tv_sec) > RESYNC_GTOD_EVERY_SECS ))
     {
         bInSync = FALSE; // (force resync)
-        return w32_nanogtod( pTS );
+        return (clock_gettime(clk_id, tp));
     }
 
-    // Ensure each call returns a unique, ever-increasing value...
 
-    if (unlikely( !tsPrevRetVal.tv_sec ))
+    // If monotonic request, ensure each call returns a unique, ever-increasing value...
+
+    if (clk_id == CLOCK_MONOTONIC)
     {
-        tsPrevRetVal.tv_sec  = pTS->tv_sec;
-        tsPrevRetVal.tv_nsec = pTS->tv_nsec;
-    }
-
-    if (unlikely
-    (0
-        ||      pTS->tv_sec  <  tsPrevRetVal.tv_sec
-        || (1
-            &&  pTS->tv_sec  == tsPrevRetVal.tv_sec
-            &&  pTS->tv_nsec <= tsPrevRetVal.tv_nsec
-           )
-    ))
-    {
-        pTS->tv_sec  = tsPrevRetVal.tv_sec;
-        pTS->tv_nsec = tsPrevRetVal.tv_nsec + 1;
-
-        if (unlikely(pTS->tv_nsec >= 1000000000))
+        if (unlikely( !tsPrevRetVal.tv_sec ))
         {
-            pTS->tv_sec  += pTS->tv_nsec / 1000000000;
-            pTS->tv_nsec  = pTS->tv_nsec % 1000000000;
+            tsPrevRetVal.tv_sec  = tp->tv_sec;
+            tsPrevRetVal.tv_nsec = tp->tv_nsec;
+        }
+
+        if (unlikely
+        (0
+            ||      tp->tv_sec  <  tsPrevRetVal.tv_sec
+            || (1
+                &&  tp->tv_sec  == tsPrevRetVal.tv_sec
+                &&  tp->tv_nsec <= tsPrevRetVal.tv_nsec
+               )
+        ))
+        {
+            tp->tv_sec  = tsPrevRetVal.tv_sec;
+            tp->tv_nsec = tsPrevRetVal.tv_nsec + 1;
+
+            if (unlikely(tp->tv_nsec >= 1000000000))
+            {
+                tp->tv_sec  += tp->tv_nsec / 1000000000;
+                tp->tv_nsec  = tp->tv_nsec % 1000000000;
+            }
         }
     }
 
-    // Save previously returned value for next time...
 
-    tsPrevRetVal.tv_sec  = pTS->tv_sec;
-    tsPrevRetVal.tv_nsec = pTS->tv_nsec;
+    // Save previously returned high clock value for next MONOTONIC clock time...
+
+    if (tp->tv_sec > tsPrevRetVal.tv_sec ||
+        (tp->tv_sec == tsPrevRetVal.tv_sec &&
+         tp->tv_nsec > tsPrevRetVal.tv_nsec))
+    {
+        tsPrevRetVal.tv_sec  = tp->tv_sec;
+        tsPrevRetVal.tv_nsec = tp->tv_nsec;
+    }
+
 
     // Done!
 
-    return 0;       // (always unless user error)
+    return 0;       // (always, unless user error)
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // (PUBLIC) Microsecond resolution GTOD (getimeofday)...
@@ -576,7 +593,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
     // Get nanosecond resolution TOD...
 
-    VERIFY( w32_nanogtod( &ts ) == 0 );
+    VERIFY( clock_gettime( CLOCK_REALTIME, &ts ) == 0 );
 
     // Convert to microsecond resolution...
 
@@ -591,6 +608,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
     return 0;
 }
+
 
 #endif // !defined( HAVE_GETTIMEOFDAY )
 
@@ -695,7 +713,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
 
         if (unlikely( !tsOurWake.tv_sec ))
         {
-            VERIFY( w32_nanogtod( &tsCurrTime ) == 0);
+            VERIFY( clock_gettime( CLOCK_REALTIME, &tsCurrTime ) == 0);
 
             tsOurWake = tsCurrTime;
             tsOurWake.tv_sec  += rqtp->tv_sec;
@@ -800,7 +818,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
         // Thus obtaining a fresh/current TOD value each time we
         // are awakened yields more precise/desireable behavior.
 
-        VERIFY( w32_nanogtod( &tsCurrTime ) == 0);
+        VERIFY( clock_gettime( CLOCK_REALTIME, &tsCurrTime ) == 0);
     }
     while // (has our wakeup time arrived yet?)
     (0

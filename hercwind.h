@@ -189,4 +189,18 @@ typedef u_int32_t           in_addr_t;
   #define  OPTION_HAO                   // Hercules Automatic Operator
 #endif
 
+// IDs for various POSIX.1b interval timers and system clocks
+
+#define CLOCK_REALTIME                  0
+#define CLOCK_MONOTONIC                 1
+#define CLOCK_PROCESS_CPUTIME_ID        2
+#define CLOCK_THREAD_CPUTIME_ID         3
+#define CLOCK_MONOTONIC_RAW             4
+#define CLOCK_REALTIME_COARSE           5
+#define CLOCK_MONOTONIC_COARSE          6
+#define CLOCK_BOOTTIME                  7
+#define CLOCK_REALTIME_ALARM            8
+#define CLOCK_BOOTTIME_ALARM            9
+
+
 #endif /*!defined(_HERCWIND_H)*/

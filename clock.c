@@ -24,6 +24,48 @@
 
 #include "clock.h"
 
+//----------------------------------------------------------------------
+// host_ETOD - Primary high-resolution clock fetch and conversion
+//----------------------------------------------------------------------
+
+ETOD*
+host_ETOD (ETOD* ETOD)
+{
+  struct timespec time;
+  register U64    high;
+  register U64    low;
+
+  clock_gettime(CLOCK_REALTIME, &time);         // Should use CLOCK_MONOTONIC + adjustment
+  high = time.tv_sec;
+  low  = time.tv_nsec;
+  if ( unlikely (low >= 1000000000UL) )         // Ensure less than one second's worth of nanoseconds
+  {
+    high += low / 1000000000UL;
+    low  %= 1000000000UL;
+  }
+  high *= ETOD_SEC;                             // Convert seconds to usec, adjusted to bit-59; truncate above TOD clock resolution
+  low = (low << 32) / 1000;                     // Convert nanoseconds to usec, adjusted to bit-31
+  high += (low >> 28);                          // Add to result, adjusted to usec bit-59 (shift value 32-4)
+  low <<= 36;                                   // Position remainder
+  high += ETOD_1970;                            // Adjust for clock_gettime host epoch of 1970
+  ETOD->high = high, ETOD->low = low;           // Save result
+  return ETOD;
+}
+
+
+//----------------------------------------------------------------------
+// host_TOD - Primary clock fetch and conversion
+//----------------------------------------------------------------------
+
+TOD
+host_tod(void)
+{
+  ETOD  ETOD;
+  host_ETOD(&ETOD);
+  return ( ETOD.high );
+}
+
+
 // static int clock_state = CC_CLOCK_SET;
 
 static CSR old;
@@ -40,26 +82,17 @@ void csr_reset()
     old = new;
 }
 
-static U64 universal_tod;
-static U64 universal_clock(void) /* really: any clock used as a base */
+static ETOD universal_tod;
+static TOD universal_clock(void) /* really: any clock used as a base */
 {
-    struct timeval tv;
+  host_ETOD(&universal_tod);
+  return (universal_tod.high);
+}
 
-    gettimeofday (&tv, NULL);
-
-    /* Load number of seconds since 00:00:00 01 Jan 1970 */
-    universal_tod = (U64)tv.tv_sec;
-
-    universal_tod += SECONDS_IN_SEVENTY_YEARS;
-
-    /* Convert to microseconds */
-    universal_tod = (universal_tod * 1000000) + tv.tv_usec;
-
-    /* Shift left 4 bits so that bits 0-7=TOD Clock Epoch,
-       bits 8-59=TOD Clock bits 0-51, bits 60-63=zero */
-    universal_tod <<= 4;
-
-    return universal_tod;
+static TOD universal_clock_extended(ETOD* ETOD)
+{
+  host_ETOD(ETOD);
+  return (ETOD->high);
 }
 
 
@@ -69,49 +102,57 @@ static U64 universal_clock(void) /* really: any clock used as a base */
 static double hw_steering = 0.0;  /* Current TOD clock steering rate */
 static U64 hw_episode;           /* TOD of start of steering episode */
 static S64 hw_offset = 0;       /* Current offset between TOD and HW */
-// static U64 hw_tod = 0;             /* Globally defined in clock.h */
+// static ETOD hw_tod = 0;            /* Globally defined in clock.h */
 
 static inline U64 hw_adjust(U64 base_tod)
 {
+  register U64 result;
+
     /* Apply hardware offset, this is the offset achieved by all
        previous steering episodes */
     base_tod += hw_offset;
-    
+
     /* Apply the steering offset from the current steering episode */
     base_tod += (S64)(base_tod - hw_episode) * hw_steering;
 
     /* Ensure that the clock returns a unique value */
-    if(hw_tod < base_tod)
-        return base_tod;
+    if (hw_tod.high < base_tod)
+      result = base_tod;
     else
-    return hw_tod += 0x10;
+    {
+      /* Increment clock by the lowest unique clock tick as used by */
+      /* the clock comparator; clear bits below TOD bit-55 */
+      result = hw_tod.high += 1;
+               hw_tod.low   = 0;
+    }
+
+    return (result);
 }
 
 
-U64 hw_clock(void)
+static TOD hw_clock_l(void)
 {
-U64 temp_tod;
+    /* Get time of day (GMT); adjust speed and ensure uniqueness */
+    hw_tod.high = hw_adjust(universal_clock());
+    hw_tod.low  = universal_tod.low;
+    return (hw_tod.high);
+}
+
+
+TOD hw_clock(void)
+{
+register TOD temp_tod;
 
     obtain_lock(&sysblk.todlock);
 
-    /* Get the time of day (GMT) */
-    temp_tod = universal_clock();
-
-    /* Ajust speed and ensure uniqueness */
-    hw_tod = hw_adjust(temp_tod);
+    /* Get time of day (GMT); adjust speed and ensure uniqueness */
+    temp_tod = hw_clock_l();
 
     release_lock(&sysblk.todlock);
 
-    return hw_tod;
+    return (temp_tod);
 }
 
-
-static U64 hw_clock_l(void)
-{
-    hw_tod = hw_adjust(universal_clock());
-
-    return hw_tod;
-}
 
 
 /* set_tod_steering(double) sets a new steering rate.                */
@@ -120,8 +161,8 @@ static U64 hw_clock_l(void)
 void set_tod_steering(double steering)
 {
     obtain_lock(&sysblk.todlock);
-    hw_offset = hw_clock_l() - universal_tod;
-    hw_episode = hw_tod;
+    hw_offset = hw_clock_l() - universal_tod.high;                      // FIXME: hw_offset always zero; should this be hw_offset = -universal_tod.high; hw_offset += hw_clock_l(); ???
+    hw_episode = hw_tod.high;
     hw_steering = steering;
     release_lock(&sysblk.todlock);
 }
@@ -130,8 +171,8 @@ void set_tod_steering(double steering)
 /* Start a new episode */
 static inline void start_new_episode()
 {
-    hw_offset = hw_tod - universal_tod;
-    hw_episode = hw_tod;
+    hw_offset = hw_tod.high - universal_tod.high;
+    hw_episode = hw_tod.high;
     new.start_time = hw_episode;
     hw_steering = ldexp(2,-44) * (S32)(new.fine_s_rate + new.gross_s_rate);
     current = &new;
@@ -232,7 +273,7 @@ static void set_tod_offset(S64 offset)
     new.base_offset = offset;
     release_lock(&sysblk.todlock);
 }
-    
+
 
 static void adjust_tod_offset(S64 offset)
 {
@@ -260,27 +301,34 @@ S64 timer;
 }
 
 
-U64 tod_clock(REGS *regs)
+TOD etod_clock(REGS *regs, ETOD* ETOD)
 {
-U64 current_tod;
+  obtain_lock(&sysblk.todlock);
 
-    obtain_lock(&sysblk.todlock);
+  ETOD->high = hw_clock_l();
+  ETOD->low  = universal_tod.low;
 
-    current_tod = hw_clock_l();
-    
-    /* If we are in the old episode, and the new episode has arrived
-       then we must take action to start the new episode */
-    if(current == &old)
-        start_new_episode();
+  /* If we are in the old episode, and the new episode has arrived
+     then we must take action to start the new episode */
+  if(current == &old)
+    start_new_episode();
 
-    /* Set the clock to the new updated value with offset applied */
-    current_tod += current->base_offset;
+  /* Set the clock to the new updated value with offset applied */
+  ETOD->high += current->base_offset;
 
-    tod_value = current_tod;
+  tod_value.high = ETOD->high;
+  tod_value.low  = ETOD->low;
+  ETOD->high += regs->tod_epoch;
 
-    release_lock(&sysblk.todlock);
+  release_lock(&sysblk.todlock);
+  return (ETOD->high);
+}
 
-    return current_tod + regs->tod_epoch;
+
+TOD tod_clock(REGS *regs)
+{
+  ETOD ETOD;
+  return (etod_clock(regs, &ETOD));
 }
 
 
@@ -344,10 +392,74 @@ int pending = 0;
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 
 
+/*
+ *  is_leapyear ( year )
+ *
+ *  Returns:
+ *
+ *  0 - Specified year is NOT a leap year
+ *  1 - Specified year is a leap year
+ *
+ *
+ *  Algorithm:
+ *
+ *  if ((Year % 4) == 0)        LeapYear = 0
+ *  else if ((Year % 400) == 0) LeapYear = 1
+ *  else if ((Year % 100) == 0) LeapYear = 0
+ *  else                        LeapYear = 1
+ *
+ *
+ *  Notes and Restrictions:
+ *
+ *  1) In reality, only valid for years 1582 and later. 1582 was the
+ *     first year of Gregorian calendar; actual years are dependent upon
+ *     year of acceptance by any given government and/or agency. For
+ *     example, Britain and the British empire did not adopt the
+ *     calendar until 1752; Alaska did not adopt the calendar until
+ *     1867.
+ *
+ *  2) Minimum validity period for algorithm is 3,300 years after 1582
+ *     (4882), at which point the calendar may be off by one full day.
+ *
+ *  3) Most likely invalid for years after 8000 due to unpredictability
+ *     in the earth's long-time rotational changes.
+ *
+ *
+ *  References:
+ *
+ *  http://scienceworld.wolfram.com/astronomy/LeapYear.html
+ *  http://www.timeanddate.com/date/leapyear.html
+ *  http://www.usno.navy.mil/USNO/astronomical-applications/
+ *         astronomical-information-center/leap-years
+ *  http://en.wikipedia.org/wiki/Leap_year
+ *
+ */
+
+INLINE unsigned int
+is_leapyear ( const unsigned int year )
+{
+  register int result;
+
+  if (unlikely (year < 4) )             // Invalid years and years prior
+    result = 0;                         // to Year 4 are defined not to
+                                        // be leap years...
+
+  else if ( likely (year & 0x03) )      // (year %   4) != 0
+    result = 0;
+  else if ( unlikely (!(year % 400)) )  // (year % 400) == 0
+    result = 1;
+  else if ( likely (year % 100) )       // (year % 100) != 0
+    result = 1;
+  else
+    result = 0;
+
+  return (result);
+}
+
 static inline S64 lyear_adjust(int epoch)
 {
 int year, leapyear;
-U64 tod = hw_clock();
+TOD tod = hw_clock();
 
     if(tod >= TOD_YEAR)
     {
@@ -362,9 +474,9 @@ U64 tod = hw_clock();
        year = 0;
 
     if(epoch > 0)
-        return (((year % 4) != 0) && (((year % 4) - (epoch % 4)) <= 0)) ? -TOD_DAY : 0;
+        return ( ((!is_leapyear(year)) && (((year % 4) - (epoch % 4)) <= 0)) ? -TOD_DAY : 0 );
     else
-        return (((year % 4) == 0 && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0;
+        return ( ((is_leapyear(year) && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0 );
 }
 
 
@@ -380,18 +492,20 @@ S64 ly1960;
 
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
- 
+
     if( (epoch = default_epoch) == 1960 )
-        ly1960 = TOD_DAY;
+        ly1960 = ETOD_DAY;
     else
         ly1960 = 0;
 
     epoch -= 1900 + default_yroffset;
 
-    set_tod_epoch(((epoch*365+(epoch/4))*-TOD_DAY)+lyear_adjust(epoch)+ly1960);
+    set_tod_epoch(((epoch*365+(epoch/4))*-ETOD_DAY)+lyear_adjust(epoch)+ly1960);
 
     /* Set the timezone offset */
-    adjust_tod_epoch((default_tzoffset/100*3600+(default_tzoffset%100)*60)*16000000LL);
+    adjust_tod_epoch((((default_tzoffset / 100) * 60) + // Hours -> Minutes
+                      (default_tzoffset % 100)) *       // Minutes
+                     ETOD_MIN);                         // Convert to ETOD format
 }
 
 
@@ -470,15 +584,15 @@ int query_tzoffset(void)
 /* has been adjusted.                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// static U64 tod_value;
-U64 update_tod_clock(void)
+// static ETOD tod_value;
+TOD update_tod_clock(void)
 {
-U64 new_clock;
+TOD new_clock;
 
     obtain_lock(&sysblk.todlock);
 
     new_clock = hw_clock_l();
-    
+
     /* If we are in the old episode, and the new episode has arrived
        then we must take action to start the new episode */
     if(current == &old)
@@ -486,7 +600,8 @@ U64 new_clock;
 
     /* Set the clock to the new updated value with offset applied */
     new_clock += current->base_offset;
-    tod_value = new_clock;
+    tod_value.high = new_clock;
+    tod_value.low  = universal_tod.low;
 
     release_lock(&sysblk.todlock);
 
@@ -522,7 +637,7 @@ int clock_hsuspend(void *file)
 
     i = (current == &new);
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_CURRENT_CSR, i, sizeof(i));
-    SR_WRITE_VALUE(file, SR_SYS_CLOCK_UNIVERSAL_TOD, universal_tod, sizeof(universal_tod));
+    SR_WRITE_VALUE(file, SR_SYS_CLOCK_UNIVERSAL_TOD, universal_tod.high, sizeof(universal_tod.high));
     MSGBUF(buf, "%f", hw_steering);
     SR_WRITE_STRING(file, SR_SYS_CLOCK_HW_STEERING, buf);
     SR_WRITE_VALUE(file, SR_SYS_CLOCK_HW_EPISODE, hw_episode, sizeof(hw_episode));
@@ -551,7 +666,7 @@ int clock_hresume(void *file)
     memset(&old, 0, sizeof(CSR));
     memset(&new, 0, sizeof(CSR));
     current = &new;
-    universal_tod = 0;
+    universal_tod.high = universal_tod.low = 0;
     hw_steering = 0.0;
     hw_episode = 0;
     hw_offset = 0;
@@ -564,7 +679,7 @@ int clock_hresume(void *file)
             current = i ? &new : &old;
             break;
         case SR_SYS_CLOCK_UNIVERSAL_TOD:
-            SR_READ_VALUE(file, len, &universal_tod, sizeof(universal_tod));
+            SR_READ_VALUE(file, len, &universal_tod.high, sizeof(universal_tod.high));
             break;
         case SR_SYS_CLOCK_HW_STEERING:
             SR_READ_STRING(file, buf, len);
@@ -763,8 +878,8 @@ void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
     obtain_lock(&sysblk.todlock);
-    STORE_DW(qto.todoff, (hw_clock_l() - universal_tod) << 8);
-    STORE_DW(qto.physclk, universal_tod << 8);
+    STORE_DW(qto.todoff, (hw_clock_l() - universal_tod.high) << 8);
+    STORE_DW(qto.physclk, (universal_tod.high << 8) | (universal_tod.low >> 56));
     STORE_DW(qto.ltodoff, current->base_offset << 8);
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);
     release_lock(&sysblk.todlock);

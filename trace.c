@@ -304,7 +304,7 @@ typedef struct _TRACE_F5_PC {
 BYTE    format;
 #define TRACE_F5_PC_FMT 0x22
 BYTE    pswkey;
-#define TRACE_F5_PC_FM2 0x08 
+#define TRACE_F5_PC_FM2 0x08
 HWORD   resv;
 FWORD   retna;
 FWORD   pcnum;
@@ -314,7 +314,7 @@ typedef struct _TRACE_F6_PC {
 BYTE    format;
 #define TRACE_F6_PC_FMT 0x22
 BYTE    pswkey;
-#define TRACE_F6_PC_FM2 0x0A 
+#define TRACE_F6_PC_FM2 0x0A
 HWORD   resv;
 FWORD   retna;
 FWORD   pcnum;
@@ -324,7 +324,7 @@ typedef struct _TRACE_F7_PC {
 BYTE    format;
 #define TRACE_F7_PC_FMT 0x23
 BYTE    pswkey;
-#define TRACE_F7_PC_FM2 0x0E 
+#define TRACE_F7_PC_FM2 0x0E
 HWORD   resv;
 DBLWRD  retna;
 FWORD   pcnum;
@@ -493,9 +493,9 @@ int  size;
         tte = (void*)(regs->mainstor + raddr);
         STORE_FW(tte->newia24,ia & 0x00FFFFFF);
     }
-    
+
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_br) */
 
 
@@ -526,9 +526,9 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F2_BSG_FMT;
-        tte->alet[0] = (alet >> 16) & 0xFF; 
-        tte->alet[1] = (alet >> 8) & 0xFF; 
-        tte->alet[2] = alet & 0xFF; 
+        tte->alet[0] = (alet >> 16) & 0xFF;
+        tte->alet[1] = (alet >> 8) & 0xFF;
+        tte->alet[2] = alet & 0xFF;
         STORE_DW(tte->newia,ia);
     }
     else
@@ -539,16 +539,16 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_BSG_FMT;
-        tte->alet[0] = ((alet >> 17) & 0x80) | ((alet >> 16) & 0x7F); 
-        tte->alet[1] = (alet >> 8) & 0xFF; 
+        tte->alet[0] = ((alet >> 17) & 0x80) | ((alet >> 16) & 0x7F);
+        tte->alet[1] = (alet >> 8) & 0xFF;
         tte->alet[2] = alet & 0xFF;
         if ((ia & 0x80000000) == 0)
-            ia &=0x00FFFFFF;  
+            ia &=0x00FFFFFF;
         STORE_FW(tte->newia,ia);
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_bsg) */
 #endif /*defined(FEATURE_SUBSPACE_GROUP)*/
 
@@ -583,7 +583,7 @@ BYTE nbit = (ssair ? 1 : 0);
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_ssar) */
 
 
@@ -697,7 +697,7 @@ int  eamode;
         tte->format = TRACE_F2_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
-        STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw)); 
+        STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
     }
     else
 #endif /*defined(FEATURE_ESAME)*/
@@ -711,7 +711,7 @@ int  eamode;
         tte->format = TRACE_F1_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
-        STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw)); 
+        STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw));
     }
 
 #if defined(FEATURE_ESAME)
@@ -719,7 +719,7 @@ int  eamode;
 #endif
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_pc) */
 
 #if defined(_MSVC_)
@@ -943,7 +943,7 @@ BYTE nbit = (pti ? 1 : 0);
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_pt) */
 
 
@@ -1045,7 +1045,7 @@ int  size;
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
-    
+
 } /* end function ARCH_DEP(trace_ms) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -1069,6 +1069,7 @@ RADR ag;
 int  size;
 int  i, j, n;
 U64  dreg;
+ETOD ETOD;
 
     {
         TRACE_F1_TR *tte;
@@ -1080,7 +1081,8 @@ U64  dreg;
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        dreg = (tod_clock(regs) << 8) | regs->cpuad;
+        etod_clock(regs, &ETOD);
+        dreg = (ETOD2TOD(ETOD) & 0x3F) | regs->cpuad;
 
         tte->format = TRACE_F1_TR_FMT | n;
         tte->fmt2 = TRACE_F1_TR_FM2;
@@ -1103,7 +1105,7 @@ U64  dreg;
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size - (4 * (15 - n)), regs);
-    
+
 } /* end function ARCH_DEP(trace_tr) */
 
 
@@ -1126,7 +1128,7 @@ RADR raddr;
 RADR ag;
 int  size;
 int  i, j, n;
-U64  dreg;
+ETOD ETOD;
 
     {
         TRACE_F2_TR *tte;
@@ -1138,19 +1140,17 @@ U64  dreg;
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
         /* Retrieve the TOD clock value including the epoch */
-        dreg = tod_clock(regs);
+        etod_clock(regs, &ETOD);
 
         tte->format = TRACE_F2_TR_FMT | n;
         tte->fmt2 = TRACE_F2_TR_FM2;
 
-        STORE_HW(tte->clk0, (dreg >> 48) & 0xFFFF);
-        /* shift out the epoch */
-        dreg = (dreg << 8) | regs->cpuad;
-        STORE_FW(tte->clk16, (dreg >> 32) & 0xFFFFFFFF);
-        STORE_FW(tte->clk48, dreg & 0xFFFFFFFF);
+        STORE_HW(tte->clk0,  (ETOD.high >> 40) & 0x0000FFFF);           // TOD Clock bits 0-15
+        STORE_FW(tte->clk16, (ETOD.high << 24) | (ETOD.low >> 40));     // TOD Clock bits 16-47
+        STORE_FW(tte->clk48, (ETOD.low  << 24) | 0x40 | regs->cpuad);          // TOD Clock bits 48-79 with CPU address in last six bits (Hercules)
         STORE_FW(tte->operand, op);
 
-        for(i = r1, j = 0; ; )
+        for (i = r1, j = 0; ; )
         {
             STORE_DW(tte->reg[j++], regs->GR_G(i));
 
@@ -1164,7 +1164,7 @@ U64  dreg;
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size - (8 * (15 - n)), regs);
-    
+
 } /* end function ARCH_DEP(trace_tg) */
 #endif /*defined(FEATURE_ESAME)*/
 

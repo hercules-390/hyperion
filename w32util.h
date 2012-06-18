@@ -68,7 +68,9 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
 #endif
 
 #if !defined( HAVE_GETTIMEOFDAY )
-  W32_DLL_IMPORT int gettimeofday ( struct timeval* pTV, void* pTZ);
+  typedef int   clockid_t;
+  W32_DLL_IMPORT int clock_gettime ( clockid_t clk_id, struct timespec* ts );
+  W32_DLL_IMPORT int gettimeofday ( struct timeval* pTV, void* pTZ );
 #endif
 
 #if !defined( HAVE_NANOSLEEP )
