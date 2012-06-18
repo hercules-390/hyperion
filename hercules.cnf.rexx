@@ -69,8 +69,8 @@ NOECHO"msglevel"     "VERBOSE"
 NOECHO"attach" "0009" "3215-C"  "/ noprompt"
 
 -- readers
-rdrfile = _PWD"util/zzsacard.bin"
-if  \exists(rdrf ile) then ,
+rdrfile = _PWD"/util/zzsacard.bin"
+if  \exists(rdrfile) then ,
     rdrfile = "*"
 
 rdrtabl = "000C 001C"
