@@ -450,62 +450,6 @@ DLL_EXPORT const char *get_symbol(const char *sym)
     return(tok->val);
 }
 
-#if 0
-static void buffer_addchar_and_alloc(char **bfr,char c,int *ix_p,int *max_p)
-{
-    char *buf;
-    int ix;
-    int mx;
-    buf=*bfr;
-    ix=*ix_p;
-    mx=*max_p;
-    if((ix+1)>=mx)
-    {
-        mx+=SYMBOL_BUFFER_GROWTH;
-        if(buf==NULL)
-        {
-            buf=malloc(mx);
-        }
-        else
-        {
-            buf=realloc(buf,mx);
-        }
-        *bfr=buf;
-        *max_p=mx;
-    }
-    buf[ix++]=c;
-    buf[ix]=0;
-    *ix_p=ix;
-    return;
-}
-#endif
-
-#if 0
-static void append_string(char **bfr,char *text,int *ix_p,int *max_p)
-{
-    int i;
-    for(i=0;text[i]!=0;i++)
-    {
-        buffer_addchar_and_alloc(bfr,text[i],ix_p,max_p);
-    }
-    return;
-}
-#endif
-
-#if 0
-static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
-{
-    char *txt;
-    txt=(char *)get_symbol(sym);
-    if(txt==NULL)
-    {
-        txt="";
-    }
-    append_string(bfr,txt,ix_p,max_p);
-    return;
-}
-#endif
-
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
     char    buf[MAX_PATH*4];                /* Statement buffer          */
