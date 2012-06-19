@@ -3201,10 +3201,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                            message */
                 iobuf[0] = 0x00;                     // Message length
                 iobuf[1] = 0x09;                    // ...
-                iobuf[2] = 0x02;                    // 3990-x/ESS message
-                iobuf[3] = 0x00;                    // Message code
+                iobuf[2] = 0x00;                    // Format: "No message"
+                iobuf[3] = 0x00;                    // Message code: n/a
                 memcpy (iobuf+4, iobuf+8, 4);       // Copy message identifier from bytes 8-11
-                iobuf[9] = 0x00;                    // Flags
+                iobuf[8] = 0x00;                    // Flags
                 dev->ckdssdlen = 9;                 // Indicate length of subsystem data prepared
                 break;
             case 0x0E: /* Unit address configuration */
