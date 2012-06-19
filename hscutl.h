@@ -97,7 +97,6 @@
   HUT_DLL_IMPORT void del_symbol(const char *);
   HUT_DLL_IMPORT const char *get_symbol(const char *);
   HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
-  HUT_DLL_IMPORT void kill_all_symbols(void);
   HUT_DLL_IMPORT void list_all_symbols(void);
 #endif
 

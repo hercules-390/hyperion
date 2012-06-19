@@ -624,31 +624,6 @@ DLL_EXPORT void list_all_symbols(void)
     return;
 }
 
-DLL_EXPORT void kill_all_symbols(void)
-{
-    SYMBOL_TOKEN        *tok;
-    int i;
-    for(i=0;i<symbol_count;i++)
-    {
-        tok=symbols[i];
-        if(tok==NULL)
-        {
-            continue;
-        }
-        free(tok->val);
-        if(tok->var!=NULL)
-        {
-            free(tok->var);
-        }
-        free(tok);
-        symbols[i]=NULL;
-    }
-    free(symbols);
-    symbol_count=0;
-    symbol_max=0;
-    return;
-}
-
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
