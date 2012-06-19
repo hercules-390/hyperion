@@ -956,6 +956,7 @@ DEF_INST(store_clock)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word work area     */
+ETOD    ETOD;                           /* Extended TOD clock        */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -971,13 +972,14 @@ U64     dreg;                           /* Double word work area     */
         PERFORM_SERIALIZATION (regs);
 
     /* Retrieve the TOD clock value and shift out the epoch */
-    dreg = tod_clock(regs) << 8;
+    etod_clock(regs, &ETOD);
+    dreg = ETOD2TOD(ETOD);
 
 #if defined(FEATURE_STORE_CLOCK_FAST)
     if(inst[1] == 0x05) // STCK only
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
         /* Insert the cpu address to ensure a unique value */
-        dreg |= regs->cpuad;
+        dreg = (dreg & ~0x3F) | (regs->cpuad & 0x3F);
 
 // /*debug*/logmsg("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
 
@@ -1004,7 +1006,7 @@ DEF_INST(store_clock_extended)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* Double word work area     */
+ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -1016,18 +1018,22 @@ U64     dreg;                           /* Double word work area     */
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
 
-    /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
-    dreg = 0x00ffffffffffffffULL & tod_clock(regs);
-
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);
+
+    /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
+    etod_clock(regs, &ETOD);
+
+    /* Nonzero value in pos 72 to 111; set bit 105 to one and copy    */
+    /* CPU address to bits 106 to 111.                                */
+    ETOD.low |= 0x0000000000400000ULL | (regs->cpuad << 16) | regs->todpr;
 
 //  /*debug*/logmsg("Store TOD clock extended: +0=%16.16" I64_FMT "X\n",
 //  /*debug*/       dreg);
 
     /* Store the 8 bit TOD epoch, clock bits 0-51, and bits
        20-23 of the TOD uniqueness value at operand address */
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    ARCH_DEP(vstore8) ( ETOD.high, effective_addr2, b2, regs );
 
 //  /*debug*/logmsg("Store TOD clock extended: +8=%16.16" I64_FMT "X\n",
 //  /*debug*/       dreg);
@@ -1037,9 +1043,7 @@ U64     dreg;                           /* Double word work area     */
     effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
     /* Store nonzero value in pos 72 to 111 */
-    dreg = 0x0000000001000000ULL | (regs->cpuad << 16) | regs->todpr;
-
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    ARCH_DEP(vstore8) ( ETOD.low, effective_addr2, b2, regs );
 
     /* Perform serialization after storing clock */
     PERFORM_SERIALIZATION (regs);

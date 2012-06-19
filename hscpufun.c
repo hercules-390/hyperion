@@ -246,7 +246,7 @@ int on = -1;
 
 #else
 int cf_cmd(int argc, char *argv[], char *cmdline)
-{    
+{
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
@@ -330,7 +330,7 @@ int sysclear_cmd(int ac,char *av[],char *cmdline)
 
 /*-------------------------------------------------------------------*/
 /* ipl function                                                      */
-/* Format: 
+/* Format:
  *      ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxx ] [clear]
 */
 /*-------------------------------------------------------------------*/
@@ -685,33 +685,33 @@ char * format_tod(char *buf, U64 tod, int flagdate)
 {
     int leapyear, years, days, hours, minutes, seconds, microseconds;
 
-    if ( tod >= TOD_YEAR )
+    if ( tod >= ETOD_YEAR )
     {
-        tod -= TOD_YEAR;
-        years = (tod / TOD_4YEARS * 4) + 1;
-        tod %= TOD_4YEARS;
-        if ( ( leapyear = tod / TOD_YEAR ) == 4 )
+        tod -= ETOD_YEAR;
+        years = (tod / ETOD_4YEARS * 4) + 1;
+        tod %= ETOD_4YEARS;
+        if ( ( leapyear = tod / ETOD_YEAR ) == 4 )
         {
-            tod %= TOD_YEAR;
+            tod %= ETOD_YEAR;
             years--;
-            tod += TOD_YEAR;
+            tod += ETOD_YEAR;
         }
         else
-            tod %= TOD_YEAR;
+            tod %= ETOD_YEAR;
 
         years += leapyear;
     }
     else
         years = 0;
 
-    days = tod / TOD_DAY;
-    tod %= TOD_DAY;
-    hours = tod / TOD_HOUR;
-    tod %= TOD_HOUR;
-    minutes = tod / TOD_MIN;
-    tod %= TOD_MIN;
-    seconds = tod / TOD_SEC;
-    microseconds = (tod % TOD_SEC) / TOD_USEC;
+    days = tod / ETOD_DAY;
+    tod %= ETOD_DAY;
+    hours = tod / ETOD_HOUR;
+    tod %= ETOD_HOUR;
+    minutes = tod / ETOD_MIN;
+    tod %= ETOD_MIN;
+    seconds = tod / ETOD_SEC;
+    microseconds = (tod % ETOD_SEC) / ETOD_USEC;
 
     if (flagdate)
     {
@@ -733,8 +733,8 @@ int clocks_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 char clock_buf[30];
-U64 tod_now;
-U64 hw_now;
+ETOD tod_now;
+ETOD hw_now;
 S64 epoch_now;
 U64 epoch_now_abs;
 char epoch_sign;
@@ -757,7 +757,7 @@ int rc = 0;
 
     UNREFERENCED(cmdline);
 
-    if ( argc == 1 ) for (;;)        
+    if ( argc == 1 ) for (;;)
     {
         obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -771,15 +771,16 @@ int rc = 0;
 
     /* Get the clock values all at once for consistency and so we can
         release the CPU lock more quickly. */
-        tod_now = (tod_clock(regs) << 8) >> 8;
-        hw_now = hw_tod;
+        etod_clock(regs, &tod_now);
+        hw_now.high = hw_tod.high;
+        hw_now.low  = hw_tod.low;
         epoch_now = regs->tod_epoch;
         clkc_now = regs->clkc;
         cpt_now = CPU_TIMER(regs);
 #if defined(_FEATURE_SIE)
         if ( regs->sie_active )
         {
-            vtod_now = (TOD_CLOCK(regs->guestregs) << 8) >> 8;
+            vtod_now = TOD_CLOCK(regs->guestregs);
             vepoch_now = regs->guestregs->tod_epoch;
             vclkc_now = regs->guestregs->clkc;
             vcpt_now = CPU_TIMER(regs->guestregs);
@@ -800,14 +801,14 @@ int rc = 0;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
         MSGBUF( buf, "tod = %16.16" I64_FMT "X    %s",
-               (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
+                ETOD2TOD(tod_now), format_tod(clock_buf,tod_now.high,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         MSGBUF( buf, "h/w = %16.16" I64_FMT "X    %s",
-               (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
+                ETOD2TOD(hw_now), format_tod(clock_buf,hw_now.high,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
-        if (epoch_now < 0) 
+        if (epoch_now < 0)
         {
             epoch_now_abs = -(epoch_now);
             epoch_sign = '-';
@@ -818,18 +819,18 @@ int rc = 0;
             epoch_sign = ' ';
         }
         MSGBUF( buf, "off = %16.16" I64_FMT "X   %c%s",
-               (epoch_now << 8),epoch_sign,
-               format_tod(clock_buf,epoch_now_abs,FALSE));
+                (epoch_now << 8), epoch_sign,
+                format_tod(clock_buf,epoch_now_abs,FALSE) );
         WRMSG(HHC02274, "I", buf);
 
         MSGBUF( buf, "ckc = %16.16" I64_FMT "X    %s",
-               (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
+                (clkc_now << 8), format_tod(clock_buf,clkc_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
-            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now << 8);
+            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", (cpt_now << 8) );
         else
-            MSGBUF( buf, "cpt = not decrementing");
+            MSGBUF( buf, "cpt = not decrementing" );
         WRMSG(HHC02274, "I", buf);
 
 #if defined(_FEATURE_SIE)
@@ -837,10 +838,10 @@ int rc = 0;
         {
 
             MSGBUF( buf, "vtod = %16.16" I64_FMT "X    %s",
-                   (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
+                    (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            if (vepoch_now < 0) 
+            if (vepoch_now < 0)
             {
                 vepoch_now_abs = -(vepoch_now);
                 vepoch_sign = '-';
@@ -851,15 +852,15 @@ int rc = 0;
                 vepoch_sign = ' ';
             }
             MSGBUF( buf, "voff = %16.16" I64_FMT "X   %c%s",
-                   (vepoch_now << 8),vepoch_sign,
-                   format_tod(clock_buf,vepoch_now_abs,FALSE));
+                    (vepoch_now << 8), vepoch_sign,
+                    format_tod(clock_buf,vepoch_now_abs,FALSE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vckc = %16.16" I64_FMT "X    %s",
-                   (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
+                    (vclkc_now << 8), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X",vcpt_now << 8);
+            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", (vcpt_now << 8) );
             WRMSG(HHC02274, "I", buf);
         }
 #endif
@@ -936,7 +937,7 @@ int start_cmd_cpu(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     OBTAIN_INTLOCK(NULL);
-    
+
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
         REGS *regs = sysblk.regs[sysblk.pcpu];
@@ -1000,7 +1001,7 @@ int stop_cmd_cpu(int argc, char *argv[], char *cmdline)
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         rc = 1;
     }
-            
+
     RELEASE_INTLOCK(NULL);
 
     return rc;

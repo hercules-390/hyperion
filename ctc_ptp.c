@@ -3440,11 +3440,13 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 void     get_tod_clock( BYTE* TodClock )
 {
     REGS    *regs;
-    U64     tod;
+    ETOD    ETOD;
+    TOD     tod;
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
     regs = sysblk.regs[sysblk.pcpu];
-    tod = tod_clock(regs) << 8;
+    etod_clock(regs, &ETOD);
+    tod = ETOD2TOD(ETOD);
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     STORE_DW( TodClock, tod );
@@ -3469,14 +3471,16 @@ void     get_tod_clock( BYTE* TodClock )
 void     get_subarea_address( BYTE* SAaddress )
 {
     REGS    *regs;
-    U64     tod;
+    ETOD    ETOD;
+    TOD     tod;
     U64     dreg;                       /* Double word workarea       */
     U16     hreg;                       /* Half word workarea         */
 
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
     regs = sysblk.regs[sysblk.pcpu];
-    tod = tod_clock(regs) << 8;
+    etod_clock(regs, &ETOD);
+    tod = ETOD2TOD(ETOD);
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     dreg = sysblk.cpuid;
@@ -8973,6 +8977,7 @@ HDL_RESOLVER_SECTION;
      #undef sysblk
      HDL_RESOLVE_PTRVAR( psysblk, sysblk );
      HDL_RESOLVE( tod_clock );
+     HDL_RESOLVE( etod_clock );
      HDL_RESOLVE( device_attention );
    #endif /* defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL) */
 }

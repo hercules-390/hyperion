@@ -1,6 +1,7 @@
                             Hercules REXX support
 
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+NOTE fixed a typo for the error handler variable name
 NOTE the changes in the Address HERCULES invocation
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -57,7 +58,7 @@ all the <local> option are defined/passed thru predefined and reserved rexx vari
 
 and here they are
 
-HREXX.ERRORHANDLING "RETCODE"/"SYSTEM"
+HREXX.ERRORHANDER "RETCODE"/"SYSTEM"
 to determine how error situations must be handled
 ( usually a non 0 return code from the command )
 

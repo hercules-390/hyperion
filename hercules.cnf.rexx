@@ -1,8 +1,20 @@
-/* Rexx Sample configuration file for Hercules ESA/390 emulator              */
-/* tested and working with ooRexx AND Regina                                 */
+/* Rexx Sample configuration file for Hercules ESA/390 emulator               */
+/* tested and working with ooRexx AND Regina                                  */
 
-parse version _RXv
-parse var _RXv _RXv "_" .
+/* fixed to use <auxiliary> variables                                         */
+/* use the NOECHO variable  to customize ECHO/NOECHO                          */
+
+/* used the <signal> clause for errors                                        */
+
+parse version _RXV
+parse var _RXV _RXV "_" .
+
+parse source . . _CNF
+_CNF = filespec("n",_CNF)
+parse var _CNF _CNF "." .
+
+signal on failure name hfailure
+signal on error   name herror
 
 _PWD = directory()
 
@@ -11,8 +23,13 @@ cnslport    =   3279
 
 Address HERCULES
 
+HREXX.ERRORHANDLER = "system"
+HREXX.PERSISTENTRESPSTEMNAME = "resp"
+NOECHO = "-"
+
 -- find the number of cpus
-"maxcpu (stem retd."
+HREXX.RESPSTEMNAME = "retd"
+NOECHO"maxcpu"
 do  i = 1 to retd.0
     if  pos("HHC02203",retd.i) > 0 then do
         parse var retd.i . ":" maxcpu
@@ -22,59 +39,51 @@ do  i = 1 to retd.0
 end
 
 --  CPU section
-"cpuserial"     "002623"
-"cpumodel"      "3090"
-"model"         "EMULATOR"
-"plant"         "ZZ"
-"manufacturer"  "HRC"
-"lparname"      "HERCULES"
-"cpuverid"      "FD"
-"mainsize"      64
-"xpndsize"      0
-"maxcpu"        maxcpu
-"numcpu"        maxcpu
-"numvec"        0
-"capping"       0
-"archlvl"       "z/Arch"
-"archlvl"       "DISABLE ASN_LX_REUSE"
+NOECHO"cpuserial"    "002623"
+NOECHO"cpumodel"     "3090"
+NOECHO"model"        "EMULATOR"
+NOECHO"plant"        "ZZ"
+NOECHO"manufacturer" "HRC"
+NOECHO"lparname"     "HERCULES"
+NOECHO"cpuverid"     "FD"
+NOECHO"mainsize"     64
+NOECHO"xpndsize"     0
+NOECHO"maxcpu"       maxcpu
+NOECHO"numcpu"       maxcpu
+NOECHO"numvec"       0
+NOECHO"capping"      0
+NOECHO"archlvl"      "z/Arch"
+NOECHO"archlvl"      "DISABLE ASN_LX_REUSE"
 
 --  misc
-"panrate"       "SLOW"
-"timerint"      "1000"
+NOECHO"panrate"      "SLOW"
+NOECHO"timerint"     "1000"
 
 --  integrated Hercules I/O Controller
-"cnslport"      cnslport
+NOECHO"cnslport"     cnslport
 
 -- message level
-"msglevel"      "VERBOSE"
-
-
---              .-----------------------Device number
---              |       .-----------------Device type
---              |       |       .---------File name and parameters
---              |       |       |
---              V       V       V
---              ----    ----    --------------------
+NOECHO"msglevel"     "VERBOSE"
 
 --integrated console
-"attach"        "0009" "3215-C"  "/ noprompt"
+NOECHO"attach" "0009" "3215-C"  "/ noprompt"
 
 -- readers
-rdrfile = _PWD"util/zzsacard.bin"
+rdrfile = _PWD"/util/zzsacard.bin"
 if  \exists(rdrfile) then ,
     rdrfile = "*"
 
 rdrtabl = "000C 001C"
 do  i = 1 to words(rdrtabl)
     addr = word(rdrtabl,i)
-    "attach"        addr "3505" rdrfile
+    NOECHO"attach" addr "3505" rdrfile
 end
 
 -- card punches
 pchtabl = "000D 001D"
 do  i = 1 to words(rdrtabl)
     addr = word(pchtabl,i)
-    "attach"        addr "3525" "pch"addr".txt"
+    NOECHO"attach" addr "3525" "pch"addr".txt"
 end
 
 -- printers
@@ -83,31 +92,44 @@ prttype = "3211 3211 1403 1403"
 do  i = 1 to words(prttabl)
     addr = word(prttabl,i)
     type = word(prttype,i)
-    "attach"        addr type "prt"addr".txt"
+    NOECHO"attach" addr type "prt"addr".txt"
 end
 
 -- 3270 devices
-"attach"            "700.8" "3270"
+NOECHO"attach" "700.8" "3270"
 
 -- 3270 devices ( to show how to loop thru hex addresses )
-do  addr = x2d(708) to x2d(70f)
-    "attach"        d2x(addr) "3270"
+do  addr = x2d(900) to x2d(907)
+    NOECHO"attach" d2x(addr) "3270"
 end
 
+-- attach a duplicate device to show the error handling
+NOECHO"attach" "900" "3270"
 
 exit
 
+-- on error/failure handlers
+
+herror:
+    say "*********" _CNF "signal on error trapped at " sigl
+    say "*********" _CNF "Ended"
+    exit
+
+hfailure:
+    say "*********" _CNF "signal on failure trapped at " sigl
+    say "*********" _CNF "Ended"
+    exit
 
 -- ooRexx/Regina compatibility functions
 
 exists:
-	if _RXv = "REXX-ooRexx" then do
+	if _RXV = "REXX-ooRexx" then do
 		if SysIsFile(arg(1)) then return 1
 		if SysIsFileDirectory(arg(1)) then return 1
 		return 0
 	end
 
-	if _RXv = "REXX-Regina" then do
+	if _RXV = "REXX-Regina" then do
 		if stream(arg(1), "c", "query exists") \= "" then return 1
 		return 0
 	end
@@ -115,12 +137,12 @@ exists:
 	return 0
 
 isFile:
-	if _RXv = "REXX-ooRexx" then do
+	if _RXV = "REXX-ooRexx" then do
 		if SysIsFile(arg(1)) then return 1
 		return 0
 	end
 
-	if _RXv = "REXX-Regina" then do
+	if _RXV = "REXX-Regina" then do
 		_?fstat = stream(arg(1), "c", "fstat")
 		if wordpos("RegularFile",_?fstat) > 0 then return 1
 		return 0
@@ -129,12 +151,12 @@ isFile:
 	return 0
 
 isPath:
-	if _RXv = "REXX-ooRexx" then do
+	if _RXV = "REXX-ooRexx" then do
 		if SysIsFileDirectory(arg(1)) then return 1
 		return 0
 	end
 
-	if _RXv = "REXX-Regina" then do
+	if _RXV = "REXX-Regina" then do
 		_?fstat = stream(arg(1), "c", "fstat")
 		if wordpos("Directory",_?fstat) > 0 then return 1
 		return 0

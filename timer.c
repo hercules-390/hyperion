@@ -163,14 +163,22 @@ void *timer_update_thread (void *argp)
 #ifdef OPTION_MIPS_COUNTING
 int     i;                              /* Loop index                */
 REGS   *regs;                           /* -> REGS                   */
-U64     now;                            /* Current time of day (us)  */
-U64     then;                           /* Previous time of day (us) */
-U64     diff;                           /* Interval (us)             */
 U64     mipsrate;                       /* Calculated MIPS rate      */
 U64     siosrate;                       /* Calculated SIO rate       */
 U64     cpupct;                         /* Calculated cpu percentage */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
+
+/* Clock times use the top 64-bits of the ETOD clock                 */
+U64     now;                            /* Current time of day       */
+U64     then;                           /* Previous time of day      */
+U64     diff;                           /* Interval                  */
+U64     halfdiff;                       /* One-half interval         */
+const U64   period = ETOD_SEC;          /* MIPS calculation period   */
+
+#define diffrate(_x,_y) \
+        ((((_x) * (_y)) + halfdiff) / diff)
+
 #endif /*OPTION_MIPS_COUNTING*/
 
     UNREFERENCED(argp);
@@ -198,18 +206,16 @@ U64     total_sios;                     /* Total SIO rate            */
 
     while (sysblk.cpus)
     {
-        /* Update TOD clock */
-        update_tod_clock();
 
-// This MIPS counting needs to move to something like panel too 
-// - there is no need to recalculate statistics every timer pop 
-// - this makes the timer too heavvy for no reason
 #ifdef OPTION_MIPS_COUNTING
-        now = host_tod();
+        /* Update TOD clock and save TOD clock value */
+        now = update_tod_clock();
+
         diff = now - then;
 
-        if (diff >= 1000000)
+        if (diff >= period)             /* Period expired? */
         {
+            halfdiff = diff / 2;        /* One-half interval for rounding */
             then = now;
             total_mips = total_sios = 0;
     #if defined(OPTION_SHARED_DEVICES)
@@ -241,7 +247,7 @@ U64     total_sios;                     /* Total SIO rate            */
                 mipsrate = regs->instcount;
                 regs->instcount = 0;
                 regs->prevcount += mipsrate;
-                mipsrate = (mipsrate*1000000 + diff/2) / diff;
+                mipsrate = diffrate(mipsrate, period);
                 regs->mipsrate = mipsrate;
                 total_mips += mipsrate;
 
@@ -249,7 +255,7 @@ U64     total_sios;                     /* Total SIO rate            */
                 siosrate = regs->siocount;
                 regs->siocount = 0;
                 regs->siototal += siosrate;
-                siosrate = (siosrate*1000000 + diff/2) / diff;
+                siosrate = diffrate(siosrate, period);
                 regs->siosrate = siosrate;
                 total_sios += siosrate;
 
@@ -261,8 +267,9 @@ U64     total_sios;                     /* Total SIO rate            */
                     cpupct += now - regs->waittod;
                     regs->waittod = now;
                 }
-                cpupct = ((diff - cpupct)*100) / diff;
-                if (cpupct > 100) cpupct = 100;
+                cpupct = diffrate(diff - cpupct, 100);
+                if (cpupct > 100)
+                  cpupct = 100;
                 regs->cpupct = cpupct;
 
                 release_lock(&sysblk.cpulock[i]);
@@ -272,10 +279,15 @@ U64     total_sios;                     /* Total SIO rate            */
             /* Total for ALL CPUs together */
             sysblk.mipsrate = total_mips;
             sysblk.siosrate = total_sios;
-            
+
             update_maxrates_hwm(); // (update high-water-mark values)
-        
-        } /* end if(diff >= 1000000) */
+
+        } /* end if(diff >= period) */
+
+#else /* ! OPTION_MIPS_COUNTING */
+
+        /* Update TOD clock */
+        update_tod_clock();
 
 
 #endif /*OPTION_MIPS_COUNTING*/
@@ -300,7 +312,7 @@ COND capcond;
 static void capping_manager_shutdown(void * unused)
 {
     UNREFERENCED(unused);
-    
+
     if(sysblk.capvalue)
     {
         sysblk.capvalue = 0;
@@ -369,7 +381,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
 
         /* Sleep for 1/100 of a second */
         usleep(10000);
-        
+
         if ( sysblk.capvalue == 0 )
             break;
 
@@ -396,7 +408,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
         {
             if(!IS_CPU_ONLINE(cpu) || sysblk.ptyp[cpu] != SCCB_PTYP_CP || sysblk.regs[cpu]->cpustate != CPUSTATE_STARTED)
                 break;
-           
+
             instcnt[cpu] = sysblk.regs[cpu]->prevcount + sysblk.regs[cpu]->instcount;
 
             /* Check for CP reset */
@@ -423,7 +435,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
                     obtain_lock(&sysblk.caplock[cpu]);
                     sysblk.caplocked[cpu] = 1;
                 }
-            
+
             prevcnt[cpu] = instcnt[cpu];
             then = now;
         }

@@ -201,7 +201,7 @@ typedef struct _DIAG204_X_PART {
         BYTE    virtcpu;                /* Number of virt CP's       */
         BYTE    realcpu;                /* Number of real CP's       */
         BYTE    pflag;
-        FWORD   mlu;      
+        FWORD   mlu;
         BYTE    partname[8];            /* Partition name            */
         BYTE    cpcname[8];             /* CPC name                  */
         BYTE    osname[8];              /* Operating system type     */
@@ -420,7 +420,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     /* Set service signal external interrupt pending */
     sysblk.servparm &= ~SERVSIG_ADDR;
     sysblk.servparm |= spccb_absolute_addr;
-    ON_IC_SERVSIG; 
+    ON_IC_SERVSIG;
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
@@ -443,13 +443,14 @@ DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
 DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
 DIAG204_X_PART     *partxinfo;         /* Partition info             */
 DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
-U64               tdis;       
+U64               tdis;
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
 int               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
-static U64        diag204tod;          /* last diag204 tod           */
+ETOD              ETOD;                /* ETOD clock work area       */
+static TOD        diag204tod;          /* last diag204 tod           */
 #if defined(FEATURE_PHYSICAL_DIAG204)
 static BYTE       physical[8] =
               {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */
@@ -480,7 +481,8 @@ static BYTE       physical[8] =
         dreg = diag204tod;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        diag204tod = tod_clock(regs) << 8;
+        etod_clock(regs, &ETOD);
+        diag204tod = ETOD2TOD(ETOD);
 
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
@@ -586,7 +588,8 @@ static BYTE       physical[8] =
         dreg = diag204tod;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        diag204tod = tod_clock(regs) << 8;
+        etod_clock(regs, &ETOD);
+        diag204tod = ETOD2TOD(ETOD);
 
         memset(hdrxinfo, 0, sizeof(DIAG204_X_HDR));
         hdrxinfo->numpart = 1;
@@ -620,7 +623,7 @@ static BYTE       physical[8] =
               STORE_HW(cpuxinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
-              
+
               tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
               tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
               tdis <<= 12;
@@ -663,7 +666,7 @@ static BYTE       physical[8] =
               STORE_HW(cpuxinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
-              
+
               tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
               tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
               tdis <<= 12;
