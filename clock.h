@@ -15,7 +15,7 @@
 
 /* TOD Clock Definitions */
 
-#define TOD_USEC   (4096ULL)
+#define TOD_USEC   (4096LL)
 #define TOD_SEC    (1000000 * TOD_USEC)
 #define TOD_MIN    (60 * TOD_SEC)
 #define TOD_HOUR   (60 * TOD_MIN)
@@ -30,7 +30,7 @@ typedef U64     TOD;                            // one microsecond = Bit 51
 
 /* Extended TOD Clock Definitions */
 
-#define ETOD_USEC   16ULL
+#define ETOD_USEC   16LL
 #define ETOD_SEC    (1000000 * ETOD_USEC)
 #define ETOD_MIN    (60 * ETOD_SEC)
 #define ETOD_HOUR   (60 * ETOD_MIN)
