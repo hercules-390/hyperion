@@ -10,7 +10,7 @@
 
 
 #if !defined(_CLOCK_H)
-#define _CLOCK_H_
+#define _CLOCK_H
 
 
 /* TOD Clock Definitions */
