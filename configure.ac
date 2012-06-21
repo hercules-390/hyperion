@@ -89,6 +89,14 @@ case "$target_os" in
         ;;
 esac
 
+
+#----------------------------------------------------------------------#
+#  Determine GCC level                                                 #
+#----------------------------------------------------------------------#
+
+hc_gcc_level="`gcc -v 2>&1 | tail -1 | awk '{print $3}'`"
+
+
 #------------------------#
 #  Fix CFLAGS if needed  #
 #------------------------#
@@ -1836,13 +1844,16 @@ AC_CACHE_SAVE()
 
 AC_MSG_CHECKING( [for what optimization flags to use] )
 
+    hc_cv_optimization_flags=""
+
 if test "$hc_cv_opt_debug" = "yes"; then
 
     # Note: the -g option we start with below will be removed if they specified
     # their own optimization flags via "--enable-optimization=(flags)", but will
     # be kept if they specify an optimized build via "--enable-optimization=yes"
 
-    hc_cv_optimization_flags="-g -ggdb"
+    hc_cv_optimization_flags="$hc_cv_optimization_flags -g3"    # Include module/statement_information
+    hc_cv_optimization_flags="$hc_cv_optimization_flags -ggdb3" # Include gdb symbols
 fi
 
 case "$hc_cv_opt_optimization" in
@@ -1861,7 +1872,6 @@ case "$hc_cv_opt_optimization" in
         if test "x$hc_cv_opt_optimization" = "x"; then
 
             if test "$hc_cv_opt_debug" = "yes"; then
-
                 hc_cv_auto_optimize=no
             else
                 hc_cv_auto_optimize=yes
@@ -1881,7 +1891,6 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
 
     if test "$hc_cv_builtin_alloca_broke" != "yes"; then
-
         hc_cv_optimization_flags="$hc_cv_optimization_flags -O3"
     fi
 
@@ -1892,7 +1901,11 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         x86_64-yes)
 
             hc_cv_is_intel_x86_arch=yes
-            hc_cv_intel_cpu_type=k8
+            if test $hc_gcc_level < 4.2.0; then
+               hc_cv_intel_cpu_type=k8
+            else
+               hc_cv_intel_cpu_type=native
+            fi
             ;;
 
         i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
@@ -1900,15 +1913,17 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             hc_cv_is_intel_x86_arch=yes
 
             if test $target_cpu = i786; then
-
                 hc_cv_intel_cpu_type=pentium4
             else
                 if test $target_cpu        = i686   &&
                    test "hc_cv_is_gcc_2_96" = "yes"; then
-
                     hc_cv_intel_cpu_type=i586
                 else
-                    hc_cv_intel_cpu_type=$target_cpu
+                    if $hc_gcc_level < 4.2.0; then
+                        hc_cv_intel_cpu_type=$target_cpu
+                    else
+                        hc_cv_intel_cpu_type=native
+                    fi
                 fi
             fi
             ;;
@@ -1927,10 +1942,21 @@ if test "$hc_cv_auto_optimize" = "yes"; then
     esac
     if test "$hc_cv_is_intel_x86_arch" = "yes"; then
 
+        # Set CPU type
         hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
 
-        if test "$hc_cv_builtin_alloca_broke" != "yes"; then
+        # Align 128-bit values
+        if test $hc_gcc_level > 3.0.0; then
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -m128bit-long-double"
+        fi
 
+        # Dynamically inline small block string operations (subroutine calls still made for large area calls)
+        if test $hc_gcc_level > 4.1.2; then
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"
+        fi
+
+        if test "$hc_cv_builtin_alloca_broke" != "yes" &&
+           test "$hc_cv_opt_debug" != "yes"; then
             hc_cv_optimization_flags="$hc_cv_optimization_flags -fomit-frame-pointer"
         else
             hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-omit-frame-pointer"
