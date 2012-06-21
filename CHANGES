@@ -4,7 +4,7 @@
 19 Jun 2012 Fix dasd PSF PRSD suborder 03 bug (florian.bilek@gmail.com by Fish)
 17 Jun 2012 Improved TOD clock resolution; eliminated floating-point clock
             conversions under Windows; document interval timer conversion
-                        factors; corrected various clock stores - Mark L. Gaubatz
+            factors; corrected various clock stores - Mark L. Gaubatz
 23 May 2012 Fix INTLOCK bug in PTF and STSI instructions causing deadlock
             during SYNCHRONIZE_CPUS leading to eventual Machine Check
             identified by Neale Ferguson [neale@sinenomine.net] -- Fish
