@@ -219,6 +219,7 @@ int             trks;                   /* #of tracks in CKD file    */
 int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
+char           *kw = NULL;              /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            pathname[MAX_PATH];     /* file path in host format  */
 char            filename[FILENAME_MAX]; /* work area for display     */
@@ -346,8 +347,8 @@ char           *strtok_str = NULL;      /* save last position        */
         if (strlen (argv[i]) > 3
          && memcmp("cu=", argv[i], 3) == 0)
         {
-                 strtok_r (argv[i], "=",   &strtok_str );
-            cu = strtok_r (NULL,    " \t", &strtok_str );
+            kw = strtok_r (argv[i], "=", &strtok_str);
+            cu = strtok_r (NULL, " \t", &strtok_str);
             continue;
         }
         if (strcasecmp ("nosyncio", argv[i]) == 0 ||
