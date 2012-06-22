@@ -91,9 +91,9 @@ static void fcb_dump( DEVBLK*, char *, unsigned int );
 /* $test command helper thread */
 static void* test_thread( void* parg)
 {
-    TID tid = thread_id();          /* thread identity */
-    int rc, secs = (int) parg;      /* how long to wait */
-    struct timespec ts;             /* nanosleep argument */
+    TID tid = thread_id();                  /* thread identity */
+    int rc, secs = (int)(uintptr_t)parg;    /* how long to wait */
+    struct timespec ts;                     /* nanosleep argument */
 
     ts.tv_sec  = secs;
     ts.tv_nsec = 0;
@@ -138,7 +138,8 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     for (i=0; i < NUM_THREADS; i++)
     {
         secs = 1 + rand() % MAX_WAIT_SECS;
-        if ((rc = create_thread( &tids[i], JOINABLE, test_thread, (void*)secs, "test_thread" )) != 0)
+        if ((rc = create_thread( &tids[i], JOINABLE, test_thread,
+            (void*)(uintptr_t) secs, "test_thread" )) != 0)
         {
             // "Error in function create_thread(): %s"
             WRMSG( HHC00102, "E", strerror( rc ));
