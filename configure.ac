@@ -95,7 +95,7 @@ esac
 #----------------------------------------------------------------------#
 
 hc_gcc_level="`gcc -v 2>&1 | tail -1 | awk '{print $3}'`"
-
+AC_MSG_NOTICE( [Detected GCC level is: ${hc_gcc_level}] )
 
 #------------------------#
 #  Fix CFLAGS if needed  #
@@ -1901,11 +1901,9 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         x86_64-yes)
 
             hc_cv_is_intel_x86_arch=yes
-            if test $hc_gcc_level < 4.2.0; then
-               hc_cv_intel_cpu_type=k8
-            else
-               hc_cv_intel_cpu_type=native
-            fi
+            AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=k8],
+                                                        [hc_cv_intel_cpu_type=native],
+                                                        [hc_cv_intel_cpu_type=native] )
             ;;
 
         i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
@@ -1919,11 +1917,9 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                    test "hc_cv_is_gcc_2_96" = "yes"; then
                     hc_cv_intel_cpu_type=i586
                 else
-                    if $hc_gcc_level < 4.2.0; then
-                        hc_cv_intel_cpu_type=$target_cpu
-                    else
-                        hc_cv_intel_cpu_type=native
-                    fi
+                    AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=$target_cpu],
+                                                                [hc_cv_intel_cpu_type=native],
+                                                                [hc_cv_intel_cpu_type=native] )
                 fi
             fi
             ;;
@@ -1946,14 +1942,14 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
 
         # Align 128-bit values
-        if test $hc_gcc_level > 3.0.0; then
-            hc_cv_optimization_flags="$hc_cv_optimization_flags -m128bit-long-double"
-        fi
+        AS_VERSION_COMPARE( $hc_gcc_level, "3.0.0", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags -m128bit-long-double"] )
 
         # Dynamically inline small block string operations (subroutine calls still made for large area calls)
-        if test $hc_gcc_level > 4.1.2; then
-            hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"
-        fi
+        AS_VERSION_COMPARE( $hc_gcc_level, "4.1.2", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
 
         if test "$hc_cv_builtin_alloca_broke" != "yes" &&
            test "$hc_cv_opt_debug" != "yes"; then
