@@ -471,9 +471,6 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         GetSystemTimeAsFileTime( &ftStartingSystemTime );
         liStartingHPCTick.QuadPart = liWork.QuadPart;
 
-        // FIXME: Performance frequency may change more frequently than once
-        //        every 30 seconds. Possible to receive notification of
-        //        frequency change?
         VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
 
         liStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
