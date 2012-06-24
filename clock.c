@@ -391,7 +391,6 @@ int pending = 0;
 }
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 
-
 /*
  *  is_leapyear ( year )
  *
@@ -403,10 +402,14 @@ int pending = 0;
  *
  *  Algorithm:
  *
- *  if ((Year % 4) == 0)        LeapYear = 0
- *  else if ((Year % 400) == 0) LeapYear = 1
- *  else if ((Year % 100) == 0) LeapYear = 0
- *  else                        LeapYear = 1
+ *    if year modulo 400 is 0 then 
+ *       is_leap_year
+ *    else if year modulo 100 is 0 then 
+ *       not_leap_year
+ *    else if year modulo 4 is 0 then 
+ *       is_leap_year
+ *    else
+ *       not_leap_year
  *
  *
  *  Notes and Restrictions:
@@ -416,7 +419,7 @@ int pending = 0;
  *     year of acceptance by any given government and/or agency. For
  *     example, Britain and the British empire did not adopt the
  *     calendar until 1752; Alaska did not adopt the calendar until
- *     1867.
+ *     1867. For our purposes however year 0 is treated as a leap year.
  *
  *  2) Minimum validity period for algorithm is 3,300 years after 1582
  *     (4882), at which point the calendar may be off by one full day.
@@ -432,28 +435,20 @@ int pending = 0;
  *  http://www.usno.navy.mil/USNO/astronomical-applications/
  *         astronomical-information-center/leap-years
  *  http://en.wikipedia.org/wiki/Leap_year
+ *  http://en.wikipedia.org/wiki/0_(year)
+ *  http://en.wikipedia.org/wiki/1_BC
+ *  http://en.wikipedia.org/wiki/Proleptic_calendar
+ *  http://en.wikipedia.org/wiki/Proleptic_Julian_calendar
+ *  http://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar
+ *  http://dotat.at/tmp/ISO_8601-2004_E.pdf
+ *  http://tools.ietf.org/html/rfc3339
  *
  */
 
 INLINE unsigned int
 is_leapyear ( const unsigned int year )
 {
-  register int result;
-
-  if (unlikely (year < 4) )             // Invalid years and years prior
-    result = 0;                         // to Year 4 are defined not to
-                                        // be leap years...
-
-  else if ( likely (year & 0x03) )      // (year %   4) != 0
-    result = 0;
-  else if ( unlikely (!(year % 400)) )  // (year % 400) == 0
-    result = 1;
-  else if ( likely (year % 100) )       // (year % 100) != 0
-    result = 1;
-  else
-    result = 0;
-
-  return (result);
+  return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
 static inline S64 lyear_adjust(int epoch)
