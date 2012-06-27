@@ -115,7 +115,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     int             rc = 0;             // Return code
     int             nIFFlags;           // Interface flags
     char            thread_name[32];    // CTCI_ReadThread
-    int             preconfigured = 0;  // Preconfigured net device
 
     nIFFlags =               // Interface flags
         0
@@ -213,7 +212,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
              pDevCTCBLK->szTUNCharName,
      sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
 
-    if (pDevCTCBLK->szTUNDevName[0]) preconfigured = 1;
     rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
@@ -232,7 +230,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                   pDevCTCBLK->szTUNDevName, "TUN");
     }
 
-    if (!preconfigured)
+    if (!pDevCTCBLK->fPreconfigured)
     {
 
 #if defined(OPTION_W32_CTCI)
@@ -1390,6 +1388,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if (1 == argc)                /* Pre-configured net device   */
         {
             strlcpy(pCTCBLK->szTUNDevName, argv[0], sizeof(pCTCBLK->szTUNDevName));
+            pCTCBLK->fPreconfigured = TRUE;
             argc--; argv++;
         }
         else
