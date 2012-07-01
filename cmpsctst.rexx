@@ -33,10 +33,10 @@ check_rexx_support: procedure expose  _rc
       something wrong. Maybe someone else can figure it out, but for
       now, Regina is simply not supported. Sorry!
   */
-  if pos(REXX,"REGINA") = 0 then
+  if pos("REGINA",REXX) = 0 then
     return
   call errmsg "Open Object REXX required. (Regina doesn't work right!)"
-  exit -- (abort)
+  exit -1 -- (abort)
 
 /*----------------------------------------------------------------------------
                             platform_unique
