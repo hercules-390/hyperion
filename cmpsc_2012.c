@@ -1033,8 +1033,7 @@ DEF_INST( alt_cmpsc )
         /* Update register context with results */
 
         cmpsc.cbn &= 0x07;
-        ARCH_DEP( cmpsc_SetREGS )( &cmpsc, regs, r1, r2,
-            (regs->GR_L(0) & 0x100) ? 1 : 0 );
+        ARCH_DEP( cmpsc_SetREGS )( &cmpsc, regs, r1, r2 );
 
         /* Program Check Interrupt if we failed */
 

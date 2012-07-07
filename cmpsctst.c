@@ -1274,7 +1274,7 @@ void CallCMPSC()
     REGS regs;          // (retrieved starting values)
 
     ARCH_DEP( cmpsc_SetREGS )( &g_cmpsc, &g_regs,
-        OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand );
+        OPERAND_1_REGNUM, OPERAND_2_REGNUM );
 
     regs = g_regs;      // (save starting values)
     nIterations = 0;    // (init repeat counter)
@@ -1627,7 +1627,7 @@ int main( int argc, char* argv[] )
 
     // Initialize the REGS structure based on the CMPSCBLK...
 
-    ARCH_DEP( cmpsc_SetREGS )( &g_cmpsc, &g_regs,
+    ARCH_DEP( cmpsc_SetREGS_R0_too )( &g_cmpsc, &g_regs,
         OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand );
     g_regs.dat.storkey = &g_regs.dat.storage;
 

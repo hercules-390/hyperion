@@ -614,7 +614,7 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstorec ))( U8* src, U16 len, VADR addr, ME
 // Helper functions to either build CMPSCBLK from information in REGS
 // or the complete opposite: build the REGS struct from the CMPSCBLK.
 
-void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand )
+void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2 )
 {
     SET_GR_A( r1,     regs, (VADR) pCMPSCBLK->pOp1  );
     SET_GR_A( r2,     regs, (VADR) pCMPSCBLK->pOp2  );
@@ -623,6 +623,35 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs
 
     regs->psw.cc      = pCMPSCBLK->cc;
     regs->psw.intcode = pCMPSCBLK->pic;
+
+    /* Register 0 is input-only and thus not modified.
+
+    SET_GR_A( 0, regs, ((GREG) pCMPSCBLK->st   << 16) |
+                       ((GREG) pCMPSCBLK->cdss << 12) |
+                       ((GREG) pCMPSCBLK->f1   <<  9) |
+                       ((GREG)   expand        <<  8) );
+    */
+
+    SET_GR_A( 1, regs, ((GREG) pCMPSCBLK->pDict     ) |
+                       ((GREG) pCMPSCBLK->stt  <<  3) |
+                       ((GREG) pCMPSCBLK->cbn       ) );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// (same thing but including GR0 too. Used only by test tool utility)
+
+#if defined( NOT_HERC )
+void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS_R0_too ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand )
+{
+    SET_GR_A( r1,     regs, (VADR) pCMPSCBLK->pOp1  );
+    SET_GR_A( r2,     regs, (VADR) pCMPSCBLK->pOp2  );
+    SET_GR_A( r1 + 1, regs, (GREG) pCMPSCBLK->nLen1 );
+    SET_GR_A( r2 + 1, regs, (GREG) pCMPSCBLK->nLen2 );
+
+    regs->psw.cc      = pCMPSCBLK->cc;
+    regs->psw.intcode = pCMPSCBLK->pic;
+
+    /* (for the convenience of the utility testing tool) */
 
     SET_GR_A( 0, regs, ((GREG) pCMPSCBLK->st   << 16) |
                        ((GREG) pCMPSCBLK->cdss << 12) |
@@ -633,9 +662,10 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs
                        ((GREG) pCMPSCBLK->stt  <<  3) |
                        ((GREG) pCMPSCBLK->cbn       ) );
 }
+#endif // defined( NOT_HERC )
 
 ///////////////////////////////////////////////////////////////////////////////
-// (same thing but going in the opposite direction)
+// (same idea but going in the opposite direction)
 
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2 )
 {

@@ -8,7 +8,7 @@
 
 #define PRODUCT_NAME        "CMPSCTST"
 #define PRODUCT_DESC        "CMPSC Instruction Testing Tool"
-#define VERSION_STR         "2.3.0"
+#define VERSION_STR         "2.3.1"
 #define COPYRIGHT           "Copyright (C) 2012"
 #define COMPANY             "Software Development Laboratories"
 
@@ -633,14 +633,14 @@ static INLINE U16 RandAlign()
 
 extern void program_interrupt( REGS* regs, U16 pcode );
 
-#define UTIL_PROGRAM_INTERRUPT()                                \
-                                                                \
-    do                                                          \
-    {                                                           \
-        ARCH_DEP( cmpsc_SetREGS )( &g_cmpsc, &g_regs,           \
-            OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand );       \
-        program_interrupt( &g_regs, PGM_UTIL_FAILED );          \
-    }                                                           \
+#define UTIL_PROGRAM_INTERRUPT()                        \
+                                                        \
+    do                                                  \
+    {                                                   \
+        ARCH_DEP( cmpsc_SetREGS )( &g_cmpsc, &g_regs,   \
+            OPERAND_1_REGNUM, OPERAND_2_REGNUM );       \
+        program_interrupt( &g_regs, PGM_UTIL_FAILED );  \
+    }                                                   \
     while (0)
 
 ///////////////////////////////////////////////////////////////////////////////

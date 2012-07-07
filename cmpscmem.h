@@ -223,7 +223,11 @@ extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstorec ))( U8* src, U16 len, VADR a
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions to build pCMPSCBLK from REGS or vice-versa
 
-extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS  ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand );
+extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS  ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2 );
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2 );
+
+#if defined( NOT_HERC ) // (called by the testing tool utility)
+extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS_R0_too ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand );
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
