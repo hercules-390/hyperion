@@ -1142,11 +1142,12 @@ END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
-    char*    fn = NULL;
+    char*    fn = NULL, info[256];
     if (!fn) fn = strrchr( __FILE__, '\\' );
     if (!fn) fn = strrchr( __FILE__ , '/' );
     if (!fn) fn =          __FILE__        ; else fn++;
-    logmsg( "%s, %s\n", fn, __TIMESTAMP__ );
+    MSGBUF( info, "%s, %s", fn, __TIMESTAMP__ );
+    WRMSG( HHC01417, "I", info );
 
     HDL_DEFINST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB263, alt_cmpsc );
 }
