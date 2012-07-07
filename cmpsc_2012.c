@@ -1135,13 +1135,19 @@ static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEX
 
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY( HERCULES );
-     HDL_DEPENDENCY( REGS );
+    HDL_DEPENDENCY( HERCULES );
+    HDL_DEPENDENCY( REGS );
 }
 END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
+    char*    fn = NULL;
+    if (!fn) fn = strrchr( __FILE__, '\\' );
+    if (!fn) fn = strrchr( __FILE__ , '/' );
+    if (!fn) fn =          __FILE__        ; else fn++;
+    logmsg( "%s, %s\n", fn, __TIMESTAMP__ );
+
     HDL_DEFINST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB263, alt_cmpsc );
 }
 END_INSTRUCTION_SECTION;
