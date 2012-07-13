@@ -255,15 +255,19 @@ end
 in_buffer_size  = ib
 out_buffer_size = ob
 
-if  fullpath(in_file) = "" then do
+fp = fullpath(in_file)
+if  fp = "" then do
     call logmsg '** ERROR ** infile "'in_file'" not found.'
     exit 1
 end
+in_file = fp
 
-if  fullpath(indict) = "" then do
+fp = fullpath(indict)
+if  fp = "" then do
     call logmsg '** ERROR ** indict "'indict'" not found.'
     exit 1
 end
+indict = fp
 
 if  right(indict,1) = "C" then do
     test_type = "Compression"
@@ -290,21 +294,26 @@ else do
     cmp_dict_name = exp_dict_name
 end
 
-if  fullpath(cmp_dict_name) = "" then do
+fp = fullpath(cmp_dict_name)
+if  fp = "" then do
     call logmsg '** ERROR ** cmp_dict_name "'cmp_dict_name'" not found.'
     exit 1
 end
+cmp_dict_name = fp
 
-if  fullpath(exp_dict_name) = "" then do
+fp = fullpath(exp_dict_name)
+if  fp = "" then do
     call logmsg '** ERROR ** exp_dict_name "'exp_dict_name'" not found.'
     exit 1
 end
+exp_dict_name = fp
 
-if  fullpath(workdir) = "" then do
+fp = fullpath(workdir)
+if  fp = "" then do
     call logmsg '** ERROR ** workdir "'workdir'" not found.'
     exit 1
 end
-workdir = dirnamefmt(workdir)
+workdir = fp
 
 /* Set needed values */
 
@@ -552,9 +561,14 @@ isnum: procedure -- (is it a number?)
 
     return arg(1) <> "" & datatype(arg(1),"N");
 
-fullpath: procedure -- (locate file or dir, return full path or null)
+fullpath: procedure expose pathsep -- (locate file or dir, return full path or null)
 
-    return SysSearchPath("PATH",arg(1))
+    fp = qualify(arg(1))
+    if SysIsFileDirectory(fp) then ,
+        return dirnamefmt(fp)
+    if SysIsFile(fp) then ,
+        return fp
+    return ""
 
 delfile: procedure -- (delete a file if it exists)
 
@@ -564,13 +578,17 @@ delfile: procedure -- (delete a file if it exists)
 
 dirnamefmt: procedure expose pathsep -- (convert to dir format)
 
-    result = arg(1)
-    do  while pos(pathsep||pathsep,result) > 0
-        result = changestr(pathsep||pathsep,result,pathsep)
+    dn = arg(1)
+    do  while pos(pathsep||pathsep,dn) > 0
+        dn = changestr(pathsep||pathsep,dn,pathsep)
     end
-    if  qualify(result) <> qualify(result||pathsep) then
-        result ||= pathsep
-    return result
+    if  qualify(dn) <> qualify(dn||pathsep) then
+        dn ||= pathsep
+    if SysIsFileDirectory(dn) then do
+        if right(dn,1) \= pathsep then ,
+            dn ||= pathsep
+    end
+    return dn
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
