@@ -1901,9 +1901,15 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         x86_64-yes)
 
             hc_cv_is_intel_x86_arch=yes
-            AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=k8],
-                                                        [hc_cv_intel_cpu_type=native],
-                                                        [hc_cv_intel_cpu_type=native] )
+            if test "$hc_cv_is_apple" = "yes"; then
+               AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=k8],
+                                                           [hc_cv_intel_cpu_type=core2],
+                                                           [hc_cv_intel_cpu_type=core2] )
+            else
+               AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=k8],
+                                                           [hc_cv_intel_cpu_type=native],
+                                                           [hc_cv_intel_cpu_type=native] )
+            fi
             ;;
 
         i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
@@ -1914,12 +1920,16 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                 hc_cv_intel_cpu_type=pentium4
             else
                 if test $target_cpu        = i686   &&
-                   test "hc_cv_is_gcc_2_96" = "yes"; then
+                   test "$hc_cv_is_gcc_2_96" = "yes"; then
                     hc_cv_intel_cpu_type=i586
                 else
-                    AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=$target_cpu],
-                                                                [hc_cv_intel_cpu_type=native],
-                                                                [hc_cv_intel_cpu_type=native] )
+                   if test "$hc_cv_is_apple" = "yes"; then
+                      hc_cv_intel_cpu_type=$target_cpu
+                   else
+                      AS_VERSION_COMPARE( $hc_gcc_level, "4.2.0", [hc_cv_intel_cpu_type=$target_cpu],
+                                                                  [hc_cv_intel_cpu_type=native],
+                                                                  [hc_cv_intel_cpu_type=native] )
+                   fi
                 fi
             fi
             ;;
@@ -1947,9 +1957,11 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                                                     [hc_cv_optimization_flags="$hc_cv_optimization_flags -m128bit-long-double"] )
 
         # Dynamically inline small block string operations (subroutine calls still made for large area calls)
-        AS_VERSION_COMPARE( $hc_gcc_level, "4.1.2", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
+        if test "$hc_cv_is_apple" != "yes"; then
+           AS_VERSION_COMPARE( $hc_gcc_level, "4.1.2", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
+        fi
 
         if test "$hc_cv_builtin_alloca_broke" != "yes" &&
            test "$hc_cv_opt_debug" != "yes"; then
