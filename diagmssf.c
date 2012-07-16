@@ -481,7 +481,7 @@ static BYTE       physical[8] =
         dreg = diag204tod;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        etod_clock(regs, &ETOD);
+        etod_clock(regs, &ETOD, ETOD_fast);
         diag204tod = ETOD2TOD(ETOD);
 
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
@@ -588,7 +588,7 @@ static BYTE       physical[8] =
         dreg = diag204tod;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        etod_clock(regs, &ETOD);
+        etod_clock(regs, &ETOD, ETOD_fast);
         diag204tod = ETOD2TOD(ETOD);
 
         memset(hdrxinfo, 0, sizeof(DIAG204_X_HDR));

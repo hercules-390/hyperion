@@ -1080,9 +1080,9 @@ ETOD ETOD;
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-        /* Retrieve the TOD clock value and shift out the epoch */
-        etod_clock(regs, &ETOD);
-        dreg = (ETOD2TOD(ETOD) & 0x3F) | regs->cpuad;
+        /* Retrieve the standard TOD clock value with CPU address */
+        etod_clock(regs, &ETOD, ETOD_standard);
+        dreg = ETOD2TOD(ETOD);
 
         tte->format = TRACE_F1_TR_FMT | n;
         tte->fmt2 = TRACE_F1_TR_FM2;
@@ -1139,15 +1139,22 @@ ETOD ETOD;
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-        /* Retrieve the TOD clock value including the epoch */
-        etod_clock(regs, &ETOD);
+        /* Retrieve the extended TOD clock value including the epoch */
+        etod_clock(regs, &ETOD, ETOD_extended);
+
+        /* Convert clock value to 80-bit trace format */
+        ETOD_shift(&ETOD, ETOD, 48);
+
+        /* OR in CPU address in bits 74-79 for Hercules format */
+        ETOD.low  &= ~0x3FULL;
+        ETOD.low  |= regs->cpuad & 0x3F;
 
         tte->format = TRACE_F2_TR_FMT | n;
         tte->fmt2 = TRACE_F2_TR_FM2;
 
-        STORE_HW(tte->clk0,  (ETOD.high >> 40) & 0x0000FFFF);           // TOD Clock bits 0-15
-        STORE_FW(tte->clk16, (ETOD.high << 24) | (ETOD.low >> 40));     // TOD Clock bits 16-47
-        STORE_FW(tte->clk48, (ETOD.low  << 24) | 0x40 | regs->cpuad);          // TOD Clock bits 48-79 with CPU address in last six bits (Hercules)
+        STORE_HW(tte->clk0,  ETOD.high & 0x0000FFFF);   // TOD Clock bits 0-15
+        STORE_FW(tte->clk16, ETOD.low >> 32);           // TOD Clock bits 16-47
+        STORE_FW(tte->clk48, ETOD.low & 0xFFFFFFFF);    // TOD Clock bits 48-79
         STORE_FW(tte->operand, op);
 
         for (i = r1, j = 0; ; )

@@ -966,20 +966,25 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_STORE_CLOCK_FAST)
-    if(inst[1] == 0x05) // STCK only
+    if (inst[1] == 0x7C) // STCKF only
+    {
+        /* Retrieve the TOD clock value without embedded CPU address */
+        etod_clock(regs, &ETOD, ETOD_fast);
+    }
+    else
+    {
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
         /* Perform serialization before fetching clock */
         PERFORM_SERIALIZATION (regs);
 
-    /* Retrieve the TOD clock value and shift out the epoch */
-    etod_clock(regs, &ETOD);
-    dreg = ETOD2TOD(ETOD);
-
+        /* Retrieve the TOD clock value with embedded CPU address*/
+        etod_clock(regs, &ETOD, ETOD_standard);
 #if defined(FEATURE_STORE_CLOCK_FAST)
-    if(inst[1] == 0x05) // STCK only
+    }
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
-        /* Insert the cpu address to ensure a unique value */
-        dreg = (dreg & ~0x3F) | (regs->cpuad & 0x3F);
+
+    /* Shift out epoch */
+    dreg = ETOD2TOD(ETOD);
 
 // /*debug*/logmsg("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
 
@@ -987,7 +992,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
 #if defined(FEATURE_STORE_CLOCK_FAST)
-    if(inst[1] == 0x05) // STCK only
+    if(inst[1] != 0x7C) // not STCKF
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
         /* Perform serialization after storing clock */
         PERFORM_SERIALIZATION (regs);
@@ -1021,12 +1026,8 @@ ETOD    ETOD;                           /* Extended clock work area  */
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);
 
-    /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
-    etod_clock(regs, &ETOD);
-
-    /* Nonzero value in pos 72 to 111; set bit 105 to one and copy    */
-    /* CPU address to bits 106 to 111.                                */
-    ETOD.low |= 0x0000000000400000ULL | (regs->cpuad << 16) | regs->todpr;
+    /* Retrieve the extended format TOD clock */
+    etod_clock(regs, &ETOD, ETOD_extended);
 
 //  /*debug*/logmsg("Store TOD clock extended: +0=%16.16" I64_FMT "X\n",
 //  /*debug*/       dreg);

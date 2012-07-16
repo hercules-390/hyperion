@@ -771,7 +771,7 @@ int rc = 0;
 
     /* Get the clock values all at once for consistency and so we can
         release the CPU lock more quickly. */
-        etod_clock(regs, &tod_now);
+        etod_clock(regs, &tod_now, ETOD_fast);
         hw_now.high = hw_tod.high;
         hw_now.low  = hw_tod.low;
         epoch_now = regs->tod_epoch;

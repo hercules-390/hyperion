@@ -13,6 +13,7 @@
 #define _CLOCK_H
 
 
+
 /* TOD Clock Definitions */
 
 #define TOD_USEC   (4096LL)
@@ -28,7 +29,7 @@
 typedef U64     TOD;                            // one microsecond = Bit 51
 
 
-/* Extended TOD Clock Definitions */
+/* Hercules and Extended TOD Clock Definitions for high-order 64-bits */
 
 #define ETOD_USEC   16LL
 #define ETOD_SEC    (1000000 * ETOD_USEC)
@@ -40,14 +41,93 @@ typedef U64     TOD;                            // one microsecond = Bit 51
 #define ETOD_4YEARS (1461 * ETOD_DAY)
 #define ETOD_1970   0x007D91048BCA0000ULL       // Extended TOD base for host epoch of 1970
 
-#if !defined(_ETOD_)
-#define _ETOD_
-typedef struct _ETOD                            // ETOD - Extended TOD Clock Value; one microsecond = Bit-59
-{                                               // Bits   0 -   7:  Epoch
-  U64 high;                                     // Bits   8 -  71:  TOD clock bits 0-63
-  U64 low;                                      // Bits   8 - 111:  TOD clock bits 0-103
-} ETOD;                                         // Bits 112 - 127:  Programmable Field
+
+#if __BIG_ENDIAN__
+typedef struct ETOD { U64 high, low; } ETOD;
+#define ETOD_init(_high,_low) \
+        {_high,_low}
+#else
+typedef struct ETOD { U64 low, high; } ETOD;
+#define ETOD_init(_high,_low) \
+        {_low,_high}
 #endif
+
+
+static INLINE void
+ETOD_add (ETOD* result, const ETOD a, const ETOD b)
+{
+  register uint64_t high = a.high + b.high;
+  register uint64_t low  = a.low + b.low;
+  if (low < a.low)
+    ++high;
+  result->high = high;
+  result->low  = low;
+}
+
+static INLINE void
+ETOD_sub (ETOD* result, const ETOD a, const ETOD b)
+{
+  register uint64_t high = a.high - b.high;
+  register uint64_t low  = a.low - b.low;
+  if (a.low < b.low)
+    --high;
+  result->high = high;
+  result->low  = low;
+}
+
+static INLINE void
+ETOD_shift (ETOD* result, const ETOD a, int shift)
+{
+  register uint64_t high;
+  register uint64_t low;
+
+  if (shift == 0)
+  {
+    high = a.high;
+    low  = a.low;
+  }
+  else if (shift < 0)
+  {
+    shift = -shift;
+    if (shift >= 64)
+    {
+      shift -= 64;
+      if (shift == 0)
+        high = a.low;
+      else if (shift > 64)
+        high = 0;
+      else
+        high = a.low << shift;
+      low = 0;
+    }
+    else
+    {
+      high = a.high << shift |
+             a.low >> (64 - shift);
+      low  = a.low << shift;
+    }
+  }
+  else if (shift >= 64)
+  {
+    shift -= 64;
+    high   = 0;
+    if (shift == 0)
+      low = a.high;
+    else if (shift < 64)
+      low = a.high >> shift;
+    else
+      low = 0;
+  }
+  else
+  {
+    high = a.high >> shift;
+    low  = a.high << (64 - shift) |
+           a.low >> shift;
+  }
+
+  result->low  = low;
+  result->high = high;
+}
 
 
 /* Clock Steering Registers */
@@ -73,8 +153,12 @@ U64 hw_clock(void);                     /* Get hardware clock        */
 S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
 void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
 void set_int_timer(REGS *, S32);        /* Set interval timer        */
-TOD tod_clock(REGS *);                  /* Get TOD clock             */
-TOD etod_clock(REGS *, ETOD *);         /* Get extended TOD clock    */
+TOD tod_clock(REGS *);                  /* Get TOD clock non-unique  */
+TOD etod_clock(REGS *, ETOD *,          /* Get extended TOD clock    */
+               const U8);
+#define ETOD_fast       0
+#define ETOD_standard   1
+#define ETOD_extended   2
 void set_tod_clock(U64);                /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
 int clock_hsuspend(void *file);         /* Hercules suspend          */
@@ -82,16 +166,55 @@ int clock_hresume(void *file);          /* Hercules resume           */
 int query_tzoffset(void);               /* Report current TzOFFSET   */
 
 ETOD* host_ETOD (ETOD*);                /* Retrieve extended TOD     */
-TOD   host_tod  (void);                 /* Retrieve TOD              */
 
-#if !defined(_ETOD2TOD)
-#define _ETOD2TOD
+
+/*----------------------------------------------------------------------------*/
+/* host_TOD - Clock fetch and conversion for routines that DO NOT use the     */
+/*            synchronized clock services or emulation services (including    */
+/*            clock steering), and can tolerate duplicate time stamp          */
+/*            generation.                                                     */
+/*----------------------------------------------------------------------------*/
+
+static INLINE TOD
+host_tod (void)
+{
+  register TOD  result;
+  register U64  temp;
+
+  /* Use the same clock source as host_ETOD; refer to host_ETOD in clock.c for
+   * additional comments.
+   */
+
+  #if !defined(_MSVC_) && !defined(CLOCK_REALTIME)
+  {
+    struct timeval time;
+    gettimeofday(&time, NULL);      /* Get current host time                  */
+    result = time.tv_usec << 4;     /* Adjust microseconds to bit-59          */
+    temp   = time.tv_sec;           /* Load seconds                           */
+  }
+  #else
+  {
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    result  = time.tv_nsec;         /* Adjust nanoseconds to bit-59 and       */
+    result <<= 1;                   /* divide by 1000 (bit-shift compressed)  */
+    result  /= 125;                 /* ...                                    */
+    temp     = time.tv_sec;         /* Load seconds                           */
+   }
+  #endif
+
+  temp   *= ETOD_SEC;               /* Convert seconds to ETOD format         */
+  result += temp;                   /* Add seconds                            */
+  result += ETOD_1970;              /* Adjust to open source epoch of 1970    */
+  return ( result );
+}
+
+
 static INLINE TOD
 ETOD2TOD (const ETOD ETOD)
 {
   return ( (ETOD.high << 8) | (ETOD.low >> 56) );
 }
-#endif
 
 #endif
 
