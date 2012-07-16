@@ -1181,9 +1181,8 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
   cbn = GR1_cbn(cc->iregs);
 
   /* Can we write an index or interchange symbol */
-  if(unlikely(GR_A(cc->r1 + 1, cc->iregs) < 2))
-  {
-    if(unlikely(((cbn + cc->smbsz - 1) / 8) >= GR_A(cc->r1 + 1, cc->iregs)))
+  if(unlikely(GR_A(cc->r1 + 1, cc->iregs) < 2 ||
+    ((cbn + cc->smbsz - 1) / 8) >= GR_A(cc->r1 + 1, cc->iregs)))
     {
       cc->regs->psw.cc = 1;
 
@@ -1193,7 +1192,6 @@ static int ARCH_DEP(store_is)(struct cc *cc, U16 is)
 
       return(-1);
     }
-  }
 
   /* Check if symbol translation is requested */
   if(unlikely(cc->st))
