@@ -1146,7 +1146,11 @@ HDL_INSTRUCTION_SECTION;
     if (!fn) fn = strrchr( __FILE__, '\\' );
     if (!fn) fn = strrchr( __FILE__ , '/' );
     if (!fn) fn =          __FILE__        ; else fn++;
-    MSGBUF( info, "%s, %s", fn, __TIMESTAMP__ );
+#ifdef __TIMESTAMP__
+    MSGBUF( info, "%s version %s last updated on %s", fn, VERSION, __TIMESTAMP__ );
+#else
+    MSGBUF( info, "%s version %s compiled on %s at %s", fn, VERSION, __DATE__, __TIME__ );
+#endif
     WRMSG( HHC01417, "I", info );
 
     HDL_DEFINST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB263, alt_cmpsc );
