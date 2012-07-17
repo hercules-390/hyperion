@@ -3445,7 +3445,7 @@ void     get_tod_clock( BYTE* TodClock )
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
     regs = sysblk.regs[sysblk.pcpu];
-    etod_clock(regs, &ETOD);
+    etod_clock(regs, &ETOD, ETOD_standard);
     tod = ETOD2TOD(ETOD);
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3479,7 +3479,7 @@ void     get_subarea_address( BYTE* SAaddress )
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
     regs = sysblk.regs[sysblk.pcpu];
-    etod_clock(regs, &ETOD);
+    etod_clock(regs, &ETOD, ETOD_standard);
     tod = ETOD2TOD(ETOD);
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
