@@ -1,3 +1,5 @@
+18 Jul 2012 Report IO/s on panel displays when operating in device server mode
+            (no configured CPUs).
 18 Jul 2012 Support CCW command 0x01, write no carriage return in con1052c.c,
             but only when generated for no message prefixing.  -- jph
 20 Jun 2012 Update configure to recognize GCC versions; use -march=native when
