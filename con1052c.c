@@ -203,32 +203,32 @@ BYTE    c;                              /* Print character           */
         /* Perform end of record processing if not data-chaining,
            and append carriage return and newline if required */
         if ((flags & CCW_FLAGS_CD) == 0
-          && len < BUFLEN_1052)
+          && len < BUFLEN_1052 && 0x09 == code)
             iobuf[len++] = '\n';
 
         iobuf[len] = '\0';
 
         /* process multiline messages */
         {
-            char    *strtok_str = NULL;
-            char    *str = strtok_r ((char *)iobuf,"\n", &strtok_str);
+            char * str = (char *) iobuf;
 
-            while (str != NULL)
+            for (; str && *str;)
             {
+                char * t = strchr(str, '\n');
+
+                if (t) *t++ = 0;
 #ifdef OPTION_MSGCLR
-    #ifdef OPTION_SCP_MSG_PREFIX
-                WRCMSG ("<pnl,color(green,black)>", HHC00001, "I", str);
-    #else /*!OPTION_SCP_MSG_PREFIX*/
-                logmsg ("<pnl,color(green,black)>%s\n", str);
-    #endif /*OPTION_SCP_MSG_PREFIX*/
-#else /*!OPTION_MSGCLR*/
-    #ifdef OPTION_SCP_MSG_PREFIX
-                WRMSG (HHC00001, "I", str);
-    #else /*!OPTION_SCP_MSG_PREFIX*/
-                logmsg ("%s\n", str);
-    #endif /*OPTION_SCP_MSG_PREFIX*/
-#endif /*OPTION_MSGCLR*/
-                str = strtok_r (NULL, "\n", &strtok_str);
+                #define CLR "<pnl,color(green,black)>"
+#else
+                #define CLR ""
+#endif
+
+#ifdef OPTION_SCP_MSG_PREFIX
+                WRCMSG (CLR, HHC00001, "I", str);
+#else /*!OPTION_SCP_MSG_PREFIX*/
+                logmsg (CLR "%s%s", str, (t ? "\n" : ""));
+#endif /*OPTION_SCP_MSG_PREFIX*/
+                str = t;
             }
 
         }
@@ -394,7 +394,7 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            WRCMSG ("<pnl,color(lightyellow,black)>", HHC00008, "I", 
+            WRCMSG ("<pnl,color(lightyellow,black)>", HHC00008, "I",
                         dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
