@@ -562,7 +562,7 @@ S64 timer;
 }
 
 
-TOD etod_clock(REGS *regs, ETOD* ETOD, const U8 format)
+TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 {
   /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
    * order for comparison. Consequently, swap delays for a subsequent
@@ -570,9 +570,14 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, const U8 format)
    * introduced when a STORE CLOCK value is advanced due to the use of
    * the CPU address in bits 66-71.
    *
+   * If the regs pointer is null, then the request is a raw request,
+   * and the format operand should specify ETOD_raw or ETOD_fast. For
+   * raw and fast requests, the CPU address is not inserted into the
+   * returned value.
+   *
    * A spin loop is used for the introduction of the delay, moderated
    * by obtaining and releasing of the TOD lock. This permits raw and
-   * fast clock requests to complete without delay.
+   * fast clock requests to complete without additional delay.
    */
 
   U64   high;
@@ -597,22 +602,25 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, const U8 format)
     /* Place CPU stamp into clock value for Standard and Extended
      * formats (raw or fast requests fall through)
      */
-    switch (format)
+    if (regs)
     {
-      /* Standard TOD format */
-      case ETOD_standard:
-        low &= 0xC000000000000000ULL;
-        low |= (U64)((regs->cpuad) & 0x3F) << 56;
-        break;
+      switch (format)
+      {
+        /* Standard TOD format */
+        case ETOD_standard:
+          low &= 0xC000000000000000ULL;
+          low |= (U64)((regs->cpuad) & 0x3F) << 56;
+          break;
 
-      /* Extended TOD format */
-      case ETOD_extended:
-        low &= 0xFFFFFFFFFF800000ULL;
-        low |= (U64)((regs->cpuad) & 0x3F) << 16;
-        if (low == 0)
-          low |= 0x0000000000400000ULL;
-        low |= regs->todpr;
-        break;
+        /* Extended TOD format */
+        case ETOD_extended:
+          low &= 0xFFFFFFFFFF800000ULL;
+          low |= (U64)((regs->cpuad) & 0x3F) << 16;
+          if (low == 0)
+            low |= 0x0000000000400000ULL;
+          low |= regs->todpr;
+          break;
+      }
     }
 
     if (/* New clock value > Old clock value   */
@@ -627,7 +635,7 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, const U8 format)
       tod_value.low  = low;
       swapped = 1;
     }
-    else if (format == ETOD_fast)
+    else if (format <= ETOD_fast)
     {
       high = tod_value.high;
       low  = tod_value.low;
@@ -652,7 +660,7 @@ TOD
 tod_clock (REGS* regs)
 {
   ETOD  ETOD;
-  return ( etod_clock(regs, &ETOD, 0) );
+  return ( etod_clock(regs, &ETOD, ETOD_fast) );
 }
 
 #if defined(_FEATURE_INTERVAL_TIMER)

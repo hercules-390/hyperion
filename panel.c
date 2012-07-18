@@ -2120,10 +2120,10 @@ char    buf[1024];                      /* Buffer workarea           */
     {
         time_t      current_time;
         struct tm  *current_tm;
-        time_t      since_midnight = 0;            
+        time_t      since_midnight = 0;
         current_time = time( NULL );
         current_tm   = localtime( &current_time );
-        since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) + 
+        since_midnight = (time_t)( ( ( current_tm->tm_hour  * 60 ) +
                                        current_tm->tm_min ) * 60   +
                                        current_tm->tm_sec );
         curr_int_start_time = current_time - since_midnight;
@@ -2346,7 +2346,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, 
+                            sprintf (cmdline,
 #if defined(OPTION_CMDTGT)
                                              "herc "
 #endif
@@ -3057,7 +3057,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                         strcpy(cmdline, NPdevnam[NPasgn]);
                                     }
                                     strcpy(NPdevnam[NPasgn], "");
-                                    sprintf (NPentered, 
+                                    sprintf (NPentered,
 #if defined(OPTION_CMDTGT)
                                                        "herc "
 #endif
@@ -3553,6 +3553,16 @@ FinishShutdown:
                 {
                     len += sprintf (buf+len,"%s", "Offline");
                     buf[len++] = ' ';
+#if defined(OPTION_MIPS_COUNTING)
+                    i = cons_cols - 11;
+                    if (len < i) // IO/s
+                    {
+                        sprintf(&buf[i],
+                                "IO/s %6.6s",
+                                format_int(sysblk.siosrate));
+                        len = cons_cols;
+                    }
+#endif /* OPTION_MIPS_COUNTING */
                 }
                 buf[cons_cols] = '\0';
                 set_pos (cons_rows, 1);

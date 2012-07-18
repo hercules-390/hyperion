@@ -154,11 +154,15 @@ S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
 void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
 void set_int_timer(REGS *, S32);        /* Set interval timer        */
 TOD tod_clock(REGS *);                  /* Get TOD clock non-unique  */
-TOD etod_clock(REGS *, ETOD *,          /* Get extended TOD clock    */
-               const U8);
-#define ETOD_fast       0
-#define ETOD_standard   1
-#define ETOD_extended   2
+typedef enum
+{
+  ETOD_raw,
+  ETOD_fast,
+  ETOD_standard,
+  ETOD_extended
+} ETOD_format;
+TOD etod_clock(REGS*, ETOD*,            /* Get extended TOD clock    */
+               ETOD_format);
 void set_tod_clock(U64);                /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
 int clock_hsuspend(void *file);         /* Hercules suspend          */

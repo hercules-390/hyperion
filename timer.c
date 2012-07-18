@@ -36,6 +36,12 @@ int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
 CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 
+#if defined(OPTION_MIPS_COUNTING)
+    /* If no CPUs are available, just return (device server mode) */
+    if (!sysblk.hicpu)
+      return;
+#endif /*defined(OPTION_MIPS_COUNTING)*/
+
     /* Access the diffent register contexts with the intlock held */
     OBTAIN_INTLOCK(NULL);
 
@@ -202,12 +208,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
 #ifdef OPTION_MIPS_COUNTING
     then = host_tod();
-#endif
-
-    while (sysblk.cpus)
+    while (!sysblk.shutdown)
     {
-
-#ifdef OPTION_MIPS_COUNTING
         /* Update TOD clock and save TOD clock value */
         now = update_tod_clock();
 
@@ -286,6 +288,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
 #else /* ! OPTION_MIPS_COUNTING */
 
+    while (sysblk.cpus)
+    {
         /* Update TOD clock */
         update_tod_clock();
 
