@@ -1142,7 +1142,8 @@ END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
-    char*    fn = NULL, info[256];
+    char info[256];
+    const char* fn = NULL;
     if (!fn) fn = strrchr( __FILE__, '\\' );
     if (!fn) fn = strrchr( __FILE__ , '/' );
     if (!fn) fn =          __FILE__        ; else fn++;
