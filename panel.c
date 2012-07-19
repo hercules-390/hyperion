@@ -907,14 +907,14 @@ static void draw_char (int c)
 static void draw_fw (U32 fw)
 {
     char buf[9];
-    sprintf (buf, "%8.8X", fw);
+    snprintf (buf, sizeof(buf), "%8.8X", fw);
     draw_text (buf);
 }
 
 static void draw_dw (U64 dw)
 {
     char buf[17];
-    sprintf (buf, "%16.16"I64_FMT"X", dw);
+    snprintf (buf, sizeof(buf), "%16.16"I64_FMT"X", dw);
     draw_text (buf);
 }
 
@@ -1081,9 +1081,14 @@ static void NP_screen_redraw (REGS *regs)
     set_color (COLOR_WHITE, COLOR_BLUE);
 
     /* Center "Peripherals" on the right-hand-side */
-    if (cons_cols > 52)
-        fill_text (' ', 40 + (cons_cols - 52) / 2);
-    draw_text ("Peripherals");
+    i = 40 + snprintf(buf, sizeof(buf),
+                      "Peripherals [Shared Port %u]",
+                      sysblk.shrdport);
+    if ((cons_cols < i) || !sysblk.shrdport)
+        i = 52, buf[11] = 0;            /* Truncate string */
+    if (cons_cols > i)                  /* Center string   */
+        fill_text (' ', 40 + ((cons_cols - i) / 2));
+    draw_text (buf);
     fill_text (' ', (short)cons_cols);
 
     /* Line 2 - peripheral headings */
@@ -1237,7 +1242,7 @@ static void NP_screen_redraw (REGS *regs)
         NPcpugraph_valid = 0;
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            sprintf (buf, "%s%02X ", PTYPSTR(i), i);
+            snprintf (buf, sizeof(buf), "%s%02X ", PTYPSTR(i), i);
             set_pos (line++, 1);
             draw_text (buf);
         }
@@ -1367,7 +1372,7 @@ static void NP_update(REGS *regs)
                 }
         set_color (COLOR_WHITE, COLOR_BLUE);
         set_pos (1, 22);
-        sprintf(buf, "%3d", (n > 0 ? cpupct_total/n : 0));
+        snprintf(buf, sizeof(buf), "%3d", (n > 0 ? cpupct_total/n : 0));
         draw_text (buf);
     }
 #else // !defined(OPTION_MIPS_COUNTING)
@@ -1444,7 +1449,7 @@ static void NP_update(REGS *regs)
         }
 
         /* Display psw state */
-        sprintf (buf, "%2d%c%c%c%c%c%c%c%c",
+        snprintf (buf, sizeof(buf), "%2d%c%c%c%c%c%c%c%c",
                       regs->psw.amode64                  ? 64  :
                       regs->psw.amode                    ? 31  : 24,
                       regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
@@ -1672,13 +1677,13 @@ static void NP_update(REGS *regs)
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
         if((sysblk.mipsrate / 1000000) > 999)
-          sprintf(buf, "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
+          snprintf(buf, sizeof(buf), "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
         else if((sysblk.mipsrate / 1000000) > 99)
-          sprintf(buf, "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+          snprintf(buf, sizeof(buf), "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
         else if((sysblk.mipsrate / 1000000) > 9)
-          sprintf(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+          snprintf(buf, sizeof(buf), "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
         else
-          sprintf(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
+          snprintf(buf, sizeof(buf), "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -1687,7 +1692,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        sprintf(buf, "%6.6s", format_int(sysblk.siosrate));
+        snprintf(buf, sizeof(buf), "%6.6s", format_int(sysblk.siosrate));
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
@@ -1745,7 +1750,7 @@ static void NP_update(REGS *regs)
                 else
                   set_color(COLOR_LIGHT_GREY, COLOR_BLACK);
                 set_pos(CPU_GRAPH_LINE + i + 1, 1);
-                sprintf(buf, "%s%02X", PTYPSTR(i), i);
+                snprintf(buf, sizeof(buf), "%s%02X", PTYPSTR(i), i);
                 draw_text(buf);
               }
             }
@@ -1780,7 +1785,7 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 43);
             set_color (busy ? COLOR_LIGHT_YELLOW : COLOR_LIGHT_GREY, COLOR_BLACK);
-            sprintf (buf, "%4.4X", dev->devnum);
+            snprintf (buf, sizeof(buf), "%4.4X", dev->devnum);
             draw_text (buf);
             NPdevnum[i] = dev->devnum;
             NPbusy[i] = busy;
@@ -1791,7 +1796,7 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 48);
             set_color (open ? COLOR_LIGHT_GREEN : COLOR_LIGHT_GREY, COLOR_BLACK);
-            sprintf (buf, "%4.4X", dev->devtype);
+            snprintf (buf, sizeof(buf), "%4.4X", dev->devtype);
             draw_text (buf);
             NPdevtype[i] = dev->devtype;
             NPopen[i] = open;
@@ -1803,7 +1808,7 @@ static void NP_update(REGS *regs)
         {
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
             set_pos (DEV_LINE+i, 53);
-            sprintf (buf, "%-4.4s", devclass);
+            snprintf (buf, sizeof(buf), "%-4.4s", devclass);
             draw_text (buf);
             /* Draw device name only if they're NOT assigning a new one */
             if (0
@@ -3572,49 +3577,49 @@ FinishShutdown:
                     {
                         if(sysblk.mipsrate / 1000000 > 999)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d,%03d; IO/s %6.6s", instcnt,
-                                    sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000,
-                                    format_int(sysblk.siosrate));
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d,%03d; IO/s %6.6s", instcnt,
+                                     sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000,
+                                     format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %3d.%01d; IO/s %6.6s",
-                                    instcnt, sysblk.mipsrate / 1000000,
-                                    sysblk.mipsrate % 1000000 / 100000, format_int(sysblk.siosrate));
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %3d.%01d; IO/s %6.6s",
+                                     instcnt, sysblk.mipsrate / 1000000,
+                                     sysblk.mipsrate % 1000000 / 100000, format_int(sysblk.siosrate));
                         }
                         else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%02d; IO/s %6.6s",
-                                    instcnt, sysblk.mipsrate / 1000000,
-                                    sysblk.mipsrate % 1000000 / 10000, format_int(sysblk.siosrate));
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %2d.%02d; IO/s %6.6s",
+                                     instcnt, sysblk.mipsrate / 1000000,
+                                     sysblk.mipsrate % 1000000 / 10000, format_int(sysblk.siosrate));
                         }
                         else
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%03d; IO/s %6.6s",
-                                    instcnt, sysblk.mipsrate / 1000000,
-                                    sysblk.mipsrate % 1000000 / 1000, format_int(sysblk.siosrate));
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d.%03d; IO/s %6.6s",
+                                     instcnt, sysblk.mipsrate / 1000000,
+                                     sysblk.mipsrate % 1000000 / 1000, format_int(sysblk.siosrate));
                         }
                     }
                     else if(len + i + 11 < cons_cols) // instcnt and mips
                     {
                         if(sysblk.mipsrate / 1000000 > 99)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %4d", instcnt, sysblk.mipsrate / 1000000);
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %4d", instcnt, sysblk.mipsrate / 1000000);
                         }
                         else if(sysblk.mipsrate / 1000000 > 9)
                         {
-                            sprintf(ibuf, "instcnt %s; mips %2d.%1d",
-                                    instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %2d.%1d",
+                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
                         }
                         else
                         {
-                            sprintf(ibuf, "instcnt %s; mips %1d.%02d",
-                                    instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d.%02d",
+                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
                         }
                     }
                     else if(len + i < cons_cols) // instcnt
                     {
-                        sprintf(ibuf, "instcnt %s", instcnt);
+                        snprintf(ibuf, sizeof(ibuf), "instcnt %s", instcnt);
                     }
                     else
                        strcpy(ibuf, "");
