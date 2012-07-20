@@ -532,7 +532,12 @@ U64     dreg;
         if(fld & 0x7ffffff8)
         {
             facility_mask = &(regs->mainstor[fld]);
-            for(i = 0; i < STFL_BYTESIZE; i++)
+            GUESTREGS->facility_list[0] &= (facility_mask[0]
+#if defined(FEATURE_ESAME)
+        /* Prevent current architecture mode being masked */ | 0x60
+#endif
+                                                                   );
+            for(i = 1; i < STFL_BYTESIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }
