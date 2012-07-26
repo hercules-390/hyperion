@@ -28,6 +28,8 @@
 /*-------------------------------------------------------------------*/
 U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchb ))( VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -67,6 +69,8 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchb ))( VADR addr, MEMBLK* pMEMBLK )
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstoreb ))( U8 byt, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -106,6 +110,8 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstoreb ))( U8 byt, VADR addr, MEMBLK* pMEM
 /*-------------------------------------------------------------------*/
 U16 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch2 ))( VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -168,6 +174,8 @@ U16 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch2 ))( VADR addr, MEMBLK* pMEMBLK )
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore2 ))( U16 val, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -232,6 +240,8 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore2 ))( U16 val, VADR addr, MEMBLK* pME
 /*-------------------------------------------------------------------*/
 U32 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch4 ))( VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -297,6 +307,8 @@ U32 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch4 ))( VADR addr, MEMBLK* pMEMBLK )
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore4 ))( U32 val, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -363,6 +375,8 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore4 ))( U32 val, VADR addr, MEMBLK* pME
 /*-------------------------------------------------------------------*/
 U64 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch8 ))( VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -428,6 +442,8 @@ U64 (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetch8 ))( VADR addr, MEMBLK* pMEMBLK )
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore8 ))( U64 val, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -490,11 +506,13 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstore8 ))( U64 val, VADR addr, MEMBLK* pME
 }
 
 /*-------------------------------------------------------------------*/
-/* Fetch a 1 to MAX_SYMLEN character operand from virtual storage    */
-/* len = size of operand minus 1                                     */
+/* Fetch a 1 to PAGEFRAME_PAGESIZE character operand from virtual    */
+/* storage; len = size of operand minus 1                            */
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchc ))( U8* dst, U16 len, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
@@ -550,11 +568,13 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vfetchc ))( U8* dst, U16 len, VADR addr, ME
 }
 
 /*-------------------------------------------------------------------*/
-/* Store 1 to MAX_SYMLEN characters into virtual storage operand     */
-/* len = size of operand minus 1                                     */
+/* Store 1 to PAGEFRAME_PAGESIZE characters into operand virtual     */
+/* storage; len = size of operand minus 1                            */
 /*-------------------------------------------------------------------*/
 void (CMPSC_FASTCALL ARCH_DEP( cmpsc_vstorec ))( U8* src, U16 len, VADR addr, MEMBLK* pMEMBLK )
 {
+    addr &= ADDRESS_MAXWRAP( pMEMBLK->regs );
+
     if (unlikely(!pMEMBLK->maddr[0] || addr < pMEMBLK->vpagebeg))
     {
         pMEMBLK->vpagebeg = (addr & PAGEFRAME_PAGEMASK);
