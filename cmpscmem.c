@@ -641,7 +641,7 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs
 // (same thing but including GR0 too. Used only by test tool utility)
 
 #if defined( NOT_HERC )
-void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS_R0_too ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand )
+void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand )
 {
     SET_GR_A( r1,     regs, (VADR) pCMPSCBLK->pOp1  );
     SET_GR_A( r2,     regs, (VADR) pCMPSCBLK->pOp2  );

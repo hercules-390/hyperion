@@ -1627,7 +1627,7 @@ int main( int argc, char* argv[] )
 
     // Initialize the REGS structure based on the CMPSCBLK...
 
-    ARCH_DEP( cmpsc_SetREGS_R0_too )( &g_cmpsc, &g_regs,
+    ARCH_DEP( util_cmpsc_SetREGS )( &g_cmpsc, &g_regs,
         OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand );
     g_regs.dat.storkey = &g_regs.dat.storage;
 
