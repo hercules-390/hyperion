@@ -836,7 +836,7 @@ static void AtoE( U8* p, U32 n ) // EBCDIC <-- ASCII
     if (bTranslate && !Translate( p, EBCDIC_CP, p, ASCII_CP, n ))
     {
         FPRINTF( fRptFile, "ERROR: Translate error.\n" );
-        UTIL_PROGRAM_INTERRUPT();
+        UTIL_PROGRAM_INTERRUPT( PGM_UTIL_FAILED );
     }
 }
 static void EtoA( U8* p, U32 n ) // ASCII <-- EBCDIC
@@ -844,7 +844,7 @@ static void EtoA( U8* p, U32 n ) // ASCII <-- EBCDIC
     if (bTranslate && !Translate( p, ASCII_CP, p, EBCDIC_CP, n ))
     {
         FPRINTF( fRptFile, "ERROR: Translate error.\n" );
-        UTIL_PROGRAM_INTERRUPT();
+        UTIL_PROGRAM_INTERRUPT( PGM_UTIL_FAILED );
     }
 }
 
@@ -912,7 +912,7 @@ static void GetInput()
             rc = errno;
             FPRINTF( fRptFile, "ERROR: Error %d reading '-i' file\"%s\": %s\n",
                 errno, pszInName, strerror( errno ) );
-            UTIL_PROGRAM_INTERRUPT();
+            UTIL_PROGRAM_INTERRUPT( PGM_UTIL_FAILED );
         }
 
         TRANSLATE_INPUT( (U8*)g_cmpsc.pOp2, g_cmpsc.nLen2 );
@@ -946,7 +946,7 @@ static void FlushOutput()
             rc = errno;
             FPRINTF( fRptFile, "ERROR: Error %d writing '-o' file\"%s\": %s\n",
                 errno, pszOutName, strerror( errno ) );
-            UTIL_PROGRAM_INTERRUPT();
+            UTIL_PROGRAM_INTERRUPT( PGM_UTIL_FAILED );
         }
     }
 
@@ -1476,11 +1476,26 @@ void program_interrupt( REGS* regs, U16 pcode )
 {
     // Log the problem...
 
-    FPRINTF( g_cmpsc.dbg ? g_cmpsc.dbg : stderr,
-        "\nERROR: Program Interruption Code 0x%04.4X%s\n",
-        pcode, PGM_PROTECTION_EXCEPTION == pcode ?
-            (g_bHWPIC04 ? "  (Hardware Detected)"
-                        : "  (Software Detected)") : "");
+    if (1
+        && PGM_UTIL_FAILED != pcode
+    )
+    {
+        const char* pszInterruptMessage   = "";
+        const char* pszHardwareDetected   = "  (Hardware Detected)";
+        const char* pszSoftwareDetected   = "  (Software Detected)";
+
+        if (PGM_PROTECTION_EXCEPTION == pcode)
+        {
+            if (g_bHWPIC04)
+                pszInterruptMessage = pszHardwareDetected;
+            else
+                pszInterruptMessage = pszSoftwareDetected;
+        }
+
+        FPRINTF( g_cmpsc.dbg ? g_cmpsc.dbg : stderr,
+            "\nERROR: Program Interruption Code 0x%04.4X%s\n",
+            pcode, pszInterruptMessage );
+    }
 
     if (regs != &g_regs)            // (sanity check)
         __debugbreak();             // (WTF?!)
@@ -1675,8 +1690,10 @@ int main( int argc, char* argv[] )
     }
     else // (program check has occurred...)
     {
-        if (g_regs.psw.intcode != PGM_UTIL_FAILED)
-            rc = g_regs.psw.intcode;
+        if (PGM_UTIL_FAILED == g_regs.psw.intcode)
+            ; // (use whatever value rc is set to)
+        else
+            rc = g_regs.psw.intcode; // (rc = Program Interrupt Code)
         g_nTotAddrTrans += g_nAddrTransCtr;
         FlushOutput();
     }
@@ -1730,7 +1747,10 @@ int main( int argc, char* argv[] )
         }
         else // (an error has occurred...)
         {
-            if (bVerbose)
+            if (1
+                && PGM_UTIL_FAILED != g_nPIC
+                && bVerbose
+            )
             {
                 U32  nInDisp   =  (nInBuffSize  - (U32) g_cmpsc.nLen2);
                 U32  nOutDisp  =  (nOutBuffSize - (U32) g_cmpsc.nLen1);

@@ -633,13 +633,13 @@ static INLINE U16 RandAlign()
 
 extern void program_interrupt( REGS* regs, U16 pcode );
 
-#define UTIL_PROGRAM_INTERRUPT()                        \
+#define UTIL_PROGRAM_INTERRUPT( pic )                   \
                                                         \
     do                                                  \
     {                                                   \
         ARCH_DEP( cmpsc_SetREGS )( &g_cmpsc, &g_regs,   \
             OPERAND_1_REGNUM, OPERAND_2_REGNUM );       \
-        program_interrupt( &g_regs, PGM_UTIL_FAILED );  \
+        program_interrupt( &g_regs, pic );              \
     }                                                   \
     while (0)
 
