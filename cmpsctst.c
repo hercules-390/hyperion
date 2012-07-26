@@ -1683,7 +1683,7 @@ int main( int argc, char* argv[] )
                     rc = errno;
                     FPRINTF( fRptFile, "ERROR: Error %d writing '-o' file\"%s\": %s\n",
                         errno, pszOutName, strerror( errno ) );
-                    UTIL_PROGRAM_INTERRUPT();
+                    UTIL_PROGRAM_INTERRUPT( PGM_UTIL_FAILED );
                 }
             }
         }
