@@ -137,7 +137,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand_Index ))( CMPSCBLK* pCMPSCBLK, EXPBLK*
 
 U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 {
-    U64         pCPULimit;      // CPU Limit SRC pointer
+    U64         nCPUAmt;        // CPU determined processing limit
     GetIndex**  ppGetIndex;     // Ptr to GetNextIndex table for this CDSS-1
     GetIndex*   pGetIndex;      // Ptr to GetNextIndex function for this CBN
     GIBLK       giblk;          // GetIndex parameters block
@@ -145,7 +145,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
     U16         index[8];       // SRC Index values
     U8          bits;           // Number of bits per index
 
-    pCPULimit   = pCMPSCBLK->pOp2 + max( MIN_CMPSC_CPU_AMT, min( MAX_CMPSC_CPU_AMT, pCMPSCBLK->nCPUAmt ));
+    nCPUAmt     = 0;
     ppGetIndex  = ARCH_DEP( GetIndexCDSSTab  )[ pCMPSCBLK->cdss - 1 ];
     pGetIndex   = ppGetIndex [ pCMPSCBLK->cbn ];
     bits        = pCMPSCBLK->cdss + 8;
@@ -186,7 +186,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
     if ((pCMPSCBLK->cbn & 7) != 0)
     {
-        while ((pCMPSCBLK->pOp2 < pCPULimit) && (pCMPSCBLK->cbn & 7) != 0)
+        while (nCPUAmt < (U64) pCMPSCBLK->nCPUAmt && (pCMPSCBLK->cbn & 7) != 0)
         {
             // Get index symbol...
 
@@ -202,6 +202,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
             // Bump source...
 
+            nCPUAmt          += expblk.SRC_bytes;
             pCMPSCBLK->pOp2  += expblk.SRC_bytes;
             pCMPSCBLK->nLen2 -= expblk.SRC_bytes;
             pCMPSCBLK->cbn   += bits;
@@ -237,7 +238,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
         memcpy( &save_op1blk, &expblk.op1blk, sizeof( MEMBLK   ));
         memcpy( &save_op2blk, &expblk.op2blk, sizeof( MEMBLK   ));
 
-        while (pCMPSCBLK->pOp2 < pCPULimit)
+        while (nCPUAmt < (U64) pCMPSCBLK->nCPUAmt)
         {
             // Retrieve 8 index symbols from operand-2...
 
@@ -246,6 +247,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
             // Bump source...
 
+            nCPUAmt          += expblk.SRC_bytes;
             pCMPSCBLK->pOp2  += expblk.SRC_bytes;
             pCMPSCBLK->nLen2 -= expblk.SRC_bytes;
 
@@ -281,7 +283,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
             // Save context
 
-            memcpy( &save_cmpsc,  pCMPSCBLK, sizeof( CMPSCBLK ));
+            memcpy( &save_cmpsc,  pCMPSCBLK,      sizeof( CMPSCBLK ));
             memcpy( &save_op1blk, &expblk.op1blk, sizeof( MEMBLK   ));
             memcpy( &save_op2blk, &expblk.op2blk, sizeof( MEMBLK   ));
         }
@@ -291,7 +293,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
     // Finish up any remainder...
 
-    while (pCMPSCBLK->pOp2 < pCPULimit)
+    while (nCPUAmt < (U64) pCMPSCBLK->nCPUAmt)
     {
         // Get index symbol...
 
@@ -307,6 +309,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
         // Bump source...
 
+        nCPUAmt          += expblk.SRC_bytes;
         pCMPSCBLK->pOp2  += expblk.SRC_bytes;
         pCMPSCBLK->nLen2 -= expblk.SRC_bytes;
         pCMPSCBLK->cbn   += bits;
@@ -434,8 +437,8 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand_Index ))( CMPSCBLK* pCMPSCBLK, EXPBLK*
 
 U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress ))( CMPSCBLK* pCMPSCBLK )
 {
-    U64         pCPULimit;          // CPU Limit SRC pointer
-    U64         pEndMaxSym;         // Ptr to end of maximum length symbol
+    U64         nCPUAmt;            // CPU determined processing limit
+    U64         pBegOp2;            // Ptr to beginning of operand-2
     PutIndex**  ppPutIndex;         // Ptr to PutNextIndex table for this CDSS-1
     PutIndex*   pPutIndex;          // Ptr to PutNextIndex function for this CBN
     U64         pSymTab;            // Symbol-Translation Table
@@ -464,7 +467,6 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress ))( CMPSCBLK* pCMPSCBLK )
     max_index  = (0xFFFF >> (16 - bits));
     ppPutIndex = ARCH_DEP( PutIndexCDSSTab )[ pCMPSCBLK->cdss - 1 ];
     pPutIndex  = ppPutIndex[ pCMPSCBLK->cbn ];
-    pCPULimit  = pCMPSCBLK->pOp2 + max( MIN_CMPSC_CPU_AMT, min( MAX_CMPSC_CPU_AMT, pCMPSCBLK->nCPUAmt ));
     pSymTab    = pCMPSCBLK->st ? pCMPSCBLK->pDict + ((U32)pCMPSCBLK->stt << 7) : 0;
     pGetSD     = pCMPSCBLK->f1 ? ARCH_DEP( GetSD1 ) : ARCH_DEP( GetSD0 );
 
@@ -515,7 +517,10 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress ))( CMPSCBLK* pCMPSCBLK )
 
     // GET STARTED...
 
-    eodst = (pCMPSCBLK->nLen1 < (2 + ((pCMPSCBLK->cbn > (16 - bits)) ? 1 : 0))) ? TRUE : FALSE;
+    pBegOp2  =  pCMPSCBLK->pOp2;
+    eodst    =  (pCMPSCBLK->nLen1 < (2 + ((pCMPSCBLK->cbn > (16 - bits)) ? 1 : 0)))
+             ?  TRUE : FALSE;
+    nCPUAmt  =  0;
 
     //-------------------------------------------------------------------------
     // PROGRAMMING NOTE: the following compression algorithm follows exactly
@@ -539,11 +544,10 @@ cmp2:
     if (unlikely( eodst ))
         RETCC1();
 
-    if (unlikely( pCMPSCBLK->pOp2 >= pCPULimit ))   // (max bytes processed?)
-        RETCC3();                                   // (return cc3 to caller)
+    if (unlikely( nCPUAmt >= (U64) pCMPSCBLK->nCPUAmt ))  // (max bytes processed?)
+        RETCC3();                                         // (return cc3 to caller)
 
-    pEndMaxSym = pCMPSCBLK->pOp2 + MAX_SYMLEN;
-    children   = 0;
+    children = 0;
 
     // Use next SRC char as index of alphabet entry.
     // Call this entry the parent.
@@ -555,6 +559,7 @@ cmp2:
     if (unlikely( !ARCH_DEP( GetCCE )( parent_index, &cceblk )))
         RETERR();
 
+    nCPUAmt++;
     pCMPSCBLK->pOp2++;
     pCMPSCBLK->nLen2--;
 
@@ -824,6 +829,10 @@ cmp8:
     // Advance 1 index in DST.
     // goto cmp2;
 
+    if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
+        RETERR();
+    pBegOp2  =  pCMPSCBLK->pOp2;
+
     piblk.index = (!pCMPSCBLK->st) ? parent_index
           : fetch_dct_hw( pSymTab + (parent_index << 1), pCMPSCBLK );
     eodst = pPutIndex( &piblk );
@@ -834,6 +843,10 @@ cmp9:
     // Store parent index in DST.
     // Advance 1 index in DST.
     // goto cmp1;
+
+    if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
+        RETERR();
+    pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? parent_index
           : fetch_dct_hw( pSymTab + (parent_index << 1), pCMPSCBLK );
@@ -950,6 +963,10 @@ cmp13:
     // Advance 1 index in DST;
     // Set CC0 and endop.
 
+    if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
+        RETERR();
+    pBegOp2  =  pCMPSCBLK->pOp2;
+
     piblk.index = (!pCMPSCBLK->st) ? parent_index
           : fetch_dct_hw( pSymTab + (parent_index << 1), pCMPSCBLK );
     pPutIndex( &piblk );
@@ -962,8 +979,13 @@ cmp14:
     // Advance 1 byte in SRC.
     // goto cmp1;
 
+    nCPUAmt++;
     pCMPSCBLK->pOp2++;
     pCMPSCBLK->nLen2--;
+
+    if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
+        RETERR();
+    pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? child_index
           : fetch_dct_hw( pSymTab + (child_index << 1), pCMPSCBLK );
@@ -979,11 +1001,9 @@ cmp15:
     parent       = child;
     parent_index = child_index;
 
+    nCPUAmt++;
     pCMPSCBLK->pOp2++;
     pCMPSCBLK->nLen2--;
-
-    if (unlikely( pCMPSCBLK->pOp2 > pEndMaxSym ))
-        RETERR();
 
     goto cmp3;
 
@@ -996,11 +1016,9 @@ cmp16:
     parent       = child;
     parent_index = child_index;
 
+    nCPUAmt           += 1 + child.act;
     pCMPSCBLK->pOp2   += 1 + child.act;
     pCMPSCBLK->nLen2  -= 1 + child.act;
-
-    if (unlikely( pCMPSCBLK->pOp2 > pEndMaxSym ))
-        RETERR();
 
     goto cmp3;
 }
