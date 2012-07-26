@@ -52,8 +52,16 @@ U64  (CMPSC_FASTCALL ARCH_DEP( GetDCT ))( U16 index, DCTBLK* pDCTBLK )
 
 U8 (CMPSC_FASTCALL ARCH_DEP( GetECE ))( U16 index, ECEBLK* pECEBLK )
 {
-    register U64 ece = ARCH_DEP( GetDCT )( index, pECEBLK->pDCTBLK );
+    register U64 ece;
     register ECE* pECE = pECEBLK->pECE;
+
+    if (pECEBLK->ece[ index ].cached)
+    {
+        *pECE = pECEBLK->ece[ index ];
+        return TRUE;
+    }
+
+    ece = ARCH_DEP( GetDCT )( index, pECEBLK->pDCTBLK );
 
     if (!(pECE->psl = ECE_U8R( 0, 3 )))
     {
@@ -72,6 +80,9 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetECE ))( U16 index, ECEBLK* pECEBLK )
         pECE->csl = 0;
     }
 
+    pECE->cached = TRUE;
+    pECEBLK->ece[ index ] = *pECE;
+
     return TRUE;
 }
 
@@ -82,9 +93,16 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetECE ))( U16 index, ECEBLK* pECEBLK )
 
 U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
 {
-    register U64 cce = ARCH_DEP( GetDCT )( index, pCCEBLK->pDCTBLK );
+    register U64 cce;
     register CCE* pCCE = pCCEBLK->pCCE;
 
+    if (pCCEBLK->cce[ index ].cached)
+    {
+        *pCCE = pCCEBLK->cce[ index ];
+        return TRUE;
+    }
+
+    cce = ARCH_DEP( GetDCT )( index, pCCEBLK->pDCTBLK );
     pCCE->mc = FALSE;
 
     if (!(pCCE->cct = CCE_U8R( 0, 3 )))  // (no children)
@@ -94,6 +112,9 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
 
         if (pCCE->act)
             pCCE->ec_dw = CSWAP64( cce << 24 );
+
+        pCCE->cached = TRUE;
+        pCCEBLK->cce[ index ] = *pCCE;
 
         return TRUE;
     }
@@ -144,6 +165,9 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
         pCCE->yy   = CCE_U16L(  8,  2 );
     }
 
+    pCCE->cached = TRUE;
+    pCCEBLK->cce[ index ] = *pCCE;
+
     return (pCCE->cptr > pCCEBLK->max_index) ? FALSE : TRUE;
 }
 
@@ -154,9 +178,16 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetCCE ))( U16 index, CCEBLK* pCCEBLK )
 
 U8 (CMPSC_FASTCALL ARCH_DEP( GetSD0 ))( U16 index, SDEBLK* pSDEBLK )
 {
-    register U64 sd1 = ARCH_DEP( GetDCT )( index, pSDEBLK->pDCTBLK );
+    register U64 sd1;
     register SDE* pSDE = pSDEBLK->pSDE;
 
+    if (pSDEBLK->sde[ index ].cached)
+    {
+        *pSDE = pSDEBLK->sde[ index ];
+        return TRUE;
+    }
+
+    sd1 = ARCH_DEP( GetDCT )( index, pSDEBLK->pDCTBLK );
     pSDE->ms = FALSE;
 
     if (!(pSDE->sct = SD1_U8R( 0, 3 )) || pSDE->sct >= 7)
@@ -190,6 +221,9 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD0 ))( U16 index, SDEBLK* pSDEBLK )
 
     pSDE->sc_dw = CSWAP64( sd1 << 8 );
 
+    pSDE->cached = TRUE;
+    pSDEBLK->sde[ index ] = *pSDE;
+
     return TRUE;
 }
 
@@ -200,9 +234,16 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD0 ))( U16 index, SDEBLK* pSDEBLK )
 
 U8 (CMPSC_FASTCALL ARCH_DEP( GetSD1 ))( U16 index, SDEBLK* pSDEBLK )
 {
-    register U64 sd1 = ARCH_DEP( GetDCT )( index, pSDEBLK->pDCTBLK );
+    register U64 sd1;
     register SDE* pSDE = pSDEBLK->pSDE;
 
+    if (pSDEBLK->sde[ index ].cached)
+    {
+        *pSDE = pSDEBLK->sde[ index ];
+        return TRUE;
+    }
+
+    sd1 = ARCH_DEP( GetDCT )( index, pSDEBLK->pDCTBLK );
     pSDE->ms = FALSE;
 
     if (!(pSDE->sct = SD1_U8R( 0, 4 )) || pSDE->sct >= 15)
@@ -248,6 +289,9 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD1 ))( U16 index, SDEBLK* pSDEBLK )
         sd2 <<= 16;                           // (next 6 bytes)
         pSDE->sc_dw2 = CSWAP64( sd2 );        // (store next 6)
     }
+
+    pSDE->cached = TRUE;
+    pSDEBLK->sde[ index ] = *pSDE;
 
     return TRUE;
 }

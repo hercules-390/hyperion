@@ -46,6 +46,7 @@ struct ECE              //  Portable Expansion Character Entry
     U8      csl;        // 10:1  Complete-symbol length
     U8      psl;        // 11:1  Partial-symbol length
     U8      ofst;       // 12:1  Offset
+    U8      cached;     // 13:1  Cache entry active flag
 };
 typedef struct ECE ECE;
 
@@ -75,6 +76,7 @@ struct CCE              //  Portable Compression Character Entry
     U8      cct;        // 22:1  Child count
     U8      act;        // 23:1  Additional-extension-character count
     U8      mc;         // 24:1  More children flag
+    U8      cached;     // 25:1  Cache entry active flag
 };
 typedef struct CCE CCE;
 
@@ -94,6 +96,7 @@ struct SDE              //  Portable Sibling Descriptor Entry
     U16     ecb;        // 16:2  Examine-child bits for children 1-7 or 1-14
     U8      sct;        // 18:1  Sibling count
     U8      ms;         // 19:1  More siblings flag
+    U8      cached;     // 13:1  Cache entry active flag
 };
 typedef struct SDE SDE;
 
@@ -105,6 +108,7 @@ struct ECEBLK               // GetECE parameters block
     DCTBLK*  pDCTBLK;       // Ptr to GetDCT parameters block
     ECE*     pECE;          // Ptr to destination ECE structure
     U16      max_index;     // Max index value (same as index's bitmask value)
+    ECE      ece[ MAX_DICT_ENTRIES ];   // ECE cache
 };
 typedef struct ECEBLK ECEBLK;
 
@@ -116,6 +120,7 @@ struct CCEBLK               // GetCCE parameters block
     DCTBLK*  pDCTBLK;       // Ptr to GetDCT parameters block
     CCE*     pCCE;          // Ptr to destination CCE structure
     U16      max_index;     // Max index value (same as index's bitmask value)
+    CCE      cce[ MAX_DICT_ENTRIES ];   // CCE cache
 };
 typedef struct CCEBLK CCEBLK;
 
@@ -130,6 +135,7 @@ struct SDEBLK               // GetSDn parameters block
     CCE*     pCCE;          // Ptr to Parent CCE structure where extra
                             // Examine-child bits reside, but ONLY if this
                             // is the parent's first sibling. Otherwise NULL.
+    SDE      sde[ MAX_DICT_ENTRIES ];   // SDE cache
 };
 typedef struct SDEBLK SDEBLK;
 

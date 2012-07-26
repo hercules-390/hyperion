@@ -485,29 +485,33 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Compress ))( CMPSCBLK* pCMPSCBLK )
     cceblk.max_index  = max_index;
     cceblk.pCCE       = NULL;           // (filled in before each call)
 
+    memset( &cceblk.cce, 0, sizeof( cceblk.cce ) );
+
     sdeblk.pDCTBLK    = &dctblk;
     sdeblk.pDCTBLK2   = &dctblk2;
     sdeblk.pSDE       = &sibling;
     sdeblk.pCCE       = NULL;           // (depends if first sibling)
+
+    memset( &sdeblk.sde, 0, sizeof( sdeblk.sde ) );
 
     piblk.ppPutIndex  = (void**) &pPutIndex;
     piblk.pCMPSCBLK   = pCMPSCBLK;
     piblk.pMEMBLK     = &op1blk;        // (we put indexes into op-1)
     piblk.index       = 0;              // (filled in before each call)
 
-    op1blk.arn       = pCMPSCBLK->r1;
-    op1blk.regs      = pCMPSCBLK->regs;
-    op1blk.pkey      = pCMPSCBLK->regs->psw.pkey;
-    op1blk.vpagebeg  = 0;
-    op1blk.maddr[0]  = 0;
-    op1blk.maddr[1]  = 0;
+    op1blk.arn        = pCMPSCBLK->r1;
+    op1blk.regs       = pCMPSCBLK->regs;
+    op1blk.pkey       = pCMPSCBLK->regs->psw.pkey;
+    op1blk.vpagebeg   = 0;
+    op1blk.maddr[0]   = 0;
+    op1blk.maddr[1]   = 0;
 
-    op2blk.arn       = pCMPSCBLK->r2;
-    op2blk.regs      = pCMPSCBLK->regs;
-    op2blk.pkey      = pCMPSCBLK->regs->psw.pkey;
-    op2blk.vpagebeg  = 0;
-    op2blk.maddr[0]  = 0;
-    op2blk.maddr[1]  = 0;
+    op2blk.arn        = pCMPSCBLK->r2;
+    op2blk.regs       = pCMPSCBLK->regs;
+    op2blk.pkey       = pCMPSCBLK->regs->psw.pkey;
+    op2blk.vpagebeg   = 0;
+    op2blk.maddr[0]   = 0;
+    op2blk.maddr[1]   = 0;
 
     // GET STARTED...
 
