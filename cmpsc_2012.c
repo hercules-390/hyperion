@@ -271,7 +271,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
 
                 pCMPSCBLK->pOp1  += expblk.symlen;
                 pCMPSCBLK->nLen1 -= expblk.symlen;
-                pCMPSCBLK->cbn   += bits;
+//              pCMPSCBLK->cbn   += bits;
 
                 MEMBLK_BUMP( &expblk.op1blk, pCMPSCBLK->pOp1 );
             }
