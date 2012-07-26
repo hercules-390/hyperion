@@ -1744,6 +1744,10 @@ int main( int argc, char* argv[] )
                 FPRINTF( fRptFile, "%9.2f%% ratio\n",
                     ratio * 100.0 );
             }
+
+            if (bVerbose)
+                FPRINTF( fRptFile, "%10lld MADDRs\n",
+                    g_nTotAddrTrans );
         }
         else // (an error has occurred...)
         {
@@ -1761,12 +1765,6 @@ int main( int argc, char* argv[] )
                     nOutBlockNum, nOutDisp, nOutDisp, !expand ? (g_regs.gr[1] & 0x07) : 0 );
             }
         }
-
-        // Show total Address Translations regardless of success if verbose
-
-        if (bVerbose)
-            FPRINTF( fRptFile, "%10lld MADDRs\n",
-                g_nTotAddrTrans );
 
         // Show CPU consumed and duration... (in VM/CMS format just for fun)
         //
