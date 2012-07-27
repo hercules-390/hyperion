@@ -29,6 +29,7 @@ int        pttto;                       /* timeout in seconds        */
 TID        ptttotid;                    /* timeout thread id         */
 LOCK       ptttolock;                   /* timeout thread lock       */
 COND       ptttocond;                   /* timeout thread condition  */
+int        pttmadethread;               /* pthreads is active        */
 
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
@@ -482,6 +483,7 @@ int result;
     UNREFERENCED(nm);
     result = pthread_create(tid, attr, start, arg);
     PTTRACE ("create", (void *)*tid, NULL, loc, result);
+    pttmadethread = 1;                /* Set a mark on the wall      */
     return result;
 }
 
