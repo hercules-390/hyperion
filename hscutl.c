@@ -363,6 +363,7 @@ DLL_EXPORT void del_symbol(const char *sym)
 DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
+    extern int          pttmadethread;         /* pthreads is active */
 
     if ( sym == NULL || value == NULL || strlen(sym) == 0 )
         return;
@@ -391,8 +392,45 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     }
 
 #else
-    if ( setenv( sym, value, TRUE ) )
-        WRMSG(HHC00136, "W", "setenv()", strerror(errno));
+    #if 0
+
+    setenv/putenv are not thread safe.  This needs redesign.  Essentially,
+    you must maintain your own set of variables, under proper mutexing,
+    in front of the environment proper, which must remain read only.  When
+    running a command (system()), you must fork(), kill all other threads,
+    stow the local variables in the environment, and issue the command.
+
+    It won't work to restrict all access to the environment from Hercules
+    to a single thread as many library routines access _environment
+    directly.  That is, once you do setenv(), even getenv() is unsafe.
+
+    In short, pthreads is not for the average Joe COBOL.
+
+    A workable solution is to have a separate process that is not
+    multithreaded.  It can maintain its environment as this code tries to;
+    it can issue system() with impunity.  Of course, you have the problem
+    of designing a working protocol, but that can be done with a message
+    queue, or with pipes as long as the message length is within the
+    maximum atomic pipe buffer size PIPE_BUF.
+
+    #endif
+    if (!pttmadethread)
+    {
+       if ( setenv( sym, value, TRUE ) )
+           WRMSG(HHC00136, "W", "setenv()", strerror(errno));
+    }
+    else
+    {
+        char b[4096];
+        static int toldhim;
+
+        if (!toldhim)
+        {
+            sprintf (b, "cannot set %s: Not thread safe--setting disabled", sym);
+            WRMSG(HHC00136, "W", "setenv()", b);
+            toldhim = 1;
+        }
+    }
 #endif
 
     tok=get_symbol_token(sym,1);
