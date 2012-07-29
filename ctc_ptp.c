@@ -2019,9 +2019,12 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
         // Check for error conditions...
         if( iLength < 0 )
         {
-            // HHC03972 "%1d:%04X PTP: error reading from device '%s': '%s'"
-            WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 pPTPBLK->szTUNDevName, strerror( errno ) );
+            if( !pPTPBLK->fCloseInProgress )
+            {
+                // HHC03972 "%1d:%04X PTP: error reading from device '%s': '%s'"
+                WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                                     pPTPBLK->szTUNDevName, strerror( errno ) );
+            }
             break;
         }
 

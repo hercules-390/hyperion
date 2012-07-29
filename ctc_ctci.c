@@ -1000,9 +1000,12 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
-            // "%1d:%04X CTC: error reading from device '%s': '%s'"
-            WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
-                strerror( errno ) );
+            if( !pCTCBLK->fCloseInProgress )
+            {
+                // "%1d:%04X CTC: error reading from device '%s': '%s'"
+                WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+                    strerror( errno ) );
+            }
             break;
         }
 
