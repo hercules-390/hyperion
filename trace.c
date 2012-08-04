@@ -1073,22 +1073,45 @@ ETOD ETOD;
 
     {
         TRACE_F1_TR *tte;
+        BYTE fast;
+
         size = sizeof(TRACE_F1_TR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)(regs->mainstor + raddr);
 
+        /* Determine if fast clock format */
+        #if defined(FEATURE_STORE_CLOCK_FAST)
+            fast = (regs->CR(0) & CR0_TRACE_TOD) >> 31;
+        #else
+            fast = 0;
+        #endif
+
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-        /* Retrieve the standard TOD clock value with CPU address */
-        etod_clock(regs, &ETOD, ETOD_standard);
-        dreg = ETOD2TOD(ETOD);
+        /* Retrieve the TOD clock value bits 16-63 */
+        etod_clock(regs, &ETOD, fast ? ETOD_fast : ETOD_standard);
+        dreg = ETOD2TOD(ETOD) & 0x0000FFFFFFFFFFFFULL;
 
-        tte->format = TRACE_F1_TR_FMT | n;
-        tte->fmt2 = TRACE_F1_TR_FM2;
+        /* Set format information */
+        dreg |= /* tte->format = */ ((U64)(TRACE_F1_TR_FMT | n)) << 56;
+        dreg |= /* tte->fmt2 =   */  (U64)TRACE_F1_TR_FM2        << 48;
 
-        STORE_HW(tte->clk16, (dreg >> 32) & 0xFFFF);
-        STORE_FW(tte->clk32, dreg & 0xFFFFFFFF);
+        /* Store format information and bits 16-63 of the TOD clock
+         * value
+         */
+        STORE_DW(tte, dreg);
+
+        /* Store trace operand */
+        #if defined(FEATURE_STORE_CLOCK_FAST)
+            if (fast)
+            {
+                op &= 0xFF00FFFF;
+                /* FIXME: OR-in model dependent code
+                op |= model_code << 16;
+                 */
+            }
+        #endif
         STORE_FW(tte->operand, op);
 
         for(i = r1, j = 0; ; )
@@ -1129,6 +1152,7 @@ RADR ag;
 int  size;
 int  i, j, n;
 ETOD ETOD;
+U64  dreg;
 
     {
         TRACE_F2_TR *tte;
@@ -1142,19 +1166,32 @@ ETOD ETOD;
         /* Retrieve the extended TOD clock value including the epoch */
         etod_clock(regs, &ETOD, ETOD_extended);
 
-        /* Convert clock value to 80-bit trace format */
-        ETOD_shift(&ETOD, ETOD, 48);
+        /* Convert clock value to 80-bit trace format; clean and leave
+         * TODEX bit 7 along with TOD clock bits 0-79
+         */
+        ETOD_shift(&ETOD, ETOD, 8);
+        dreg = ETOD.high & 0x0001FFFFFFFFFFFFULL;       /* Clean up */
 
-        /* OR in CPU address in bits 74-79 for Hercules format */
-        ETOD.low  &= ~0x3FULL;
-        ETOD.low  |= regs->cpuad & 0x3F;
+        /* Set format information */
+        dreg |= /* tte->format = */ ((U64)(TRACE_F2_TR_FMT | n)) << 56;
+        dreg |= /* tte->fmt2 =   */  (U64)TRACE_F2_TR_FM2        << 48;
 
-        tte->format = TRACE_F2_TR_FMT | n;
-        tte->fmt2 = TRACE_F2_TR_FM2;
+        /* Store format information and bits 0-79 of the TOD clock
+         * value
+         */
+        STORE_DW(tte, dreg);
+        STORE_FW(tte->clk48, ETOD.low >> 32);
 
-        STORE_HW(tte->clk0,  ETOD.high & 0x0000FFFF);   // TOD Clock bits 0-15
-        STORE_FW(tte->clk16, ETOD.low >> 32);           // TOD Clock bits 16-47
-        STORE_FW(tte->clk48, ETOD.low & 0xFFFFFFFF);    // TOD Clock bits 48-79
+        /* Store trace operand */
+        #if defined(FEATURE_STORE_CLOCK_FAST)
+            if ((regs->CR(0) & CR0_TRACE_TOD))
+            {
+                op &= 0xFF00FFFF;
+                /* FIXME: OR-in model dependent code
+                op |= model_code << 16;
+                 */
+            }
+        #endif
         STORE_FW(tte->operand, op);
 
         for (i = r1, j = 0; ; )

@@ -205,45 +205,46 @@ typedef struct _DAT {
       } DAT;
 
 /* Bit definitions for control register 0 */
-#define CR0_MCX_AUTH    0x0001000000000000 /* Measurement Counter 
-                                           Extraction Authority      */
-#define CR0_BMPX        0x80000000      /* Block multiplex ctl  S/370*/
-#define CR0_SSM_SUPP    0x40000000      /* SSM suppression control   */
-#define CR0_TOD_SYNC    0x20000000      /* TOD clock sync control    */
-#define CR0_LOW_PROT    0x10000000      /* Low-address protection    */
-#define CR0_EXT_AUTH    0x08000000      /* Extraction auth control   */
-#define CR0_SEC_SPACE   0x04000000      /* Secondary space control   */
-#define CR0_FETCH_OVRD  0x02000000      /* Fetch protection override */
-#define CR0_STORE_OVRD  0x01000000      /* Store protection override */
-#define CR0_STORKEY_4K  0x01000000      /* Storkey exception control */
-#define CR0_TRAN_FMT    0x00F80000      /* Translation format bits...*/
-#define CR0_TRAN_ESA390 0x00B00000      /* ...1M/4K ESA/390 format   */
-#define CR0_PAGE_SIZE   0x00C00000      /* Page size for S/370...    */
-#define CR0_PAGE_SZ_2K  0x00400000      /* ...2K pages               */
-#define CR0_PAGE_SZ_4K  0x00800000      /* ...4K pages               */
-#define CR0_ED          0x00800000      /* Enhanced DAT enable   EDAT*/
-#define CR0_SEG_SIZE    0x00380000      /* Segment size for S/370... */
-#define CR0_SEG_SZ_64K  0x00000000      /* ...64K segments           */
-#define CR0_SEG_SZ_1M   0x00100000      /* ...1M segments            */
-#define CR0_ASN_LX_REUS 0x00080000      /* ASN-and-LX-reuse control  */
-#define CR0_AFP         0x00040000      /* AFP register control      */
-#define CR0_VOP         0x00020000      /* Vector control         390*/
-#define CR0_ASF         0x00010000      /* AS function control    390*/
-#define CR0_XM_MALFALT  0x00008000      /* Malfunction alert mask    */
-#define CR0_XM_EMERSIG  0x00004000      /* Emergency signal mask     */
-#define CR0_XM_EXTCALL  0x00002000      /* External call mask        */
-#define CR0_XM_TODSYNC  0x00001000      /* TOD clock sync mask       */
-#define CR0_XM_CLKC     0x00000800      /* Clock comparator mask     */
-#define CR0_XM_PTIMER   0x00000400      /* CPU timer mask            */
-#define CR0_XM_SERVSIG  0x00000200      /* Service signal mask       */
-#define CR0_XM_ITIMER   0x00000080      /* Interval timer mask  S/370*/
-#define CR0_XM_INTKEY   0x00000040      /* Interrupt key mask        */
-#define CR0_XM_EXTSIG   0x00000020      /* External signal mask S/370*/
-#define CR0_XM_MALERT   0x00000020      /* Measurement alert mask    */
-#define CR0_XM_ETR      0x00000010      /* External timer mask       */
-#define CR0_PC_FAST     0x00000008      /* PC fast control        390*/
-#define CR0_CRYPTO      0x00000004      /* Crypto control       ESAME*/
-#define CR0_IUCV        0x00000002      /* IUCV interrupt mask       */
+#define CR0_MCX_AUTH    0x0001000000000000ULL   /* Measurement Counter
+                                                   Extraction Authority       */
+#define CR0_TRACE_TOD           0x80000000      /* TRACE TOD-clock control    */
+#define CR0_BMPX                0x80000000      /* Block multiplex ctl  S/370 */
+#define CR0_SSM_SUPP            0x40000000      /* SSM suppression control    */
+#define CR0_TOD_SYNC            0x20000000      /* TOD clock sync control     */
+#define CR0_LOW_PROT            0x10000000      /* Low-address protection     */
+#define CR0_EXT_AUTH            0x08000000      /* Extraction auth control    */
+#define CR0_SEC_SPACE           0x04000000      /* Secondary space control    */
+#define CR0_FETCH_OVRD          0x02000000      /* Fetch protection override  */
+#define CR0_STORE_OVRD          0x01000000      /* Store protection override  */
+#define CR0_STORKEY_4K          0x01000000      /* Storkey exception control  */
+#define CR0_TRAN_FMT            0x00F80000      /* Translation format bits... */
+#define CR0_TRAN_ESA390         0x00B00000      /* ...1M/4K ESA/390 format    */
+#define CR0_PAGE_SIZE           0x00C00000      /* Page size for S/370...     */
+#define CR0_PAGE_SZ_2K          0x00400000      /* ...2K pages                */
+#define CR0_PAGE_SZ_4K          0x00800000      /* ...4K pages                */
+#define CR0_ED                  0x00800000      /* Enhanced DAT enable   EDAT */
+#define CR0_SEG_SIZE            0x00380000      /* Segment size for S/370...  */
+#define CR0_SEG_SZ_64K          0x00000000      /* ...64K segments            */
+#define CR0_SEG_SZ_1M           0x00100000      /* ...1M segments             */
+#define CR0_ASN_LX_REUS         0x00080000      /* ASN-and-LX-reuse control   */
+#define CR0_AFP                 0x00040000      /* AFP register control       */
+#define CR0_VOP                 0x00020000      /* Vector control         390 */
+#define CR0_ASF                 0x00010000      /* AS function control    390 */
+#define CR0_XM_MALFALT          0x00008000      /* Malfunction alert mask     */
+#define CR0_XM_EMERSIG          0x00004000      /* Emergency signal mask      */
+#define CR0_XM_EXTCALL          0x00002000      /* External call mask         */
+#define CR0_XM_TODSYNC          0x00001000      /* TOD clock sync mask        */
+#define CR0_XM_CLKC             0x00000800      /* Clock comparator mask      */
+#define CR0_XM_PTIMER           0x00000400      /* CPU timer mask             */
+#define CR0_XM_SERVSIG          0x00000200      /* Service signal mask        */
+#define CR0_XM_ITIMER           0x00000080      /* Interval timer mask  S/370 */
+#define CR0_XM_INTKEY           0x00000040      /* Interrupt key mask         */
+#define CR0_XM_EXTSIG           0x00000020      /* External signal mask S/370 */
+#define CR0_XM_MALERT           0x00000020      /* Measurement alert mask     */
+#define CR0_XM_ETR              0x00000010      /* External timer mask        */
+#define CR0_PC_FAST             0x00000008      /* PC fast control        390 */
+#define CR0_CRYPTO              0x00000004      /* Crypto control       ESAME */
+#define CR0_IUCV                0x00000002      /* IUCV interrupt mask        */
 
 #define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
@@ -1312,7 +1313,7 @@ typedef struct _MBK {
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
 /* Perform Frame Management Function definitions */
-#define PFMF_FMFI            0x000f0000 
+#define PFMF_FMFI            0x000f0000
 #define PFMF_FMFI_RESV       0x000c0000 /* Reserved must be zero     */
 #define PFMF_FMFI_SK         0x00020000 /* Set-Key Control           */
 #define PFMF_FMFI_CF         0x00010000 /* Clear-Frame Control       */
@@ -1396,7 +1397,7 @@ typedef struct _MBK {
                                            facility is installed  208*/
 #define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                            facility installed     810*/
-#define STFL_FP_EXTENSION         37    /* Floating-point extension   
+#define STFL_FP_EXTENSION         37    /* Floating-point extension
                                            facility installed     810*/
 #define STFL_RESERVED_39          39    /* Reserved */
 #define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
@@ -1422,19 +1423,19 @@ typedef struct _MBK {
                                            facility installed (ESAME)*/
 #define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
                                            facility installed (ESAME)*/
-#define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store  
+#define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
                                            indication facility    810*/
-#define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810  
+#define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810
                                            Extension 3 installed  810*/
-#define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810 
+#define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810
                                            Extension 4 installed  810*/
 
 #define STFL_MAX                  77
 #define STFL_BYTESIZE (((STFL_MAX+8))/8)
 #define STFL_DWRDSIZE ((STFL_BYTESIZE+7)/8)
 
-/* The below facility definitions are not part of the architecture 
-   but are hercules specific.  They are placed here for the convenience 
+/* The below facility definitions are not part of the architecture
+   but are hercules specific.  They are placed here for the convenience
    of being able to use the Virtual Architecture Level facility */
 
 #define STFL_HBASE              (STFL_DWRDSIZE*64)
@@ -2260,11 +2261,11 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define MAEIP_ISDBTE      0x80000000   /* Incorrect sample-data-block-
                                           table entry                */
 #define MAEIP_PRA         0x20000000   /* Program request alert      */
-#define MAEIP_SACA        0x00800000   /* Sampling authorisation 
+#define MAEIP_SACA        0x00800000   /* Sampling authorisation
                                           change alert               */
 #define MAEIP_LSDA        0x00400000   /* Loss of sample data alert  */
-#define MAEIP_CACA        0x00000080   /* Counter Authorisation 
+#define MAEIP_CACA        0x00000080   /* Counter Authorisation
                                           change alert               */
 #define MAEIP_LCDA        0x00000040   /* Loss of counter data alert */
-                                          
+
 #endif // _ESA390_H
