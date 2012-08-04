@@ -1,0 +1,48 @@
+* TRACE, TRACG tests
+stopall
+cfall off
+maxcpu 2
+numcpu 2
+archmode esame
+cpu 1
+cf on
+sysclear
+r 1a0=00000001800000000000000000000200  # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD  # z/Arch pgm new PSW
+r 200=A7F90001                          #       LHGI  R15,1             Load loop counter
+r 204=B7CC0310                          #       LCTL  12,12,CTL12       Load trace control
+r 208=B2050320                          #       STCK  CLOCK             Get clock value
+r 20C=98120320                          # LOOP  LM    R1,R2,CLOCK       Load into register pair
+r 210=99080318                          #       TRACE R0,R8,TROP        Trace 32-bit
+r 214=A7290000                          #       LHGI  R2,0              Clear R2
+r 218=B2780320                          #       STCKE CLOCK             Get extended clock value
+r 21C=E3000320008F                      #       LPQ   R0,CLOCK          Load into register pair
+r 222=EBE00038000D                      #       SLLG  R14,R0,56         Shift clock right by 8
+r 228=EB000008000C                      #       SRLG  R0,R0,8           ...
+r 22E=EB110008000C                      #       SRLG  R1,R1,8           ...
+r 234=B981001E                          #       OGR   R1,R14            ...
+r 238=EB030318000F                      #       TRACG R0,R3,TROP        Trace 64-bit
+r 23E=E3F0025C0046                      #       BCTG  R15,WAIT          Go wait if done
+r 244=A7090000                          #       LHGI  R0,0              Clear R0
+r 248=B6000314                          #       STCTL 0,0,CTL0          Turn on TRACE TOD-clock control bit
+r 24C=96800314                          #       OI    CTL0,X'80'        ...
+r 250=B7000314                          #       LCTL  0,0,CTL0          ...
+r 254=B27C0320                          #       STCKF CLOCK             Store clock fast
+r 258=47F0020C                          #       B     LOOP              Store trace entries once again
+r 25C=947F0314                          # WAIT  NI    CTL0,255-X'80'    Turn off TRACE TOD-clock control bit
+r 260=B7000314                          #       LCTL  0,0,CTL0          Load enabled wait PSW
+r 264=B2B20300                          #       LPSWE WAITPSW           Load enabled wait PSW
+r 268=B2B201D0                          # DIE   LPSWE PGMNPSW           Load disabled wait PSW
+r 300=07020001800000000000000000FED0D0  # WAITPSW                       Enabled wait state PSW
+r 310=00002001                          # CTL12 DS    A(2000+1)         Control register 12
+* 314                                   # CTL0  DS    F                 Control register  0
+r 318=01234567                          # TROP  DC    X'01234567'       Trace parameters
+* 320                                   # CLOCK DS    2D                Clock values
+restart
+pause 1
+* Display TRACE results
+r 2000.30       # TRACE TOD-clock control = 0
+r 2060.30       # TRACE TOD-clock control = 1
+* Display TRACG results
+r 2030.30       # TRACE TOD-clock control = 0
+r 2090.30       # TRACE TOD-clock control = 1
