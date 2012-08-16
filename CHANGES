@@ -1,3 +1,5 @@
+15 Aug 2012 Prevent command reject response to no-op during Read IPL to disk
+            - Kevin Leonard, Mark L. Gaubatz
 18 Jul 2012 Report IO/s on panel displays when operating in device server mode
             (no configured CPUs).
 18 Jul 2012 Support CCW command 0x01, write no carriage return in con1052c.c,
