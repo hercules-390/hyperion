@@ -121,7 +121,7 @@ BYTE ipl2data[] =   {0x07, 0x00, 0x3A, 0xB8, 0x40, 0x00, 0x00, 0x06,
                      0x06, 0x00, 0x00, 0x00, 0x20, 0x00, 0x7f, 0xff,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /*BBCCHH*/
                      0x00, 0x00, 0x00, 0x00, 0x04}; /*CCHHR*/
-BYTE noiplpsw[8] =  {0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+BYTE noiplpsw[8] =  {0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 BYTE noiplccw1[8] = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
@@ -670,6 +670,12 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 /*      heads   Number of tracks per cylinder on output device       */
 /*      trklen  Track length of virtual output device                */
 /*      iplfnm  Name of file containing IPL text object deck         */
+/*      flagECmode        1  set EC mode bit in wait PSW             */
+/*                        0  don't set EC mode bit in wait PSW       */
+/*      flagMachinecheck  1  set machine-check-enabled flag          */
+/*                           in wait PSW                             */
+/*                        0  don't set machine-check-enabled flag    */
+/*                           in wait PSW                             */
 /* Output:                                                           */
 /*      reltrk  Next relative track number on output device          */
 /*      outcyl  Cylinder number of next track on output device       */
@@ -679,7 +685,8 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 static int
 write_track_zero (CIFBLK *cif, char *ofname, char *volser, U16 devtype,
             int heads, int trklen, char *iplfnm,
-            int *reltrk, int *outcyl, int *outhead)
+            int *reltrk, int *outcyl, int *outhead,
+            int flagECmode, int flagMachinecheck)
 {
 int             rc;                     /* Return code               */
 int             outusedv = 0;           /* Output bytes used on track
@@ -719,17 +726,32 @@ BYTE            buf[32768];             /* Buffer for data block     */
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "IPL1");
 
+    /* Build IPL PSW and CCWs in IPL1 record */
     if (iplfnm != NULL)
     {
+        /* Copy model IPL PSW and CCWs for IPLable volume */
         memcpy (datablk->kdarea+4, iplpsw, 8);
         memcpy (datablk->kdarea+12, iplccw1, 8);
         memcpy (datablk->kdarea+20, iplccw2, 8);
     }
     else
     {
+        /* Copy model IPL PSW and CCWs for non-IPLable volume */
         memcpy (datablk->kdarea+4, noiplpsw, 8);
         memcpy (datablk->kdarea+12, noiplccw1, 8);
         memcpy (datablk->kdarea+20, noiplccw2, 8);
+
+        /* Set EC mode flag in wait PSW if requested */
+        if (flagECmode)
+        {
+            *(datablk->kdarea+5) = 0x08 | *(datablk->kdarea+5);
+        }
+
+        /* Set machine-check-enabled mask in PSW if requested */
+        if (flagMachinecheck)
+        {
+            *(datablk->kdarea+5) = 0x04 | *(datablk->kdarea+5);
+        }
     }
 
     keylen = IPL1_KEYLEN;
@@ -4277,6 +4299,8 @@ char            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
+int             flagECmode = 1;         /* IPL PSW mode flag         */
+int             flagMachinecheck = 0;   /* IPL PSW machine check flag*/
 int             lfs = 0;                /* 1 = Large file            */
 char            pathname[MAX_PATH];     /* cfname in host path format*/
 char           *strtok_str = NULL;      /* last token position       */
@@ -4331,6 +4355,10 @@ char           *strtok_str = NULL;      /* last token position       */
             altcylflag = 1;
         else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
+        else if (strcmp("b", &argv[1][1]) == 0)
+            flagECmode = 0;
+        else if (strcmp("m", &argv[1][1]) == 0)
+            flagMachinecheck = 1;
         else argexit(0, pgm);
     }
 
@@ -4436,7 +4464,7 @@ char           *strtok_str = NULL;      /* last token position       */
     if (extgui) fprintf (stderr, "REQCYLS=%d\n", reqcyls);
 #endif /*EXTERNALGUI*/
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp, lfs, 0, 0, 0);
+                     volser, comp, lfs, 0, 0, 0, 1, 0 );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02504, "E", ofname, "create_ckd()" ) );
@@ -4457,7 +4485,8 @@ char           *strtok_str = NULL;      /* last token position       */
     /* Write track zero to the DASD image file */
     rc = write_track_zero (cif, ofname, volser, devtype,
                         outheads, outtrklv, iplfnm,
-                        &reltrk, &outcyl, &outhead);
+                        &reltrk, &outcyl, &outhead,
+                        flagECmode, flagMachinecheck);
     if (rc < 0)
         return -1;
 

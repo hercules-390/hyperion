@@ -1546,6 +1546,10 @@ do { \
        "            -a     build dasd image file that includes alternate cylinders\n" \
        "                   (option ignored if size is manually specified)\n" \
        "            -r     build 'raw' dasd image file  (no VOL1 or IPL track)\n" \
+       "            -b     make wait PSW in IPL1 record a BC-mode PSW\n" \
+       "                   (default is EC-mode PSW)\n" \
+       "            -m     enable wait PSW in IPL1 record for machine checks\n" \
+       "                   (default is disabled for machine checks)\n" \
        "            -linux  null track images will look like linux dasdfmt'ed images\n" \
        "                   (3390 device type only)\n\n" \
        "            filename  name of dasd image file to be created\n" \
@@ -1618,6 +1622,10 @@ do { \
        "          options:\n" \
        "            -0     no compression (default)\n" \
        "            -a     output disk will include alternate cylinders\n" \
+       "            -b     make wait PSW in IPL1 record a BC-mode PSW\n" \
+       "                   (default is EC-mode PSW)\n" \
+       "            -m     enable wait PSW in IPL1 record for machine checks\n" \
+       "                   (default is disabled for machine checks)\n" \
        "%s%s%s" \
        "\n" \
        "          ctlfile  name of input control file\n" \

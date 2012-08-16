@@ -94,6 +94,10 @@ where:
   -a         build dasd image file that includes alternate cylinders
              (option ignored if size is manually specified)
   -r         build 'raw' dasd image file  (no VOL1 or IPL track)
+  -b         make wait PSW in IPL1 record a BC-mode PSW
+             (default is EC-mode PSW)
+  -m         enable wait PSW in IPL1 record for machine checks
+             (default is disabled for machine checks)
   -linux     null track images will look like linux dasdfmt'ed images
              (3390 device type only)
 
@@ -110,9 +114,18 @@ where:
   size       number of CKD cylinders or 512-byte FBA sectors
              (required if model not specified else optional)
 </pre>
-<p><br>
+<p>
+Note that the defaults for the wait PSW written to the IPL1 record have changed
+from earlier releases of Hercules.  In the past, the wait PSW created by dasdinit
+was a BC-mode PSW enabled for machine check interrupts.  The current default for
+the wait PSW is EC-mode, disabled for machine checks.  To obtain the earlier
+behavior, run dasdinit with the "-b" and "-m" flags.
+</p>
+<br>
+<p>
 <a NAME="models">
 The current list of device types and models supported is:
+</p>
 <p><br>
 <pre>
               CKD DEVICES
@@ -329,16 +342,23 @@ where
 <dl>
     <dt><em>[options]</em>
     <dt><code><i>-z</i></code>
-    <dd>build compressed dasd image file using zlib
+    <dd>Build compressed dasd image file using zlib.
     <dt><code><i>-bz2</i></code>
-    <dd>build compressed dasd image file using bzip2
+    <dd>Build compressed dasd image file using bzip2.
     <dt><code><i>-0</i></code>
-    <dd>build compressed dasd image file with no compression
+    <dd>Build compressed dasd image file with no compression.
     <dt><code><i>-lfs</i></code>
-    <dd>build a large dasd image file (can exceed 2G)
+    <dd>Build a large dasd image file (can exceed 2G).
     <dt><code><i>-a</i></code>
-    <dd>build dasd image file that includes alternate cylinders
-
+    <dd>Build dasd image file that includes alternate cylinders.
+    <dt><code><i>-b</i></code>
+    <dd>For a volume without IPL text, make the wait PSW written to the IPL1
+        record a BC-mode PSW.  The default is to make the wait PSW an EC-mode
+        PSW.</dd>
+    <dt><code><i>-m</i></code>
+    <dd>For a volume without IPL text, make the wait PSW written to the IPL1
+        record for enabled for machine checks.  The default is to make the wait
+        PSW disabled for machine checks.</dd>
     <dt><code><em>ctlname</em></code>
     <dd>is the name of the control file which specifies the datasets
         that are to be loaded onto the newly-created volume
@@ -348,6 +368,14 @@ where
     <dd>is a number from 0 to 5 which controls the level of detail
         of the messages issued during the load.
 </dl>
+
+<p>
+Note that the dasdload defaults for the wait PSW written to the IPL1 record have
+changed from earlier releases of Hercules.  In the past, the wait PSW created by dasdload
+on volumes without IPL text was a BC-mode PSW enabled for machine check interrupts.
+The current default for the wait PSW is EC-mode, disabled for machine checks.  To obtain
+the earlier behavior, run dasdload with the "-b" and "-m" flags.
+</p>
 
 <h4>Control file</h4>
 <p>

@@ -1,3 +1,6 @@
+15 Aug 2012 Change DASD utilities defaults to make wait PSW in IPL1 record
+            EC-mode and disabled for machine checks, add -b and -m switches
+            to dasdinit and dasdload to obtain old behavior - Kevin Leonard
 15 Aug 2012 Prevent command reject response to no-op during Read IPL to disk
             - Kevin Leonard, Mark L. Gaubatz
 18 Jul 2012 Report IO/s on panel displays when operating in device server mode
