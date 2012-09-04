@@ -2883,52 +2883,86 @@ BYTE    f = ' ', c = '\0';
         return -1;
     }
 
-    if ( rc == 2 )
+    /* Handle size suffix and suffix overflow */
     {
-        switch (toupper(f))
-        {
-        case 'B':
-            break;
-        case 'K':
-            mainsize <<= SHIFT_KIBIBYTE;
-            break;
-        case 'M':
-            mainsize <<= SHIFT_MEBIBYTE;
-            break;
-        case 'G':
-            mainsize <<= SHIFT_GIBIBYTE;
-            break;
-#if SIZEOF_SIZE_T >= 8
-        case 'T':
-            mainsize <<= SHIFT_TEBIBYTE;
-            break;
-        case 'P':
-            mainsize <<= SHIFT_PEBIBYTE;
-            break;
-        case 'E':
-            mainsize <<= SHIFT_EXBIBYTE;
-            break;
-#endif
-        default:
-            WRMSG( HHC01451, "E", argv[1], argv[0]);
-            return -1;
-        }
-    }
-    else
-        mainsize <<= SHIFT_MEGABYTE;
+        register U64 shiftsize = mainsize;              /* mainsize pages     */
+        register U64 overflow = 0xFFFFFFFFFFFFFFFFULL;  /* Overflow mask      */
 
-    if ( ( ( mainsize || sysblk.maxcpu ) &&                                             // 0 only valid if MAXCPU 0
-           ( (sysblk.arch_mode == ARCH_370 && mainsize < (U64)(_64_KILOBYTE) ) ||       // 64K minimum for S/370
-             (sysblk.arch_mode != ARCH_370 && mainsize < (U64)(ONE_MEGABYTE) ) ) ) ||   // Else 1M minimum
-         ( (mainsize > (U64)(((U64)ONE_MEGABYTE << 12)-1)) &&                           // Check for 32-bit addressing limits
-           ( sizeof(sysblk.mainsize) < 8 || sizeof(size_t) < 8 ) ) )
+        if ( rc == 2 )
+        {
+            switch (toupper(f))
+            {
+            case 'B':
+                overflow = 0;
+                shiftsize >>= 12;
+                if (mainsize & 0x0FFF)
+                    ++shiftsize;
+                break;
+            case 'K':
+                overflow  <<= 55;
+                shiftsize >>= 2;
+                if (mainsize & 0x03)
+                    ++shiftsize;
+                break;
+            case 'M':
+                overflow  <<= 45;
+                shiftsize <<= SHIFT_MEBIBYTE - 12;
+                break;
+            case 'G':
+                overflow  <<= 35;
+                shiftsize <<= SHIFT_GIBIBYTE - 12;
+                break;
+            case 'T':
+                overflow  <<= 25;
+                shiftsize <<= SHIFT_TEBIBYTE - 12;
+                break;
+            case 'P':
+                overflow  <<= 15;
+                shiftsize <<= SHIFT_PEBIBYTE - 12;
+                break;
+            case 'E':
+                overflow  <<=  5;
+                shiftsize <<= SHIFT_EXBIBYTE - 12;
+                break;
+            /*----------------------------------------------------------
+            default:        // Force error
+                break;      // ...
+            ----------------------------------------------------------*/
+            }
+        }
+        else
+        {
+            overflow  <<= 45;
+            shiftsize <<= SHIFT_MEBIBYTE - 12;
+        }
+
+        if (shiftsize > 0x0010000000000000ULL /* 16E */ ||
+            mainsize & overflow)
+        {
+            WRMSG( HHC01451, "E", argv[1], argv[0]);
+            return (-1);
+        }
+
+        mainsize = shiftsize;
+    }
+
+    /* Validate storage sizes by architecture; minimums handled in
+     * config.c
+     */
+    if ( (!mainsize && sysblk.maxcpu > 0) ||    /* 0 only valid if MAXCPU 0           */
+         ( sysblk.arch_mode == ARCH_370 &&      /* 64M maximum for S/370 support      */
+           mainsize > 0x004000 ) ||             /*     ...                            */
+         ( sysblk.arch_mode == ARCH_390 &&      /*  2G maximum for ESA/390 support    */
+           mainsize > 0x080000 ) ||             /*     ...                            */
+         ( sizeof(size_t) < 8 &&                /*  4G maximum for 32-bit host        */
+           mainsize > 0x100000 ) )              /*     addressing                     */
     {
         WRMSG( HHC01451, "E", argv[1], argv[0]);
         return -1;
     }
 
     /* Process options */
-    for (i = 2; (int)i < argc; i++)
+    for (i = 2; (int)i < argc; ++i)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
 #if 0   // Interim - Storage is not locked yet in config.c
@@ -3008,55 +3042,60 @@ u_int   locktype = 0;
         return -1;
     }
 
-    if ( rc == 2 )
+    /* Handle size suffix and suffix overflow */
     {
-        switch (toupper(f))
-        {
-        case 'M':
-            xpndsize <<= SHIFT_MEGABYTE;
-            break;
-        case 'G':
-            if ( sizeof(xpndsize) < 8  && xpndsize > 2 )                // Check limit for 32-bit addressing
-            {
-                WRMSG( HHC01451, "E", argv[1], argv[0]);
-                return -1;
-            }
-            xpndsize <<= SHIFT_GIGABYTE;
-            break;
-#if SIZEOF_SIZE_T >= 8
-        case 'T':
-            xpndsize <<= SHIFT_TERABYTE;
-            break;
-#endif
-        default:
-            WRMSG( HHC01451, "E", argv[1], argv[0]);
-            return -1;
-        }
-    }
-    else
-        xpndsize <<= SHIFT_MEGABYTE;
+        register U64 shiftsize = xpndsize;
 
-    if ( sizeof(xpndsize) < 8 || sizeof(size_t) < 8 )                   // Check limits for 32-bit addressing
-    {
-        if (xpndsize > (RADR)(2 << SHIFT_GIGABYTE) )
+        if ( rc == 2 )
+        {
+            switch (toupper(f))
+            {
+            case 'B':
+                shiftsize >>= SHIFT_MEBIBYTE;
+                if (xpndsize & 0x00000000000FFFFFULL)
+                    ++shiftsize;
+                break;
+            case 'K':
+                shiftsize >>= SHIFT_MEBIBYTE - SHIFT_KIBIBYTE;
+                if (xpndsize & 0x00000000000003FFULL)
+                    ++shiftsize;
+                break;
+            case 'M':
+                break;
+            case 'G':
+                shiftsize <<= SHIFT_GIBIBYTE - SHIFT_MEBIBYTE;
+                break;
+            case 'T':
+                shiftsize <<= SHIFT_TEBIBYTE - SHIFT_MEBIBYTE;
+                break;
+            case 'P':
+                shiftsize <<= SHIFT_PEBIBYTE - SHIFT_MEBIBYTE;
+                break;
+            case 'E':
+                shiftsize <<= SHIFT_EXBIBYTE - SHIFT_MEBIBYTE;
+                break;
+            default:
+                /* Force error */
+                shiftsize = 0;
+                xpndsize = 1;
+                break;
+            }
+        }
+
+        if ((xpndsize && !shiftsize) ||                                 /* Overflow specification           */
+            (sizeof(xpndsize) < 8 &&                                    /* 4G maximum for 32-bit addressing */
+             shiftsize > 0x0000000000001000ULL) ||                      /* ...                              */
+            shiftsize > 0x0000100000000000ULL)                          /* 16E maximum                      */
         {
             WRMSG( HHC01451, "E", argv[1], argv[0]);
-            return -1;
+            return (-1);
         }
+
+        xpndsize = shiftsize;
     }
-#if SIZEOF_SIZE_T >= 8
-    else
-    {
-        if (xpndsize > (RADR)((RADR)16 << SHIFT_TERABYTE) )             // Check limits for 64-bit addressing
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0]);
-            return -1;
-        }
-    }
-#endif
 
     /* Process options */
-    for (i = 2; (int)i < argc; i++)
+    for (i = 2; (int)i < argc; ++i)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
 #if 0   // Interim - Storage is not locked yet in config.c
@@ -7923,47 +7962,6 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
-/* fmt_memsize routine for qstor                                     */
-/*-------------------------------------------------------------------*/
-static char *fmt_memsize( const U64 memsize )
-{
-    // Mainframe memory and DASD amounts are reported in 2**(10*n)
-    // values, (x_iB international format, and shown as x_ or x_B, when
-    // x >= 1024; x when x < 1024). Open Systems and Windows report
-    // memory in the same format, but report DASD storage in 10**(3*n)
-    // values. (Thank you, various marketing groups and international
-    // standards committees...)
-
-    // For Hercules, mainframe oriented reporting characteristics will
-    // be formatted and shown as x_, when x >= 1024, and as x when x <
-    // 1024. Reporting of Open Systems and Windows specifics should
-    // follow the international format, shown as x_iB, when x >= 1024,
-    // and x or xB when x < 1024. Reporting is done at the highest
-    // integral boundary.
-
-    // Format storage in 2**(10*n) values at the highest integral
-    // integer boundary.
-
-    const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
-    static char fmt_mem[128];    // Max of 21 bytes used for U64
-    u_int   i = 0;
-    U64 mem = memsize;
-
-    if (mem)
-        for (i = 0; i < sizeof(suffix); i++)
-            {
-                if (mem & 0x3FF)
-                    break;
-                mem >>= 10;
-            }
-
-    MSGBUF( fmt_mem, "%"I64_FMT"u %c", mem, suffix[i]);
-
-    return fmt_mem;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* qstor command                                                     */
 /*-------------------------------------------------------------------*/
 int qstor_cmd(int argc, char *argv[], char *cmdline)
@@ -8000,13 +7998,18 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
         U64 mainsize = sysblk.mainsize;
         if (!sysblk.maxcpu && mainsize <= _64_KILOBYTE )
             mainsize = 0;
-        WRMSG( HHC17003, "I", "MAIN", fmt_memsize((U64)mainsize),
+        else if (mainsize)
+            mainsize >>= SHIFT_KIBIBYTE;
+        else /* 16E and quite unlikely */
+            mainsize = 16ULL << (SHIFT_EXBIBYTE - SHIFT_KIBIBYTE);
+        WRMSG( HHC17003, "I", "MAIN", fmt_memsize_KB((U64)mainsize),
                               "main", sysblk.mainstor_locked ? "":"not " );
     }
     if ( display_xpnd )
     {
-        WRMSG( HHC17003, "I", "EXPANDED", fmt_memsize((U64)sysblk.xpndsize << 12),
-                              "xpnd", sysblk.xpndstor_locked ? "":"not "  );
+        WRMSG( HHC17003, "I", "EXPANDED",
+                         fmt_memsize_MB((U64)sysblk.xpndsize >> (SHIFT_MEBIBYTE - XSTORE_PAGESHIFT)),
+                         "xpnd", sysblk.xpndstor_locked ? "":"not "  );
     }
     return 0;
 }

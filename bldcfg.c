@@ -132,8 +132,8 @@ int     devtmax;                        /* Max number device threads */
     for (i = 0; i < sysblk.maxcpu; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
-    /* Default Storage & NUMCPU */
-    configure_storage(2);
+    /* Default main storage to 1M with one CPU */
+    configure_storage(1 << (SHIFT_MEBIBYTE - 12));
     configure_numcpu(1);
 
     if (hercules_cnf && (process_config(hercules_cnf)))

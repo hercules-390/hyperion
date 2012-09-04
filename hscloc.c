@@ -13,57 +13,57 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/* fmt_memsize routine for qstor                                     */
+/* fmt_memsize_rounded                                               */
 /*-------------------------------------------------------------------*/
-static char *fmt_memsize( const U64 memsize )
+static char *fmt_memsize_rounded( const U64 memsize )
 {
-    // Mainframe memory and DASD amounts are reported in 2**(10*n)
-    // values, (x_iB international format, and shown as x_ or x_B, when
-    // x >= 1024; x when x < 1024). Open Systems and Windows report
-    // memory in the same format, but report DASD storage in 10**(3*n)
-    // values. (Thank you, various marketing groups and international
-    // standards committees...)
+    /* Mainframe memory and DASD amounts are reported in 2**(10*n)
+     * values, (x_iB international format, and shown as x_ or x_B, when
+     * x >= 1024; x when x < 1024). Open Systems and Windows report
+     * memory in the same format, but report DASD storage in 10**(3*n)
+     * values. (Thank you, various marketing groups and international
+     * standards committees...)
+     *
+     * For Hercules, mainframe oriented reporting characteristics will
+     * be formatted and shown as x_, when x >= 1024, and as x when x <
+     * 1024. Reporting of Open Systems and Windows specifics should
+     * follow the international format, shown as x_iB, when x >= 1024,
+     * and x or xB when x < 1024. Reporting is done at the highest
+     * integral boundary.
+     *
+     * Format storage in 2**(10*n) values at the highest rounded
+     * (truncated) integral integer boundary.
+     */
 
-    // For Hercules, mainframe oriented reporting characteristics will
-    // be formatted and shown as x_, when x >= 1024, and as x when x <
-    // 1024. Reporting of Open Systems and Windows specifics should
-    // follow the international format, shown as x_iB, when x >= 1024,
-    // and x or xB when x < 1024. Reporting is done at the highest
-    // integral boundary.
-
-    // Format storage in 2**(10*n) values at the highest integral
-    // integer boundary.
-
-    const  char suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
-    static char fmt_mem[128];    // Max of 21 bytes used for U64
-    U64 mem = memsize;
-    u_int   i = 0;
+    const  char     suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
+    static char     fmt_mem[128];   /* Max of 21 bytes used for U64 */
+    register U64    mem = memsize;
+    register u_int  i = 0;
 
     if (mem)
-        for (i = 0; i < sizeof(suffix); i++)
-            {
-/*                    if ( mem > ONE_YOBIBYTE )
-                    mem &= 0xFFFFFFFFC0000000ULL;
-                     if ( mem > ONE_ZEBIBYTE )
-                    mem &= 0xFFFFFFFFC0000000ULL;
-                else 
-*/
-                     if ( mem > ONE_EXBIBYTE )
-                    mem &= 0xFFFC000000000000ULL;
-                else if ( mem > ONE_PEBIBYTE )
-                    mem &= 0xFFFFFF0000000000ULL;
-                else if ( mem > ONE_TEBIBYTE )
-                    mem &= 0xFFFFFFFFC0000000ULL;
-                else if ( mem > ONE_GIBIBYTE )
-                    mem &= 0xFFFFFFFFFFF00000ULL;
-                else if ( mem > ONE_MEBIBYTE )
-                    mem &= 0xFFFFFFFFFFFFFC00ULL;
-                if (mem & 0x03FF) 
-                    break;
-                mem >>= 10;
-            }
+    {
+#if SIZEOF_SIZE_T > 8
+             if ( mem > ONE_YOBIBYTE )
+            mem &= 0xFFFFFFFFC0000000ULL;
+        else if ( mem > ONE_ZEBIBYTE )
+            mem &= 0xF000000000000000ULL;
+        else
+#endif
+             if ( mem > ONE_EXBIBYTE )
+            mem &= 0xFFFC000000000000ULL;
+        else if ( mem > ONE_PEBIBYTE )
+            mem &= 0xFFFFFF0000000000ULL;
+        else if ( mem > ONE_TEBIBYTE )
+            mem &= 0xFFFFFFFFC0000000ULL;
+        else if ( mem > ONE_GIBIBYTE )
+            mem &= 0xFFFFFFFFFFF00000ULL;
+        else if ( mem > ONE_MEBIBYTE )
+            mem &= 0xFFFFFFFFFFFFFC00ULL;
 
-    MSGBUF( fmt_mem, "%5"I64_FMT"u %c", mem, suffix[i]);
+        for (; i < sizeof(suffix) && !(mem & 0x03FF); mem >>= 10, ++i);
+    }
+
+    MSGBUF( fmt_mem, "%5"I64_FMT"u%c", mem, suffix[i]);
 
     return fmt_mem;
 }
@@ -95,14 +95,14 @@ static char *fmt_decimal( const U64 number )
             num /= (double)ONE_MILLION;
             size = 'M';
         }
-        else 
+        else
         {
             num /= (double)ONE_THOUSAND;
             size = 'K';
         }
 
         MSGBUF( fmt_dec, "%7.3f", num );
-    
+
         i = (int)strlen(fmt_dec);
 
         if ( i > 0 )
@@ -144,7 +144,7 @@ void fmt_line( unsigned char *tbl, char *name, int start, int length)
     {
         memset( hbuf, 0, sizeof(hbuf) );
         memset( cbuf, 0, sizeof(cbuf) );
-            
+
         for (i = 0, j = 0, k = 0; i < l; i++)
         {
             c = tbl[o+i];
@@ -169,7 +169,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
 {
     int         rc = 0;
     char        msgbuf[256];
-    int         start = 0; 
+    int         start = 0;
     int         start_adj = 0;
     int         length = 512;
     u_char     *tbl = (u_char *)&sysblk;
@@ -200,7 +200,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
             memset( str, SPACE, sizeof(str) );
 
             memcpy( str, HDL_NAME_SYSBLK, strlen(HDL_NAME_SYSBLK) );
-                
+
             if ( memcmp( sysblk.blknam, str, sizeof(sysblk.blknam) ) != 0 )
             {
                 char sstr[32];
@@ -233,11 +233,11 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
         {   /* verify trailer */
             char str[32];
             char trailer[32];
-            
+
             MSGBUF( trailer, "END%13.13s", HDL_NAME_SYSBLK );
             memset( str, SPACE, sizeof(str) );
             memcpy( str, trailer, strlen(trailer) );
-               
+
             if ( memcmp(sysblk.blkend, str, sizeof(sysblk.blkend)) != 0 )
             {
                 char sstr[32];
@@ -270,7 +270,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
             return -1;
         }
         start_adj = x % 16;
-        start = x - ( x % 16 );      /* round to a 16 byte boundry */       
+        start = x - ( x % 16 );      /* round to a 16 byte boundry */
         if ( start + length + start_adj > (int)sizeof(SYSBLK) )
             length = (int)sizeof(SYSBLK) - start;
     }
@@ -295,7 +295,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
     length += start_adj;
     if ( start + length > (int)sizeof(SYSBLK) )
         length = (int)sizeof(SYSBLK) - start;
-        
+
     fmt_line( tbl, "sysblk", start, length);
 
     return rc;
@@ -310,14 +310,14 @@ int locate_regs(int argc, char *argv[], char *cmdline)
     int         rc = 0;
     int         cpu = sysblk.pcpu;
     char        msgbuf[256];
-    int         start = 0; 
+    int         start = 0;
     int         start_adj = 0;
     int         length = 512;
     REGS       *regs = sysblk.regs[cpu];
     u_char     *tbl = (u_char *)regs;
 
     UNREFERENCED(cmdline);
-    
+
     if ( argc == 2 )
     {
         int ok = TRUE;
@@ -329,27 +329,27 @@ int locate_regs(int argc, char *argv[], char *cmdline)
         MSGBUF( blknam, "%-4.4s_%2.2s%2.2X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
         MSGBUF( hdr, "%-16.16s", blknam );
         MSGBUF( tlr, "END%13.13s", blknam );
-        
+
         /* verify head, tail, length and address */
         if ( loc != (U64)((uintptr_t)regs) )
         {
-            MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x"I64_FMTX", is 0x%p", 
+            MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x"I64_FMTX", is 0x%p",
                             cpu, loc, regs );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
         if ( swap_byte_U32(sysblk.regs[cpu]->blksiz) != (U32)sizeof(REGS) )
         {
-            MSGBUF( msgbuf, "REGS[%2.2X] size wrong; is %u, should be %u", 
-                            cpu, 
-                            swap_byte_U32(sysblk.regs[cpu]->blksiz), 
+            MSGBUF( msgbuf, "REGS[%2.2X] size wrong; is %u, should be %u",
+                            cpu,
+                            swap_byte_U32(sysblk.regs[cpu]->blksiz),
                             (U32)sizeof(REGS));
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
         { /* verify header */
-            if ( memcmp( sysblk.regs[cpu]->blknam, 
-                         hdr, 
+            if ( memcmp( sysblk.regs[cpu]->blknam,
+                         hdr,
                          sizeof(sysblk.regs[cpu]->blknam) ) != 0 )
             {
                 char sstr[32];
@@ -357,7 +357,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
                 memset( sstr, 0, sizeof(sstr) );
                 memcpy( sstr, sysblk.regs[cpu]->blknam, sizeof(sysblk.regs[cpu]->blknam) );
 
-                MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s", 
+                MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s",
                                 cpu, sstr, hdr);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
@@ -369,8 +369,8 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             memset( str, SPACE, sizeof(str) );
             memcpy( str, HDL_VERS_REGS, strlen(HDL_VERS_REGS) );
 
-            if ( memcmp( sysblk.regs[cpu]->blkver, 
-                         str, 
+            if ( memcmp( sysblk.regs[cpu]->blkver,
+                         str,
                          sizeof(sysblk.regs[cpu]->blkver) ) != 0 )
             {
                 char sstr[32];
@@ -383,7 +383,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             }
         }
         {   /* verify trailer */
-               
+
             if ( memcmp(sysblk.regs[cpu]->blkend, tlr, sizeof(sysblk.regs[cpu]->blkend)) != 0 )
             {
                 char sstr[32];
@@ -391,7 +391,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
 
                 memcpy( sstr, sysblk.regs[cpu]->blkend, sizeof(sysblk.regs[cpu]->blkend) );
 
-                MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is %s, should be %s", 
+                MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is %s, should be %s",
                                 cpu, sstr, tlr);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
@@ -417,7 +417,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             return -1;
         }
         start_adj = x % 16;
-        start = x - ( x % 16 );      /* round to a 16 byte boundry */       
+        start = x - ( x % 16 );      /* round to a 16 byte boundry */
         if ( start + length + start_adj > (int)sizeof(REGS) )
             length = (int)sizeof(REGS) - start;
     }
@@ -442,7 +442,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
     length += start_adj;
     if ( start + length > (int)sizeof(REGS) )
         length = (int)sizeof(REGS) - start;
-        
+
     fmt_line( tbl, "regs", start, length);
 
     return rc;
@@ -463,7 +463,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
     init_hostinfo(NULL);                    // refresh information
-    
+
     /* verify head, tail, length and address */
         if ( loc != (U64)((uintptr_t)&hostinfo) )
         {
@@ -483,7 +483,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
             memset( str, SPACE, sizeof(str) );
 
             memcpy( str, HDL_NAME_HOST_INFO, strlen(HDL_NAME_HOST_INFO) );
-                
+
             if ( memcmp( hostinfo.blknam, str, sizeof(hostinfo.blknam) ) != 0 )
             {
                 char sstr[32];
@@ -516,11 +516,11 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
         {   /* verify trailer */
             char str[32];
             char trailer[32];
-            
+
             MSGBUF( trailer, "END%13.13s", HDL_NAME_HOST_INFO );
             memset( str, SPACE, sizeof(str) );
             memcpy( str, trailer, strlen(trailer) );
-               
+
             if ( memcmp(hostinfo.blkend, str, sizeof(hostinfo.blkend)) != 0 )
             {
                 char sstr[32];
@@ -603,54 +603,54 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
 
         if ( pHostInfo->L1Dcachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize((U64)pHostInfo->L1Dcachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize_rounded((U64)pHostInfo->L1Dcachesz) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Icachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize((U64)pHostInfo->L1Icachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize_rounded((U64)pHostInfo->L1Icachesz) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Ucachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize((U64)pHostInfo->L1Ucachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize_rounded((U64)pHostInfo->L1Ucachesz) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize((U64)pHostInfo->L2cachesz) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize_rounded((U64)pHostInfo->L2cachesz) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize((U64)pHostInfo->L3cachesz) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize((U64)pHostInfo->hostpagesz) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize((U64)pHostInfo->AllocationGranularity) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize_rounded((U64)pHostInfo->L3cachesz) );
         WRMSG( HHC90000, "D", msgbuf );
 
         WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize((U64)pHostInfo->TotalPhys) );
+        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize_rounded((U64)pHostInfo->hostpagesz) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize((U64)pHostInfo->AvailPhys) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize_rounded((U64)pHostInfo->AllocationGranularity) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize((U64)pHostInfo->TotalPageFile) );
+        WRMSG( HHC90000, "D", "" );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize_rounded((U64)pHostInfo->TotalPhys) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize((U64)pHostInfo->AvailPageFile) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize_rounded((U64)pHostInfo->AvailPhys) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize((U64)pHostInfo->TotalVirtual) );
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize_rounded((U64)pHostInfo->TotalPageFile) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize((U64)pHostInfo->AvailVirtual) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize_rounded((U64)pHostInfo->AvailPageFile) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize_rounded((U64)pHostInfo->TotalVirtual) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize_rounded((U64)pHostInfo->AvailVirtual) );
         WRMSG( HHC90000, "D", msgbuf );
 
     return rc;
@@ -669,12 +669,12 @@ int locate_cmd(int argc, char *argv[], char *cmdline)
     {
         rc = locate_sysblk(argc, argv, cmdline);
     }
-    else 
+    else
     if (argc > 1 && CMD(argv[1],regs,4))
     {
         rc = locate_regs(argc, argv, cmdline);
     }
-    else 
+    else
     if (argc > 1 && CMD(argv[1],hostinfo,4))
     {
         rc = locate_hostinfo(argc, argv, cmdline);
