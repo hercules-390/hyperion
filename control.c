@@ -5206,12 +5206,11 @@ BYTE    r1key;
         fc = 1;
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
-    /* Convert real address to absolute address */
-    n = a = APPLY_PREFIXING (a, regs->PX);
-
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-    for( ; fc--; n = a += 0x1000)
+    for( ; fc--; a += 0x1000)
     {
+        /* Convert real address to absolute address */
+        n = a = APPLY_PREFIXING (a, regs->PX);
 
         if(FACILITY_ENABLED(ENHANCED_DAT,regs)
          && (m3 & SSKE_MASK_MB))
@@ -5221,6 +5220,11 @@ BYTE    r1key;
             else
                 regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
         }
+#else /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+
+        /* Convert real address to absolute address */
+        n = a = APPLY_PREFIXING (a, regs->PX);
+
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
         /* Addressing exception if block is outside main storage */
