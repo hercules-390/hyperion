@@ -11,8 +11,8 @@
 
 \*****************************************************************************/
 
-  ver      = "2.3"              -- (version of this script)
-  ver_date = "June 3, 2012"     -- (version of this script)
+  ver      = "2.4"          -- (version of this script)
+  ver_date = "July 2012"    -- (version of this script)
 
   Trace Off
   signal initialize
@@ -86,7 +86,7 @@ help:
   say ""
   say "    DESCRIPTION"
   say ""
-  say "        Uses the "CMPSCTST.EXE" Instruction Test Tool to verify"
+  say '        Uses the "CMPSCTST.EXE" Instruction Test Tool to verify'
   say "        the sanity of the given compression algorithm to within"
   say "        an acceptably high degree of confidence depending on the"
   say "        number and variety of files and dictionaries used."
@@ -116,17 +116,20 @@ help:
   say "        -t      Translate ASCII/EBCDIC             (default = no)"
   say "        -a      Algorithm to be used               (default = 0)"
   say "        -r      Number of random tests             (default = "num_randoms")"
+  say "        -r      Number of speed test repeats       (default = "num_randoms")"
   say "        -n      No hard-coded test cases           (default = all)"
   say "        -bn     Use only buffer sizes set 'n'      (default = all)"
   say "        -on     Use only buffer offsets set 'n'    (default = all)"
   say "        -speed  Speed test; -r = repeats           (see NOTES below)"
+  say "        -z      Zero Padding [enabled:requested]   (see NOTES below)"
+  say "        -w      Zero Padding Alignment             (default = "zp_bits" bit)"
   say ""
   say "    EXAMPLES"
   say ""
-  say "        "_n0"  .\files        .\dicts  .\work  > EXTREMELY-long-test.log"
-  say "        "_n0"  .\files\small  .\dicts  .\work  -r 0 > non-random-test.log"
-  say "        "_n0"  .\files\small  .\dicts  .\work  -n -r 4 > randoms-test.log"
-  say "        "_n0"  .\files\large  .\dicts  .\work  -speed -r 1000 > speed-test.log"
+  say "        "_n0"  .\files        .\dicts  .\work  -z > EXTREMELY-long-test.log"
+  say "        "_n0"  .\files\small  .\dicts  .\work  -r 0 -z -w 3 > VERY-long-non-random-test.log"
+  say "        "_n0"  .\files\small  .\dicts  .\work  -n -r 3 -z 0:1 > short-randoms-test.log"
+  say "        "_n0"  .\files\large  .\dicts  .\work  -speed -r 100 > speed-test.log"
   say ""
   say "    NOTES"
   say ""
@@ -170,7 +173,7 @@ help:
   say ""
   say "        Because a default test using the many built-in (hard-coded)"
   say "        buffer size and offset values can cause "_n0" to run for"
-  say "        an *VERY* long time since there are so many of them ("words(buffsizes)**2 * words(offsets)**2","
+  say "        a *VERY* long time since there are so many of them (" || words(buffsizes) * words(offsets) * words(buffsizes) * words(offsets)
   say "        times #of test files, times #of test dictionaries = total"
   say "        number of tests, each of which does a full compression and"
   say "        expansion) the -n (no-non-random) option allows you to skip"
@@ -178,9 +181,12 @@ help:
   say ""
   say "        You can also use the -bn and -on options to choose a smaller"
   say "        subset of buffer size and/or offset values too. There are 3"
-  say "        buffer size sets with "words(bs1)", "words(bs2)" and "words(bs3)" values in each of their sets"
-  say "        respectively, and 2 sets of offset values with "words(of1)" and "words(bs2)" values"
-  say "        in each of their sets, respectively."
+  say "        buffer size sets with "words(bs1)", "words(bs2)" and "words(bs3)" values in each of their"
+  say "        respective sets, and 2 sets of offset values with "words(of1)" and "words(of2)
+  say "        values in each of their respective sets. Specifying -b3 -o2"
+  say "        for example, will cause " || words(bs3) * words(of2) * words(bs3) * words(of2) || " total tests to be performed for"
+  say "        each file/dictionary pair. Thus for a set of 2 files and 3"
+  say "        dictionaries, a grand total of " || words(bs3) * words(of2) * words(bs3) * words(of2) * 2 * 3 || " tests will be performed."
   say ""
   say "        The -r value defines either the number of random buffer size"
   say "        and offset tests to perform or else the number of repeats to"
@@ -201,6 +207,20 @@ help:
   say "        offset values. To perform a custom timing/speed test using"
   say "        specific buffer size and offset values, you need to call the"
   say "        CMPSCTST.EXE tool yourself (i.e. don't use "_nx0")."
+  say ""
+  say "        The '-z' (Zero Padding) option controls CMPSC-Enhancement"
+  say "        Facility. Specify the option as two 0/1 values separated by"
+  say "        a single colon. The first 0/1 defines whether the facility"
+  say "        should be simulated as being enabled or not. The second 0/1"
+  say "        controls whether the Zero Padding option (GR0 bit 46) should"
+  say "        be set (requested) or not in the compression/expansion call."
+  say "        If the -z option is not specified the default is 0:0. If the"
+  say "        option is specified but without any arguments then it's 1:1."
+  say ""
+  say "        The '-w' (Zero Padding Alignment) option controls adjustment"
+  say "        of the model-dependent storage boundary used by zero padding."
+  say "        The value should be specified as a power of 2 number of bits"
+  say "        ranging from 1 to 12 (i.e. zero pad to 2-4096 byte boundary)."
   say ""
   say "        All dictionaries must be in RAW BINARY format and MUST use"
   say "        the following file naming convention:"
@@ -290,7 +310,6 @@ initialize:
 
   sep = "---------------------------------------------------------------------------------------------------"
 
-
   /* The following buffer size and offset values
      are known to have caused problems in the past
      with certain files on some implementations. */
@@ -302,15 +321,17 @@ initialize:
   of1 = "0 1 2 3 7 8 9 10 15"
   of2 = "3596 1695 1771 3126 4052"
 
-
   /* The following values are modifiable options */
 
   trans       = ""        -- ("-t" translate option)
   algorithm   = 0         -- ("-a" algorithm option)
   no_nonrand  = ""        -- ("-n" no non-randoms option)
-  num_randoms = 100       -- ("-r" random option)
+  num_randoms = 4         -- ("-r" random option)
   repeat      = ""        -- ("-r" repeat option)
   speed       = ""        -- ("-speed" option)
+  zp_enable   = 0         -- ("-z" ENABLED:requested option)
+  zp_request  = 0         -- ("-z" enabled:REQUESTED option)
+  zp_bits     = 8         -- ("-w" padding alignment option)
 
   buffsizes   = bs1 || " " || bs2 || " " || bs3     -- (the complete set)
   offsets     = of1 || " " || of2                   -- (the complete set)
@@ -367,7 +388,6 @@ initialize:
     end
   end
   drop helpflags i h
-
 
   /* Now we can try loading our required tools... */
 
@@ -534,53 +554,94 @@ parse_arguments:
 
         /* The "-a" option takes an OPTIONAL algorithm number */
 
-        if val = "" then ,
+        if val = "" then
           algorithm = 1     -- (default alternate algorithm)
         else if left(val,1) = "-" | left(val,1) = "/" then
           algorithm = 1     -- ("val" is really next option)
         else do
           i += 1            -- (the algorithm was specified)
-          if isnum(val) then do
-            if val >= 0 & val < num_algorithms then ,
-              algorithm = val
-            else do
-              call bad_option_value  -- (out of valid range)
-              _rc = 1
-            end
-          end; else do
+          if \isnum(val) then
             call bad_option_value    -- (not a valid number)
-            _rc = 1
+          else do
+            if val >= 0 & val < num_algorithms then
+              algorithm = val
+            else
+              call bad_option_value  -- (out of valid range)
           end
         end
       end
 
       when opt = "-r" then do
-
-        /* "-r" requires a value (already placed into "val") */
-
-        i += 1    -- (because we're consuming "val")
-
-        if isnum(val) then do
-          if speed <> "" then do
-
-            /* Speed test: -r means #of repeats; must be > 0 */
-
-            if val > 0 then do
-              repeat = "-r " || val + 0
-            end; else
-              call bad_option_value   -- (negative or zero)
-          end; else do
-
-            /* Normal non-speed test: -r means #of randoms or 0 for none */
-
-            if val >= 0 then do
-              repeat = ""
-              num_randoms = val + 0
-            end; else
-              call bad_option_value   -- (negative invalid)
+        if val = "" | left(val,1) = "-" | left(val,1) = "/" then
+          call missing_option_value     -- (missing argument)
+        else do
+          i += 1    -- (because we're consuming "val")
+          if \isnum(val) then
+            call bad_option_value       -- (not a valid number)
+          else do
+            if speed <> "" then do
+      
+              /* Speed test: -r means #of repeats; must be > 0 */
+      
+              if val <= 0 then
+                call bad_option_value   -- (negative or zero)
+              else
+                repeat = "-r " || val + 0
+            end; else do
+      
+              /* Normal non-speed test: -r means #of randoms or 0 for none */
+      
+              if val < 0 then
+                call bad_option_value   -- (negative)
+              else do
+                repeat = ""
+                num_randoms = val + 0
+              end
+            end
           end
-        end; else
-          call bad_option_value       -- (not a valid number)
+        end
+      end
+
+      when opt = "-z" then do
+
+        /* The "-z" option's argumment is OPTIONAL */
+
+        if val = "" | left(val,1) = "-" | left(val,1) = "/" then do
+          -- (the -z option without any argument; use defaults)
+          zp_enable  = 1
+          zp_request = 1
+        end; else do
+          -- (the -z "enable:request" argument was specified)
+          i += 1    -- (because we're consuming "val")
+          parse var val ena ":" req
+          if  \isnum(ena) | \isnum(req) then
+            call bad_option_value       -- (not a valid number)
+          else do
+            if ena < 0 | ena > 1 | req < 0 | req > 1 then
+              call bad_option_value     -- (out of valid range)
+            else do
+              zp_enable  = ena + 0
+              zp_request = req + 0
+            end
+          end
+          drop ena req
+        end
+      end
+
+      when opt = "-w" then do
+        if val = "" | left(val,1) = "-" | left(val,1) = "/" then
+          call missing_option_value     -- (missing argument)
+        else do
+          i += 1        -- (because we're consuming "val")
+          if \isnum(val) then
+            call bad_option_value       -- (not a valid number)
+          else do
+            if val < 1 | val > 12 then
+              call bad_option_value     -- (out of valid range)
+            else
+              zp_bits = val + 0
+          end
+        end
       end
 
       otherwise do
@@ -592,10 +653,16 @@ parse_arguments:
 
   end /* do while */
 
+  drop opt val
   signal validate_arguments
 
 bad_option_value:
   call errmsg "Invalid '"opt"' value " || '"'val'"'
+  _rc = 1
+  return
+
+missing_option_value:
+  call errmsg "Missing '"opt"' value"
   _rc = 1
   return
 
@@ -856,7 +923,7 @@ dotest:
   /*--------------------------------------------------*/
   totcmp += 1
   exp = 0  -- (0 = compression)
-  qif(cmpsctst_bin)" -c -a "algorithm" "repeat" "trans" -v -i "qif(ib":"io":"infile)" -o "qif(ob":"oo":"cmpout_bin)" -d "qif(cdict)" -x "qif(edict)" -s "cdss" -"fmt
+  qif(cmpsctst_bin)" -c -a "algorithm" "repeat" "trans" -v -i "qif(ib":"io":"infile)" -o "qif(ob":"oo":"cmpout_bin)" -d "qif(cdict)" -x "qif(edict)" -s "cdss" -"fmt" -z "zp_enable":"zp_request" -w "zp_bits
   if rc <> 0 then do
     err = rc
     call count_errors
@@ -872,7 +939,7 @@ dotest:
     /*--------------------------------------------------*/
     totexp += 1
     exp = 1  -- (1 = expansion)
-    qif(cmpsctst_bin)" -e -a "algorithm" "repeat" "trans" -v -i "qif(ib":"io":"cmpout_bin)" -o "qif(ob":"oo":"expout_txt)" -d "qif(cdict)" -x "qif(edict)" -s "cdss" -"fmt
+    qif(cmpsctst_bin)" -e -a "algorithm" "repeat" "trans" -v -i "qif(ib":"io":"cmpout_bin)" -o "qif(ob":"oo":"expout_txt)" -d "qif(cdict)" -x "qif(edict)" -s "cdss" -"fmt" -z "zp_enable":"zp_request" -w "zp_bits
     if rc <> 0 then do
       err = rc
       call count_errors
@@ -913,7 +980,12 @@ count_errors:  -- (exp: 0=compression, 1=expansion, err: 4=prot, 7=data, 5=md5)
   select
     when err=4 then rc4err.exp += 1    -- (Protection Exception)
     when err=7 then rc7err.exp += 1    -- (Data Exception)
-    otherwise call oops
+    when err<0 then exit -1            -- (CMPSCTST.EXE failed)
+    otherwise do
+      call bothmsg "** LOGIC ERROR in 'count_errors' routine!"
+      call bothmsg "** Unexpected 'err' value: "err
+      call oops
+    end
   end
   return
 
@@ -1129,7 +1201,7 @@ delfile: procedure    -- (delete a file if it exists)
 
 oops:
 
-  call bothmsg "** OOPS! **  (line "sigl")"
+  call bothmsg "** 'OOPS!' called from line "sigl
   raise user oops
 
 /*----------------------------------------------------------------------------

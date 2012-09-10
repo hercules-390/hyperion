@@ -1039,3 +1039,85 @@ int     rc = 0;
 }
 #endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+/*-------------------------------------------------------------------*/
+/* cmpscpad command - set CMPSC instruction padding alignment        */
+/*-------------------------------------------------------------------*/
+int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
+{
+    int bits, i;
+    const char* ptr;
+    char* nxt;
+    char buf[8];
+
+    UNREFERENCED( cmdline );
+
+    if ( argc > 2 )
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return HERROR;
+    }
+
+    /* Ensure all CPUs have been stopped */
+
+    OBTAIN_INTLOCK( NULL );
+
+    if (sysblk.cpus)
+    {
+        for (i = 0; i < sysblk.maxcpu; i++)
+        {
+            if (IS_CPU_ONLINE( i ) &&
+                sysblk.regs[ i ]->cpustate == CPUSTATE_STARTED)
+            {
+                RELEASE_INTLOCK( NULL );
+                // "CPUs must be offline or stopped"
+                WRMSG( HHC02389, "E" );
+                return HERRCPUONL;
+            }
+        }
+    }
+
+    if ( argc == 2 )
+    {
+        ptr   = argv[1];
+        errno = 0;
+        bits  = (int) strtoul( ptr, &nxt, 10 );
+
+        if (0
+            || errno != 0
+            || nxt == ptr
+            || *nxt != 0
+            || bits < MIN_CMPSC_ZP_BITS
+            || bits > MAX_CMPSC_ZP_BITS
+        )
+        {
+            RELEASE_INTLOCK( NULL );
+            // "Specified value is invalid or outside of range %d to %d"
+            WRMSG( HHC17014 , "E", MIN_CMPSC_ZP_BITS,
+                                   MAX_CMPSC_ZP_BITS );
+            return HERROR;
+        }
+
+        /* Update SYSBLK with new value */
+        sysblk.zpbits = (BYTE) bits;
+        RELEASE_INTLOCK( NULL );
+
+        MSGBUF( buf, "%d", bits );
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], buf );
+    }
+    else
+    {
+        /* Display current SYSBLK value */
+        bits = sysblk.zpbits;
+        RELEASE_INTLOCK( NULL );
+
+        MSGBUF( buf, "%d", bits );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
+    }
+
+    return HNOERROR;
+}
+#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */

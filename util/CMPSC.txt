@@ -8,14 +8,15 @@
 *        Entry point and housekeeping routine
 *--------------------------------------------------------------------
          SPACE
-CMPSC    START X'200'             entry point...
-START    EQU   X'200'             entry point...
+CMPSC    START X'200'             entry point ...
+START    EQU   X'200'             entry point ...
 WKSTLOC  EQU   X'800'             working storage
 *
          BASR  R12,0              set up base register
          BCTR  R12,0              set up base register
          BCTR  R12,0              set up base register
          USING CMPSC,R12          set up base register
+         USING LOWCORE,0          low core area
 *
          LM    R0,R5,CMPR0        load starting values
 *
@@ -40,12 +41,46 @@ WKSTLOC  EQU   X'800'             working storage
          LR    R7,R6              calculate end..
          AL    R7,DICTSIZE        ..of dictionaries
          BAS   R14,PROTECT        protect dictionaries
+         EJECT
+*
+**      Check for CMPSC Enhancement Facility...
+*
+         MVC   SVPGMNEW,ZPINPSW     save pgm new PSW
+         LA    R10,DIDSTFLE              R10 -> continue address
+         STCM  R10,B'0111',ZPINPSW+16-3  plug into pgm new PSW
+         NI    ZPINPSW+1,X'FF'-X'02'     turn off PSW wait bit
+         LR    R10,R0               save R0
+         LA    R0,1                 need 1 dblwrd of facilities
+         STFLE FACILITY             Store Facility List Extended
+DIDSTFLE DS    0H                   pgm chk *MAY* have occurred
+         MVC   ZPINPSW,SVPGMNEW     restore pgm new PSW
+         LR    R0,R10               restore R0
+*
+**      Get started...
 *
          L     R10,CMPINLEN       i/p "file" length
          L     R11,CMPOTLEN       o/p "file" length
 *
          SLR   R5,R5              i/p buffer residual
+*
          B     COMPRESS           *** START TEST ***
+         SPACE 4
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
          EJECT
 *--------------------------------------------------------------------
 *        Protect storage range subroutine
@@ -75,23 +110,6 @@ PROTLOOP DS    0H
 *
          SSKE  R15,R6             protect fence page
          BR    R14                return to caller
-         SPACE 4
-R0       EQU   0
-R1       EQU   1
-R2       EQU   2
-R3       EQU   3
-R4       EQU   4
-R5       EQU   5
-R6       EQU   6
-R7       EQU   7
-R8       EQU   8
-R9       EQU   9
-R10      EQU   10
-R11      EQU   11
-R12      EQU   12
-R13      EQU   13
-R14      EQU   14
-R15      EQU   15
          EJECT
 *--------------------------------------------------------------------
 *        Perform CMPSC compression test
@@ -113,6 +131,7 @@ CMPAGAIN DS    0H                 compress loop
          MVI   CC,X'01'           nope, CC=1
 CMPOKAY  DS    0H
 *
+         BAS   R14,CKZEROPD       check zero padding
          BAS   R14,CHKOFLOW       check overflow pattern
          BAS   R14,CMPFLUSH       flush output to "file"
 *
@@ -126,15 +145,15 @@ CMPOKAY  DS    0H
          N     R1,CBNBITS         extra compress bits?
          BZ    CMPDONE            no then we're done
 *
-         L     R8,CMPR2           r8 -> output buffer
-         L     R6,CMPOUTPT        r6 -> output "file"
+         L     R8,CMPR2           R8 -> output buffer
+         L     R6,CMPOUTPT        R6 -> output "file"
          MVC   0(1,R6),0(R8)      save those bits too
          LA    R11,1(,R11)        count those bits too
 CMPDONE  DS    0H
          ST    R11,CMPOTLEN       save o/p "file" len
-         LPSW  DONEPSW            test complete
+         LPSWE DONEPSW            test complete
 *
-BADCC2   LPSW  BADCCPSW           invalid condition code
+BADCC2   LPSWE BADCCPSW           invalid condition code
          EJECT
 *--------------------------------------------------------------------
 *   Fill input buffer with input "file"
@@ -150,22 +169,22 @@ CMPGETIN DS    0H
          LTR   R9,R10             any i/p remaining?
          BZR   R14                no, return
 *
-         LM    R6,R7,CMPR4        r6 -> i/p buff, r7 = len
-         LR    R13,R7             r13 = i/p buffer length
+         LM    R6,R7,CMPR4        R6 -> i/p buff, R7 = len
+         LR    R13,R7             R13 = i/p buffer length
 *
-         LTR   R7,R5              r7 = input residual
+         LTR   R7,R5              R7 = input residual
          BZ    CMPGET10           no residual to save
 *
-         LR    R8,R4              r8 -> unused input
-         LR    R9,R7              r9 = unused amount
+         LR    R8,R4              R8 -> unused input
+         LR    R9,R7              R9 = unused amount
          MVCL  R6,R8              save unused input
 *
 CMPGET10 DS    0H
          LR    R7,R13             len of i/p buffer
          SLR   R7,R5              amt used = needed
 *
-         L     R8,CMPINPUT        r8 -> input "file"
-         LR    R9,R10             r9 = len of "file"
+         L     R8,CMPINPUT        R8 -> input "file"
+         LR    R9,R10             R9 = len of "file"
 *
          CLR   R9,R7              enough i/p remain?
          BNL   CMPGET20           yes, length okay
@@ -176,13 +195,92 @@ CMPGET20 DS    0H
 *
          ST    R8,CMPINPUT        update i/p "file" location
          ST    R9,CMPINLEN        update i/p "file" remaining
-         LR    R10,R9             r10 =  i/p "file" remaining
+         LR    R10,R9             R10 =  i/p "file" remaining
 *
-         L     R4,CMPR4           r4 -> input buffer
-         LR    R5,R6              r5 -> past input data
+         L     R4,CMPR4           R4 -> input buffer
+         LR    R5,R6              R5 -> past input data
          SLR   R5,R4              calc i/p data amount
 *
          BR    R14                return to caller
+         EJECT
+*--------------------------------------------------------------------
+*   Check proper handling of CMPSC-Enhancement Facility zero padding
+*
+*     Input:    R2        next o/p buffer position from cmpsc
+*--------------------------------------------------------------------
+         SPACE
+CKZEROPD DS    0H                 check correct zero padding handling
+         LR    R6,R2              R6 -> next output buffer position
+         LM    R7,R8,CMPR2        R7 -> o/p buff, R8 = o/p buff len
+         ALR   R7,R8              R7 -> end of o/p buffer
+         SLR   R7,R6              R7 = bytes remaining in o/p buffer
+         LTR   R7,R7              any bytes remaining in o/p buffer?
+         BZR   R14                if none remain then nothing to do
+*
+         L     R8,CMPR0           get CMPSC option bits
+         N     R8,GR0EXBIT        was this an expansion?
+         BNZ   ZPLENOK            yes then no partial byte
+         BCTR  R7,0               R7 = bytes remain in o/p buffer
+         LTR   R7,R7              if no bytes remain ...
+         BZR   R14                ... then nothing to do
+*
+         LA    R6,1(,R6)          otherwise get past partial byte
+ZPLENOK  DS    0H
+         LH    R13,ZPHBYTES       calculate ...
+         ALR   R13,R6             ... where ...
+         BCTR  R13,0              ... zeropad ...
+         N     R13,ZPMASK         ... should end
+*
+         SLR   R13,R6             R13 = zeropad alignment amount
+         LTR   R13,R13            test zeropad alignment amount
+         BNM   ZPPADOK            not minus pad amount is okay
+*
+         SLR   R13,R13            otherwise pad amount is zero
+ZPPADOK  DS    0H
+         LTR   R13,R13            is zero padding needed?
+         BZ    NZEROPAD           no then no zero padding
+         CLR   R13,R7             enough room for padding?
+         BH    NZEROPAD           no then no zero padding
+         TM    FACCMPSC,CMPSCENH  CMPSC-Enhancement Facility?
+         BZ    NZEROPAD           no then no zero padding
+         L     R8,CMPR0           get CMPSC option bits
+         N     R8,GR0ZPBIT        zero padding requested?
+         BZ    NZEROPAD           no then no zero padding
+*
+         CLI   0(R6),X'00'        did they maybe zero pad?
+         BE    YZEROPAD           yes it looks like maybe
+*
+         LR    R8,R6              R8=R6 -> next o/p buff pos
+         SLR   R9,R9              R9 = length 0, pad = x'00'
+         ICM   R9,B'1000',PADBYTE R9 = length 0, pad = x'FF'
+         B     NZEROPAD           continue
+         EJECT
+YZEROPAD DS    0H                 some zero padding DID occur
+         LR    R15,R7             save o/p buffer bytes remain
+         LR    R7,R13             R7 = zeropad alignment amount
+         LR    R8,R6              R8=R6 -> next o/p buff pos
+         SLR   R9,R9              R9 = length 0, pad = x'00'
+*
+         CLCL  R6,R8              zero padding bytes all x'00'?
+         BNE   EZEROPAD           no then zero padding error
+*
+         LR    R7,R15             restore o/p buff bytes remain
+         SLR   R7,R13             get new o/p buff bytes remain
+         LR    R8,R6              R8=R6 -> next o/p buff pos
+         SLR   R9,R9              R9 = length 0, pad = x'00'
+         ICM   R9,B'1000',PADBYTE R9 = length 0, pad = x'FF'
+*
+         CLCL  R6,R8              all remainder all pad chars?
+         BER   R14                yes okay return to caller
+         B     EZEROPAD           no then zero padding error
+*
+NZEROPAD DS    0H                 zero padding should NOT occur
+         CLCL  R6,R8              all remainder all pad chars?
+         BER   R14                yes okay return to caller
+         B     EZEROPAD           no then zero padding error
+*
+EZEROPAD DS    0H                 zero padding error detected
+         LPSWE ZPERRPSW           zero padding error detected
          EJECT
 *--------------------------------------------------------------------
 *   Flush output buffer to output "file"
@@ -196,17 +294,17 @@ CMPGET20 DS    0H
          SPACE
 CMPFLUSH DS    0H
          LM    R8,R9,CMPR2        o/p buffer begin and size
-         SLR   R9,R3              calc r9 = o/p data amount
+         SLR   R9,R3              calc R9 = o/p data amount
 *
-         L     R6,CMPOUTPT        r6 -> output "file"
-         LR    R7,R9              r7 = o/p data amount
+         L     R6,CMPOUTPT        R6 -> output "file"
+         LR    R7,R9              R7 = o/p data amount
          ALR   R11,R9             update o/p "file" length
          LR    R13,R8             save o/p buff begin
 *
          MVCL  R6,R8              flush o/p to "file"
          ST    R6,CMPOUTPT        update o/p "file" addr
 *
-         MVC   0(1,R13),0(R2)     keep partial byte
+         MVC   0(1,R13),0(R2)     keep partial byte, if any
          LM    R2,R3,CMPR2        reset o/p buffer
          BR    R14                return to caller
          SPACE 3
@@ -228,75 +326,104 @@ CHKOFLOW DS    0H                 check buffer overflow
 *
          BR    R14                no, return to caller
 *
-BUFOFLOW LPSW  OFLOWPSW           o/p buffer overflow!
+BUFOFLOW LPSWE OFLOWPSW           o/p buffer overflow!
          EJECT
 *--------------------------------------------------------------------
 *   Pad output buffer with pad char to catch buffer overflows
+*
+*     Input:    R0        compression parameters  ready for cmpsc
+*               R1        dictionary addr and CBN ready for cmpsc
+*               R2/R3     beg o/p buff and length ready for cmpsc
 *--------------------------------------------------------------------
          SPACE
 PADOFLOW DS    0H                 catch cmp cbn errors
-         LR    R9,R0              R9 = cmpsc parameters
-         N     R9,GR0EXBIT        is this expansion?
-         BO    PADOFLW2           yes then forget it
+         LA    R13,X'FF'          R13 = all bits of byte set on
+         LR    R8,R0              R8 = cmpsc parameters
+         N     R8,GR0EXBIT        is this expansion?
+         BNZ   PADOFLW2           yes then forget it
 *
 **    Set unused bits in partial-byte to catch CBN errors
 *
-         LR    R9,R1              R9 = dict addr + cbn
-         N     R9,CBNBITS         just the cbn field please
-         LA    R6,X'FF'           R6 = all bits of byte set on
-         SRL   R6,0(R9)           R6 = unused partial byte bits
+         LR    R8,R1              R8 = dictionary addr + cbn
+         N     R8,CBNBITS         just the cbn field please
+         SRL   R13,0(R8)          R13 = unused partial byte bits
 *
-         L     R8,CMPR2           R8 -> output buffer
-         IC    R9,0(,R8)          turn on the partial...
-         OR    R9,R6              ... byte's unused bits
-         STC   R9,0(,R8)          catch compress cbn errors
+         IC    R8,0(,R2)          get partial byte
+         OR    R8,R13             turn on unused bits
+         LR    R13,R8             R13 = partial byte
 *
-**    Pad output buffer to catch buffer-overflow errors
+**    Pad output buffer to catch improper cmpsc o/p buffer use
 *
 PADOFLW2 DS    0H                 pad the output buffer
+         STC   R13,0(,R2)         catch compress cbn errors
+         LA    R6,1(,R2)          R6 -> o/p buffer + 1
+         LR    R8,R6              R8 -> o/p buffer + 1
+         LR    R7,R3              R7 =  o/p length
+         BCTR  R7,0               R7 =  o/p length - 1
+         SLR   R9,R9              R9 = source length == 0
+         ICM   R9,B'1000',PADBYTE padding character
+         MVCL  R6,R8              pad output buffer
+*
+**    Pad remainder of o/p buffer to catch buffer-overflow errors
+*
          LM    R6,R7,PADPARMS     end of buff, pad amt
          LTR   R7,R7              any padding needed?
          BZR   R14                no, return to caller
 *
-         SLR   R9,R9              zero source length
-         ICM   R9,B'1000',PADBYTE padding character
          MVCL  R6,R8              pad output buffer
          BR    R14                return to caller
          EJECT
 *--------------------------------------------------------------------
-*   Working Storage...
+*   Working Storage ...
 *--------------------------------------------------------------------
          SPACE
          ORG   CMPSC+(WKSTLOC-START)   working storage
          SPACE
-DONEPSW  DC    XL8'000A000080000000'      end of test PSW
-BADCCPSW DC    XL8'000A2000800BADCC'      invalid cc2 PSW
-OFLOWPSW DC    XL8'000A0000800000C4'      buff o'flow PSW
+FACILITY DC    D'0'               facilities list
+FACCMPSC EQU   FACILITY+5         CMPSC Enh. Facility byte
+CMPSCENH EQU   X'01'              CMPSC Enh. Facility bit
+SVPGMNEW DC    XL16'00'           original program new PSW
 *
-CMPR0    DC    A(0)   $(GR0)
-CMPR1    DC    A(0)   $(cmp_dict_addr)
-CMPR2    DC    A(0)   $(out_buffer_addr)
-CMPR3    DC    A(0)   $(out_buffer_size)
-CMPR4    DC    A(0)   $(in_buffer_addr)
-CMPR5    DC    A(0)   $(in_buffer_size)
+DONEPSW  DC    XL16'00020000800000000000000000000000'
+BADCCPSW DC    XL16'000220008000000000000000000BADCC'
+OFLOWPSW DC    XL16'000200008000000000000000000000C4'
+ZPERRPSW DC    XL16'00020000800000000000000000002616'
 *
-DICTSIZE DC    A(0)   $(dicts_size)
-CMPINPUT DC    A(0)   $(in_file_addr)
-CMPINLEN DC    A(0)   $(in_file_size)
-CMPOUTPT DC    A(0)   $(out_file_addr)
-CMPOTLEN DC    A(0)   starting o/p "file" length = 0
+CMPR0    DC    A(0)               $(GR0)
+CMPR1    DC    A(0)               $(cmp_dict_addr)
+CMPR2    DC    A(0)               $(out_buffer_addr)
+CMPR3    DC    A(0)               $(out_buffer_size)
+CMPR4    DC    A(0)               $(in_buffer_addr)
+CMPR5    DC    A(0)               $(in_buffer_size)
 *
-CBNBITS  DC    A(7)               r1 cbn bits mask
+DICTSIZE DC    A(0)               $(dicts_size)
+CMPINPUT DC    A(0)               $(in_file_addr)
+CMPINLEN DC    A(0)               $(in_file_size)
+CMPOUTPT DC    A(0)               $(out_file_addr)
+CMPOTLEN DC    A(0)               starting o/p "file" length = 0
+*
+CBNBITS  DC    A(7)               R1 cbn bits mask
 PADPARMS DC   0D'0'               o/p buffer padding
 ENDOUTBF DC    A(0)               end of o/p buffer
 LEFTOVER DC    A(0)               leftover page bytes
-GR0EXBIT DC    A(X'100')          r0 'E'xpansion bit
+GR0EXBIT DC    A(X'100')          R0 'E'xpansion bit
+*
+GR0ZPBIT DC    A(X'20000')        GR0 request zero padding bit
+ZPBYTES  EQU   256                zero padding alignment bytes
+ZPMASK   DC    A(-1-ZPBYTES+1)    $(zp_mask)
+ZPHBYTES DC    AL2(ZPBYTES)       $(zp_bytes)
 *
 CMPSCKEY EQU   X'10'              cmpsc testing psw key
 NOACCKEY EQU   X'38'              no-access storage key
-PADCHAR  EQU   X'CD'              buffer pad character
+PADCHAR  EQU   X'FF'              buffer pad character
 PADBYTE  DC    AL1(PADCHAR)       buffer padding byte
 CC       DC    X'00'              condition code flag
+         EJECT
+*--------------------------------------------------------------------
+*   Low Core layout
+*--------------------------------------------------------------------
+         SPACE
+         LOWCORE ,
          SPACE
          END
 /*

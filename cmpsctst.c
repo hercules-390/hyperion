@@ -51,8 +51,13 @@ Options:\n\
 \n\
   -0  Format-0 (default)\n\
   -1  Format-1\n\
-  -s  Symbol Size (1-5 or 9-13; default = %d)\n\
-\n\
+  -s  Symbol Size  (1-5 or 9-13; default = %d)\n"
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+"\n\
+  -z  Zero Padding (enabled:requested; see NOTES)\n\
+  -w  Zero Padding Alignment (default = %d bit)\n"
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+"\n\
   -t  Translate (ASCII <-> EBCDIC as needed)\n\
   -v  Verbose [filename]\n\
   -q  Quiet\n\
@@ -67,7 +72,7 @@ Returns:\n\
 Examples:\n\
 \n\
   %s -c -i 8192:*:foo.txt -o *:4095:foo.cmpsc -r 1000 \\\n\
-        -t -d cdict.bin -x edict.bin -1 -s 10 -v rpt.log\n\
+        -t -d cdict.bin -x edict.bin -1 -s 10 -v rpt.log -z 0:1\n\
 \n\
   %s -e -i foo.cmpsc -o foo.txt -t -x edict.bin -s 10 -q\n\
 \n\
@@ -88,8 +93,25 @@ Notes:\n\
   offset value does not mean your buffer will then be automatically\n\
   page aligned. To the contrary it will most likely *not* be aligned.\n\
   If you want your buffers to always be page aligned then you need to\n\
-  specify 0 for the offset. Dictionaries will always be page aligned.\n\
+  specify 0 for the offset. Dictionaries will always be page aligned.\n"
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+"\n\
+  The '-z' (Zero Padding) option controls CMPSC-Enhancement Facility.\n\
+  Specify the option as two 0/1 values separated by a single colon.\n\
+  If the -z option is not specified the default is 0:0. If the option\n\
+  is specified but without any arguments then the default is 1:1.\n\
+  The first 0/1 defines whether the facility should be enabled or not.\n\
+  The second 0/1 controls whether the GR0 zero padding option bit 46\n\
+  should be set or not (i.e. whether the zero padding option should be\n\
+  requested or not). The two values together allow testing the proper\n\
+  handling of the facility since zero padding may only be attempted\n\
+  when both the Facility bit and the GR0 option bit 46 are both '1'.\n\
 \n\
+  The '-w' (Zero Padding Alignment) option allows adjusting the model-\n\
+  dependent integral storage boundary for zero padding. The value is\n\
+  specified as a power of 2 number of bits ranging from %d to %d.\n"
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+"\n\
   Use the '-t' (Translate) option when testing using ASCII test files\n\
   since most dictionaries are intended for EBCDIC data. If specified,\n\
   the test data is first internally translated from ASCII to EBCDIC\n\
@@ -122,10 +144,17 @@ Notes:\n\
 \n" // (end of string)
 
     , DEF_CDSS
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    , DEF_CMPSC_ZP_BITS
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
     , PRODUCT_NAME
     , PRODUCT_NAME
     , DEF_BUFFSIZE / (1024*1024)
     , MAX_OFFSET
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    , MIN_CMPSC_ZP_BITS
+    , MAX_CMPSC_ZP_BITS
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
     , algorithm_names[0]
     , algorithm_names[1]
     );
@@ -135,6 +164,7 @@ Notes:\n\
 // Global variables...
 
 CMPSCBLK  g_cmpsc    = {0};         // CMPSC parameters control block
+SYSBLK    sysblk     = {0};         // Dummy System configuration block
 REGS      g_regs     = {0};         // Dummy REGS context for Hercules
 jmp_buf   g_progjmp  = {0};         // Jump buff for ProgChk Interrupt
 jmp_buf   g_except   = {0};         // Jump buff for __try / __except
@@ -147,6 +177,9 @@ U8        g_bHWPIC04      = FALSE;  // Hardware Detected PIC 04
 #ifndef _MSVC_
 struct timeval beg_time;            // (time-of-day test began)
 #endif
+
+U8*  g_pNoZeroPadPattern = NULL;    // Ptr to 0xFF array...
+U8*  g_pZeroPaddingBytes = NULL;    // Ptr to 0x00 array...
 
 ///////////////////////////////////////////////////////////////////////////////
 // Working storage...
@@ -191,6 +224,9 @@ static U16     nOutBuffAlign   = 0;
 
 static U8      algorithm       = 0;
 static U8      expand          = FALSE;
+static U8      zeropad_enabled = FALSE;
+static U8      zeropad_wanted  = FALSE;
+static U8      zeropad_bits    = DEF_CMPSC_ZP_BITS;
 static U8      format1         = FALSE;
 static U8      bVerbose        = FALSE;
 static U8      bQuiet          = FALSE;
@@ -849,6 +885,133 @@ static void EtoA( U8* p, U32 n ) // ASCII <-- EBCDIC
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Check proper handling of CMPSC-Enhancement Facility zero padding option
+
+static void CheckZeroPadding()
+{
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+
+    static BYTE bDidPIC = FALSE;        // (only throw PIC once)
+
+    // If zero padding must NOT be performed, then check if perhaps
+    // they improperly performed zero padding anyway. Otherwise they
+    // MAY perform zero padding if they want to, but they don't have
+    // to. If they DON'T zero pad when they MAY, then that's okay.
+    // If they DO zero pad however, then they better do it properly!
+
+    U64  pOp1;                          // Ptr -> last output byte
+    U32  nBufRem;                       // Bytes remaining in buffer
+    U16  nAlignAmt;                     // Bytes to zeropad boundary
+
+    if (bRepeat)                        // If this is a timing run,
+        return;                         // then exit immediately.
+
+    if (bDidPIC)                        // If PIC already thrown
+        return;                         // then exit immediately.
+
+    pOp1 = g_cmpsc.pOp1;                // next o/p buffer position
+
+    // Calculate how much room remains in the buffer.
+
+    if (!(nBufRem = (U32) ((pOutBuffer + nOutBuffSize) - pOp1)))
+        return;                         // (zero == quick exit)
+
+    if (1
+        && !expand                      // Was data compressed?
+        && g_cmpsc.cbn                  // Last byte partly used?
+    )
+    {
+        if (nBufRem < 2)                // Enough room remaining?
+            return;                     // No then nothing to do.
+        pOp1++;                         // Get past partial byte
+        nBufRem--;                      // One less byte remains
+    }
+
+    // Calculate number of bytes to zero padding boundary.
+
+    nAlignAmt = (pOp1 & CMPSC_ZP_MASK) == 0 ? 0 :
+        (U16) (CMPSC_ZP_BYTES - (U16)(pOp1 & CMPSC_ZP_MASK));
+
+    // They must NOT pad if: a) program check (i.e. data exception, etc),
+    // b) not needed (already aligned), c) not enough room, or d) facility
+    // is not enabled or zp was not requested. Otherwise padding is model
+    // dependent (i.e. implementation dependent; i.e. zero padding is thus
+    // OPTIONAL and, while ALLOWED, is NOT required).
+
+    if (0
+        || !zeropad_enabled             // (not enabled?)
+        || !zeropad_wanted              // (not requested?)
+        || !nAlignAmt                   // (padding not needed?)
+        || (U32) nAlignAmt > nBufRem    // (not enough room?)
+        || g_nPIC                       // (program check?)
+    )
+    {
+        // Zero padding is *PROHIBITED* (i.e. *NOT* allowed).
+        // They must NOT zeropad so check if they wrongly did
+        // so anyway. If the remainder of the buffer does not
+        // still have our original buffer padding character
+        // intact (0xFF), then they either did zero padding
+        // when they should not have or else wrote more data
+        // than they said (more data than they should have).
+
+        if (memcmp( (U8*) pOp1, g_pNoZeroPadPattern, nBufRem ) != 0)
+            goto ZeroPaddingError;
+    }
+    else // (zero padding is ALLOWED, but is NOT required)
+    {
+        // They MAY pad if desired. Determine whether they did so
+        // or not, and if they did, whether they did so correctly.
+
+        if (ZERO_PADDED_PATT == *(U8*)pOp1)
+        {
+            // It looks like they MAY have done zero padding.
+            // Check closer to be sure they did it correctly.
+
+            // Are all expected padding bytes all binary zero?
+            // If not then they didn't padd enough (i.e. they
+            // didn't zero pad to the proper storage boundary).
+
+            if (memcmp( (U8*) pOp1, g_pZeroPaddingBytes, nAlignAmt ) != 0)
+                goto ZeroPaddingError;
+
+            // Did they pad only to the expected boundary? I.e.
+            // does the zero padding stop where we expect it too?
+            // I.e. does the remainder of the buffer still have
+            // our '0xFF' buffer padding character still intact?
+            // If not then they padded more than they should have.
+
+            if (memcmp( (U8*) pOp1 + nAlignAmt, g_pNoZeroPadPattern,
+                nBufRem - nAlignAmt ) != 0)
+                goto ZeroPaddingError;
+        }
+        else // (NO_ZERO_PAD_PATT == *(U8*)pOp1)
+        {
+            // It looks like they DIDN'T do any zero padding.
+            // Check further to be absolutely sure of that.
+
+            // If they didn't do any zero padding, the remainder
+            // of the buffer SHOULD still have our '0xFF' buffer
+            // padding characters intact. If they're not intact,
+            // then they actually wrote more data than they should
+            // have (i.e. more than they actually said they did).
+
+            if (memcmp( (U8*) pOp1, g_pNoZeroPadPattern, nBufRem ) != 0)
+                goto ZeroPaddingError;
+        }
+    }
+
+    return;  // (everything looks okay to me!)
+
+ZeroPaddingError:
+
+    bDidPIC = TRUE; // (prevent infinite program interrupt loop)
+    FPRINTF( fRptFile, "ERROR: Improper output buffer zero padding.\n" );
+    UTIL_PROGRAM_INTERRUPT( PGM_ZEROPAD_ERR );
+
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Detect buffer underflows and overflows...
 
 void CheckBuffer( U8* pBuffer, U16 nBuffAlign, U32 nBuffSize )
@@ -927,6 +1090,7 @@ static void GetInput()
 
 static void FlushOutput()
 {
+    CheckZeroPadding();
     CheckBuffer( pOutBuffer, nOutBuffAlign, nOutBuffSize );
 
     // write out all completed bytes...
@@ -1004,15 +1168,21 @@ void ParseArgs( int argc, char* argv[] )
     int optchar;
     char* pszOptArg;
     char syntax = 0;
+    char help = 0;
 
     // Initialize saved command line options string...
 
     pszOptions = malloc(1); *pszOptions = 0;
     save_option( "", argv[0] );
 
-    // Available option chars:   b   fgh jklmn p    u w yz  23456789
+    // Available option chars:   b   fgh jklmn p    u   y   23456789
 
-    while ((optchar = GetOption( argc, argv, "cea:r:i:o:d:x:01s:tv:q?",
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+  #define  CMPSC_ENHANCEMENT_OPTIONS    "z:w:"
+#else
+  #define  CMPSC_ENHANCEMENT_OPTIONS    ""
+#endif
+    while ((optchar = GetOption( argc, argv, "cea:r:i:o:d:x:01s:tv:q"CMPSC_ENHANCEMENT_OPTIONS"?",
         &pszOptArg )) != 0)
     {
         switch (optchar)
@@ -1169,9 +1339,62 @@ void ParseArgs( int argc, char* argv[] )
             }
             break;
 
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+            case 'z': // (zeropad option)
+            {
+                if (!pszOptArg)
+                {
+                    save_option( "-z ", NULL );
+                    zeropad_enabled = 1;
+                    zeropad_wanted  = 1;
+                }
+                else
+                {
+                    if (1
+                        && ('0' == *(pszOptArg + 0) ||
+                            '1' == *(pszOptArg + 0))
+                        &&  ':' == *(pszOptArg + 1)
+                        && ('0' == *(pszOptArg + 2) ||
+                            '1' == *(pszOptArg + 2))
+                        &&   0  == *(pszOptArg + 3)
+                    )
+                    {
+                        save_option(      "-z ",    pszOptArg );
+                        zeropad_enabled = ('1' == *(pszOptArg + 0));
+                        zeropad_wanted  = ('1' == *(pszOptArg + 2));
+                    }
+                    else
+                    {
+                        FPRINTF( stderr, "ERROR: Invalid '-z' zeropad option \"%s\".\n",
+                            pszOptArg );
+                        syntax = 1;
+                    }
+                }
+            }
+            break;
+
+            case 'w': // (zeropad alignment bits)
+            {
+                save_option( "-w ", pszOptArg );
+                if (0
+                    ||                      !pszOptArg
+                    || (zeropad_bits = atoi( pszOptArg )) < MIN_CMPSC_ZP_BITS
+                    ||  zeropad_bits                      > MAX_CMPSC_ZP_BITS
+                )
+                {
+                    FPRINTF( stderr, "ERROR: Invalid '-w' zeropad alignment bits \"%s\".\n",
+                        pszOptArg ? pszOptArg : "(unspecified)" );
+                    syntax = 1;
+                }
+                else
+                    sysblk.zpbits = zeropad_bits;
+            }
+            break;
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+
             case '?': // (display help)
             {
-                syntax = 1;
+                help = 1;
             }
             break;
 
@@ -1201,14 +1424,31 @@ void ParseArgs( int argc, char* argv[] )
         }
     }
 
-    if (0
-        || syntax
-        || !pszInName                   // I/P file always required
-        || !pszOutName                  // O/P file always required
-        || (!expand && !pszCmpName)     // Comp dict needed for compression
-        || ( expand && !pszExpName)     // Exp  dict needed for expansion
-        || (format1 && !pszExpName)     // Exp  dict needed if format-1 dicts
-    )
+    if (!syntax && help)
+    {
+        showhelp();
+        exit(-1);
+    }
+
+    if (!expand && !pszCmpName)         // Comp dict needed for compression
+    {
+        FPRINTF( stderr, "ERROR: '-d' Compression Dictionary Filename required with '-c'.\n" );
+        syntax = 1;
+    }
+
+    if (expand && !pszExpName)          // Exp  dict needed for expansion
+    {
+        FPRINTF( stderr, "ERROR: '-x' Expansion Dictionary Filename required with '-e'.\n" );
+        syntax = 1;
+    }
+
+    if (format1 && !pszExpName)         // Exp  dict needed if format-1 dicts
+    {
+        FPRINTF( stderr, "ERROR: '-x' Expansion Dictionary Filename required with '-1'.\n" );
+        syntax = 1;
+    }
+
+    if (syntax)
     {
         showhelp();
         exit(-1);
@@ -1311,13 +1551,13 @@ void CallCMPSC()
                     // since it may contain the last few bits from the
                     // previous compression call.
 
-                    *p |= (0xFF >> g_cmpsc.cbn);    // (catch CBN bugs)
+                    *p |= (0xFF >> g_cmpsc.cbn);      // (catch CBN bugs)
 
                     p++;  // (skip first byte; see PROGRAMMING NOTE above)
                     n--;  // (skip first byte; see PROGRAMMING NOTE above)
                 }
 
-                memset( p, UNINIT_HEAP_PATT, n );   // (init o/p buffer)
+                memset( p, NO_ZERO_PAD_PATT, n );     // (catch CBN/ZP bugs)
             }
 
             g_nAddrTransCtr = 0;    // (reset counter)
@@ -1478,6 +1718,7 @@ void program_interrupt( REGS* regs, U16 pcode )
 
     if (1
         && PGM_UTIL_FAILED != pcode
+        && PGM_ZEROPAD_ERR != pcode
     )
     {
         const char* pszInterruptMessage   = "";
@@ -1521,6 +1762,7 @@ int main( int argc, char* argv[] )
 #ifndef _MSVC_
     gettimeofday( &beg_time, 0 );
 #endif
+    sysblk.zpbits  = zeropad_bits;
     srand((unsigned int)time(NULL));
 
     //-------------------------------------------------------------------------
@@ -1591,6 +1833,18 @@ int main( int argc, char* argv[] )
             nDictBuffSize );
 
     //-------------------------------------------------------------------------
+
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    if (bVerbose)
+    {
+        FPRINTF( fRptFile, "%10s Enable CMPSC-Enhancement Facility\n",
+            zeropad_enabled ? "Yes" : "No" );
+        FPRINTF( fRptFile, "%10s Request Zero Padding (%d bit = %d byte alignment)\n",
+            zeropad_wanted ? "Yes" : "No", CMPSC_ZP_BITS, CMPSC_ZP_BYTES );
+    }
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+
+    //-------------------------------------------------------------------------
     // Load dictionaries...
 
     if (!expand)
@@ -1622,6 +1876,21 @@ int main( int argc, char* argv[] )
     }
 
     //-------------------------------------------------------------------------
+    // Allocate zero padding checking arrays...
+
+    if (0
+        || !(g_pNoZeroPadPattern = malloc( nOutBuffSize    ))
+        || !(g_pZeroPaddingBytes = calloc( nOutBuffSize, 1 ))  // (init to zero too)
+    )
+    {
+        FPRINTF( stderr, "ERROR: Could not allocate zero-padding checking arrays.\n" );
+        return -1;
+    }
+
+    memset( g_pNoZeroPadPattern, NO_ZERO_PAD_PATT, nOutBuffSize );
+//  memset( g_pZeroPaddingBytes, ZERO_PADDED_PATT, nOutBuffSize ); // (already zero)
+
+    //-------------------------------------------------------------------------
     // Build the Compression Call parameters block...
 
     g_cmpsc.r1      = OPERAND_1_REGNUM;
@@ -1643,8 +1912,10 @@ int main( int argc, char* argv[] )
     // Initialize the REGS structure based on the CMPSCBLK...
 
     ARCH_DEP( util_cmpsc_SetREGS )( &g_cmpsc, &g_regs,
-        OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand );
+        OPERAND_1_REGNUM, OPERAND_2_REGNUM, expand, zeropad_wanted );
+
     g_regs.dat.storkey = &g_regs.dat.storage;
+    g_regs.zeropad     = zeropad_enabled;   // (zeropad facility enabled)
 
     //-------------------------------------------------------------------------
     // Now either Compress or Expand the requested file...
@@ -1692,6 +1963,8 @@ int main( int argc, char* argv[] )
     {
         if (PGM_UTIL_FAILED == g_regs.psw.intcode)
             ; // (use whatever value rc is set to)
+        else if (PGM_ZEROPAD_ERR == g_regs.psw.intcode)
+            rc = RC_ZEROPAD_ERROR; // (s/b unique)
         else
             rc = g_regs.psw.intcode; // (rc = Program Interrupt Code)
         g_nTotAddrTrans += g_nAddrTransCtr;
@@ -1704,11 +1977,14 @@ int main( int argc, char* argv[] )
     if (fInFile)  fclose( fInFile  );
     if (fOutFile) fclose( fOutFile );
 
-    free( (void*) pszOptions );
     if (bTranslate)
     free_buffer( &pDictBuffer  );
     free_buffer( &pInBuffer    );
     free_buffer( &pOutBuffer   );
+
+    if (pszOptions)          free( (void*) pszOptions );
+    if (g_pNoZeroPadPattern) free( (void*) g_pNoZeroPadPattern );
+    if (g_pZeroPaddingBytes) free( (void*) g_pZeroPaddingBytes );
 
     //-------------------------------------------------------------------------
     // Display results and exit
@@ -1753,6 +2029,7 @@ int main( int argc, char* argv[] )
         {
             if (1
                 && PGM_UTIL_FAILED != g_nPIC
+                && PGM_ZEROPAD_ERR != g_nPIC
                 && bVerbose
             )
             {

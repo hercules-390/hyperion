@@ -646,10 +646,14 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs
 
     /* Register 0 is input-only and thus not modified.
 
-    SET_GR_A( 0, regs, ((GREG) pCMPSCBLK->st   << 16) |
-                       ((GREG) pCMPSCBLK->cdss << 12) |
-                       ((GREG) pCMPSCBLK->f1   <<  9) |
-                       ((GREG)   expand        <<  8) );
+    SET_GR_A( 0, regs,
+    (0
+        | ((GREG)   zeropad       << 17)
+        | ((GREG) pCMPSCBLK->st   << 16)
+        | ((GREG) pCMPSCBLK->cdss << 12)
+        | ((GREG) pCMPSCBLK->f1   <<  9)
+        | ((GREG)   expand        <<  8)
+    ));
     */
 
     SET_GR_A( 1, regs, ((GREG) pCMPSCBLK->pDict     ) |
@@ -658,10 +662,10 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// (same thing but including GR0 too. Used only by test tool utility)
+// (same thing but including GR0 too. Used only by utility test tool)
 
 #if defined( NOT_HERC )
-void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand )
+void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand, U8 zeropad )
 {
     SET_GR_A( r1,     regs, (VADR) pCMPSCBLK->pOp1  );
     SET_GR_A( r2,     regs, (VADR) pCMPSCBLK->pOp2  );
@@ -673,10 +677,14 @@ void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS*
 
     /* (for the convenience of the utility testing tool) */
 
-    SET_GR_A( 0, regs, ((GREG) pCMPSCBLK->st   << 16) |
-                       ((GREG) pCMPSCBLK->cdss << 12) |
-                       ((GREG) pCMPSCBLK->f1   <<  9) |
-                       ((GREG)   expand        <<  8) );
+    SET_GR_A( 0, regs,
+    (0
+        | ((GREG)   zeropad       << 17)
+        | ((GREG) pCMPSCBLK->st   << 16)
+        | ((GREG) pCMPSCBLK->cdss << 12)
+        | ((GREG) pCMPSCBLK->f1   <<  9)
+        | ((GREG)   expand        <<  8)
+    ));
 
     SET_GR_A( 1, regs, ((GREG) pCMPSCBLK->pDict     ) |
                        ((GREG) pCMPSCBLK->stt  <<  3) |
@@ -706,6 +714,11 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* reg
     pCMPSCBLK->f1       = (GR0 >>  9) & 0x01;
     pCMPSCBLK->cdss     = (GR0 >> 12) & 0x0F;
     pCMPSCBLK->st       = (GR0 >> 16) & 0x01;
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    if (FACILITY_ENABLED( CMPSC_ENH, regs ))
+    pCMPSCBLK->zp       = (GR0 >> 17) & 0x01; else
+#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    pCMPSCBLK->zp       = FALSE;
 
     pCMPSCBLK->cbn      = (GR1 &  0x007);
     pCMPSCBLK->stt      = (GR1 &  0xFFF) >>  3;

@@ -8,7 +8,7 @@
 
 #define PRODUCT_NAME        "CMPSCTST"
 #define PRODUCT_DESC        "CMPSC Instruction Testing Tool"
-#define VERSION_STR         "2.3.1"
+#define VERSION_STR         "2.4.0"
 #define COPYRIGHT           "Copyright (C) 2012"
 #define COMPANY             "Software Development Laboratories"
 
@@ -27,6 +27,16 @@ extern void DEF_ALGORITHM( REGS* regs );
 extern void ALT_ALGORITHM( REGS* regs );
 
 #define NUM_ALGORITHMS          2
+
+#define  FEATURE_COMPRESSION
+#define  FEATURE_CMPSC_ENHANCEMENT_FACILITY
+
+#if defined(FEATURE_COMPRESSION)
+ #define   _FEATURE_COMPRESSION
+#endif
+#if defined(FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+ #define   _FEATURE_CMPSC_ENHANCEMENT_FACILITY
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Compiler
@@ -472,7 +482,11 @@ extern void ALT_ALGORITHM( REGS* regs );
 #define SET_GR_A( _r, _regs, _v )       ( (_regs)->GR_L(_r) = (_v) )
 #define ARCH_DEP( name )                name
 
-#define FEATURE_COMPRESSION
+// The only facility we support is the CMPSC-Enhancement Facility.
+// All other facility checks will return false.
+#define FACILITY_ENABLED( faci, regs )  \
+    (strcmp( "CMPSC_ENH", #faci ) == 0 && (regs)->zeropad)
+
 #define PGM_SPECIFICATION_EXCEPTION     6
 #define PGM_PROTECTION_EXCEPTION        4
 #define PGM_DATA_EXCEPTION              7
@@ -489,6 +503,22 @@ extern void ALT_ALGORITHM( REGS* regs );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Herc
+
+struct SYSBLK           // System configuration block
+{
+//#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+        BYTE    zpbits;                 /* Zeropad alignment bits    */
+#define MIN_CMPSC_ZP_BITS   1           /* align to half word bndry  */
+#define DEF_CMPSC_ZP_BITS   8           /* align to  256 byte bndry  */
+#define MAX_CMPSC_ZP_BITS   12          /* align to 4096 page bndry  */
+#define CMPSC_ZP_BITS       ((U8)sysblk.zpbits)
+#define CMPSC_ZP_BYTES      ((U16)1 << CMPSC_ZP_BITS)
+#define CMPSC_ZP_MASK       (((U64)-1) >> (64 - CMPSC_ZP_BITS))
+//#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
+};
+typedef struct SYSBLK SYSBLK;
+
+//-----------------------------------------------------------------------------
 
 struct DAT              // Dynamic Address Translation
 {
@@ -516,6 +546,7 @@ struct REGS             // CPU register context
     DAT   dat;          // (dynamic address translation)
     GREG  gr[16];       // (general purpose registers)
     U8    dxc;          // (data exception code)
+    U8    zeropad;      // (zero padding facility enabled)
 };
 //typedef struct REGS REGS;     // (already typedef'ed much further above)
 
@@ -560,12 +591,15 @@ typedef void DEF_INST_FUNC( REGS* regs );       // (instruction function)
 #define  MAX_OFFSET             (PAGEFRAME_PAGESIZE - 1)
 
 #define  PGM_UTIL_FAILED        (0xF000)        // (fabricated)
+#define  PGM_ZEROPAD_ERR        (0xF026)        // (fabricated)
+#define  RC_ZEROPAD_ERROR       (2616)          // "ZP"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global variables...
 
 extern CMPSCBLK  g_cmpsc;           // CMPSC parameters control block
 extern REGS      g_regs;            // Dummy REGS context for Hercules
+extern SYSBLK    sysblk;            // Dummy System configuration block
 extern jmp_buf   g_progjmp;         // Jump buff for ProgChk Interrupt
 extern U64       g_nAddrTransCtr;   // MADDR macro calls count
 extern U64       g_nTotAddrTrans;   // Total MADDR macro calls
@@ -587,6 +621,8 @@ void  my_offset_aligned_free( void* p );
 
 #define  GUARD_FENCE_PATT       (0xFD)  // (allocated storage fence pattern)
 #define  UNINIT_HEAP_PATT       (0xCD)  // (uninitialized heap fill pattern)
+#define  NO_ZERO_PAD_PATT       (0xFF)  // (catch zero padding errs pattern)
+#define  ZERO_PADDED_PATT       (0x00)  // (catch zero padding errs pattern)
 
 ///////////////////////////////////////////////////////////////////////////////
 // ASCII/EBCDIC translation...

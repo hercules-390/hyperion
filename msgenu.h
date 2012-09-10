@@ -1945,6 +1945,7 @@ do { \
 #define HHC17011 "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
+#define HHC17014 "Specified value is invalid or outside of range %d to %d"
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
 #define HHC17199 "%.4s %s"

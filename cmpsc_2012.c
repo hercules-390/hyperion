@@ -57,53 +57,21 @@
 
 #ifdef FEATURE_COMPRESSION
 ///////////////////////////////////////////////////////////////////////////////
-// Separate return functions for easier debugging...
-
-#ifndef RETFUNCS_ONCE
-#define RETFUNCS_ONCE
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL ERR)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC3)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC1)( CMPSCBLK* pCMPSCBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC0)( CMPSCBLK* pCMPSCBLK );
-
-#define RETERR() return ERR( pCMPSCBLK ) // (failure)
-#define RETCC3() return CC3( pCMPSCBLK ) // (stop)
-#define RETCC1() return CC1( pCMPSCBLK ) // (stop)
-#define RETCC0() return CC0( pCMPSCBLK ) // (stop)
-
-typedef struct EXPBLK EXPBLK; // (fwd ref)
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPOK )( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPERR)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC3)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC1)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK );
-
-#define EXP_RETOK()  return EXPOK ( pCMPSCBLK, pEXPBLK ) // (success; keep going)
-#define EXP_RETERR() return EXPERR( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC3() return EXPCC3( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC1() return EXPCC1( pCMPSCBLK, pEXPBLK ) // (break)
-#define EXP_RETCC0() return EXPCC0( pCMPSCBLK, pEXPBLK ) // (break)
-
-#endif // RETFUNCS_ONCE
-
-///////////////////////////////////////////////////////////////////////////////
 // Symbols Cache Control Entry
 
-#ifndef EXP_ONCE
-#define EXP_ONCE
+#ifndef EXP_ONCE                    // (we only need to define this once)
+#define EXP_ONCE                    // (we only need to define this once)
 
 #ifdef CMPSC_SYMCACHE
 
-struct SYMCTL           // Symbol Cache Control Entry
+struct SYMCTL                       // Symbol Cache Control Entry
 {
-    U16   idx;          // Cache index      (symbol's location within cache)
-    U16   len;          // Symbol length    (symbol's total expanded length)
+    U16   idx;                      // Cache index    (sym's pos in cache)
+    U16   len;                      // Symbol length  (sym's expanded len)
 };
 typedef struct SYMCTL SYMCTL;
 
-#endif // CMPSC_SYMCACHE
+#endif // CMPSC_SYMCACHE            // (we only need to define this once)
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXPAND Index Symbol parameters block
@@ -125,8 +93,155 @@ struct EXPBLK                 // EXPAND Index Symbol parameters block
     U8          SRC_bytes;    // Number of bytes to adjust the SRC ptr/len by
     U8          rc;           // TRUE == success (cc), FALSE == failure (pic)
 };
+typedef struct EXPBLK EXPBLK;
 
 #endif // EXP_ONCE
+
+///////////////////////////////////////////////////////////////////////////////
+// ZeroPadOp1 only if facility was enabled for this build architecture...
+
+#if defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+
+  #undef  ZERO_PAD_OP1
+  #define ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk )   \
+    if (pCMPSCBLK->zp)  /* (do zero padding?) */  \
+        ARCH_DEP( ZeroPadOp1 )( pCMPSCBLK, pOp1MemBlk );
+
+#else // !defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+
+  #undef  ZERO_PAD_OP1
+  #define ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk )   \
+        UNREFERENCED( pOp1MemBlk );
+
+#endif // defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+
+///////////////////////////////////////////////////////////////////////////////
+// Zero-padding
+
+#if defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+
+static CMPSC_INLINE void (CMPSC_FASTCALL ARCH_DEP( ZeroPadOp1 ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
+{
+    U64  pOp1   = pCMPSCBLK->pOp1;              // (operand-1 output)
+    U64  nLen1  = pCMPSCBLK->nLen1;             // (operand-1 length)
+
+    if (1
+        && !(pCMPSCBLK->regs->GR_L(0) & 0x100)  // (compression?)
+        && pCMPSCBLK->cbn                       // (partial byte?)
+        && nLen1                                // (rem >= 1 byte?)
+    )
+    {
+        pOp1++;                                 // (skip past byte)
+        nLen1--;                                // (length remaining)
+    }
+
+    pOp1 &= ADDRESS_MAXWRAP( pCMPSCBLK->regs ); // (wrap if needed)
+    MEMBLK_BUMP( pOp1MemBlk, pOp1 );            // (bump if needed)
+
+    if (pOp1 & CMPSC_ZP_MASK)                   // (is padding needed?)
+    {
+        U16 nPadAmt = ((U16)CMPSC_ZP_BYTES - (U16)(pOp1 & CMPSC_ZP_MASK));
+
+        if (nLen1 >= (U64) nPadAmt)             // (enough room for pad?)
+        {
+            static U8 zeroes[ (1 << MAX_CMPSC_ZP_BITS) ] = {0};
+            store_op_str( zeroes, nPadAmt-1, pOp1, pOp1MemBlk );
+        }
+    }
+}
+#endif // defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+
+///////////////////////////////////////////////////////////////////////////////
+// Separate return functions for easier debugging... (it's much easier to
+// set a breakpoint here and then examine the stack to see where you came
+// from than it is to set breakpoints everywhere each function is called)
+
+#if !defined( NOT_HERC )            // (building Hercules?)
+  #undef  CMPSC_RETFUNCS            // (rebuild each time)
+#endif                              // (else do only once)
+
+#ifndef CMPSC_RETFUNCS              // (one time if Utility, each time if Herc)
+#define CMPSC_RETFUNCS              // (one time if Utility, each time if Herc)
+
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( ERR ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
+{
+    UNREFERENCED( pOp1MemBlk );
+    pCMPSCBLK->pic = 7;
+    return FALSE;
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( CC3 ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
+{
+    ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk );
+    pCMPSCBLK->pic = 0;
+    pCMPSCBLK->cc = 3;
+    return TRUE;
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( CC1 ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
+{
+    ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk );
+    pCMPSCBLK->pic = 0;
+    pCMPSCBLK->cc = 1;
+    return TRUE;
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( CC0 ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
+{
+    ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk );
+    pCMPSCBLK->pic = 0;
+    pCMPSCBLK->cc = 0;
+    return TRUE;
+}
+//-----------------------------------------------------------------------------
+
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPOK ))( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
+{
+    UNREFERENCED( pCMPSCBLK );
+    UNREFERENCED( pEXPBLK   );
+    return TRUE; // (success; keep going)
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPERR ))( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
+{
+    pEXPBLK->rc = ARCH_DEP( ERR )( pCMPSCBLK, &pEXPBLK->op1blk ); return FALSE; // (break)
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPCC3 ))( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
+{
+    pEXPBLK->rc = ARCH_DEP( CC3 )( pCMPSCBLK, &pEXPBLK->op1blk ); return FALSE; // (break)
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPCC1 ))( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
+{
+    pEXPBLK->rc = ARCH_DEP( CC1 )( pCMPSCBLK, &pEXPBLK->op1blk ); return FALSE; // (break)
+}
+static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPCC0 ))( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
+{
+    pEXPBLK->rc = ARCH_DEP( CC0 )( pCMPSCBLK, &pEXPBLK->op1blk ); return FALSE; // (break)
+}
+
+//-----------------------------------------------------------------------------
+// (define simpler macros to make calling the return functions much easier)
+
+#undef RETERR
+#undef RETCC3
+#undef RETCC1
+#undef RETCC0
+
+#undef EXP_RETOK
+#undef EXP_RETERR
+#undef EXP_RETCC3
+#undef EXP_RETCC1
+#undef EXP_RETCC0
+
+#define RETERR( pOp1MemBlk ) return ARCH_DEP( ERR )( pCMPSCBLK, pOp1MemBlk ) // (failure)
+#define RETCC3( pOp1MemBlk ) return ARCH_DEP( CC3 )( pCMPSCBLK, pOp1MemBlk ) // (stop)
+#define RETCC1( pOp1MemBlk ) return ARCH_DEP( CC1 )( pCMPSCBLK, pOp1MemBlk ) // (stop)
+#define RETCC0( pOp1MemBlk ) return ARCH_DEP( CC0 )( pCMPSCBLK, pOp1MemBlk ) // (stop)
+
+#define EXP_RETOK()  return ARCH_DEP( EXPOK  )( pCMPSCBLK, pEXPBLK ) // (success; keep going)
+#define EXP_RETERR() return ARCH_DEP( EXPERR )( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC3() return ARCH_DEP( EXPCC3 )( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC1() return ARCH_DEP( EXPCC1 )( pCMPSCBLK, pEXPBLK ) // (break)
+#define EXP_RETCC0() return ARCH_DEP( EXPCC0 )( pCMPSCBLK, pEXPBLK ) // (break)
+
+#endif // CMPSC_RETFUNCS
+
 ///////////////////////////////////////////////////////////////////////////////
 // EXPAND Index Symbol; TRUE == success, FALSE == error; rc == return code
 
@@ -191,7 +306,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
             // Get index symbol...
 
             if (unlikely( !(expblk.SRC_bytes = pGetIndex( &giblk ))))
-                RETCC0();
+                RETCC0( &expblk.op1blk );
 
             // Expand it...
 
@@ -298,7 +413,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
         // Get index symbol...
 
         if (unlikely( !(expblk.SRC_bytes = pGetIndex( &giblk ))))
-            RETCC0();
+            RETCC0( &expblk.op1blk );
 
         // Expand it...
 
@@ -324,7 +439,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand ))( CMPSCBLK* pCMPSCBLK )
         MEMBLK_BUMP( &expblk.op1blk, pCMPSCBLK->pOp1 );
     }
 
-    RETCC3();
+    RETCC3( &expblk.op1blk );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -534,7 +649,7 @@ cmp1:
     // No, set CC0 and endop.
 
     if (unlikely( !pCMPSCBLK->nLen2 ))
-        RETCC0();
+        RETCC0( &op1blk );
 
 cmp2:
 
@@ -542,10 +657,10 @@ cmp2:
     // No, set CC1 and endop.
 
     if (unlikely( eodst ))
-        RETCC1();
+        RETCC1( &op1blk );
 
     if (unlikely( nCPUAmt >= (U64) pCMPSCBLK->nCPUAmt ))  // (max bytes processed?)
-        RETCC3();                                         // (return cc3 to caller)
+        RETCC3( &op1blk );                                // (return cc3 to caller)
 
     children = 0;
 
@@ -557,7 +672,7 @@ cmp2:
 
     cceblk.pCCE = &parent;
     if (unlikely( !ARCH_DEP( GetCCE )( parent_index, &cceblk )))
-        RETERR();
+        RETERR( &op1blk );
 
     nCPUAmt++;
     pCMPSCBLK->pOp2++;
@@ -695,7 +810,7 @@ cmp5E:
 
     sdeblk.pCCE = &parent;
     if (unlikely( !pGetSD( sibling_index, &sdeblk )))
-        RETERR();
+        RETERR( &op1blk );
     scnum = 0;
 
     // (REPEAT FOR EACH SC IN SD)...
@@ -816,7 +931,7 @@ cmp7E:
 
     sdeblk.pCCE = NULL;
     if (unlikely( !pGetSD( sibling_index, &sdeblk )))
-        RETERR();
+        RETERR( &op1blk );
     scnum = 0;
 
     // goto cmp7;
@@ -830,7 +945,7 @@ cmp8:
     // goto cmp2;
 
     if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
-        RETERR();
+        RETERR( &op1blk );
     pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? parent_index
@@ -845,7 +960,7 @@ cmp9:
     // goto cmp1;
 
     if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
-        RETERR();
+        RETERR( &op1blk );
     pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? parent_index
@@ -856,7 +971,7 @@ cmp9:
 cmp10:
 
     if (unlikely( ++children > MAX_CHILDREN ))
-        RETERR();
+        RETERR( &op1blk );
 
     // Set child index = CPTR + CC number (0-origin numbering).
 
@@ -873,7 +988,7 @@ cmp10:
 
     cceblk.pCCE = &child;
     if (unlikely( !ARCH_DEP( GetCCE )( child_index, &cceblk )))
-        RETERR();
+        RETERR( &op1blk );
 
     if (!child.act)
         goto cmp15;
@@ -915,7 +1030,7 @@ cmp11:
 cmp12:
 
     if (unlikely( ++children > MAX_CHILDREN ))
-        RETERR();
+        RETERR( &op1blk );
 
     // Set child index = SD index + SC number (1-origin numbering).
 
@@ -932,7 +1047,7 @@ cmp12:
 
     cceblk.pCCE = &child;
     if (unlikely( !ARCH_DEP( GetCCE )( child_index, &cceblk )))
-        RETERR();
+        RETERR( &op1blk );
 
     if (!child.act)
         goto cmp15;
@@ -964,13 +1079,13 @@ cmp13:
     // Set CC0 and endop.
 
     if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
-        RETERR();
+        RETERR( &op1blk );
     pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? parent_index
           : fetch_dct_hw( pSymTab + (parent_index << 1), pCMPSCBLK );
     pPutIndex( &piblk );
-    RETCC0();
+    RETCC0( &op1blk );
 
 cmp14:
 
@@ -984,7 +1099,7 @@ cmp14:
     pCMPSCBLK->nLen2--;
 
     if (unlikely( (pCMPSCBLK->pOp2 - pBegOp2) > MAX_SYMLEN ))
-        RETERR();
+        RETERR( &op1blk );
     pBegOp2  =  pCMPSCBLK->pOp2;
 
     piblk.index = (!pCMPSCBLK->st) ? child_index
@@ -1028,7 +1143,7 @@ cmp16:
 /*---------------------------------------------------------------------------*/
 DEF_INST( alt_cmpsc )
 {
-    CMPSCBLK cmpsc;                     /* Compression Call parameters block  */
+    CMPSCBLK cmpsc;                     /* Compression Call parameters block */
     int  r1, r2, rc;                    /* Operand reg numbers, return code  */
     RRE( inst, regs, r1, r2 );          /* Decode the instruction...         */
 
@@ -1086,60 +1201,10 @@ static const U32 g_nDictSize[ MAX_CDSS ] =
      8192 * 8,    // cdss 5:  8192  8-byte entries =   64K  (65536 bytes)
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Separate return functions for easier debugging... (it's much easier to
-// set a breakpoint here and then examine the stack to see where you came
-// from than it is to set breakpoints everywhere each functions is called)
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL ERR)( CMPSCBLK* pCMPSCBLK )
-{
-    pCMPSCBLK->pic = 7;
-    return FALSE;
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC3)( CMPSCBLK* pCMPSCBLK )
-{
-    pCMPSCBLK->pic = 0;
-    pCMPSCBLK->cc = 3;
-    return TRUE;
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC1)( CMPSCBLK* pCMPSCBLK )
-{
-    pCMPSCBLK->pic = 0;
-    pCMPSCBLK->cc = 1;
-    return TRUE;
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL CC0)( CMPSCBLK* pCMPSCBLK )
-{
-    pCMPSCBLK->pic = 0;
-    pCMPSCBLK->cc = 0;
-    return TRUE;
-}
-//-----------------------------------------------------------------------------
-
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPOK)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
-{
-    UNREFERENCED( pCMPSCBLK );
-    UNREFERENCED( pEXPBLK   );
-    return TRUE; // (success; keep going)
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPERR)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
-{
-    pEXPBLK->rc = ERR( pCMPSCBLK ); return FALSE; // (break)
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC3)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
-{
-    pEXPBLK->rc = CC3( pCMPSCBLK ); return FALSE; // (break)
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC1)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
-{
-    pEXPBLK->rc = CC1( pCMPSCBLK ); return FALSE; // (break)
-}
-static CMPSC_INLINE U8 (CMPSC_FASTCALL EXPCC0)( CMPSCBLK* pCMPSCBLK, EXPBLK* pEXPBLK )
-{
-    pEXPBLK->rc = CC0( pCMPSCBLK ); return FALSE; // (break)
-}
 #endif // _CMPSC_C_         // End of compile ONLY ONCE code...
+
 ///////////////////////////////////////////////////////////////////////////////
+
 #endif /* FEATURE_COMPRESSION */
 
 #ifndef _GEN_ARCH

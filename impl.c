@@ -628,6 +628,9 @@ int     dll_count;                      /* index into array          */
     }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
 
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+    sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
+#endif
 
     /* Initialize locks, conditions, and attributes */
     initialize_lock (&sysblk.config);

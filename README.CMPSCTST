@@ -33,24 +33,27 @@
                    created during processing should be written. If
                    not specified the current directory is used. The
                    work files created during processing are called
-                   "cmpout.bin" and "expout.txt".
+                   "cmpout.bin", "expout.txt" and "md5sum.txt".
 
     OPTIONS
 
         -t      Translate ASCII/EBCDIC             (default = no)
         -a      Algorithm to be used               (default = 0)
-        -r      Number of random tests             (default = 100)
+        -r      Number of random tests             (default = 4)
+        -r      Number of speed test repeats       (default = 4)
         -n      No hard-coded test cases           (default = all)
         -bn     Use only buffer sizes set 'n'      (default = all)
         -on     Use only buffer offsets set 'n'    (default = all)
         -speed  Speed test; -r = repeats           (see NOTES below)
+        -z      Zero Padding [enabled:requested]   (see NOTES below)
+        -w      Zero Padding Alignment             (default = 8 bit)
 
     EXAMPLES
 
-        cmpsctst  .\files        .\dicts  .\work  > EXTREMELY-long-test.log
-        cmpsctst  .\files\small  .\dicts  .\work  -r 0 > non-random-test.log
-        cmpsctst  .\files\small  .\dicts  .\work  -n -r 16 > randoms-test.log
-        cmpsctst  .\files\large  .\dicts  .\work  -speed -r 1000 > speed-test.log
+        cmpsctst  .\files        .\dicts  .\work  -z > EXTREMELY-long-test.log
+        cmpsctst  .\files\small  .\dicts  .\work  -r 0 -z -w 3 > VERY-long-non-random-test.log
+        cmpsctst  .\files\small  .\dicts  .\work  -n -r 3 -z 0:1 > short-randoms-test.log
+        cmpsctst  .\files\large  .\dicts  .\work  -speed -r 100 > speed-test.log
 
     NOTES
 
@@ -94,7 +97,7 @@
 
         Because a default test using the many built-in (hard-coded)
         buffer size and offset values can cause cmpsctst to run for
-        an *VERY* long time since there are so many of them (24336,
+        a *VERY* long time since there are so many of them (33124
         times #of test files, times #of test dictionaries = total
         number of tests, each of which does a full compression and
         expansion) the -n (no-non-random) option allows you to skip
@@ -102,9 +105,12 @@
 
         You can also use the -bn and -on options to choose a smaller
         subset of buffer size and/or offset values too. There are 3
-        buffer size sets with 2, 6 and 4 values in each of their sets
-        respectively, and 2 sets of offset values with 9 and 6 values
-        in each of their sets, respectively.
+        buffer size sets with 3, 6 and 4 values in each of their
+        respective sets, and 2 sets of offset values with 9 and 5
+        values in each of their respective sets. Specifying -b3 -o2
+        for example, will cause 400 total tests to be performed for
+        each file/dictionary pair. Thus for a set of 2 files and 3
+        dictionaries, a grand total of 2400 tests will be performed.
 
         The -r value defines either the number of random buffer size
         and offset tests to perform or else the number of repeats to
@@ -125,6 +131,20 @@
         offset values. To perform a custom timing/speed test using
         specific buffer size and offset values, you need to call the
         CMPSCTST.EXE tool yourself (i.e. don't use cmpsctst.rexx).
+
+        The '-z' (Zero Padding) option controls CMPSC-Enhancement
+        Facility. Specify the option as two 0/1 values separated by
+        a single colon. The first 0/1 defines whether the facility
+        should be simulated as being enabled or not. The second 0/1
+        controls whether the Zero Padding option (GR0 bit 46) should
+        be set (requested) or not in the compression/expansion call.
+        If the -z option is not specified the default is 0:0. If the
+        option is specified but without any arguments then it's 1:1.
+
+        The '-w' (Zero Padding Alignment) option controls adjustment
+        of the model-dependent storage boundary used by zero padding.
+        The value should be specified as a power of 2 number of bits
+        ranging from 1 to 12 (i.e. zero pad to 2-4096 byte boundary).
 
         All dictionaries must be in RAW BINARY format and MUST use
         the following file naming convention:
@@ -166,11 +186,11 @@
 
     VERSION
 
-        2.1  (May 22, 2012)
+        2.4  (July 2012)
 
 -------------------------------------------------------------------------------
 
-CMPSC Instruction Testing Tool, version 2.1.0
+CMPSC Instruction Testing Tool, version 2.4.0
 Copyright (C) 2012 Software Development Laboratories
 
 Options:
@@ -188,7 +208,10 @@ Options:
 
   -0  Format-0 (default)
   -1  Format-1
-  -s  Symbol Size (1-5 or 9-13; default = 2)
+  -s  Symbol Size  (1-5 or 9-13; default = 2)
+
+  -z  Zero Padding (enabled:requested; see NOTES)
+  -w  Zero Padding Alignment (default = 8 bit)
 
   -t  Translate (ASCII <-> EBCDIC as needed)
   -v  Verbose [filename]
@@ -204,7 +227,7 @@ Returns:
 Examples:
 
   CMPSCTST -c -i 8192:*:foo.txt -o *:4095:foo.cmpsc -r 1000 \
-        -t -d cdict.bin -x edict.bin -1 -s 10 -v rpt.log
+        -t -d cdict.bin -x edict.bin -1 -s 10 -v rpt.log -z 0:1
 
   CMPSCTST -e -i foo.cmpsc -o foo.txt -t -x edict.bin -s 10 -q
 
@@ -226,6 +249,21 @@ Notes:
   page aligned. To the contrary it will most likely *not* be aligned.
   If you want your buffers to always be page aligned then you need to
   specify 0 for the offset. Dictionaries will always be page aligned.
+
+  The '-z' (Zero Padding) option controls CMPSC-Enhancement Facility.
+  Specify the option as two 0/1 values separated by a single colon.
+  If the -z option is not specified the default is 0:0. If the option
+  is specified but without any arguments then the default is 1:1.
+  The first 0/1 defines whether the facility should be enabled or not.
+  The second 0/1 controls whether the GR0 zero padding option bit 46
+  should be set or not (i.e. whether the zero padding option should be
+  requested or not). The two values together allow testing the proper
+  handling of the facility since zero padding may only be attempted
+  when both the Facility bit and the GR0 option bit 46 are both '1'.
+
+  The '-w' (Zero Padding Alignment) option allows adjusting the model-
+  dependent integral storage boundary for zero padding. The value is
+  specified as a power of 2 number of bits ranging from 1 to 12.
 
   Use the '-t' (Translate) option when testing using ASCII test files
   since most dictionaries are intended for EBCDIC data. If specified,

@@ -227,7 +227,7 @@ extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetREGS  ))( CMPSCBLK* pCMPSCBLK, RE
 extern void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2 );
 
 #if defined( NOT_HERC ) // (called by the testing tool utility)
-extern void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand );
+extern void (CMPSC_FASTCALL ARCH_DEP( util_cmpsc_SetREGS ))( CMPSCBLK* pCMPSCBLK, REGS* regs, int r1, int r2, U8 expand, U8 zeropad );
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

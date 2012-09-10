@@ -169,6 +169,16 @@
   "Format: \"cmdtgt [herc | scp | pscp | ?]\". Specify the command target.\n"
 
 #define cnslport_cmd_desc       "Set console port"
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+#define cmpscpad_cmd_desc       "Set/display the CMPSC zero padding value."
+#define cmpscpad_cmd_help       \
+                                \
+  "The CMPSCPAD command defines the zero padding storage alignment boundary\n"  \
+  "for the CMPSC-Enhancement Facility. It must be a power of 2 value ranging\n" \
+  "anywhere from " QSTR( MIN_CMPSC_ZP_BITS ) " to " QSTR( MAX_CMPSC_ZP_BITS ) ". Enter the command with no arguments to display the\n" \
+  "current value.\n"
+
+#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
 #define codepage_cmd_desc       "Set/display code page conversion table"
 #define codepage_cmd_help       \
                                 \
@@ -1536,6 +1546,9 @@ COMMAND( "sizeof",                  sizeof_cmd,             SYSCMDNOPERNPROG,   
 /*-------------------------------------------------------------------*/
 
 //       "1...5...9",               function                type flags          description             long help
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+COMMAND( "cmpscpad",                cmpscpad_cmd,           SYSCFGNDIAG8,       cmpscpad_cmd_desc,      cmpscpad_cmd_help   )
+#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
 #if defined( _FEATURE_ASN_AND_LX_REUSE )
 COMMAND( "alrf",                    alrf_cmd,               SYSCMDNOPER,        alrf_cmd_desc,          NULL                )
 COMMAND( "asn_and_lx_reuse",        alrf_cmd,               SYSCMDNOPER,        asnlx_cmd_desc,         NULL                )

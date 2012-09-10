@@ -21,13 +21,13 @@
 #define DEF_CMPSC_CPU_AMT     ( 1024 * 1024 )         // 1MB
 #define MAX_CMPSC_CPU_AMT     ( 1024 * 1024 * 1024 )  // 1GB
 
-#define CMPSC_INLINE          INLINE                  // __forceinline
-#define CMPSC_FASTCALL        ATTR_REGPARM( 3 )       // __fastcall
+#define CMPSC_INLINE          INLINE                // __forceinline
+#define CMPSC_FASTCALL        ATTR_REGPARM( 3 )     // __fastcall
 
 #define CMPSC_EXPAND8         // (#define to enable expand-8 logic)
 #define CMPSC_SYMCACHE        // (#define to enable symcache logic)
 
-#define CMPSC_SYMCACHE_SIZE   ( 1024 * 32 )  // (must be < 64K)
+#define CMPSC_SYMCACHE_SIZE   ( 1024 * 32 )     // (must be < 64K)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Dictionary sizes in bytes by CDSS
@@ -56,7 +56,7 @@ struct CMPSCBLK             // CMPSC instruction control block
     U8      cdss;           // Compressed-data symbol size        (1-5)
     U8      cbn;            // Compressed-data bit number         (0-7)
     U8      cc;             // Condition-Code value               (0-3)
-    U8      rsrvd1;         // Reserved for future use            (pad)
+    U8      zp;             // Zero-pad operand-1 when done       (pad)
 };
 typedef struct CMPSCBLK CMPSCBLK;
 

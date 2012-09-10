@@ -1,3 +1,4 @@
+10 Sep 2012 CMPSC_2012: CMPSC-Enhancement Facility zero padding support - Fish
 15 Aug 2012 Change DASD utilities defaults to make wait PSW in IPL1 record
             EC-mode and disabled for machine checks, add -b and -m switches
             to dasdinit and dasdload to obtain old behavior - Kevin Leonard
