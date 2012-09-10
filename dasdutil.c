@@ -33,7 +33,7 @@ extern DEVHND ckddasd_device_hndinfo;
 /*-------------------------------------------------------------------*/
 static int verbose = 0;                /* Be chatty about reads etc. */
 static BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-static BYTE iplpsw[8]    = {0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x0F};
+static BYTE iplpsw[8]    = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x0F};
 static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
 static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 static int  nextnum = 0;
@@ -1122,12 +1122,19 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 /*      dasdcopy xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      */
 /*      nullfmt  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      */
 /*      rawflag  create raw image (skip special track 0 handling)    */
+/*      flagECmode        1  set EC mode bit in wait PSW             */
+/*                        0  don't set EC mode bit in wait PSW       */
+/*      flagMachinecheck  1  set machine-check-enabled flag          */
+/*                           in wait PSW                             */
+/*                        0  don't set machine-check-enabled flag    */
+/*                           in wait PSW                             */
 /*-------------------------------------------------------------------*/
 static int
 create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *buf, U32 start, U32 end,
                 U32 volcyls, char *volser, BYTE comp, int dasdcopy,
-                int nullfmt, int rawflag)
+                int nullfmt, int rawflag,
+                int flagECmode, int flagMachinecheck)
 {
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return value from lseek() */
@@ -1352,9 +1359,23 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     convert_to_ebcdic (pos, keylen, "IPL1");
                     pos += keylen;
 
+                    /* Copy model IPL PSW and CCWs */
                     memcpy (pos, iplpsw, 8);
                     memcpy (pos+8, iplccw1, 8);
                     memcpy (pos+16, iplccw2, 8);
+
+                    /* Set EC mode flag in wait PSW if requested */
+                    if (flagECmode)
+                    {
+                        *(pos+1) = 0x08 | *(pos+1);
+                    }
+
+                    /* Set machine-check-enabled mask in PSW if requested */
+                    if (flagMachinecheck)
+                    {
+                        *(pos+1) = 0x04 | *(pos+1);
+                    }
+
                     pos += ipl1len;
 
                     /* Build the IPL2 record */
@@ -1669,6 +1690,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*      dasdcopy xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      */
 /*      nullfmt  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      */
 /*      rawflag  create raw image (skip special track 0 handling)    */
+/*      flagECmode        1  set EC mode bit in wait PSW             */
+/*                        0  don't set EC mode bit in wait PSW       */
+/*      flagMachinecheck  1  set machine-check-enabled flag          */
+/*                           in wait PSW                             */
+/*                        0  don't set machine-check-enabled flag    */
+/*                           in wait PSW                             */
 /*                                                                   */
 /* If the total number of cylinders exceeds the capacity of a 2GB    */
 /* file, then multiple CKD image files will be created, with the     */
@@ -1678,7 +1705,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 DLL_EXPORT int
 create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
            U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
-           int nullfmt, int rawflag)
+           int nullfmt, int rawflag,
+           int flagECmode, int flagMachinecheck)
 {
 int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
@@ -1828,7 +1856,8 @@ U32             trksize;                /* DASD image track length   */
         /* Create a CKD DASD image file */
         rc = create_ckd_file (sfname, fileseq, devtype, heads,
                     trksize, buf, cyl, endcyl, volcyls, volser,
-                    comp, dasdcopy, nullfmt, rawflag);
+                    comp, dasdcopy, nullfmt, rawflag,
+                    flagECmode, flagMachinecheck);
         if (rc < 0) return -1;
     }
 

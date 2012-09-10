@@ -61,7 +61,7 @@ and how they are used.
 
     <a href="#HTTPPORT">HTTP</a>       port 8081 NOAUTH
     <a href="#HTTPROOT">HTTP</a>       root /usr/local/share/hercules/
-    <a href="#HTTPSTRT">HTTP</a>       start 
+    <a href="#HTTPSTRT">HTTP</a>       start
 
     <a href="#CCKD">CCKD</a>       RA=2,RAQ=4,RAT=2,WR=2,GCINT=10,GCPARM=0,NOSTRESS=0,TRACE=0,FREEPEND=-1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
@@ -660,7 +660,7 @@ and how they are used.
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
-    Note: <code>HTTPPORT nnnn [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code> is still supported, 
+    Note: <code>HTTPPORT nnnn [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code> is still supported,
     however, it has been deprecated.
     <p>
 
@@ -683,7 +683,7 @@ and how they are used.
 <dd><p>
     starts the HTTP server. (Note: The server is no longer started by default.)
     <p>
-    
+
 <a name="IGNORE"></a>
 <dt><code>IGNORE &nbsp; INCLUDE_ERRORS</code>
 <dd><p>
@@ -796,18 +796,47 @@ and how they are used.
     <p>
 
 <a name="MAINSIZE"></a>
-<dt><code>MAINSIZE &nbsp; <em>nnnn</em>  &#124; nnnK &#124; nnnM &#124; nnnG &#124; nnnT</code>
+<dt><code>MAINSIZE &nbsp; <em>nnnn</em> &#124;
+                          <em>nnn</em>K &#124;
+                          <em>nnn</em>M &#124;
+                          <em>nnn</em>G &#124;
+                          <em>nnn</em>T &#124;
+                          <em>nnn</em>P &#124;
+                          <em>nnn</em>E</code>
 <dd><p>
     specifies the main storage size in megabytes, where
-    <code><em>nnnn</em></code>&nbsp; is a decimal number. 
+    <code><em>nnnn</em></code>&nbsp; is a decimal number. Or,
+    <code><em>nnnM</em></code>&nbsp; where <code><em>M</em></code>&nbsp;
+    is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
+    P - Petabytes, E - Exabytes.
     <p>
-    Or, nnnM where M is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES 
+    For storage sizes less than 16M, sizes not on a 4K boundary are
+    rounded up to the next 4K boundary. Otherwise, storage sizes not on
+    a 1M boundary are rounded up to the next 1M boundary.
     <p>
-    In archmode S/370, the storage must be 64K or greater, otherwise, the storage must be
-    1 megabyte or greater. The actual upper limit is determined by your host 
-    system's architecture and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available. Host systems with a 32-bit architecture will be limited
-    to less than 4 Gigabyte.  
+    The minimum size is 4K for archlvl als0 and als1 (S/370 and
+    ESA/390), and 8K for archlvl als2 (ESAME) and higher.  A maximum of
+    64M may be specified for archlvl als0 (S/370), 2048M (2G) for
+    archlvl als1 (ESA/390), and 16E for archlvl als2 (ESAME) and higher.
+    <p>
+    <b>Notes:</b>
+    <ol><p><li>
+    The actual upper limit is determined by your host system's
+    architecture and operating system, the guest operating system, and
+    the amount of physical memory and available paging space. The total
+    of mainsize and xpndsize on host systems with a 32-bit architecture
+    will be limited to less than 4G; host systems with a 64-bit
+    architecture will be limited to less than 16E.
+    </li><p><li>
+    Using minimum storage sizes, storage sizes less than or not on a 64K
+    boundary for archlvl als1 (S/370), or on a 1M boundary for archlvl
+    als2 (ESA/390) and higher, it may be possible to generate error
+    conditions not covered by the Principles of Operations.
+    </li><p><li>
+    Use of storage sizes greater than supported by the guest operating
+    system may generate incorrect results or error conditions within the
+    guest operating system.
+    </li></ol>
     <p>
 
 <a name="MANUFACTURER"></a>
@@ -1100,7 +1129,7 @@ and how they are used.
     If no SHRDPORT statement is present then the Shared Device server thread
     will not be activated.<br>
     <p>
-    
+
 <a name="SRVPRIO"></a>
 <dt><code>SRVPRIO &nbsp; <em>nn</em></code>
 <dd><p>
@@ -1215,14 +1244,35 @@ and how they are used.
     <p>
 
 <a name="XPNDSIZE"></a>
-<dt><code>XPNDSIZE &nbsp; <em>nnnn</em> &#124; nnnM &#124; nnnG &#124; nnnT</code>
+<dt><code>XPNDSIZE &nbsp; <em>nnnn</em> &#124;
+                          <em>nnn</em>M &#124;
+                          <em>nnn</em>G &#124;
+                          <em>nnn</em>T &#124;
+                          <em>nnn</em>P &#124;
+                          <em>nnn</em>E</code>
 <dd><p>
     specifies the expanded storage size in megabytes, where
-    <code><em>nnnn</em></code> is a decimal number. The lower limit is 0.
-    The actual upper limit is determined by your host system's architecture, 
-    the architecture selected, and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available. Host systems with a 32-bit architecture will 
-    be limited 2 Gigabytes, 64-bit machines will be limited to 16 Terabytes.
+    <code><em>nnnn</em></code> is a decimal number. Or,
+    <code><em>nnnM</em></code>&nbsp; where <code><em>M</em></code>&nbsp;
+    is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
+    P - Petabytes, E - Exabytes.
+    <p>
+    Storage sizes not on a 1M boundary are rounded up to the next 1M
+    boundary. The lower limit and default is 0.
+    <p>
+    <b>Notes:</b>
+    <ol><p><li>
+    The actual upper limit is determined by your host system's
+    architecture and operating system, the guest operating system, and
+    the amount of physical memory and available paging space. The total
+    of mainsize and xpndsize on host systems with a 32-bit architecture
+    will be limited to less than 4G; host systems with a 64-bit
+    architecture will be limited to less than 16E.
+    </li><p><li>
+    Use of storage sizes greater than supported by the guest operating
+    system may generate incorrect results or error conditions within the
+    guest operating system.
+    </li></ol>
     <p>
 
 <a name="YROFFSET"></a>
@@ -1901,7 +1951,7 @@ and how they are used.
                 <td><a href="#remtty">Remote Teletype</a></td>
                 <td>TCP Socket</td>
             </tr>
-           
+
             </table>
 
         </td>
@@ -2669,7 +2719,7 @@ and how they are used.
             Specifies the maximum size (in bytes, Kilobytes or Megabytes)
             that the emulated file is allowed to grow to.
             <p>
-            Or, nnns where s is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES 
+            Or, nnns where s is either K - KILO, M - MEGA, G - GIGA, or T - TERA - BYTES
             <p>
             Specifying zero for this parameter means "unlimited" (i.e. there is no limit).
             Note: "T" is not available on all platforms.
@@ -2680,8 +2730,8 @@ and how they are used.
             Specifies the number of bytes remaining before reaching <em>maxsize</em>
             at which point the tape device will signal the presence of the "End of Tape"
             marker (reflector), thus allowing the program to switch to the next tape.
-	    <p>
-            Value is either n = bytes, or ns where s is either a K, M, G, or T multiplier.  
+            <p>
+            Value is either n = bytes, or ns where s is either a K, M, G, or T multiplier.
             <p>
 
         <dt><code>READONLY</code>=<em>n</em>
@@ -3608,7 +3658,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     Describes a 2703 Telegraph Terminal Control Type II (TTY 33/35) stop/start line, providing access to the Host OS via a standard TELNET client.
 
     <p>
-    To the host OS the line emulates an asynchronous TELE2 connection.  The communication is emulated over a TELNET connection. 
+    To the host OS the line emulates an asynchronous TELE2 connection.  The communication is emulated over a TELNET connection.
     <p>
 
     The following options define the line emulation behaviour:

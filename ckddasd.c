@@ -2332,8 +2332,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
-        /* Command reject if within the domain of a Locate Record */
-        if (dev->ckdlcount > 0)
+        /* Command reject if within the domain of a Locate Record,   */
+        /* except if Read IPL                          2012-08-14    */
+        if (dev->ckdlcount > 0 && dev->prevcode != 0x02)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);

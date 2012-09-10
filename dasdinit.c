@@ -20,7 +20,19 @@
 /*              -bz2    build compressed device using bzip2          */
 /*              -0      build compressed device with no compression  */
 /*              -r      "raw" init (bypass VOL1 & IPL track fmt)     */
+/*              -b      build disabled wait PSW as BC-mode PSW (if   */
+/*                      not specified, default is EC-mode PSW)       */
+/*              -m      build disabled wait PSW enabled for          */
+/*                      machine checks (default is disabled for      */
+/*                      machine checks)                              */
 /*              -linux  format dasd using linux null track format    */
+/*                                                                   */
+/*              Note:  To get a disabled wait PSW that matches       */
+/*                     what this program originally created,         */
+/*                     you must specify the "-b" and "-m"            */
+/*                     options.  The revised defaults, if            */
+/*                     those switches are not specified, is an       */
+/*                     EC-mode PSW disabled for machine checks.      */
 /*                                                                   */
 /* filename     is the name of the disk image file to be created     */
 /*              (this program will not overwrite an existing file)   */
@@ -62,6 +74,8 @@ char            msgbuf[512];            /* message build work area   */
 int     altcylflag = 0;                 /* Alternate cylinders flag  */
 int     rawflag = 0;                    /* Raw format flag           */
 int     volsize_argnum = 4;             /* argc value of size option */
+int     flagECmode = 1;                 /* IPL PSW mode flag         */
+int     flagMachinecheck   = 0;         /* IPL PSW machine check flag*/
 U32     size = 0;                       /* Volume size               */
 U32     altsize = 0;                    /* Alternate cylinders       */
 U32     heads = 0;                      /* Number of tracks/cylinder */
@@ -135,6 +149,10 @@ char   *strtok_str = NULL;
             lfs = 1;
         else if (strcmp("linux", &argv[1][1]) == 0)
             nullfmt = CKDDASD_NULLTRK_FMT2;
+        else if (strcmp("b", &argv[1][1]) == 0)
+            flagECmode = 0;
+        else if (strcmp("m", &argv[1][1]) == 0)
+            flagMachinecheck = 1;
         else argexit(0, pgm, argv[1]);
     }
 
@@ -225,7 +243,7 @@ char   *strtok_str = NULL;
     /* Create the device */
     if (type == 'C')
         rc = create_ckd (fname, devtype, heads, maxdlen, size, volser,
-                        comp, lfs, 0, nullfmt, rawflag);
+                        comp, lfs, 0, nullfmt, rawflag, flagECmode, flagMachinecheck);
     else
         rc = create_fba (fname, devtype, sectsize, size, volser, comp,
                         lfs, 0, rawflag);

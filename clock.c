@@ -92,91 +92,99 @@ typedef int     clockid_t;
 static INLINE int
 clock_gettime ( clockid_t clk_id, struct timespec *ts )
 {
-  register int        result;
+    register int    result;
 
-  /* Validate parameters... */
+    /* Validate parameters... */
 
-  if ( unlikely ( (clk_id > CLOCK_REALTIME) ||
-                  !ts ) )
-  {
-    errno = EINVAL;
-    return ( -1 );
-  }
-
-  #if defined(__APPLE__) && 0
-  {
-    /* FIXME: mach/mach.h include is generating invalid storage class */
-    /*        errors. Default to gettimeofday until resolved.         */
-
-    #include <mach/mach.h>
-
-    /* FIXME: This sequence is slower than gettimeofday call per OS X */
-    /*        Developer Library. Recommend converting to use the      */
-    /*        mach_absolute_time call, but that will have to wait     */
-    /*        until CLOCK_MONOTONIC support and review of steering    */
-    /*        support to avoid double steering.                       */
-
-    mach_timespec_t     mts;
-    static clock_serv_t cserv = 0;
-
-    if (!cserv)
+    if ( unlikely ( (clk_id > CLOCK_REALTIME) ||
+                    !ts ) )
     {
-      /* Get clock service port */
-      result = host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cserv);
-      if (result != KERN_SUCCESS)
-        return ( result );
+        errno = EINVAL;
+        return ( -1 );
     }
 
-    result = clock_get_time(cserv, &mts);
-    if (result == KERN_SUCCESS)
+    #if defined(__APPLE__) && 0
     {
-      ts->tv_sec  = mts.tv_sec;
-      ts->tv_nsec = mts.tv_nsec;
+        /* FIXME: mach/mach.h include is generating invalid storage
+         *        class errors. Default to gettimeofday until resolved.
+         */
+
+        #include <mach/mach.h>
+
+        /* FIXME: This sequence is slower than gettimeofday call per OS
+         *        X Developer Library. Recommend converting to use the
+         *        mach_absolute_time call, but that will have to wait
+         *        until CLOCK_MONOTONIC support and review of steering
+         *        support to avoid double steering.
+         */
+
+        mach_timespec_t     mts;
+        static clock_serv_t cserv = 0;
+
+        if (!cserv)
+        {
+            /* Get clock service port */
+            result = host_get_clock_service(mach_host_self(),
+                                            CALENDAR_CLOCK,
+                                            &cserv);
+            if (result != KERN_SUCCESS)
+            return ( result );
+        }
+
+        result = clock_get_time(cserv, &mts);
+        if (result == KERN_SUCCESS)
+        {
+            ts->tv_sec  = mts.tv_sec;
+            ts->tv_nsec = mts.tv_nsec;
+        }
+//      result = mach_port_deallocate(mach_task_self(), cserv);                 /* Can this be ignored until shutdown of Hercules? */
     }
-//  result = mach_port_deallocate(mach_task_self(), cserv);                     /* Can this be ignored until shutdown of Hercules? */
-  }
-  #else /* Convert standard gettimeofday call */
-  {
-    struct timeval      tv;
-
-    result = gettimeofday(&tv, NULL);
-
-    /* Handle microsecond overflow */
-    if ( unlikely (tv.tv_usec >= 1000000) )
+    #else /* Convert standard gettimeofday call */
     {
-      register U32      temp = tv.tv_usec / 1000000;
-      tv.tv_sec  += temp;
-      tv.tv_usec -= temp * 1000000;
+        struct timeval  tv;
+
+        result = gettimeofday(&tv, NULL);
+
+        /* Handle microsecond overflow */
+        if ( unlikely (tv.tv_usec >= 1000000) )
+        {
+            register U32    temp = tv.tv_usec / 1000000;
+            tv.tv_sec  += temp;
+            tv.tv_usec -= temp * 1000000;
+        }
+
+        /* Convert timeval to timespec */
+        ts->tv_sec  = tv.tv_sec;
+        ts->tv_nsec = tv.tv_usec * 1000;
+
+
+        /* Reset clock precision and force host_ETOD to use minimum
+         * precision algorithm.
+         */
+
+        #if defined(TOD_FULL_PRECISION)
+            #undef TOD_FULL_PRECISION
+        #endif
+
+        #if defined(TOD_120BIT_PRECISION)
+            #undef TOD_120BIT_PRECISION
+        #endif
+
+        #if defined(TOD_95BIT_PRECISION)
+            #undef TOD_95BIT_PRECISION)
+        #endif
+
+        #if defined(TOD_64BIT_PRECISION)
+            #undef TOD_64BIT_PRECISION)
+        #endif
+
+        #if !defined(TOD_MIN_PRECISION)
+            #define TOD_MIN_PRECISION
+        #endif
     }
-
-    /* Convert timeval to timespec */
-    ts->tv_sec  = tv.tv_sec;
-    ts->tv_nsec = tv.tv_usec * 1000;
-
-
-    /* Reset clock precision and force host_ETOD to use minimum precision
-     * algorithm
-     */
-
-    #if defined(TOD_FULL_PRECISION)
-      #undef TOD_FULL_PRECISION
     #endif
-    #if defined(TOD_120BIT_PRECISION)
-      #undef TOD_120BIT_PRECISION
-    #endif
-    #if defined(TOD_95BIT_PRECISION)
-      #undef TOD_95BIT_PRECISION)
-    #endif
-    #if defined(TOD_64BIT_PRECISION)
-      #undef TOD_64BIT_PRECISION)
-    #endif
-    #if !defined(TOD_MIN_PRECISION)
-      #define TOD_MIN_PRECISION
-    #endif
-  }
-  #endif
 
-  return (result);
+    return ( result );
 }
 
 #elif !(defined(TOD_FULL_PRECISION)     || \
@@ -185,8 +193,8 @@ clock_gettime ( clockid_t clk_id, struct timespec *ts )
         defined(TOD_MIN_PRECISION)      || \
         defined(TOD_95BIT_PRECISION))
 
-  /* Define default clock precision as 95-bits (only one division required) */
-  #define TOD_95BIT_PRECISION
+    /* Define default clock precision as 95-bits (only one division required) */
+    #define TOD_95BIT_PRECISION
 
 #endif
 
@@ -198,80 +206,80 @@ clock_gettime ( clockid_t clk_id, struct timespec *ts )
 ETOD*
 host_ETOD (ETOD* ETOD)
 {
-  struct timespec time;
+    struct timespec time;
 
-  /* Should use CLOCK_MONOTONIC + adjustment, but host sleep/hibernate destroys
-   * consistent monotonic clock.
-   */
+    /* Should use CLOCK_MONOTONIC + adjustment, but host sleep/hibernate
+     * destroys consistent monotonic clock.
+     */
 
-  clock_gettime(CLOCK_REALTIME, &time);
+    clock_gettime(CLOCK_REALTIME, &time);
 
-  /* This conversion, assuming a nanosecond host clock resolution, yields a TOD
-   * clock resolution of 120-bits, 95-bits, or 64-bits, with a period of over
-   * 36,533 years.
-   *
-   *
-   * Original 128-bit code:
-   *
-   * register U128 result;
-   * result  = ((((U128)time.tvsec * ETOD_SEC) + ETOD_1970) << 64) +
-   *           (((U128)time.tv_nsec << 68) / 1000);
-   *
-   *
-   * In the 64-bit translation of the routine, bits 121-127 are not calculated
-   * as a third division is required.
-   *
-   * It is not necessary to normalize the clock_gettime return value, ensuring
-   * that the tv_nsec field is less than 1 second, as tv_nsec is a 32-bit field
-   * and 64-bit registers are in use.
-   *
-   */
+    /* This conversion, assuming a nanosecond host clock resolution,
+     * yields a TOD clock resolution of 120-bits, 95-bits, or 64-bits,
+     * with a period of over 36,533 years.
+     *
+     *
+     * Original 128-bit code:
+     *
+     * register U128 result;
+     * result  = ((((U128)time.tvsec * ETOD_SEC) + ETOD_1970) << 64) +
+     *           (((U128)time.tv_nsec << 68) / 1000);
+     *
+     *
+     * In the 64-bit translation of the routine, bits 121-127 are not
+     * calculated as a third division is required.
+     *
+     * It is not necessary to normalize the clock_gettime return value,
+     * ensuring that the tv_nsec field is less than 1 second, as tv_nsec
+     * is a 32-bit field and 64-bit registers are in use.
+     *
+     */
 
-  ETOD->high  = time.tv_sec;        /* Convert seconds to microseconds,       */
-  ETOD->high *= ETOD_SEC;           /* adjusted to bit-59; truncate above     */
+    ETOD->high  = time.tv_sec;      /* Convert seconds to microseconds,       */
+    ETOD->high *= ETOD_SEC;         /* adjusted to bit-59; truncate above     */
                                     /* extended TOD clock resolution          */
-  ETOD->high += ETOD_1970;          /* Adjust for open source epoch of 1970   */
-  ETOD->low   = time.tv_nsec;       /* Copy nanoseconds                       */
+    ETOD->high += ETOD_1970;        /* Adjust for open source epoch of 1970   */
+    ETOD->low   = time.tv_nsec;     /* Copy nanoseconds                       */
 
-  #if defined(TOD_FULL_PRECISION)       || \
-      defined(TOD_120BIT_PRECISION)     || \
-      defined(TOD_64BIT_PRECISION)      || \
-      defined(TOD_MIN_PRECISION)        || \
-      !defined(TOD_95BIT_PRECISION)
-  {
-    register U64    temp;
-    temp        = ETOD->low;        /* Adjust nanoseconds to bit-59 for       */
-    temp      <<= 1;                /* division by 1000 (shift compressed),   */
-    temp       /= 125;              /* calculating microseconds and the top   */
+    #if defined(TOD_FULL_PRECISION)       || \
+        defined(TOD_120BIT_PRECISION)     || \
+        defined(TOD_64BIT_PRECISION)      || \
+        defined(TOD_MIN_PRECISION)        || \
+        !defined(TOD_95BIT_PRECISION)
+    {
+        register U64    temp;
+        temp        = ETOD->low;    /* Adjust nanoseconds to bit-59 for       */
+        temp      <<= 1;            /* division by 1000 (shift compressed),   */
+        temp       /= 125;          /* calculating microseconds and the top   */
                                     /* nibble of the remainder                */
                                     /* (us*16 = ns*16/1000 = ns*2/125)        */
-    ETOD->high += temp;             /* Add to upper 64-bits                   */
-    #if defined(TOD_MIN_PRECISION)      || \
-        defined(TOD_64BIT_PRECISION)
-      ETOD->low   = 0;              /* Set lower 64-bits to zero              */
+        ETOD->high += temp;         /* Add to upper 64-bits                   */
+        #if defined(TOD_MIN_PRECISION)      || \
+            defined(TOD_64BIT_PRECISION)
+            ETOD->low   = 0;        /* Set lower 64-bits to zero              */
                                     /* (gettimeofday or other microsecond     */
                                     /* clock used as clock source)            */
-    #else /* Calculate full precision fractional clock value                  */
-      temp      >>= 1;              /* Calculate remainder                    */
-      temp       *= 125;            /* ...                                    */
-      ETOD->low  -= temp;           /* ...                                    */
-      ETOD->low <<= 57;             /* Divide remainder by 1000 and adjust    */
-      ETOD->low  /= 125;            /* to proper position, shifting out high- */
-      ETOD->low <<= 8;              /* order byte                             */
-    #endif
-  }
-  #else /* 95-bit resolution                                                  */
-  {
-    ETOD->low <<= 32;               /* Place nanoseconds in high-order word   */
-    ETOD->low  /= 125;              /* Divide by 1000 (125 * 2^3)             */
-    ETOD->high += ETOD->low >> 31;  /* Adjust and add microseconds and first  */
-                                    /* nibble of nanosecond remainder to bits */
-                                    /* 0-63                                   */
-    ETOD->low <<= 33;               /* Adjust remaining nanosecond fraction   */
+        #else /* Calculate full precision fractional clock value              */
+            temp      >>= 1;        /* Calculate remainder                    */
+            temp       *= 125;      /* ...                                    */
+            ETOD->low  -= temp;     /* ...                                    */
+            ETOD->low <<= 57;       /* Divide remainder by 1000 and adjust    */
+            ETOD->low  /= 125;      /* to proper position, shifting out high- */
+            ETOD->low <<= 8;        /* order byte                             */
+        #endif
+    }
+    #else /* 95-bit resolution                                                */
+    {
+        ETOD->low <<= 32;           /* Place nanoseconds in high-order word   */
+        ETOD->low  /= 125;          /* Divide by 1000 (125 * 2^3)             */
+        ETOD->high += ETOD->low >> 31;  /* Adjust and add microseconds and    */
+                                    /* first nibble of nanosecond remainder   */
+                                    /* to bits 0-63                           */
+        ETOD->low <<= 33;           /* Adjust remaining nanosecond fraction   */
                                     /* to bits 64-93                          */
-  }
-  #endif
-  return ( ETOD );                  /* Return address of result               */
+    }
+    #endif
+    return ( ETOD );                /* Return address of result               */
 }
 
 
@@ -294,14 +302,14 @@ void csr_reset()
 static ETOD universal_tod;
 static TOD universal_clock(void) /* really: any clock used as a base */
 {
-  host_ETOD(&universal_tod);
-  return (universal_tod.high);
+    host_ETOD(&universal_tod);
+    return (universal_tod.high);
 }
 
 static TOD universal_clock_extended(ETOD* ETOD)
 {
-  host_ETOD(ETOD);
-  return (ETOD->high);
+    host_ETOD(ETOD);
+    return (ETOD->high);
 }
 
 
@@ -319,46 +327,46 @@ static TOD hw_adjust(TOD base_tod);
 static TOD
 hw_calculate_unique_tick (void)
 {
-  static const ETOD     m1  = ETOD_init(0,65536);
+    static const ETOD     m1  = ETOD_init(0,65536);
 
-  ETOD          temp;
-  register TOD  result;
-  register int  n;
+    ETOD          temp;
+    register TOD  result;
+    register int  n;
 
-  temp.high = universal_tod.high;
-  temp.low  = universal_tod.low;
-  hw_unique_clock_tick.low = 1;
-  for (n = 0; n < 65536; ++n)
-    result = hw_adjust(universal_clock());
-  ETOD_sub(&temp, universal_tod, temp);
-  ETOD_sub(&temp, temp, m1);
-  ETOD_shift(&hw_unique_clock_tick, temp, 16);
-  if (hw_unique_clock_tick.low  == 0 &&
-      hw_unique_clock_tick.high == 0)
-    hw_unique_clock_tick.high = 1;
-  #if defined(TOD_95BIT_PRECISION) || \
-      defined(TOD_64BIT_PRECISION) || \
-      defined(TOD_MIN_PRECISION)
-  else
-  {
-    static const ETOD   adj =
-    #if defined(TOD_95BIT_PRECISION)
-      ETOD_init(0,0x0000000100000000ULL);
-    #else
-      ETOD_init(0,0x8000000000000000ULL);
+    temp.high = universal_tod.high;
+    temp.low  = universal_tod.low;
+    hw_unique_clock_tick.low = 1;
+    for (n = 0; n < 65536; ++n)
+        result = hw_adjust(universal_clock());
+    ETOD_sub(&temp, universal_tod, temp);
+    ETOD_sub(&temp, temp, m1);
+    ETOD_shift(&hw_unique_clock_tick, temp, 16);
+    if (hw_unique_clock_tick.low  == 0 &&
+        hw_unique_clock_tick.high == 0)
+        hw_unique_clock_tick.high = 1;
+    #if defined(TOD_95BIT_PRECISION) || \
+        defined(TOD_64BIT_PRECISION) || \
+        defined(TOD_MIN_PRECISION)
+    else
+    {
+        static const ETOD   adj =
+        #if defined(TOD_95BIT_PRECISION)
+            ETOD_init(0,0x0000000100000000ULL);
+        #else
+            ETOD_init(0,0x8000000000000000ULL);
+        #endif
+
+        ETOD_add(&hw_unique_clock_tick, hw_unique_clock_tick, adj);
+
+        #if defined(TOD_95BIT_PRECISION)
+            hw_unique_clock_tick.low &= 0xFFFFFFFE00000000ULL;
+        #else
+            hw_unique_clock_tick.low = 0;
+        #endif
+    }
     #endif
 
-    ETOD_add(&hw_unique_clock_tick, hw_unique_clock_tick, adj);
-
-    #if defined(TOD_95BIT_PRECISION)
-      hw_unique_clock_tick.low &= 0xFFFFFFFE00000000ULL;
-    #else
-      hw_unique_clock_tick.low = 0;
-    #endif
-  }
-  #endif
-
-  return ( result );
+    return ( result );
 }
 
 
@@ -369,20 +377,20 @@ static TOD hw_adjust(TOD base_tod)
     base_tod += hw_offset;
 
     /* Apply the steering offset from the current steering episode */
-    /* TODO: Shift resolution to permit adjustment by less than 62.5 nanosecond
-     *       increments (1/16 microsecond).
+    /* TODO: Shift resolution to permit adjustment by less than 62.5
+     *       nanosecond increments (1/16 microsecond).
      */
     base_tod += (S64)(base_tod - hw_episode) * hw_steering;
 
     /* Ensure that the clock returns a unique value */
     if (hw_tod.high < base_tod)
-      hw_tod.high = base_tod,
-      hw_tod.low  = universal_tod.low;
+        hw_tod.high = base_tod,
+        hw_tod.low  = universal_tod.low;
     else if (hw_unique_clock_tick.low  == 0 &&
              hw_unique_clock_tick.high == 0)
-      hw_calculate_unique_tick();
+        hw_calculate_unique_tick();
     else
-      ETOD_add(&hw_tod, hw_tod, hw_unique_clock_tick);
+        ETOD_add(&hw_tod, hw_tod, hw_unique_clock_tick);
 
     return ( hw_tod.high );
 }
@@ -564,103 +572,119 @@ S64 timer;
 
 TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 {
-  /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
-   * order for comparison. Consequently, swap delays for a subsequent
-   * STORE CLOCK, STORE CLOCK EXTENDED, or TRACE instruction may be
-   * introduced when a STORE CLOCK value is advanced due to the use of
-   * the CPU address in bits 66-71.
-   *
-   * If the regs pointer is null, then the request is a raw request,
-   * and the format operand should specify ETOD_raw or ETOD_fast. For
-   * raw and fast requests, the CPU address is not inserted into the
-   * returned value.
-   *
-   * A spin loop is used for the introduction of the delay, moderated
-   * by obtaining and releasing of the TOD lock. This permits raw and
-   * fast clock requests to complete without additional delay.
-   */
-
-  U64   high;
-  U64   low;
-  U8    swapped = 0;
-
-  do
-  {
-    obtain_lock(&sysblk.todlock);
-
-    high = hw_clock_l();
-    low  = hw_tod.low;
-
-    /* If we are in the old episode, and the new episode has arrived
-       then we must take action to start the new episode */
-    if (episode_current == &episode_old)
-      start_new_episode();
-
-    /* Set the clock to the new updated value with offset applied */
-    high += episode_current->base_offset;
-
-    /* Place CPU stamp into clock value for Standard and Extended
-     * formats (raw or fast requests fall through)
+    /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
+     * order for comparison. Consequently, swap delays for a subsequent
+     * STORE CLOCK, STORE CLOCK EXTENDED, or TRACE instruction may be
+     * introduced when a STORE CLOCK value is advanced due to the use of
+     * the CPU address in bits 66-71.
+     *
+     * If the regs pointer is null, then the request is a raw request,
+     * and the format operand should specify ETOD_raw or ETOD_fast. For
+     * raw and fast requests, the CPU address is not inserted into the
+     * returned value.
+     *
+     * A spin loop is used for the introduction of the delay, moderated
+     * by obtaining and releasing of the TOD lock. This permits raw and
+     * fast clock requests to complete without additional delay.
      */
-    if (regs)
+
+    U64 high;
+    U64 low;
+    U8  swapped = 0;
+
+    do
     {
-      switch (format)
-      {
-        /* Standard TOD format */
-        case ETOD_standard:
-          low &= 0xC000000000000000ULL;
-          low |= (U64)((regs->cpuad) & 0x3F) << 56;
-          break;
+        obtain_lock(&sysblk.todlock);
 
-        /* Extended TOD format */
-        case ETOD_extended:
-          low &= 0xFFFFFFFFFF800000ULL;
-          low |= (U64)((regs->cpuad) & 0x3F) << 16;
-          if (low == 0)
-            low |= 0x0000000000400000ULL;
-          low |= regs->todpr;
-          break;
-      }
-    }
+        high = hw_clock_l();
+        low  = hw_tod.low;
 
-    if (/* New clock value > Old clock value   */
-        high > tod_value.high           ||
-        (high == tod_value.high &&
-         low > tod_value.low)           ||
-        /* or Clock Wrap                       */
-        unlikely(unlikely((tod_value.high & 0x8000000000000000ULL) == 0x8000000000000000ULL &&
-                          (          high & 0x8000000000000000ULL) == 0)))
-    {
-      tod_value.high = high;
-      tod_value.low  = low;
-      swapped = 1;
-    }
-    else if (format <= ETOD_fast)
-    {
-      high = tod_value.high;
-      low  = tod_value.low;
-      swapped = 1;
-    }
+        /* If we are in the old episode, and the new episode has arrived
+         * then we must take action to start the new episode.
+         */
+        if (episode_current == &episode_old)
+            start_new_episode();
 
-    if (swapped)
-    {
-      ETOD->high = high += regs->tod_epoch;
-      ETOD->low  = low;
-    }
+        /* Set the clock to the new updated value with offset applied */
+        high += episode_current->base_offset;
 
-    release_lock(&sysblk.todlock);
+        /* Place CPU stamp into clock value for Standard and Extended
+         * formats (raw or fast requests fall through)
+         */
+        if (regs)
+        {
+            register U64    cpuad;
+            register U64    amask;
+            register U64    lmask;
 
-  } while (!swapped);
+            /* Set CPU address masks */
+            if (sysblk.maxcpu <= 64)
+                amask = 0x3F, lmask = 0xFFFFFFFFFFC00000ULL;
+            else if (sysblk.maxcpu <= 128)
+                amask = 0x7F, lmask = 0xFFFFFFFFFF800000ULL;
+            else /* sysblk.maxcpu <= 256) */
+                amask = 0xFF, lmask = 0xFFFFFFFFFF000000ULL;
 
-  return ( high );
+            /* Clean CPU address */
+            cpuad = (U64)regs->cpuad & amask;
+
+            switch (format)
+            {
+                /* Standard TOD format */
+                case ETOD_standard:
+                    low &= lmask << 40;
+                    low |= cpuad << 56;
+                    break;
+
+                /* Extended TOD format */
+                case ETOD_extended:
+                    low &= lmask;
+                    low |= cpuad << 16;
+                    if (low == 0)
+                        low = (amask + 1) << 16;
+                    low |= regs->todpr;
+                    break;
+            }
+        }
+
+        if (/* New clock value > Old clock value   */
+            high > tod_value.high       ||
+            (high == tod_value.high &&
+            low > tod_value.low)        ||
+            /* or Clock Wrap                       */
+            unlikely(unlikely((tod_value.high & 0x8000000000000000ULL) == 0x8000000000000000ULL &&
+                              (          high & 0x8000000000000000ULL) == 0)))
+        {
+            tod_value.high = high;
+            tod_value.low  = low;
+            swapped = 1;
+        }
+        else if (format <= ETOD_fast)
+        {
+            high = tod_value.high;
+            low  = tod_value.low;
+            swapped = 1;
+        }
+
+        if (swapped)
+        {
+            ETOD->high = high += regs->tod_epoch;
+            ETOD->low  = low;
+        }
+
+        release_lock(&sysblk.todlock);
+
+    } while (!swapped);
+
+    return ( high );
 }
 
 
 TOD
 tod_clock (REGS* regs)
 {
-  ETOD  ETOD;
-  return ( etod_clock(regs, &ETOD, ETOD_fast) );
+    ETOD    ETOD;
+    return ( etod_clock(regs, &ETOD, ETOD_fast) );
 }
 
 #if defined(_FEATURE_INTERVAL_TIMER)
@@ -779,7 +803,7 @@ int pending = 0;
 static INLINE unsigned int
 is_leapyear ( const unsigned int year )
 {
-  return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+    return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
 static INLINE S64 lyear_adjust(int epoch)
@@ -817,7 +841,8 @@ int epoch;
 S64 ly1960;
 
     /* Set up the system TOD clock offset: compute the number of
-     * microseconds offset to 0000 GMT, 1 January 1900 */
+     * microseconds offset to 0000 GMT, 1 January 1900.
+     */
 
     if( (epoch = default_epoch) == 1960 )
         ly1960 = ETOD_DAY;
@@ -829,9 +854,9 @@ S64 ly1960;
     set_tod_epoch(((epoch*365+(epoch/4))*-ETOD_DAY)+lyear_adjust(epoch)+ly1960);
 
     /* Set the timezone offset */
-    adjust_tod_epoch((((default_tzoffset / 100) * 60) + // Hours -> Minutes
-                      (default_tzoffset % 100)) *       // Minutes
-                     ETOD_MIN);                         // Convert to ETOD format
+    adjust_tod_epoch((((default_tzoffset / 100) * 60) + /* Hours -> Minutes       */
+                      (default_tzoffset % 100)) *       /* Minutes                */
+                     ETOD_MIN);                         /* Convert to ETOD format */
 }
 
 
@@ -913,7 +938,7 @@ int query_tzoffset(void)
 // static ETOD tod_value;
 TOD update_tod_clock(void)
 {
-TOD new_clock;
+    TOD new_clock;
 
     obtain_lock(&sysblk.todlock);
 

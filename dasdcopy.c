@@ -336,7 +336,8 @@ char           *strtok_str = NULL;
     /* Create the output file */
     if (ckddasd)
         rc = create_ckd(ofile, idev->devtype, idev->ckdheads,
-                        ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt, 0);
+                        ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt, 0,
+                        1, 0);
     else
         rc = create_fba(ofile, idev->devtype, fba->size,
                         blks, "", comp, lfs, 1+r, 0);

@@ -386,7 +386,7 @@ DUT_DLL_IMPORT int  capacity_calc (CIFBLK *cif, int used, int keylen, int datale
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
 DUT_DLL_IMPORT int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
         U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
-        int nullfmt, int rawflag);
+        int nullfmt, int rawflag, int flagECmode, int flagMachinecheck);
 DUT_DLL_IMPORT int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
         char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag);
 int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,

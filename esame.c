@@ -5263,12 +5263,21 @@ static inline int ARCH_DEP(conditional_key_procedure) (int rck, BYTE skey, BYTE 
 
 /*-------------------------------------------------------------------*/
 /* B9AF PFMF  - Perform Frame Management Function              [RRE] */
+/*                                                                   */
+/* Note that real hardware does not update R2 for each page, only on */
+/* interrupt  or  at completion.  Nor does it reference R1 more than */
+/* once.   This  has implications for the pathological case of R1 == */
+/* R2.  The loworder 12 bits of R2 must remain unchanged.            */
+/*                                                                   */
+/* Prefixing  is  applied  in  single  frame  operation,  but not in */
+/* multipage mode.                                                   */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_frame_management_function)
 {
 int     r1, r2;                         /* Register values           */
-int     fc;
+int     fc;                           /* Frame count                 */
 RADR    addr, aaddr;
+int page_offset;                      /* Loworder bits of R2         */
 
     RRE(inst, regs, r1, r2);
 
@@ -5282,18 +5291,25 @@ RADR    addr, aaddr;
 
     /* Wrap address according to addressing mode */
     aaddr = addr = ADDRESS_MAXWRAP(regs) & regs->GR_G(r2) & PAGEFRAME_PAGEMASK;
+    page_offset = regs->GR_G(r2) & PAGEFRAME_BYTEMASK;
 
     /* Convert real address to absolute address */
 
-    if(regs->GR_L(r1) & PFMF_FMFI_FSC_1M)
-        fc = 0x100 - ((regs->GR_L(r2) & 0xFF000) >> 12);
-    else
+    switch (PFMF_FMFI_FSC & regs->GR_L(r1))
     {
-        aaddr = addr = APPLY_PREFIXING (addr, regs->PX);
-        fc = 1;
+        case PFMF_FMFI_FSC_4K:
+            aaddr = addr = APPLY_PREFIXING (addr, regs->PX);
+            fc = 1;
+            break;
+        case PFMF_FMFI_FSC_1M:
+            fc = 0x100 - ((regs->GR_L(r2) & 0xFF000) >> 12);
+            break;
+        /* Code for 2G pages goes here                               */
+        default:
+            ;
     }
 
-    for( ; fc--; aaddr = addr += 0x1000)
+    for( ; fc--; )
     {
         /* Addressing exception if block is outside main storage */
         if ( addr > regs->mainlim )
@@ -5316,15 +5332,9 @@ RADR    addr, aaddr;
             /* Change Bit must be updated */
             if((regs->GR_L(r1) & PFMF_FMFI_MC))
                 rck |= STORKEY_CHANGE;
-        
+
             /* Mask out R/C bits to be bypassed */
             sk &= ~rck;
-
-            /* Update r2 - point to the frame to be processed */
-            if(regs->GR_L(r1) & PFMF_FMFI_FSC_1M)
-                SET_GR_A(r1, regs, (addr & ADDRESS_MAXWRAP(regs)));
-            else
-                SET_GR_A(r1, regs, (APPLY_PREFIXING (addr, regs->PX) & ADDRESS_MAXWRAP(regs)));
 
             /* Addressing exception if block is outside main storage */
             if ( aaddr > regs->mainlim )
@@ -5540,17 +5550,26 @@ RADR    addr, aaddr;
             memset(regs->mainstor + aaddr, 0, PAGEFRAME_PAGESIZE);
 
         /* Update r2 - point to the next frame */
-        if(regs->GR_L(r1) & PFMF_FMFI_FSC_1M)
-            SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)));
-        else
-            SET_GR_A(r2, regs, (APPLY_PREFIXING (addr, regs->PX) & ADDRESS_MAXWRAP(regs)));
+        switch (PFMF_FMFI_FSC & regs->GR_L(r1))
+        {
+            case PFMF_FMFI_FSC_4K:
+                /* Leave R2 unchanged                                */
+                break;
+            case PFMF_FMFI_FSC_1M:
+                aaddr = addr += 0x1000;
+                SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)) + page_offset);
+                break;
+            /* Code for 2G pages goes here                               */
+            default:
+                ;
+    }
 
 #if 0
         /* Usage Indication */
         if(regs->GR_L(r1) & PFMF_FMFI_UI)
             { }
 #endif
-        
+
     }
 
 } /* end DEF_INST(perform_frame_management_function) */
