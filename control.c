@@ -5437,15 +5437,17 @@ BYTE    r1key;
         STORKEY_INVALIDATE(regs, n);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
+        /* Translate a back to real from absolute */
+        a = APPLY_PREFIXING (a, regs->PX);
     }
 
     if(FACILITY_ENABLED(ENHANCED_DAT,regs)
      && (m3 & SSKE_MASK_MB))
     {
         if(regs->psw.amode64)
-            regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX) & ADDRESS_MAXWRAP(regs);
+            regs->GR_G(r2) = a & ADDRESS_MAXWRAP(regs);
         else
-            regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX) & ADDRESS_MAXWRAP(regs);
+            regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
     }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
