@@ -5263,21 +5263,13 @@ static inline int ARCH_DEP(conditional_key_procedure) (int rck, BYTE skey, BYTE 
 
 /*-------------------------------------------------------------------*/
 /* B9AF PFMF  - Perform Frame Management Function              [RRE] */
-/*                                                                   */
-/* Note that real hardware does not update R2 for each page, only on */
-/* interrupt  or  at completion.  Nor does it reference R1 more than */
-/* once.   This  has implications for the pathological case of R1 == */
-/* R2.  The loworder 12 bits of R2 must remain unchanged.            */
-/*                                                                   */
-/* Prefixing  is  applied  in  single  frame  operation,  but not in */
-/* multipage mode.                                                   */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_frame_management_function)
 {
 int     r1, r2;                         /* Register values           */
-int     fc;                           /* Frame count                 */
+int     fc;                             /* Frame count               */
 RADR    addr, aaddr;
-int page_offset;                      /* Loworder bits of R2         */
+int     page_offset;                    /* Low order bits of R2      */
 
     RRE(inst, regs, r1, r2);
 
@@ -5295,20 +5287,25 @@ int page_offset;                      /* Loworder bits of R2         */
 
     /* Convert real address to absolute address */
 
-    switch (PFMF_FMFI_FSC & regs->GR_L(r1))
-    {
-        case PFMF_FMFI_FSC_4K:
-            aaddr = addr = APPLY_PREFIXING (addr, regs->PX);
-            fc = 1;
-            break;
-        case PFMF_FMFI_FSC_1M:
-            fc = 0x100 - ((regs->GR_L(r2) & 0xFF000) >> 12);
-            break;
-        /* Code for 2G pages goes here                               */
-        default:
-            ;
+    switch (PFMF_FMFI_FSC & regs->GR_L(r1)) {
+    case PFMF_FMFI_FSC_1M:
+        /* Prefixing is not applied in multipage mode */
+        fc = 0x100 - ((regs->GR_L(r2) & 0xFF000) >> 12);
+        break;
+    /* Code for 2G pages goes here */
+    default:
+        break;
+    case PFMF_FMFI_FSC_4K:
+        /* Prefixing is applied in single frame operation */
+        aaddr = addr = APPLY_PREFIXING (addr, regs->PX);
+        fc = 1;
+        break;
     }
 
+    /* Note that real hardware does not update R2 for each page, only on
+       interrupt or at completion. Nor does it reference R1 more than once.
+       This has implications for the case of R1 == R2.
+       The low order 12 bits of R2 must remain unchanged. */
     for( ; fc--; )
     {
         /* Addressing exception if block is outside main storage */
@@ -5550,19 +5547,18 @@ int page_offset;                      /* Loworder bits of R2         */
             memset(regs->mainstor + aaddr, 0, PAGEFRAME_PAGESIZE);
 
         /* Update r2 - point to the next frame */
-        switch (PFMF_FMFI_FSC & regs->GR_L(r1))
-        {
-            case PFMF_FMFI_FSC_4K:
-                /* Leave R2 unchanged                                */
-                break;
-            case PFMF_FMFI_FSC_1M:
-                aaddr = addr += 0x1000;
-                SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)) + page_offset);
-                break;
-            /* Code for 2G pages goes here                               */
-            default:
-                ;
-    }
+        switch (PFMF_FMFI_FSC & regs->GR_L(r1)) {
+        case PFMF_FMFI_FSC_1M:
+            aaddr = addr += 0x1000;
+            SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)) + page_offset);
+            break;
+        /* Code for 2G pages goes here */
+        default:
+            break;
+        case PFMF_FMFI_FSC_4K:
+            /* Leave R2 unchanged */
+            break;
+        }
 
 #if 0
         /* Usage Indication */
