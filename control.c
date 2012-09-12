@@ -5201,31 +5201,22 @@ BYTE    r1key;
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
     if(FACILITY_ENABLED(ENHANCED_DAT,regs)
      && (m3 & SSKE_MASK_MB))
-        fc = 0x100 - ((a & 0xFF000) >> 12);
+        fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
     else
         fc = 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-    for( ; fc--; a += 0x1000)
+    for( ; fc--; )
     {
-        /* Convert real address to absolute address */
-        n = a = APPLY_PREFIXING (a, regs->PX);
 
         if(FACILITY_ENABLED(ENHANCED_DAT,regs)
          && (m3 & SSKE_MASK_MB))
-        {
-            if(regs->psw.amode64)
-                regs->GR_G(r2) = APPLY_PREFIXING (a, regs->PX);
-            else
-                regs->GR_L(r2) = APPLY_PREFIXING (a, regs->PX);
-        }
-#else /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
-
-        /* Convert real address to absolute address */
-        n = a = APPLY_PREFIXING (a, regs->PX);
-
+            /* r2 contains an absolute address when
+                      multiple block control is one */
+            n = a;
+        else
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+            /* Convert real address to absolute address */
+            n = APPLY_PREFIXING (a, regs->PX);
 
         /* Addressing exception if block is outside main storage */
         if ( n > regs->mainlim )
@@ -5428,28 +5419,29 @@ BYTE    r1key;
 #endif
         }
 
-        /* Perform serialization and checkpoint-synchronization */
-        PERFORM_SERIALIZATION (regs);
-        PERFORM_CHKPT_SYNC (regs);
-
         /* Invalidate AIA/AEA so that the REF and CHANGE bits will be set
            when referenced next */
         STORKEY_INVALIDATE(regs, n);
 
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
-        /* Translate a back to real from absolute */
-        a = APPLY_PREFIXING (a, regs->PX);
-    }
+        /* Update r2 in the case of a multiple page update */
+        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+         && (m3 & SSKE_MASK_MB))
+        {
+            /* Advance r2 to the next page */
+            a += PAGEFRAME_PAGESIZE;
 
-    if(FACILITY_ENABLED(ENHANCED_DAT,regs)
-     && (m3 & SSKE_MASK_MB))
-    {
-        if(regs->psw.amode64)
-            regs->GR_G(r2) = a & ADDRESS_MAXWRAP(regs);
-        else
-            regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
+            if(regs->psw.amode64)
+                regs->GR_G(r2) = a & ADDRESS_MAXWRAP(regs);
+            else
+                regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
+        }
     }
 #endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+
+    /* Perform serialization and checkpoint-synchronization */
+    PERFORM_SERIALIZATION (regs);
+    PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(set_storage_key_extended) */
 #endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
