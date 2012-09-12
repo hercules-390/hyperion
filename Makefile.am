@@ -125,6 +125,8 @@ if OPTION_DYNAMIC_LOAD
                    $(XSTATIC)        \
                    -no-undefined     \
                    -avoid-version
+
+  CMPSCTST = cmpsctst
 else
   DYNSRC         = $(dyndev_SRC)
   LTDL           =
@@ -133,6 +135,7 @@ else
   LIB_LD_FLAGS    = $(XSTATIC)    \
                    -no-undefined  \
                    -avoid-version
+  CMPSCTST =
 endif
 
 #
@@ -176,7 +179,7 @@ endif
 # The following causes the dyanmic modules to not even get built
 # unless support for building dynamic modules exists on the build system
 
-bin_PROGRAMS = cmpsctst hercules \
+bin_PROGRAMS = hercules \
                dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
                tapecopy tapemap tapesplt \
                cckdcdsk cckdcomp cckddiag cckdswap \
@@ -185,7 +188,8 @@ bin_PROGRAMS = cmpsctst hercules \
                dmap2hrc \
                vmfplc2 \
                $(HERCIFC) \
-               $(HERCLIN)
+               $(HERCLIN) \
+               $(CMPSCTST)
 
 EXTRA_PROGRAMS = hercifc
 
@@ -611,6 +615,7 @@ vmfplc2_SOURCES       = vmfplc2.c
 vmfplc2_LDADD         = $(tools_ADDLIBS)
 vmfplc2_LDFLAGS       = $(tools_LD_FLAGS)
 
+if OPTION_DYNAMIC_LOAD
 cmpsctst_SOURCES      = cmpsctst.c             \
                         cmpsctst_cmpsc.c       \
                         cmpsctst_cmpsc_2012.c  \
@@ -621,6 +626,7 @@ cmpsctst_SOURCES      = cmpsctst.c             \
                         cmpsctst_cmpscput.c
 cmpsctst_LDADD        = $(tools_ADDLIBS)
 cmpsctst_LDFLAGS      = $(tools_LD_FLAGS)
+endif
 #
 # files that are not 'built' per-se
 #
