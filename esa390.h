@@ -1454,8 +1454,9 @@ typedef struct _MBK {
 #define STFL_VIRTUAL_MACHINE    (STFL_HBASE+11)
 #define STFL_QDIO_ASSIST        (STFL_HBASE+12)
 #define STFL_INTERVAL_TIMER     (STFL_HBASE+13)
+#define STFL_DETECT_PGMINTLOOP  (STFL_HBASE+14)
 
-#define STFL_HMAX               (STFL_HBASE+13)
+#define STFL_HMAX               (STFL_HBASE+14)
 #define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
 #define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
 

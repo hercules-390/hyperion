@@ -933,6 +933,7 @@ static char *pgmintname[] = {
             }
             else
 #endif /*defined(_FEATURE_SIE)*/
+            if(FACILITY_ENABLED(DETECT_PGMINTLOOP,regs))
             {
                 char buf[64];
 
