@@ -2021,35 +2021,36 @@ void panel_display (void)
 #endif // defined(OPTION_DYNAMIC_LOAD)
 {
 #ifndef _MSVC_
-  int     rc;                           /* Return code               */
-  int     maxfd;                        /* Highest file descriptor   */
-  fd_set  readset;                      /* Select file descriptors   */
-  struct  timeval tv;                   /* Select timeout structure  */
+  int     rc;                           /* Return code                */
+  int     maxfd;                        /* Highest file descriptor    */
+  fd_set  readset;                      /* Select file descriptors    */
+  struct  timeval tv;                   /* Select timeout structure   */
 #endif // _MSVC_
-int     i;                              /* Array subscripts          */
-int     len;                            /* Length                    */
-REGS   *regs;                           /* -> CPU register context   */
-QWORD   curpsw;                         /* Current PSW               */
-QWORD   prvpsw;                         /* Previous PSW              */
-BYTE    prvstate = 0xFF;                /* Previous stopped state    */
-U64     prvicount = 0;                  /* Previous instruction count*/
+int     i;                              /* Array subscripts           */
+int     len;                            /* Length                     */
+REGS   *regs;                           /* -> CPU register context    */
+QWORD   curpsw;                         /* Current PSW                */
+QWORD   prvpsw;                         /* Previous PSW               */
+BYTE    prvstate = 0xFF;                /* Previous stopped state     */
+U64     prvicount = 0;                  /* Previous instruction count */
 #if defined(OPTION_MIPS_COUNTING)
-U64     prvtcount = 0;                  /* Previous total count      */
-U64     totalcount = 0;                 /* sum of all instruction cnt*/
+U64     prvtcount = 0;                  /* Previous total count       */
+U64     totalcount = 0;                 /* sum of all instruction cnt */
+U32     numcpu = 0;                     /* Online CPU count           */
 #endif /*defined(OPTION_MIPS_COUNTING)*/
-int     prvcpupct = 0;                  /* Previous cpu percentage   */
+int     prvcpupct = 0;                  /* Previous cpu percentage    */
 #if defined(OPTION_SHARED_DEVICES)
-U32     prvscount = 0;                  /* Previous shrdcount        */
+U32     prvscount = 0;                  /* Previous shrdcount         */
 #endif // defined(OPTION_SHARED_DEVICES)
-int     prvpcpu = 0;                    /* Previous pcpu             */
-char    readbuf[MSG_SIZE];              /* Message read buffer       */
-int     readoff = 0;                    /* Number of bytes in readbuf*/
-BYTE    c;                              /* Character work area       */
-size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
-char   *kbbuf = NULL;                   /* Keyboard input buffer     */
-int     kblen;                          /* Number of chars in kbbuf  */
-U32     aaddr;                          /* Absolute address for STO  */
-char    buf[1024];                      /* Buffer workarea           */
+int     prvpcpu = 0;                    /* Previous pcpu              */
+char    readbuf[MSG_SIZE];              /* Message read buffer        */
+int     readoff = 0;                    /* Number of bytes in readbuf */
+BYTE    c;                              /* Character work area        */
+size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer    */
+char   *kbbuf = NULL;                   /* Keyboard input buffer      */
+int     kblen;                          /* Number of chars in kbbuf   */
+U32     aaddr;                          /* Absolute address for STO   */
+char    buf[1024];                      /* Buffer workarea            */
 
     SET_THREAD_NAME("panel_display");
 
@@ -3351,11 +3352,18 @@ FinishShutdown:
         memset( curpsw, 0, sizeof(curpsw) );
         copy_psw (regs, curpsw);
 
+        totalcount = 0;
+        numcpu = 0;
+        for ( i = 0; i < sysblk.maxcpu; ++i )
+            if ( IS_CPU_ONLINE(i) )
+                ++numcpu,
+                totalcount += INSTCOUNT(sysblk.regs[i]);
+
         /* Set the display update indicator if the PSW has changed
            or if the instruction counter has changed, or if
            the CPU stopped state has changed */
         if (memcmp(curpsw, prvpsw, sizeof(curpsw)) != 0
-         || prvicount != INSTCOUNT(regs)
+         || prvicount != totalcount
          || prvcpupct != regs->cpupct
 #if defined(OPTION_SHARED_DEVICES)
          || prvscount != sysblk.shrdcount
@@ -3368,7 +3376,7 @@ FinishShutdown:
         {
             redraw_status = 1;
             memcpy (prvpsw, curpsw, sizeof(prvpsw));
-            prvicount = INSTCOUNT(regs);
+            prvicount = totalcount;
             prvcpupct = regs->cpupct;
             prvstate  = regs->cpustate;
 #if defined(OPTION_SHARED_DEVICES)
@@ -3492,7 +3500,8 @@ FinishShutdown:
             }
             if (redraw_status && !npquiet)
             {
-                char instcnt[32];
+                char    ibuf[64];       /* Rate buffer                */
+
                 {
                     int cnt_disabled = 0;
                     int cnt_stopped  = 0;
@@ -3518,7 +3527,6 @@ FinishShutdown:
                          ( !sysblk.hicpu && sysblk.shrdport ) )
                         state = "GREEN";
                     set_console_title(state);
-
                 }
 
                 /* Save cursor location */
@@ -3530,7 +3538,6 @@ FinishShutdown:
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
-                    char ibuf[64];
                     len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
                                    fetch_fw(curpsw), fetch_fw(curpsw+4));
                     if (regs->arch_mode == ARCH_900)
@@ -3556,97 +3563,86 @@ FinishShutdown:
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
-
-#ifdef OPTION_MIPS_COUNTING
-                    buf[len++] = ' ';
-                    totalcount = 0;
-                    for ( i = 0; i < sysblk.maxcpu; i++ )
-                    {
-                        if ( IS_CPU_ONLINE(i) )
-                            totalcount += INSTCOUNT(sysblk.regs[i]);
-                    }
-                    /* Bottom line left corner can be when there is space: */
-                    /* "" */
-                    /* "instcnt <string>" */
-                    /* "instcnt <string>; mips nnnnn" */
-                    /* nnnnn can be nnnnn, nnn.n, nn.nn or n.nnn */
-                    /* "instcnt <string>; mips nnnnn; IO/s nnnnnn" */
-                    strncpy(instcnt, format_int(totalcount), 32);
-                    i = (int)strlen(instcnt) + 8;
-                    if(len + i + 12 + 13 < cons_cols) // instcnt, mips and ios
-                    {
-                        if(sysblk.mipsrate / 1000000 > 999)
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d,%03d; IO/s %6.6s", instcnt,
-                                     sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000,
-                                     format_int(sysblk.siosrate));
-                        }
-                        else if(sysblk.mipsrate / 1000000 > 99)
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %3d.%01d; IO/s %6.6s",
-                                     instcnt, sysblk.mipsrate / 1000000,
-                                     sysblk.mipsrate % 1000000 / 100000, format_int(sysblk.siosrate));
-                        }
-                        else if(sysblk.mipsrate / 1000000 > 9)
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %2d.%02d; IO/s %6.6s",
-                                     instcnt, sysblk.mipsrate / 1000000,
-                                     sysblk.mipsrate % 1000000 / 10000, format_int(sysblk.siosrate));
-                        }
-                        else
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d.%03d; IO/s %6.6s",
-                                     instcnt, sysblk.mipsrate / 1000000,
-                                     sysblk.mipsrate % 1000000 / 1000, format_int(sysblk.siosrate));
-                        }
-                    }
-                    else if(len + i + 11 < cons_cols) // instcnt and mips
-                    {
-                        if(sysblk.mipsrate / 1000000 > 99)
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %4d", instcnt, sysblk.mipsrate / 1000000);
-                        }
-                        else if(sysblk.mipsrate / 1000000 > 9)
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %2d.%1d",
-                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
-                        }
-                        else
-                        {
-                            snprintf(ibuf, sizeof(ibuf), "instcnt %s; mips %1d.%02d",
-                                     instcnt, sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
-                        }
-                    }
-                    else if(len + i < cons_cols) // instcnt
-                    {
-                        snprintf(ibuf, sizeof(ibuf), "instcnt %s", instcnt);
-                    }
-                    else
-                       strcpy(ibuf, "");
-                    if (len + (int)strlen(ibuf) < cons_cols)
-                        len = cons_cols - (int)strlen(ibuf);
-                    strcpy (buf + len, ibuf);
-
-#endif /* OPTION_MIPS_COUNTING */
                 }
                 else
-                {
                     len += sprintf (buf+len,"%s", "Offline");
-                    buf[len++] = ' ';
+                buf[len++] = ' ';
+
+
 #if defined(OPTION_MIPS_COUNTING)
-                    if (sysblk.shrdport)
+                /* Bottom line right corner can be when there is space:
+                 * ""
+                 * "instcnt <string>"
+                 * "instcnt <string>; mips nnnnn"
+                 * nnnnn can be nnnnn, nnn.n, nn.nn or n.nnn
+                 * "instcnt <string>; mips nnnnn; IO/s nnnnnn"
+                 * "IO/s nnnnnn"
+                 */
+
+                i = 0;
+                if (numcpu)
+                {
+                    U32 mipsrate = sysblk.mipsrate / 1000000;
+
+                    /* Format instruction count */
+                    i = snprintf(ibuf, sizeof(ibuf),
+                                 "instcnt %s",
+                                 format_int(totalcount));
+
+                    if ((len + i + 12) < cons_cols)
                     {
-                        i = cons_cols - 11;
-                        if (len < i) // IO/s
+                        if (mipsrate > 999)
+                            i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                          "; mips %1d,%03d",
+                                          sysblk.mipsrate / 1000000000,
+                                          ((sysblk.mipsrate % 1000000000) +
+                                            500000) / 1000000);
+                        else
                         {
-                            sprintf(&buf[i],
-                                    "IO/s %6.6s",
-                                    format_int(sysblk.siosrate));
-                            len = cons_cols;
+                            U32 mipsfrac = sysblk.mipsrate % 1000000;
+
+                            if (mipsrate > 99)
+                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                              "; mips %3d.%01d",
+                                              mipsrate,
+                                              (mipsfrac + 50000) / 100000);
+                            else if (mipsrate > 9)
+                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                              "; mips %2d.%02d",
+                                              mipsrate,
+                                              (mipsfrac + 5000) / 10000);
+                            else
+                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                              "; mips %1d.%03d",
+                                              mipsrate,
+                                              (mipsfrac + 500) / 1000);
                         }
                     }
-#endif /* OPTION_MIPS_COUNTING */
                 }
+
+                /* Prepare I/O statistics */
+                if ((len + i + (numcpu ? 13 : 11)) < cons_cols &&
+                    (numcpu ||
+                     (!numcpu && sysblk.shrdport)))
+                {
+                    if (numcpu)
+                        ibuf[(int)i++] = ';',
+                        ibuf[(int)i++] = ' ';
+                    i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                  "I/O %6.6s",
+                                  format_int(sysblk.siosrate));
+                }
+
+                /* Copy prepared statistics to buffer */
+                if (i)
+                {
+                    if ((len + i) < cons_cols)
+                        len = cons_cols - i;
+                    strcpy (buf + len, ibuf);
+                    len = cons_cols - 1;
+                }
+#endif /* OPTION_MIPS_COUNTING */
+
                 buf[cons_cols] = '\0';
                 set_pos (cons_rows, 1);
                 set_color (COLOR_LIGHT_YELLOW, COLOR_RED);
