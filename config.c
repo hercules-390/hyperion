@@ -184,7 +184,10 @@ int cpu;
     storsize += skeysize;
 
 
-    /*
+    /* New memory is obtained only if the requested and calculated size
+     * is larger than the last allocated size, or if the request is for
+     * less than 2M of memory.
+     *
      * Note: Using the current algorithm, storage on a 32-bit host OS
      *       is normally limited to a guest total of 1326M, split
      *       between main and expanded storage. The most either may
@@ -197,9 +200,12 @@ int cpu;
      *
      */
 
-    if (storsize > config_allocmsize)
+    if (storsize > config_allocmsize ||
+        (mainsize <= (2 * ONE_MEGABYTE) &&
+         storsize < config_allocmsize))
     {
-        if (config_mfree)
+        if (config_mfree &&
+            mainsize > (2* ONE_MEGABYTE))
             mfree = malloc(config_mfree);
 
         /* Obtain storage with hint to page size for cleanest allocation
@@ -325,8 +331,9 @@ int  cpu;
         RELEASE_INTLOCK(NULL);
     }
 
-    /* Release storage and return if deconfiguring */
-    if (xpndsize == ~0ULL)
+    /* Release storage and return if zero or deconfiguring */
+    if (!xpndsize ||
+        xpndsize == ~0ULL)
     {
         if (config_allocxaddr)
             free(config_allocxaddr);
@@ -338,7 +345,9 @@ int  cpu;
     }
 
 
-    /*
+    /* New memory is obtained only if the requested and calculated size
+     * is larger than the last allocated size.
+     *
      * Note: Using the current algorithm, storage on a 32-bit host OS
      *       is normally limited to a guest total of 1326M, split
      *       between main and expanded storage. The most either may
