@@ -2,19 +2,27 @@
                     Building Hercules
 
 If you're simply trying to figure out how to build Hercules from the
-distributed source files (i.e. NOT from the SVN sources), then skip
-to the "Building Hercules" section further below.
+distributed source tarball (i.e. NOT from the source directly pulled
+from the repository), then skip to the "Building Hercules" section
+further below.
 
 
 BUILD PREPARATION
 -----------------
 
-In order to build Hercules from the SVN sources, you must have installed:
+In order to build Hercules from the repository sources, you must have
+installed the minimum versions of the development packages as reported
+by the 'bldlvlck' script in the 'util' subdirectory:
+
+
+    Note:  the below listed versions may not be correct;
+           please run the 'util/bldlvlck' script for the
+           most current list of minimum versions.
 
 
      Package   Version  (or greater!)
     ----------------------------------
-     autoconf    2.54   (or greater!)
+     autoconf    2.64   (or greater!)
      automake    1.7    (or greater!)
      flex        2.5    (or greater!)
      gawk        3.0    (or greater!)
@@ -29,6 +37,7 @@ In order to build Hercules from the SVN sources, you must have installed:
      perl        5.6    (or greater!)
      sed         3.02   (or greater!)
 
+
 The following package(s) is(are) optional
 
      Package   Version  (or greater!)
@@ -37,6 +46,7 @@ The following package(s) is(are) optional
      zlib            ?                  (for ZLIB compression)
      libbz2          ?                  (for BZIP2 compression)
 
+
 * If an optional package is not installed, the resulting build may lack
   an optional feature, but should be usable otherwise.
 
@@ -44,22 +54,8 @@ All of these tools can be found at www.gnu.org in source code form, and
 are also widely available in packaged form (RPM, DEB, Solaris packages,
 etc.).
 
-    +------------------------------------------------------------+
-    |                                                            |
-    |                      ** NOTE **                            |
-    |                                                            |
-    |  There is a handy utility (script) found in the 'util'     |
-    |  subdirectory that will check for the required version     |
-    |  of all of the above mentioned packages. Simply 'cd' to    |
-    |  that subdirectory (in the hercules source code tree) and  |
-    |  enter the command 'bldlvlck'. It will then simply check   |
-    |  and report for you whether or not you have all of the     |
-    |  required version(s) of all the packages needed to build   |
-    |  Hercules from SVN source.                                 |
-    |                                                            |
-    +------------------------------------------------------------+
-
-Once you have these tools installed, simply enter the command:
+Once you have the minimum versions of all of the above tools installed,
+simply enter the following command:
 
     sh ./autogen.sh
 
@@ -76,15 +72,16 @@ BUILDING HERCULES
 Now that a 'configure' script has been built for us, let's use it! :)
 
 (Note: if you're simply trying to build Hercules from the distributed
-source files (i.e. NOT from the SVN sources), then just use the 'configure'
-script that should have been included with the source distribution tarball.)
+tarball (i.e. NOT directly from the pulled respository sources), then just
+use the 'configure' script that should have been included with the source
+distribution tarball.)
 
     +------------------------------------------------------------+
     |                                                            |
     |                      ** NOTE **                            |
     |                                                            |
-    |  See also the boxed Note in the BUILD PREPARATION section  |
-    |  further above regarding the 'bldlvlck' script which can   |
+    |  See also refer to instructions in the BUILD PREPARATION   |
+    |  section above regarding the 'bldlvlck' script which can   |
     |  be used to check to see if you have all of the required   |
     |  packages installed or not to build Hercules from source.  |
     |                                                            |
@@ -151,9 +148,10 @@ for building Hercules.
 
 
 --
+original author:
 Matt Zimmerman <mdz@debian.org>
 08 Oct, 2001
 
-updated in detail by:
+additional detail added by:
 "Fish" (David B. Trout)
 30 Jul, 2002
