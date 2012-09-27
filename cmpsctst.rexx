@@ -219,7 +219,7 @@ help:
   say ""
   say "        The '-w' (Zero Padding Alignment) option controls adjustment"
   say "        of the model-dependent storage boundary used by zero padding."
-  say "        The value should be specified as a power of 2 number of bits"
+  say "        The value should be specified as a power of 2 number of bytes"
   say "        ranging from 1 to 12 (i.e. zero pad to 2-4096 byte boundary)."
   say ""
   say "        All dictionaries must be in RAW BINARY format and MUST use"
