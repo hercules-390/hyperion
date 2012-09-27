@@ -452,7 +452,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( cmpsc_Expand_Index ))( CMPSCBLK* pCMPSCBLK, EXPBLK*
     if (unlikely( !pCMPSCBLK->nLen1 ))
         EXP_RETCC1();
 
-    if (unlikely( pEXPBLK->index >= 256 ))
+    if (likely( pEXPBLK->index >= 256 ))
     {
 #ifdef CMPSC_SYMCACHE
         // Check our cache of previously expanded index symbols
