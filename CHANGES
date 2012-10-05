@@ -1,3 +1,5 @@
+04 Oct 2012 Change PSW command display to use SYSBLK archmode if loadstate
+            indicator is on - Kevin Leonard
 30 Sep 2012 Fix ipl.c "ipl failed" messages to give each a separate
             message ID (HHC00810E for IPL device not found, HHC00828E for
             IPL device I/O error, HHC00839E for invalid IPL PSW); to display
