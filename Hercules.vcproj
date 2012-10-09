@@ -2450,6 +2450,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\comments.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\cpsdr.txt"
 						>
 					</File>
@@ -2971,6 +2975,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\thder.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\trace.txt"
 						>
 					</File>
 					<File
