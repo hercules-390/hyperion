@@ -2702,8 +2702,8 @@ DEF_INST(divide_integer_bfp_long_reg)
 
     /* Adjust condition code according to the manual */
     // ZZFIXME: if ((op2*quo)+rem != op1), then partial??
-    if (!float64_eq( &ctx, rem, float64_zero ))
-        regs->psw.cc += 2;
+//  if (!float64_eq( &ctx, rem, float64_zero ))
+//      regs->psw.cc += 2;
 
     /* "partial quotents are rounded towards zero" */
     ctx.effective_rounding_mode = float_round_to_zero;
@@ -2761,8 +2761,8 @@ DEF_INST(divide_integer_bfp_short_reg)
 
     /* Adjust condition code according to the manual */
     // ZZFIXME: if ((op2*quo)+rem != op1), then partial??
-    if (!float32_eq( &ctx, rem, float32_zero ))
-        regs->psw.cc += 2;
+//  if (!float32_eq( &ctx, rem, float32_zero ))
+//      regs->psw.cc += 2;
 
     /* "partial quotents are rounded towards zero" */
     ctx.effective_rounding_mode = float_round_to_zero;
