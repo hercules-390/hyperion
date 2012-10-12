@@ -120,6 +120,7 @@ static int32 roundAndPackInt32( void* ctx, flag zSign, bits64 absZ )
     z = absZ;
     if ( zSign ) z = - z;
     if ( ( absZ>>32 ) || ( z && ( ( z < 0 ) ^ zSign ) ) ) {
+        float_raise( ctx, float_flag_inexact ); /*@Z900*/
         float_raise( ctx, float_flag_invalid );
         return zSign ? (sbits32) 0x80000000 : 0x7FFFFFFF;
     }
@@ -171,6 +172,7 @@ static int64 roundAndPackInt64( void* ctx, flag zSign, bits64 absZ0, bits64 absZ
     if ( zSign ) z = - z;
     if ( z && ( ( z < 0 ) ^ zSign ) ) {
  overflow:
+        float_raise( ctx, float_flag_inexact ); /*@Z900*/
         float_raise( ctx, float_flag_invalid );
         return
               zSign ? (sbits64) LIT64( 0x8000000000000000 )
@@ -947,7 +949,8 @@ int32 float32_to_int32( void* ctx, float32 a )
     aSig = extractFloat32Frac( a );
     aExp = extractFloat32Exp( a );
     aSign = extractFloat32Sign( a );
-    if ( ( aExp == 0xFF ) && aSig ) aSign = 0;
+//  if ( ( aExp == 0xFF ) && aSig ) aSign = 0;
+    if ( ( aExp == 0xFF ) && aSig ) aSign = 1; /*@Z900*/
     if ( aExp ) aSig |= 0x00800000;
     shiftCount = 0xAF - aExp;
     aSig64 = aSig;
@@ -980,7 +983,9 @@ int32 float32_to_int32_round_to_zero( void* ctx, float32 a )
     shiftCount = aExp - 0x9E;
     if ( 0 <= shiftCount ) {
         if ( a != 0xCF000000 ) {
+            float_raise( ctx, float_flag_inexact ); /*@Z900*/
             float_raise( ctx, float_flag_invalid );
+            if ( ( aExp == 0xFF ) && aSig ) return 0x80000000; /*@Z900*/
             if ( ! aSign || ( ( aExp == 0xFF ) && aSig ) ) return 0x7FFFFFFF;
         }
         return (sbits32) 0x80000000;
@@ -1021,7 +1026,11 @@ int64 float32_to_int64( void* ctx, float32 a )
     aSign = extractFloat32Sign( a );
     shiftCount = 0xBE - aExp;
     if ( shiftCount < 0 ) {
+        float_raise( ctx, float_flag_inexact ); /*@Z900*/
         float_raise( ctx, float_flag_invalid );
+        if ( ( aExp == 0xFF ) && aSig ) {       /*@Z900*/
+            return LIT64( 0x8000000000000000 ); /*@Z900*/
+        }                                       /*@Z900*/
         if ( ! aSign || ( ( aExp == 0xFF ) && aSig ) ) {
             return LIT64( 0x7FFFFFFFFFFFFFFF );
         }
@@ -1059,7 +1068,11 @@ int64 float32_to_int64_round_to_zero( void* ctx, float32 a )
     shiftCount = aExp - 0xBE;
     if ( 0 <= shiftCount ) {
         if ( a != 0xDF000000 ) {
+            float_raise( ctx, float_flag_inexact ); /*@Z900*/
             float_raise( ctx, float_flag_invalid );
+            if ( ( aExp == 0xFF ) && aSig ) {       /*@Z900*/
+                return LIT64( 0x8000000000000000 ); /*@Z900*/
+            }                                       /*@Z900*/
             if ( ! aSign || ( ( aExp == 0xFF ) && aSig ) ) {
                 return LIT64( 0x7FFFFFFFFFFFFFFF );
             }
@@ -1825,7 +1838,8 @@ int32 float64_to_int32( void* ctx, float64 a )
     aSig = extractFloat64Frac( a );
     aExp = extractFloat64Exp( a );
     aSign = extractFloat64Sign( a );
-    if ( ( aExp == 0x7FF ) && aSig ) aSign = 0;
+//  if ( ( aExp == 0x7FF ) && aSig ) aSign = 0;
+    if ( ( aExp == 0x7FF ) && aSig ) aSign = 1; /*@Z900*/
     if ( aExp ) aSig |= LIT64( 0x0010000000000000 );
     shiftCount = 0x42C - aExp;
     if ( 0 < shiftCount ) shift64RightJamming( aSig, shiftCount, &aSig );
@@ -1854,7 +1868,8 @@ int32 float64_to_int32_round_to_zero( void* ctx, float64 a )
     aExp = extractFloat64Exp( a );
     aSign = extractFloat64Sign( a );
     if ( 0x41E < aExp ) {
-        if ( ( aExp == 0x7FF ) && aSig ) aSign = 0;
+//      if ( ( aExp == 0x7FF ) && aSig ) aSign = 0;
+        if ( ( aExp == 0x7FF ) && aSig ) aSign = 1; /*@Z900*/
         goto invalid;
     }
     else if ( aExp < 0x3FF ) {
@@ -1869,6 +1884,7 @@ int32 float64_to_int32_round_to_zero( void* ctx, float64 a )
     if ( aSign ) z = - z;
     if ( ( z < 0 ) ^ aSign ) {
  invalid:
+        float_raise( ctx, float_flag_inexact ); /*@Z900*/
         float_raise( ctx, float_flag_invalid );
         return aSign ? (sbits32) 0x80000000 : 0x7FFFFFFF;
     }
@@ -1902,7 +1918,13 @@ int64 float64_to_int64( void* ctx, float64 a )
     shiftCount = 0x433 - aExp;
     if ( shiftCount <= 0 ) {
         if ( 0x43E < aExp ) {
+            float_raise( ctx, float_flag_inexact );      /*@Z900*/
             float_raise( ctx, float_flag_invalid );
+            if ( ( aExp == 0x7FF )                       /*@Z900*/
+              && ( aSig != LIT64( 0x0010000000000000 ) ) /*@Z900*/
+               ) {                                       /*@Z900*/
+                return LIT64( 0x8000000000000000 );      /*@Z900*/
+            }                                            /*@Z900*/
             if (    ! aSign
                  || (    ( aExp == 0x7FF )
                       && ( aSig != LIT64( 0x0010000000000000 ) ) )
@@ -1946,7 +1968,13 @@ int64 float64_to_int64_round_to_zero( void* ctx, float64 a )
     if ( 0 <= shiftCount ) {
         if ( 0x43E <= aExp ) {
             if ( a != LIT64( 0xC3E0000000000000 ) ) {
+                float_raise( ctx, float_flag_inexact );      /*@Z900*/
                 float_raise( ctx, float_flag_invalid );
+                if ( ( aExp == 0x7FF )                       /*@Z900*/
+                  && ( aSig != LIT64( 0x0010000000000000 ) ) /*@Z900*/
+                   ) {                                       /*@Z900*/
+                    return LIT64( 0x8000000000000000 );      /*@Z900*/
+                }                                            /*@Z900*/
                 if (    ! aSign
                      || (    ( aExp == 0x7FF )
                           && ( aSig != LIT64( 0x0010000000000000 ) ) )
@@ -2712,7 +2740,8 @@ int32 float128_to_int32( void* ctx, float128 a )
     aSig0 = extractFloat128Frac0( a );
     aExp = extractFloat128Exp( a );
     aSign = extractFloat128Sign( a );
-    if ( ( aExp == 0x7FFF ) && ( aSig0 | aSig1 ) ) aSign = 0;
+//  if ( ( aExp == 0x7FFF ) && ( aSig0 | aSig1 ) ) aSign = 0;
+    if ( ( aExp == 0x7FFF ) && ( aSig0 | aSig1 ) ) aSign = 1; /*@Z900*/
     if ( aExp ) aSig0 |= LIT64( 0x0001000000000000 );
     aSig0 |= ( aSig1 != 0 );
     shiftCount = 0x4028 - aExp;
@@ -2744,7 +2773,8 @@ int32 float128_to_int32_round_to_zero( void* ctx, float128 a )
     aSign = extractFloat128Sign( a );
     aSig0 |= ( aSig1 != 0 );
     if ( 0x401E < aExp ) {
-        if ( ( aExp == 0x7FFF ) && aSig0 ) aSign = 0;
+//      if ( ( aExp == 0x7FFF ) && aSig0 ) aSign = 0;
+        if ( ( aExp == 0x7FFF ) && aSig0 ) aSign = 1; /*@Z900*/
         goto invalid;
     }
     else if ( aExp < 0x3FFF ) {
@@ -2759,6 +2789,7 @@ int32 float128_to_int32_round_to_zero( void* ctx, float128 a )
     if ( aSign ) z = - z;
     if ( ( z < 0 ) ^ aSign ) {
  invalid:
+        float_raise( ctx, float_flag_inexact ); /*@Z900*/
         float_raise( ctx, float_flag_invalid );
         return aSign ? (sbits32) 0x80000000 : 0x7FFFFFFF;
     }
@@ -2793,7 +2824,13 @@ int64 float128_to_int64( void* ctx, float128 a )
     shiftCount = 0x402F - aExp;
     if ( shiftCount <= 0 ) {
         if ( 0x403E < aExp ) {
+            float_raise( ctx, float_flag_inexact );          /*@Z900*/
             float_raise( ctx, float_flag_invalid );
+            if ( ( aExp == 0x7FFF ) && ( aSig1               /*@Z900*/
+              || ( aSig0 != LIT64( 0x0001000000000000 ) ) )  /*@Z900*/
+               ) {                                           /*@Z900*/
+                return LIT64( 0x8000000000000000 );          /*@Z900*/
+            }                                                /*@Z900*/
             if (    ! aSign
                  || (    ( aExp == 0x7FFF )
                       && ( aSig1 || ( aSig0 != LIT64( 0x0001000000000000 ) ) )
@@ -2843,7 +2880,11 @@ int64 float128_to_int64_round_to_zero( void* ctx, float128 a )
                 if ( aSig1 ) set_exception_flags( ctx, float_flag_inexact );
             }
             else {
+                float_raise( ctx, float_flag_inexact );          /*@Z900*/
                 float_raise( ctx, float_flag_invalid );
+                if ( ( aExp == 0x7FFF ) && ( aSig0 | aSig1 ) ) { /*@Z900*/
+                    return LIT64( 0x8000000000000000 );          /*@Z900*/
+                }                                                /*@Z900*/
                 if ( ! aSign || ( ( aExp == 0x7FFF ) && ( aSig0 | aSig1 ) ) ) {
                     return LIT64( 0x7FFFFFFFFFFFFFFF );
                 }
