@@ -649,6 +649,7 @@ do { \
 #define HHC00807 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
 #define HHC00808 "Processor %s%02X: store status completed"
 #define HHC00809 "Processor %s%02X: disabled wait state %s"
+#define HHC00810 "Processor %s%02X: ipl failed: %s"
 #define HHC00811 "Processor %s%02X: architecture mode %s"
 #define HHC00812 "Processor %s%02X: vector facility online"
 #define HHC00813 "Processor %s%02X: error in function %s: %s"
@@ -667,7 +668,6 @@ do { \
 #define HHC00826 "%1d:%04X: USR2 signal received"
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
-#define HHC00829 "IPL failure is usually as a result of ipl text missing or invalid."
 #define HHC00830 "Capping active, specialty engines excluded from MIPS calculation"
 #define HHC00831 "No central processors found, capping disabled"
 #define HHC00832 "Central processors will be capped at %u MIPS"
@@ -677,6 +677,7 @@ do { \
 #define HHC00836 "%d processor%s %s"
 #define HHC00837 "No processors started in configuration"
 #define HHC00838 "Capping is not enabled"
+#define HHC00839 "Processor %s%02X: ipl failed: %s"
 
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"

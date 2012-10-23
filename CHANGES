@@ -1,3 +1,10 @@
+04 Oct 2012 Change PSW command display to use SYSBLK archmode if loadstate
+            indicator is on - Kevin Leonard
+30 Sep 2012 Fix ipl.c "ipl failed" messages to give each a separate
+            message ID (HHC00810E for IPL device not found, HHC00828E for
+            IPL device I/O error, HHC00839E for invalid IPL PSW); to display
+            SYSBLK architecture mode in messages HHC00828E and HHC00839E; to
+            delete message HHC00829I - Kevin Leonard
 10 Sep 2012 CMPSC_2012: CMPSC-Enhancement Facility zero padding support - Fish
 15 Aug 2012 Change DASD utilities defaults to make wait PSW in IPL1 record
             EC-mode and disabled for machine checks, add -b and -m switches

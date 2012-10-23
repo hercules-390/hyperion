@@ -35,6 +35,11 @@
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define CARD_SIZE        80
+#ifdef _DEBUG
+#define TRAY_CARDS       3              /* (for easier debugging)    */
+#else
+#define TRAY_CARDS       2000           /*  one full box of cards    */
+#endif
 #define HEX40            ((BYTE)0x40)
 
 /*-------------------------------------------------------------------*/
@@ -289,6 +294,14 @@ int     attn = 0;
     /* Set size of i/o buffer */
 
     dev->bufsize = CARD_SIZE;
+
+    if (sockdev && dev->ascii)
+    {
+        /* Allocate extra room for socket i/o buffer */
+        dev->bufsize += (TRAY_CARDS * CARD_SIZE);
+        dev->buflen = dev->bufsize;
+        dev->bufoff = dev->buflen;
+    }
 
     /* Set number of sense bytes */
 
@@ -623,8 +636,21 @@ BYTE    c = 0;                          /* Input character           */
         /* Read next byte of card image */
         if (dev->bs)
         {
-            BYTE b; rc = read_socket( dev->fd, &b, 1 );
-            if (rc <= 0) rc = EOF; else c = b;
+            if (dev->bufoff >= dev->buflen)
+            {
+                rc = read_socket( dev->fd, &dev->buf[ CARD_SIZE ],
+                    TRAY_CARDS * CARD_SIZE );
+                if (rc <= 0)
+                    rc = EOF;
+                else
+                {
+                    dev->buflen = CARD_SIZE + rc;
+                    dev->bufoff = CARD_SIZE;
+                    c = dev->buf[ dev->bufoff++ ];
+                }
+            }
+            else
+                c = dev->buf[ dev->bufoff++ ];
         }
         else
         {

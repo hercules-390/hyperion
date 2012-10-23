@@ -109,7 +109,7 @@ Notes:\n\
 \n\
   The '-w' (Zero Padding Alignment) option allows adjusting the model-\n\
   dependent integral storage boundary for zero padding. The value is\n\
-  specified as a power of 2 number of bits ranging from %d to %d.\n"
+  specified as a power of 2 number of bytes ranging from %d to %d.\n"
 #endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 "\n\
   Use the '-t' (Translate) option when testing using ASCII test files\n\

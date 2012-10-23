@@ -202,7 +202,7 @@ int rc;
     {
         char buf[80];
         MSGBUF(buf, "device %4.4X not found", devnum);
-        WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
+        WRMSG (HHC00810, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -282,10 +282,10 @@ int rc;
         }
         {
             char buffer[256];
-            MSGBUF(buffer, "architecture mode '%s', csw status %2.2X%2.2X, sense %s", get_arch_mode_string(regs), 
+            MSGBUF(buffer, "architecture mode %s, csw status %2.2X%2.2X, sense %s",
+                get_arch_mode_string((REGS *)0), 
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
-            WRMSG (HHC00829, "I");
         }
         HDC1(debug_cpu_state, regs);
         return -1;
@@ -333,13 +333,13 @@ int rc;
     if ((rc = ARCH_DEP(load_psw) (regs, regs->psa->iplpsw)) ) 
     {
         char buf[80];
-        MSGBUF(buf, "architecture mode '%s', invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
-                get_arch_mode_string(regs),
+        MSGBUF(buf, "architecture mode %s, invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
+                get_arch_mode_string((REGS *)0),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],
                 regs->psa->iplpsw[4], regs->psa->iplpsw[5],
                 regs->psa->iplpsw[6], regs->psa->iplpsw[7]);
-        WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
+        WRMSG (HHC00839, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         HDC1(debug_cpu_state, regs);
         return rc;
     }

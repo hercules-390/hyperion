@@ -1806,10 +1806,23 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr)
 {
 REGS cregs;
+int  arch_mode;
 
     memcpy(&cregs, regs, sysblk.regs_copy_len);
 
-    switch(cregs.arch_mode) {
+    /* Use the architecture mode from SYSBLK if load indicator
+       shows IPL in process, otherwise use archmode from REGS */
+    if (cregs.loadstate)
+    {
+        arch_mode = sysblk.arch_mode;
+    }
+    else
+    {
+        arch_mode = cregs.arch_mode;
+    }
+
+    /* Call the appropriate store_psw routine based on archmode */
+    switch(arch_mode) {
 #if defined(_370)
         case ARCH_370:
             s370_store_psw(&cregs, addr);
@@ -1834,10 +1847,22 @@ REGS cregs;
 int display_psw (REGS *regs, char *buf, int buflen)
 {
 QWORD   qword;                            /* quadword work area      */
+int     arch_mode;                        /* architecture mode       */
+
+    /* Use the architecture mode from SYSBLK if load indicator
+       shows IPL in process, otherwise use archmode from REGS */
+    if (regs->loadstate)
+    {
+        arch_mode = sysblk.arch_mode;
+    }
+    else
+    {
+        arch_mode = regs->arch_mode;
+    }
 
     memset(qword, 0, sizeof(qword));
 
-    if( regs->arch_mode != ARCH_900 )
+    if( arch_mode != ARCH_900 )
     {
         copy_psw (regs, qword);
         return(snprintf(buf, buflen-1,
