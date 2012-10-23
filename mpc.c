@@ -95,20 +95,26 @@ DLL_EXPORT MPC_PUS*  mpc_point_pus( DEVBLK* pDEVBLK, MPC_PUK* pMPC_PUK, BYTE bTy
     /* Find the required MPC_PUS. */
     while( iTotLenPUS > 0 )
     {
+        /* Ensure there are at least the first 4-bytes of an MPC_PUS. */
+        if( iTotLenPUS < 4 )
+            return NULL;
+
+        /* Get the length of the MPC_PUS. */
+        FETCH_HW( uLenPUS, pMPC_PUS->length );
+        if( uLenPUS == 0 )                  /* Better safe than sorry */
+            return NULL;
+
+        /* Ensure there is the whole of the MPC_PUS. */
+        if( iTotLenPUS < uLenPUS )
+            return NULL;
+
         /* Check for the required MPC_PUS. */
         if( pMPC_PUS->type == bType )
             return pMPC_PUS;
 
-        /* Get the length of the MPC_PUS.                            */
-        /* (The length check is probably unnecessary, a zero length  */
-        /* has never been seen. Better safe than sorry though.)      */
-        FETCH_HW( uLenPUS, pMPC_PUS->length );
-        if( uLenPUS == 0 )
-            return NULL;
-        iTotLenPUS -= uLenPUS;
-
         /* Point to the next MPC_PUS. */
         pMPC_PUS = (MPC_PUS*)((BYTE*)pMPC_PUS + uLenPUS);
+        iTotLenPUS -= uLenPUS;
     }
 
     return NULL;
@@ -295,18 +301,33 @@ DLL_EXPORT void  mpc_display_rrh_and_puk( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
     // Display all of the MPC_PUSs.
     while( iTotLenPUS > 0 )
     {
+        // Ensure there are at least the first 4-bytes of the MPC_PUS.
+        if( iTotLenPUS < 4 )
+        {
+            mpc_display_stuff( pDEVBLK, "???", (BYTE*)pMPC_PUS, iTotLenPUS, bDir );
+            break;
+        }
+
         // Get the length of the MPC_PUS.
         FETCH_HW( uLenPUS, pMPC_PUS->length );
         if( uLenPUS == 0 )                     /* Better safe than sorry */
+        {
+            mpc_display_stuff( pDEVBLK, "???", (BYTE*)pMPC_PUS, iTotLenPUS, bDir );
             break;
+        }
+
+        // Ensure there is the whole of the MPC_PUS.
+        if( iTotLenPUS < uLenPUS )
+        {
+            mpc_display_stuff( pDEVBLK, "???", (BYTE*)pMPC_PUS, iTotLenPUS, bDir );
+            break;
+        }
 
         // Display the MPC_PUS.
         mpc_display_stuff( pDEVBLK, "PUS", (BYTE*)pMPC_PUS, uLenPUS, bDir );
 
         // Point to the next MPC_PUS
         pMPC_PUS = (MPC_PUS*)((BYTE*)pMPC_PUS + uLenPUS);
-
-        //
         iTotLenPUS -= uLenPUS;
     }
 
@@ -553,15 +574,15 @@ DLL_EXPORT void  mpc_display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE 
         pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + uOffRRH);
 
         /* Display the MPC_RRH etc. */
-        if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+        if( pMPC_RRH->type == RRH_TYPE_CM ||
+            pMPC_RRH->type == RRH_TYPE_ULP )
         {
 
             /* Display MPC_RRH and following MPC_PUK etc. */
             mpc_display_rrh_and_puk( pDEVBLK, pMPC_TH, pMPC_RRH, bDir );
 
         }
-        else if( pMPC_RRH->proto == PROTOCOL_LAYER3 &&
-                 pMPC_RRH->type == RRH_TYPE_IPA )
+        else if( pMPC_RRH->type == RRH_TYPE_IPA )
         {
 
             /* Display MPC_RRH and following MPC_IPA etc. */

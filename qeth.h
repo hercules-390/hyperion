@@ -180,6 +180,9 @@ typedef struct _OSA_GRP {
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
     U32   seqnumcm;             /* MPC_RRH sequence number cm        */
 
+    U32   supipamk;             /* Supported IP assist mask          */
+    U32   enaipamk;             /* Enabled IP assist mask            */
+
     } OSA_GRP;
 
 

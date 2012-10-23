@@ -97,6 +97,7 @@
 #define MPC_TOKEN_X5       0x05
 #define MPC_TOKEN_LENGTH   4
 
+#define PROTOCOL_02        0x02
 #define PROTOCOL_LAYER2    0x08
 #define PROTOCOL_LAYER3    0x03
 #define PROTOCOL_NCP       0x0A
@@ -172,7 +173,7 @@ struct _MPC_RRH                    /* Request/Response Header        */
                                    /* Note: a 3-byte length field.   */
 /*017*/  BYTE   tokenx5;           /* Token length or type or ...    */
 /*018*/  FWORD  token;             /* Token.                         */
-/*01C*/                            /* End of the MPC_RRH, maybe.     */
+/*01C*/                            /* End of short MPC_RRH.          */
 /*01C*/  BYTE   unknown1C;         /* ???.                           */
 /*01D*/  BYTE   unknown1D[3];      /* ???.                           */
 /*020*/  FWORD  unknown20;         /* ???. Contains zero in the      */
@@ -183,6 +184,7 @@ struct _MPC_RRH                    /* Request/Response Header        */
                                    /* of the following MPC_PH.)      */
 } ATTRIBUTE_PACKED;                /*                                */
 #define SIZE_RRH 0x0024            /* Size of MPC_RRH.               */
+#define SIZE_RRH_1 0x001C          /* Size of short MPC_RRH.         */
 typedef struct _MPC_RRH MPC_RRH, *PMPC_RRH;
 
 /*-------------------------------------------------------------------*/
@@ -512,33 +514,35 @@ typedef struct _MPC_IPA {
     } MPC_IPA;
 
 
-#define IPA_ARP_PROCESSING      0x00000001L
-#define IPA_INBOUND_CHECKSUM    0x00000002L
-#define IPA_OUTBOUND_CHECKSUM   0x00000004L
-#define IPA_IP_FRAGMENTATION    0x00000008L
-#define IPA_FILTERING           0x00000010L
-#define IPA_IPV6                0x00000020L
-#define IPA_MULTICASTING        0x00000040L
-#define IPA_IP_REASSEMBLY       0x00000080L
-#define IPA_QUERY_ARP_COUNTERS  0x00000100L
-#define IPA_QUERY_ARP_ADDR_INFO 0x00000200L
-#define IPA_SETADAPTERPARMS     0x00000400L
-#define IPA_VLAN_PRIO           0x00000800L
-#define IPA_PASSTHRU            0x00001000L
-#define IPA_FLUSH_ARP_SUPPORT   0x00002000L
-#define IPA_FULL_VLAN           0x00004000L
-#define IPA_INBOUND_PASSTHRU    0x00008000L
-#define IPA_SOURCE_MAC          0x00010000L
-#define IPA_OSA_MC_ROUTER       0x00020000L
-#define IPA_QUERY_ARP_ASSIST    0x00040000L
-#define IPA_INBOUND_TSO         0x00080000L
-#define IPA_OUTBOUND_TSO        0x00100000L
+#define IPA_ARP_PROCESSING      0x00000001L  /*  *  *                */
+#define IPA_INBOUND_CHECKSUM    0x00000002L  /*                      */
+#define IPA_OUTBOUND_CHECKSUM   0x00000004L  /*                      */
+#define IPA_IP_FRAGMENTATION    0x00000008L  /*                      */
+#define IPA_FILTERING           0x00000010L  /*     *                */
+#define IPA_IPV6                0x00000020L  /*  *  *                */
+#define IPA_MULTICASTING        0x00000040L  /*     *                */
+#define IPA_IP_REASSEMBLY       0x00000080L  /*                      */
+#define IPA_QUERY_ARP_COUNTERS  0x00000100L  /*     *                */
+#define IPA_QUERY_ARP_ADDR_INFO 0x00000200L  /*     *                */
+#define IPA_SETADAPTERPARMS     0x00000400L  /*  *  *                */
+#define IPA_VLAN_PRIO           0x00000800L  /*     *                */
+#define IPA_PASSTHRU            0x00001000L  /*  *  *                */
+#define IPA_FLUSH_ARP_SUPPORT   0x00002000L  /*     *                */
+#define IPA_FULL_VLAN           0x00004000L  /*     *                */
+#define IPA_INBOUND_PASSTHRU    0x00008000L  /*                      */
+#define IPA_SOURCE_MAC          0x00010000L  /*  *  *                */
+#define IPA_OSA_MC_ROUTER       0x00020000L  /*     *                */
+#define IPA_QUERY_ARP_ASSIST    0x00040000L  /*     *                */
+#define IPA_INBOUND_TSO         0x00080000L  /*                      */
+#define IPA_OUTBOUND_TSO        0x00100000L  /*                      */
 
 
 #define IPA_SUPP ( 0 \
-                 | IPA_PASSTHRU \
-                 | IPA_INBOUND_PASSTHRU \
                  | IPA_ARP_PROCESSING \
+                 | IPA_IPV6 \
+                 | IPA_SETADAPTERPARMS \
+                 | IPA_PASSTHRU \
+                 | IPA_SOURCE_MAC \
                  )
 
 
@@ -661,9 +665,8 @@ typedef struct _MPC_IPA_SAP {
 /*014*/ FWORD   resv014;        /*                                   */
     } MPC_IPA_SAP;
 
-
 /*-------------------------------------------------------------------*/
-/* SAP ADP Qeury                                                     */
+/* SAP ADP Query                                                     */
 /*-------------------------------------------------------------------*/
 typedef struct _SAP_QRY {
 /*000*/ FWORD   nlan;           /* Number of Lan types supported     */
@@ -673,15 +676,56 @@ typedef struct _SAP_QRY {
 /*00A*/ DBLWRD  resv00a;
     } SAP_QRY;
 
+/*-------------------------------------------------------------------*/
+/* SAP SETMAC                                                        */
+/*-------------------------------------------------------------------*/
+typedef struct _SAP_SMA {
+/*000*/ FWORD   cmd;            /* Command                           */
+#define IPA_SAP_SMA_CMD_READ     0
+#define IPA_SAP_SMA_CMD_REPLACE  1
+#define IPA_SAP_SMA_CMD_ADD      2
+#define IPA_SAP_SMA_CMD_DEL      4
+#define IPA_SAP_SMA_CMD_RESET    8
+/*004*/ FWORD   asize;          /* Address size                      */
+/*008*/ FWORD   nomacs;         /* Number of MAC addresses           */
+/*00C*/ BYTE    addr[6];        /* MAC address                       */
+    } SAP_SMA;
 
 /*-------------------------------------------------------------------*/
-/* Set Promiscuous Mode on/off                                       */
+/* SAP Set Promiscuous Mode on/off                                   */
 /*-------------------------------------------------------------------*/
 typedef struct _SAP_SPM {
 /*000*/ FWORD   promisc;        /* Promiscuous mode                  */
 #define SAP_PROMISC_ON  0x00000001
 #define SAP_PROMISC_OFF 0x00000000
     } SAP_SPM;
+
+/*-------------------------------------------------------------------*/
+/* Set Assist Parameters                                             */
+/*-------------------------------------------------------------------*/
+struct MPC_IPA_SAS_HDR {
+/*000*/ FWORD   assno;          /* Assist number                     */
+/*004*/ HWORD   len;            /* Length                            */
+/*006*/ HWORD   cmd;            /* Command code                      */
+#define IPA_SAS_CMD_START      0x0001
+#define IPA_SAS_CMD_STOP       0x0002
+#define IPA_SAS_CMD_CONFIGURE  0x0003
+#define IPA_SAS_CMD_ENABLE     0x0004
+#define IPA_SAS_CMD_0005       0x0005   /* I wonder what */
+#define IPA_SAS_CMD_0006       0x0006   /* these two do? */
+/*008*/ HWORD   rc;             /* Return code                       */
+/*00A*/ BYTE    norep;          /* Number of replies                 */
+/*00B*/ BYTE    seqno;          /* Sequence number                   */
+    };
+
+typedef struct _MPC_IPA_SAS {
+/*000*/ struct MPC_IPA_SAS_HDR hdr;
+/*00C*/ union {
+            U32    flags_32;
+            BYTE   ip[16];
+            /* There are other things that part of the union. */
+        } data;
+    } MPC_IPA_SAS;
 
 
 /*===================================================================*/
