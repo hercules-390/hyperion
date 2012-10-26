@@ -88,6 +88,7 @@ typedef u_int32_t           in_addr_t;
 #define S_IRUSR         _S_IREAD
 #define S_IWUSR         _S_IWRITE
 #define S_IRGRP         _S_IREAD
+#define S_IROTH         _S_IREAD
 #define S_ISREG(m)      (((m) & _S_IFMT) == _S_IFREG)
 #define S_ISDIR(m)      (((m) & _S_IFMT) == _S_IFDIR)
 #define S_ISCHR(m)      (((m) & _S_IFMT) == _S_IFCHR)

@@ -289,14 +289,8 @@ static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)
 int fd, nwrite;
 U64 totwrite = 0;
 
-#undef HOPEN_PMODE
-#if defined(_MSVC_)
-  #define HOPEN_PMODE (S_IREAD|S_IWRITE)
-#else
-  #define HOPEN_PMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
-#endif
-
-    fd = HOPEN (fname, mode |O_WRONLY|O_BINARY,HOPEN_PMODE);
+    fd = HOPEN (fname, mode |O_WRONLY|O_BINARY,
+            S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (fd < 0)
     {
         WRMSG (HHC00600, "E", fname, "open()", strerror(errno));
