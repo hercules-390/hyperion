@@ -193,12 +193,16 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             memset( pLCSBLK->pDevices, 0, sizeof( LCSDEV ) );
 
             if( pLCSBLK->pszIPAddress )
+            {
                 inet_aton( pLCSBLK->pszIPAddress, &addr );
+                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
+            }
+            else
+                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_PRIMARY;
 
             pLCSBLK->pDevices->sAddr        = pDEVBLK->devnum;
             pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
-            pLCSBLK->pDevices->bType        = 0;
             pLCSBLK->pDevices->lIPAddress   = addr.s_addr; // (network byte order)
             pLCSBLK->pDevices->pszIPAddress = pLCSBLK->pszIPAddress;
             pLCSBLK->pDevices->pNext        = NULL;
