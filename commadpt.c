@@ -874,8 +874,8 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
                 continue;
             }
             if (ca->input_byte_skip_table[c])
-                continue;	// skip this byte per cfg
-            c &= 0x7f;		// make 7 bit ASCII
+                continue;   // skip this byte per cfg
+            c &= 0x7f;      // make 7 bit ASCII
             if  (ca->uctrans && c >= 'a' && c <= 'z')
             {
                 c = toupper( c );     /* make uppercase */

@@ -422,7 +422,7 @@
 
   set "BLD="
 
-	:: the latest SDk uses different arguments to the "setenv" batch file
+  :: the latest SDk uses different arguments to the "setenv" batch file
 
   if /i "%new_sdk%" == "NEW" goto :bld_sdk_env
 

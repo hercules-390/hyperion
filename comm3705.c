@@ -1561,7 +1561,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         thread_name2[sizeof(thread_name2)-1]=0;
 
         rc = create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2);
-	if(rc)
+        if(rc)
         {
             WRMSG(HHC00102, "E" ,strerror(rc));
             release_lock(&dev->commadpt->lock);
@@ -1576,7 +1576,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         thread_name[sizeof(thread_name)-1]=0;
 
         rc = create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name);
-	if(rc)
+        if(rc)
         {
             WRMSG(HHC00102, "E", strerror(rc));
             release_lock(&dev->commadpt->lock);
