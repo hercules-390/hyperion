@@ -57,6 +57,19 @@
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Buffer Header                                                 */
+/*-------------------------------------------------------------------*/
+struct _OSA_BHR;                        /* OSA Buffer Header         */
+typedef struct _OSA_BHR OSA_BHR, *POSA_BHR;
+struct _OSA_BHR {                       /* OSA Buffer Header         */
+    OSA_BHR*  next;                     /* Pointer to next OSA_BHR   */
+    int       arealen;                  /* Data area length          */
+    int       datalen;                  /* Data length               */
+};                                      /*                           */
+#define SizeBHR  sizeof(OSA_BHR)        /* Size of OSA_BHR           */
+
+
+/*-------------------------------------------------------------------*/
 /* OSA Node Element Descriptor                                       */
 /*-------------------------------------------------------------------*/
 typedef struct _NED {
@@ -143,6 +156,11 @@ typedef struct _OSA_GRP {
     COND    qcond;              /* Condition for IDX read thread     */
     LOCK    qlock;              /* Lock for IDX read thread          */
 
+    LOCK      qblock;           /* Lock for IDX read buffer chain    */
+    OSA_BHR*  firstbhr;         /* First OSA_BHR in chain            */
+    OSA_BHR*  lastbhr;          /* Last OSA_BHR in chain             */
+    int       numbhr;           /* Number of OSA_BHRs on chain       */
+
     char *tuntap;               /* Interface path name               */
     char  ttdevn[IFNAMSIZ];     /* Interface network name            */
     char *tthwaddr;             /* MAC address of the TAP adapter    */
@@ -152,9 +170,6 @@ typedef struct _OSA_GRP {
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* File Descriptor pair write pipe   */
-
-    BYTE   *rspbf;              /* Response Buffer                   */
-    int     rspsz;              /* Response Buffer Size              */
 
     int   reqpci;               /* PCI has been requested            */
 
@@ -180,8 +195,8 @@ typedef struct _OSA_GRP {
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
     U32   seqnumcm;             /* MPC_RRH sequence number cm        */
 
-    U32   supipamk;             /* Supported IP assist mask          */
-    U32   enaipamk;             /* Enabled IP assist mask            */
+    U32   ipas;                 /* Supported IP assist mask          */
+    U32   ipae;                 /* Enabled IP assist mask            */
 
     } OSA_GRP;
 

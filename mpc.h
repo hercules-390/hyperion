@@ -458,6 +458,7 @@ typedef struct _MPC_IEA {
 /*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
 /*021*/ BYTE    ddua;           /* Data Device Unit Address          */
     } MPC_IEA;
+#define MPC_IEA_FIRST4 0x00008000  /*                                */
 
 
 /*-------------------------------------------------------------------*/
@@ -520,7 +521,7 @@ typedef struct _MPC_IPA {
 #define IPA_IP_FRAGMENTATION    0x00000008L  /*                      */
 #define IPA_FILTERING           0x00000010L  /*     *                */
 #define IPA_IPV6                0x00000020L  /*  *  *                */
-#define IPA_MULTICASTING        0x00000040L  /*     *                */
+#define IPA_MULTICASTING        0x00000040L  /*  *  *                */  /* Must be on for IPv6 */
 #define IPA_IP_REASSEMBLY       0x00000080L  /*                      */
 #define IPA_QUERY_ARP_COUNTERS  0x00000100L  /*     *                */
 #define IPA_QUERY_ARP_ADDR_INFO 0x00000200L  /*     *                */
@@ -540,6 +541,7 @@ typedef struct _MPC_IPA {
 #define IPA_SUPP ( 0 \
                  | IPA_ARP_PROCESSING \
                  | IPA_IPV6 \
+                 | IPA_MULTICASTING \
                  | IPA_SETADAPTERPARMS \
                  | IPA_PASSTHRU \
                  | IPA_SOURCE_MAC \
@@ -704,7 +706,7 @@ typedef struct _SAP_SPM {
 /* Set Assist Parameters                                             */
 /*-------------------------------------------------------------------*/
 struct MPC_IPA_SAS_HDR {
-/*000*/ FWORD   assno;          /* Assist number                     */
+/*000*/ FWORD   ano;            /* Assist number                     */
 /*004*/ HWORD   len;            /* Length                            */
 /*006*/ HWORD   cmd;            /* Command code                      */
 #define IPA_SAS_CMD_START      0x0001

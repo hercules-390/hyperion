@@ -353,17 +353,17 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // PTP is a group device, with two devices in the group. The first
     // device is deemed to be the read device, the second device is deemed
     // to be the write device. (Function group_device() is in config.c)
-    if( !group_device( pDEVBLK, PTP_GROUP_SIZE ) )
+    if (!group_device( pDEVBLK, PTP_GROUP_SIZE ))
         return 0;
 
     // Allocate the PTPBLK.
     pPTPBLK = alloc_storage( pDEVBLK, (int)sizeof(PTPBLK) );
-    if( !pPTPBLK )
+    if (!pPTPBLK)
         return -1;
 
     // Allocate the PTPATH Read.
     pPTPATHre = alloc_storage( pDEVBLK, (int)sizeof(PTPATH) );
-    if( !pPTPATHre )
+    if (!pPTPATHre)
     {
         free( pPTPBLK );
         return -1;
@@ -371,7 +371,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     // Allocate the PTPATH Write.
     pPTPATHwr = alloc_storage( pDEVBLK, (int)sizeof(PTPATH) );
-    if( !pPTPATHwr )
+    if (!pPTPATHwr)
     {
         free( pPTPATHre );
         free( pPTPBLK );
@@ -379,7 +379,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
 
     // Parse configuration file statement.
-    if( parse_conf_stmt( pDEVBLK, pPTPBLK, argc, (char**)argv ) != 0 )
+    if (parse_conf_stmt( pDEVBLK, pPTPBLK, argc, (char**)argv ) != 0)
     {
         free( pPTPATHwr );
         free( pPTPATHre );
@@ -464,7 +464,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                  IFF_TUN | IFF_NO_PI,
                                  &pPTPBLK->fd,
                                  pPTPBLK->szTUNDevName );
-    if( rc < 0 )
+    if (rc < 0)
     {
         // Disconnect the DEVBLKs from the PTPATHs.
         pPTPBLK->pDEVBLKRead->dev_data = NULL;
@@ -493,7 +493,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         // Set the specified driver/dll i/o buffer sizes..
         tt32ctl.tt32ctl_devbuffsize = pPTPBLK->iKernBuff;
-        if( TUNTAP_IOCtl( pPTPBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
+        if (TUNTAP_IOCtl( pPTPBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0)
         {
             // HHC03962 "%1d:%04X PTP: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
@@ -501,7 +501,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         }
 
         tt32ctl.tt32ctl_iobuffsize = pPTPBLK->iIOBuff;
-        if( TUNTAP_IOCtl( pPTPBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
+        if (TUNTAP_IOCtl( pPTPBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0)
         {
             // HHC03962 "%1d:%04X PTP: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
@@ -527,7 +527,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     VERIFY( TUNTAP_SetMACAddr ( pPTPBLK->szTUNDevName, pPTPBLK->szMACAddress  ) == 0 );
 #endif /* OPTION_TUNTAP_SETMACADDR */
 
-    if( pPTPBLK->fIPv4Spec )
+    if (pPTPBLK->fIPv4Spec)
     {
         VERIFY( TUNTAP_SetIPAddr  ( pPTPBLK->szTUNDevName, pPTPBLK->szDriveIPAddr4 ) == 0 );
 
@@ -538,7 +538,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif /* OPTION_TUNTAP_SETNETMASK */
     }
 
-    if( pPTPBLK->fIPv6Spec )
+    if (pPTPBLK->fIPv6Spec)
     {
         VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNDevName,
                                      pPTPBLK->szDriveLLAddr6,
@@ -558,7 +558,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                          pPTPBLK->pDEVBLKRead->typname,
                          pPTPBLK->pDEVBLKRead->devnum);
     rc = create_thread( &pPTPBLK->tid, JOINABLE, ptp_read_thread, pPTPBLK, thread_name );
-    if(rc)
+    if (rc)
     {
         // Report the bad news.
         // HHC00102 "Error in function create_thread(): %s"
@@ -579,12 +579,12 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pPTPBLK->pDEVBLKWrite->tid = pPTPBLK->tid;
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCONFVALUE ) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCONFVALUE))
     {
         // HHC03952 "%1d:%04X PTP: MAC: %s"
         WRMSG(HHC03952, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
             pPTPBLK->szMACAddress );
-        if( pPTPBLK->fIPv4Spec )
+        if (pPTPBLK->fIPv4Spec)
         {
             // HHC03953 "%1d:%04X PTP: IPv4: Drive %s: Guest %s/%s (%s)"
             WRMSG(HHC03953, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -593,7 +593,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 pPTPBLK->szGuestPfxSiz4,
                 pPTPBLK->szNetMask );
         }
-        if( pPTPBLK->fIPv6Spec )
+        if (pPTPBLK->fIPv6Spec)
         {
             // HHC03954 "%1d:%04X PTP: IPv6: Drive %s/%s %s/%s: Guest %s"
             WRMSG(HHC03954, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -636,22 +636,20 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     int       iNum;                          // Number of bytes to move
 
 
-    // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGCCW ) )
-    {
-        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
-        WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-            bCode, bFlags, uCount, bChained, bPrevCode, iCCWSeq );
-    }
-
     // Intervention required if the device file is not open
-    if( pDEVBLK->fd < 0 &&
-        !IS_CCW_SENSE( bCode ) &&
-        !IS_CCW_CONTROL( bCode ) )
+    if (pDEVBLK->fd < 0)
     {
         pDEVBLK->sense[0] = SENSE_IR;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
         return;
+    }
+
+    // Display various information, maybe
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCCW))
+    {
+        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+        WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            bCode, bFlags, uCount, bChained, bPrevCode, iCCWSeq );
     }
 
     // Process depending on CCW bCode
@@ -663,7 +661,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         //------------------------------------------------------------
 
         // Return normal status if CCW count is zero
-        if( uCount == 0 )
+        if (uCount == 0)
         {
             *pUnitStat = CSW_CE | CSW_DE;
             break;
@@ -731,7 +729,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
         *pResidual = uCount - iNum;
 
-        if( uCount < pDEVBLK->numsense )
+        if (uCount < pDEVBLK->numsense)
             *pMore = 1;
 
         // Copy device sense bytes to channel I/O buffer
@@ -756,7 +754,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
         *pResidual = uCount - iNum;
 
-        if( uCount < pDEVBLK->numdevid )
+        if (uCount < pDEVBLK->numdevid)
             *pMore = 1;
 
         // Copy device identifier bytes to channel I/O buffer
@@ -791,6 +789,14 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
 
     }
 
+    // Display various information, maybe
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCCW))
+    {
+        // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+        WRMSG(HHC03993, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            *pUnitStat, *pResidual, *pMore );
+    }
+
     return;
 }   /* End function  ptp_execute_ccw() */
 
@@ -806,7 +812,7 @@ int  ptp_close( DEVBLK* pDEVBLK )
 
 
     // Close the device file (if not already closed)
-    if( pPTPBLK->fd >= 0 )
+    if (pPTPBLK->fd >= 0)
     {
         // PROGRAMMING NOTE: there's currently no way to interrupt
         // the "ptp_read_thread"s TUNTAP_Read of the adapter. Thus
@@ -861,7 +867,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 
     pPTPATH = pDEVBLK->dev_data;
 
-    if(!pPTPATH)
+    if (!pPTPATH)
     {
         strlcpy(pBuffer,"*Uninitialized",iBufLen);
         return;
@@ -869,7 +875,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 
     pPTPBLK = pPTPATH->pPTPBLK;
 
-    if( pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec )
+    if (pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec)
     {
         snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%" I64_FMT "u]",
                   pPTPBLK->pDEVBLKRead->typname,
@@ -881,7 +887,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
     }
-    else if( pPTPBLK->fIPv4Spec )
+    else if (pPTPBLK->fIPv4Spec)
     {
         snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%" I64_FMT "u]",
                   pPTPBLK->pDEVBLKRead->typname,
@@ -940,12 +946,12 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
     FETCH_FW( uFirst4, pMPC_TH->first4 );
 
     // Display up to 256-bytes of data, if debug is active
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGDATA))
     {
         // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
         WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
         iTraceLen = uCount;
-        if( iTraceLen > 256 )
+        if (iTraceLen > 256)
         {
             iTraceLen = 256;
             // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -956,12 +962,12 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
     }
 
     // Process depending on what was writen by the guest.
-    if( uCount >= SIZE_TH &&
-        uFirst4 == MPC_TH_FIRST4 )
+    if (uCount >= SIZE_TH &&
+        uFirst4 == MPC_TH_FIRST4)
     {
 
         // Display TH etc. structured, if debug is active
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGEXPAND))
         {
             // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
             WRMSG(HHC03906, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
@@ -972,25 +978,25 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         write_th( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if( uCount >= SizeHX0 &&
+    else if (uCount >= SizeHX0 &&
              pPTPHX0->TH_seg == 0x00 &&
-             pPTPHX0->TH_ch_flag == TH_CH_0x00 )
+             pPTPHX0->TH_ch_flag == TH_CH_0x00)
     {
 
         // Process the PTPHX0 type 0x00
         write_hx0_00( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if( uCount >= SizeHX0 &&
+    else if (uCount >= SizeHX0 &&
              pPTPHX0->TH_seg == 0x00 &&
-             pPTPHX0->TH_ch_flag == TH_CH_0x01 )
+             pPTPHX0->TH_ch_flag == TH_CH_0x01)
     {
 
         // Process the PTPHX0 type 0x01
         write_hx0_01( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if( uCount >= ( SizeHX2 + SizeHSV ) &&
+    else if (uCount >= ( SizeHX2 + SizeHSV ) &&
              ( pPTPHX2->Ft & XID2_FORMAT_MASK ) == 0x20 &&
              pPTPHX2->NodeID[0] == 0xFF )
     {
@@ -1006,10 +1012,10 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         WRMSG(HHC03931, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
 
         // Display up to 256-bytes of data, if debug is not active
-        if( !pPTPBLK->fDebug && !( pPTPBLK->uDebugMask & DEBUGDATA ) )
+        if (!pPTPBLK->fDebug && !(pPTPBLK->uDebugMask & DEBUGDATA))
         {
             iTraceLen = uCount;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1075,27 +1081,27 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
 
         // Decide what the RRH contains.
         iWhat = UNKNOWN_RRH;
-        if( pMPC_RRH->type == RRH_TYPE_CM )
+        if (pMPC_RRH->type == RRH_TYPE_CM)
         {
-            if( pMPC_RRH->proto == PROTOCOL_LAYER2 )
+            if (pMPC_RRH->proto == PROTOCOL_LAYER2)
             {
                 iWhat = RRH_8108;
             }
         }
-        else if( pMPC_RRH->type == RRH_TYPE_ULP )
+        else if (pMPC_RRH->type == RRH_TYPE_ULP)
         {
-            if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+            if (pMPC_RRH->proto == PROTOCOL_UNKNOWN)
             {
                 iWhat = RRH_417E;
             }
         }
-        else if( pMPC_RRH->type == RRH_TYPE_IPA )
+        else if (pMPC_RRH->type == RRH_TYPE_IPA)
         {
-            if( pMPC_RRH->proto == PROTOCOL_LAYER2 )
+            if (pMPC_RRH->proto == PROTOCOL_LAYER2)
             {
                 iWhat = RRH_C108;
             }
-            else if( pMPC_RRH->proto == PROTOCOL_UNKNOWN )
+            else if (pMPC_RRH->proto == PROTOCOL_UNKNOWN)
             {
                 iWhat = RRH_C17E;
             }
@@ -1136,7 +1142,7 @@ void  write_th( DEVBLK* pDEVBLK, U16  uCount,
         }
 
         // If the MPC_RRH processing was not sucessful, let's stop.
-        if( rv != 0 )
+        if (rv != 0)
             break;
 
         // Get the displacement from the start of the MPC_TH to the
@@ -1240,7 +1246,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     FETCH_F3( iDataLen, pMPC_RRH->lenalda );
 
     // Check whether there is more than one MPC_PH.
-    if( uNumPH == 1 )
+    if (uNumPH == 1)
     {
         pDataBuf = NULL;
     }
@@ -1249,7 +1255,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         // More than one MPC_PH. Allocate a buffer in which all of
         // the data referenced by the MPC_PHs will be concatanated.
         pDataBuf = alloc_storage( pDEVBLK, iDataLen );   // Allocate buffer
-        if( !pDataBuf )              // if the allocate was not successful...
+        if (!pDataBuf)               // if the allocate was not successful...
             return -1;
 
         // Copy and concatanate the data referenced by the MPC_PHs.
@@ -1281,11 +1287,11 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         // Check the IP packet version. The first 4-bits of the first
         // byte of the IP header contains the version number.
         iPktVer = ( ( pData[0] & 0xF0 ) >> 4 );
-        if( iPktVer == 4 )
+        if (iPktVer == 4)
         {
             strcpy( cPktVer, "IPv4" );
         }
-        else if( iPktVer == 6 )
+        else if (iPktVer == 6)
         {
             strcpy( cPktVer, "IPv6" );
         }
@@ -1296,7 +1302,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             WRMSG(HHC03933, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNDevName );
             iTraceLen = iDataLen;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1310,9 +1316,9 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 
         // Check that there is a whole IP packet, and that
         // the IP packet is no larger than the TUN device MTU.
-        if( iPktVer == 4 )
+        if (iPktVer == 4)
         {
-            if( iDataLen >= (int)sizeof(IP4FRM) )  // Size of a minimal IPv4 header
+            if (iDataLen >= (int)sizeof(IP4FRM))   // Size of a minimal IPv4 header
             {
                 // Calculate the IPv4 packet length.
                 FETCH_HW( uPayLen, pIP4FRM->hwTotalLength );
@@ -1325,7 +1331,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         }
         else
         {
-            if( iDataLen >= (int)sizeof(IP6FRM) )  // Size of an IPv6 header
+            if (iDataLen >= (int)sizeof(IP6FRM))   // Size of an IPv6 header
             {
                 // Calculate the IPv6 packet length.
                 FETCH_HW( uPayLen, pIP6FRM->bPayloadLength );
@@ -1336,13 +1342,13 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
                 iPktLen = -1;
             }
         }
-        if( iPktLen > iDataLen || iPktLen == -1 )
+        if (iPktLen > iDataLen || iPktLen == -1)
         {
             // HHC03934 "%1d:%04X PTP: Accept data for device '%s' contains incomplete IP packet, data dropped"
             WRMSG(HHC03934, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNDevName );
             iTraceLen = iDataLen;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1353,13 +1359,13 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             rv = -2;
             break;
         }
-        if( iPktLen > pPTPBLK->iMTU )
+        if (iPktLen > pPTPBLK->iMTU)
         {
             // HHC03935 "%1d:%04X PTP: Accept data for device '%s' contains IP packet larger than MTU, data dropped"
             WRMSG(HHC03935, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNDevName );
             iTraceLen = iDataLen;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1373,26 +1379,26 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 
         // Check whether the interface is ready for the IP packet.
         fWantPkt = TRUE;
-        if( iPktVer == 4 )
+        if (iPktVer == 4)
         {
-            if( !pPTPBLK->fActive4 )
+            if (!pPTPBLK->fActive4)
             {
                 fWantPkt = FALSE;
             }
         }
         else
         {
-            if( !pPTPBLK->fActive6 )
+            if (!pPTPBLK->fActive6)
             {
                 fWantPkt = FALSE;
             }
         }
 
         //
-        if( fWantPkt )
+        if (fWantPkt)
         {
             // Trace the IP packet before sending to TUN device
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGPACKET ) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGPACKET))
             {
                 // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
                 WRMSG(HHC03907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -1402,7 +1408,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 
             // Write the IP packet to the TUN/TAP interface
             rv = TUNTAP_Write( pPTPBLK->fd, pData, iPktLen );
-            if( rv < 0 )
+            if (rv < 0)
             {
                 // HHC03971 "%1d:%04X PTP: error writing to device '%s': '%s'"
                 WRMSG(HHC03971, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName,
@@ -1421,7 +1427,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     }   /* while( iDataLen > 0 ) */
 
     // Free the data buffer, if one was used.
-    if( pDataBuf )
+    if (pDataBuf)
         free( pDataBuf );
 
     return rv;
@@ -1456,7 +1462,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 
 
     //
-    if( pPTPATH->bDLCtype == DLCTYPE_READ )    // Read from the y-sides Read path?
+    if (pPTPATH->bDLCtype == DLCTYPE_READ)     // Read from the y-sides Read path?
     {
         // The read is from the y-sides Read path.
 
@@ -1471,7 +1477,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 
             // Remove first buffer from chain.
             pPTPHDR = remove_buffer_from_chain( pPTPATH );
-            if( pPTPHDR )
+            if (pPTPHDR)
             {
                 // Return the data to the guest OS.
                 read_chain_buffer( pDEVBLK, uCount, iCCWSeq, pIOBuf,
@@ -1493,7 +1499,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 
             //
             pPTPHDR = pPTPBLK->pReadBuffer;
-            if( pPTPHDR && pPTPHDR->iDataLen > LEN_OF_PAGE_ONE )
+            if (pPTPHDR && pPTPHDR->iDataLen > LEN_OF_PAGE_ONE)
             {
                 // Return the data to the guest OS.
                 read_read_buffer( pDEVBLK, uCount, iCCWSeq, pIOBuf,
@@ -1540,13 +1546,13 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 #endif /* defined( OPTION_WTHREADS ) */
 
             //
-            if( rc == ETIMEDOUT || rc == EINTR )
+            if (rc == ETIMEDOUT || rc == EINTR)
             {
                 // check for halt condition
-                if( pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
-                    pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
+                if (pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
+                    pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR)
                 {
-                    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+                    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
                     {
                         // HHC03964 "%1d:%04X PTP: halt or clear recognized"
                         WRMSG(HHC03964, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -1568,7 +1574,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 
         // Remove first buffer from chain.
         pPTPHDR = remove_buffer_from_chain( pPTPATH );
-        if( pPTPHDR )
+        if (pPTPHDR)
         {
             // There is a buffer on the chain waiting to be read.
             read_chain_buffer( pDEVBLK, uCount, iCCWSeq, pIOBuf,
@@ -1591,7 +1597,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
             return;
         }
 
-    }   /* if( pPTPATH->bDLCtype == DLCTYPE_READ ) */
+    }   /* if (pPTPATH->bDLCtype == DLCTYPE_READ ) */
 
     return;
 }   /* End function  ptp_read() */
@@ -1638,7 +1644,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
 
     // Check whether all of the data that is currently in page two and
     // onwards will fit into page one.
-    if( iDataLen <= ( LEN_OF_PAGE_ONE - (int)(SIZE_TH + SIZE_RRH + SIZE_PH) ) )
+    if (iDataLen <= (LEN_OF_PAGE_ONE - (int)(SIZE_TH + SIZE_RRH + SIZE_PH)))
     {
 
         // All of the data that is currently in page two and onwards
@@ -1648,7 +1654,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         // ptp_read_thread().
 
         // Set the residual length and unit status.
-        if( uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH + iDataLen) )
+        if (uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH + iDataLen))
         {
             iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
             iLength2 = iDataLen;
@@ -1657,7 +1663,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         }
         else
         {
-            if( uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH) )
+            if (uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH))
             {
                 iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
                 iLength2 = (int)uCount - iLength1;
@@ -1702,7 +1708,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         // set-up by ptp_read_thread().
 
         // Set the residual length and unit status.
-        if( uCount >= (U16)(LEN_OF_PAGE_ONE + iDataLen) )
+        if (uCount >= (U16)(LEN_OF_PAGE_ONE + iDataLen))
         {
             iLength1 = LEN_OF_PAGE_ONE;
             iLength2 = iDataLen;
@@ -1711,7 +1717,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         }
         else
         {
-            if( uCount >= (U16)LEN_OF_PAGE_ONE )
+            if (uCount >= (U16)LEN_OF_PAGE_ONE)
             {
                 iLength1 = LEN_OF_PAGE_ONE;
                 iLength2 = (int)uCount - iLength1;
@@ -1747,7 +1753,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     }
 
     // Display TH etc. structured, if debug is active
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGEXPAND))
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
@@ -1755,13 +1761,13 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGDATA))
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
         FETCH_FW( uTotalLen, pMPC_TH->length );
         iTraceLen = uTotalLen;
-        if( iTraceLen > 256 )
+        if (iTraceLen > 256)
         {
             iTraceLen = 256;
             // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1816,7 +1822,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     FETCH_FW( uFirst4, pMPC_TH->first4 );
 
     // Set the residual length and unit status.
-    if( uCount >= iDataLen )
+    if (uCount >= iDataLen)
     {
         *pMore     = 0;
         *pResidual = (U16)uCount - (U16)iDataLen;
@@ -1830,7 +1836,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     *pUnitStat = CSW_CE | CSW_DE;
 
     // Set the transmission header sequence number, if necessary.
-    if( uFirst4 == MPC_TH_FIRST4 )
+    if (uFirst4 == MPC_TH_FIRST4)
     {
         STORE_FW( pMPC_TH->seqnum, ++pPTPATH->uSeqNum );
     }
@@ -1839,7 +1845,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     memcpy( pIOBuf, pMPC_TH, iDataLen );
 
     // Display TH etc. structured, if debug is active
-    if( uFirst4 == MPC_TH_FIRST4 && ( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGEXPAND ) ) )
+    if (uFirst4 == MPC_TH_FIRST4 && (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGEXPAND)))
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
@@ -1847,12 +1853,12 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGDATA ) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGDATA))
     {
         // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
         WRMSG(HHC03905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
         iTraceLen = iDataLen;
-        if( iTraceLen > 256 )
+        if (iTraceLen > 256)
         {
             iTraceLen = 256;
             // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -1864,9 +1870,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 
     // When we are handshaking the sixth CCW in the chain marks the
     // end of an exchange.
-    if( pPTPATH->fHandshaking && iCCWSeq == 5 )
+    if (pPTPATH->fHandshaking && iCCWSeq == 5)
     {
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE )    // Handshake one in progress?
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE)     // Handshake one in progress?
         {
             // The end of the first exchange. The y-side VTAM will
             // now wait (for up to 90 seconds) for an Attention
@@ -1875,7 +1881,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
             // Raise an attention interrupt in one second.
             pPTPATH->bAttnCode = 0x17;
             rc = raise_unsol_int( pDEVBLK, CSW_ATTN, 1000 );
-            if( rc )
+            if (rc)
             {
                 // Report the bad news.
                 // HHC00102 "Error in function create_thread(): %s"
@@ -1885,16 +1891,16 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
             }
             pPTPATH->fHandshakeFin |= HANDSHAKE_ONE;     // Handshake one finished
         }
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_TWO )    // Handshake two in progress?
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_TWO)     // Handshake two in progress?
         {
             pPTPATH->fHandshakeFin |= HANDSHAKE_TWO;     // Handshake two finished
         }
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_THREE )  // Handshake three in progress?
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_THREE)   // Handshake three in progress?
         {
             pPTPATH->fHandshakeFin |= HANDSHAKE_THREE;   // Handshake three finished
         }
         // If all three exchanges have finished, handshaking is complete.
-        if( pPTPATH->fHandshakeFin == HANDSHAKE_ALL )    // All handshakes finished?
+        if (pPTPATH->fHandshakeFin == HANDSHAKE_ALL)     // All handshakes finished?
         {
             pPTPATH->fHandshaking = FALSE;
             pPTPATH->fHandshakeCur = 0;
@@ -1993,7 +1999,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
     // Allocate the TUN/TAP read buffer.
     iTunLen = pPTPBLK->iMTU;                      // Read length and buffer size
     pTunBuf = alloc_storage( pDEVBLK, iTunLen );  // equal to the MTU size
-    if( !pTunBuf )                   // if the allocate failed...
+    if (!pTunBuf)                    // if the allocate failed...
     {
         // Close the TUN/TAP interface.
         VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
@@ -2017,9 +2023,9 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
         iLength = TUNTAP_Read( pPTPBLK->fd, (void*)pTunBuf, iTunLen );
 
         // Check for error conditions...
-        if( iLength < 0 )
+        if (iLength < 0)
         {
-            if( !pPTPBLK->fCloseInProgress )
+            if (!pPTPBLK->fCloseInProgress)
             {
                 // HHC03972 "%1d:%04X PTP: error reading from device '%s': '%s'"
                 WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2028,17 +2034,17 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             break;
         }
 
-        if( iLength == 0 )      // (probably EINTR; ignore)
+        if (iLength == 0)       // (probably EINTR; ignore)
             continue;
 
         // Check the IP packet version. The first 4-bits of the first
         // byte of the IP header contains the version number.
         iPktVer = ( ( pTunBuf[0] & 0xF0 ) >> 4 );
-        if( iPktVer == 4 )
+        if (iPktVer == 4)
         {
             strcpy( cPktVer, "IPv4" );
         }
-        else if( iPktVer == 6 )
+        else if (iPktVer == 6)
         {
             strcpy( cPktVer, "IPv6" );
         }
@@ -2049,7 +2055,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             WRMSG(HHC03921, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  iLength, pPTPBLK->szTUNDevName );
             iTraceLen = iLength;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -2062,9 +2068,9 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 
         // Check that a whole IP packet has been read. If an incomplete
         // packet has been read it is dropped.
-        if( iPktVer == 4 )
+        if (iPktVer == 4)
         {
-            if( iLength >= (int)sizeof(IP4FRM) )  // Size of a minimal IPv4 header
+            if (iLength >= (int)sizeof(IP4FRM))   // Size of a minimal IPv4 header
             {
                 // Calculate the IPv4 packet length.
                 FETCH_HW( uPayLen, pIP4FRM->hwTotalLength );
@@ -2077,7 +2083,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
         }
         else
         {
-            if( iLength >= (int)sizeof(IP6FRM) )  // Size of an IPv6 header
+            if (iLength >= (int)sizeof(IP6FRM))   // Size of an IPv6 header
             {
                 // Calculate the IPv6 packet length.
                 FETCH_HW( uPayLen, pIP6FRM->bPayloadLength );
@@ -2088,14 +2094,14 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                 iPktLen = -1;
             }
         }
-        if( iPktLen != iLength )
+        if (iPktLen != iLength)
         {
             // HHC03922 "%1d:%04X PTP: Packet of size %d bytes from device '%s' is not equal to the packet length of %d bytes, packet dropped"
             WRMSG(HHC03922, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  iLength, pPTPBLK->szTUNDevName,
                                  iPktLen );
             iTraceLen = iLength;
-            if( iTraceLen > 256 )
+            if (iTraceLen > 256)
             {
                 iTraceLen = 256;
                 // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -2114,9 +2120,9 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             obtain_lock( &pPTPBLK->ReadBufferLock );
 
             // Check whether the interface is ready for data from the TUN interface.
-            if( iPktVer == 4 )
+            if (iPktVer == 4)
             {
-                if( !pPTPBLK->fActive4 )
+                if (!pPTPBLK->fActive4)
                 {
                     // Release the read buffer lock.
                     release_lock( &pPTPBLK->ReadBufferLock );
@@ -2125,7 +2131,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             }
             else
             {
-                if( !pPTPBLK->fActive6 )
+                if (!pPTPBLK->fActive6)
                 {
                     // Release the read buffer lock.
                     release_lock( &pPTPBLK->ReadBufferLock );
@@ -2135,7 +2141,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 
             // Check that there is a read buffer.
             pPTPHDR = pPTPBLK->pReadBuffer;
-            if( !pPTPHDR )
+            if (!pPTPHDR)
             {
                 // Release the read buffer lock.
                 release_lock( &pPTPBLK->ReadBufferLock );
@@ -2144,7 +2150,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 
             // Check whether the IP packet is larger than y-sides actual MTU.
             // If it is then it is dropped.
-            if( iLength > pPTPBLK->yActMTU )
+            if (iLength > pPTPBLK->yActMTU)
             {
                 // Release the read buffer lock.
                 release_lock( &pPTPBLK->ReadBufferLock );
@@ -2153,7 +2159,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                                      iLength, pPTPBLK->szTUNDevName,
                                      (int)pPTPBLK->yActMTU );
                 iTraceLen = iLength;
-                if( iTraceLen > 256 )
+                if (iTraceLen > 256)
                 {
                     iTraceLen = 256;
                     // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -2166,7 +2172,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 
             // Check whether the IP packet will ever fit into the read buffer.
             // If it will not then it is dropped.
-            if( iLength > ( pPTPHDR->iAreaLen - LEN_OF_PAGE_ONE ) )
+            if (iLength > (pPTPHDR->iAreaLen - LEN_OF_PAGE_ONE))
             {
                 // Release the read buffer lock.
                 release_lock( &pPTPBLK->ReadBufferLock );
@@ -2175,7 +2181,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                                      iLength, pPTPBLK->szTUNDevName,
                                      pPTPHDR->iAreaLen - LEN_OF_PAGE_ONE );
                 iTraceLen = iLength;
-                if( iTraceLen > 256 )
+                if (iTraceLen > 256)
                 {
                     iTraceLen = 256;
                     // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
@@ -2187,7 +2193,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             }
 
             // Check whether the IP packet will fit into the read buffer.
-            if( iLength > ( pPTPHDR->iAreaLen - pPTPHDR->iDataLen ) )
+            if (iLength > (pPTPHDR->iAreaLen - pPTPHDR->iDataLen))
             {
                 // The IP packet will not fit into the read buffer at the
                 // moment, presumably there are IP packets waiting to be read.
@@ -2208,7 +2214,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                 // The IP packet will fit into the read buffer.
 
                 // Display the IP packet just read, if the device group is being debugged.
-                if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGPACKET ) )
+                if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGPACKET))
                 {
                     // HHC03904 "%1d:%04X PTP: Receive %s packet of size %d bytes from device '%s'"
                     WRMSG(HHC03904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2236,7 +2242,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 
                 break;
 
-            }   /* if( iLength > ( pPTPHDR->iAreaLen - pPTPHDR->iDataLen ) ) */
+            }   /* if (iLength > (pPTPHDR->iAreaLen - pPTPHDR->iDataLen)) */
 
         }   /* while( pPTPBLK->fd != -1 && !pPTPBLK->fCloseInProgress ) */
 
@@ -2264,7 +2270,7 @@ void*    add_buffer_to_chain_and_signal_event( PTPATH* pPTPATH, PTPHDR* pPTPHDR 
     PTPBLK*  pPTPBLK = pPTPATH->pPTPBLK;               // PTPBLK
 
     // Prepare PTPHDR for adding to chain.
-    if( !pPTPHDR )                                     // Any PTPHDR been passed?
+    if (!pPTPHDR)                                      // Any PTPHDR been passed?
         return NULL;
     pPTPHDR->pNextPTPHDR = NULL;                       // Clear the pointer to next PTPHDR
 
@@ -2272,7 +2278,7 @@ void*    add_buffer_to_chain_and_signal_event( PTPATH* pPTPATH, PTPHDR* pPTPHDR 
     obtain_lock( &pPTPATH->ChainLock );
 
     // Add PTPHDR to end of chain.
-    if( pPTPATH->pFirstPTPHDR )                        // if there are already PTPHDRs
+    if (pPTPATH->pFirstPTPHDR)                         // if there are already PTPHDRs
     {
         pPTPATH->pLastPTPHDR->pNextPTPHDR = pPTPHDR;   // Add the PTPHDR to
         pPTPATH->pLastPTPHDR = pPTPHDR;                // the end of the chain
@@ -2304,7 +2310,7 @@ void*    add_buffer_to_chain( PTPATH* pPTPATH, PTPHDR* pPTPHDR )
 {
 
     // Prepare PTPHDR for adding to chain.
-    if( !pPTPHDR )                                     // Any PTPHDR been passed?
+    if (!pPTPHDR)                                      // Any PTPHDR been passed?
         return NULL;
     pPTPHDR->pNextPTPHDR = NULL;                       // Clear the pointer to next PTPHDR
 
@@ -2312,7 +2318,7 @@ void*    add_buffer_to_chain( PTPATH* pPTPATH, PTPHDR* pPTPHDR )
     obtain_lock( &pPTPATH->ChainLock );
 
     // Add PTPHDR to end of chain.
-    if( pPTPATH->pFirstPTPHDR )                        // if there are already PTPHDRs
+    if (pPTPATH->pFirstPTPHDR)                         // if there are already PTPHDRs
     {
         pPTPATH->pLastPTPHDR->pNextPTPHDR = pPTPHDR;   // Add the PTPHDR to
         pPTPATH->pLastPTPHDR = pPTPHDR;                // the end of the chain
@@ -2347,12 +2353,12 @@ PTPHDR*  remove_buffer_from_chain( PTPATH* pPTPATH )
     pPTPHDR = pPTPATH->pFirstPTPHDR;                   // Pointer to first PTPHDR
 
     // Remove the first PTPHDR from the chain, if there is one...
-    if( pPTPHDR )                                      // If there is a PTPHDR
+    if (pPTPHDR)                                       // If there is a PTPHDR
     {
         pPTPATH->pFirstPTPHDR = pPTPHDR->pNextPTPHDR;  // Make the next the first PTPHDR
         pPTPATH->iNumPTPHDR--;                         // Decrement number of PTPHDRs
         pPTPHDR->pNextPTPHDR = NULL;                   // Clear the pointer to next PTPHDR
-        if( !pPTPATH->pFirstPTPHDR )                   // if there are no more PTPHDRs
+        if (!pPTPATH->pFirstPTPHDR)                    // if there are no more PTPHDRs
         {
 //          pPTPATH->pFirstPTPHDR = NULL;              // Clear
             pPTPATH->pLastPTPHDR = NULL;               // the chain
@@ -2414,12 +2420,12 @@ PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
     // Allocate the buffer.
     iBufLen = SizeHDR + iSize;
     pPTPHDR = malloc( iBufLen );       // Allocate the buffer
-    if( !pPTPHDR )                     // if the allocate was not successful...
+    if (!pPTPHDR)                      // if the allocate was not successful...
     {
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &iBufLen );
-        // HHC03960 "%1d:%04X PTP: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
+        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
         return NULL;
     }
@@ -2447,12 +2453,12 @@ void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
     // Allocate the storage.
     iStorLen = iSize;
     pStorPtr = malloc( iStorLen );     // Allocate the storage
-    if( !pStorPtr )                    // if the allocate was not successful...
+    if (!pStorPtr)                     // if the allocate was not successful...
     {
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &iStorLen );
-        // HHC03960 "%1d:%04X PTP: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
+        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
         return NULL;
     }
@@ -2497,7 +2503,7 @@ void  ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir )
         {
             c = *pAddr++;
 
-            if( offset < iLen )
+            if (offset < iLen)
             {
                 snprintf((char *) tmp, 32, "%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
@@ -2506,9 +2512,9 @@ void  ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir )
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if (isprint( e ))
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if (isprint( c ))
                     print_ascii[i] = c;
             }
             else
@@ -2517,7 +2523,7 @@ void  ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir )
             }
 
             offset++;
-            if( ( offset & 3 ) == 0 )
+            if (( offset & 3 ) == 0)
             {
                 strlcat((char *) print_line, " ", sizeof(print_line) );
             }
@@ -2565,7 +2571,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     // Build a copy of the argv list.
     // getopt() and getopt_long() expect argv[0] to be a program name.
     // We need to shift the arguments and insert a dummy argv[0].
-    if( argc > (MAX_ARGS-1) )
+    if (argc > (MAX_ARGS-1))
         argc = (MAX_ARGS-1);
     for( j = 0; j < argc; j++ )
         argn[j+1] = argx[j];
@@ -2650,7 +2656,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         c = getopt( argc, argv, PTP_OPTSTRING );
 #endif /* defined(HAVE_GETOPT_LONG) */
 
-        if( c == -1 ) // No more options found
+        if (c == -1 ) // No more options found
             break;
 
         switch( c )
@@ -2660,10 +2666,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #if defined( OPTION_W32_CTCI )
             // This could be the IP or MAC address of the
             // host ethernet adapter.
-            if( inet_aton( optarg, &addr4 ) == 0 )
+            if (inet_aton( optarg, &addr4 ) == 0)
             {
                 // Not an IP address, check for valid MAC
-                if( ParseMAC( optarg, mac ) != 0 )
+                if (ParseMAC( optarg, mac ) != 0)
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2673,7 +2679,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
 #endif /* defined( OPTION_W32_CTCI ) */
             // This is the file name of the special TUN/TAP character device
-            if( strlen( optarg ) > sizeof(pPTPBLK->szTUNCharName)-1 )
+            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharName)-1)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2684,7 +2690,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             break;
 
         case 'x':     // TUN network device name
-            if( strlen( optarg ) > sizeof(pPTPBLK->szTUNDevName)-1 )
+            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNDevName)-1)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2721,8 +2727,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
             iMTU = atoi( optarg );
 
-            if( iMTU < 576 || iMTU > 14336 ||
-                strlen(optarg) > sizeof(pPTPBLK->szMTU)-1 )
+            if (iMTU < 576 || iMTU > 14336 ||
+                strlen(optarg) > sizeof(pPTPBLK->szMTU)-1)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2757,12 +2763,12 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //              return -1;
 //          }
 //
-//          if( iMaxBfru < 5 )
+//          if (iMaxBfru < 5)
 //          {
 //              strlcpy( pPTPBLK->szMaxBfru, "5", sizeof(pPTPBLK->szMaxBfru) );
 //              pPTPBLK->iMaxBfru = 5;
 //          }
-//          else if( iMaxBfru > 16 )
+//          else if (iMaxBfru > 16)
 //          {
 //              strlcpy( pPTPBLK->szMaxBfru, "16", sizeof(pPTPBLK->szMaxBfru) );
 //              pPTPBLK->iMaxBfru = 16;
@@ -2776,7 +2782,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //          break;
 
         case 'm':
-            if( ParseMAC( optarg, mac ) != 0 ||
+            if (ParseMAC( optarg, mac ) != 0 ||
                 strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
@@ -2791,10 +2797,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         case 'd':     // Diagnostics
             pPTPBLK->fDebug = TRUE;
-            if( optarg )
+            if (optarg)
             {
                 iDebugMask = atoi( optarg );
-                if( iDebugMask < 1 || iDebugMask > 255 )
+                if (iDebugMask < 1 || iDebugMask > 255)
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2821,8 +2827,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         case 'k':     // Kernel Buffer Size (Windows only)
             iKernBuff = atoi( optarg );
 
-            if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
-                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
+            if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
+                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2837,8 +2843,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         case 'i':     // I/O Buffer Size (Windows only)
             iIOBuff = atoi( optarg );
 
-            if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
-                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
+            if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
+                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2866,7 +2872,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     // Check for correct number of arguments. There can be either two
     // parameters (a pair of IPv4 or IPv6 addresses), or four parameters
     // (a pair of IPv4 addresses and a pair of IPv6 addresses, or vice-versa).
-    if( argc != 2 && argc != 4)
+    if (argc != 2 && argc != 4)
     {
         // HHC03975 "%1d:%04X PTP: incorrect number of parameters"
         WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -2899,13 +2905,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         ilhost = strlen( *argv );            // calculate size of name/address (assume no prefix size)
         cpprfx = strchr( *argv, '/' );       // Point to slash character
         ilprfx = 0;                          // no prefix size
-        if( cpprfx )                         // If there is a slash
+        if (cpprfx)                          // If there is a slash
         {
             ilhost = cpprfx - cphost;        // calculate length of name/address
             cpprfx++;                        // point to prefix size
             ilprfx = strlen( cpprfx );       // calculate length of prefix size
         }
-        if( ilhost > (size_t)(sizeof(hrb.host)-1) )
+        if (ilhost > (size_t)(sizeof(hrb.host)-1))
         {
             // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
             WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2919,7 +2925,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         hrb.numeric = TRUE;
         memcpy( hrb.host, cphost, ilhost );
         rc = resolve_host( &hrb);
-        if( rc == 0 )
+        if (rc == 0)
         {
             // OK, a numeric IPv4 address has been specified.
             iFirstFamily[j] = AF_INET;
@@ -2933,7 +2939,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             memset( &hrb, 0, sizeof(hrb) );
             hrb.wantafam = AF_INET6;
             hrb.numeric = TRUE;
-            if( cphost[0] == '[' && cphost[ilhost-1] == ']' )
+            if (cphost[0] == '[' && cphost[ilhost-1] == ']')
             {
                 memcpy( hrb.host, cphost+1, ilhost-2 );
             }
@@ -2942,7 +2948,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 memcpy( hrb.host, cphost, ilhost );
             }
             rc = resolve_host( &hrb);
-            if( rc == 0 )
+            if (rc == 0)
             {
                 // OK, a numeric IPv6 address has been specified.
                 iFirstFamily[j] = AF_INET6;
@@ -2958,14 +2964,14 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 hrb.wantafam = iWantFamily;
                 memcpy( hrb.host, cphost, ilhost );
                 rc = resolve_host( &hrb);
-                if( rc == 0 )
+                if (rc == 0)
                 {
                     // OK, a host name that resolves to the required address
                     // family has been specified. If no family was specified
                     // (the -4/-6 options) whichever family was first in the
                     // resolve result is being used.
                     iFirstFamily[j] = hrb.afam;
-                    if( iFirstFamily[j] == AF_INET )
+                    if (iFirstFamily[j] == AF_INET)
                     {
                         strlcpy( pPTPBLK->szGuestIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr4) );
                         memcpy( &pPTPBLK->iaGuestIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaGuestIPAddr4) );
@@ -2987,11 +2993,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
         }
 
-        if( cpprfx )
+        if (cpprfx)
         {
-            if( iFirstFamily[j] == AF_INET )
+            if (iFirstFamily[j] == AF_INET)
             {
-                if( ilprfx > (size_t)sizeof(pPTPBLK->szGuestPfxSiz4)-1 )
+                if (ilprfx > (size_t)sizeof(pPTPBLK->szGuestPfxSiz4)-1)
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2999,7 +3005,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     return -1;
                 }
                 iPfxSiz = atoi( cpprfx );
-                if( ( iPfxSiz < 0 ) || ( iPfxSiz > 32 ) )
+                if (( iPfxSiz < 0 ) || ( iPfxSiz > 32 ))
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3051,13 +3057,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         ilhost = strlen( *argv );            // calculate size of name/address (assume no prefix)
         cpprfx = strchr( *argv, '/' );       // Point to slash character
         ilprfx = 0;                          // no prefix size
-        if( cpprfx )                         // If there is a slash
+        if (cpprfx)                          // If there is a slash
         {
             ilhost = cpprfx - cphost;        // calculate length of name/address
             cpprfx++;                        // point to prefix size
             ilprfx = strlen( cpprfx );       // calculate length of prefix size
         }
-        if( ilhost > (size_t)(sizeof(hrb.host)-1) )
+        if (ilhost > (size_t)(sizeof(hrb.host)-1))
         {
             // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
             WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3067,8 +3073,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         memset( &hrb, 0, sizeof(hrb) );
         hrb.wantafam = iFirstFamily[j];
-        if( iFirstFamily[j] == AF_INET6 &&
-            cphost[0] == '[' && cphost[ilhost-1] == ']' )
+        if (iFirstFamily[j] == AF_INET6 &&
+            cphost[0] == '[' && cphost[ilhost-1] == ']')
         {
             hrb.numeric = TRUE;
             memcpy( hrb.host, cphost+1, ilhost-2 );
@@ -3078,7 +3084,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             memcpy( hrb.host, cphost, ilhost );
         }
         rc = resolve_host( &hrb);
-        if( rc != 0 )
+        if (rc != 0)
         {
             // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
             WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3086,7 +3092,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             return -1;
         }
 
-        if( iFirstFamily[j] == AF_INET )
+        if (iFirstFamily[j] == AF_INET)
         {
             strlcpy( pPTPBLK->szDriveIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szDriveIPAddr4) );
             memcpy( &pPTPBLK->iaDriveIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaDriveIPAddr4) );
@@ -3097,9 +3103,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             memcpy( &pPTPBLK->iaDriveIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaDriveIPAddr6) );
         }
 
-        if( cpprfx )
+        if (cpprfx)
         {
-            if( iFirstFamily[j] == AF_INET )
+            if (iFirstFamily[j] == AF_INET)
             {
                 // Hmm... the Drive IPv4 address was specified with a prefix size.
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
@@ -3109,7 +3115,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
             else
             {
-                if( ilprfx > (size_t)sizeof(pPTPBLK->szDrivePfxSiz6)-1 )
+                if (ilprfx > (size_t)sizeof(pPTPBLK->szDrivePfxSiz6)-1)
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3117,7 +3123,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     return -1;
                 }
                 iPfxSiz = atoi( cpprfx );
-                if( ( iPfxSiz < 0 ) || ( iPfxSiz > 128 ) )
+                if (( iPfxSiz < 0 ) || ( iPfxSiz > 128 ))
                 {
                     // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                     WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3131,19 +3137,19 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         argc--; argv++;
 
         // Remember whether IPv4 or IPv6 addresses were specified.
-        if( iFirstFamily[j] == AF_INET )
+        if (iFirstFamily[j] == AF_INET)
             pPTPBLK->fIPv4Spec = TRUE;
         else
             pPTPBLK->fIPv6Spec = TRUE;
 
         // Decide what address family the next pair of IP addresses should be.
-        if( iWantFamily == AF_INET )
+        if (iWantFamily == AF_INET)
             iWantFamily = AF_INET6;
-        else if( iWantFamily == AF_INET6 )
+        else if (iWantFamily == AF_INET6)
             iWantFamily = AF_INET;
         else
         {
-            if( iFirstFamily[j] == AF_INET )
+            if (iFirstFamily[j] == AF_INET)
                 iWantFamily = AF_INET6;
             else
                 iWantFamily = AF_INET;
@@ -3156,8 +3162,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If IPv4 addresses were specified check that the same IPv4 address
     // has not been specified for the guest and driver.
-    if( pPTPBLK->fIPv4Spec &&
-        memcmp( &pPTPBLK->iaGuestIPAddr4, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0 )
+    if (pPTPBLK->fIPv4Spec &&
+        memcmp( &pPTPBLK->iaGuestIPAddr4, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0)
     {
         // HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"
         WRMSG(HHC03901, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -3166,8 +3172,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If IPv6 addresses were specified check that the same IPv6 address
     // has not been specified for the guest and driver.
-    if( pPTPBLK->fIPv6Spec &&
-        memcmp( &pPTPBLK->iaGuestIPAddr6, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0 )
+    if (pPTPBLK->fIPv6Spec &&
+        memcmp( &pPTPBLK->iaGuestIPAddr6, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0)
     {
         // HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"
         WRMSG(HHC03901, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -3176,10 +3182,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If IPv6 addresses were specified check that IPv6 is supported on
     // this machine.
-    if( pPTPBLK->fIPv6Spec )
+    if (pPTPBLK->fIPv6Spec)
     {
         fd = socket( AF_INET6, SOCK_DGRAM, 0 );
-        if( fd < 0 )
+        if (fd < 0)
         {
             // HHC03902 "%1d:%04X PTP: Inet6 not supported"
             WRMSG(HHC03902, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -3193,8 +3199,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If IPv6 addresses were specified check that the MTU size is at
     // least the minimum size for an IPv6 link.
-    if( pPTPBLK->fIPv6Spec &&
-        pPTPBLK->iMTU < 1280 )
+    if (pPTPBLK->fIPv6Spec &&
+        pPTPBLK->iMTU < 1280)
     {
         // HHC03918 "%1d:%04X PTP: MTU changed from size %d bytes to size %d bytes"
         WRMSG(HHC03918, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->iMTU, 1280 );
@@ -3204,7 +3210,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If IPv6 addresses were specified create a Driver Link Local IPv6
     // address using pseudo-random numbers.
-    if( pPTPBLK->fIPv6Spec )
+    if (pPTPBLK->fIPv6Spec)
     {
         addr6.s6_addr[0] = 0xFE;
         addr6.s6_addr[1] = 0x80;
@@ -3218,7 +3224,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
     // If the MAC address was not specified in the configuration
     // statement, create a MAC address using pseudo-random numbers.
-    if( !pPTPBLK->szMACAddress[0] )
+    if (!pPTPBLK->szMACAddress[0])
     {
         for( j = 0; j < 6; j++ )
             mac[j] = (int)((rand()/(RAND_MAX+1.0))*256);
@@ -3261,7 +3267,7 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
 
     // Obtain a PTPINT from the LIFO linked list.
     pPTPINT = pPTPBLK->pFirstPTPINT;                   // Pointer to first PTPINT
-    if( pPTPINT )                                      // If there is a PTPINT
+    if (pPTPINT)                                       // If there is a PTPINT
     {
         pPTPBLK->pFirstPTPINT = pPTPINT->pNextPTPINT;  // Make the next the first PTPINT
         pPTPINT->pNextPTPINT = NULL;                   // Clear the pointer to next PTPINT
@@ -3272,10 +3278,10 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
 
     // If we did not obtain a PTPINT from the LIFO linked list
     // then allocate storage for a PTPINT.
-    if( !pPTPINT )                                     // If there isn't a PTPINT
+    if (!pPTPINT)                                      // If there isn't a PTPINT
     {
         pPTPINT = alloc_storage( pDEVBLK, (int)sizeof(PTPINT) );
-        if( !pPTPINT )                                 // If there is no storage
+        if (!pPTPINT)                                  // If there is no storage
             return -1;
     }
 
@@ -3289,7 +3295,7 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
                          pPTPBLK->pDEVBLKRead->typname,
                          pPTPBLK->pDEVBLKRead->devnum);
     rc = create_thread( &tid, JOINABLE, ptp_unsol_int_thread, pPTPINT, thread_name );
-    if(rc)
+    if (rc)
     {
         // Report the bad news.
         // HHC00102 "Error in function create_thread(): %s"
@@ -3322,7 +3328,7 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
     // Check whether the requestor wants a delay before the interrupt
     // is raised.
-    if( pPTPINT->iDelay != 0 )
+    if (pPTPINT->iDelay != 0)
     {
         // Wait for the number of milliseconds specified by the requestor.
 #if defined( OPTION_WTHREADS )
@@ -3345,7 +3351,7 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
         waittime.tv_sec  = now.tv_sec + delay_q;
         waittime.tv_nsec = (now.tv_usec + (delay_r * 1000)) * 1000;
-        if( waittime.tv_nsec >= 1000000000 )
+        if (waittime.tv_nsec >= 1000000000)
         {
             waittime.tv_sec++;
             waittime.tv_nsec -= 1000000000;
@@ -3364,6 +3370,14 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 #endif /* defined( OPTION_WTHREADS ) */
     }
 
+    // Display various information, maybe
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCCW))
+    {
+        // HHC03994 "%1d:%04X %s: Status %02X"
+        WRMSG(HHC03994, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            pPTPINT->bStatus );
+    }
+
     // Raise an interrupt.
     // device_attention() (in channel.c) raises an unsolicited interrupt
     // for the specified device. Return value is 0 if successful, 1 if
@@ -3373,7 +3387,7 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
     // attempt to raise the interrupt again. Retry up to nine times,
     // i.e. attempt to raise the interrupt up to a total of ten times.
     rc = device_attention( pDEVBLK, pPTPINT->bStatus );
-    if( rc == 1 )
+    if (rc == 1)
     {
         for( i = 0; i <= 8; i++ )
         {
@@ -3395,7 +3409,7 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
             waittime.tv_sec  = now.tv_sec;
             waittime.tv_nsec = (now.tv_usec + (100 * 1000)) * 1000;
-            if( waittime.tv_nsec >= 1000000000 )
+            if (waittime.tv_nsec >= 1000000000)
             {
                 waittime.tv_sec++;
                 waittime.tv_nsec -= 1000000000;
@@ -3415,7 +3429,7 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
             // Attempt to raise the interrupt again.
             rc = device_attention( pDEVBLK, pPTPINT->bStatus );
-            if( rc != 1 )
+            if (rc != 1)
                 break;
         }
     }
@@ -3519,14 +3533,14 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
 
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "In HX0" );
     }
 
     // PTPHX0 type 0x01's should only be written when handshaking is being
     // initiated or is in progress.
-    if( !pPTPATH->fHandshaking )
+    if (!pPTPATH->fHandshaking)
     {
         // An PTPHX0 type 0x01 is being written by the y-side when handshaking
         // was not in progress on the path; we will assume that the y-side
@@ -3543,12 +3557,12 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
         // order. Whichever path executes the routine first will reset or
         // update the values.
         obtain_lock( &pPTPBLK->UpdateLock );
-        if( pPTPBLK->xTokensUpdated == 0 )             // if not updated
+        if (pPTPBLK->xTokensUpdated == 0)              // if not updated
         {
             pPTPBLK->xTokensUpdated = 1;               // updated
 
             // Reset the active & terminate indicators
-            if( pPTPBLK->fActive4 )
+            if (pPTPBLK->fActive4)
             {
                 // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                 WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3557,7 +3571,7 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
             pPTPBLK->fActive4 = FALSE;
             pPTPBLK->bActivate4 = 0x00;
             pPTPBLK->bTerminate4 = 0x00;
-            if( pPTPBLK->fActive6 )
+            if (pPTPBLK->fActive6)
             {
                 // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                 WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3566,7 +3580,7 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
             pPTPBLK->fActive6 = FALSE;
             pPTPBLK->bActivate6 = 0x00;
             pPTPBLK->bTerminate6 = 0x00;
-            if( pPTPBLK->fActiveLL6 )
+            if (pPTPBLK->fActiveLL6)
             {
                 // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                 WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -3663,13 +3677,13 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
 
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "In HX0" );
     }
 
     // PTPHX0 type 0x00 should only be written when handshaking is in progress.
-    if( pPTPATH->fHandshaking )
+    if (pPTPATH->fHandshaking)
     {
         // An PTPHX0 type 0x00 is being written by the y-side and handshaking
         // is in progress on the path; we will assume that the y-side
@@ -3731,7 +3745,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "In HX2" );
     }
@@ -3740,7 +3754,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
     pPTPHSVwr = point_CSVcv( pDEVBLK, pPTPHX2wr );
 
     // XID2's should only be written when handshaking is in progress.
-    if( pPTPATH->fHandshaking )
+    if (pPTPATH->fHandshaking)
     {
         // An XID2 is being written by the y-side and handshaking is
         // in progress on the path; all is well with the world.
@@ -3750,18 +3764,18 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         // path and once for the write path, though not necessarily in that
         // order. Whichever path executes the routine first will copy the
         // values.
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE )
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE)
         {
 
             obtain_lock( &pPTPBLK->UpdateLock );
 
-            if( pPTPHX2wr->DLCtype != pPTPATH->bDLCtype )  // XID2 from expected y-sides path?
+            if (pPTPHX2wr->DLCtype != pPTPATH->bDLCtype )  // XID2 from expected y-sides path?
             {
                 // HHC03917 "%1d:%04X PTP: Guest read and write paths mis-configured"
                 WRMSG(HHC03917, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             }
 
-            if( pPTPBLK->yTokensCopied == 0 )
+            if (pPTPBLK->yTokensCopied == 0)
             {
 
                 pPTPBLK->yTokensCopied = 1;
@@ -3773,7 +3787,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
             }
 
-            if( pPTPHX2wr->DLCtype == DLCTYPE_READ )             // XID2 from y-sides Read path?
+            if (pPTPHX2wr->DLCtype == DLCTYPE_READ)              // XID2 from y-sides Read path?
             {
                 // Extract the data lengths from the XID2.
                 FETCH_HW( uDataLen1, pPTPHX2wr->DataLen1 );      // Get y-sides data length one
@@ -3790,10 +3804,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
                 // (This is the buffer into which we place packets
                 // received from the tun device, and from which the
                 // y-sides read path reads the packets.)
-                if( pPTPBLK->yMaxReadLen != uMaxReadLen )
+                if (pPTPBLK->yMaxReadLen != uMaxReadLen)
                 {
                     // Free the existing read buffer, if there is one.
-                    if( pPTPHDR )
+                    if (pPTPHDR)
                         free( pPTPHDR );
 
                     // Allocate a new read buffer.
@@ -3801,7 +3815,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
                 }
 
                 // Initialize the existing or new read buffer, if there is one.
-                if( pPTPHDR )
+                if (pPTPHDR)
                 {
                     MPC_TH*    pMPC_TH;        // MPC_TH follows the PTPHDR
                     MPC_RRH*   pMPC_RRH;       // MPC_RRH follows the MPC_TH
@@ -3881,13 +3895,13 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
         // Allocate a buffer in which the PTPHX0 will be build.
         pPTPHDRx0 = alloc_ptp_buffer( pDEVBLK, SizeHX0 );
-        if( !pPTPHDRx0 )
+        if (!pPTPHDRx0)
             return;
         pPTPHX0re = (PTPHX0*)((BYTE*)pPTPHDRx0 + SizeHDR);
 
         // Allocate a buffer in which the PTPHX2 and PTPHSV will be build.
         pPTPHDRx2 = alloc_ptp_buffer( pDEVBLK, 255 );
-        if( !pPTPHDRx2 )
+        if (!pPTPHDRx2)
         {
             // Free the PTPHDR
             free( pPTPHDRx0 );
@@ -3898,7 +3912,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
         // Allocate a buffer in which the literal 'VTAM' will be build.
         pPTPHDRvt = alloc_ptp_buffer( pDEVBLK, 4 );
-        if( !pPTPHDRvt )
+        if (!pPTPHDRvt)
         {
             // Free the PTPHDRs
             free( pPTPHDRx2 );
@@ -3910,8 +3924,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         // Prepare PTPHDRx0 and PTPHX0re
         pPTPHDRx0->iDataLen = SizeHX0;
         // PTPHX0
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE ||
-            pPTPATH->fHandshakeCur == HANDSHAKE_TWO )
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE ||
+            pPTPATH->fHandshakeCur == HANDSHAKE_TWO)
         {
             pPTPHX0re->TH_ch_flag = TH_CH_0x01;
         }
@@ -3933,11 +3947,11 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         pPTPHX2re->LenXcv = SizeHX2;
         pPTPHX2re->ULPuse = 0x80;
         memcpy( pPTPHX2re->SAaddress, pPTPBLK->xSAaddress, 4 );
-        if( pPTPATH->fHandshakeCur != HANDSHAKE_ONE )
+        if (pPTPATH->fHandshakeCur != HANDSHAKE_ONE)
         {
             pPTPHX2re->CLstatus = 0x07;
         }
-        if( pPTPATH->bDLCtype == DLCTYPE_WRITE )        // Destined for the y-sides Write path?
+        if (pPTPATH->bDLCtype == DLCTYPE_WRITE)         // Destined for the y-sides Write path?
         {
             pPTPHX2re->DLCtype = DLCTYPE_READ;          // This XID2 is from x-sides Read path
         }
@@ -3945,14 +3959,14 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         {
             pPTPHX2re->DLCtype = DLCTYPE_WRITE;         // This XID2 is from x-sides Write path
         }
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE &&  // The first exchange of handshaking and
-            pPTPATH->bDLCtype == DLCTYPE_WRITE )        // destined for the y-sides Write path?
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE &&  // The first exchange of handshaking and
+            pPTPATH->bDLCtype == DLCTYPE_WRITE)         // destined for the y-sides Write path?
         {
             STORE_HW( pPTPHX2re->DataLen1, pPTPBLK->xDataLen1 );
             STORE_HW( pPTPHX2re->MaxReadLen, pPTPBLK->xMaxReadLen );
         }
         pPTPHX2re->MpcFlag = 0x27;
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE )
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE)
         {
             pPTPHX2re->TokenX5 = MPC_TOKEN_X5;
             memcpy( pPTPHX2re->Token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH );
@@ -3968,7 +3982,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         pPTPHSVre->LenSIDs = sizeof(pPTPHSVre->LenSIDs) +
                               sizeof(pPTPHSVre->SID1) + sizeof(pPTPHSVre->SID2);
         memcpy( pPTPHSVre->SID1, &pPTPBLK->xStartTime, 8 );  // x-sides start time
-        if( pPTPATH->fHandshakeCur == HANDSHAKE_ONE )
+        if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE)
         {
             memcpy( pPTPHSVre->SID2, &pPTPBLK->xFirstCsvSID2, 8 );
         }
@@ -3982,7 +3996,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         memcpy( pPTPVTMre, &VTAM_ebcdic, 4 );      // 'VTAM' in EBCDIC
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "Out HX0" );
             mpc_display_description( pDEVBLK, "Out HX2" );
@@ -4034,7 +4048,7 @@ PTPHSV*  point_CSVcv( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2 )
     while( pCurCv < pEndCv )
     {
         pPTPHSV = (PTPHSV*)pCurCv;
-        if( pPTPHSV->Key == CSV_KEY )
+        if (pPTPHSV->Key == CSV_KEY)
             break;
         pCurCv += pPTPHSV->Length;
         pPTPHSV = NULL;
@@ -4093,60 +4107,60 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Decide what the PUK contains.
     iWhat = UNKNOWN_PUK;
-    if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
+    if (memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0)
     {
-        if( pMPC_PUKwr->what == PUK_WHAT_41 )
+        if (pMPC_PUKwr->what == PUK_WHAT_41)
         {
-            if( pMPC_PUKwr->type == PUK_TYPE_ENABLE )
+            if (pMPC_PUKwr->type == PUK_TYPE_ENABLE)
             {
                 iWhat = CM_ENABLE;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_SETUP )
+            else if (pMPC_PUKwr->type == PUK_TYPE_SETUP)
             {
                 iWhat = CM_SETUP;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_CONFIRM )
+            else if (pMPC_PUKwr->type == PUK_TYPE_CONFIRM)
             {
                 iWhat = CM_CONFIRM;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_DISABLE )
+            else if (pMPC_PUKwr->type == PUK_TYPE_DISABLE)
             {
                 iWhat = CM_DISABLE;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_TAKEDOWN )
+            else if (pMPC_PUKwr->type == PUK_TYPE_TAKEDOWN)
             {
                 iWhat = CM_TAKEDOWN;
             }
         }
     }
-    else if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH ) == 0 )
+    else if (memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenCmConnection, MPC_TOKEN_LENGTH ) == 0)
     {
-        if( pMPC_PUKwr->what == PUK_WHAT_41 )
+        if (pMPC_PUKwr->what == PUK_WHAT_41)
         {
-            if( pMPC_PUKwr->type == PUK_TYPE_ENABLE )
+            if (pMPC_PUKwr->type == PUK_TYPE_ENABLE)
             {
                 iWhat = ULP_ENABLE;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_SETUP )
+            else if (pMPC_PUKwr->type == PUK_TYPE_SETUP)
             {
                 iWhat = ULP_SETUP;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_CONFIRM )
+            else if (pMPC_PUKwr->type == PUK_TYPE_CONFIRM)
             {
                 iWhat = ULP_CONFIRM;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_DISABLE )
+            else if (pMPC_PUKwr->type == PUK_TYPE_DISABLE)
             {
                 iWhat = ULP_DISABLE;
             }
-            else if( pMPC_PUKwr->type == PUK_TYPE_TAKEDOWN )
+            else if (pMPC_PUKwr->type == PUK_TYPE_TAKEDOWN)
             {
                 iWhat = ULP_TAKEDOWN;
             }
         }
-        else if( pMPC_PUKwr->what == PUK_WHAT_43 )
+        else if (pMPC_PUKwr->what == PUK_WHAT_43)
         {
-            if( pMPC_PUKwr->type == PUK_TYPE_ACTIVE )
+            if (pMPC_PUKwr->type == PUK_TYPE_ACTIVE)
             {
                 iWhat = DM_ACT;
             }
@@ -4163,14 +4177,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_ENABLE:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
         }
 
         // Find the PUS and copy the yTokenCmFilter.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_01" );
@@ -4182,7 +4196,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenIssuerRm
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_ENABLE)", "PUS_02" );
@@ -4200,7 +4214,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // If the other side 'wins' the 'handedness' this side must now wait
         // to receive a RRH 0x417E PUK 0x4104 to xTokenIssuerRm from the
         // other side.
-        if( fxSideWins )    // if the x-side wins
+        if (fxSideWins)     // if the x-side wins
         {
 
             // Build RRH 0x417E PUK 0x4104 to yTokenIssuerRm
@@ -4219,14 +4233,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_SETUP:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
         }
 
         // Find the PUS and copy the yTokenCmConnection.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_SETUP)", "PUS_04" );
@@ -4257,14 +4271,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_CONFIRM:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
         }
 
         // Find the PUS and copy the yTokenCmConnection.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (CM_CONFIRM)", "PUS_08" );
@@ -4287,7 +4301,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_DISABLE:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4103 (CM_DISABLE)" );
         }
@@ -4299,7 +4313,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_TAKEDOWN:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4105 (CM_TAKEDOWN)" );
         }
@@ -4314,14 +4328,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_ENABLE:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
         }
 
         // Find the PUS and copy the yTokenUlpFilter.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_01 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_01" );
@@ -4333,7 +4347,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Find the PUS that contains the 'bid' value.
         // Build RRH 0x417E PUK 0x4102 to yTokenCmConnection
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_02 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_ENABLE)", "PUS_02" );
@@ -4351,7 +4365,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // If the other side 'wins' the 'handedness' this side must now wait
         // to receive a RRH 0x417E PUK 0x4104 to xTokenCmConnection from the
         // other side.
-        if( fxSideWins )    // if the x-side wins
+        if (fxSideWins)     // if the x-side wins
         {
 
             // Build RRH 0x417E PUK 0x4104 to yTokenCmConnection
@@ -4371,14 +4385,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_SETUP:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_04 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_SETUP)", "PUS_04" );
@@ -4408,14 +4422,14 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_CONFIRM:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
         }
 
         // Find the PUS and copy the yTokenUlpConnection.
         pMPC_PUSwr = mpc_point_pus( pDEVBLK, pMPC_PUKwr, PUS_TYPE_08 );
-        if( !pMPC_PUSwr )
+        if (!pMPC_PUSwr)
         {
             // HHC03937 "%1d:%04X PTP: Accept data contains %s that does not contain expected %s"
             WRMSG(HHC03937, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "PUK (ULP_CONFIRM)", "PUS_08" );
@@ -4437,7 +4451,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case DM_ACT:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
         }
@@ -4449,7 +4463,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_DISABLE:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4103 (ULP_DISABLE)" );
         }
@@ -4461,13 +4475,13 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_TAKEDOWN:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4105 (ULP_TAKEDOWN)" );
         }
 
         // The guest OS on the y-side has stopped the device
-        if( pPTPBLK->fActive4 )
+        if (pPTPBLK->fActive4)
         {
             // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
             WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -4476,7 +4490,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->fActive4 = FALSE;
         pPTPBLK->bActivate4 = 0x00;
         pPTPBLK->bTerminate4 = 0x00;
-        if( pPTPBLK->fActive6 )
+        if (pPTPBLK->fActive6)
         {
             // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
             WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -4485,7 +4499,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->fActive6 = FALSE;
         pPTPBLK->bActivate6 = 0x00;
         pPTPBLK->bTerminate6 = 0x00;
-        if( pPTPBLK->fActiveLL6 )
+        if (pPTPBLK->fActiveLL6)
         {
             // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
             WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -4551,7 +4565,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
 
     // Allocate a buffer in which the response will be build.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -4644,12 +4658,12 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     rc = memcmp( pMPC_PUSwr->vc.pus_02.a.clock,
                  pMPC_PUSre[1]->vc.pus_02.a.clock,
                  sizeof(pMPC_PUSwr->vc.pus_02.a.clock) );
-    if( rc < 0 )
+    if (rc < 0)
         // This should be the normal case; the other side must have
         // obtained the tod clock a few moments ago for it to be in the
         // message we recently received.
         *fxSideWins = TRUE;     // i.e. the x-side wins
-    else if( rc > 0 )
+    else if (rc > 0)
         // This shouldn't happen; the tod clock we have just obtained is
         // earlier than the tod clock in the message we recently received.
         // Presumably it wasn't a tod clock, or it was manipulated somehow.
@@ -4667,7 +4681,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     }
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
     }
@@ -4698,7 +4712,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 
     // Allocate a buffer.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -4772,7 +4786,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[2]->vc.pus_06.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
     }
@@ -4803,7 +4817,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 
     // Allocate a buffer.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -4877,7 +4891,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[2]->vc.pus_07.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
     }
@@ -4913,7 +4927,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
 
     // Allocate a buffer in which the response will be build.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -4983,7 +4997,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     pMPC_PUSre[1]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[1]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[1]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
-    if( pPTPBLK->fIPv4Spec )
+    if (pPTPBLK->fIPv4Spec)
     {
         memcpy( pMPC_PUSre[1]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
@@ -4996,14 +5010,14 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     // Compare the IP address in the MPC_PUSwr with the IP address in
     // the second MPC_PUSre to determine which side wins. First, check
     // whether both sides are using the same variety of IP address.
-    if( ( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == ( pMPC_PUSre[1]->vc.pus_02.b.flags & 0x08 ) )
+    if (( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == ( pMPC_PUSre[1]->vc.pus_02.b.flags & 0x08 ))
     {
         // Both sides are using the same variety of IP address.
         rc = memcmp( &pMPC_PUSwr->vc.pus_02.b.ipaddr, &pMPC_PUSre[1]->vc.pus_02.b.ipaddr, 16 );
-        if( rc < 0 )
+        if (rc < 0)
             // The y-sides IP address is lower than the x-sides.
             *fxSideWins = TRUE;     // i.e. the x-side wins
-        else if( rc > 0 )
+        else if (rc > 0)
             // The y-sides IP address is higher than the x-sides.
             *fxSideWins = FALSE;    // i.e. the y-side wins
         else
@@ -5027,14 +5041,14 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
         // IPv4 and IPv6 connections, and the other is only starting the
         // IPv6 connection. The side that is using the IPv4 address is
         // the winner. Check the y-sides variety of IP address.
-        if( ( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == 0x08 )
+        if (( pMPC_PUSwr->vc.pus_02.b.flags & 0x08 ) == 0x08)
             *fxSideWins = TRUE;     // i.e. the x-side wins, it's using IPv4
         else
             *fxSideWins = FALSE;    // i.e. the y-side wins, it's using IPv4
     }
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
     }
@@ -5065,7 +5079,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 
     // Allocate a buffer in which the response will be build.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -5147,7 +5161,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
-    if( pPTPBLK->fIPv4Spec )
+    if (pPTPBLK->fIPv4Spec)
     {
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
@@ -5158,7 +5172,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     }
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
     }
@@ -5189,7 +5203,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 
     // Allocate a buffer.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -5271,7 +5285,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
-    if( pPTPBLK->fIPv4Spec )
+    if (pPTPBLK->fIPv4Spec)
     {
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
     }
@@ -5282,7 +5296,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     }
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
     }
@@ -5313,7 +5327,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 
     // Allocate a buffer in which the response will be build.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -5370,7 +5384,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     memcpy( pMPC_PUSre->vc.pus_04.token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
     }
@@ -5413,11 +5427,11 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Decide what the PUK contains.
     iWhat = UNKNOWN_PUK;
-    if( memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0 )
+    if (memcmp( pMPC_RRHwr->token, pPTPBLK->xTokenIssuerRm, MPC_TOKEN_LENGTH ) == 0)
     {
-        if( pMPC_PUKwr->what == PUK_WHAT_45 )
+        if (pMPC_PUKwr->what == PUK_WHAT_45)
         {
-            if( pMPC_PUKwr->type == PUK_TYPE_01 )
+            if (pMPC_PUKwr->type == PUK_TYPE_01)
             {
                 iWhat = PUK_4501;
             }
@@ -5434,7 +5448,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case PUK_4501:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC17E (Issuer)" );
         }
@@ -5507,54 +5521,54 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
     // Decide what the PIX contains.
     iWhat = UNKNOWN_PIX;
-    if( pMPC_PIXwr->action == PIX_START )
+    if (pMPC_PIXwr->action == PIX_START)
     {
-        if( pMPC_PIXwr->askans == PIX_ASK )
+        if (pMPC_PIXwr->askans == PIX_ASK)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = WILL_YOU_START_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = WILL_YOU_START_IPV6;
         }
-        else if( pMPC_PIXwr->askans == PIX_ANSWER )
+        else if (pMPC_PIXwr->askans == PIX_ANSWER)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = I_WILL_START_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = I_WILL_START_IPV6;
         }
     }
-    else if( pMPC_PIXwr->action == PIX_ADDRESS )
+    else if (pMPC_PIXwr->action == PIX_ADDRESS)
     {
-        if( pMPC_PIXwr->askans == PIX_ASK )
+        if (pMPC_PIXwr->askans == PIX_ASK)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = MY_ADDRESS_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = MY_ADDRESS_IPV6;
         }
-        if( pMPC_PIXwr->askans == PIX_ANSWER )
+        if (pMPC_PIXwr->askans == PIX_ANSWER)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = YOUR_ADDRESS_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = YOUR_ADDRESS_IPV6;
         }
     }
-    else if( pMPC_PIXwr->action == PIX_STOP )
+    else if (pMPC_PIXwr->action == PIX_STOP)
     {
-        if( pMPC_PIXwr->askans == PIX_ASK )
+        if (pMPC_PIXwr->askans == PIX_ASK)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = WILL_YOU_STOP_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = WILL_YOU_STOP_IPV6;
         }
-        else if( pMPC_PIXwr->askans == PIX_ANSWER )
+        else if (pMPC_PIXwr->askans == PIX_ANSWER)
         {
-            if( pMPC_PIXwr->iptype == PIX_IPV4 )
+            if (pMPC_PIXwr->iptype == PIX_IPV4)
                 iWhat = I_WILL_STOP_IPV4;
-            else if( pMPC_PIXwr->iptype == PIX_IPV6 )
+            else if (pMPC_PIXwr->iptype == PIX_IPV6)
                 iWhat = I_WILL_STOP_IPV6;
         }
     }
@@ -5566,7 +5580,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_START_IPV4:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
         }
@@ -5576,7 +5590,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // Build RRH 0xC108 PIX 0x0101 to yTokenUlpConnection (I will start IPv4)
         pPTPHDRr1 = build_C108_i_will_start_4( pDEVBLK, pMPC_PIXwr, 0 );
-        if( !pPTPHDRr1 )
+        if (!pPTPHDRr1)
             break;
 
         // Remember the activation status.
@@ -5590,21 +5604,21 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // will you start IPv4, which will never arrive. He's quite happy,
         // he just assumes the device/link has not been started on this side
         // and might be at sometime in the future.
-        if( pPTPBLK->fIPv4Spec )
+        if (pPTPBLK->fIPv4Spec)
         {
             for( ; ; )
             {
 
                 // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you start IPv4?)
                 pPTPHDRr1 = build_C108_will_you_start_4( pDEVBLK );
-                if( !pPTPHDRr1 )
+                if (!pPTPHDRr1)
                 {
                     break;
                 }
 
                 // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv4)
                 pPTPHDRr2 = build_C108_my_address_4( pDEVBLK );
-                if( !pPTPHDRr2 )
+                if (!pPTPHDRr2)
                 {
                     free( pPTPHDRr1 );
                     break;
@@ -5627,7 +5641,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_START_IPV6:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
         }
@@ -5638,7 +5652,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
         // Build RRH 0xC108 PIX 0x0101 to yTokenUlpConnection (I will start IPv6)
         pPTPHDRr1 = build_C108_i_will_start_6( pDEVBLK, pMPC_PIXwr, 0 );
-        if( !pPTPHDRr1 )
+        if (!pPTPHDRr1)
             break;
 
         // Remember the activation status.
@@ -5653,19 +5667,19 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // will you start IPv6, which will never arrive. He's quite happy,
         // he just assumes the interface has not been started on this side
         // and might be at sometime in the future.
-        if( pPTPBLK->fIPv6Spec )
+        if (pPTPBLK->fIPv6Spec)
         {
             for( ; ; )
             {
 
                 // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you start IPv6?)
                 pPTPHDRr1 = build_C108_will_you_start_6( pDEVBLK );
-                if( !pPTPHDRr1 )
+                if (!pPTPHDRr1)
                     break;
 
                 // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv6)
                 pPTPHDRr2 = build_C108_my_address_6( pDEVBLK, TRUE );  // Link local
-                if( !pPTPHDRr2 )
+                if (!pPTPHDRr2)
                 {
                     free( pPTPHDRr1 );
                     break;
@@ -5673,7 +5687,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                 // Build RRH 0xC108 PIX 0x1180 to yTokenUlpConnection (My address IPv6)
                 pPTPHDRr3 = build_C108_my_address_6( pDEVBLK, FALSE );
-                if( !pPTPHDRr3 )
+                if (!pPTPHDRr3)
                 {
                     free( pPTPHDRr2 );
                     free( pPTPHDRr1 );
@@ -5700,7 +5714,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_START_IPV4:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv4" );
         }
@@ -5709,7 +5723,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->bActivate4 |= HEANSWEREDME_START;
 
         // Check whether the connection is active.
-        if( pPTPBLK->bActivate4 == WEAREACTIVE )
+        if (pPTPBLK->bActivate4 == WEAREACTIVE)
         {
             // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
             WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -5724,7 +5738,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_START_IPV6:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv6" );
         }
@@ -5734,7 +5748,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->bActivateLL6 |= HEANSWEREDME_START;
 
         // Check whether the connection is active.
-        if( pPTPBLK->bActivateLL6 == WEAREACTIVE )
+        if (pPTPBLK->bActivateLL6 == WEAREACTIVE)
         {
             // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
             WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -5742,12 +5756,12 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             pPTPBLK->fActiveLL6 = TRUE;
             pPTPBLK->bActivateLL6 = 0x00;
             pPTPBLK->bTerminateLL6 = 0x00;
-            if( pPTPBLK->fActive6 )
+            if (pPTPBLK->fActive6)
             {
                 build_8108_icmpv6_packets( pDEVBLK );
             }
         }
-        if( pPTPBLK->bActivate6 == WEAREACTIVE )
+        if (pPTPBLK->bActivate6 == WEAREACTIVE)
         {
             // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
             WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -5755,7 +5769,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             pPTPBLK->fActive6 = TRUE;
             pPTPBLK->bActivate6 = 0x00;
             pPTPBLK->bTerminate6 = 0x00;
-            if( pPTPBLK->fActiveLL6 )
+            if (pPTPBLK->fActiveLL6)
             {
                 build_8108_icmpv6_packets( pDEVBLK );
             }
@@ -5766,7 +5780,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case MY_ADDRESS_IPV4:
 
         // Display various information, maybe
-        if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv4" );
         }
@@ -5776,10 +5790,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // However, if IPv4 was not specified on the config statement, we
         // are not interested. We will repond to his message to keep him
         // happy but that is all.
-        if( pPTPBLK->fIPv4Spec )
+        if (pPTPBLK->fIPv4Spec)
         {
             // Check whether the guests IPv4 address was specified on config statement.
-            if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr4, 4 ) == 0 )
+            if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr4, 4 ) == 0)
             {
                 // The y-side has told us his IPv4 address and it is the guest address
                 // specified on the config statement, which is of course good news.
@@ -5788,7 +5802,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                 // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
                 pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
-                if( !pPTPHDRr1 )
+                if (!pPTPHDRr1)
                     break;
 
                 // Remember the activation status.
@@ -5804,7 +5818,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 // should not happen, unless we have been told the wrong address.
                 // Perhaps the guest and driver IPv4 addresses were transposed on
                 // the config statement.
-                if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0 )
+                if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0)
                 {
                     // Looks like the guest and driver IPv4 addresses were transposed.
                     inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
@@ -5813,7 +5827,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                     // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
                     pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 12 );
-                    if( !pPTPHDRr1 )
+                    if (!pPTPHDRr1)
                         break;
 
                     // Add PTPHDR to chain.
@@ -5830,7 +5844,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                     // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
                     pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
-                    if( !pPTPHDRr1 )
+                    if (!pPTPHDRr1)
                         break;
 
                     // Add PTPHDR to chain.
@@ -5845,7 +5859,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
             // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv4)
             pPTPHDRr1 = build_C108_your_address_4( pDEVBLK, pMPC_PIXwr, 0 );
-            if( !pPTPHDRr1 )
+            if (!pPTPHDRr1)
                  break;
 
             // Add PTPHDR to chain.
@@ -5853,7 +5867,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         }
 
         // Check whether the connection is active.
-        if( pPTPBLK->bActivate4 == WEAREACTIVE )
+        if (pPTPBLK->bActivate4 == WEAREACTIVE)
         {
             // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
             WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -5868,7 +5882,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case MY_ADDRESS_IPV6:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv6" );
             }
@@ -5878,7 +5892,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             memset( addr6.s6_addr, 0, 16 );
             addr6.s6_addr[0] = 0xFE;
             addr6.s6_addr[1] = 0x80;
-            if( memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0 )
+            if (memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0)
                 fLL = TRUE;
 
             // The y-side is telling us about his IPv6 address(es), which means
@@ -5886,14 +5900,14 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             // However, if IPv6 was not specified on the config statement, we
             // are not interested. We will repond to his message(s) to keep him
             // happy but that is all.
-            if( pPTPBLK->fIPv6Spec )
+            if (pPTPBLK->fIPv6Spec)
             {
-                if( !fLL )
+                if (!fLL)
                 {
                     // The y-side has told us about an address that is not his Link
                     // Local address. Check whether the guests IPv6 is the address
                     // that was specified on the config statement.
-                    if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr6, 16 ) == 0 )
+                    if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaGuestIPAddr6, 16 ) == 0)
                     {
                         // The y-side has told us his IPv6 address and it is the guest address
                         // specified on the config statement, which is of course good news.
@@ -5902,7 +5916,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                         // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                         pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
-                        if( !pPTPHDRr1 )
+                        if (!pPTPHDRr1)
                             break;
 
                         // Remember the activation status.
@@ -5919,7 +5933,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                         // the other hand, we could have been told the wrong address.
                         // Perhaps the guest and driver IPv6 addresses were transposed on
                         // the config statement.
-                        if( memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0 )
+                        if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0)
                         {
                             // Looks like the guest and driver IPv6 addresses were transposed.
                             inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
@@ -5929,7 +5943,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                             // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                             pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 12 );
-                            if( !pPTPHDRr1 )
+                            if (!pPTPHDRr1)
                                 break;
 
                             // Add PTPHDR to chain.
@@ -5946,7 +5960,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                             // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                             pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
-                            if( !pPTPHDRr1 )
+                            if (!pPTPHDRr1)
                                 break;
 
                             // Add PTPHDR to chain.
@@ -5968,7 +5982,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                     // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                     pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
-                    if( !pPTPHDRr1 )
+                    if (!pPTPHDRr1)
                         break;
 
                     // Remember the activation status.
@@ -5985,7 +5999,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                 // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                 pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
-                if( !pPTPHDRr1 )
+                if (!pPTPHDRr1)
                     break;
 
                 // Add PTPHDR to chain.
@@ -5993,10 +6007,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             }
 
             //
-            if( pPTPBLK->fIPv6Spec )
+            if (pPTPBLK->fIPv6Spec)
             {
                 // Check whether the connection is active.
-                if( pPTPBLK->bActivateLL6 == WEAREACTIVE )
+                if (pPTPBLK->bActivateLL6 == WEAREACTIVE)
                 {
                     // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
                     WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6004,10 +6018,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                     pPTPBLK->fActiveLL6 = TRUE;
                     pPTPBLK->bActivateLL6 = 0x00;
                     pPTPBLK->bTerminateLL6 = 0x00;
-                    if( pPTPBLK->fActive6 )
+                    if (pPTPBLK->fActive6)
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
-                if( pPTPBLK->bActivate6 == WEAREACTIVE )
+                if (pPTPBLK->bActivate6 == WEAREACTIVE)
                 {
                     // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
                     WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6015,7 +6029,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                     pPTPBLK->fActive6 = TRUE;
                     pPTPBLK->bActivate6 = 0x00;
                     pPTPBLK->bTerminate6 = 0x00;
-                    if( pPTPBLK->fActiveLL6 )
+                    if (pPTPBLK->fActiveLL6)
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
             }
@@ -6025,7 +6039,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case YOUR_ADDRESS_IPV4:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv4" );
             }
@@ -6034,7 +6048,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             pPTPBLK->bActivate4 |= HEANSWEREDMY_ADDRESS;
 
             // Check whether the connection is active.
-            if( pPTPBLK->bActivate4 == WEAREACTIVE )
+            if (pPTPBLK->bActivate4 == WEAREACTIVE)
             {
                 // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
                 WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6049,7 +6063,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case YOUR_ADDRESS_IPV6:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv6" );
             }
@@ -6059,18 +6073,18 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             memset( addr6.s6_addr, 0, 16 );
             addr6.s6_addr[0] = 0xFE;
             addr6.s6_addr[1] = 0x80;
-            if( memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0 )
+            if (memcmp( pMPC_PIXwr->ipaddr, &addr6, 8 ) == 0)
                 fLL = TRUE;
 
             //
-            if( !fLL )
+            if (!fLL)
             {
                 // The y-side has told us about our IPv6 address.
                 // Remember the activation status.
                 pPTPBLK->bActivate6 |= HEANSWEREDMY_ADDRESS;
 
                 // Check whether the connection is active.
-                if( pPTPBLK->bActivate6 == WEAREACTIVE )
+                if (pPTPBLK->bActivate6 == WEAREACTIVE)
                 {
                     // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
                     WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6078,7 +6092,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                     pPTPBLK->fActive6 = TRUE;
                     pPTPBLK->bActivate6 = 0x00;
                     pPTPBLK->bTerminate6 = 0x00;
-                    if( pPTPBLK->fActiveLL6 )
+                    if (pPTPBLK->fActiveLL6)
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
             }
@@ -6089,7 +6103,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 pPTPBLK->bActivateLL6 |= HEANSWEREDMY_ADDRESS;
 
                 // Check whether the connection is active.
-                if( pPTPBLK->bActivateLL6 == WEAREACTIVE )
+                if (pPTPBLK->bActivateLL6 == WEAREACTIVE)
                 {
                     // HHC03915 "%1d:%04X PTP: Connection active to guest IP address '%s'"
                     WRMSG(HHC03915, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6097,7 +6111,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                     pPTPBLK->fActiveLL6 = TRUE;
                     pPTPBLK->bActivateLL6 = 0x00;
                     pPTPBLK->bTerminateLL6 = 0x00;
-                    if( pPTPBLK->fActive6 )
+                    if (pPTPBLK->fActive6)
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
             }
@@ -6107,7 +6121,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_STOP_IPV4:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
             }
@@ -6117,12 +6131,12 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
             // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (I will stop IPv4)
             pPTPHDRr1 = build_C108_i_will_stop_4( pDEVBLK, pMPC_PIXwr );
-            if( !pPTPHDRr1 )
+            if (!pPTPHDRr1)
                 break;
 
             // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you stop IPv4)
             pPTPHDRr2 = build_C108_will_you_stop_4( pDEVBLK );
-            if( !pPTPHDRr2 )
+            if (!pPTPHDRr2)
             {
                 free( pPTPHDRr1 );
                 break;
@@ -6141,7 +6155,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_STOP_IPV6:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
             }
@@ -6152,12 +6166,12 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
             // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (I will stop IPv6)
             pPTPHDRr1 = build_C108_i_will_stop_6( pDEVBLK, pMPC_PIXwr );
-            if( !pPTPHDRr1 )
+            if (!pPTPHDRr1)
                 break;
 
             // Build RRH 0xC108 PIX 0x0180 to yTokenUlpConnection (Will you stop IPv6)
             pPTPHDRr2 = build_C108_will_you_stop_6( pDEVBLK );
-            if( !pPTPHDRr2 )
+            if (!pPTPHDRr2)
             {
                 free( pPTPHDRr1 );
                 break;
@@ -6178,7 +6192,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_STOP_IPV4:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
             }
@@ -6187,10 +6201,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             pPTPBLK->bTerminate4 |= HEANSWEREDME_STOP;
 
             // Check whether the connection is terminated.
-            if( pPTPBLK->bTerminate4 == WEARETERMINATED )
+            if (pPTPBLK->bTerminate4 == WEARETERMINATED)
             {
                 // The guest OS on the y-side has stopped the device.
-                if( pPTPBLK->fActive4 )
+                if (pPTPBLK->fActive4)
                 {
                     // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                     WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6206,7 +6220,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_STOP_IPV6:
 
             // Display various information, maybe
-            if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
             {
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
             }
@@ -6216,10 +6230,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             pPTPBLK->bTerminateLL6 |= HEANSWEREDME_STOP;
 
             // Check whether the connection is terminated.
-            if( pPTPBLK->bTerminate6 == WEARETERMINATED )
+            if (pPTPBLK->bTerminate6 == WEARETERMINATED)
             {
                 // The guest OS on the y-side has stopped the device.
-                if( pPTPBLK->fActive6 )
+                if (pPTPBLK->fActive6)
                 {
                     // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                     WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6229,10 +6243,10 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 pPTPBLK->bActivate6 = 0x00;
                 pPTPBLK->bTerminate6 = 0x00;
             }
-            if( pPTPBLK->bTerminateLL6 == WEARETERMINATED )
+            if (pPTPBLK->bTerminateLL6 == WEARETERMINATED)
             {
                 // The guest OS on the y-side has stopped the device.
-                if( pPTPBLK->fActiveLL6 )
+                if (pPTPBLK->fActiveLL6)
                 {
                     // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                     WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -6281,7 +6295,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6328,7 +6342,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
     }
@@ -6358,7 +6372,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6405,7 +6419,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
     }
@@ -6434,7 +6448,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
 
     // Allocate a buffer in which the message will be build.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6482,7 +6496,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
     }
@@ -6512,7 +6526,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6560,7 +6574,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
     }
@@ -6590,7 +6604,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6638,7 +6652,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv4" );
     }
@@ -6668,7 +6682,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6713,7 +6727,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     pMPC_PIXre->numaddr = PIX_ONEADDR;
     pMPC_PIXre->iptype = PIX_IPV6;
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
-    if( fLL )
+    if (fLL)
     {
         memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
@@ -6723,7 +6737,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     }
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv6" );
     }
@@ -6753,7 +6767,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6802,7 +6816,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 4 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
     }
@@ -6832,7 +6846,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     // Allocate a buffer in which the first reply will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6881,7 +6895,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 16 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
     }
@@ -6911,7 +6925,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -6958,7 +6972,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
     }
@@ -6988,7 +7002,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -7035,7 +7049,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
     }
@@ -7065,7 +7079,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -7112,7 +7126,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
     }
@@ -7142,7 +7156,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     // Allocate a buffer in which the response will be build.
     // Note: the largest reply will be 88 bytes.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return NULL;
 
     // Fix-up various lengths
@@ -7189,7 +7203,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
     }
@@ -7227,7 +7241,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // The source address is the drive link local address, the destination
     // address is the Link-Local Scope All Nodes multicast address.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return;
 
     // Fix-up various lengths
@@ -7290,7 +7304,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
@@ -7304,7 +7318,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // The source address is the drive link local address, the destination
     // address is the Link-Local Scope All Routers multicast address.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return;
 
     // Fix-up various lengths
@@ -7367,7 +7381,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Router solicitation" );
     }
@@ -7381,7 +7395,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // The source address is the drive address, the destination address
     // is the Link-Local Scope All Nodes multicast address.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return;
 
     // Fix-up various lengths
@@ -7444,7 +7458,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
@@ -7459,7 +7473,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // address is the Link-Local Scope Selected-Node multicast address for
     // the drive link local address.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return;
 
     // Fix-up various lengths
@@ -7532,7 +7546,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
@@ -7547,7 +7561,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // address is the Link-Local Scope Selected-Node multicast address for
     // the drive address.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
-    if( !pPTPHDRre )
+    if (!pPTPHDRre)
         return;
 
     // Fix-up various lengths
@@ -7620,7 +7634,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if( pPTPBLK->fDebug && ( pPTPBLK->uDebugMask & DEBUGUPDOWN) )
+    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
@@ -7810,7 +7824,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[i] = 0;
 
     // Process the STCK value.
-    if( (pClock1[0] & 0x80 ) == 0x80 )
+    if ((pClock1[0] & 0x80 ) == 0x80)
     {
         OrResult[0]  |= OrConstant[11];
         OrResult[4]  |= OrConstant[2];
@@ -7827,7 +7841,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[3];
         OrResult[31] |= OrConstant[7];
     }
-    if( (pClock1[0] & 0x40 ) == 0x40 )
+    if ((pClock1[0] & 0x40 ) == 0x40)
     {
         OrResult[1]  |= OrConstant[6];
         OrResult[2]  |= OrConstant[1];
@@ -7845,7 +7859,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[0];
         OrResult[31] |= OrConstant[2];
     }
-    if( (pClock1[0] & 0x20 ) == 0x20 )
+    if ((pClock1[0] & 0x20 ) == 0x20)
     {
         OrResult[0]  |= OrConstant[3];
         OrResult[5]  |= OrConstant[8];
@@ -7860,7 +7874,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[9];
         OrResult[30] |= OrConstant[6];
     }
-    if( (pClock1[0] & 0x10 ) == 0x10 )
+    if ((pClock1[0] & 0x10 ) == 0x10)
     {
         OrResult[0]  |= OrConstant[21];
         OrResult[3]  |= OrConstant[22];
@@ -7877,7 +7891,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[26] |= OrConstant[13];
         OrResult[30] |= OrConstant[17];
     }
-    if( (pClock1[0] & 0x08 ) == 0x08 )
+    if ((pClock1[0] & 0x08 ) == 0x08)
     {
         OrResult[0]  |= OrConstant[13];
         OrResult[2]  |= OrConstant[23];
@@ -7894,7 +7908,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[20];
         OrResult[31] |= OrConstant[14];
     }
-    if( (pClock1[0] & 0x04 ) == 0x04 )
+    if ((pClock1[0] & 0x04 ) == 0x04)
     {
         OrResult[0]  |= OrConstant[18];
         OrResult[3]  |= OrConstant[15];
@@ -7911,7 +7925,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[13];
         OrResult[29] |= OrConstant[19];
     }
-    if( (pClock1[0] & 0x02 ) == 0x02 )
+    if ((pClock1[0] & 0x02 ) == 0x02)
     {
         OrResult[1]  |= OrConstant[21];
         OrResult[2]  |= OrConstant[15];
@@ -7927,7 +7941,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[23];
         OrResult[28] |= OrConstant[22];
     }
-    if( (pClock1[1] & 0x80 ) == 0x80 )
+    if ((pClock1[1] & 0x80 ) == 0x80)
     {
         OrResult[1]  |= OrConstant[7];
         OrResult[2]  |= OrConstant[11];
@@ -7944,7 +7958,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[5];
         OrResult[31] |= OrConstant[3];
     }
-    if( (pClock1[1] & 0x40 ) == 0x40 )
+    if ((pClock1[1] & 0x40 ) == 0x40)
     {
         OrResult[1]  |= OrConstant[2];
         OrResult[3]  |= OrConstant[6];
@@ -7960,7 +7974,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[10];
         OrResult[30] |= OrConstant[0];
     }
-    if( (pClock1[1] & 0x20 ) == 0x20 )
+    if ((pClock1[1] & 0x20 ) == 0x20)
     {
         OrResult[0]  |= OrConstant[6];
         OrResult[2]  |= OrConstant[3];
@@ -7977,7 +7991,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[26] |= OrConstant[7];
         OrResult[29] |= OrConstant[4];
     }
-    if( (pClock1[1] & 0x10 ) == 0x10 )
+    if ((pClock1[1] & 0x10 ) == 0x10)
     {
         OrResult[0]  |= OrConstant[17];
         OrResult[2]  |= OrConstant[21];
@@ -7993,7 +8007,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[14];
         OrResult[28] |= OrConstant[23];
     }
-    if( (pClock1[1] & 0x08 ) == 0x08 )
+    if ((pClock1[1] & 0x08 ) == 0x08)
     {
         OrResult[1]  |= OrConstant[14];
         OrResult[2]  |= OrConstant[13];
@@ -8010,7 +8024,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[19];
         OrResult[31] |= OrConstant[20];
     }
-    if( (pClock1[1] & 0x04 ) == 0x04 )
+    if ((pClock1[1] & 0x04 ) == 0x04)
     {
         OrResult[2]  |= OrConstant[18];
         OrResult[5]  |= OrConstant[18];
@@ -8026,7 +8040,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[12];
         OrResult[31] |= OrConstant[19];
     }
-    if( (pClock1[1] & 0x02 ) == 0x02 )
+    if ((pClock1[1] & 0x02 ) == 0x02)
     {
         OrResult[3]  |= OrConstant[21];
         OrResult[7]  |= OrConstant[13];
@@ -8043,7 +8057,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[16];
         OrResult[30] |= OrConstant[22];
     }
-    if( (pClock1[2] & 0x80 ) == 0x80 )
+    if ((pClock1[2] & 0x80 ) == 0x80)
     {
         OrResult[1]  |= OrConstant[3];
         OrResult[3]  |= OrConstant[7];
@@ -8060,7 +8074,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[9];
         OrResult[30] |= OrConstant[5];
     }
-    if( (pClock1[2] & 0x40 ) == 0x40 )
+    if ((pClock1[2] & 0x40 ) == 0x40)
     {
         OrResult[0]  |= OrConstant[0];
         OrResult[3]  |= OrConstant[2];
@@ -8078,7 +8092,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[8];
         OrResult[31] |= OrConstant[10];
     }
-    if( (pClock1[2] & 0x20 ) == 0x20 )
+    if ((pClock1[2] & 0x20 ) == 0x20)
     {
         OrResult[2]  |= OrConstant[6];
         OrResult[7]  |= OrConstant[8];
@@ -8094,7 +8108,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[9];
         OrResult[31] |= OrConstant[4];
     }
-    if( (pClock1[2] & 0x10 ) == 0x10 )
+    if ((pClock1[2] & 0x10 ) == 0x10)
     {
         OrResult[2]  |= OrConstant[17];
         OrResult[5]  |= OrConstant[22];
@@ -8111,7 +8125,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[13];
         OrResult[30] |= OrConstant[23];
     }
-    if( (pClock1[2] & 0x08 ) == 0x08 )
+    if ((pClock1[2] & 0x08 ) == 0x08)
     {
         OrResult[1]  |= OrConstant[20];
         OrResult[3]  |= OrConstant[14];
@@ -8128,7 +8142,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[17];
         OrResult[30] |= OrConstant[19];
     }
-    if( (pClock1[2] & 0x04 ) == 0x04 )
+    if ((pClock1[2] & 0x04 ) == 0x04)
     {
         OrResult[1]  |= OrConstant[19];
         OrResult[5]  |= OrConstant[15];
@@ -8145,7 +8159,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[13];
         OrResult[30] |= OrConstant[12];
     }
-    if( (pClock1[2] & 0x02 ) == 0x02 )
+    if ((pClock1[2] & 0x02 ) == 0x02)
     {
         OrResult[0]  |= OrConstant[22];
         OrResult[4]  |= OrConstant[15];
@@ -8161,7 +8175,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[23];
         OrResult[31] |= OrConstant[16];
     }
-    if( (pClock1[3] & 0x80 ) == 0x80 )
+    if ((pClock1[3] & 0x80 ) == 0x80)
     {
         OrResult[0]  |= OrConstant[5];
         OrResult[3]  |= OrConstant[3];
@@ -8178,7 +8192,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[0];
         OrResult[30] |= OrConstant[9];
     }
-    if( (pClock1[3] & 0x40 ) == 0x40 )
+    if ((pClock1[3] & 0x40 ) == 0x40)
     {
         OrResult[1]  |= OrConstant[10];
         OrResult[2]  |= OrConstant[0];
@@ -8194,7 +8208,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[2];
         OrResult[30] |= OrConstant[8];
     }
-    if( (pClock1[3] & 0x20 ) == 0x20 )
+    if ((pClock1[3] & 0x20 ) == 0x20)
     {
         OrResult[1]  |= OrConstant[4];
         OrResult[4]  |= OrConstant[3];
@@ -8211,7 +8225,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[7];
         OrResult[31] |= OrConstant[9];
     }
-    if( (pClock1[3] & 0x10 ) == 0x10 )
+    if ((pClock1[3] & 0x10 ) == 0x10)
     {
         OrResult[0]  |= OrConstant[23];
         OrResult[4]  |= OrConstant[21];
@@ -8227,7 +8241,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[14];
         OrResult[30] |= OrConstant[13];
     }
-    if( (pClock1[3] & 0x08 ) == 0x08 )
+    if ((pClock1[3] & 0x08 ) == 0x08)
     {
         OrResult[0]  |= OrConstant[19];
         OrResult[3]  |= OrConstant[20];
@@ -8243,7 +8257,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[16];
         OrResult[31] |= OrConstant[17];
     }
-    if( (pClock1[3] & 0x04 ) == 0x04 )
+    if ((pClock1[3] & 0x04 ) == 0x04)
     {
         OrResult[0]  |= OrConstant[12];
         OrResult[3]  |= OrConstant[19];
@@ -8260,7 +8274,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[20];
         OrResult[31] |= OrConstant[13];
     }
-    if( (pClock1[3] & 0x02 ) == 0x02 )
+    if ((pClock1[3] & 0x02 ) == 0x02)
     {
         OrResult[1]  |= OrConstant[16];
         OrResult[2]  |= OrConstant[22];
@@ -8278,7 +8292,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[14];
         OrResult[31] |= OrConstant[23];
     }
-    if( (pClock1[4] & 0x80 ) == 0x80 )
+    if ((pClock1[4] & 0x80 ) == 0x80)
     {
         OrResult[0]  |= OrConstant[9];
         OrResult[2]  |= OrConstant[5];
@@ -8294,7 +8308,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[11];
         OrResult[31] |= OrConstant[0];
     }
-    if( (pClock1[4] & 0x40 ) == 0x40 )
+    if ((pClock1[4] & 0x40 ) == 0x40)
     {
         OrResult[0]  |= OrConstant[8];
         OrResult[3]  |= OrConstant[10];
@@ -8312,7 +8326,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[5];
         OrResult[30] |= OrConstant[2];
     }
-    if( (pClock1[4] & 0x20 ) == 0x20 )
+    if ((pClock1[4] & 0x20 ) == 0x20)
     {
         OrResult[1]  |= OrConstant[9];
         OrResult[3]  |= OrConstant[4];
@@ -8329,7 +8343,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[6];
         OrResult[30] |= OrConstant[7];
     }
-    if( (pClock1[4] & 0x10 ) == 0x10 )
+    if ((pClock1[4] & 0x10 ) == 0x10)
     {
         OrResult[1]  |= OrConstant[1];
         OrResult[2]  |= OrConstant[4];
@@ -8345,7 +8359,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[10];
         OrResult[31] |= OrConstant[8];
     }
-    if( (pClock1[4] & 0x08 ) == 0x08 )
+    if ((pClock1[4] & 0x08 ) == 0x08)
     {
         OrResult[1]  |= OrConstant[17];
         OrResult[2]  |= OrConstant[19];
@@ -8363,7 +8377,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[18];
         OrResult[30] |= OrConstant[16];
     }
-    if( (pClock1[4] & 0x04 ) == 0x04 )
+    if ((pClock1[4] & 0x04 ) == 0x04)
     {
         OrResult[1]  |= OrConstant[13];
         OrResult[2]  |= OrConstant[12];
@@ -8379,7 +8393,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[21];
         OrResult[30] |= OrConstant[20];
     }
-    if( (pClock1[4] & 0x02 ) == 0x02 )
+    if ((pClock1[4] & 0x02 ) == 0x02)
     {
         OrResult[1]  |= OrConstant[23];
         OrResult[3]  |= OrConstant[16];
@@ -8395,7 +8409,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[12];
         OrResult[30] |= OrConstant[14];
     }
-    if( (pClock1[5] & 0x80 ) == 0x80 )
+    if ((pClock1[5] & 0x80 ) == 0x80)
     {
         OrResult[1]  |= OrConstant[0];
         OrResult[2]  |= OrConstant[9];
@@ -8413,7 +8427,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[4];
         OrResult[31] |= OrConstant[11];
     }
-    if( (pClock1[5] & 0x40 ) == 0x40 )
+    if ((pClock1[5] & 0x40 ) == 0x40)
     {
         OrResult[0]  |= OrConstant[2];
         OrResult[2]  |= OrConstant[8];
@@ -8428,7 +8442,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[7];
         OrResult[31] |= OrConstant[5];
     }
-    if( (pClock1[5] & 0x20 ) == 0x20 )
+    if ((pClock1[5] & 0x20 ) == 0x20)
     {
         OrResult[0]  |= OrConstant[7];
         OrResult[3]  |= OrConstant[9];
@@ -8444,7 +8458,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[2];
         OrResult[28] |= OrConstant[1];
     }
-    if( (pClock1[5] & 0x10 ) == 0x10 )
+    if ((pClock1[5] & 0x10 ) == 0x10)
     {
         OrResult[1]  |= OrConstant[8];
         OrResult[3]  |= OrConstant[1];
@@ -8462,7 +8476,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[26] |= OrConstant[6];
         OrResult[30] |= OrConstant[10];
     }
-    if( (pClock1[5] & 0x08 ) == 0x08 )
+    if ((pClock1[5] & 0x08 ) == 0x08)
     {
         OrResult[0]  |= OrConstant[16];
         OrResult[3]  |= OrConstant[17];
@@ -8478,7 +8492,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[15];
         OrResult[31] |= OrConstant[18];
     }
-    if( (pClock1[5] & 0x04 ) == 0x04 )
+    if ((pClock1[5] & 0x04 ) == 0x04)
     {
         OrResult[0]  |= OrConstant[20];
         OrResult[3]  |= OrConstant[13];
@@ -8495,7 +8509,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[25] |= OrConstant[16];
         OrResult[28] |= OrConstant[15];
     }
-    if( (pClock1[5] & 0x02 ) == 0x02 )
+    if ((pClock1[5] & 0x02 ) == 0x02)
     {
         OrResult[0]  |= OrConstant[14];
         OrResult[3]  |= OrConstant[23];
@@ -8513,7 +8527,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[22];
         OrResult[31] |= OrConstant[12];
     }
-    if( (pClock1[6] & 0x80 ) == 0x80 )
+    if ((pClock1[6] & 0x80 ) == 0x80)
     {
         OrResult[1]  |= OrConstant[11];
         OrResult[3]  |= OrConstant[0];
@@ -8529,7 +8543,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[1];
         OrResult[30] |= OrConstant[4];
     }
-    if( (pClock1[6] & 0x40 ) == 0x40 )
+    if ((pClock1[6] & 0x40 ) == 0x40)
     {
         OrResult[1]  |= OrConstant[5];
         OrResult[2]  |= OrConstant[2];
@@ -8547,7 +8561,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[3];
         OrResult[28] |= OrConstant[11];
     }
-    if( (pClock1[6] & 0x20 ) == 0x20 )
+    if ((pClock1[6] & 0x20 ) == 0x20)
     {
         OrResult[2]  |= OrConstant[7];
         OrResult[5]  |= OrConstant[4];
@@ -8564,7 +8578,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[6];
         OrResult[30] |= OrConstant[1];
     }
-    if( (pClock1[6] & 0x10 ) == 0x10 )
+    if ((pClock1[6] & 0x10 ) == 0x10)
     {
         OrResult[0]  |= OrConstant[10];
         OrResult[3]  |= OrConstant[8];
@@ -8579,7 +8593,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[25] |= OrConstant[9];
         OrResult[28] |= OrConstant[3];
     }
-    if( (pClock1[6] & 0x08 ) == 0x08 )
+    if ((pClock1[6] & 0x08 ) == 0x08)
     {
         OrResult[1]  |= OrConstant[18];
         OrResult[2]  |= OrConstant[16];
@@ -8597,7 +8611,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[18];
         OrResult[31] |= OrConstant[15];
     }
-    if( (pClock1[6] & 0x04 ) == 0x04 )
+    if ((pClock1[6] & 0x04 ) == 0x04)
     {
         OrResult[2]  |= OrConstant[20];
         OrResult[4]  |= OrConstant[12];
@@ -8613,7 +8627,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[21];
         OrResult[30] |= OrConstant[15];
     }
-    if( (pClock1[6] & 0x02 ) == 0x02 )
+    if ((pClock1[6] & 0x02 ) == 0x02)
     {
         OrResult[1]  |= OrConstant[12];
         OrResult[2]  |= OrConstant[14];
@@ -8629,7 +8643,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[21];
         OrResult[31] |= OrConstant[22];
     }
-    if( (pClock1[7] & 0x80 ) == 0x80 )
+    if ((pClock1[7] & 0x80 ) == 0x80)
     {
         OrResult[0]  |= OrConstant[4];
         OrResult[3]  |= OrConstant[11];
@@ -8647,7 +8661,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[8];
         OrResult[31] |= OrConstant[1];
     }
-    if( (pClock1[7] & 0x40 ) == 0x40 )
+    if ((pClock1[7] & 0x40 ) == 0x40)
     {
         OrResult[3]  |= OrConstant[5];
         OrResult[4]  |= OrConstant[8];
@@ -8662,7 +8676,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[7];
         OrResult[30] |= OrConstant[11];
     }
-    if( (pClock1[7] & 0x20 ) == 0x20 )
+    if ((pClock1[7] & 0x20 ) == 0x20)
     {
         OrResult[0]  |= OrConstant[1];
         OrResult[5]  |= OrConstant[9];
@@ -8678,7 +8692,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[29] |= OrConstant[2];
         OrResult[31] |= OrConstant[6];
     }
-    if( (pClock1[7] & 0x10 ) == 0x10 )
+    if ((pClock1[7] & 0x10 ) == 0x10)
     {
         OrResult[2]  |= OrConstant[10];
         OrResult[5]  |= OrConstant[1];
@@ -8696,7 +8710,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[28] |= OrConstant[6];
         OrResult[30] |= OrConstant[3];
     }
-    if( (pClock1[7] & 0x08 ) == 0x08 )
+    if ((pClock1[7] & 0x08 ) == 0x08)
     {
         OrResult[1]  |= OrConstant[15];
         OrResult[3]  |= OrConstant[18];
@@ -8712,7 +8726,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[26] |= OrConstant[12];
         OrResult[30] |= OrConstant[18];
     }
-    if( (pClock1[7] & 0x04 ) == 0x04 )
+    if ((pClock1[7] & 0x04 ) == 0x04)
     {
         OrResult[0]  |= OrConstant[15];
         OrResult[5]  |= OrConstant[13];
@@ -8729,7 +8743,7 @@ void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken )
         OrResult[27] |= OrConstant[16];
         OrResult[31] |= OrConstant[21];
     }
-    if( (pClock1[7] & 0x02 ) == 0x02 )
+    if ((pClock1[7] & 0x02 ) == 0x02)
     {
         OrResult[1]  |= OrConstant[22];
         OrResult[3]  |= OrConstant[12];

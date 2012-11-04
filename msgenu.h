@@ -1886,7 +1886,7 @@ do { \
 #define HHC03952 "%1d:%04X PTP: MAC: %s"
 #define HHC03953 "%1d:%04X PTP: IPv4: Drive %s: Guest %s/%s (%s)"
 #define HHC03954 "%1d:%04X PTP: IPv6: Drive %s/%s %s/%s: Guest %s"
-#define HHC03960 "%1d:%04X PTP: error in function %s: %s"
+#define HHC03960 "%1d:%04X %s: error in function %s: %s"
 #define HHC03961 "%1d:%04X PTP: device %s, type %s opened"
 #define HHC03962 "%1d:%04X PTP: ioctl %s failed for device %s: %s"
 #define HHC03964 "%1d:%04X PTP: halt or clear recognized"
@@ -1901,6 +1901,8 @@ do { \
 #define HHC03984 "%s"
 #define HHC03991 "%1d:%04X %s: %s"
 #define HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+#define HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+#define HHC03994 "%1d:%04X %s: Status %02X"
 
 
 // reserve 04xxx for host os specific component messages
