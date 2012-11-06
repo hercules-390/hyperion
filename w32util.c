@@ -407,26 +407,26 @@ DLL_EXPORT char* strtok_r ( char* s, const char* sep, char** lasts )
 
 // (INTERNAL) Convert Windows SystemTime value to #of nanoseconds since 1/1/1970...
 
-static LARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
+static ULARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
 {
-    LARGE_INTEGER  liRetVal;
+    ULARGE_INTEGER  uliRetVal;
     ASSERT( pFT );
 
-    // Convert FILETIME to LARGE_INTEGER
+    // Convert FILETIME to ULARGE_INTEGER
 
-    liRetVal.HighPart = pFT->dwHighDateTime;
-    liRetVal.LowPart  = pFT->dwLowDateTime;
+    uliRetVal.HighPart = pFT->dwHighDateTime;
+    uliRetVal.LowPart  = pFT->dwLowDateTime;
 
     // Convert from 100-nsec units since 1/1/1601
     // to number of 100-nsec units since 1/1/1970
 
-    liRetVal.QuadPart -= 116444736000000000ULL;
+    uliRetVal.QuadPart -= 116444736000000000ULL;
 
     // Convert from 100-nsec units to just nsecs
 
-    liRetVal.QuadPart *= 100;
+    uliRetVal.QuadPart *= 100;
 
-    return liRetVal;
+    return uliRetVal;
 }
 
 
@@ -435,10 +435,10 @@ static LARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
 
 DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 {
-    LARGE_INTEGER           liWork;                   // (high-performance-counter tick count)
-    static LARGE_INTEGER    liHPCTicksPerSecond;      // (high-performance-counter ticks per second)
-    static LARGE_INTEGER    liStartingHPCTick;        // (high-performance-counter tick count)
-    static LARGE_INTEGER    liStartingNanoTime;       // (time of last resync in nanoseconds)
+    ULARGE_INTEGER          uliWork;                  // (high-performance-counter tick count)
+    static ULARGE_INTEGER   uliHPCTicksPerSec;        // (high-performance-counter ticks per second)
+    static ULARGE_INTEGER   uliStartingHPCTick;       // (high-performance-counter tick count)
+    static ULARGE_INTEGER   uliStartingNanoTime;      // (time of last resync in nanoseconds)
     static struct timespec  tsPrevSyncVal = {0};      // (time of last resync as timespec)
     static struct timespec  tsPrevRetVal  = {0};      // (previously returned value)
     static BOOL             bInSync = FALSE;          // (work flag)
@@ -456,7 +456,7 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // Query current high-performance counter value...
 
-    VERIFY( QueryPerformanceCounter( &liWork ) );
+    VERIFY( QueryPerformanceCounter( (LARGE_INTEGER*)&uliWork ) );
 
 
     // Perform (re-)initialization...
@@ -469,11 +469,11 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         // and time. The information is in Coordinated Universal Time (UTC) format.
 
         GetSystemTimeAsFileTime( &ftStartingSystemTime );
-        liStartingHPCTick.QuadPart = liWork.QuadPart;
+        uliStartingHPCTick.QuadPart = uliWork.QuadPart;
 
-        VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
+        VERIFY( QueryPerformanceFrequency( (LARGE_INTEGER*)&uliHPCTicksPerSec ) );
 
-        liStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
+        uliStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
 
         tsPrevSyncVal.tv_sec = 0;       // (to force init further below)
         tsPrevSyncVal.tv_nsec = 0;      // (to force init further below)
@@ -483,21 +483,21 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // Calculate elapsed HPC ticks...
 
-    liWork.QuadPart -= liStartingHPCTick.QuadPart;
+    uliWork.QuadPart -= uliStartingHPCTick.QuadPart;
 
     // Convert to elapsed nanoseconds...
 
-    liWork.QuadPart *= 1000000000;
-    liWork.QuadPart /= liHPCTicksPerSecond.QuadPart;
+    uliWork.QuadPart *= 1000000000;
+    uliWork.QuadPart /= uliHPCTicksPerSec.QuadPart;
 
     // Add starting time to yield current TOD in nanoseconds...
 
-    liWork.QuadPart += liStartingNanoTime.QuadPart;
+    uliWork.QuadPart += uliStartingNanoTime.QuadPart;
 
     // Build results...
 
-    tp->tv_sec   =  (time_t) (liWork.QuadPart / 1000000000);
-    tp->tv_nsec  =  (long) (liWork.QuadPart % 1000000000);
+    tp->tv_sec   =  (time_t) (uliWork.QuadPart / 1000000000);
+    tp->tv_nsec  =  (long)   (uliWork.QuadPart % 1000000000);
 
     // Re-sync to system clock every so often to prevent clock drift
     // since high-performance timer updated independently from clock.
