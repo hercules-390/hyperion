@@ -37,7 +37,8 @@ struct COMMADPT
         hangup:1,               /* host initated shutdown                   */
         is_3270:1,              /* 0=tty 1=3270                             */
         eol_flag:1,             /* 1 = CR has been received                 */
-        debug_sna:1;            /* 1 = write debug messages                 */
+        debug_sna:1,            /* 1 = write debug messages                 */
+        emu3791:1;              /* mode (0=default=3705;1=3791)             */
     U32 rlen3270;               /* amt of data in 3270 recv buf             */
     BYTE telnet_cmd;            /* telnet command */
 
