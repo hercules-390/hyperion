@@ -1932,6 +1932,7 @@ do { \
 #define HHC04109 "%s"
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: [%02d] %s"
+#define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
 
 // reserve 17000-17499 messages command processing
 #define HHC17000 "Missing or invalid argument(s)"

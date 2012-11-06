@@ -71,6 +71,9 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
 #define MILLION  1000000
 
 #if !defined( HAVE_GETTIMEOFDAY )
+  #define DEF_GTOD_RESYNC_SECS      30          // (host clock resync freq)
+  #define MAX_GTOD_RESOLUTION       BILLION     // (nanosecond resolution)
+  #define MIN_GTOD_RESOLUTION       MILLION     // (microsecond resolution)
   typedef int   clockid_t;
   W32_DLL_IMPORT int clock_gettime ( clockid_t clk_id, struct timespec* ts );
   W32_DLL_IMPORT int gettimeofday ( struct timeval* pTV, void* pTZ );
