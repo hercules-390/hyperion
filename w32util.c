@@ -523,7 +523,7 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // If monotonic request, ensure each call returns a unique, ever-increasing value...
 
-    if (clk_id == CLOCK_MONOTONIC)
+    if (unlikely( clk_id == CLOCK_MONOTONIC ))
     {
         if (unlikely( !tsPrevRetVal.tv_sec ))
         {
@@ -554,9 +554,9 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // Save previously returned high clock value for next MONOTONIC clock time...
 
-    if (tp->tv_sec > tsPrevRetVal.tv_sec ||
+    if (likely( tp->tv_sec > tsPrevRetVal.tv_sec ||
         (tp->tv_sec == tsPrevRetVal.tv_sec &&
-         tp->tv_nsec > tsPrevRetVal.tv_nsec))
+         tp->tv_nsec > tsPrevRetVal.tv_nsec)))
     {
         tsPrevRetVal.tv_sec  = tp->tv_sec;
         tsPrevRetVal.tv_nsec = tp->tv_nsec;
