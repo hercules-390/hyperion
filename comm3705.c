@@ -1741,7 +1741,7 @@ static void make_sna_requests2 (COMMADPT *ca) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2"); 
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
         respbuf[0] = 0x1C;
@@ -1815,7 +1815,7 @@ static void make_sna_requests3 (COMMADPT *ca) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3"); 
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
         respbuf[0] = 0x1D;
@@ -1859,7 +1859,7 @@ static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4"); 
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
         respbuf[0] = 0x1C;
@@ -1926,7 +1926,7 @@ static void make_sna_requests5 (COMMADPT *ca) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5"); 
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
         respbuf[0] = 0x1C;
@@ -1971,7 +1971,7 @@ void make_sna_requests (BYTE * requestp, COMMADPT *ca) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request"); 
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
 //        respbuf[0] = requestp[0];
@@ -2052,7 +2052,7 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
                 WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA response");
                 return;
         }
-        respbuf = 4 + (BYTE*)eleptr;
+        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
         /* first do the ten-byte FID1 TH */
         respbuf[0] = requestp[0];
@@ -2213,7 +2213,7 @@ void    *eleptr;
                 eleptr = get_bufpool(&dev->commadpt->sendq);
                 *residual=count;
                 if (eleptr) {
-                    piudata = 4 + (BYTE*)eleptr;
+                    piudata = SIZEOF_INT_P + (BYTE*)eleptr;
                     piusize = (piudata[8] << 8) + piudata[9];
                     piusize += 10;    // for FID1 TH
                     iobuf[0] = BUFPD;
