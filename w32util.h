@@ -67,6 +67,9 @@ W32_DLL_IMPORT  char*  w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffS
 W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
 #endif
 
+#define BILLION  1000000000
+#define MILLION  1000000
+
 #if !defined( HAVE_GETTIMEOFDAY )
   typedef int   clockid_t;
   W32_DLL_IMPORT int clock_gettime ( clockid_t clk_id, struct timespec* ts );

@@ -487,7 +487,7 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // Convert to elapsed nanoseconds...
 
-    uliWork.QuadPart *= 1000000000;
+    uliWork.QuadPart *= BILLION;
     uliWork.QuadPart /= uliHPCTicksPerSec.QuadPart;
 
     // Add starting time to yield current TOD in nanoseconds...
@@ -496,8 +496,8 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
     // Build results...
 
-    tp->tv_sec   =  (time_t) (uliWork.QuadPart / 1000000000);
-    tp->tv_nsec  =  (long)   (uliWork.QuadPart % 1000000000);
+    tp->tv_sec   =  (time_t) (uliWork.QuadPart / BILLION);
+    tp->tv_nsec  =  (long)   (uliWork.QuadPart % BILLION);
 
     // Re-sync to system clock every so often to prevent clock drift
     // since high-performance timer updated independently from clock.
@@ -543,10 +543,10 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
             tp->tv_sec  = tsPrevRetVal.tv_sec;
             tp->tv_nsec = tsPrevRetVal.tv_nsec + 1;
 
-            if (unlikely(tp->tv_nsec >= 1000000000))
+            if (unlikely(tp->tv_nsec >= BILLION))
             {
-                tp->tv_sec  += tp->tv_nsec / 1000000000;
-                tp->tv_nsec  = tp->tv_nsec % 1000000000;
+                tp->tv_sec  += tp->tv_nsec / BILLION;
+                tp->tv_nsec  = tp->tv_nsec % BILLION;
             }
         }
     }
@@ -597,10 +597,10 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
     pTV->tv_sec  = (long)  (ts.tv_sec);
     pTV->tv_usec = (long) ((ts.tv_nsec + 500) / 1000);
 
-    if (unlikely( pTV->tv_usec >= 1000000 ))
+    if (unlikely( pTV->tv_usec >= MILLION ))
     {
         pTV->tv_sec  += 1;
-        pTV->tv_usec -= 1000000;
+        pTV->tv_usec -= MILLION;
     }
 
     return 0;
@@ -687,7 +687,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
     (0
         || !rqtp
         || rqtp->tv_nsec < 0
-        || rqtp->tv_nsec >= 1000000000
+        || rqtp->tv_nsec >= BILLION
     ))
     {
         errno = EINVAL;
@@ -716,10 +716,10 @@ static int w32_nanosleep ( const struct timespec* rqtp )
             tsOurWake.tv_sec  += rqtp->tv_sec;
             tsOurWake.tv_nsec += rqtp->tv_nsec;
 
-            if (unlikely( tsOurWake.tv_nsec >= 1000000000 ))
+            if (unlikely( tsOurWake.tv_nsec >= BILLION ))
             {
                 tsOurWake.tv_sec  += 1;
-                tsOurWake.tv_nsec -= 1000000000;
+                tsOurWake.tv_nsec -= BILLION;
             }
         }
 
@@ -762,10 +762,10 @@ static int w32_nanosleep ( const struct timespec* rqtp )
                 tsOurWake.tv_nsec += (long) ((timerint * 10) - liWaitAmt.QuadPart) * 100;
                 liWaitAmt.QuadPart = (timerint * 10);
 
-                if (unlikely( tsOurWake.tv_nsec >= 1000000000 ))
+                if (unlikely( tsOurWake.tv_nsec >= BILLION ))
                 {
-                    tsOurWake.tv_sec  += (tsOurWake.tv_nsec / 1000000000);
-                    tsOurWake.tv_nsec %= 1000000000;
+                    tsOurWake.tv_sec  += (tsOurWake.tv_nsec / BILLION);
+                    tsOurWake.tv_nsec %= BILLION;
                 }
             }
 
@@ -876,7 +876,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
 
     struct timespec rqtp;
 
-    if (unlikely( useconds < 0 || useconds >= 1000000 ))
+    if (unlikely( useconds < 0 || useconds >= MILLION ))
     {
         errno = EINVAL;
         return -1;
@@ -1068,8 +1068,8 @@ static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
 
     liWork.QuadPart /= 10;  // (convert to microseconds)
 
-    r_usage->ru_stime.tv_sec  = (long)(liWork.QuadPart / 1000000);
-    r_usage->ru_stime.tv_usec = (long)(liWork.QuadPart % 1000000);
+    r_usage->ru_stime.tv_sec  = (long)(liWork.QuadPart / MILLION);
+    r_usage->ru_stime.tv_usec = (long)(liWork.QuadPart % MILLION);
 
     // User time...
 
@@ -1078,8 +1078,8 @@ static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
 
     liWork.QuadPart /= 10;  // (convert to microseconds)
 
-    r_usage->ru_utime.tv_sec  = (long)(liWork.QuadPart / 1000000);
-    r_usage->ru_utime.tv_usec = (long)(liWork.QuadPart % 1000000);
+    r_usage->ru_utime.tv_sec  = (long)(liWork.QuadPart / MILLION);
+    r_usage->ru_utime.tv_usec = (long)(liWork.QuadPart % MILLION);
 
     return 0;
 }
