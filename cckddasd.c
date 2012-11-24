@@ -2013,7 +2013,7 @@ cckd_get_space_atend:
         if ((fpos + len) > cckd->maxsize)
         {
             WRMSG (HHC00304, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
-                                 (cckd->maxsize >> 20) + 1);
+                  (long long)    (cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;

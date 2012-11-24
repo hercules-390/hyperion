@@ -400,7 +400,7 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     running a command (system()), you must fork(), kill all other threads,
     stow the local variables in the environment, and issue the command.
 
-    It won't work to restrict all access to the environment from Hercules
+    It will not work to restrict all access to the environment from Hercules
     to a single thread as many library routines access _environment
     directly.  That is, once you do setenv(), even getenv() is unsafe.
 
