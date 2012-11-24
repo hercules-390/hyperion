@@ -37,7 +37,7 @@ and how they are used.
     #
 
 
-    <a href="#ARCHMODE">ARCHMODE</a>   ESA/390
+    <a href="#ARCHLVL">ARCHLVL</a>   ESA/390
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
     <a href="#LOADPARM">LOADPARM</a>   0120....
 
@@ -177,10 +177,10 @@ and how they are used.
 
 <dl>
 
-<a name="ARCHMODE"></a>
+<a name="ARCHLVL"></a>
 <dt><code>ARCHLVL &nbsp; S/370 &#124; ESA/390 &#124; ESAME &#124; z/Arch</code>
 <dd><p>
-    specifies the initial architecture mode:
+    specifies the initial architecture mode:<p>
     <ul compact>
     <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
     <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
@@ -192,12 +192,18 @@ and how they are used.
     the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
-    <br>
-    The ESAME mode is equivalent to z/Architecture mode at Architecture Level 2
-    <br>
-    The z/Arch mode is equivalent to z/Architecture mode at Architecture Level 3
-    <br>
+    <p>
+    The <code>ESAME</code> mode is equivalent to z/Architecture mode at Architecture Level 2.
+    The <code>z/Arch</code> mode is equivalent to z/Architecture mode at Architecture Level 3.
     The synonyms ALS0, ALS1, ALS2 and ALS3 may be used to specify S/370, ESA/390, ESAME or Z/Arch respectively.
+    <p>
+    Note: This statement used to be called <code>ARCHMODE</code> in previous versions of Hercules
+    but the use of <code>ARCHMODE</code> has been deprecated in favor of the new <code>ARCHLVL</code>
+    statement. Existing <code>ARCHMODE</code> statements should be changed to <code>ARCHLVL</code>
+    instead.
+    <p>
+    For the time being however, <code>ARCHMODE</code> is still accepted and is treated as
+    simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
 <dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY <em>facility</em></code>
 <dd><p>
@@ -503,7 +509,7 @@ and how they are used.
 <dd><p>
     specifies the 2 hexadecimal digit CPU version code
     stored by the STIDP instruction.
-    The default version code is FD when ARCHMODE S/370 or ARCHMODE ESA/390
+    The default version code is FD when ARCHLVL S/370 or ARCHLVL ESA/390
     is specified.  For the z/Architecture mode, the version code is always
     stored as 00 and the value specified here is ignored.
     <p>
