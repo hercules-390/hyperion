@@ -2,6 +2,7 @@
 sysclear
 archmode ESAME
 archlvl  ena load_prog_param
+sysreset                               # Reset [all] CPU(s) after any archlvl change
 r 000=0008000000000200                 # EC mode restart PSW
 r 068=000A00000000DEAD                 # EC mode pgm new PSW
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
