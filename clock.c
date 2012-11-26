@@ -1085,34 +1085,16 @@ static INLINE void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
 S32 itimer;
 S32 vtimer=0;
 
-    FETCH_FW(itimer, regs->psa->inttimer);
     if(getlock)
     {
         OBTAIN_INTLOCK(regs->hostregs?regs:NULL);
     }
-    if(itimer != regs->old_timer)
-    {
-// ZZ       logmsg(_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
-        set_int_timer(regs, itimer);
-    }
-    else
-    {
-        itimer=int_timer(regs);
-    }
+    itimer=int_timer(regs);
     STORE_FW(regs->psa->inttimer, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
-        FETCH_FW(vtimer, regs->ecps_vtmrpt);
-        if(vtimer != regs->ecps_oldtmr)
-        {
-// ZZ       logmsg(_("ECPS vtimer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->ecps_vtimer);
-            set_ecps_vtimer(regs, itimer);
-        }
-        else
-        {
-            vtimer=ecps_vtimer(regs);
-        }
+        vtimer=ecps_vtimer(regs);
         STORE_FW(regs->ecps_vtmrpt, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/

@@ -1,3 +1,5 @@
+26 Nov 2012 Interval timer 2012-04-11 fix completion: remove circumvention code
+            - Kevin Leonard
 05 Nov 2012 IBM 3791 support - Max H. Parke <ikj1234i@yahoo.com> by Fish
 04 Oct 2012 Change PSW command display to use SYSBLK archmode if loadstate
             indicator is on - Kevin Leonard
