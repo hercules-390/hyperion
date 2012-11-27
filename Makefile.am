@@ -7,7 +7,7 @@
 # ***************************************************************************
 
 AUTOMAKE_OPTIONS = foreign 1.5
-ACLOCAL_AMFLAGS  = -I m4
+ACLOCAL_AMFLAGS  = -I m4 -I autoconf
 
 lns=@LN_S@
 
