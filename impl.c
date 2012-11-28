@@ -743,9 +743,42 @@ int     dll_count;                      /* index into array          */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "hf:p:l:db:s:tv")) != EOF)
     {
+#define  HERCULES_BASE_OPTS     "hf:db:v"
+#define  HERCULES_SYM_OPTS      ""
+#define  HERCULES_HDL_OPTS      ""
+#if defined(OPTION_CONFIG_SYMBOLS)
+#undef   HERCULES_SYM_OPTS
+#define  HERCULES_SYM_OPTS      "s:"
+#endif
+#if defined(OPTION_DYNAMIC_LOAD)
+#undef   HERCULES_HDL_OPTS
+#define  HERCULES_HDL_OPTS      "p:l:"
+#endif
+#define  HERCULES_OPTS_STRING   HERCULES_BASE_OPTS  HERCULES_SYM_OPTS  HERCULES_HDL_OPTS
 
+#if defined(HAVE_GETOPT_LONG)
+    static struct option longopts[] =
+    {
+        { "help",     no_argument,       NULL, 'h' },
+        { "config",   required_argument, NULL, 'f' },
+        { "daemon",   no_argument,       NULL, 'd' },
+        { "herclogo", required_argument, NULL, 'b' },
+        { "verbose",  no_argument,       NULL, 'v' },
+#if defined(OPTION_CONFIG_SYMBOLS)
+        { "defsym",   required_argument, NULL, 's' },
+#endif
+#if defined(OPTION_DYNAMIC_LOAD)
+        { "modpath",  required_argument, NULL, 'p' },
+        { "ldmod",    required_argument, NULL, 'l' },
+#endif
+        { NULL,       0,                 NULL,  0  }
+    };
+    while ((c = getopt_long( argc, argv, HERCULES_OPTS_STRING, longopts, NULL )) != EOF)
+#else
+    while ((c = getopt( argc, argv, HERCULES_OPTS_STRING )) != EOF)
+#endif
+    {
         switch (c) {
         case 'h':
             arg_error = 1;
@@ -780,7 +813,7 @@ int     dll_count;                      /* index into array          */
                     WRMSG(HHC01419, "E");
             }
             break;
-#endif
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
             if(optarg)
@@ -805,7 +838,7 @@ int     dll_count;                      /* index into array          */
             break;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         case 'b':
-            sysblk.logofile=optarg;
+            sysblk.logofile = optarg;
             break;
         case 'v':
             sysblk.msglvl |= MLVL_VERBOSE;
@@ -818,6 +851,7 @@ int     dll_count;                      /* index into array          */
 
         } /* end switch(c) */
     } /* end while */
+    } /* end Process the command line options */
 
     /* Treat filename None as special */
     if(!strcasecmp(cfgfile,"None"))
@@ -833,12 +867,22 @@ int     dll_count;                      /* index into array          */
         char* strtok_str = NULL;
         strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
 
+        /* Show them all of our command-line arguments... */
+
+        WRMSG (HHC01414, "S", "");   // (blank line)
+        WRMSG (HHC01414, "S", "");   // (blank line)
+
 #if defined(OPTION_DYNAMIC_LOAD)
+        // "Usage: %s [-f config-filename] [-d] [-b logo-filename] [-s sym=val]%s [> logfile]"
         WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str),
                              " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
         WRMSG (HHC01407, "S", strtok_r(pgm,".", &strtok_str), "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
+
+        WRMSG (HHC01414, "S", "");   // (blank line)
+        WRMSG (HHC01414, "S", "");   // (blank line)
+
         fflush(stderr);
         fflush(stdout);
         usleep(100000);

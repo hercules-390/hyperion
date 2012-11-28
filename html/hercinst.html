@@ -29,7 +29,7 @@ Hercules Version 3: Installation and Operation</TITLE>
     <p>
         <a href="#operating">Operating Procedure</a>
         <ul>
-            <li><a href="#starting">Starting Hercules</a>
+            <li><a href="#arguments">Command line arguments</a>
             <li><a href="#keyboard">Using the keyboard</a>
             <li><a href="#commands">Panel commands</a>
             <li><a href="#RCFILE">The .RC &nbsp;("run commands")&nbsp; file</a>
@@ -222,21 +222,25 @@ volumes. The compressed CKD DASD support is described in <a
 href="cckddasd.html">this page</a>.
 
 <p><hr><a name="operating"></a>
+<a name="arguments">
 <h2>Operating Procedure</h2>
-<a name="starting">
 <p class="warning">
 <em>Note: If you intend to run any licensed software on your PC
 using Hercules, it is your responsibility to ensure that you do not
 violate the software vendor's licensing terms.</em>
 
-<h4>Starting Hercules</h4>
+<h4>Command line arguments</h4>
 <p>
 To start Hercules enter this command at the host's command prompt:
 <blockquote><code><pre>
-    hercules  [ -f <em>filename</em> ]
-              [ -d ]
-              [ -p <em>dyndir</em> ]  [[-l <em>dynmod</em> ] ... ]
-              [ -s symbol=value ]
+    hercules  [ -f <em>filename</em> ]           |  [ --config=<em>filename</em> ]
+              [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
+              [ -d ]                    |  [ --daemon ]
+              [ -p <em>dyndir</em> ]             |  [ --modpath=<em>dyndir</em> ]
+              [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
+              [ -s <em>symbol=value</em> ] ...   |  [ --defsym=<em>symbol=value</em> ] ...
+              [ -v ]                    |  [ --verbose ]
+              [ -h ]                    |  [ --help ]
               [ &gt; <em>logfile</em> ]
 </pre></code>
 </blockquote>
@@ -251,7 +255,13 @@ where:
             The default may be overridden via the <code>HERCULES_CNF</code>
             environment variable.
         <p>
-        <dt><code><em>-d</em></code><p><dd>
+        <dt><code><em>logofile</em></code><p><dd>
+
+            is the name of the Hercules logo file. The logo file is the
+            initial welcome screen presented when a TN 3270 terminal connects 
+            to a hercules 3270 device.
+        <p>
+        <dt><code><em>-d</em></em></code><p><dd>
 
             specifies that Hercules is to be run in 'daemon' mode,
             wherein it runs invisibly with no attached console.
@@ -262,7 +272,7 @@ where:
             The default depends on the host platform on which Hercules
             is being run. This option overrides the default.
         <p>
-        <dt><code><em>dynmod</em></code><p><dd>
+        <dt><code><em>modname</em></code><p><dd>
 
             is the name of an additional dynamic module to be loaded
             at startup. More than one additional module may be specified,
@@ -271,11 +281,20 @@ where:
         <p>
         <dt><code><em>symbol=value</em></code><p><dd>
 
-            the name of symbol and the associated value to be used in configuration
-            processing or panel commands. See the command 'defsym'
-            for more information on using symbols. The '-s' option maybe repeated. 
-            Note: 'value' maybe quoted to contain imbedded blanks. 
+            the name of a symbol and its associated value to be used in configuration
+            file processing or panel commands. See the command 'defsym'
+            for more information on using symbols. The '-s' option may be repeated. 
+            Note: 'value' may be quoted to contain imbedded blanks. 
         <p>        
+        <dt><code><em>-v</em></code><p><dd>
+
+            sets the message-level to verbose. This is the same as
+            entering the command <code>msglvl +verbose</code>.
+        <p>
+        <dt><code><em>-h</em></code><p><dd>
+
+            displays help information regarding the syntax of command-line arguments.
+        <p>
         <dt><code><em>logfile</em></code><p><dd>
 
             is an optional log file which will receive a copy of
