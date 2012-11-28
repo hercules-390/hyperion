@@ -139,6 +139,11 @@ int     devtmax;                        /* Max number device threads */
     if (hercules_cnf && (process_config(hercules_cnf)))
         return -1;
 
+    /* Connect each channel set to its home cpu */
+    for (i = 0; i < sysblk.maxcpu; i++)
+        if (IS_CPU_ONLINE(i))
+            sysblk.regs[i]->chanset = i < FEATURE_LCSS_MAX ? i : 0xFFFF;
+
     return 0;
 } /* end function build_config */
 
