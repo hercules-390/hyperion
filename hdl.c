@@ -7,7 +7,7 @@
 #define _HUTIL_DLL_
 
 #include "hercules.h"
-#include "opcode.h" 
+#include "opcode.h"
 
 /*
 extern HDLPRE hdl_preload[];
@@ -72,7 +72,7 @@ HDLSHD **tmpcall;
         if( (*tmpcall)->shdcall == shdcall
           && (*tmpcall)->shdarg == shdarg )
             return;
-    
+
     newcall = malloc(sizeof(HDLSHD));
     newcall->shdname = shdname;
     newcall->shdcall = shdcall;
@@ -116,7 +116,7 @@ HDLSHD *shdent;
 
     if(MLVL(DEBUG))
         logmsg(MSG(HHC01500, "I"));
-    
+
     hdl_sdip = TRUE;
 
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
@@ -132,7 +132,7 @@ HDLSHD *shdent;
 
             if(MLVL(DEBUG))
                 logmsg(MSG(HHC01502, "I", shdent->shdname));
-        }   
+        }
         free(shdent);
     }
 
@@ -143,9 +143,9 @@ HDLSHD *shdent;
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-/* hdl_setpath - set path for module load 
+/* hdl_setpath - set path for module load
  * If path is NULL, then return the current path
- * If path length is greater than MAX_PATH, send message and return NULL 
+ * If path length is greater than MAX_PATH, send message and return NULL
  *     indicating an error has occurred.
  * If flag is TRUE, then only set new path if not already defined
  * If flag is FALSE, then always set the new path.
@@ -175,7 +175,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
             }
             else
             {
-                logmsg(MSG(HHC01506, "W", pathname)); 
+                logmsg(MSG(HHC01506, "W", pathname));
                 logmsg(MSG(HHC01507, "W", hdl_modpath));
                 return hdl_modpath;
             }
@@ -211,11 +211,11 @@ size_t  fulllen = 0;
 
     if ( (ret = dlopen(filename,flag)) )       /* try filename as is first */
         return ret;
- 
+
     fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
     fullname = (char *)calloc(1,fulllen);
-    
-    if ( fullname == NULL ) 
+
+    if ( fullname == NULL )
         return NULL;
 
 #if defined(HDL_MODULE_SUFFIX)
@@ -228,7 +228,7 @@ size_t  fulllen = 0;
         return ret;
     }
 #endif
-    
+
     if( hdl_modpath && *hdl_modpath)
     {
         strlcpy(fullname,hdl_modpath,fulllen);
@@ -256,7 +256,7 @@ size_t  fulllen = 0;
 
     return NULL;
 }
-    
+
 
 /* hdl_dvad - register device type
  */
@@ -367,7 +367,7 @@ int len;
             ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : "not forced"));
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
-            if((flags & HDL_LIST_ALL) 
+            if((flags & HDL_LIST_ALL)
               || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
             {
                 logmsg(MSG(HHC01532, "I"
@@ -751,7 +751,7 @@ HDLPRE *preload;
             }
         }
         else
-        {   
+        {
             hostpath(pathname, def, sizeof(pathname));
             hdl_setpath(pathname, TRUE);
         }
@@ -1022,7 +1022,7 @@ char *modname;
             if((*dllent)->hdlfini)
             {
             int rc;
-                
+
                 if((rc = ((*dllent)->hdlfini)()))
                 {
                     release_lock(&hdl_lock);
@@ -1035,7 +1035,7 @@ char *modname;
             while(modent)
             {
                 tmpmod = modent;
-                
+
                 /* remove current entry from chain */
                 modent = modent->modnext;
 
@@ -1091,7 +1091,7 @@ char *modname;
 
             return 0;
         }
-        
+
     }
 
     release_lock(&hdl_lock);
@@ -1132,7 +1132,7 @@ static void hdl_modify_opcode(int insert, HDLINS *instr)
 #ifdef _900
     if(instr->archflags & HDL_INSTARCH_900)
       replace_opcode(ARCH_900, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
-#endif    
+#endif
   }
   return;
 }
