@@ -151,7 +151,9 @@ typedef struct _DLLENT {                /* DLL entry                 */
 #if defined( HDL_BUILD_SHARED ) && defined( LTDL_SHLIB_EXT )
   #define   HDL_MODULE_SUFFIX   LTDL_SHLIB_EXT
 #else
-  #if defined(_MSVC_)
+  #if defined( LT_MODULE_EXT )
+    #define HDL_MODULE_SUFFIX   LT_MODULE_EXT
+  #elif defined( _MSVC_ )
     #define HDL_MODULE_SUFFIX   ".dll"
   #else
     #define HDL_MODULE_SUFFIX   ".la"
