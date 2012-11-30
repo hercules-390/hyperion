@@ -1,3 +1,5 @@
+30 Nov 2012 Libtool autoconf dynamic loader kludge fix - Mike Frysinger
+            <vapier@gentoo.org> by Fish
 26 Nov 2012 Interval timer 2012-04-11 fix completion: remove circumvention code
             - Kevin Leonard
 05 Nov 2012 IBM 3791 support - Max H. Parke <ikj1234i@yahoo.com> by Fish
