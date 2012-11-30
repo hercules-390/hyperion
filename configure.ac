@@ -351,7 +351,11 @@ AC_SUBST([LIBTOOL_DEPS])                # (see PROGRAMMING NOTE above)
 # (See comments in the 'AC_CHECK_LIB' Libraries section further below)
 # -----------------------------------------------------------------------------
 AC_MSG_NOTICE( [(use of lt_dlopen forced by Hercules Dynamic Loader requirement)] )
-hc_cv_have_lt_dlopen=${with_included_ltdl}
+
+AS_IF([test "x${with_included_ltdl}" = "xno"],
+    [hc_cv_have_lt_dlopen=no],
+    [hc_cv_have_lt_dlopen=yes])
+
 AS_IF([test "x${ac_cv_func_dlopen}" = "xyes" -o "x${ac_cv_lib_dl_dlopen}" = "xyes"],
     [hc_cv_have_dlopen=yes],
     [hc_cv_have_dlopen=no])
