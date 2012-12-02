@@ -110,7 +110,8 @@ DEVHND ctci_device_hndinfo =
 
 int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
-    PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
+    CTCBLK          wblk;
+    PCTCBLK         pWrkCTCBLK = &wblk; // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
     int             rc = 0;             // Return code
     int             nIFFlags;           // Interface flags
@@ -139,26 +140,11 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         return 0;
 
     // Housekeeping
-    pWrkCTCBLK = malloc( sizeof( CTCBLK ) );
-
-    if( !pWrkCTCBLK )
-    {
-        char buf[40];
-        MSGBUF(buf,"malloc(%d)", (int)sizeof(CTCBLK));
-        // "%1d:%04X CTC: error in function '%s': '%s'"
-        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
-        return -1;
-    }
-
     memset( pWrkCTCBLK, 0, sizeof( CTCBLK ) );
 
     // Parse configuration file statement
     if( ParseArgs( pDEVBLK, pWrkCTCBLK, argc, (char**)argv ) != 0 )
-    {
-        free( pWrkCTCBLK );
-        pWrkCTCBLK = NULL;
         return -1;
-    }
 
     // Allocate the device CTCBLK and copy parsed information.
 
@@ -170,8 +156,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         MSGBUF(buf, "malloc(%d)", (int)sizeof(CTCBLK));
         // "%1d:%04X CTC: error in function '%s': '%s'"
         WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
-        free( pWrkCTCBLK );
-        pWrkCTCBLK = NULL;
         return -1;
     }
 
@@ -213,24 +197,30 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
      sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
 
     rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
+#if defined(IFF_TUN_EXCL)
+         /* This is a fairly recent (ca. 2009) addition to the Linux */
+         /* kernel to prevent a race in creating devices.  Here used */
+         /* to prevent a preconfigured device being reconfigured.    */
+                                 (pDevCTCBLK->fPreconfigured ? 0 : IFF_TUN_EXCL) |
+#endif
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
                                  pDevCTCBLK->szTUNDevName );
 
-    if( rc < 0 )
-    {
-        free( pWrkCTCBLK );
-        pWrkCTCBLK = NULL;
-        return -1;
-    }
-    else
-    {
-        // "%1d:%04X CTC: device '%s', type '%s' opened"
-        WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                  pDevCTCBLK->szTUNDevName, "TUN");
-    }
+    if( rc < 0 ) return -1;
 
-    if (!pDevCTCBLK->fPreconfigured)
+    // "%1d:%04X CTC: device '%s', type '%s' opened"
+    WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+              pDevCTCBLK->szTUNDevName, "TUN");
+
+    if (pDevCTCBLK->fPreconfigured)
+    {
+#if !defined( OPTION_W32_CTCI ) && 0
+        /* Trying  to determine whether the device is persistent did */
+        /* not pan out as the query returns only the IFF flags.      */
+#endif
+    }
+    else                              /* Needs configuring           */
     {
 
 #if defined(OPTION_W32_CTCI)
@@ -327,9 +317,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
-
-    free( pWrkCTCBLK );
-    pWrkCTCBLK = NULL;
 
     return 0;
 }
