@@ -2190,7 +2190,7 @@ U32     i2;                             /* 32-bit operand value      */
     if ( --(regs->GR_H(r1)) )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2LL*(S32)i2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_relative_on_count_high) */
 
