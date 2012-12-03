@@ -2182,13 +2182,13 @@ DEF_INST(branch_relative_on_count_high)                         /*810*/
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
-U32     i2;                             /* 32-bit operand value      */
+S32     i2;                             /* 32-bit operand value      */
 
     RIL_B(inst, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_H(r1)) )
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2LL*(S32)i2, 4);
+        SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*i2);
     else
         INST_UPDATE_PSW(regs, 6, 0);
 
