@@ -125,6 +125,10 @@
 
 #endif
 
+   /* Passed  from ctc_ctci to tuntap to indicate that the interface */
+   /* is configured and that only the interface name is to be set.   */
+   #define IFF_NO_HERCIFC 0x10000
+
 #if (!defined(HAVE_NET_IF_H) && !defined(_MSVC_))
   /* Standard interface flags. */
   #define IFF_UP          0x1             /* interface is up              */

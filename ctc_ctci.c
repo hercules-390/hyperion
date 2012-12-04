@@ -196,13 +196,12 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
              pDevCTCBLK->szTUNCharName,
      sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
 
+    /* It  might  be  tempting  to  add IFF_TUN_EXCL to the flags to */
+    /* avoid  a  race,  but it does not work like open exclusive; it */
+    /* would appear that the bit is permanent so that hercifc cannot */
+    /* configure the interface.                                      */
     rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
-#if defined(IFF_TUN_EXCL)
-         /* This is a fairly recent (ca. 2009) addition to the Linux */
-         /* kernel to prevent a race in creating devices.  Here used */
-         /* to prevent a preconfigured device being reconfigured.    */
-                                 (pDevCTCBLK->fPreconfigured ? 0 : IFF_TUN_EXCL) |
-#endif
+                                 (pDevCTCBLK->fPreconfigured ? IFF_NO_HERCIFC : 0) |
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
                                  pDevCTCBLK->szTUNDevName );
@@ -1126,6 +1125,8 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
 static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                        int argc, char** argx )
 {
+    int             saw_dev = 0;      /* -n specified                */
+    int             saw_conf = 0; /* Other configuration flags present */
     struct in_addr  addr;               // Work area for addresses
     int             iMTU;
     int             i;
@@ -1266,6 +1267,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
             strlcpy( pCTCBLK->szTUNCharName, optarg, sizeof(pCTCBLK->szTUNCharName) );
+            saw_dev = 1;
             break;
 
         case 'x':     // TUN network device name
@@ -1323,6 +1325,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             strlcpy( pCTCBLK->szMTU, optarg, sizeof(pCTCBLK->szMTU) );
+            saw_conf = 1;
             break;
 
         case 's':     // Netmask of point-to-point link
@@ -1335,6 +1338,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             strlcpy( pCTCBLK->szNetMask, optarg, sizeof(pCTCBLK->szNetMask) );
+            saw_conf = 1;
             break;
 
         case 'm':
@@ -1347,6 +1351,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             strlcpy( pCTCBLK->szMACAddress, optarg, sizeof(pCTCBLK->szMACAddress) );
+            saw_conf = 1;
 
             break;
 
@@ -1366,7 +1371,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     i = 0;
 
     // Check for correct number of arguments
-    if( argc == 0 )
+    if( argc == 0 && !saw_dev)
     {
         // "%1d:%04X CTC: incorrect number of parameters"
         WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -1375,7 +1380,9 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     if( !pCTCBLK->fOldFormat )
     {
-        if (1 == argc)                /* Pre-configured net device   */
+        if (!argc && saw_dev && !saw_conf)
+            pCTCBLK->fPreconfigured = TRUE;
+        else if (1 == argc && !saw_dev && !saw_conf) /* Pre-configured net device */
         {
             strlcpy(pCTCBLK->szTUNDevName, argv[0], sizeof(pCTCBLK->szTUNDevName));
             pCTCBLK->fPreconfigured = TRUE;

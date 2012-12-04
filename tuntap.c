@@ -56,7 +56,7 @@ static void tuntap_term(void)
 // Primary Module Entry Points
 // ====================================================================
 
-static int TUNTAP_SetMode (int fd, struct hifr *hifr)
+static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 {
     int rc;
 
@@ -68,9 +68,8 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr)
     if (0 > rc && errno == EINVAL)
         rc = TUNTAP_IOCtl (fd, ('T' << 8) | 202, (char *) hifr);
 
-#if !defined(NO_SETUID)
     /* kludge for EPERM and linux 2.6.18 */
-    if (0 > rc && errno == EPERM)
+    if (0 > rc && errno == EPERM && !(IFF_NO_HERCIFC & iFlags))
     {
         int             ifd[2];
         char           *hercifc;
@@ -138,7 +137,6 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr)
         waitpid (pid, &status, 0);
         errno = sv_err;
     }
-#endif /* if !defined(NO_SETUID) */
 #endif /* if !defined(OPTION_W32_CTCI) */
 
     return rc;
@@ -236,11 +234,11 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         struct hifr hifr;
 
         memset( &hifr, 0, sizeof( hifr ) );
-        hifr.hifr_flags = iFlags & ~(iFlags & IFF_OSOCK);
+        hifr.hifr_flags = iFlags & ~(iFlags & IFF_OSOCK) & 0xffff;
         if(*pszNetDevName)
             strcpy( hifr.hifr_name, pszNetDevName );
 
-        if( TUNTAP_SetMode (fd, &hifr) < 0 )
+        if( TUNTAP_SetMode (fd, &hifr, iFlags) < 0 )
         {
             WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
             return -1;
