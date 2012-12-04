@@ -150,7 +150,11 @@
 // --------------------------------------------------------------------
 
 #define  HERCIFC_CMD  "hercifc"           // Interface config command
-#define  HERCTUN_DEV  "/dev/net/tun"      // Default TUN/TAP char dev
+#if defined(__APPLE__)
+    #define  HERCTUN_DEV  "/dev/tun0"     // Default TUN/TAP char dev
+#else
+    #define  HERCTUN_DEV  "/dev/net/tun"  // Default TUN/TAP char dev
+#endif
 
 typedef struct _CTLREQ
 {
