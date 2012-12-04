@@ -293,8 +293,8 @@ struct  _CTCBLK
     char        szDriveIPAddr[32];        // IP Address (Driver)
     char        szNetMask[32];            // Netmask for P2P link
     char        szMTU[32];
-    char        szTUNCharName[256];       // TUN/TAP char filename
-    char        szTUNDevName[IFNAMSIZ];   // Network Device Name
+    char        szTUNCharDevName[256];    // TUN/TAP special char device filename (/dev/net/tun)
+    char        szTUNIfName[IFNAMSIZ];    // Network interface Name (tun0)
     char        szMACAddress[32];         // MAC Address
 };
 

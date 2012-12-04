@@ -240,7 +240,10 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
         if( TUNTAP_SetMode (fd, &hifr, iFlags) < 0 )
         {
-            WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
+            logmsg("nohif %x\n", IFF_NO_HERCIFC & iFlags);
+            if (EPERM == errno && (IFF_NO_HERCIFC & iFlags))
+                WRMSG(HHC00154, "E", hifr.hifr_name);
+            else WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
             return -1;
         }
 

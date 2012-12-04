@@ -350,7 +350,8 @@ do { \
 #define HHC00151 "Activated facility: %s"
 #define HHC00152 "Out of memory"
 #define HHC00153 "Net device %s: Invalid prefix length %s"
-// 00154 - 00159 unused
+#define HHC00154 "Preconfigured interface %s does not exist or is not accessible by Hercules (EPERM)"
+// 00155 - 00159 unused
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
 
@@ -735,7 +736,7 @@ do { \
 // reserve 009xx for ctc related messages
 /*ctc_ctci.c*/
 #define HHC00900 "%1d:%04X CTC: error in function %s: %s"
-#define HHC00901 "%1d:%04X CTC: device %s, type %s opened"
+#define HHC00901 "%1d:%04X CTC: interface %s, type %s opened"
 #define HHC00902 "%1d:%04X CTC: ioctl %s failed for device %s: %s"
 #define HHC00904 "%1d:%04X CTC: halt or clear recognized"
 #define HHC00905 "%1d:%04X CTC: received %d bytes size frame"

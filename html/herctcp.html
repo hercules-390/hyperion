@@ -39,7 +39,7 @@ as shown in the following diagram:
         |    CTCA     |         |        |
         |192.168.200.1|         |        |
         +------|------+   192.168.200.2  |
-        |  /dev/tun           tun0       |
+        |/dev/net/tun         tun0       |
         |      |                |        |
         |      +----------------+        |
         |       Virtual CTC link         |
@@ -130,8 +130,14 @@ For distributions based on the Linux 2.6 kernel you will probably find that the
 TUN/TAP driver is already installed and the /dev/net/tun device is already
 defined. If not, then follow the procedure for Linux 2.4 as descibed above.
 <p>
-You will certainly need to alter the permissions on the /dev/net/tun device
+If you are using a current distribution you are unlikely to need to alter the permissions on the /dev/net/tun device
 to allow Hercules to open it.
+Issue <code>ls -l /dev/net/tun</code> to determine whether Hercules can
+open the device.
+<pre>
+[root@servus ~]# ls -l /dev/net/tun
+crw-rw---- 1 root staff 10, 200 Nov 24 15:01 /dev/net/tun
+</pre>
 <ul>
 <li>Use the following commands to set the necessary permissions:
     <code>
@@ -140,6 +146,12 @@ to allow Hercules to open it.
         </code>(where <em>xxxxx</em> is the group under which
                 you run Hercules)<code>
     <br>chmod 0660 /dev/net/tun
+    </code>
+    <br>or make the device file writable by world; this does not consist an
+    integrity exposure, as the world at large cannot do anything with the
+    file descriptor it gets.
+    <code>
+    <br>chmod 0666 /dev/net/tun
     </code>
 <li><i>Additional notes from Greg Smith:</i>
     <ol>
@@ -160,8 +172,9 @@ instead there is a file called <b><i>/etc/modprobe.conf</i></b>.
 TUN/TAP will usually work, however, without any change to the modprobe
 configuration.
 
-<h2><a name="hercifc">Configuring the TUN interface</a></h2>
-<p>You may be able to configure the tunnel device at system boot;
+<h2><a name="hercifc">Configuring a TUN interface</a></h2>
+<p>You may be able to configure the tunnel interfaces you will need
+at system boot;
 but if you cannot or will not, Hercules supplies a utility
 (<code>hercifc</code>) to do this.
 <h3>At Linux boot</h3>
@@ -174,7 +187,7 @@ http://openvpn.net/index.php/open-source/documentation/howto.html</a>.
 Note, however, that <code>openvpn</code> is just one way to create a permanent tunnel device;
 if you have another favourite, go ahead and use it.
 <p>
-To create permanent a tunnel device, add this to rc.local
+To create permanent a tunnel interface, add this to rc.local
 (or as appropriate for
 the distribution you are using):
 <pre>
@@ -185,8 +198,19 @@ the distribution you are using):
 <p>This example assumes that Hercules is in the group
 <code>hercules</code>; it shows the tunnel device in a separate network,
 which requires routing as described below.
+<code>ifconfig</code> can display the permanent interface:
+<pre>
+[root@servus ~]# ifconfig tun0
+tun0      Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00
+          inet addr:192.168.2.65  P-t-P:10.0.0.33  Mask:255.255.255.255
+          UP POINTOPOINT RUNNING NOARP MULTICAST  MTU:1500  Metric:1
+          RX packets:71282 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:50 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:100
+          RX bytes:4289708 (4.0 MiB)  TX bytes:2764 (2.6 KiB)
+</pre>
 <p>
-If the device is in the same subnet as the Hercules host,
+If the interface is in the same subnet as the Hercules host,
 you need to enable proxy arp.
 One way to achieve this is to turn it on dynamically:
 <pre>
@@ -195,13 +219,15 @@ One way to achieve this is to turn it on dynamically:
 <h3>Using hercifc</h3>
 <p>
 The tun0 network interface in the driving system must be configured
-as a point-to-point link.  The design of the TUN/TAP driver does not
+as a point-to-point link.  The original design of the TUN/TAP driver does not
 allow the interface to be statically configured like a regular network
 interface &#151; the tun0 interface does not exist until a program
 opens the TUN device.  For this reason, Hercules provides a special
 program called hercifc to configure the tun0 network interface.  This
 program is launched automatically by Hercules 3088 CTC device
 initialization.
+(Later, the ability to make an interface permanent was added;
+this is why <code>openvpn</code> and preconfigured interfaces work.)
 <p>
 To allow the hercifc program to issue the necessary configuration
 commands, you must ensure that hercifc is installed with setuid root
@@ -262,7 +288,9 @@ is to add an appropriate routing entry to your default gateway router.
 <p>
 You must define a CTC device pair in the Hercules configuration
 file. The second device must bear the same definition as the 1st
-instance and be at device number + 1. The 1st device number must be even.
+instance and be at device number + 1
+(for CTCI, the first definition beyond the device type is ignored).
+The 1st device number must be even.
 Devices should preferably be grouped (furthermore, it makes the
 configuration file easier to read).
 <p>
@@ -275,6 +303,7 @@ For a preconfigured tunnel:
 <br>or
 <br>0E20-0E21 CTCI tun0
 </code>
+<p>
 <p>Using hercifc:
 <p>
 <code>
@@ -284,6 +313,7 @@ For a preconfigured tunnel:
 <br>or
 <br>0E20-0E21 CTCI 192.168.200.1 192.168.200.2
 </code>
+<p>
 <p>Check <A HREF="hercconf.html#device_definitions">Device Definition Statement syntax </A> for an explanation of device grouping.
 <p>
 Two IP addresses must be assigned, one for the driving system's

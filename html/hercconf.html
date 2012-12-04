@@ -141,6 +141,7 @@ and how they are used.
     0400      <a href="#CTCT">CTCT</a>    30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
     0401      <a href="#CTCT">CTCT</a>    30881  192.168.100.2  30881  2048
     0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
+    0430.2    <a href="#CTCI">CTCI</a>    tun0
     0440.2    <a href="#LCS">LCS</a>      -n   /dev/net/tun   192.168.200.2
     0A00.3    <a href="#QETH">QETH</a>    iface /dev/net/tun
 
@@ -2888,27 +2889,40 @@ and how they are used.
     <dd><p>
         A point-to-point IP connection with the TCP/IP stack of the
         driving system on which Hercules is running.  See the
-        <a href="herctcp.html">Hercules TCP/IP</a> page for details.
+        <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
+        in particular the use of preconfigured interfaces.
         <p>
-
-        (Note: The CTCI protocol is only for the Linux version of
-        Hercules. For Windows, use the below CTCI protocol instead).
-        <p>
-
-<p><br>
-
-    <dt><b>CTCI</b>  &nbsp; &nbsp; (Channel to Channel link to Win32 TCP/IP stack)
-    <dd><p>
-        A modified Win32 version of the CTCI protocol for the Windows
-        crowd. Note that the protocol name (CTCI) is the same,
-        even though the actual implementation is very different. See Fish's
+        The Windows
+        implementation is different from the unix one. See Fish's
         <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
         page for further details and information.
         <p>
+        For unix systems, such as Linux, BSD, and OSX, you may use
+        preconfigured interfaces or you may
+        request Hercules to configure the interface for you.
+        In the first case you must know and supply the name of the interface to use;
+        in the second case the kernel supplies an interface name.
+        <p>
 
         <dl> <!-- begin CTCI parms -->
+        <dt>Linux using preconfigured interfaces:
 
-        <dt>Required for both Linux and Windows:
+        <dd><p>
+            <dl>
+                <dt><code><em>ifname</em></code>
+                <dd><p>
+                    specifies the interface name of an
+                    interface that is already configured.
+                    The flag <code>--if</code> may optionally be specified
+                    before the name.
+                    <p>
+                    Specify no IP addresses or other arguments as the
+                    information is already configured into the interface.
+                    <p>
+            </dl>
+
+        <dt>Required for Linux when not using a preconfigured interface,
+        and for Windows:
         <dd><p>
 
             <dl> <!-- begin Required for both Linux and Windows -->
@@ -2971,7 +2985,7 @@ and how they are used.
                     specifies the name of the tunnel device to use.
                     <p>
                     The default
-                    for Linux is /dev/net/tun (which is correct for version 2.4
+                    for Linux is <code>/dev/net/tun</code> (which is correct for version 2.4
                     and above of the Linux kernel).
                     <p>
                     For Windows, specify the IP address or MAC address of the
@@ -3001,6 +3015,14 @@ and how they are used.
                     where <em>netmask</em> is the netmask to use for the
                     automatically added point-to-point route in standard
                     dotted internet noitation (e.g. 255.255.255.0)
+                    <p>
+
+                <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
+                <dd><p>
+                    specifies the name of the network interface to use.
+                    <p>
+                    There is no default for this argument as the kernel
+                    assigns an interface name if none is provided.
                     <p>
 
                 <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
