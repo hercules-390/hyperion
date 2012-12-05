@@ -1485,7 +1485,7 @@ int i;
                         break;
                     }
                     addr4.s_addr = htonl(mask);
-                    inet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
+                    hinet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
 
                     if(grp->ttnetmask)
                         free(grp->ttnetmask);
@@ -3210,7 +3210,7 @@ int      GetMACAddr( char*   pszNetDevName,
         return -1;
     }
 
-    rc = ioctl( fd, SIOCGIFHWADDR, (char*)&hifr );
+    rc = TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&hifr );
     if (rc < 0 ) {
         return -1;
     }
@@ -3260,7 +3260,7 @@ int      GetMTU( char*   pszNetDevName,
         return -1;
     }
 
-    rc = ioctl( fd, SIOCGIFMTU, (char*)&hifr );
+    rc = TUNTAP_IOCtl( fd, SIOCGIFMTU, (char*)&hifr );
     if (rc < 0 ) {
         return -1;
     }
