@@ -12,12 +12,13 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 /* Default parm:   iface /dev/net/tun                                */
-/* Optional parms: hwaddr  <mac address of TAP adapter>              */
-/*                 ipaddr  <IP address of TAP adapter>               */
-/*                 netmask <netmask of TAP adapter>                  */
-/*                 mtu     <mtu of TAP adapter>                      */
+/* Optional parms: hwaddr  <mac address of interface  >              */
+/*                 ipaddr  <IPv4 address and prefix length of if>    */
+/*                 netmask <netmask of interface  >                  */
+/*                 ipaddr6 <IPv6 address and prefix length of if>    */
+/*                 mtu     <mtu of interface  >                      */
 /*                 chpid   <channel path id>                         */
-/*                 dev     <name of TAP adapter>                     */
+/*                 dev     <name of interface  >                     */
 /*                 debug                                             */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
@@ -45,6 +46,7 @@
 #include "mpc.h"
 #include "tuntap.h"
 #include "ctcadpt.h"
+#include "hercifc.h"
 
 #define QETH_DEBUG
 
@@ -97,6 +99,12 @@ void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
 void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
 OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
 void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
+
+/*-------------------------------------------------------------------*/
+/* Functions, entirely internal to qeth.c but should be in tuntap.c  */
+/*-------------------------------------------------------------------*/
+int      GetMACAddr( char*, char*, int, MAC* );
+int      GetMTU( char*, char*, int, int* );
 
 
 /*-------------------------------------------------------------------*/
@@ -466,8 +474,41 @@ U16 offph;
                 if(grp->ttnetmask)
                     VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+#if defined(ENABLE_IPV6)
+                if(grp->ttipaddr6)
+                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttdevn,
+                                              grp->ttipaddr6,
+                                              grp->ttpfxlen6));
+#endif /*defined(ENABLE_IPV6)*/
                 if(grp->ttmtu)
                     VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
+
+                if ( grp->l3 && !grp->tthwaddr )
+                {
+                    /* Small problem ahoy. We have started a TUN interface  */
+                    /* and the config statement did not specify a MAC       */
+                    /* address. At various points in the future the guest   */
+                    /* may output requests relating to, he expects, the     */
+                    /* devices MAC address, e.g. Read MAC address. So let's */
+                    /* create a MAC address for ourselves, pretending that  */
+                    /* it was specified on the config statement.            */
+                    /* See tuntap.c for MAC address related notes.          */
+                    {
+                    MAC mac;
+                    char cmac[24];
+                    int i;
+
+                        mac[0] = 0x00;
+                        mac[1] = 0x00;
+                        mac[2] = 0x5E;
+                        for( i = 3; i < 6; i++ )
+                            mac[i] = (int)((rand()/(RAND_MAX+1.0))*256);
+                        snprintf( cmac, sizeof(cmac),
+                                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
+                                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+                        grp->tthwaddr = strdup(cmac);
+                    }
+                }
 
                 break;
 
@@ -574,14 +615,16 @@ U16 offph;
                             case IPA_SAP_SMA_CMD_READ:
                                 DBGTRC(dev, "SETMAC Read MAC address\n");
                                 if(grp->tthwaddr) {
-                                    if (ParseMAC( grp->tthwaddr, mac ) == 0 ) {
-                                        STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
-                                        STORE_FW(sap->resv004,0x93020000);  /* !!!! */
-                                        STORE_FW(sma->asize,IFHWADDRLEN);
-                                        STORE_FW(sma->nomacs,1);
-                                        memcpy(sma->addr, &mac, IFHWADDRLEN);
-                                    }
+                                  ParseMAC( grp->tthwaddr, mac );
                                 }
+                                else {
+                                  GetMACAddr( grp->ttdevn, NULL, 0, &mac );
+                                }
+                                STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
+                                STORE_FW(sap->resv004,0x93020000);  /* !!!! */
+                                STORE_FW(sma->asize,IFHWADDRLEN);
+                                STORE_FW(sma->nomacs,1);
+                                memcpy(sma->addr, &mac, IFHWADDRLEN);
                                 STORE_HW(sap->rc,IPA_RC_OK);
                                 STORE_HW(ipa->rc,IPA_RC_OK);
                                 break;
@@ -732,11 +775,14 @@ U16 offph;
 //                      VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
                     }
+#if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
                         /* Hmm... What does one do with an IPv6 address? */
                         /* SetDestAddr isn't valid for IPv6.             */
                     }
+#endif /*defined(ENABLE_IPV6)*/
+
                     STORE_HW(ipa->rc,IPA_RC_OK);
                 }
                 break;
@@ -815,8 +861,25 @@ U16 offph;
                 break;
 
             case IPA_CMD_CREATEADDR:
-                DBGTRC(dev, "L3 Create IPv6 addr from MAC\n");
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                {
+                BYTE *sip = (BYTE*)(ipa+1);
+                MAC  mac;
+
+                    DBGTRC(dev, "L3 Create IPv6 addr from MAC\n");
+
+                    if(grp->tthwaddr) {
+                      ParseMAC( grp->tthwaddr, mac );
+                    }
+                    else {
+                      GetMACAddr( grp->ttdevn, NULL, 0, &mac );
+                    }
+
+                    memcpy( sip, &mac, IFHWADDRLEN );
+                    sip[6] = 0xFF;
+                    sip[7] = 0xFE;
+
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
                 break;
 
             case IPA_CMD_SETDIAGASS:
@@ -1163,6 +1226,8 @@ static void process_output_queue(DEVBLK *dev)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int oq = dev->qdio.o_qpos;
 int mq = dev->qdio.o_qcnt;
+//  int  ipktver;
+//  char cpktver[8];
 
     while (mq--)
         if(dev->qdio.o_qmask & (0x80000000 >> oq))
@@ -1234,6 +1299,23 @@ mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
                         {
                             if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_UNICST,grp))
                             {
+
+//          // Trace the IP packet before sending to TUN interface
+//          if( grp->debug )
+//          {
+//              ipktver = (((buf+sizeof(OSA_HDR2))[0] & 0xF0) >> 4);
+//              if (ipktver == 4)
+//                strcpy( cpktver, "IPv4" );
+//              else if (ipktver == 6)
+//                strcpy( cpktver, "IPv6" );
+//              else
+//                strcpy( cpktver, "???" );
+//              // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
+//              WRMSG(HHC03907, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+//                                   cpktver, len-sizeof(OSA_HDR2), grp->ttdevn );
+//              packet_trace( buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2), '<' );
+//          }
+
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", ns, len-sizeof(OSA_HDR2), 0 );
                                 TUNTAP_Write(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
                                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", ns, len-sizeof(OSA_HDR2), 0 );
@@ -1361,15 +1443,59 @@ int i;
         }
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
-            if(grp->tthwaddr)
+            MAC mac;
+            if(grp->tthwaddr) {
                 free(grp->tthwaddr);
-            grp->tthwaddr = strdup(argv[++i]);
+                grp->tthwaddr = NULL;
+            }
+            if (ParseMAC( argv[i+1], mac ) == 0)
+                grp->tthwaddr = strdup(argv[i+1]);
+            ++i;
             continue;
         }
         else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
         {
+            char            *slash, *prfx;
+            int             prfxsz;
+            uint32_t        mask;
+            struct in_addr  addr4;
+            char            netmask[24];
+
             if(grp->ttipaddr)
                 free(grp->ttipaddr);
+            if(grp->ttpfxlen) {
+                free(grp->ttpfxlen);
+                grp->ttpfxlen = NULL;
+            }
+            slash = strchr( argv[i+1], '/' );  /* Point to slash character */
+            if (slash) {                       /* If there is a slash      */
+                prfx = slash + 1;              /* Point to prefix size     */
+                prfxsz = atoi(prfx);
+                if (( prfxsz >= 0 ) && ( prfxsz <= 32 )) {
+                    switch( prfxsz )
+                    {
+                    case 0:
+                        mask = 0x00000000;
+                        break;
+                    case 32:
+                        mask = 0xFFFFFFFF;
+                        break;
+                    default:
+                        mask = 0xFFFFFFFF ^ ( 0xFFFFFFFF >> prfxsz );
+                        break;
+                    }
+                    addr4.s_addr = htonl(mask);
+                    inet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
+
+                    if(grp->ttnetmask)
+                        free(grp->ttnetmask);
+                    grp->ttnetmask = strdup(netmask);
+
+                    grp->ttpfxlen = strdup(prfx);
+
+                    slash[0] = 0;              /* Replace slash with null  */
+                }
+            }
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
@@ -1380,6 +1506,35 @@ int i;
             grp->ttnetmask = strdup(argv[++i]);
             continue;
         }
+#if defined(ENABLE_IPV6)
+        else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
+        {
+            char  *slash, *prfx;
+            int   prfxsz;
+
+            if(grp->ttipaddr6)
+                free(grp->ttipaddr6);
+            if(grp->ttpfxlen6)
+                free(grp->ttpfxlen6);
+            slash = strchr( argv[i+1], '/' );  /* Point to slash character */
+            if (slash) {                       /* If there is a slash      */
+                prfx = slash + 1;              /* Point to prefix size     */
+                prfxsz = atoi(prfx);
+                if (( prfxsz >= 0 ) && ( prfxsz <= 128 )) {
+                    slash[0] = 0;              /* Replace slash with null  */
+                }
+                else {
+                    prfx = "128";
+                }
+            }
+            else {
+                prfx = "128";
+            }
+            grp->ttpfxlen6 = strdup(prfx);
+            grp->ttipaddr6 = strdup(argv[++i]);
+            continue;
+        }
+#endif /*defined(ENABLE_IPV6)*/
         else if(!strcasecmp("mtu",argv[i]) && (i+1) < argc)
         {
             if(grp->ttmtu)
@@ -1404,21 +1559,19 @@ int i;
             strlcpy( grp->ttdevn, argv[++i], sizeof(grp->ttdevn) );
             continue;
         }
-        else
 #if defined(QETH_DEBUG) || defined(IFF_DEBUG)
-        if(!strcasecmp("debug",argv[i]))
+        else if (!strcasecmp("debug",argv[i]))
         {
             grp->debug = 1;
             continue;
         }
-        else
-        if(!strcasecmp("nodebug",argv[i]))
+        else if(!strcasecmp("nodebug",argv[i]))
         {
             grp->debug = 0;
             continue;
         }
-        else
 #endif
+        else
             logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
 
     }
@@ -1485,8 +1638,14 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->tthwaddr);
         if(grp->ttipaddr)
             free(grp->ttipaddr);
+        if(grp->ttpfxlen)
+            free(grp->ttpfxlen);
         if(grp->ttnetmask)
             free(grp->ttnetmask);
+        if(grp->ttipaddr6)
+            free(grp->ttipaddr6);
+        if(grp->ttpfxlen6)
+            free(grp->ttpfxlen6);
         if(grp->ttmtu)
             free(grp->ttmtu);
         remove_and_free_any_buffers_on_chain( grp );
@@ -1633,13 +1792,13 @@ int num;                                /* Number of bytes to move   */
         return;
     }
 
-    /* Display various information, maybe */
-    if( grp->debug )
-    {
-        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
-        WRMSG(HHC03992, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-            code, flags, count, chained, prevcode, ccwseq );
-    }
+//  /* Display various information, maybe */
+//  if( grp->debug )
+//  {
+//      // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+//      WRMSG(HHC03992, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//          code, flags, count, chained, prevcode, ccwseq );
+//  }
 
     /* Process depending on CCW opcode */
     switch (code) {
@@ -2090,13 +2249,13 @@ int num;                                /* Number of bytes to move   */
 
     } /* end switch(code) */
 
-    /* Display various information, maybe */
-    if( grp->debug )
-    {
-        // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
-        WRMSG(HHC03993, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-            *unitstat, *residual, *more );
-    }
+//  /* Display various information, maybe */
+//  if( grp->debug )
+//  {
+//      // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+//      WRMSG(HHC03993, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//          *unitstat, *residual, *more );
+//  }
 
 } /* end function qeth_execute_ccw */
 
@@ -2516,10 +2675,12 @@ U16 uMTU;
     if(grp->ttmtu)
     {
         iMTU = atoi( grp->ttmtu );
-        uMTU = iMTU;
     }
     else
-        uMTU = 1500;
+    {
+        GetMTU( grp->ttdevn, NULL, 0, &iMTU );
+    }
+    uMTU = iMTU;
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_01 +                     // first MPC_PUS
@@ -3020,6 +3181,102 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 
     return NULL;
 
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Get MAC address                                                   */
+/*-------------------------------------------------------------------*/
+int      GetMACAddr( char*   pszNetDevName,
+                     char*   pszMACAddr,
+                     int     szMACAddrLen,
+                     MAC*    pMACAddr )
+{
+    int fd, rc;
+    struct hifr hifr;
+
+    memset( &hifr, 0, sizeof(struct hifr) );
+    strncpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name)-1 );
+
+    if (pszMACAddr) {
+        memset( pszMACAddr, 0, szMACAddrLen );
+    }
+    if (pMACAddr) {
+        memset( pMACAddr, 0, IFHWADDRLEN );
+    }
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        return -1;
+    }
+
+    rc = ioctl( fd, SIOCGIFHWADDR, (char*)&hifr );
+    if (rc < 0 ) {
+        return -1;
+    }
+
+    if (pszMACAddr) {
+        snprintf( pszMACAddr, szMACAddrLen-1,
+                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[0],
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[1],
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[2],
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[3],
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[4],
+                  (unsigned char)hifr.hifr_hwaddr.sa_data[5] );
+    }
+    if (pMACAddr) {
+        memcpy( pMACAddr, &hifr.hifr_hwaddr, IFHWADDRLEN );
+    }
+
+    close(fd);
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Get MTU value                                                     */
+/*-------------------------------------------------------------------*/
+int      GetMTU( char*   pszNetDevName,
+                 char*   pszMTU,
+                 int     szMTULen,
+                 int*    pMTU )
+{
+    int fd, rc;
+    struct hifr hifr;
+
+    memset( &hifr, 0, sizeof(struct hifr) );
+    strncpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name)-1 );
+
+    if (pszMTU) {
+        memset( pszMTU, 0, szMTULen );
+    }
+    if (pMTU) {
+        *pMTU = 0;
+    }
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        return -1;
+    }
+
+    rc = ioctl( fd, SIOCGIFMTU, (char*)&hifr );
+    if (rc < 0 ) {
+        return -1;
+    }
+
+    if (pszMTU) {
+        snprintf( pszMTU, szMTULen-1,
+                  "%d",
+                  hifr.hifr_mtu );
+    }
+    if (pMTU) {
+        *pMTU = hifr.hifr_mtu;
+    }
+
+    close(fd);
+
+    return 0;
 }
 
 

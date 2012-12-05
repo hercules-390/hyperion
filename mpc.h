@@ -725,9 +725,27 @@ typedef struct _MPC_IPA_SAS {
 /*00C*/ union {
             U32    flags_32;
             BYTE   ip[16];
-            /* There are other things that part of the union. */
+            /* There are other things that are part of the union. */
         } data;
     } MPC_IPA_SAS;
+
+/*-------------------------------------------------------------------*/
+/* Set IP Address                                                    */
+/*-------------------------------------------------------------------*/
+typedef struct _MPC_IPA_SIP {
+/*000*/   union {
+            struct {
+/*000*/       BYTE   addr[4];
+/*004*/       BYTE   mask[4];
+/*008*/       BYTE   prfx[4];
+            } ip4;
+            struct {
+/*000*/       BYTE   addr[16];
+/*010*/       BYTE   mask[16];
+/*020*/       BYTE   prfx[4];
+            } ip6;
+          } u;
+        } MPC_IPA_SIP;
 
 
 /*===================================================================*/

@@ -163,10 +163,13 @@ typedef struct _OSA_GRP {
 
     char *tuntap;               /* Interface path name               */
     char  ttdevn[IFNAMSIZ];     /* Interface network name            */
-    char *tthwaddr;             /* MAC address of the TAP adapter    */
-    char *ttipaddr;             /* IP address of the TAP adapter     */
-    char *ttnetmask;            /* Netmask of the TAP adapter        */
-    char *ttmtu;                /* MTU of the TAP adapter            */
+    char *tthwaddr;             /* MAC address of the interface      */
+    char *ttipaddr;             /* IPv4 address of the interface     */
+    char *ttpfxlen;             /* IPv4 Prefix length of interface   */
+    char *ttnetmask;            /* IPv4 Netmask of the interface     */
+    char *ttipaddr6;            /* IPv6 address of the interface     */
+    char *ttpfxlen6;            /* IPv6 Prefix length of interface   */
+    char *ttmtu;                /* MTU of the interface              */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* File Descriptor pair write pipe   */
