@@ -414,10 +414,10 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pPTPBLK->pDEVBLKWrite->ctcxmode = 1;
 
     strlcpy( pPTPBLK->pDEVBLKRead->filename,
-             pPTPBLK->szTUNCharName,
+             pPTPBLK->szTUNCharDevName,
              sizeof(pPTPBLK->pDEVBLKRead->filename) );
     strlcpy( pPTPBLK->pDEVBLKWrite->filename,
-             pPTPBLK->szTUNCharName,
+             pPTPBLK->szTUNCharDevName,
              sizeof(pPTPBLK->pDEVBLKWrite->filename) );
 
     // Initialize various fields in the PTPATHs.
@@ -460,10 +460,10 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     initialize_condition( &pPTPATHwr->UnsolEvent );
 
     // Create the TUN interface.
-    rc = TUNTAP_CreateInterface( pPTPBLK->szTUNCharName,
+    rc = TUNTAP_CreateInterface( pPTPBLK->szTUNCharDevName,
                                  IFF_TUN | IFF_NO_PI,
                                  &pPTPBLK->fd,
-                                 pPTPBLK->szTUNDevName );
+                                 pPTPBLK->szTUNIfName );
     if (rc < 0)
     {
         // Disconnect the DEVBLKs from the PTPATHs.
@@ -477,7 +477,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
     // HHC03961 "%1d:%04X PTP: device '%s', type '%s' opened"
     WRMSG(HHC03961, "I", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
-                         pPTPBLK->szTUNDevName, "TUN" );
+                         pPTPBLK->szTUNIfName, "TUN" );
 
     // Copy the fd to make panel.c happy
     pPTPBLK->pDEVBLKRead->fd =
@@ -489,7 +489,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         struct tt32ctl tt32ctl;
 
         memset( &tt32ctl, 0, sizeof(tt32ctl) );
-        strlcpy( tt32ctl.tt32ctl_name, pPTPBLK->szTUNDevName, sizeof(tt32ctl.tt32ctl_name) );
+        strlcpy( tt32ctl.tt32ctl_name, pPTPBLK->szTUNIfName, sizeof(tt32ctl.tt32ctl_name) );
 
         // Set the specified driver/dll i/o buffer sizes..
         tt32ctl.tt32ctl_devbuffsize = pPTPBLK->iKernBuff;
@@ -497,7 +497,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         {
             // HHC03962 "%1d:%04X PTP: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
-                  "TT32SDEVBUFF", pPTPBLK->szTUNDevName, strerror( errno ) );
+                  "TT32SDEVBUFF", pPTPBLK->szTUNIfName, strerror( errno ) );
         }
 
         tt32ctl.tt32ctl_iobuffsize = pPTPBLK->iIOBuff;
@@ -505,13 +505,13 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         {
             // HHC03962 "%1d:%04X PTP: ioctl '%s' failed for device '%s': '%s'"
             WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
-                  "TT32SIOBUFF", pPTPBLK->szTUNDevName, strerror( errno ) );
+                  "TT32SIOBUFF", pPTPBLK->szTUNIfName, strerror( errno ) );
         }
     }
 #endif /* defined(OPTION_W32_CTCI) */
 
 // #ifdef OPTION_TUNTAP_CLRIPADDR
-//     VERIFY( TUNTAP_ClrIPAddr ( pPTPBLK->szTUNDevName ) == 0 );
+//     VERIFY( TUNTAP_ClrIPAddr ( pPTPBLK->szTUNIfName ) == 0 );
 // #endif /* OPTION_TUNTAP_CLRIPADDR */
 
 #ifdef OPTION_TUNTAP_SETMACADDR
@@ -519,39 +519,39 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     (
         "** ptp_init: %4.4X (%s): IP \"%s\"  -->  default MAC \"%s\"\n",
         pPTPBLK->pDEVBLKRead->devnum,
-        pPTPBLK->szTUNDevName,
+        pPTPBLK->szTUNIfName,
         pPTPBLK->szGuestIPAddr4,
         pPTPBLK->szMACAddress
     );
 
-    VERIFY( TUNTAP_SetMACAddr ( pPTPBLK->szTUNDevName, pPTPBLK->szMACAddress  ) == 0 );
+    VERIFY( TUNTAP_SetMACAddr ( pPTPBLK->szTUNIfName, pPTPBLK->szMACAddress  ) == 0 );
 #endif /* OPTION_TUNTAP_SETMACADDR */
 
     if (pPTPBLK->fIPv4Spec)
     {
-        VERIFY( TUNTAP_SetIPAddr  ( pPTPBLK->szTUNDevName, pPTPBLK->szDriveIPAddr4 ) == 0 );
+        VERIFY( TUNTAP_SetIPAddr  ( pPTPBLK->szTUNIfName, pPTPBLK->szDriveIPAddr4 ) == 0 );
 
-        VERIFY( TUNTAP_SetDestAddr( pPTPBLK->szTUNDevName, pPTPBLK->szGuestIPAddr4 ) == 0 );
+        VERIFY( TUNTAP_SetDestAddr( pPTPBLK->szTUNIfName, pPTPBLK->szGuestIPAddr4 ) == 0 );
 
 #ifdef OPTION_TUNTAP_SETNETMASK
-        VERIFY( TUNTAP_SetNetMask ( pPTPBLK->szTUNDevName, pPTPBLK->szNetMask     ) == 0 );
+        VERIFY( TUNTAP_SetNetMask ( pPTPBLK->szTUNIfName, pPTPBLK->szNetMask     ) == 0 );
 #endif /* OPTION_TUNTAP_SETNETMASK */
     }
 
     if (pPTPBLK->fIPv6Spec)
     {
-        VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNDevName,
+        VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNIfName,
                                      pPTPBLK->szDriveLLAddr6,
                                      pPTPBLK->szDriveLLxSiz6 ) == 0 );
 
-        VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNDevName,
+        VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNIfName,
                                      pPTPBLK->szDriveIPAddr6,
                                      pPTPBLK->szDrivePfxSiz6 ) == 0 );
     }
 
-    VERIFY( TUNTAP_SetMTU     ( pPTPBLK->szTUNDevName, pPTPBLK->szMTU ) == 0 );
+    VERIFY( TUNTAP_SetMTU     ( pPTPBLK->szTUNIfName, pPTPBLK->szMTU ) == 0 );
 
-    VERIFY( TUNTAP_SetFlags   ( pPTPBLK->szTUNDevName, nIFFlags ) == 0 );
+    VERIFY( TUNTAP_SetFlags   ( pPTPBLK->szTUNIfName, nIFFlags ) == 0 );
 
     // Create the read thread.
     MSGBUF( thread_name, "%s %4.4X ReadThread",
@@ -563,7 +563,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // Report the bad news.
         // HHC00102 "Error in function create_thread(): %s"
         WRMSG(HHC00102, "E", strerror(rc));
-        // Close the TUN/TAP interface.
+        // Close the TUN interface.
         VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
         pPTPBLK->fd = -1;
         // Disconnect the DEVBLKs from the PTPATHs.
@@ -883,7 +883,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->szDriveIPAddr4,
                   pPTPBLK->szGuestIPAddr6,
                   pPTPBLK->szDriveIPAddr6,
-                  pPTPBLK->szTUNDevName,
+                  pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
     }
@@ -893,7 +893,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr4,
                   pPTPBLK->szDriveIPAddr4,
-                  pPTPBLK->szTUNDevName,
+                  pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
     }
@@ -903,7 +903,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr6,
                   pPTPBLK->szDriveIPAddr6,
-                  pPTPBLK->szTUNDevName,
+                  pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
     }
@@ -1300,7 +1300,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             // Err... not IPv4 or IPv6!
             // HHC03933 "%1d:%04X PTP: Accept data for device '%s' contains IP packet with unknown IP version, data dropped"
             WRMSG(HHC03933, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 pPTPBLK->szTUNDevName );
+                                 pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
             if (iTraceLen > 256)
             {
@@ -1315,7 +1315,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         }
 
         // Check that there is a whole IP packet, and that
-        // the IP packet is no larger than the TUN device MTU.
+        // the IP packet is no larger than the TUN interface MTU.
         if (iPktVer == 4)
         {
             if (iDataLen >= (int)sizeof(IP4FRM))   // Size of a minimal IPv4 header
@@ -1346,7 +1346,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         {
             // HHC03934 "%1d:%04X PTP: Accept data for device '%s' contains incomplete IP packet, data dropped"
             WRMSG(HHC03934, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 pPTPBLK->szTUNDevName );
+                                 pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
             if (iTraceLen > 256)
             {
@@ -1363,7 +1363,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         {
             // HHC03935 "%1d:%04X PTP: Accept data for device '%s' contains IP packet larger than MTU, data dropped"
             WRMSG(HHC03935, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 pPTPBLK->szTUNDevName );
+                                 pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
             if (iTraceLen > 256)
             {
@@ -1377,7 +1377,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             break;
         }
 
-        // Check whether the interface is ready for the IP packet.
+        // Check whether the TUN interface is ready for the IP packet.
         fWantPkt = TRUE;
         if (iPktVer == 4)
         {
@@ -1397,21 +1397,21 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         //
         if (fWantPkt)
         {
-            // Trace the IP packet before sending to TUN device
+            // Trace the IP packet before sending to TUN interface
             if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGPACKET))
             {
                 // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
                 WRMSG(HHC03907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     cPktVer, iPktLen, pPTPBLK->szTUNDevName );
+                                     cPktVer, iPktLen, pPTPBLK->szTUNIfName );
                 packet_trace( pData, iPktLen, '<' );
             }
 
-            // Write the IP packet to the TUN/TAP interface
+            // Write the IP packet to the TUN interface
             rv = TUNTAP_Write( pPTPBLK->fd, pData, iPktLen );
             if (rv < 0)
             {
                 // HHC03971 "%1d:%04X PTP: error writing to device '%s': '%s'"
-                WRMSG(HHC03971, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNDevName,
+                WRMSG(HHC03971, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->szTUNIfName,
                         strerror( errno ) );
                 rv = -3;
                 break;
@@ -1916,9 +1916,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 /* ------------------------------------------------------------------ */
 /* ptp_read_thread()                                                  */
 /* ------------------------------------------------------------------ */
-// The ptp_read_thread() reads data from the TUN device, stores the
-// data in the path read buffer, from where the data is read by the
-// read path of the MPCPTP/MPCPTP6 connection.
+// The ptp_read_thread() reads data from the TUN interface, stores
+// the data in the path read buffer, from where the data is read by
+// the read path of the MPCPTP/MPCPTP6 connection.
 //
 // The size of the read buffer is determined by the maximum read
 // length reported by the y-side during handshaking. The y-side
@@ -1979,11 +1979,11 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
 {
     PTPATH*    pPTPATH = pPTPBLK->pPTPATHRead; // PTPATH Read
     DEVBLK*    pDEVBLK = pPTPATH->pDEVBLK;     // DEVBLK
-    BYTE*      pTunBuf;                        // TUN/TAP read buffer address
-    PIP4FRM    pIP4FRM;                        // IPv4 packet in TUN/TAP read buffer
-    PIP6FRM    pIP6FRM;                        // IPv6 packet in TUN/TAP read buffer
-    int        iTunLen;                        // TUN/TAP read length
-    int        iLength;                        // Length of data in TUN/TAP read buffer
+    BYTE*      pTunBuf;                        // TUN read buffer address
+    PIP4FRM    pIP4FRM;                        // IPv4 packet in TUN read buffer
+    PIP6FRM    pIP6FRM;                        // IPv6 packet in TUN read buffer
+    int        iTunLen;                        // TUN read length
+    int        iLength;                        // Length of data in TUN read buffer
     PTPHDR*    pPTPHDR;                        // PTPHDR of the path read buffer
     MPC_TH*    pMPC_TH;                        // MPC_TH follows the PTPHDR
 //  MPC_RRH*   pMPC_RRH;                       // MPC_RRH follows the MPC_TH
@@ -1996,12 +1996,12 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
     int        iTraceLen;
 
 
-    // Allocate the TUN/TAP read buffer.
+    // Allocate the TUN read buffer.
     iTunLen = pPTPBLK->iMTU;                      // Read length and buffer size
     pTunBuf = alloc_storage( pDEVBLK, iTunLen );  // equal to the MTU size
     if (!pTunBuf)                    // if the allocate failed...
     {
-        // Close the TUN/TAP interface.
+        // Close the TUN interface.
         VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
         pPTPBLK->fd = -1;
         // Nothing else to be done.
@@ -2029,7 +2029,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             {
                 // HHC03972 "%1d:%04X PTP: error reading from device '%s': '%s'"
                 WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     pPTPBLK->szTUNDevName, strerror( errno ) );
+                                     pPTPBLK->szTUNIfName, strerror( errno ) );
             }
             break;
         }
@@ -2053,7 +2053,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
             // Err... not IPv4 or IPv6!
             // HHC03921 "%1d:%04X PTP: Packet of size %d bytes from device '%s' has an unknown IP version, packet dropped"
             WRMSG(HHC03921, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 iLength, pPTPBLK->szTUNDevName );
+                                 iLength, pPTPBLK->szTUNIfName );
             iTraceLen = iLength;
             if (iTraceLen > 256)
             {
@@ -2098,7 +2098,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
         {
             // HHC03922 "%1d:%04X PTP: Packet of size %d bytes from device '%s' is not equal to the packet length of %d bytes, packet dropped"
             WRMSG(HHC03922, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                 iLength, pPTPBLK->szTUNDevName,
+                                 iLength, pPTPBLK->szTUNIfName,
                                  iPktLen );
             iTraceLen = iLength;
             if (iTraceLen > 256)
@@ -2156,7 +2156,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                 release_lock( &pPTPBLK->ReadBufferLock );
                 // HHC03923 "%1d:%04X PTP: Packet of size %d bytes from device '%s' is larger than the guests actual MTU of %d bytes, packet dropped"
                 WRMSG(HHC03923, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     iLength, pPTPBLK->szTUNDevName,
+                                     iLength, pPTPBLK->szTUNIfName,
                                      (int)pPTPBLK->yActMTU );
                 iTraceLen = iLength;
                 if (iTraceLen > 256)
@@ -2178,7 +2178,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                 release_lock( &pPTPBLK->ReadBufferLock );
                 // HHC03924 "%1d:%04X PTP: Packet of size %d bytes from device '%s' is too large for read buffer area of %d bytes, packet dropped"
                 WRMSG(HHC03924, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                     iLength, pPTPBLK->szTUNDevName,
+                                     iLength, pPTPBLK->szTUNIfName,
                                      pPTPHDR->iAreaLen - LEN_OF_PAGE_ONE );
                 iTraceLen = iLength;
                 if (iTraceLen > 256)
@@ -2218,7 +2218,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
                 {
                     // HHC03904 "%1d:%04X PTP: Receive %s packet of size %d bytes from device '%s'"
                     WRMSG(HHC03904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                                         cPktVer, iLength, pPTPBLK->szTUNDevName );
+                                         cPktVer, iLength, pPTPBLK->szTUNIfName );
                     packet_trace( (BYTE*)pTunBuf, iLength, '>' );
                 }
 
@@ -2252,7 +2252,7 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
     VERIFY( pPTPBLK->fd == -1 || TUNTAP_Close( pPTPBLK->fd ) == 0 );
     pPTPBLK->fd = -1;
 
-    // Release the TUN/TAP read buffer.
+    // Release the TUN read buffer.
     free( pTunBuf );
     pTunBuf = NULL;
     iTunLen = 0;
@@ -2600,9 +2600,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #if defined( OPTION_W32_CTCI )
     pPTPBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pPTPBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
-    strlcpy( pPTPBLK->szTUNCharName, tt32_get_default_iface(), sizeof(pPTPBLK->szTUNCharName) );
+    strlcpy( pPTPBLK->szTUNCharDevName, tt32_get_default_iface(), sizeof(pPTPBLK->szTUNCharDevName) );
 #else /* defined ( OPTION_W32_CTCI ) */
-    strlcpy( pPTPBLK->szTUNCharName, HERCTUN_DEV, sizeof(pPTPBLK->szTUNCharName) );
+    strlcpy( pPTPBLK->szTUNCharDevName, HERCTUN_DEV, sizeof(pPTPBLK->szTUNCharDevName) );
 #endif /* defined( OPTION_W32_CTCI ) */
     pPTPBLK->iAFamily = AF_UNSPEC;
     strlcpy( pPTPBLK->szMaxBfru, "5", sizeof(pPTPBLK->szMaxBfru) );
@@ -2638,7 +2638,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         static struct option options[] =
         {
             { "dev",     required_argument, NULL, 'n' },
-            { "tundev",  required_argument, NULL, 'x' },
+            { "tundev",  required_argument, NULL, 'x' }, /* Deprecated, line should be removed */
+            { "if",      required_argument, NULL, 'x' },
             { "mtu",     required_argument, NULL, 't' },
             { "mac",     required_argument, NULL, 'm' },
             { "debug",   optional_argument, NULL, 'd' },
@@ -2679,25 +2680,25 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
 #endif /* defined( OPTION_W32_CTCI ) */
             // This is the file name of the special TUN/TAP character device
-            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharName)-1)
+            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharDevName)-1)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "device name", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szTUNCharName, optarg, sizeof(pPTPBLK->szTUNCharName) );
+            strlcpy( pPTPBLK->szTUNCharDevName, optarg, sizeof(pPTPBLK->szTUNCharDevName) );
             break;
 
-        case 'x':     // TUN network device name
-            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNDevName)-1)
+        case 'x':     // TUN network interface name
+            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNIfName)-1)
             {
                 // HHC03976 "%1d:%04X PTP: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "TUN device name", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szTUNDevName, optarg, sizeof(pPTPBLK->szTUNDevName) );
+            strlcpy( pPTPBLK->szTUNIfName, optarg, sizeof(pPTPBLK->szTUNIfName) );
             break;
 
         case 't':     // MTU of link (ignored if Windows) (default 1500).
@@ -3802,8 +3803,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 
                 // Replace the existing read buffer if necessary.
                 // (This is the buffer into which we place packets
-                // received from the tun device, and from which the
-                // y-sides read path reads the packets.)
+                // received from the TUN interface, and from which
+                // the y-sides read path reads the packets.)
                 if (pPTPBLK->yMaxReadLen != uMaxReadLen)
                 {
                     // Free the existing read buffer, if there is one.

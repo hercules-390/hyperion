@@ -110,8 +110,8 @@ struct  _PTPBLK
     int         iKernBuff;                 // Kernel buffer in K bytes.
     int         iIOBuff;                   // I/O buffer in K bytes.
     int         iAFamily;                  // Address family
-    char        szTUNCharName[256];        // TUN/TAP char filename
-    char        szTUNDevName[IFNAMSIZ];    // Network Device Name
+    char        szTUNCharDevName[256];     // TUN/TAP char device filename (e.g. /dev/net/tun)
+    char        szTUNIfName[IFNAMSIZ];     // TUN/TAP network interface name (e.g. tun0)
     char        szMaxBfru[8];              // Maximum buffers to use
     char        szMTU[8];                  // MTU size
     char        szMACAddress[32];          // MAC Address
