@@ -448,7 +448,7 @@ U16 offph;
                             | (grp->l3 ? IFF_TUN : IFF_TAP)
                         ,
                         &grp->ttfd,
-                        grp->ttdevn
+                        grp->ttifname
                     )
                     == 0
                 );
@@ -458,30 +458,30 @@ U16 offph;
 
 #if defined(IFF_DEBUG)
                 if (grp->debug)
-                    VERIFY(!TUNTAP_SetFlags(grp->ttdevn,IFF_DEBUG));
+                    VERIFY(!TUNTAP_SetFlags(grp->ttifname,IFF_DEBUG));
 #endif /*defined(IFF_DEBUG)*/
 #if defined( OPTION_TUNTAP_SETMACADDR )
                 if(grp->tthwaddr)
-                    VERIFY(!TUNTAP_SetMACAddr(grp->ttdevn,grp->tthwaddr));
+                    VERIFY(!TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr));
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
                 if(grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
-                    VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,grp->ttipaddr));
+                    VERIFY(!TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr));
 #else /*!defined( OPTION_W32_CTCI )*/
-                    VERIFY(!TUNTAP_SetIPAddr(grp->ttdevn,grp->ttipaddr));
+                    VERIFY(!TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr));
 #endif /*defined( OPTION_W32_CTCI )*/
 #if defined( OPTION_TUNTAP_SETNETMASK )
                 if(grp->ttnetmask)
-                    VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,grp->ttnetmask));
+                    VERIFY(!TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask));
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
 #if defined(ENABLE_IPV6)
                 if(grp->ttipaddr6)
-                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttdevn,
+                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttifname,
                                               grp->ttipaddr6,
                                               grp->ttpfxlen6));
 #endif /*defined(ENABLE_IPV6)*/
                 if(grp->ttmtu)
-                    VERIFY(!TUNTAP_SetMTU(grp->ttdevn,grp->ttmtu));
+                    VERIFY(!TUNTAP_SetMTU(grp->ttifname,grp->ttmtu));
 
                 if ( grp->l3 && !grp->tthwaddr )
                 {
@@ -618,7 +618,7 @@ U16 offph;
                                   ParseMAC( grp->tthwaddr, mac );
                                 }
                                 else {
-                                  GetMACAddr( grp->ttdevn, NULL, 0, &mac );
+                                  GetMACAddr( grp->ttifname, NULL, 0, &mac );
                                 }
                                 STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
                                 STORE_FW(sap->resv004,0x93020000);  /* !!!! */
@@ -676,7 +676,7 @@ U16 offph;
                 {
                     DBGTRC(dev, _("STARTLAN\n"));
 
-                    if (TUNTAP_SetFlags( grp->ttdevn, 0
+                    if (TUNTAP_SetFlags( grp->ttifname, 0
                         | IFF_UP
                         | QETH_RUNNING
                         | QETH_PROMISC
@@ -698,7 +698,7 @@ U16 offph;
                 {
                     DBGTRC(dev, _("STOPLAN\n"));
 
-                    if( TUNTAP_SetFlags(grp->ttdevn,0) )
+                    if( TUNTAP_SetFlags(grp->ttifname,0) )
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else
                         STORE_HW(ipa->rc,IPA_RC_OK);
@@ -768,11 +768,11 @@ U16 offph;
                     if (proto == IPA_PROTO_IPV4)
                     {
                         snprintf(ipaddr,sizeof(ipaddr),"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                        VERIFY(!TUNTAP_SetDestAddr(grp->ttdevn,ipaddr));
+                        VERIFY(!TUNTAP_SetDestAddr(grp->ttifname,ipaddr));
 
 #if defined( OPTION_TUNTAP_SETNETMASK )
 //                      snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-//                      VERIFY(!TUNTAP_SetNetMask(grp->ttdevn,ipmask));
+//                      VERIFY(!TUNTAP_SetNetMask(grp->ttifname,ipmask));
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
                     }
 #if defined(ENABLE_IPV6)
@@ -871,7 +871,7 @@ U16 offph;
                       ParseMAC( grp->tthwaddr, mac );
                     }
                     else {
-                      GetMACAddr( grp->ttdevn, NULL, 0, &mac );
+                      GetMACAddr( grp->ttifname, NULL, 0, &mac );
                     }
 
                     memcpy( sip, &mac, IFHWADDRLEN );
@@ -1312,7 +1312,7 @@ mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
 //                strcpy( cpktver, "???" );
 //              // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
 //              WRMSG(HHC03907, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-//                                   cpktver, len-sizeof(OSA_HDR2), grp->ttdevn );
+//                                   cpktver, len-sizeof(OSA_HDR2), grp->ttifname );
 //              packet_trace( buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2), '<' );
 //          }
 
@@ -1554,9 +1554,9 @@ int i;
 
             continue;
         }
-        else if(!strcasecmp("dev",argv[i]) && (i+1) < argc)
+        else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
         {
-            strlcpy( grp->ttdevn, argv[++i], sizeof(grp->ttdevn) );
+            strlcpy( grp->ttifname, argv[++i], sizeof(grp->ttifname) );
             continue;
         }
 #if defined(QETH_DEBUG) || defined(IFF_DEBUG)
@@ -1598,8 +1598,8 @@ char qdiostat[80] = {0};
     {
         OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         snprintf( qdiostat, sizeof(qdiostat), "%s%stx[%u] rx[%u] "
-            , grp->ttdevn[0] ? grp->ttdevn : ""
-            , grp->ttdevn[0] ? " "         : ""
+            , grp->ttifname[0] ? grp->ttifname : ""
+            , grp->ttifname[0] ? " "         : ""
             , dev->qdio.txcnt
             , dev->qdio.rxcnt
         );
@@ -2678,7 +2678,7 @@ U16 uMTU;
     }
     else
     {
-        GetMTU( grp->ttdevn, NULL, 0, &iMTU );
+        GetMTU( grp->ttifname, NULL, 0, &iMTU );
     }
     uMTU = iMTU;
 

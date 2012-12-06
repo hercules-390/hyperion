@@ -162,7 +162,7 @@ typedef struct _OSA_GRP {
     int       numbhr;           /* Number of OSA_BHRs on chain       */
 
     char *tuntap;               /* Interface path name               */
-    char  ttdevn[IFNAMSIZ];     /* Interface network name            */
+    char  ttifname[IFNAMSIZ];   /* Interface network name            */
     char *tthwaddr;             /* MAC address of the interface      */
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
