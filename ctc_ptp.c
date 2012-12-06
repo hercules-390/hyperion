@@ -15,9 +15,6 @@
 /* See README.NETWORKING for details.                                 */
 
 #include "hstdinc.h"
-
-#if defined(ENABLE_IPV6)
-
 #include "hercules.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
@@ -159,14 +156,18 @@ static PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK );
 static PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX );
 static PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIX );
 
+#if defined(ENABLE_IPV6)
 static void     build_8108_icmpv6_packets( DEVBLK* pDEVBLK );
+#endif /* defined(ENABLE_IPV6) */
 
 static void     gen_csv_sid( BYTE* pClock1, BYTE* pClock2, BYTE* pToken );
 
 static void     shift_left_dbl( U32* even, U32* odd, int number );
 static void     shift_right_dbl( U32* even, U32* odd, int number );
 
+#if defined(ENABLE_IPV6)
 static void     calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen );
+#endif /* defined(ENABLE_IPV6) */
 
 
 /* ------------------------------------------------------------------ */
@@ -538,6 +539,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif /* OPTION_TUNTAP_SETNETMASK */
     }
 
+#if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv6Spec)
     {
         VERIFY( TUNTAP_SetIPAddr6  ( pPTPBLK->szTUNIfName,
@@ -548,6 +550,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                      pPTPBLK->szDriveIPAddr6,
                                      pPTPBLK->szDrivePfxSiz6 ) == 0 );
     }
+#endif /* defined(ENABLE_IPV6) */
 
     VERIFY( TUNTAP_SetMTU     ( pPTPBLK->szTUNIfName, pPTPBLK->szMTU ) == 0 );
 
@@ -584,14 +587,17 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // HHC03952 "%1d:%04X PTP: MAC: %s"
         WRMSG(HHC03952, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
             pPTPBLK->szMACAddress );
+#if defined(ENABLE_IPV6)
         if (pPTPBLK->fIPv4Spec)
         {
+#endif /* defined(ENABLE_IPV6) */
             // HHC03953 "%1d:%04X PTP: IPv4: Drive %s: Guest %s/%s (%s)"
             WRMSG(HHC03953, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                 pPTPBLK->szDriveIPAddr4,
                 pPTPBLK->szGuestIPAddr4,
                 pPTPBLK->szGuestPfxSiz4,
                 pPTPBLK->szNetMask );
+#if defined(ENABLE_IPV6)
         }
         if (pPTPBLK->fIPv6Spec)
         {
@@ -603,6 +609,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 pPTPBLK->szDrivePfxSiz6,
                 pPTPBLK->szGuestIPAddr6 );
         }
+#endif /* defined(ENABLE_IPV6) */
     }
 
     return 0;
@@ -875,6 +882,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 
     pPTPBLK = pPTPATH->pPTPBLK;
 
+#if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec)
     {
         snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%" I64_FMT "u]",
@@ -889,6 +897,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     }
     else if (pPTPBLK->fIPv4Spec)
     {
+#endif /* defined(ENABLE_IPV6) */
         snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%" I64_FMT "u]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr4,
@@ -896,6 +905,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
+#if defined(ENABLE_IPV6)
     }
     else
     {
@@ -907,6 +917,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
     }
+#endif /* defined(ENABLE_IPV6) */
     pBuffer[iBufLen-1] = '\0';
 
     return;
@@ -2546,7 +2557,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 {
     MAC             mac;                // Work area for MAC address
     struct in_addr  addr4;              // Work area for IPv4 addresses
+#if defined(ENABLE_IPV6)
     struct in6_addr addr6;              // Work area for IPv6 addresses
+#endif /* defined(ENABLE_IPV6) */
     int             iPfxSiz;            // Work area for prefix size
 //  int             iMaxBfru;
     int             iMTU;
@@ -2557,7 +2570,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     int             iWantFamily;
     int             iFirstFamily[2];
     int             j;
+#if defined(ENABLE_IPV6)
     int             fd;
+#endif /* defined(ENABLE_IPV6) */
     int             rc;
 #if defined(OPTION_W32_CTCI)
     int             iKernBuff;
@@ -2592,7 +2607,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //  }
 
     // Housekeeping
+#if defined(ENABLE_IPV6)
     memset( &addr6, 0, sizeof(struct in6_addr) );
+#endif /* defined(ENABLE_IPV6) */
     memset( &addr4, 0, sizeof(struct in_addr) );
     memset( &mac,  0, sizeof(MAC) );
 
@@ -2604,17 +2621,23 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #else /* defined ( OPTION_W32_CTCI ) */
     strlcpy( pPTPBLK->szTUNCharDevName, HERCTUN_DEV, sizeof(pPTPBLK->szTUNCharDevName) );
 #endif /* defined( OPTION_W32_CTCI ) */
+#if defined(ENABLE_IPV6)
     pPTPBLK->iAFamily = AF_UNSPEC;
+#else /* defined(ENABLE_IPV6) */
+    pPTPBLK->iAFamily = AF_INET;
+#endif /* defined(ENABLE_IPV6) */
     strlcpy( pPTPBLK->szMaxBfru, "5", sizeof(pPTPBLK->szMaxBfru) );
     pPTPBLK->iMaxBfru = 5;
     strlcpy( pPTPBLK->szMTU, "1500", sizeof(pPTPBLK->szMTU) );
     pPTPBLK->iMTU = 1500;
     strlcpy( pPTPBLK->szGuestPfxSiz4, "32", sizeof(pPTPBLK->szGuestPfxSiz4) );
     strlcpy( pPTPBLK->szNetMask, "255.255.255.255", sizeof(pPTPBLK->szNetMask) );
+#if defined(ENABLE_IPV6)
     strlcpy( pPTPBLK->szDrivePfxSiz6, "128", sizeof(pPTPBLK->szDrivePfxSiz6) );
     strlcpy( pPTPBLK->szGuestPfxSiz6, "128", sizeof(pPTPBLK->szGuestPfxSiz6) );  // never used
     strlcpy( pPTPBLK->szDriveLLxSiz6, "64", sizeof(pPTPBLK->szDriveLLxSiz6) );
     strlcpy( pPTPBLK->szGuestLLxSiz6, "64", sizeof(pPTPBLK->szGuestLLxSiz6) );   // never used
+#endif /* defined(ENABLE_IPV6) */
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
@@ -2817,11 +2840,15 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             break;
 
         case '4':     // Address family.
+#if defined(ENABLE_IPV6)
             pPTPBLK->iAFamily = AF_INET;
+#endif /* defined(ENABLE_IPV6) */
             break;
 
         case '6':     // Address family.
+#if defined(ENABLE_IPV6)
             pPTPBLK->iAFamily = AF_INET6;
+#endif /* defined(ENABLE_IPV6) */
             break;
 
 #if defined( OPTION_W32_CTCI )
@@ -2873,7 +2900,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     // Check for correct number of arguments. There can be either two
     // parameters (a pair of IPv4 or IPv6 addresses), or four parameters
     // (a pair of IPv4 addresses and a pair of IPv6 addresses, or vice-versa).
-    if (argc != 2 && argc != 4)
+    if (argc != 2
+#if defined(ENABLE_IPV6)
+                  && argc != 4
+#endif /* defined(ENABLE_IPV6) */
+                              )
     {
         // HHC03975 "%1d:%04X PTP: incorrect number of parameters"
         WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
@@ -2935,8 +2966,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         }
         else
         {
-            // A numeric IPv4 address has not been specified so check
-            // whether a numeric IPv6 address has been specified.
+            // A numeric IPv4 address has not been specified.
+#if defined(ENABLE_IPV6)
+            // Check whether a numeric IPv6 address has been specified.
             memset( &hrb, 0, sizeof(hrb) );
             hrb.wantafam = AF_INET6;
             hrb.numeric = TRUE;
@@ -2958,9 +2990,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
             else
             {
-                // A numeric IPv6 address has not been specified so check
-                // whether a host name that resolves to the required address
-                // family has been specified.
+                // A numeric IPv6 address has not been specified.
+#endif /* defined(ENABLE_IPV6) */
+                // Check whether a host name that resolves to the required
+                // address family has been specified.
                 memset( &hrb, 0, sizeof(hrb) );
                 hrb.wantafam = iWantFamily;
                 memcpy( hrb.host, cphost, ilhost );
@@ -2977,11 +3010,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                         strlcpy( pPTPBLK->szGuestIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr4) );
                         memcpy( &pPTPBLK->iaGuestIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaGuestIPAddr4) );
                     }
+#if defined(ENABLE_IPV6)
                     else
                     {
                         strlcpy( pPTPBLK->szGuestIPAddr6, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr6) );
                         memcpy( &pPTPBLK->iaGuestIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaGuestIPAddr6) );
                     }
+#endif /* defined(ENABLE_IPV6) */
                 }
                 else
                 {
@@ -2991,7 +3026,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                          "IP address", *argv );
                     return -1;
                 }
+#if defined(ENABLE_IPV6)
             }
+#endif /* defined(ENABLE_IPV6) */
         }
 
         if (cpprfx)
@@ -3030,9 +3067,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 }
                 addr4.s_addr = htonl(mask);
 
-                inet_ntop( AF_INET, &addr4, pPTPBLK->szNetMask,
-                                            sizeof(pPTPBLK->szNetMask) );
+                hinet_ntop( AF_INET, &addr4, pPTPBLK->szNetMask,
+                                             sizeof(pPTPBLK->szNetMask) );
             }
+#if defined(ENABLE_IPV6)
             else
             {
                 // Hmm... the Guest IPv6 address was specified with a prefix size.
@@ -3041,6 +3079,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                      "IP address", *argv );
                 return -1;
             }
+#endif /* defined(ENABLE_IPV6) */
         }
 
         argc--; argv++;
@@ -3074,6 +3113,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         memset( &hrb, 0, sizeof(hrb) );
         hrb.wantafam = iFirstFamily[j];
+#if defined(ENABLE_IPV6)
         if (iFirstFamily[j] == AF_INET6 &&
             cphost[0] == '[' && cphost[ilhost-1] == ']')
         {
@@ -3082,8 +3122,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         }
         else
         {
+#endif /* defined(ENABLE_IPV6) */
             memcpy( hrb.host, cphost, ilhost );
+#if defined(ENABLE_IPV6)
         }
+#endif /* defined(ENABLE_IPV6) */
         rc = resolve_host( &hrb);
         if (rc != 0)
         {
@@ -3098,11 +3141,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             strlcpy( pPTPBLK->szDriveIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szDriveIPAddr4) );
             memcpy( &pPTPBLK->iaDriveIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaDriveIPAddr4) );
         }
+#if defined(ENABLE_IPV6)
         else
         {
             strlcpy( pPTPBLK->szDriveIPAddr6, hrb.ipaddr, sizeof(pPTPBLK->szDriveIPAddr6) );
             memcpy( &pPTPBLK->iaDriveIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaDriveIPAddr6) );
         }
+#endif /* defined(ENABLE_IPV6) */
 
         if (cpprfx)
         {
@@ -3114,6 +3159,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                      "IP address", *argv );
                 return -1;
             }
+#if defined(ENABLE_IPV6)
             else
             {
                 if (ilprfx > (size_t)sizeof(pPTPBLK->szDrivePfxSiz6)-1)
@@ -3133,6 +3179,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 }
                 strlcpy( pPTPBLK->szDrivePfxSiz6, cpprfx, sizeof(pPTPBLK->szDrivePfxSiz6) );
             }
+#endif /* defined(ENABLE_IPV6) */
         }
 
         argc--; argv++;
@@ -3140,10 +3187,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         // Remember whether IPv4 or IPv6 addresses were specified.
         if (iFirstFamily[j] == AF_INET)
             pPTPBLK->fIPv4Spec = TRUE;
+#if defined(ENABLE_IPV6)
         else
             pPTPBLK->fIPv6Spec = TRUE;
+#endif /* defined(ENABLE_IPV6) */
 
         // Decide what address family the next pair of IP addresses should be.
+#if defined(ENABLE_IPV6)
         if (iWantFamily == AF_INET)
             iWantFamily = AF_INET6;
         else if (iWantFamily == AF_INET6)
@@ -3153,8 +3203,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             if (iFirstFamily[j] == AF_INET)
                 iWantFamily = AF_INET6;
             else
+#endif /* defined(ENABLE_IPV6) */
                 iWantFamily = AF_INET;
+#if defined(ENABLE_IPV6)
         }
+#endif /* defined(ENABLE_IPV6) */
 
         j++;
     }   /* while( argc > 0 ) */
@@ -3171,6 +3224,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         return -1;
     }
 
+#if defined(ENABLE_IPV6)
     // If IPv6 addresses were specified check that the same IPv6 address
     // has not been specified for the guest and driver.
     if (pPTPBLK->fIPv6Spec &&
@@ -3219,9 +3273,10 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         for( j = 8; j < 16; j++ )
             addr6.s6_addr[j] = (int)((rand()/(RAND_MAX+1.0))*256);
 
-        inet_ntop( AF_INET6, &addr6, pPTPBLK->szDriveLLAddr6, sizeof(pPTPBLK->szDriveLLAddr6) );
+        hinet_ntop( AF_INET6, &addr6, pPTPBLK->szDriveLLAddr6, sizeof(pPTPBLK->szDriveLLAddr6) );
         memcpy( &pPTPBLK->iaDriveLLAddr6, &addr6, sizeof(pPTPBLK->iaDriveLLAddr6) );
     }
+#endif /* defined(ENABLE_IPV6) */
 
     // If the MAC address was not specified in the configuration
     // statement, create a MAC address using pseudo-random numbers.
@@ -3572,21 +3627,25 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
             pPTPBLK->fActive4 = FALSE;
             pPTPBLK->bActivate4 = 0x00;
             pPTPBLK->bTerminate4 = 0x00;
+#if defined(ENABLE_IPV6)
             if (pPTPBLK->fActive6)
             {
                 // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                 WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                     pPTPBLK->szGuestIPAddr6 );
             }
+#endif /* defined(ENABLE_IPV6) */
             pPTPBLK->fActive6 = FALSE;
             pPTPBLK->bActivate6 = 0x00;
             pPTPBLK->bTerminate6 = 0x00;
+#if defined(ENABLE_IPV6)
             if (pPTPBLK->fActiveLL6)
             {
                 // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                 WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                     pPTPBLK->szGuestLLAddr6 );
             }
+#endif /* defined(ENABLE_IPV6) */
             pPTPBLK->fActiveLL6 = FALSE;
             pPTPBLK->bActivateLL6 = 0x00;
             pPTPBLK->bTerminateLL6 = 0x00;
@@ -4491,21 +4550,25 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->fActive4 = FALSE;
         pPTPBLK->bActivate4 = 0x00;
         pPTPBLK->bTerminate4 = 0x00;
+#if defined(ENABLE_IPV6)
         if (pPTPBLK->fActive6)
         {
             // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
             WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                 pPTPBLK->szGuestIPAddr6 );
         }
+#endif /* defined(ENABLE_IPV6) */
         pPTPBLK->fActive6 = FALSE;
         pPTPBLK->bActivate6 = 0x00;
         pPTPBLK->bTerminate6 = 0x00;
+#if defined(ENABLE_IPV6)
         if (pPTPBLK->fActiveLL6)
         {
             // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
             WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                 pPTPBLK->szGuestLLAddr6 );
         }
+#endif /* defined(ENABLE_IPV6) */
         pPTPBLK->fActiveLL6 = FALSE;
         pPTPBLK->bActivateLL6 = 0x00;
         pPTPBLK->bTerminateLL6 = 0x00;
@@ -4998,15 +5061,19 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     pMPC_PUSre[1]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[1]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[1]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
+#if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv4Spec)
     {
+#endif /* defined(ENABLE_IPV6) */
         memcpy( pMPC_PUSre[1]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+#if defined(ENABLE_IPV6)
     }
     else
     {
         pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
         memcpy( pMPC_PUSre[1]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
+#endif /* defined(ENABLE_IPV6) */
 
     // Compare the IP address in the MPC_PUSwr with the IP address in
     // the second MPC_PUSre to determine which side wins. First, check
@@ -5162,15 +5229,19 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
+#if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv4Spec)
     {
+#endif /* defined(ENABLE_IPV6) */
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+#if defined(ENABLE_IPV6)
     }
     else
     {
         pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
+#endif /* defined(ENABLE_IPV6) */
 
     // Display various information, maybe
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
@@ -5286,15 +5357,19 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[3]->vc.pus_02.b.unknown04 = 0x02;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.flags = 0x90;         // !!! //
     pMPC_PUSre[3]->vc.pus_02.b.unknown0A = 0x40;         // !!! //
+#if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv4Spec)
     {
+#endif /* defined(ENABLE_IPV6) */
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
+#if defined(ENABLE_IPV6)
     }
     else
     {
         pMPC_PUSre[1]->vc.pus_02.b.flags |= 0x08;
         memcpy( pMPC_PUSre[3]->vc.pus_02.b.ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
+#endif /* defined(ENABLE_IPV6) */
 
     // Display various information, maybe
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGUPDOWN))
@@ -5488,12 +5563,16 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     U32        uOffData;
 //  U32        uLenData;
     U16        uOffPH;
+#if defined(ENABLE_IPV6)
     u_int      fLL;
     struct in6_addr addr6;
+#endif /* defined(ENABLE_IPV6) */
     char       cIPaddr[48];
     PTPHDR*    pPTPHDRr1;
     PTPHDR*    pPTPHDRr2;
+#if defined(ENABLE_IPV6)
     PTPHDR*    pPTPHDRr3;
+#endif /* defined(ENABLE_IPV6) */
     int        iWhat;
 #define UNKNOWN_PIX          0
 #define WILL_YOU_START_IPV4  1
@@ -5663,6 +5742,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         // Add PTPHDR to chain.
         add_buffer_to_chain_and_signal_event( pPTPATHre, pPTPHDRr1 );
 
+#if defined(ENABLE_IPV6)
         // We have said we will start IPv6, but if IPv6 was not specified
         // that's all we will do. The y-side will wait patiently for our
         // will you start IPv6, which will never arrive. He's quite happy,
@@ -5709,6 +5789,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 break;
             }
         }
+#endif /* defined(ENABLE_IPV6) */
 
         break;
 
@@ -5748,6 +5829,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
         pPTPBLK->bActivate6 |= HEANSWEREDME_START;
         pPTPBLK->bActivateLL6 |= HEANSWEREDME_START;
 
+#if defined(ENABLE_IPV6)
         // Check whether the connection is active.
         if (pPTPBLK->bActivateLL6 == WEAREACTIVE)
         {
@@ -5775,6 +5857,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 build_8108_icmpv6_packets( pDEVBLK );
             }
         }
+#endif /* defined(ENABLE_IPV6) */
 
         break;
 
@@ -5822,7 +5905,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 ) == 0)
                 {
                     // Looks like the guest and driver IPv4 addresses were transposed.
-                    inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                    hinet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                     // HHC03912 "%1d:%04X PTP: Guest has the driver IP address '%s'"
                     WRMSG(HHC03912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, cIPaddr );
 
@@ -5838,7 +5921,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 {
                     // The guest has an IPv4 address we know nothing about. The guest
                     // can only have one IPv4 address associated with a link.
-                    inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                    hinet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                     // HHC03913 "%1d:%04X PTP: Guest has IP address '%s'"
                     WRMSG(HHC03913, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                          cIPaddr );
@@ -5888,6 +5971,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv6" );
             }
 
+#if defined(ENABLE_IPV6)
             // Check whether the y-side is telling us about a Link Local address.
             fLL = FALSE;
             memset( addr6.s6_addr, 0, 16 );
@@ -5937,7 +6021,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                         if (memcmp( pMPC_PIXwr->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 ) == 0)
                         {
                             // Looks like the guest and driver IPv6 addresses were transposed.
-                            inet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                            hinet_ntop( AF_INET, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                             // HHC03912 "%1d:%04X PTP: Guest has the driver IP address '%s'"
                             WRMSG(HHC03912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                                  cIPaddr );
@@ -5954,7 +6038,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                         {
                             // The guest has an IPv6 address we know nothing about. The guest
                             // can have multiple IPv6 addresses associated with an interface.
-                            inet_ntop( AF_INET6, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
+                            hinet_ntop( AF_INET6, &pMPC_PIXwr->ipaddr, cIPaddr, sizeof(cIPaddr) );
                             // HHC03914 "%1d:%04X PTP: Guest has IP address '%s'"
                             WRMSG(HHC03914, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                                  cIPaddr );
@@ -5977,9 +6061,9 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                     // Copy the y-sides Link Local address.
                     memcpy( &pPTPBLK->iaGuestLLAddr6, pMPC_PIXwr->ipaddr, 16 );
-                    inet_ntop( AF_INET6, &pPTPBLK->iaGuestLLAddr6,
-                                         pPTPBLK->szGuestLLAddr6,
-                                         sizeof(pPTPBLK->szGuestLLAddr6) );
+                    hinet_ntop( AF_INET6, &pPTPBLK->iaGuestLLAddr6,
+                                          pPTPBLK->szGuestLLAddr6,
+                                          sizeof(pPTPBLK->szGuestLLAddr6) );
 
                     // Build RRH 0xC108 PIX 0x1101 to yTokenUlpConnection (Your address IPv6)
                     pPTPHDRr1 = build_C108_your_address_6( pDEVBLK, pMPC_PIXwr, 0 );
@@ -5995,6 +6079,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             }
             else
             {
+#endif /* defined(ENABLE_IPV6) */
                 // IPv6 was not specified on the config statement, but the guest
                 // has informed us of an IPv6 address. Reply but otherwise ignore.
 
@@ -6005,6 +6090,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
 
                 // Add PTPHDR to chain.
                 add_buffer_to_chain_and_signal_event( pPTPATHre, pPTPHDRr1 );
+#if defined(ENABLE_IPV6)
             }
 
             //
@@ -6034,6 +6120,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
             }
+#endif /* defined(ENABLE_IPV6) */
 
         break;
 
@@ -6069,6 +6156,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                 mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv6" );
             }
 
+#if defined(ENABLE_IPV6)
             // Check whether the y-side is telling us about a Link Local address.
             fLL = FALSE;
             memset( addr6.s6_addr, 0, 16 );
@@ -6116,6 +6204,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
                         build_8108_icmpv6_packets( pDEVBLK );
                 }
             }
+#endif /* defined(ENABLE_IPV6) */
 
         break;
 
@@ -6234,12 +6323,14 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             if (pPTPBLK->bTerminate6 == WEARETERMINATED)
             {
                 // The guest OS on the y-side has stopped the device.
+#if defined(ENABLE_IPV6)
                 if (pPTPBLK->fActive6)
                 {
                     // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                     WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                         pPTPBLK->szGuestIPAddr6 );
                 }
+#endif /* defined(ENABLE_IPV6) */
                 pPTPBLK->fActive6 = FALSE;
                 pPTPBLK->bActivate6 = 0x00;
                 pPTPBLK->bTerminate6 = 0x00;
@@ -6247,12 +6338,14 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
             if (pPTPBLK->bTerminateLL6 == WEARETERMINATED)
             {
                 // The guest OS on the y-side has stopped the device.
+#if defined(ENABLE_IPV6)
                 if (pPTPBLK->fActiveLL6)
                 {
                     // HHC03916 "%1d:%04X PTP: Connection cleared to guest IP address '%s'"
                     WRMSG(HHC03916, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                         pPTPBLK->szGuestLLAddr6 );
                 }
+#endif /* defined(ENABLE_IPV6) */
                 pPTPBLK->fActiveLL6 = FALSE;
                 pPTPBLK->bActivateLL6 = 0x00;
                 pPTPBLK->bTerminateLL6 = 0x00;
@@ -6730,11 +6823,13 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
     if (fLL)
     {
+#if defined(ENABLE_IPV6)
         memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveLLAddr6, 16 );
     }
     else
     {
         memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveIPAddr6, 16 );
+#endif /* defined(ENABLE_IPV6) */
     }
 
     // Display various information, maybe
@@ -6743,7 +6838,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv6" );
     }
 
-return pPTPHDRre;
+    return pPTPHDRre;
 }   /* End function  build_C108_my_address_6() */
 
 /* ------------------------------------------------------------------ */
@@ -7213,6 +7308,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
 }   /* End function  build_C108_i_will_stop_6() */
 
 
+#if defined(ENABLE_IPV6)
 /* ------------------------------------------------------------------ */
 /* build_8108_icmpv6_packets()                                        */
 /* ------------------------------------------------------------------ */
@@ -7645,6 +7741,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
 
     return;
 }   /* End function  build_8108_icmpv6_packets() */
+#endif /* defined(ENABLE_IPV6) */
 
 
 /* ------------------------------------------------------------------ */
@@ -8876,6 +8973,7 @@ void  shift_right_dbl( U32* even, U32* odd, int number )
 }   /* End function  shift_right_dbl() */
 
 
+#if defined(ENABLE_IPV6)
 /* ------------------------------------------------------------------ */
 /* calculate_icmpv6_checksum()                                        */
 /* ------------------------------------------------------------------ */
@@ -8961,6 +9059,7 @@ void  calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
 
     return;
 }   /* End function  calculate_icmpv6_checksum() */
+#endif /* defined(ENABLE_IPV6) */
 
 
 /* ------------------------------------------------------------------ */
@@ -9025,4 +9124,3 @@ END_DEVICE_SECTION
 
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
-#endif /*defined(ENABLE_IPV6)*/
