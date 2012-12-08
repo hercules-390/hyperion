@@ -3187,7 +3187,7 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 /* Get MAC address                                                   */
 /*-------------------------------------------------------------------*/
-int      GetMACAddr( char*   pszNetDevName,
+int      GetMACAddr( char*   pszIfName,
                      char*   pszMACAddr,
                      int     szMACAddrLen,
                      MAC*    pMACAddr )
@@ -3196,7 +3196,7 @@ int      GetMACAddr( char*   pszNetDevName,
     struct hifr hifr;
 
     memset( &hifr, 0, sizeof(struct hifr) );
-    strncpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name)-1 );
+    strncpy( hifr.hifr_name, pszIfName, sizeof(hifr.hifr_name)-1 );
 
     if (pszMACAddr) {
         memset( pszMACAddr, 0, szMACAddrLen );
@@ -3210,10 +3210,20 @@ int      GetMACAddr( char*   pszNetDevName,
         return -1;
     }
 
+#if defined(__APPLE__)
+    hifr.hifr_hwaddr.sa_data[0] = 0x00;
+    hifr.hifr_hwaddr.sa_data[1] = 0x00;
+    hifr.hifr_hwaddr.sa_data[2] = 0x5E;
+    hifr.hifr_hwaddr.sa_data[3] = 0x12;
+    hifr.hifr_hwaddr.sa_data[4] = 0x34;
+    hifr.hifr_hwaddr.sa_data[5] = 0x56;
+#else
     rc = TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&hifr );
     if (rc < 0 ) {
+        close(fd);
         return -1;
     }
+#endif
 
     if (pszMACAddr) {
         snprintf( pszMACAddr, szMACAddrLen-1,
@@ -3237,7 +3247,7 @@ int      GetMACAddr( char*   pszNetDevName,
 /*-------------------------------------------------------------------*/
 /* Get MTU value                                                     */
 /*-------------------------------------------------------------------*/
-int      GetMTU( char*   pszNetDevName,
+int      GetMTU( char*   pszIfName,
                  char*   pszMTU,
                  int     szMTULen,
                  int*    pMTU )
@@ -3246,7 +3256,7 @@ int      GetMTU( char*   pszNetDevName,
     struct hifr hifr;
 
     memset( &hifr, 0, sizeof(struct hifr) );
-    strncpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name)-1 );
+    strncpy( hifr.hifr_name, pszIfName, sizeof(hifr.hifr_name)-1 );
 
     if (pszMTU) {
         memset( pszMTU, 0, szMTULen );
@@ -3262,6 +3272,7 @@ int      GetMTU( char*   pszNetDevName,
 
     rc = TUNTAP_IOCtl( fd, SIOCGIFMTU, (char*)&hifr );
     if (rc < 0 ) {
+        close(fd);
         return -1;
     }
 
