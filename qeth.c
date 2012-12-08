@@ -3192,6 +3192,7 @@ int      GetMACAddr( char*   pszIfName,
                      int     szMACAddrLen,
                      MAC*    pMACAddr )
 {
+#if defined(SIOCGIFHWADDR)
     int fd, rc;
     struct hifr hifr;
 
@@ -3206,24 +3207,11 @@ int      GetMACAddr( char*   pszIfName,
     }
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        return -1;
-    }
-
-#if defined(__APPLE__)
-    hifr.hifr_hwaddr.sa_data[0] = 0x00;
-    hifr.hifr_hwaddr.sa_data[1] = 0x00;
-    hifr.hifr_hwaddr.sa_data[2] = 0x5E;
-    hifr.hifr_hwaddr.sa_data[3] = 0x12;
-    hifr.hifr_hwaddr.sa_data[4] = 0x34;
-    hifr.hifr_hwaddr.sa_data[5] = 0x56;
-#else
     rc = TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&hifr );
-    if (rc < 0 ) {
-        close(fd);
+    close(fd);
+
+    if (rc < 0 )
         return -1;
-    }
-#endif
 
     if (pszMACAddr) {
         snprintf( pszMACAddr, szMACAddrLen-1,
@@ -3236,12 +3224,36 @@ int      GetMACAddr( char*   pszIfName,
                   (unsigned char)hifr.hifr_hwaddr.sa_data[5] );
     }
     if (pMACAddr) {
-        memcpy( pMACAddr, &hifr.hifr_hwaddr, IFHWADDRLEN );
+    memcpy( pMACAddr, &hifr.hifr_hwaddr, IFHWADDRLEN );
     }
 
-    close(fd);
+    return 0;
+#else /* !defined(SIOCGIFHWADDR) */
+    MAC mac;
+
+    mac[0] = 0x00;
+    mac[1] = 0x00;
+    mac[2] = 0x5E;
+    mac[3] = 0x12;
+    mac[4] = 0x34;
+    mac[5] = 0x56;
+
+    if (pszMACAddr) {
+        snprintf( pszMACAddr, szMACAddrLen-1,
+                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
+                  (unsigned char)mac[0],
+                  (unsigned char)mac[1],
+                  (unsigned char)mac[2],
+                  (unsigned char)mac[3],
+                  (unsigned char)mac[4],
+                  (unsigned char)mac[5] );
+    }
+    if (pMACAddr) {
+    memcpy( pMACAddr, &mac, IFHWADDRLEN );
+    }
 
     return 0;
+#endif /* defined(SIOCGIFHWADDR) */
 }
 
 /*-------------------------------------------------------------------*/
