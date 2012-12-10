@@ -999,7 +999,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                         return -1;
                     }
                     wfcb[line] = chan;
-                    if ( nxt == 0 )
+                    if ( *nxt == 0 )
                         break ;
                     ptr = nxt + 1;
                 }
@@ -1028,7 +1028,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                         return -1;
                     }
                     wfcb[line] = chan;
-                    if ( nxt == 0 )
+                    if ( *nxt == 0 )
                         break ;
                     ptr = nxt + 1;
                 }
