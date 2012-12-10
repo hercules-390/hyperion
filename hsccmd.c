@@ -917,7 +917,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( wlpi != 6 && wlpi != 8 && wlpi != 10) )
             {
                 jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                 return -1;
             }
             continue;
@@ -927,7 +927,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         {
             if (0x3211 != dev->devtype )
             {
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, 1);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], 1);
                 return -1;
             }
             ptr = argv[iarg]+6;
@@ -936,7 +936,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( windex < 0 || windex > 15) )
             {
                 jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                 return -1;
             }
             continue;
@@ -950,7 +950,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             if (errno != 0 || nxt == ptr || *nxt != 0 ||wlpp > FCBSIZE)
             {
                 jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                 return -1;
             }
             continue;
@@ -964,7 +964,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             if (errno != 0 || nxt == ptr || *nxt != 0 ||  wffchan < 1 || wffchan > 12)
             {
                 jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                 return -1;
             }
             continue ;
@@ -985,7 +985,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                     if (errno != 0 || *nxt != ':' || nxt == ptr || line > wlpp || wfcb[line] != 0 )
                     {
                         jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                         return -1;
                     }
 
@@ -995,7 +995,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
                     {
                         jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                         return -1;
                     }
                     wfcb[line] = chan;
@@ -1017,14 +1017,14 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > wlpp || wfcb[line] != 0 )
                     {
                         jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                         return -1;
                     }
                     chan += 1;
                     if ( chan > 12 )
                     {
                         jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                         return -1;
                     }
                     wfcb[line] = chan;
@@ -1035,7 +1035,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
                 if ( chan != 12 )
                 {
                     jarg = 5 ;
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, jarg);
+                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
                     return -1;
                 }
             }
@@ -1043,7 +1043,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
+        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg]);
         return -1;
     }
 

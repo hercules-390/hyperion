@@ -471,7 +471,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->lpi != 6 && dev->lpi != 8 ) )
             {
                 j = ptr - argv[iarg];
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                 return -1;
             }
             continue;
@@ -481,7 +481,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
         {
             if (dev->devtype != 0x3211 )
             {
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, 1);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], 1);
                 return -1;
             }
             ptr = argv[iarg]+6;
@@ -490,7 +490,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->index < 0 || dev->index > 15) )
             {
                 j = ptr - argv[iarg];
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                 return -1;
             }
             continue;
@@ -504,7 +504,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->lpp > FCBSIZE)
             {
                 j = ptr - argv[iarg];
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                 return -1;
             }
             continue;
@@ -518,7 +518,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             if (errno != 0 || nxt == ptr || *nxt != 0 ||  dev->ffchan < 1 || dev->ffchan > 12)
             {
                 j = ptr - argv[iarg];
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                 return -1;
             }
             continue;
@@ -540,7 +540,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                     if (errno != 0 || *nxt != ':' || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
                     {
                         j = ptr - argv[iarg];
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                         return -1;
                     }
 
@@ -550,7 +550,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
                     {
                         j = ptr - argv[iarg];
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                         return -1;
                     }
                     dev->fcb[line] = chan;
@@ -572,14 +572,14 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                     if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
                     {
                         j = ptr - argv[iarg];
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                         return -1;
                     }
                     chan += 1;
                     if ( chan > 12 )
                     {
                         j = ptr - argv[iarg];
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                         return -1;
                     }
                     dev->fcb[line] = chan;
@@ -590,7 +590,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                 if ( chan != 12 )
                 {
                     j = 5;
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1, j);
+                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
                     return -1;
                 }
             }
@@ -598,7 +598,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             continue;
         }
 
-        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[iarg], iarg + 1);
+        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg]);
         return -1;
     }
 

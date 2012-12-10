@@ -920,8 +920,8 @@ do { \
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
 #define HHC01101 "%1d:%04X Printer: file name missing or invalid"
-#define HHC01102 "%1d:%04X Printer: parameter %s in argument %d is invalid"
-#define HHC01103 "%1d:%04X Printer: parameter %s in argument %d at position %d is invalid"
+#define HHC01102 "%1d:%04X Printer: argument %d parameter '%s' is invalid"
+#define HHC01103 "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
 #define HHC01104 "%1d:%04X Printer: option %s is incompatible"
 #define HHC01105 "%1d:%04X Printer: error in function %s: %s"
 #define HHC01106 "%1d:%04X Printer: pipe receiver with pid %d starting"
