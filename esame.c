@@ -2172,7 +2172,7 @@ U64     gr0, gr1;                       /* Result register workareas */
     dreg = cpu_timer(regs);
 
     /* Reset the cpu timer pending flag according to its value */
-    if( CPU_TIMER(regs) < 0 )
+    if( dreg < 0 )
     {
         ON_IC_PTIMER(regs);
 

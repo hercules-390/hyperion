@@ -602,6 +602,7 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         }
     }
 
+
     // Save previously returned high clock value for next MONOTONIC clock time...
 
     if (likely( tp->tv_sec > tsPrevRetVal.tv_sec ||
@@ -611,6 +612,7 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         tsPrevRetVal.tv_sec  = tp->tv_sec;
         tsPrevRetVal.tv_nsec = tp->tv_nsec;
     }
+
 
     // Done!
 
@@ -1089,6 +1091,17 @@ DLL_EXPORT int alphasort ( const struct dirent **a, const struct dirent **b )
 
 #if !defined(HAVE_SYS_RESOURCE_H)
 
+static void INLINE FILETIME2timeval (FILETIME ft, struct timeval* tv)
+{
+    LARGE_INTEGER  liWork;                              // Work area
+
+    liWork.HighPart = ft.dwHighDateTime;                // Initialize work area for 64-bit
+    liWork.LowPart  = ft.dwLowDateTime;                 // operations
+
+    tv->tv_sec  = (long)(liWork.QuadPart / 10000000);   // 100ns FILETIME to microseconds
+    tv->tv_usec = (long)(liWork.QuadPart % 10000000);   // ...
+}
+
 static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
 {
     FILETIME  ftCreation;   // When the process was created(*)
@@ -1100,7 +1113,7 @@ static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
     FILETIME  ftKernel;     // CPU time spent in kernel mode (in #of 100-nanosecond units)
     FILETIME  ftUser;       // CPU time spent in user   mode (in #of 100-nanosecond units)
 
-    LARGE_INTEGER  liWork;  // (work area)
+    int result = 0;
 
     if ( !GetProcessTimes( hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser ) )
     {
@@ -1108,33 +1121,49 @@ static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
         ftExit    .dwHighDateTime = ftExit    .dwLowDateTime = 0;
         ftKernel  .dwHighDateTime = ftKernel  .dwLowDateTime = 0;
         ftUser    .dwHighDateTime = ftUser    .dwLowDateTime = 0;
+        errno = EINVAL;
+        result = -1;
     }
 
-    // Kernel time...
+    FILETIME2timeval(ftKernel, &r_usage->ru_stime); // Kernel time...
+    FILETIME2timeval(ftUser,   &r_usage->ru_utime); // User time...
 
-    liWork.HighPart = ftKernel.dwHighDateTime;
-    liWork.LowPart  = ftKernel.dwLowDateTime;
+    return ( result );
+}
 
-    liWork.QuadPart /= 10;  // (convert to microseconds)
+static int DoGetRUsage_Thread( HANDLE hThread, struct rusage* r_usage )
+{
+    FILETIME  ftCreation;   // When the process was created(*)
+    FILETIME  ftExit;       // When the process exited(*)
 
-    r_usage->ru_stime.tv_sec  = (long)(liWork.QuadPart / MILLION);
-    r_usage->ru_stime.tv_usec = (long)(liWork.QuadPart % MILLION);
+    // (*) Windows standard FILETIME format: date/time expressed as the
+    //     amount of time that has elapsed since midnight January 1, 1601.
 
-    // User time...
+    FILETIME  ftKernel;     // CPU time spent in kernel mode (in #of 100-nanosecond units)
+    FILETIME  ftUser;       // CPU time spent in user   mode (in #of 100-nanosecond units)
 
-    liWork.HighPart = ftUser.dwHighDateTime;
-    liWork.LowPart  = ftUser.dwLowDateTime;
+    int result = 0;
 
-    liWork.QuadPart /= 10;  // (convert to microseconds)
+    if ( !GetThreadTimes( hThread, &ftCreation, &ftExit, &ftKernel, &ftUser ) )
+    {
+        ftCreation.dwHighDateTime = ftCreation.dwLowDateTime = 0;
+        ftExit    .dwHighDateTime = ftExit    .dwLowDateTime = 0;
+        ftKernel  .dwHighDateTime = ftKernel  .dwLowDateTime = 0;
+        ftUser    .dwHighDateTime = ftUser    .dwLowDateTime = 0;
+        errno = EINVAL;
+        result = -1;
+    }
 
-    r_usage->ru_utime.tv_sec  = (long)(liWork.QuadPart / MILLION);
-    r_usage->ru_utime.tv_usec = (long)(liWork.QuadPart % MILLION);
+    FILETIME2timeval(ftKernel, &r_usage->ru_stime); // Kernel time...
+    FILETIME2timeval(ftUser,   &r_usage->ru_utime); // User time...
 
-    return 0;
+    return ( result );
 }
 
 DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
 {
+    int i;
+
     if ( !r_usage )
     {
         errno = EFAULT;
@@ -1142,16 +1171,20 @@ DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
     }
 
     if ( RUSAGE_SELF == who )
-        return DoGetRUsage( GetCurrentProcess(), r_usage );
-
-    if ( RUSAGE_CHILDREN != who )
     {
-        errno = EINVAL;
-        return -1;
+        HANDLE hRealHandle = 0;
+        DuplicateHandle( GetCurrentProcess(),       // Source Process Handle
+                         GetCurrentThread(),        // Source Handle to duplicate
+                         GetCurrentProcess(),       // Target Process Handle
+                         &hRealHandle,              // Target Handle pointer
+                         0,                         // Options flag
+                         TRUE,                      // Inheritable flag
+                         DUPLICATE_SAME_ACCESS );   // Options
+
+        return DoGetRUsage_Thread( hRealHandle, r_usage );
     }
 
-    // RUSAGE_CHILDREN ...
-
+    if ( RUSAGE_CHILDREN == who)
     {
         DWORD           dwOurProcessId  = GetCurrentProcessId();
         HANDLE          hProcessSnap    = NULL;
@@ -1199,9 +1232,24 @@ DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
         while ( Process32Next( hProcessSnap, &pe32 ) );
 
         VERIFY( CloseHandle( hProcessSnap ) );
+
+        return 0;
     }
 
-    return 0;
+    /* Consider "who" to be the requested thread ID (GNU standard), if
+     * processing a CPU thread.
+     */
+    if (who)
+        for (i = 0; i < sysblk.cpus; ++i)
+        {
+            if (sysblk.cputid[i] == who)
+                return DoGetRUsage_Thread(UlongToHandle(who), r_usage);
+        }
+
+    /* Otherwise, error */
+    memset(r_usage, 0, sizeof(struct rusage));
+    errno = EINVAL;
+    return (-1);
 }
 
 #endif

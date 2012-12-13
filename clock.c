@@ -38,6 +38,7 @@
    - Hercules timers only use the 64-bit clock/timer format.
 
    - The Hercules clock format has a period of over 36,533 years.
+
    - With masking, the 128-bit clock format may be used for extended TOD clock
      operations.
 
@@ -67,139 +68,6 @@
 
 
 /*----------------------------------------------------------------------------*/
-/*      Define clock_gettime for systems not supporting nanosecond clocks,    */
-/*      other than Windows.                                                   */
-/*----------------------------------------------------------------------------*/
-
-#if !defined(_MSVC_) && !defined(CLOCK_REALTIME)
-
-typedef int     clockid_t;
-
-/* IDs for various POSIX.1b interval timers and system clocks */
-
-#define CLOCK_REALTIME                  0
-#define CLOCK_MONOTONIC                 1
-#define CLOCK_PROCESS_CPUTIME_ID        2
-#define CLOCK_THREAD_CPUTIME_ID         3
-#define CLOCK_MONOTONIC_RAW             4
-#define CLOCK_REALTIME_COARSE           5
-#define CLOCK_MONOTONIC_COARSE          6
-#define CLOCK_BOOTTIME                  7
-#define CLOCK_REALTIME_ALARM            8
-#define CLOCK_BOOTTIME_ALARM            9
-
-
-static INLINE int
-clock_gettime ( clockid_t clk_id, struct timespec *ts )
-{
-    register int    result;
-
-    /* Validate parameters... */
-
-    if ( unlikely ( (clk_id > CLOCK_REALTIME) ||
-                    !ts ) )
-    {
-        errno = EINVAL;
-        return ( -1 );
-    }
-
-    #if defined(__APPLE__) && 0
-    {
-        /* FIXME: mach/mach.h include is generating invalid storage
-         *        class errors. Default to gettimeofday until resolved.
-         */
-
-        #include <mach/mach.h>
-
-        /* FIXME: This sequence is slower than gettimeofday call per OS
-         *        X Developer Library. Recommend converting to use the
-         *        mach_absolute_time call, but that will have to wait
-         *        until CLOCK_MONOTONIC support and review of steering
-         *        support to avoid double steering.
-         */
-
-        mach_timespec_t     mts;
-        static clock_serv_t cserv = 0;
-
-        if (!cserv)
-        {
-            /* Get clock service port */
-            result = host_get_clock_service(mach_host_self(),
-                                            CALENDAR_CLOCK,
-                                            &cserv);
-            if (result != KERN_SUCCESS)
-            return ( result );
-        }
-
-        result = clock_get_time(cserv, &mts);
-        if (result == KERN_SUCCESS)
-        {
-            ts->tv_sec  = mts.tv_sec;
-            ts->tv_nsec = mts.tv_nsec;
-        }
-//      result = mach_port_deallocate(mach_task_self(), cserv);                 /* Can this be ignored until shutdown of Hercules? */
-    }
-    #else /* Convert standard gettimeofday call */
-    {
-        struct timeval  tv;
-
-        result = gettimeofday(&tv, NULL);
-
-        /* Handle microsecond overflow */
-        if ( unlikely (tv.tv_usec >= 1000000) )
-        {
-            register U32    temp = tv.tv_usec / 1000000;
-            tv.tv_sec  += temp;
-            tv.tv_usec -= temp * 1000000;
-        }
-
-        /* Convert timeval to timespec */
-        ts->tv_sec  = tv.tv_sec;
-        ts->tv_nsec = tv.tv_usec * 1000;
-
-
-        /* Reset clock precision and force host_ETOD to use minimum
-         * precision algorithm.
-         */
-
-        #if defined(TOD_FULL_PRECISION)
-            #undef TOD_FULL_PRECISION
-        #endif
-
-        #if defined(TOD_120BIT_PRECISION)
-            #undef TOD_120BIT_PRECISION
-        #endif
-
-        #if defined(TOD_95BIT_PRECISION)
-            #undef TOD_95BIT_PRECISION)
-        #endif
-
-        #if defined(TOD_64BIT_PRECISION)
-            #undef TOD_64BIT_PRECISION)
-        #endif
-
-        #if !defined(TOD_MIN_PRECISION)
-            #define TOD_MIN_PRECISION
-        #endif
-    }
-    #endif
-
-    return ( result );
-}
-
-#elif !(defined(TOD_FULL_PRECISION)     || \
-        defined(TOD_120BIT_PRECISION)   || \
-        defined(TOD_64BIT_PRECISION)    || \
-        defined(TOD_MIN_PRECISION)      || \
-        defined(TOD_95BIT_PRECISION))
-
-    /* Define default clock precision as 95-bits (only one division required) */
-    #define TOD_95BIT_PRECISION
-
-#endif
-
-
-/*----------------------------------------------------------------------------*/
 /* host_ETOD - Primary high-resolution clock fetch and conversion             */
 /*----------------------------------------------------------------------------*/
 
@@ -213,72 +81,7 @@ host_ETOD (ETOD* ETOD)
      */
 
     clock_gettime(CLOCK_REALTIME, &time);
-
-    /* This conversion, assuming a nanosecond host clock resolution,
-     * yields a TOD clock resolution of 120-bits, 95-bits, or 64-bits,
-     * with a period of over 36,533 years.
-     *
-     *
-     * Original 128-bit code:
-     *
-     * register U128 result;
-     * result  = ((((U128)time.tvsec * ETOD_SEC) + ETOD_1970) << 64) +
-     *           (((U128)time.tv_nsec << 68) / 1000);
-     *
-     *
-     * In the 64-bit translation of the routine, bits 121-127 are not
-     * calculated as a third division is required.
-     *
-     * It is not necessary to normalize the clock_gettime return value,
-     * ensuring that the tv_nsec field is less than 1 second, as tv_nsec
-     * is a 32-bit field and 64-bit registers are in use.
-     *
-     */
-
-    ETOD->high  = time.tv_sec;      /* Convert seconds to microseconds,       */
-    ETOD->high *= ETOD_SEC;         /* adjusted to bit-59; truncate above     */
-                                    /* extended TOD clock resolution          */
-    ETOD->high += ETOD_1970;        /* Adjust for open source epoch of 1970   */
-    ETOD->low   = time.tv_nsec;     /* Copy nanoseconds                       */
-
-    #if defined(TOD_FULL_PRECISION)       || \
-        defined(TOD_120BIT_PRECISION)     || \
-        defined(TOD_64BIT_PRECISION)      || \
-        defined(TOD_MIN_PRECISION)        || \
-        !defined(TOD_95BIT_PRECISION)
-    {
-        register U64    temp;
-        temp        = ETOD->low;    /* Adjust nanoseconds to bit-59 for       */
-        temp      <<= 1;            /* division by 1000 (shift compressed),   */
-        temp       /= 125;          /* calculating microseconds and the top   */
-                                    /* nibble of the remainder                */
-                                    /* (us*16 = ns*16/1000 = ns*2/125)        */
-        ETOD->high += temp;         /* Add to upper 64-bits                   */
-        #if defined(TOD_MIN_PRECISION)      || \
-            defined(TOD_64BIT_PRECISION)
-            ETOD->low   = 0;        /* Set lower 64-bits to zero              */
-                                    /* (gettimeofday or other microsecond     */
-                                    /* clock used as clock source)            */
-        #else /* Calculate full precision fractional clock value              */
-            temp      >>= 1;        /* Calculate remainder                    */
-            temp       *= 125;      /* ...                                    */
-            ETOD->low  -= temp;     /* ...                                    */
-            ETOD->low <<= 57;       /* Divide remainder by 1000 and adjust    */
-            ETOD->low  /= 125;      /* to proper position, shifting out high- */
-            ETOD->low <<= 8;        /* order byte                             */
-        #endif
-    }
-    #else /* 95-bit resolution                                                */
-    {
-        ETOD->low <<= 32;           /* Place nanoseconds in high-order word   */
-        ETOD->low  /= 125;          /* Divide by 1000 (125 * 2^3)             */
-        ETOD->high += ETOD->low >> 31;  /* Adjust and add microseconds and    */
-                                    /* first nibble of nanosecond remainder   */
-                                    /* to bits 0-63                           */
-        ETOD->low <<= 33;           /* Adjust remaining nanosecond fraction   */
-                                    /* to bits 64-93                          */
-    }
-    #endif
+    timespec2ETOD(ETOD, &time);
     return ( ETOD );                /* Return address of result               */
 }
 
@@ -553,20 +356,42 @@ static void adjust_tod_offset(S64 offset)
 }
 
 
-/* The cpu timer is internally kept as an offset to the hw_clock()
- * the cpu timer counts down as the clock approaches the timer epoch
+/* The CPU timer is internally kept as an offset to the thread CPU time
+ * used. The CPU timer counts down as the clock approaches the timer
+ * epoch.
  */
+
+TOD
+process_cputime(REGS *regs)
+{
+    register TOD    result;
+
+    struct rusage   rusage;
+    int             rc;
+
+    rc = getrusage(sysblk.cputid[regs->cpuad], &rusage);
+    if (rc == -1)
+        result = hw_clock();
+    else
+        result  = timeval2etod(&rusage.ru_utime) +
+                  timeval2etod(&rusage.ru_stime);
+
+    return (result);
+}
+
+
 void set_cpu_timer(REGS *regs, S64 timer)
 {
-    regs->cpu_timer = (timer >> 8) + hw_clock();
+    regs->cpu_timer = (timer >> 8) + process_cputime(regs);
 }
 
 
 S64 cpu_timer(REGS *regs)
 {
-S64 timer;
-    timer = (regs->cpu_timer - hw_clock()) << 8;
-    return timer;
+    register S64    result;
+
+    result = (regs->cpu_timer - process_cputime(regs)) << 8;
+    return (result);
 }
 
 
@@ -774,13 +599,15 @@ int pending = 0;
  *     year of acceptance by any given government and/or agency. For
  *     example, Britain and the British empire did not adopt the
  *     calendar until 1752; Alaska did not adopt the calendar until
- *     1867. For our purposes however year 0 is treated as a leap year.
+ *     1867.
  *
  *  2) Minimum validity period for algorithm is 3,300 years after 1582
  *     (4882), at which point the calendar may be off by one full day.
  *
  *  3) Most likely invalid for years after 8000 due to unpredictability
  *     in the earth's long-time rotational changes.
+ *
+ *  4) For our purposes, year zero is treated as a leap year.
  *
  *
  *  References:

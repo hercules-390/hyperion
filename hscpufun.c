@@ -828,7 +828,7 @@ int rc = 0;
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
-            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", (cpt_now << 8) );
+            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now );
         else
             MSGBUF( buf, "cpt = not decrementing" );
         WRMSG(HHC02274, "I", buf);
@@ -860,7 +860,7 @@ int rc = 0;
                     (vclkc_now << 8), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", (vcpt_now << 8) );
+            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", vcpt_now << 8 );
             WRMSG(HHC02274, "I", buf);
         }
 #endif

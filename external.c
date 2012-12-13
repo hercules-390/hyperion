@@ -159,6 +159,7 @@ void ARCH_DEP(perform_external_interrupt) (REGS *regs)
 {
 PSA    *psa;                            /* -> Prefixed storage area  */
 U16     cpuad;                          /* Originating CPU address   */
+S64     dreg;                           /* Double word workarea      */
 #if defined(FEATURE_VM_BLOCKIO)
 #if defined(FEATURE_ESAME)
 RADR    servpadr;      /* Address of 64-bit block I/O interrupt */
@@ -286,12 +287,13 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     }
 
     /* External interrupt if CPU timer is negative */
-    if ( CPU_TIMER(regs) < 0
+    dreg = cpu_timer(regs);
+    if ( dreg < 0
         && OPEN_IC_PTIMER(regs) )
     {
         if (CPU_STEPPING_OR_TRACING_ALL)
         {
-            WRMSG (HHC00842, "I", CPU_TIMER(regs) << 8);
+            WRMSG (HHC00842, "I", dreg );
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }
