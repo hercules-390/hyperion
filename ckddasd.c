@@ -11,6 +11,13 @@
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
+/* Reference information:                                            */
+/* GA32-0099 IBM 3990 Storage Control Reference (Models 1, 2, and 3) */
+/* GA32-0274 IBM 3990,9390 Storage Control Reference                 */
+/* GC26-7006 IBM RAMAC Array Subsystem Reference                     */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
 /* Additional credits:                                               */
 /*      Write Update Key and Data CCW by Jan Jaeger                  */
 /*      Track overflow support added by Jay Maynard                  */

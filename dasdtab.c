@@ -10,7 +10,16 @@
 /* each DASD device and control unit supported by Hercules.          */
 /* Routines are also provided to perform table lookup and build the  */
 /* device identifier and characteristics areas.                      */
-/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* Reference information:                                            */
+/* GA32-0099 IBM 3990 Storage Control Reference (Models 1, 2, and 3) */
+/* GA32-0274 IBM 3990,9390 Storage Control Reference                 */
+/* GC26-7006 IBM RAMAC Array Subsystem Reference                     */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
 /* Note: source for most CKD/FBA device capacities take from SDI's   */
 /* device capacity page at: http://www.sdisw.com/dasd_capacity.html  */
 /* (used with permission)                                            */
@@ -140,6 +149,12 @@ static CKDDEV ckdtab[] = {
 /*                                                                   */
 /*   Byte 8 - Added feature support                                  */
 /*   0000 0000 Not supported by Hercules, must be zero               */
+/*   1... .... RAMAC: During dynamic sparing operations,             */
+/*             a defective primary track will be written             */
+/*             as defective on the secondary                         */
+/*   ...1 .... RAMAC: Data striping and compaction is                */
+/*             supported on parallel channels                        */
+/*   .00. 0000 Reserved, set to zeros                                */
 /*                                                                   */
 /*   Byte 9 - Subsystem Program Visible Facilities                   */
 /*   1... .... Cache Fast Write supported (not supported, yet!)      */
