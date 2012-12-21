@@ -42,7 +42,7 @@ and how they are used.
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
     <a href="#LOADPARM">LOADPARM</a>   0120....
-    <a href="#ARCHLVL">ARCHLVL</a>    DISABLE  ASN_LX_REUSE
+    <a href="#ARCHLVL_FACILITY">ARCHLVL</a>    DISABLE  ASN_LX_REUSE
 
     <a href="#CPUSERIAL">CPUSERIAL</a>  000611
     <a href="#CPUMODEL">CPUMODEL</a>   3090
@@ -211,9 +211,17 @@ and how they are used.
     For the time being however, <code>ARCHMODE</code> is still accepted and is treated as
     simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
+<a name="ARCHLVL_FACILITY"></a>
 <dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY <em>facility</em></code>
 <dd><p>
-    specifies a particular facility to be enabled or disabled, or the current setting queried.
+    specifies a particular STFLE facility to be enabled or disabled, or the current setting queried.
+    Use <code>QUERY ALL</code> to obtain a list of valid <code><em>facility</em></code> &nbsp; names
+    that may be used.
+   <p>
+    Alternatively, you can also specify the actual STFLE bit number to be turned off or on
+    (disabled or enabled) using the format <code><em>BITnn</em></code> &nbsp; where 'nn'
+    corresponds to the exact STFLE facility bit you wish to be forced on or off. A popular
+    one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO Facility bit on.
    <p>
 
 
