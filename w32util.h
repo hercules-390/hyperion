@@ -117,9 +117,11 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
 #endif
 
 #if !defined(HAVE_SYS_RESOURCE_H)
-  // Note: we only provide the absolute minimum required information
-  #define  RUSAGE_SELF       0      // Current process
-  #define  RUSAGE_CHILDREN  -1      // Children of the current process
+  // Note: We only provide the absolute minimum required information;
+  //       RUSAGE_BOTH not defined as RUSAGE_BOTH is deprecated.
+  #define  RUSAGE_SELF      ( 0)    // Current process
+  #define  RUSAGE_CHILDREN  (-1)    // Children of the current process
+  #define  RUSAGE_THREAD    ( 1)    // Current thread
   struct rusage                     // Resource utilization information
   {
     struct timeval  ru_utime;       // User time used

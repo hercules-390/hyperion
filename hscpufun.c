@@ -776,14 +776,14 @@ int rc = 0;
         hw_now.low  = hw_tod.low;
         epoch_now = regs->tod_epoch;
         clkc_now = regs->clkc;
-        cpt_now = CPU_TIMER(regs);
+        cpt_now = cpu_timer(regs);
 #if defined(_FEATURE_SIE)
         if ( regs->sie_active )
         {
             vtod_now = TOD_CLOCK(regs->guestregs);
             vepoch_now = regs->guestregs->tod_epoch;
             vclkc_now = regs->guestregs->clkc;
-            vcpt_now = CPU_TIMER(regs->guestregs);
+            vcpt_now = cpu_timer_SIE(regs->guestregs);
             sie_flag = 1;
         }
 #endif
@@ -860,7 +860,7 @@ int rc = 0;
                     (vclkc_now << 8), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", vcpt_now << 8 );
+            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", vcpt_now );
             WRMSG(HHC02274, "I", buf);
         }
 #endif

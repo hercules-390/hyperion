@@ -137,10 +137,11 @@ struct REGS {                           /* Processor registers       */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1;           /* 1=SIGP initial cpu reset  */
 
-        S64     cpu_timer;              /* CPU timer epoch           */
+        TOD     cpu_timer;              /* CPU timer                 */
+        TOD     cpu_timer_epoch;        /* CPU timer epoch           */
         S64     int_timer;              /* S/370 Interval timer      */
         S32     old_timer;              /* S/370 Interval timer int  */
-        U64     clkc;                   /* 0-7=Clock comparator epoch,
+        TOD     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
         S64     tod_epoch;              /* TOD epoch for this CPU    */
         S64     ecps_vtimer;            /* ECPS Virtual Int. timer   */
@@ -440,6 +441,7 @@ struct SYSBLK {
                                            pending (CPU cfg on/off)  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+        TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
 #if defined(USE_GETTID)
         pid_t   cputidp[MAX_CPU_ENGINES];

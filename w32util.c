@@ -1091,165 +1091,175 @@ DLL_EXPORT int alphasort ( const struct dirent **a, const struct dirent **b )
 
 #if !defined(HAVE_SYS_RESOURCE_H)
 
-static void INLINE FILETIME2timeval (FILETIME ft, struct timeval* tv)
+enum rusage_type
 {
-    LARGE_INTEGER  liWork;                              // Work area
+    rusage_type_process,
+    rusage_type_thread,
+    rusage_type_unknown
+};
 
-    liWork.HighPart = ft.dwHighDateTime;                // Initialize work area for 64-bit
-    liWork.LowPart  = ft.dwLowDateTime;                 // operations
 
-    tv->tv_sec  = (long)(liWork.QuadPart / 10000000);   // 100ns FILETIME to microseconds
-    tv->tv_usec = (long)(liWork.QuadPart % 10000000);   // ...
+static int INLINE
+rusage_failure (struct rusage* r_usage)
+{
+    r_usage->ru_stime.tv_sec  = 0;
+    r_usage->ru_stime.tv_usec = 0;
+    r_usage->ru_utime.tv_sec  = 0;
+    r_usage->ru_utime.tv_usec = 0;
+    errno = EINVAL;
+    return ( -1 );
 }
 
-static int DoGetRUsage( HANDLE hProcess, struct rusage* r_usage )
+
+static INLINE U64 FileTime2us (const FILETIME ft)
+{
+    ULARGE_INTEGER  uliWork;                // Work area
+
+    uliWork.HighPart = ft.dwHighDateTime;   // Initialize work area for 64-bit
+    uliWork.LowPart  = ft.dwLowDateTime;    // operations
+
+    uliWork.QuadPart +=  5;                 // Round FILETIME 100ns increments
+    uliWork.QuadPart /= 10;                 // Convert to microseconds
+    return ( uliWork.QuadPart );
+}
+
+
+static INLINE void FileTime2timeval (const FILETIME ft, struct timeval* tv)
+{
+    us2timeval( FileTime2us( ft ), tv );    // Convert to timeval
+}
+
+
+int DoGetRUsage( const int who, const int whotype, struct rusage* r_usage )
 {
     FILETIME  ftCreation;   // When the process was created(*)
     FILETIME  ftExit;       // When the process exited(*)
 
     // (*) Windows standard FILETIME format: date/time expressed as the
-    //     amount of time that has elapsed since midnight January 1, 1601.
+    //     amount of time that has elapsed since midnight January 1,
+    //     1601. These fields are NOT used in converting FILETIME usage
+    //     times to rusage times.
 
     FILETIME  ftKernel;     // CPU time spent in kernel mode (in #of 100-nanosecond units)
     FILETIME  ftUser;       // CPU time spent in user   mode (in #of 100-nanosecond units)
 
     int result = 0;
 
-    if ( !GetProcessTimes( hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser ) )
+    HANDLE  whoHandle;
+
+    switch ( whotype )
     {
-        ftCreation.dwHighDateTime = ftCreation.dwLowDateTime = 0;
-        ftExit    .dwHighDateTime = ftExit    .dwLowDateTime = 0;
-        ftKernel  .dwHighDateTime = ftKernel  .dwLowDateTime = 0;
-        ftUser    .dwHighDateTime = ftUser    .dwLowDateTime = 0;
-        errno = EINVAL;
-        result = -1;
+        case rusage_type_process:
+            whoHandle = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, who );
+            if ( whoHandle == NULL )
+                return rusage_failure( r_usage );
+            result = GetProcessTimes( whoHandle, &ftCreation, &ftExit, &ftKernel, &ftUser );
+            break;
+        case rusage_type_thread:
+            whoHandle = OpenThread( THREAD_QUERY_INFORMATION, FALSE, who );
+            if ( whoHandle == NULL )
+                return rusage_failure( r_usage );
+            result = GetThreadTimes( whoHandle, &ftCreation, &ftExit, &ftKernel, &ftUser );
+            break;
+        default:
+            // Check for thread ID first. If failure, handle as process ID.
+            result = DoGetRUsage( who, rusage_type_thread, r_usage );
+            if ( result == -1 )
+                result = DoGetRUsage( who, rusage_type_process, r_usage );
+            return (result);
     }
 
-    FILETIME2timeval(ftKernel, &r_usage->ru_stime); // Kernel time...
-    FILETIME2timeval(ftUser,   &r_usage->ru_utime); // User time...
+    CloseHandle( whoHandle );
 
-    return ( result );
+    if ( !result )
+        return rusage_failure( r_usage );
+
+    FileTime2timeval( ftKernel, &r_usage->ru_stime );   // Kernel time...
+    FileTime2timeval( ftUser,   &r_usage->ru_utime );   // User time...
+
+    errno = 0;
+    return ( 0 );
 }
 
-static int DoGetRUsage_Thread( HANDLE hThread, struct rusage* r_usage )
-{
-    FILETIME  ftCreation;   // When the process was created(*)
-    FILETIME  ftExit;       // When the process exited(*)
-
-    // (*) Windows standard FILETIME format: date/time expressed as the
-    //     amount of time that has elapsed since midnight January 1, 1601.
-
-    FILETIME  ftKernel;     // CPU time spent in kernel mode (in #of 100-nanosecond units)
-    FILETIME  ftUser;       // CPU time spent in user   mode (in #of 100-nanosecond units)
-
-    int result = 0;
-
-    if ( !GetThreadTimes( hThread, &ftCreation, &ftExit, &ftKernel, &ftUser ) )
-    {
-        ftCreation.dwHighDateTime = ftCreation.dwLowDateTime = 0;
-        ftExit    .dwHighDateTime = ftExit    .dwLowDateTime = 0;
-        ftKernel  .dwHighDateTime = ftKernel  .dwLowDateTime = 0;
-        ftUser    .dwHighDateTime = ftUser    .dwLowDateTime = 0;
-        errno = EINVAL;
-        result = -1;
-    }
-
-    FILETIME2timeval(ftKernel, &r_usage->ru_stime); // Kernel time...
-    FILETIME2timeval(ftUser,   &r_usage->ru_utime); // User time...
-
-    return ( result );
-}
 
 DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
 {
-    int i;
+    int result;
 
-    if ( !r_usage )
+    if ( !r_usage || r_usage == NULL)
     {
         errno = EFAULT;
-        return -1;
+        return ( -1 );
     }
 
-    if ( RUSAGE_SELF == who )
+    switch ( who )
     {
-        HANDLE hRealHandle = 0;
-        DuplicateHandle( GetCurrentProcess(),       // Source Process Handle
-                         GetCurrentThread(),        // Source Handle to duplicate
-                         GetCurrentProcess(),       // Target Process Handle
-                         &hRealHandle,              // Target Handle pointer
-                         0,                         // Options flag
-                         TRUE,                      // Inheritable flag
-                         DUPLICATE_SAME_ACCESS );   // Options
+        case RUSAGE_SELF:
+            return DoGetRUsage( GetCurrentProcessId(), rusage_type_process, r_usage );
 
-        return DoGetRUsage_Thread( hRealHandle, r_usage );
+        case RUSAGE_CHILDREN:
+        {
+            DWORD           dwOurProcessId  = GetCurrentProcessId();
+            HANDLE          hProcessSnap    = NULL;
+            PROCESSENTRY32  pe32;
+            struct rusage   child_usage;
+
+            memset( &pe32, 0, sizeof(pe32) );
+
+            // Take a snapshot of all active processes...
+
+            hProcessSnap = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+
+            if ( INVALID_HANDLE_VALUE == hProcessSnap )
+                return rusage_failure(r_usage);
+
+            pe32.dwSize = sizeof( PROCESSENTRY32 );
+
+            //  Walk the snapshot...
+
+            if ( !Process32First( hProcessSnap, &pe32 ) )
+            {
+                CloseHandle( hProcessSnap );
+                return rusage_failure( r_usage );
+            }
+
+            r_usage->ru_stime.tv_sec = r_usage->ru_stime.tv_usec = 0;
+            r_usage->ru_utime.tv_sec = r_usage->ru_utime.tv_usec = 0;
+
+            // Locate all children of the current process
+            // and accumulate their process times together...
+
+            do
+            {
+                if ( pe32.th32ParentProcessID != dwOurProcessId )
+                    continue;
+
+                result = DoGetRUsage( pe32.th32ProcessID, rusage_type_process, &child_usage );
+                if ( result != 0 )
+                    return rusage_failure( r_usage );
+
+                VERIFY( timeval_add( &child_usage.ru_stime, &r_usage->ru_stime ) == 0 );
+                VERIFY( timeval_add( &child_usage.ru_utime, &r_usage->ru_utime ) == 0 );
+            }
+            while ( Process32Next( hProcessSnap, &pe32 ) );
+
+            VERIFY( CloseHandle( hProcessSnap ) );
+
+            result = 0;
+            break;
+        }
+
+        case RUSAGE_THREAD:
+            result = DoGetRUsage( GetCurrentThreadId(), rusage_type_thread, r_usage );
+            break;
+
+        default:
+            result = DoGetRUsage( who, rusage_type_unknown, r_usage );
+            break;
     }
 
-    if ( RUSAGE_CHILDREN == who)
-    {
-        DWORD           dwOurProcessId  = GetCurrentProcessId();
-        HANDLE          hProcessSnap    = NULL;
-        PROCESSENTRY32  pe32;
-        HANDLE          hChildProcess;
-        struct rusage   child_usage;
-
-        memset( &pe32, 0, sizeof(pe32) );
-
-        // Take a snapshot of all active processes...
-
-        hProcessSnap = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
-
-        if ( INVALID_HANDLE_VALUE == hProcessSnap )
-            return DoGetRUsage( INVALID_HANDLE_VALUE, r_usage );
-
-        pe32.dwSize = sizeof( PROCESSENTRY32 );
-
-        //  Walk the snapshot...
-
-        if ( !Process32First( hProcessSnap, &pe32 ) )
-        {
-            CloseHandle( hProcessSnap );
-            return DoGetRUsage( INVALID_HANDLE_VALUE, r_usage );
-        }
-
-        r_usage->ru_stime.tv_sec = r_usage->ru_stime.tv_usec = 0;
-        r_usage->ru_utime.tv_sec = r_usage->ru_utime.tv_usec = 0;
-
-        // Locate all children of the current process
-        // and accumulate their process times together...
-
-        do
-        {
-            if ( pe32.th32ParentProcessID != dwOurProcessId )
-                continue;
-
-            hChildProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, pe32.th32ProcessID );
-            DoGetRUsage( hChildProcess, &child_usage );
-            CloseHandle( hChildProcess );
-
-            VERIFY( timeval_add( &child_usage.ru_stime, &r_usage->ru_stime ) == 0 );
-            VERIFY( timeval_add( &child_usage.ru_utime, &r_usage->ru_utime ) == 0 );
-        }
-        while ( Process32Next( hProcessSnap, &pe32 ) );
-
-        VERIFY( CloseHandle( hProcessSnap ) );
-
-        return 0;
-    }
-
-    /* Consider "who" to be the requested thread ID (GNU standard), if
-     * processing a CPU thread.
-     */
-    if (who)
-        for (i = 0; i < sysblk.cpus; ++i)
-        {
-            if (sysblk.cputid[i] == who)
-                return DoGetRUsage_Thread(UlongToHandle(who), r_usage);
-        }
-
-    /* Otherwise, error */
-    memset(r_usage, 0, sizeof(struct rusage));
-    errno = EINVAL;
-    return (-1);
+    errno = ( result == 0 ) ? 0 : errno;
+    return ( result );
 }
 
 #endif

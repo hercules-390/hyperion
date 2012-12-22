@@ -144,6 +144,17 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* Handle newer RUSAGE_THREAD definition for older Linux levels      */
+/* before 2.6.4 along with *nix systems not supporting...            */
+/*-------------------------------------------------------------------*/
+
+// ZZ FIXME: this should probably be handled in configure.ac...
+
+#if !defined(RUSAGE_THREAD) && !defined(_MSVC_)
+  #define   RUSAGE_THREAD       thread_id()
+#endif
+
+/*-------------------------------------------------------------------*/
 /* some handy quantity definitions                                   */
 /*-------------------------------------------------------------------*/
 #define  ONE_KILOBYTE   ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */

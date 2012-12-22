@@ -153,6 +153,10 @@ typedef struct _SPCCB_CHP_STATUS {
         BYTE    reserved[152];          /* Reserved.                 */
     } SPCCB_CHP_STATUS;
 
+
+/* Diagnose 204 Field Descriptions from http://lwn.net/Articles/180938/
+ */
+
 typedef struct _DIAG204_HDR {
         BYTE    numpart;                /* Number of partitions      */
         BYTE    flags;                  /* Flag Byte                 */
@@ -178,8 +182,17 @@ typedef struct _DIAG204_PART_CPU {
         BYTE    index;                  /* Index into diag224 area   */
         BYTE    cflag;                  /*   ???                     */
         HWORD   weight;                 /* Weight                    */
-        DBLWRD  totdispatch;            /* Total dispatch time       */
+        DBLWRD  totdispatch;            /* Total dispatch time in    */
+                                        /* ... microseconds          */
+                                        /* ... (Accumulated CPU      */
+                                        /* ... time)                 */
         DBLWRD  effdispatch;            /* Effective dispatch time   */
+                                        /* ... in microseconds       */
+                                        /* ... (Accumulated          */
+                                        /* ... effective CPU time;   */
+                                        /* ... that is, time not     */
+                                        /* ... spent in overhead     */
+                                        /* ... activities)           */
     } DIAG204_PART_CPU;
 
 typedef struct _DIAG204_X_HDR {
@@ -220,14 +233,26 @@ typedef struct _DIAG204_X_PART_CPU {
         BYTE    index;                  /* Index into diag224 area   */
         BYTE    cflag;                  /*   ???                     */
         HWORD   weight;                 /* Weight                    */
-        DBLWRD  totdispatch;            /* Total dispatch time       */
+        DBLWRD  totdispatch;            /* Total dispatch time in    */
+                                        /* ... microseconds          */
+                                        /* ... (Accumulated CPU      */
+                                        /* ... time)                 */
         DBLWRD  effdispatch;            /* Effective dispatch time   */
+                                        /* ... in microseconds       */
+                                        /* ... (Accumulated          */
+                                        /* ... effective CPU time;   */
+                                        /* ... that is, time not     */
+                                        /* ... spent in overhead     */
+                                        /* ... activities)           */
         HWORD   minweight;
         HWORD   curweight;
         HWORD   maxweight;
         BYTE    resv2[2];
-        DBLWRD  onlinetime;
-        DBLWRD  waittime;
+        DBLWRD  onlinetime;             /* Accumulated microseconds  */
+                                        /* ... logical CPU defined   */
+        DBLWRD  waittime;               /* Accumulated microseconds  */
+                                        /* ... logical CPU not       */
+                                        /* ... executing (wait)      */
         FWORD   pmaweight;
         FWORD   polarweight;
         BYTE    resv3[40];
@@ -443,18 +468,23 @@ DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
 DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
 DIAG204_X_PART     *partxinfo;         /* Partition info             */
 DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
-U64               tdis;
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 RADR              abs;                 /* abs addr of data area      */
-U64               dreg;                /* work doubleword            */
 int               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
-ETOD              ETOD;                /* ETOD clock work area       */
-static TOD        diag204tod;          /* last diag204 tod           */
+ETOD              ETOD;                /* Extended TOD clock         */
+U64               uCPU[MAX_CPU_ENGINES];    /* User CPU time    (us) */
+U64               tCPU[MAX_CPU_ENGINES];    /* Total CPU time   (us) */
+
 #if defined(FEATURE_PHYSICAL_DIAG204)
 static BYTE       physical[8] =
               {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
+
+#if defined(FEATURE_EXTENDED_DIAG204)
+U64               oCPU[MAX_CPU_ENGINES];    /* Online CPU time  (us) */
+U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
+#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 
     /* Test DIAG204 command word */
     switch (regs->GR_L(r2)) {
@@ -477,12 +507,22 @@ static BYTE       physical[8] =
         /* Mark page referenced */
         STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
 
-        /* save last diag204 tod */
-        dreg = diag204tod;
+        /* Retrieve the TOD clock value */
+        etod_clock(regs, &ETOD, ETOD_extended);
 
-        /* Retrieve the TOD clock value and shift out the epoch */
-        etod_clock(regs, &ETOD, ETOD_fast);
-        diag204tod = ETOD2TOD(ETOD);
+        /* Get processor time(s) and leave out non-CPU processes and
+         * threads
+         */
+        for(i = 0; i < sysblk.maxcpu; ++i)
+        {
+            if (IS_CPU_ONLINE(i))
+            {
+                /* Get CPU times in microseconds */
+                getrusage(sysblk.cputid[i], &usage);
+                uCPU[i] = timeval2us(&usage.ru_utime);
+                tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);
+            }
+        }
 
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
@@ -491,17 +531,16 @@ static BYTE       physical[8] =
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrinfo->offown,sizeof(DIAG204_HDR));
-        STORE_DW(hdrinfo->diagstck,dreg);
+        STORE_DW(hdrinfo->diagstck,ETOD2tod(ETOD));
 
         /* hercules partition */
         partinfo = (DIAG204_PART*)(hdrinfo + 1);
         memset(partinfo, 0, sizeof(DIAG204_PART));
-        partinfo->partnum = 1; /* Hercules partition */
+        partinfo->partnum = sysblk.lparnum;     /* Hercules partition */
         partinfo->virtcpu = sysblk.cpus;
         get_lparname(partinfo->partname);
 
         /* hercules cpu's */
-        getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
@@ -510,22 +549,17 @@ static BYTE       physical[8] =
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuinfo->index=sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
-              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuinfo->totdispatch,dreg);
-
-              dreg = (U64)(usage.ru_utime.tv_sec)* 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuinfo->effdispatch,dreg);
-
+              STORE_DW(cpuinfo->totdispatch,tCPU[i]);
+              STORE_DW(cpuinfo->effdispatch, uCPU[i]);
               cpuinfo += 1;
           }
 
 #if defined(FEATURE_PHYSICAL_DIAG204)
-        /* lpar management */
-        getrusage(RUSAGE_CHILDREN,&usage);
+        /* LPAR management */
+        /* FIXME: This section should report on the real CPUs, appearing
+         *        and transformed for reporting purposes. This should
+         *        also be properly reflected in STSI information.
+         */
         partinfo = (DIAG204_PART*)cpuinfo;
         memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 0; /* Physical machine */
@@ -533,7 +567,6 @@ static BYTE       physical[8] =
         memcpy(partinfo->partname,physical,sizeof(physical));
 
         /* report all emulated physical cpu's */
-        getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
@@ -542,17 +575,8 @@ static BYTE       physical[8] =
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               cpuinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
-
-              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuinfo->totdispatch,dreg);
-
-              dreg = (U64)(usage.ru_utime.tv_sec) * 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuinfo->effdispatch,dreg);
-
+              STORE_DW(cpuinfo->totdispatch, tCPU[i]);
+              STORE_DW(cpuinfo->effdispatch, uCPU[i]);
               cpuinfo += 1;
           }
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
@@ -584,12 +608,24 @@ static BYTE       physical[8] =
            check protection, and set reference and change bits */
         hdrxinfo = (DIAG204_X_HDR*)MADDR (GR_A(r1,regs), r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-        /* save last diag204 tod */
-        dreg = diag204tod;
+        /* Retrieve the TOD clock value */
+        etod_clock(regs, &ETOD, ETOD_extended);
 
-        /* Retrieve the TOD clock value and shift out the epoch */
-        etod_clock(regs, &ETOD, ETOD_fast);
-        diag204tod = ETOD2TOD(ETOD);
+        /* Get processor time(s) and leave out non-CPU processes and
+         * threads
+         */
+        for(i = 0; i < sysblk.maxcpu; ++i)
+        {
+            if (IS_CPU_ONLINE(i))
+            {
+                /* Get CPU times in microseconds */
+                getrusage(sysblk.cputid[i], &usage);
+                oCPU[i] = etod2us(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
+                uCPU[i] = timeval2us(&usage.ru_utime);
+                tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);
+                wCPU[i] = tCPU[i] - uCPU[i];
+            }
+        }
 
         memset(hdrxinfo, 0, sizeof(DIAG204_X_HDR));
         hdrxinfo->numpart = 1;
@@ -598,13 +634,13 @@ static BYTE       physical[8] =
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrxinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrxinfo->offown,sizeof(DIAG204_X_HDR));
-        STORE_DW(hdrxinfo->diagstck1,(dreg >> 8));
-        STORE_DW(hdrxinfo->diagstck2,( 0x0000000001000000ULL | (regs->cpuad << 16) | regs->todpr));
+        STORE_DW(hdrxinfo->diagstck1,ETOD.high);
+        STORE_DW(hdrxinfo->diagstck2,ETOD.low);
 
         /* hercules partition */
         partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
         memset(partxinfo, 0, sizeof(DIAG204_PART));
-        partxinfo->partnum = 1; /* Hercules partition */
+        partxinfo->partnum = sysblk.lparnum;    /* Hercules partition */
         partxinfo->virtcpu = sysblk.cpus;
         get_lparname(partxinfo->partname);
         get_sysname(partxinfo->cpcname);
@@ -614,7 +650,6 @@ static BYTE       physical[8] =
         get_sysplex(partxinfo->gr_name);
 
         /* hercules cpu's */
-        getrusage(RUSAGE_SELF,&usage);
         cpuxinfo = (DIAG204_X_PART_CPU*)(partxinfo + 1);
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
@@ -624,22 +659,15 @@ static BYTE       physical[8] =
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
 
-              tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              tdis <<= 12;
-              STORE_DW(cpuxinfo->totdispatch,tdis);
-
-              dreg = (U64)(usage.ru_utime.tv_sec)* 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuxinfo->effdispatch,dreg);
+              STORE_DW(cpuxinfo->totdispatch, tCPU[i]);
+              STORE_DW(cpuxinfo->effdispatch, uCPU[i]);
 
               STORE_HW(cpuxinfo->minweight,1000);
               STORE_HW(cpuxinfo->curweight,1000);
               STORE_HW(cpuxinfo->maxweight,1000);
 
-              STORE_DW(cpuxinfo->onlinetime, diag204tod - sysblk.todstart);
-              STORE_DW(cpuxinfo->waittime, (diag204tod - sysblk.todstart) - tdis);
+              STORE_DW(cpuxinfo->onlinetime, oCPU[i]);
+              STORE_DW(cpuxinfo->waittime,   wCPU[i]);
 
               STORE_HW(cpuxinfo->pmaweight,1000);
               STORE_HW(cpuxinfo->polarweight,1000);
@@ -649,7 +677,11 @@ static BYTE       physical[8] =
 
 
 #if defined(FEATURE_PHYSICAL_DIAG204)
-        /* lpar management */
+        /* LPAR management */
+        /* FIXME: This section should report on the real CPUs, appearing
+         *        and transformed for reporting purposes. This should
+         *        also be properly reflected in STSI information.
+         */
         partxinfo = (DIAG204_X_PART*)cpuxinfo;
         memset(partxinfo, 0, sizeof(DIAG204_X_PART));
         partxinfo->partnum = 0; /* Physical machine */
@@ -657,7 +689,6 @@ static BYTE       physical[8] =
         memcpy(partxinfo->partname,physical,sizeof(physical));
 
         /* report all emulated physical cpu's */
-        getrusage(RUSAGE_CHILDREN,&usage);
         cpuxinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         for(i = 0; i < sysblk.maxcpu; i++)
           if (IS_CPU_ONLINE(i))
@@ -667,22 +698,15 @@ static BYTE       physical[8] =
               cpuxinfo->index = sysblk.ptyp[i];
               STORE_HW(cpuxinfo->weight,100);
 
-              tdis = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000;
-              tdis = (tdis + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec)) / sysblk.cpus;
-              tdis <<= 12;
-              STORE_DW(cpuxinfo->totdispatch,tdis);
-
-              dreg = (U64)(usage.ru_utime.tv_sec)* 1000000;
-              dreg = (dreg + (usage.ru_utime.tv_usec)) / sysblk.cpus;
-              dreg <<= 12;
-              STORE_DW(cpuxinfo->effdispatch,dreg);
+              STORE_DW(cpuxinfo->totdispatch, tCPU[i]);
+              STORE_DW(cpuxinfo->effdispatch, uCPU[i]);
 
               STORE_HW(cpuxinfo->minweight,1000);
               STORE_HW(cpuxinfo->curweight,1000);
               STORE_HW(cpuxinfo->maxweight,1000);
 
-              STORE_DW(cpuxinfo->onlinetime, diag204tod - sysblk.todstart);
-              STORE_DW(cpuxinfo->waittime, (diag204tod - sysblk.todstart) - tdis);
+              STORE_DW(cpuxinfo->onlinetime, oCPU[i]);
+              STORE_DW(cpuxinfo->waittime,   wCPU[i]);
 
               STORE_HW(cpuxinfo->pmaweight,1000);
               STORE_HW(cpuxinfo->polarweight,1000);
