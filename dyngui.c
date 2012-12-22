@@ -518,7 +518,8 @@ NotSpecialGUICommand:
 
     if ('*' == pszCommand[0] || '#' == pszCommand[0])
     {
-        logmsg("%s\n",pszCommand);      // (log comment to console)
+        if ('*' == pszCommand[0])       // (LOUD comment?)
+            logmsg("%s\n",pszCommand);  // (then log to console)
         return NULL;                    // (and otherwise ignore it)
     }
 
