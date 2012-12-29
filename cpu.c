@@ -1300,6 +1300,14 @@ int i;
 
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
+
+    /* Save CPU creation time without epoch set, as epoch may change. When using
+     * the field, subtract the current epoch from any time being used in
+     * relation to the creation time to yield the correct result.
+     */
+    if (sysblk.cpucreateTOD[cpu] == 0)
+        sysblk.cpucreateTOD[cpu] = host_tod(); /* tod_epoch is zero at this point */
+
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
     regs->sysblk = &sysblk;
@@ -1395,6 +1403,7 @@ void *cpu_uninit (int cpu, REGS *regs)
         sysblk.started_mask &= ~CPU_BIT(cpu);
         sysblk.waiting_mask &= ~CPU_BIT(cpu);
         sysblk.regs[cpu] = NULL;
+        sysblk.cpucreateTOD[cpu] = 0;
         release_lock (&sysblk.cpulock[cpu]);
     }
 
@@ -1518,7 +1527,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* This is where a stopped CPU will wait */
     if (unlikely(regs->cpustate == CPUSTATE_STOPPED))
     {
-        S64 saved_timer = cpu_timer(regs);
+        TOD saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
         sysblk.intowner = LOCK_OWNER_NONE;
@@ -1755,7 +1764,7 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
     if (shouldstep)
     {
         REGS *hostregs = regs->hostregs;
-        S64 saved_timer[2];
+        TOD saved_timer[2];
 
         OBTAIN_INTLOCK(hostregs);
 #ifdef OPTION_MIPS_COUNTING
@@ -1763,8 +1772,8 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
 #endif
         /* The CPU timer is not decremented for a CPU that is in
            the manual state (e.g. stopped in single step mode) */
-        saved_timer[0] = cpu_timer(regs);
-        saved_timer[1] = cpu_timer(hostregs);
+        save_cpu_timers(hostregs, &saved_timer[0],
+                        regs,     &saved_timer[1]);
         hostregs->cpustate = CPUSTATE_STOPPED;
         sysblk.started_mask &= ~hostregs->cpubit;
         hostregs->stepwait = 1;
@@ -1776,8 +1785,8 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
         sysblk.intowner = hostregs->cpuad;
         hostregs->stepwait = 0;
         sysblk.started_mask |= hostregs->cpubit;
-        set_cpu_timer(regs,saved_timer[0]);
-        set_cpu_timer(hostregs,saved_timer[1]);
+        set_cpu_timers(hostregs, saved_timer[0],
+                       regs,     saved_timer[1]);
 #ifdef OPTION_MIPS_COUNTING
         hostregs->waittime += host_tod() - hostregs->waittod;
         hostregs->waittod = 0;

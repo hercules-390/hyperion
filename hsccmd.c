@@ -7882,67 +7882,60 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     {
         if ( IS_CPU_ONLINE(i) )
         {
-            char *pmsg = "";
-#if defined(_MSVC_)
-            FILETIME ftCreate, ftExit, ftKernel, ftUser;
+            char           *pmsg = "";
+            struct rusage   rusage;
 
-            if ( GetThreadTimes(win_thread_handle(sysblk.cputid[i]), &ftCreate, &ftExit, &ftKernel, &ftUser) != 0 )
+            if (getrusage(sysblk.cputid[i], &rusage) == 0)
             {
-                char    msgKernel[64];
-                char    msgUser[64];
-                char    yy[8], mm[8], dd[8], hh[8], mn[8], ss[8], ms[8];
+                char    kdays[16], udays[16];
 
-                SYSTEMTIME  st;
+                U64     kdd, khh, kmm, kss, kms,
+                        udd, uhh, umm, uss, ums;
 
-                FileTimeToSystemTime( &ftKernel, &st );
-                st.wYear    -= 1601;
-                st.wDay     -= 1;
-                st.wMonth   -= 1;
-
-                MSGBUF( yy, "%02d", st.wYear );
-                MSGBUF( mm, "%02d", st.wMonth );
-                MSGBUF( dd, "%02d", st.wDay );
-                MSGBUF( hh, "%02d", st.wHour );
-                MSGBUF( mn, "%02d", st.wMinute );
-                MSGBUF( ss, "%02d", st.wSecond );
-                MSGBUF( ms, "%03d", st.wMilliseconds );
-
-                if ( st.wYear != 0 )
-                    MSGBUF( msgKernel, "%s/%s/%s %s:%s:%s.%s", yy, mm, dd, hh, mn, ss, ms );
-                else if ( st.wMonth != 0 )
-                    MSGBUF( msgKernel, "%s/%s %s:%s:%s.%s", mm, dd, hh, mn, ss, ms );
-                else if ( st.wDay != 0 )
-                    MSGBUF( msgKernel, "%s %s:%s:%s.%s", dd, hh, mn, ss, ms );
+                if (unlikely(rusage.ru_stime.tv_usec > 1000000))
+                {
+                    rusage.ru_stime.tv_sec += rusage.ru_stime.tv_usec / 1000000;
+                    rusage.ru_stime.tv_usec %= 1000000;
+                }
+                kss = rusage.ru_stime.tv_sec;
+                kdd = kss / 86400;
+                if (kdd)
+                {
+                    kss %= 86400;
+                    MSGBUF( kdays, "%llu/", kdd);
+                }
                 else
-                    MSGBUF( msgKernel, "%s:%s:%s.%s", hh, mn, ss, ms );
+                    kdays[0] = 0;
+                khh = kss /  3600, kss %=  3600;
+                kmm = kss /    60, kss %=    60;
+                kms = (rusage.ru_stime.tv_usec + 500) / 1000;
 
-                FileTimeToSystemTime( &ftUser, &st );
-                st.wYear    -= 1601;
-                st.wDay     -= 1;
-                st.wMonth   -= 1;
-
-                MSGBUF( yy, "%02d", st.wYear );
-                MSGBUF( mm, "%02d", st.wMonth );
-                MSGBUF( dd, "%02d", st.wDay );
-                MSGBUF( hh, "%02d", st.wHour );
-                MSGBUF( mn, "%02d", st.wMinute );
-                MSGBUF( ss, "%02d", st.wSecond );
-                MSGBUF( ms, "%03d", st.wMilliseconds );
-
-                if ( st.wYear != 0 )
-                    MSGBUF( msgUser, "%s/%s/%s %s:%s:%s.%s", yy, mm, dd, hh, mn, ss, ms );
-                else if ( st.wMonth != 0 )
-                    MSGBUF( msgUser, "%s/%s %s:%s:%s.%s", mm, dd, hh, mn, ss, ms );
-                else if ( st.wDay != 0 )
-                    MSGBUF( msgUser, "%s %s:%s:%s.%s", dd, hh, mn, ss, ms );
+                if (unlikely(rusage.ru_utime.tv_usec > 1000000))
+                {
+                    rusage.ru_utime.tv_sec += rusage.ru_utime.tv_usec / 1000000;
+                    rusage.ru_utime.tv_usec %= 1000000;
+                }
+                uss = rusage.ru_utime.tv_sec;
+                udd = uss / 86400;
+                if (udd)
+                {
+                    uss %= 86400;
+                    MSGBUF( udays, "%llu/", udd);
+                }
                 else
-                    MSGBUF( msgUser, "%s:%s:%s.%s", hh, mn, ss, ms );
+                    udays[0] = 0;
+                uhh = uss /  3600, uss %=  3600;
+                umm = uss /    60, uss %=    60;
+                ums = (rusage.ru_utime.tv_usec + 500) / 1000;
 
-                MSGBUF( msgbuf, " - Host Kernel(%s) User(%s)", msgKernel, msgUser );
+                MSGBUF( msgbuf, " - Host Kernel(%s%02d:%02d:%02d.%03d) "
+                                          "User(%s%02d:%02d:%02d.%03d)",
+                        kdays, khh, kmm, kss, kms,
+                        udays, uhh, umm, uss, ums);
 
                 pmsg = msgbuf;
             }
-#endif
+
             mipsrate = sysblk.regs[i]->mipsrate;
             WRMSG( HHC17009, "I", PTYPSTR(i), i,
                                 ( sysblk.regs[i]->cpustate == CPUSTATE_STARTED ) ? '-' :

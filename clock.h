@@ -142,17 +142,20 @@ typedef struct _CSR {
 #endif
 
 void csr_reset(void);                   /* Reset cs registers        */
-void set_tod_steering(double);          /* Set steering rate         */
+void set_tod_steering(const double);    /* Set steering rate         */
 double get_tod_steering(void);          /* Get steering rate         */
 U64 update_tod_clock(void);             /* Update the TOD clock      */
 void update_cpu_timer(void);            /* Update the CPU timer      */
-void set_tod_epoch(S64);                /* Set TOD epoch             */
-void adjust_tod_epoch(S64);             /* Adjust TOD epoch          */
+void set_tod_epoch(const S64);          /* Set TOD epoch             */
+void adjust_tod_epoch(const S64);       /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */
 S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
-void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
-void set_int_timer(REGS *, S32);        /* Set interval timer        */
+S64 cpu_timer_SIE(REGS *);              /* Retrieve SIE CPU timer    */
+S64 set_cpu_timer(REGS *, const TOD);   /* Set CPU timer             */
+void save_cpu_timers(REGS *, TOD *, REGS *, TOD *);
+void set_cpu_timers(REGS *, const TOD, REGS *, const TOD);
+void set_int_timer(REGS *, const S32);  /* Set interval timer        */
 TOD tod_clock(REGS *);                  /* Get TOD clock non-unique  */
 typedef enum
 {
@@ -163,7 +166,7 @@ typedef enum
 } ETOD_format;
 TOD etod_clock(REGS*, ETOD*,            /* Get extended TOD clock    */
                ETOD_format);
-void set_tod_clock(U64);                /* Set TOD clock             */
+void set_tod_clock(const U64);          /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
 int clock_hsuspend(void *file);         /* Hercules suspend          */
 int clock_hresume(void *file);          /* Hercules resume           */
@@ -304,6 +307,23 @@ clock_gettime ( clockid_t clk_id, struct timespec *ts )
 
 #endif
 
+static INLINE S64
+timeval2us (const struct timeval* tv)
+{
+    S64 result;
+    result  = tv->tv_sec * 1000000;
+    result += tv->tv_usec;
+    return (result);
+}
+
+
+static INLINE void
+us2timeval (const U64 us, struct timeval* tv)
+{
+    tv->tv_sec  = us / 1000000;
+    tv->tv_usec = us % 1000000;
+}
+
 
 static INLINE TOD
 ns2etod (const S64 ns)
@@ -347,9 +367,21 @@ timeval2etod (const struct timeval* tv)
     return (result);
 }
 
+static INLINE TOD
+etod2tod (const U64 etod)
+{
+    return (etod << 8);
+}
 
 static INLINE TOD
-ns2ETOD (ETOD* ETOD, S64 ns)
+etod2us (const S64 etod)
+{
+    return (etod >> 4);
+}
+
+
+static INLINE TOD
+ns2ETOD (ETOD* ETOD, const S64 ns)
 {
     /* This conversion, assuming a nanosecond host clock resolution,
      * yields a TOD clock resolution of 120-bits, 95-bits, or 64-bits,
@@ -546,6 +578,26 @@ sec2tod (const S64 sec)
 }
 
 static INLINE TOD
+tod2etod (const TOD tod)
+{
+    return (tod >> 8);                  /* Adjust bit 51 to bit 59    */
+}
+
+static INLINE TOD
+tod2ETOD (const TOD tod, ETOD *ETOD)
+{
+    ETOD->high = tod >>  8;             /* Adjust bit 51 to bit 59    */
+    ETOD->low  = tod << 56;
+    return (ETOD->high);
+}
+
+static INLINE TOD
+tod2us (const TOD tod)
+{
+    return (tod >> 12);                 /* Adjust bit 51 to bit 63    */
+}
+
+static INLINE TOD
 timespec2tod (const struct timespec* tv)
 {
     register S64 result;
@@ -565,7 +617,7 @@ timeval2tod (const struct timeval* tv)
 
 
 /*----------------------------------------------------------------------------*/
-/* host_TOD - Clock fetch and conversion for routines that DO NOT use the     */
+/* host_tod - Clock fetch and conversion for routines that DO NOT use the     */
 /*            synchronized clock services or emulation services (including    */
 /*            clock steering), and can tolerate duplicate time stamp          */
 /*            generation.                                                     */
@@ -616,6 +668,12 @@ static INLINE TOD
 ETOD2TOD (const ETOD ETOD)
 {
   return ETOD2tod(ETOD);
+}
+
+static INLINE U64
+ETOD2us (const ETOD ETOD)
+{
+    return (ETOD.high >> 4);
 }
 
 #endif

@@ -92,7 +92,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
          *-------------------------------------------*/
 
         /* Set interrupt flag if the CPU timer is negative */
-        if (CPU_TIMER(regs) < 0)
+        if (cpu_timer(regs) < 0)
         {
             if (!IS_IC_PTIMER(regs))
             {
@@ -108,7 +108,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
             /* Set interrupt flag if the CPU timer is negative */
-            if (CPU_TIMER(regs->guestregs) < 0)
+            if (cpu_timer_SIE(regs) < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
                 intmask |= regs->cpubit;
@@ -171,7 +171,6 @@ int     i;                              /* Loop index                */
 REGS   *regs;                           /* -> REGS                   */
 U64     mipsrate;                       /* Calculated MIPS rate      */
 U64     siosrate;                       /* Calculated SIO rate       */
-U64     cpupct;                         /* Calculated cpu percentage */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
 
@@ -180,6 +179,7 @@ U64     now;                            /* Current time of day       */
 U64     then;                           /* Previous time of day      */
 U64     diff;                           /* Interval                  */
 U64     halfdiff;                       /* One-half interval         */
+U64     waittime;                       /* Wait time                 */
 const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
 #define diffrate(_x,_y) \
@@ -262,17 +262,16 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
                 total_sios += siosrate;
 
                 /* Calculate CPU busy percentage */
-                cpupct = regs->waittime;
+                waittime = regs->waittime;
                 regs->waittime = 0;
                 if (regs->waittod)
                 {
-                    cpupct += now - regs->waittod;
+                    waittime += now - regs->waittod;
                     regs->waittod = now;
                 }
-                cpupct = diffrate(diff - cpupct, 100);
-                if (cpupct > 100)
-                  cpupct = 100;
-                regs->cpupct = cpupct;
+                regs->cpupct = min((diff > waittime) ?
+                                     diffrate(diff - waittime, 100) : 0,
+                                   100);
 
                 release_lock(&sysblk.cpulock[i]);
 

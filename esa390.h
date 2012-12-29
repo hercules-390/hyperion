@@ -2112,9 +2112,14 @@ typedef struct _TLECPU {                /* CPU TLE                   */
         DW      cpumask;                /* CPU Mask                  */
     }   TLECPU;
 
-#define CPUTLE_FLAG_RESERVED    0xF8
-#define CPUTLE_FLAG_DEDICATED   0x04
-#define CPUTLE_FLAG_VPOLARMASK  0x03
+#define CPUTLE_FLAG_RESERVED        0xF8
+#define CPUTLE_FLAG_DEDICATED       0x04
+#define CPUTLE_FLAG_SHARED          0x00
+#define CPUTLE_FLAG_HORIZONTAL      0x00
+#define CPUTLE_FLAG_VERTICAL_LOW    0x01
+#define CPUTLE_FLAG_VERTICAL_MEDIUM 0x02
+#define CPUTLE_FLAG_VERTICAL_HIGH   0x03
+#define CPUTLE_FLAG_VPOLARMASK      0x03
 
 typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
         BYTE    resv1[4*1];             /* Reserved                  */

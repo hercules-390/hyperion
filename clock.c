@@ -225,7 +225,7 @@ register TOD temp_tod;
 /* set_tod_steering(double) sets a new steering rate.                */
 /* When a new steering episode begins, the offset is adjusted,       */
 /* and the new steering rate takes effect                            */
-void set_tod_steering(double steering)
+void set_tod_steering(const double steering)
 {
     obtain_lock(&sysblk.todlock);
 
@@ -263,7 +263,7 @@ static INLINE void prepare_new_episode()
 
 
 /* Ajust the epoch for all active cpu's in the configuration */
-static U64 adjust_epoch_cpu_all(U64 epoch)
+static U64 adjust_epoch_cpu_all(const U64 epoch)
 {
 int cpu;
 
@@ -288,7 +288,7 @@ double get_tod_steering(void)
 }
 
 
-void set_tod_epoch(S64 epoch)
+void set_tod_epoch(const S64 epoch)
 {
     obtain_lock(&sysblk.todlock);
     csr_reset();
@@ -298,7 +298,7 @@ void set_tod_epoch(S64 epoch)
 }
 
 
-void adjust_tod_epoch(S64 epoch)
+void adjust_tod_epoch(const S64 epoch)
 {
     obtain_lock(&sysblk.todlock);
     csr_reset();
@@ -308,7 +308,7 @@ void adjust_tod_epoch(S64 epoch)
 }
 
 
-void set_tod_clock(U64 tod)
+void set_tod_clock(const U64 tod)
 {
     set_tod_epoch(tod - hw_clock());
 }
@@ -320,7 +320,7 @@ S64 get_tod_epoch()
 }
 
 
-static void set_gross_steering_rate(S32 gsr)
+static void set_gross_steering_rate(const S32 gsr)
 {
     obtain_lock(&sysblk.todlock);
     prepare_new_episode();
@@ -329,7 +329,7 @@ static void set_gross_steering_rate(S32 gsr)
 }
 
 
-static void set_fine_steering_rate(S32 fsr)
+static void set_fine_steering_rate(const S32 fsr)
 {
     obtain_lock(&sysblk.todlock);
     prepare_new_episode();
@@ -338,7 +338,7 @@ static void set_fine_steering_rate(S32 fsr)
 }
 
 
-static void set_tod_offset(S64 offset)
+static void set_tod_offset(const S64 offset)
 {
     obtain_lock(&sysblk.todlock);
     prepare_new_episode();
@@ -347,7 +347,7 @@ static void set_tod_offset(S64 offset)
 }
 
 
-static void adjust_tod_offset(S64 offset)
+static void adjust_tod_offset(const S64 offset)
 {
     obtain_lock(&sysblk.todlock);
     prepare_new_episode();
@@ -359,10 +359,16 @@ static void adjust_tod_offset(S64 offset)
 /* The CPU timer is internally kept as an offset to the thread CPU time
  * used. The CPU timer counts down as the clock approaches the timer
  * epoch.
+ *
+ * To be in agreement with reporting of time in association with real
+ * diagnose code x'204' for partition management and resource reporting,
+ * only user time is considered as CPU time used. System time is
+ * considered to be overhead time of the system (partition overhead or
+ * management time).
  */
 
 TOD
-process_cputime(REGS *regs)
+thread_cputime(const REGS *regs)
 {
     register TOD    result;
 
@@ -370,27 +376,95 @@ process_cputime(REGS *regs)
     int             rc;
 
     rc = getrusage(sysblk.cputid[regs->cpuad], &rusage);
-    if (rc == -1)
-        result = hw_clock();
+    if (unlikely(rc == -1))
+        result = host_tod();
     else
-        result  = timeval2etod(&rusage.ru_utime) +
-                  timeval2etod(&rusage.ru_stime);
+        result  = timeval2etod(&rusage.ru_utime);
 
     return (result);
 }
 
 
-void set_cpu_timer(REGS *regs, S64 timer)
+S64 set_cpu_timer(REGS *regs, const TOD timer)
 {
-    regs->cpu_timer = (timer >> 8) + process_cputime(regs);
+    register REGS*  guestregs = regs->guestregs;
+    register REGS*  hostregs  = regs->hostregs;
+
+    regs->cpu_timer         = tod2etod(timer);
+    regs->cpu_timer_epoch   = thread_cputime(regs);
+
+    if (hostregs && hostregs != regs && regs->cpu_timer_epoch > hostregs->cpu_timer_epoch)
+    {
+        hostregs->cpu_timer        -= regs->cpu_timer_epoch - hostregs->cpu_timer_epoch;
+        hostregs->cpu_timer_epoch   = regs->cpu_timer_epoch;
+    }
+    if (guestregs && guestregs != regs && regs->cpu_timer_epoch > guestregs->cpu_timer_epoch)
+    {
+        guestregs->cpu_timer       -= regs->cpu_timer_epoch - guestregs->cpu_timer_epoch;
+        guestregs->cpu_timer_epoch  = regs->cpu_timer_epoch;
+    }
+
+    return (timer);
+}
+
+
+void set_cpu_timers(REGS *hostregs, const TOD host_timer, REGS *regs, const TOD timer)
+{
+    set_cpu_timer(hostregs, host_timer);
+    if (regs != hostregs)
+    {
+        regs->cpu_timer = tod2etod(timer);
+        regs->cpu_timer_epoch   = hostregs->cpu_timer_epoch;
+    }
+}
+
+void save_cpu_timers(REGS *hostregs, TOD *host_timer, REGS *regs, TOD *timer)
+{
+    *host_timer = cpu_timer(hostregs);
+    *timer = (regs == hostregs) ? *host_timer : cpu_timer_SIE(regs);
 }
 
 
 S64 cpu_timer(REGS *regs)
 {
     register S64    result;
+    register TOD    new_epoch = thread_cputime(regs);
+    register REGS*  guestregs = regs->guestregs;
+    register REGS*  hostregs  = regs->hostregs;
 
-    result = (regs->cpu_timer - process_cputime(regs)) << 8;
+    if (new_epoch > regs->cpu_timer_epoch)
+    {
+        regs->cpu_timer            -= new_epoch - regs->cpu_timer_epoch;
+        regs->cpu_timer_epoch       = new_epoch;
+    }
+
+    if (guestregs && guestregs != regs && new_epoch > guestregs->cpu_timer_epoch)
+    {
+
+        guestregs->cpu_timer       -= new_epoch - guestregs->cpu_timer_epoch;
+        guestregs->cpu_timer_epoch  = new_epoch;
+    }
+
+    if (hostregs && hostregs != regs && new_epoch > hostregs->cpu_timer_epoch)
+    {
+        hostregs->cpu_timer        -= new_epoch - hostregs->cpu_timer_epoch;
+        hostregs->cpu_timer_epoch   = new_epoch;
+    }
+
+    result = etod2tod(regs->cpu_timer);
+    return (result);
+}
+
+
+S64 cpu_timer_SIE(REGS *regs)
+{
+    register S64    result;
+
+    /* Ensure SIE guestregs are in use */
+    if (regs == regs->hostregs)
+        regs = regs->guestregs;
+
+    result = etod2tod(regs->cpu_timer);
     return (result);
 }
 
@@ -516,13 +590,13 @@ tod_clock (REGS* regs)
 
 
 #if defined(_FEATURE_ECPSVM)
-static INLINE S32 ecps_vtimer(REGS *regs)
+static INLINE S32 ecps_vtimer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
 
 
-static INLINE void set_ecps_vtimer(REGS *regs, S32 vtimer)
+static INLINE void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 {
     regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
     regs->ecps_oldtmr = vtimer;
@@ -530,13 +604,13 @@ static INLINE void set_ecps_vtimer(REGS *regs, S32 vtimer)
 #endif /*defined(_FEATURE_ECPSVM)*/
 
 
-static INLINE S32 int_timer(REGS *regs)
+static INLINE S32 int_timer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
 
 
-void set_int_timer(REGS *regs, S32 itimer)
+void set_int_timer(REGS *regs, const S32 itimer)
 {
     regs->int_timer = (U64)(hw_clock() + ITIMER_TO_TOD(itimer));
     regs->old_timer = itimer;
@@ -633,7 +707,7 @@ is_leapyear ( const unsigned int year )
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
-static INLINE S64 lyear_adjust(int epoch)
+static INLINE S64 lyear_adjust(const int epoch)
 {
 int year, leapyear;
 TOD tod = hw_clock();

@@ -4637,7 +4637,7 @@ S64     dreg;                           /* Timer value               */
     set_cpu_timer(regs, dreg);
 
     /* reset the cpu timer pending flag according to its value */
-    if( dreg < 0 )
+    if( unlikely( dreg < 0 ) )
         ON_IC_PTIMER(regs);
     else
         OFF_IC_PTIMER(regs);
@@ -6427,7 +6427,7 @@ U64     dreg;                           /* Double word workarea      */
         if(!(dreg & 0x00F0000000000000ULL))
             dreg |= (U64)(regs->cpuad & 0x0F) << 52;
     }
-    
+
     /* Store CPU ID at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
@@ -6460,7 +6460,7 @@ S64     dreg;                           /* Double word workarea      */
     dreg = cpu_timer(regs);
 
     /* reset the cpu timer pending flag according to its value */
-    if( dreg < 0 )
+    if( unlikely( dreg < 0 ) )
     {
         ON_IC_PTIMER(regs);
 
@@ -6528,9 +6528,8 @@ struct rusage     usage;               /* RMF type data              */
 
 #define SUSEC_PER_MIPS 48              /* One MIPS eq 48 SU          */
 
-        getrusage(RUSAGE_SELF,&usage);
-        dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
-        dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+        getrusage(RUSAGE_THREAD, &usage);
+        dreg = timeval2us(&usage.ru_utime);
         dreg = INSTCOUNT(regs) / (dreg ? dreg : 1);
         dreg *= SUSEC_PER_MIPS;
         return 0x800000 / (dreg ? dreg : 1);
@@ -6699,7 +6698,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     switch(regs->GR_L(0) & STSI_GPR0_FC_MASK) {
 
     case STSI_GPR0_FC_BASIC:
-        
+
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
         m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
@@ -6794,7 +6793,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         break;
 
     case STSI_GPR0_FC_LPAR:
-        
+
 #if defined(_FEATURE_HYPERVISOR)
          if(!FACILITY_ENABLED(LOGICAL_PARTITION,regs))
          {
@@ -6832,7 +6831,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 /* Logical-partition All CPUs */
                 sysib222 = (SYSIB222 *)(m);
                 memset(sysib222, 0, MAX(sizeof(SYSIB222),64*4));
-                STORE_HW(sysib222->lparnum,1);
+                STORE_HW(sysib222->lparnum,sysblk.lparnum);
                 sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu,sysblk.maxcpu);
                 STORE_HW(sysib222->confcpu,sysblk.cpus);
@@ -6856,13 +6855,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
-        
+
     case STSI_GPR0_FC_VM:
-        
+
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
         m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        
+
         sysib322 = (SYSIB322 *)(m);
         memset(sysib322, 0, sizeof(SYSIB322));
         sysib322->dbct = 0x01;
@@ -6873,13 +6872,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         get_vmid(sysibvmdb->vmname);
         STORE_FW(sysibvmdb->vmcaf,1000);   /* Full capability factor */
         get_cpid(sysibvmdb->cpid);
-        
+
         regs->psw.cc = 0;
         break;
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
     case STSI_GPR0_FC_CURRINFO:
-        
+
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
         m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
@@ -6897,6 +6896,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
                 // PROGRAMMING NOTE: we only support horizontal polarization,
                 // not vertical.
+                // TECHNICAL NOTE: Supported host platforms normally schedule
+                // and dispatch in what is considered shared and vertically
+                // polarized.
+                // FIXME: Futures. Properly support vertical polarization.
 
                 sysib1512->mnest = 1;
                 sysib1512->mag[5] = sysblk.cpus;
@@ -6920,7 +6923,8 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                             {
                                 memset(tlecpu, 0, sizeof(TLECPU));
                                 tlecpu->nl = 0;
-                                tlecpu->flags = CPUTLE_FLAG_DEDICATED;
+                                tlecpu->flags = CPUTLE_FLAG_SHARED +
+                                                CPUTLE_FLAG_HORIZONTAL;
                                 tlecpu->cpuadorg = 0;
                                 tlecpu->cputype = cputype;
                             }

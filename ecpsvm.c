@@ -338,9 +338,8 @@ VADR    effective_addr1, \
 
 #define SPT(_x) \
 { \
-    set_cpu_timer(regs,EVM_LD(_x)); \
     OBTAIN_INTLOCK(regs); \
-    if(CPU_TIMER(regs) < 0) \
+    if(set_cpu_timer(regs,EVM_LD(_x)) < 0) \
     { \
         ON_IC_PTIMER(regs); \
     } \
