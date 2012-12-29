@@ -311,7 +311,7 @@ static INLINE S64
 timeval2us (const struct timeval* tv)
 {
     S64 result;
-    result  = tv->tv_sec * 1000000;
+    result  = (S64)tv->tv_sec * 1000000;
     result += tv->tv_usec;
     return (result);
 }
