@@ -714,9 +714,9 @@ DLL_EXPORT int timeval_add
 
     if (accum_timeval->tv_usec > 1000000)
     {
-        int nsec = accum_timeval->tv_usec / 1000000;
-        accum_timeval->tv_sec  += nsec;
-        accum_timeval->tv_usec -= nsec * 1000000;
+        int usec = accum_timeval->tv_usec / 1000000;
+        accum_timeval->tv_sec  += usec;
+        accum_timeval->tv_usec -= usec * 1000000;
     }
 
     return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
