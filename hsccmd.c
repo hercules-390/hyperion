@@ -7811,9 +7811,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     int i, j, k;
     int cpupct = 0;
     U32 mipsrate = 0;
-#if defined(_MSVC_)
     char msgbuf[128];
-#endif
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argv);
@@ -7885,7 +7883,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
             char           *pmsg = "";
             struct rusage   rusage;
 
-            if (getrusage(sysblk.cputid[i], &rusage) == 0)
+            if (getrusage((int)sysblk.cputid[i], &rusage) == 0)
             {
                 char    kdays[16], udays[16];
 
@@ -7930,8 +7928,8 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
 
                 MSGBUF( msgbuf, " - Host Kernel(%s%02d:%02d:%02d.%03d) "
                                           "User(%s%02d:%02d:%02d.%03d)",
-                        kdays, khh, kmm, kss, kms,
-                        udays, uhh, umm, uss, ums);
+                        kdays, (int)khh, (int)kmm, (int)kss, (int)kms,
+                        udays, (int)uhh, (int)umm, (int)uss, (int)ums);
 
                 pmsg = msgbuf;
             }

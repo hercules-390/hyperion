@@ -518,7 +518,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
             if (IS_CPU_ONLINE(i))
             {
                 /* Get CPU times in microseconds */
-                getrusage(sysblk.cputid[i], &usage);
+                getrusage((int)sysblk.cputid[i], &usage);
                 uCPU[i] = timeval2us(&usage.ru_utime);
                 tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);
             }
@@ -619,7 +619,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
             if (IS_CPU_ONLINE(i))
             {
                 /* Get CPU times in microseconds */
-                getrusage(sysblk.cputid[i], &usage);
+                getrusage((int)sysblk.cputid[i], &usage);
                 oCPU[i] = etod2us(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
                 uCPU[i] = timeval2us(&usage.ru_utime);
                 tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);

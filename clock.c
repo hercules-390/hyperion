@@ -375,7 +375,7 @@ thread_cputime(const REGS *regs)
     struct rusage   rusage;
     int             rc;
 
-    rc = getrusage(sysblk.cputid[regs->cpuad], &rusage);
+    rc = getrusage((int)sysblk.cputid[regs->cpuad], &rusage);
     if (unlikely(rc == -1))
         result = host_tod();
     else
