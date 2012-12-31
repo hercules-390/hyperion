@@ -1634,7 +1634,7 @@ if test "$hc_cv_build_hercifc" = "yes"; then
                  ;;
             esac
         ],
-        [hc_cv_opt_setuid_hercifc=yes]
+        [hc_cv_opt_setuid_hercifc=no]
     )
 
     hc_cv_setuid_hercifc=$hc_cv_opt_setuid_hercifc
