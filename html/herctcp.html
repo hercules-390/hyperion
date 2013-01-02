@@ -99,14 +99,14 @@ The procedure for completing the TUN/TAP setup for Linux 2.4 is shown below.
     when the /dev/net/tun device is opened by Hercules.
 </ol>
 
-<h2>Installing the TUN/TAP Driver</h2>
+<h2>Installing the TUN/TAP Driver (Linux 2.6, FreeBSD, OS X)</h2>
 <p>
 For distributions based on the Linux 2.6 kernel you will probably find that the
 TUN/TAP driver is already installed and the /dev/net/tun device is already
 defined. If not, then follow the procedure for Linux 2.4 as descibed above.
 <p>
 For FreeBSD, refer to <code>man tun</code>.
-You will likey want to enable
+You will likely want to enable
 <code>net.link.tun.devfs_cloning</code> to create
 <code>/dev/tun</code>, but you will be in uncharted waters.
 <p>
@@ -138,8 +138,7 @@ device is via a udev rule in
 [root@servus rules.d]# cat 99-jph.rules
 KERNEL=="tun",                  GROUP="staff", MODE="0660"
 </pre>
-<li>Alternatively, use the following commands to set the necessary permissions
-(the sledgehammer approach):
+<li>Alternatively, use the following commands to set the necessary permissions:
     <code>
     <p>su </code>(enter the root password when prompted)<code>
     <br>chgrp <em>xxxxx</em> /dev/net/tun
@@ -163,7 +162,7 @@ KERNEL=="tun",                  GROUP="staff", MODE="0660"
         <br><code>KERNEL=="tun", NAME="net/%k", GROUP="<em>xxxxx</em>", MODE="0660"</code>
     <li>In the hercules log you should see /dev/net/tun0 opened. I get a couple
         of error messages about SIOCDIFADDR and SIOCSIFHWADDR ioctl's failing
-        but these can be ignored (maybe I'll fix that soon).
+        but these can be ignored.
     </ol>
 </ol>
 <p>
@@ -185,7 +184,7 @@ Openvpn is usually installed as a package (<code>yum install openvpn</code> on F
 if not refer to <a href="http://openvpn.net/index.php/open-source/documentation/howto.html#install">
 http://openvpn.net/index.php/open-source/documentation/howto.html</a>.
 Note, however, that <code>openvpn</code> is just one way to create a permanent tunnel device;
-if you have another favourite, go ahead and use it.
+alternative methods may be possible.
 <p>
 To create permanent a tunnel interface, add this to rc.local
 (or as appropriate for
@@ -223,7 +222,7 @@ an interface.
 <h3>Using hercifc</h3>
 <p>
 The tun0 network interface in the driving system must be configured
-as a point-to-point link.  The original design of the TUN/TAP driver does not
+as a point-to-point link.  The original design of the TUN/TAP driver did not
 allow the interface to be statically configured like a regular network
 interface &#151; the tun0 interface does not exist until a program
 opens the TUN device.  For this reason, Hercules provides a special
@@ -236,13 +235,15 @@ this is why <code>openvpn</code> and preconfigured interfaces work.)
 To allow the hercifc program to issue the necessary configuration
 commands, you must ensure that hercifc is installed with setuid root
 file permissions.  When Hercules is built with the
-configuration option --enable-setuid-hercifc, <b><i>make install</i></b>
+configuration option --enable-setuid-hercifc=xxxxx, <b><i>make install</i></b>
 will install hercifc in /usr/local/bin with setuid root permissions.
+The hercifc program will be executable only by group xxxxx.
 <i>Note: Unrestricted access to the hercifc program could present a
 potential security exposure, so you will want to ensure that hercifc
 can be executed only by the group which is authorized to run Hercules.</i>
-The following commands alter the file permissions to ensure that only
-users in a trusted group can execute hercifc:
+<p>
+The following commands have the same effect as the
+configuration option --enable-setuid-hercifc=xxxxx:
     <code>
     <p>su </code>(enter the root password when prompted)<code>
     <br>chgrp <em>xxxxx</em> /usr/local/bin/hercifc
@@ -251,15 +252,11 @@ users in a trusted group can execute hercifc:
     <br>chmod 4750 /usr/local/bin/hercifc
     <br>exit
     </code>
-<p>That said, if you are installing Hercules on anything like
-a production environment (more likely requesting the installation
-of Hercules),
-your systems programmer will flatly
-refuse this hack if he is worth his salt.
-As refusal often offends, we suggest that
-you refrain from asking for the use of
-<code>hercifc</code> (it might also be good
-for your <i>street cred</i>).
+
+<p>
+<em>Note:</em> you can avoid the need to install hercifc as a setuid root
+program by creating a permanent tunnel interface at Linux boot time,
+as described above.
 
 <h2>Enabling IP forwarding</h2>
 <p>
