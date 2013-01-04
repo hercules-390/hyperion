@@ -80,7 +80,7 @@ r C1A=0300                             # RES14 CC=3
 r C1C=0300                             # RES15 CC=3
 r C1E=0300                             # RES16 CC=3
 r C20=0300                             # RES17 CC=3
-r C22=0300                             # RES18 CC=3
+r C22=0000                             # RES18 CC=0
 r C24=0300                             # RES19 CC=3
 r C26=0300                             # RES20 CC=3
 r C28=0300                             # RES21 CC=3
