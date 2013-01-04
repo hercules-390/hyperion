@@ -1634,7 +1634,7 @@ if test "$hc_cv_build_hercifc" = "yes"; then
                  ;;
             esac
         ],
-        [hc_cv_opt_setuid_hercifc=yes]
+        [hc_cv_opt_setuid_hercifc=no]
     )
 
     hc_cv_setuid_hercifc=$hc_cv_opt_setuid_hercifc
@@ -2022,7 +2022,6 @@ test "$hc_cv_have_getset_uid"            != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
-test "$hc_cv_opt_setuid_hercifc"          = "no"   &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_REGINA_REXX)

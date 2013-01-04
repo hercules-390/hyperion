@@ -116,7 +116,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         FD_SET (ifd[1], &selset);
         tv.tv_sec = 5;
         tv.tv_usec = 0;
-        rc = select (1, &selset, NULL, NULL, &tv);
+        rc = select (ifd[1]+1, &selset, NULL, NULL, &tv);
         if (rc > 0)
         {
             rc = read (ifd[1], &ctlreq, CTLREQ_SIZE);
