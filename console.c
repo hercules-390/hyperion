@@ -1524,6 +1524,20 @@ char                    *logoout;
             clientip );
 #endif
 
+    /*  Dr. Hans-Walter Latz -- binary xfer mode performance tweak   */
+    /*  See: http://www.unixguide.net/network/socketfaq/2.16.shtml   */
+    {
+        int flag = 1;
+        int result = setsockopt(csock,   /* socket affected          */
+                          IPPROTO_TCP,   /* set option at TCP level  */
+                          TCP_NODELAY,   /* name of option           */
+                          (char *)&flag, /* cast is historical cruft */
+                           sizeof(int)); /* length of option value   */
+        if (result < 0) {
+            TNSERROR("console: DBG035: setsockopt: %s\n", strerror(HSO_errno));
+        }
+    }
+
     /* Negotiate telnet parameters */
     rc = negotiate (csock, &devclass, &model, &extended, &devnum, group);
     if (rc != 0)
