@@ -33,7 +33,7 @@ static const BYTE default_plant[4]      = { 0xE9,0xE9,0x40,0x40 };
 static const BYTE dflt_cpid[16]         = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2,
                                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
                                           /*  H    E    R    C    U    L    E    S  */
-static const BYTE dflt_vmid[8]          = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };      
+static const BYTE dflt_vmid[8]          = { 0xC8,0xC5,0xD9,0xC3,0xE4,0xD3,0xC5,0xE2 };
 
 static int gsysinfo_init_flg = FALSE;
 
@@ -698,9 +698,22 @@ void get_mpfactors(BYTE *dest)
 /* The new z10 machine will use a denominator of 65535 for better    */
 /* granularity. But this will mess up old software. We will stick    */
 /* to the old value of 100. Bernard Feb 26, 2010.                    */
+/*                                                                   */
+/* Calculations will be done in a higher precision to prevent early  */
+/* truncation and degradation of the factors. To achieve this, the   */
+/* factors are calculated * 256. When storing the values, the        */
+/* individual values are rounded up by 128 and then divided by 256   */
+/* for the store operation.                                          */
+/*                                                                   */
+/* Once the number of host logical CPUs is reached, subsequent MP    */
+/* factors are no longer adjusted.                                   */
+/*                                                                   */
+/* MPFACTOR_DENOMINATOR must be 100, 255, or 65535.                  */
+/*                                                                   */
+/* It is recommended that MPFACTOR_PERCENT remain at 95 (95%).       */
 /*-------------------------------------------------------------------*/
-#define  MPFACTOR_DENOMINATOR   100
-#define  MPFACTOR_PERCENT       95
+#define  MPFACTOR_DENOMINATOR     100
+#define  MPFACTOR_PERCENT          95
 
     static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
     static BYTE didthis = 0;
@@ -708,18 +721,38 @@ void get_mpfactors(BYTE *dest)
     if (!didthis)
     {
         /* First time: initialize array... */
-        U32 mpfactor = MPFACTOR_DENOMINATOR;
-        size_t i;
+        size_t  limit = MIN(MAX_CPU_ENGINES, hostinfo.num_logical_cpu);
+        size_t  i;
+        U32     mpfactor = MPFACTOR_DENOMINATOR << 8;
+        U16     result = 0;
         for (i=0; i < arraysize( mpfactors ); i++)
         {
-            /* Calculate the value of each subsequent entry
-               as percentage of the previous entry's value. */
-            mpfactor = (mpfactor * MPFACTOR_PERCENT) / 100;
-            STORE_HW( &mpfactors[i], (U16) mpfactor );
+            /* Calculate the value of each subsequent entry as a
+             * percentage of the previous entry's value for the real
+             * defined CPU entries.
+             */
+            if (i < limit)
+            {
+                mpfactor = (mpfactor * MPFACTOR_PERCENT) / 100;
+                result = (mpfactor + 128) >> 8;
+                switch (MPFACTOR_DENOMINATOR)
+                {
+                    case   100:
+                        result = MAX(result,   1);
+                        break;
+                    case   255:
+                        result = MAX(result, 101);
+                        break;
+                    case 65535:
+                        result = MAX(result, 256);
+                        break;
+                }
+            }
+            STORE_HW( &mpfactors[i], result );
         }
         didthis = 1;
     }
 
     /* Return the requested information... */
-    memcpy( dest, &mpfactors[0], (sysblk.maxcpu-1) * sizeof(U16) );
+    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGINES-1) * sizeof(U16) );
 }
