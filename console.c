@@ -911,23 +911,38 @@ int     eor = 0;                        /* 1=End of record received  */
     /* Update number of bytes in receive buffer */
     dev->rlen3270 += rc;
 
-    /* Check whether Attn indicator was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == BRK)
-        eor = 1;
+    /* Dr. Hans-Walter Latz -- Fix 3270 binary xfer IAC bug. */
+    /* Check for telnet IAC command sequence at end of buffer. */
+    if (dev->rlen3270 >= 2 
+        && dev->buf[dev->rlen3270 - 2] == IAC)
+    {
+        /* Count the number of 0xFF bytes preceding last byte of
+           the buffer. If the count is even then all of the 0xFF's
+           preceding the end of the buffer are properly escaped
+           and what we thought was an IAC command sequence isn't.
+           Else if the count is odd then the buffer ends with an
+           IAC command sequence and the last byte is the command.
+        */
+        int xFFCount = 1; /* Initialize 0xFF count (IAC == 0xFF) */
+        int remaining = dev->rlen3270 - 2;
+        BYTE *curr = &dev->buf[dev->rlen3270 - 3];
+        while (remaining-- && *curr-- == 0xFF) { xFFCount++; }
 
-    /* Check whether SysRq indicator was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == IP)
-        eor = 1;
+        if (xFFCount & 0x01)
+        {
+            /* Check whether Attn indicator was received */
+            if (dev->buf[dev->rlen3270 - 1] == BRK)
+                eor = 1;
 
-    /* Check whether end of record marker was received */
-    if (dev->rlen3270 >= 2
-        && dev->buf[dev->rlen3270 - 2] == IAC
-        && dev->buf[dev->rlen3270 - 1] == EOR_MARK)
-        eor = 1;
+            /* Check whether SysRq indicator was received */
+            else if (dev->buf[dev->rlen3270 - 1] == IP)
+                eor = 1;
+
+            /* Check whether end of record marker was received */
+            else if (dev->buf[dev->rlen3270 - 1] == EOR_MARK)
+                eor = 1;
+        }
+    }
 
     /* If record is incomplete, test for buffer full */
     if (eor == 0 && dev->rlen3270 >= BUFLEN_3270)
