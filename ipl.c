@@ -52,7 +52,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
     OFF_IC_INTKEY;
-    
+
     /* Perform system-reset-normal or system-reset-clear function */
     if (clear)
     {
@@ -76,9 +76,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                   #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
                 }
             }
-    
+
         sysblk.program_parameter = 0;
-    
+
         /* Clear storage */
         sysblk.main_clear = sysblk.xpnd_clear = 0;
         storage_clear();
@@ -92,7 +92,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
             if (IS_CPU_ONLINE(n))
             {
                 regs=sysblk.regs[n];
-        
+
                 if(n == cpu)
                 {
                     /* Perform initial reset on the IPL CPU */
@@ -117,7 +117,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     /* set default system state to reset */
-    sysblk.sys_reset = TRUE; 
+    sysblk.sys_reset = TRUE;
 
     return rc1;
 } /* end function system_reset */
@@ -268,11 +268,11 @@ int rc;
     chanstat = dev->scsw.chanstat;
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-    if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) 
+    if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0)
     {
         char buf[80];
         char buf2[16];
-        
+
         memset(buf,0,sizeof(buf));
         for (i=0; i < (int)dev->numsense; i++)
         {
@@ -283,7 +283,7 @@ int rc;
         {
             char buffer[256];
             MSGBUF(buffer, "architecture mode %s, csw status %2.2X%2.2X, sense %s",
-                get_arch_mode_string((REGS *)0), 
+                get_arch_mode_string((REGS *)0),
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
         }
@@ -330,10 +330,10 @@ int rc;
     regs->psw.intcode = 0;
 
     /* Load IPL PSW from PSA+X'0' */
-    if ((rc = ARCH_DEP(load_psw) (regs, regs->psa->iplpsw)) ) 
+    if ((rc = ARCH_DEP(load_psw) (regs, regs->psa->iplpsw)) )
     {
         char buf[80];
-        MSGBUF(buf, "architecture mode %s, invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X", 
+        MSGBUF(buf, "architecture mode %s, invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 get_arch_mode_string((REGS *)0),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],
@@ -352,7 +352,7 @@ int rc;
     regs->loadstate = 0;
 
     /* reset sys_reset flag to indicate a active machine */
-    sysblk.sys_reset = FALSE; 
+    sysblk.sys_reset = FALSE;
 
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs);
@@ -421,6 +421,10 @@ int i, rc = 0;                          /* Array subscript           */
     /* Initialize Architecture Level Set */
     init_als(regs);
 
+   /* Reset real CPU time used */
+   regs->rcputime = 0;
+   regs->bcputime = thread_cputime_us(regs);
+
    return rc;
 } /* end function cpu_reset */
 
@@ -446,8 +450,8 @@ int rc1 = 0, rc;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;
 
-    /* 
-     * ISW20060125 : Since we reset the prefix, we must also adjust 
+    /*
+     * ISW20060125 : Since we reset the prefix, we must also adjust
      * the PSA ptr
      */
     regs->psa = (PSA_3XX *)regs->mainstor;
@@ -474,7 +478,7 @@ int rc1 = 0, rc;
     regs->CR(2) = 0xFFFFFFFF;
 #endif /* defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS) */
 
-    regs->chanset = 
+    regs->chanset =
 #if defined(FEATURE_CHANNEL_SWITCHING)
                     regs->cpuad < FEATURE_LCSS_MAX ? regs->cpuad :
 #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/

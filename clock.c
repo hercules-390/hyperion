@@ -385,6 +385,24 @@ thread_cputime(const REGS *regs)
 }
 
 
+U64
+thread_cputime_us(const REGS *regs)
+{
+    U64 result;
+
+    struct rusage   rusage;
+    int             rc;
+
+    rc = getrusage((int)sysblk.cputid[regs->cpuad], &rusage);
+    if (unlikely(rc == -1))
+        result = etod2us(host_tod());
+    else
+        result  = timeval2us(&rusage.ru_utime);
+
+    return (result);
+}
+
+
 S64 set_cpu_timer(REGS *regs, const TOD timer)
 {
     register REGS*  guestregs = regs->guestregs;
@@ -432,6 +450,10 @@ S64 cpu_timer(REGS *regs)
     register REGS*  guestregs = regs->guestregs;
     register REGS*  hostregs  = regs->hostregs;
 
+    /* Update real CPU time used */
+    regs->rcputime = etod2us(new_epoch) - regs->bcputime;
+
+    /* Process CPU timers */
     if (new_epoch > regs->cpu_timer_epoch)
     {
         regs->cpu_timer            -= new_epoch - regs->cpu_timer_epoch;

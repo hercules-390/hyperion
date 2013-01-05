@@ -149,6 +149,8 @@ struct REGS {                           /* Processor registers       */
         BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
         U32     instcount;              /* Instruction counter       */
         U64     prevcount;              /* Previous instruction count*/
+        U64     rcputime;               /* Real CPU time used (us)   */
+        U64     bcputime;               /* Base (reset) CPU time (us)*/
         U32     mipsrate;               /* Instructions per second   */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
@@ -439,6 +441,18 @@ struct SYSBLK {
         int     hicpu;                  /* Hi cpu + 1 configured     */
         int     topchnge;               /* 1 = Topology Change Report
                                            pending (CPU cfg on/off)  */
+        U32     cpmcr;                  /* Dynamic CP model rating   */
+        U32     cpmpcr;                 /* ... Permanent             */
+        U32     cpmtcr;                 /* ... Temporary             */
+        U32     cpncr;                  /* Dynamic CP nominal rating */
+        U32     cpnpcr;                 /* ... Permanent             */
+        U32     cpntcr;                 /* ... Temporary             */
+        U32     cpmcap;                 /* Dynamic CP model capacity */
+        U32     cpncap;                 /* Dynamic CP nominal cap.   */
+        U32     cpscap;                 /* Dynamic CP secondary cap. */
+        U32     cpacap;                 /* Dynamic CP alternate cap. */
+        U8      cpccr;                  /* Dynamic CP change reason  */
+        U8      cpcai;                  /* Dynamic CP capacity adj.  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */

@@ -174,6 +174,9 @@ int query_tzoffset(void);               /* Report current TzOFFSET   */
 
 ETOD* host_ETOD (ETOD*);                /* Retrieve extended TOD     */
 
+TOD thread_cputime(const REGS*);        /* Thread real CPU used (TOD)*/
+U64 thread_cputime_us(const REGS*);     /* Thread real CPU used (us) */
+
 
 /*----------------------------------------------------------------------------*/
 /*      Define clock_gettime for systems not supporting nanosecond clocks,    */

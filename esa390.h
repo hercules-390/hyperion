@@ -2001,11 +2001,15 @@ typedef struct _SCABLK {
 typedef struct _SYSIB111 {              /* Basic Machine Config      */
         BYTE    flag1;                  /* 1.1.1 SYSIB Flag          */
 #define SYSIB111_PFLAG  0x80            /* Type percentage present   */
-        BYTE    resv1[3];               /* Reserved                  */
-        FWORD   resv2[7];               /* Reserved                  */
+#define SYSIB111_TFLAG  0x01            /* CCR & CAI are transient   */
+        BYTE    reservedforblue;        /* Manufacturer reserved byte*/
+#define SYSIB111_RFB_BIT_2  0x20        /* Reserved for manufacturer */
+        BYTE    ccr;                    /* Capacity change reason    */
+        BYTE    cai;                    /* Capacity adjustment ind.  */
+        FWORD   resv1[7];               /* Reserved                  */
         BYTE    manufact[16];           /* Manufacturer              */
         BYTE    type[4];                /* Type                      */
-        FWORD   resv3[3];               /* Reserved                  */
+        FWORD   resv2[3];               /* Reserved                  */
         BYTE    modcapaid[16];          /* Model capacity identifier */
         BYTE    seqc[16];               /* Sequence Code             */
         BYTE    plant[4];               /* Plant of manufacture      */
@@ -2016,6 +2020,10 @@ typedef struct _SYSIB111 {              /* Basic Machine Config      */
         FWORD   mpcaprating;            /* Model Perm Capacity Rating*/
         FWORD   mtcaprating;            /* Model temp Capacity Rating*/
         BYTE    typepct[5];             /* Secondary CPU types pct   */
+        BYTE    resv3[3];               /* Reserved                  */
+        FWORD   ncaprating;             /* Nominal Capacity Rating   */
+        FWORD   npcaprating;            /* Nominal Perm Capacity Rat.*/
+        FWORD   ntcaprating;            /* Nominal Temp Capacity Rat.*/
     }   SYSIB111;
 
 typedef struct _SYSIB121 {              /* Basic Machine CPU         */
@@ -2030,7 +2038,8 @@ typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         BYTE    format;                 /* Format 0 or 1             */
         BYTE    resv1;                  /* Reserved                  */
         HWORD   accoff;                 /* Offset to accap field     */
-        FWORD   resv2[6];               /* Reserved                  */
+        FWORD   resv2[5];               /* Reserved                  */
+        FWORD   nccap;                  /* Nominal CPU Capability    */
         FWORD   sccap;                  /* Secondary CPU Capability  */
         FWORD   cap;                    /* CPU capability            */
         HWORD   totcpu;                 /* Total CPU count           */
