@@ -416,6 +416,7 @@ void get_model(BYTE *name);
 void get_modelcapa(BYTE *name);
 void get_modelperm(BYTE *name);
 void get_modeltemp(BYTE *name);
+unsigned int get_RealCPCount();
 void get_sysname(BYTE *name);
 void get_systype(BYTE *name);
 void get_sysplex(BYTE *name);

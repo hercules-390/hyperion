@@ -721,11 +721,11 @@ void get_mpfactors(BYTE *dest)
     if (!didthis)
     {
         /* First time: initialize array... */
-        size_t  limit = MIN(MAX_CPU_ENGINES, hostinfo.num_logical_cpu);
+        size_t  limit = get_RealCPCount();
         size_t  i;
         U32     mpfactor = MPFACTOR_DENOMINATOR << 8;
         U16     result = 0;
-        for (i=0; i < arraysize( mpfactors ); i++)
+        for (i=0; i < arraysize(mpfactors); i++)
         {
             /* Calculate the value of each subsequent entry as a
              * percentage of the previous entry's value for the real
@@ -755,4 +755,61 @@ void get_mpfactors(BYTE *dest)
 
     /* Return the requested information... */
     memcpy( dest, &mpfactors[0], (MAX_CPU_ENGINES-1) * sizeof(U16) );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* get_RealCPCount - Get the maximum count of possible concurrently  */
+/*                   dispatchable CP engines on the host processor.  */
+/*-------------------------------------------------------------------*/
+unsigned int
+get_RealCPCount (void)
+{
+    unsigned int    possible;
+    unsigned int    reserved;
+    unsigned int    cp = 0;
+    unsigned int    cpu;
+    unsigned int    result;
+
+    /* Initialize the number of possible concurrently dispatchable CP
+     * engines, taking into account that any of the hostinfo fields
+     * may be zero when not reported by the host OS.
+     */
+    if (hostinfo.num_logical_cpu)
+        possible = hostinfo.num_logical_cpu;
+    else if (hostinfo.num_procs)
+    {
+        if (hostinfo.num_physical_cpu)
+            possible = hostinfo.num_procs * hostinfo.num_physical_cpu;
+        else
+            possible = hostinfo.num_procs;
+    }
+    else
+        possible = MAX_CPU_ENGINES;
+
+    /* Limit to the maximum number of Hercules CPU engines */
+    if (possible > MAX_CPU_ENGINES)
+        possible = MAX_CPU_ENGINES;
+
+    /* Set number of reserved processors */
+    reserved = possible - sysblk.cpus;
+
+    /* Count the number of defined CP processors */
+    for ( cpu = 0; cpu < (unsigned) sysblk.hicpu; ++cpu )
+    {
+        /* Loop through online CP CPUs */
+        if ( IS_CPU_ONLINE(cpu) )
+        {
+            if ( sysblk.ptyp[cpu] == SCCB_PTYP_CP )
+                ++cp;
+        }
+    }
+
+    /* The result is the number of CP processors plus the number of
+     * reserved processors that may become CP processors, limited by the
+     * number of possible physical/logical processors.
+     */
+    result = MIN(cp + reserved, possible);
+
+    return (result);
 }

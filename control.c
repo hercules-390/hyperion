@@ -6606,30 +6606,6 @@ long double MIPSreal (const stsicap_type)
 }
 
 
-unsigned int
-RealCPCount (void)
-{
-    unsigned int    possible = MIN(MAX_CPU_ENGINES,
-                                   hostinfo.num_logical_cpu);
-    unsigned int    reserved = possible - sysblk.cpus;
-    unsigned int    cp = 0;
-    unsigned int    cpu;
-    unsigned int    result;
-
-    for ( cpu = 0; cpu < (unsigned) sysblk.hicpu; ++cpu )
-    {
-        /* Loop through online CP CPUs */
-        if ( IS_CPU_ONLINE(cpu) )
-        {
-            if ( sysblk.ptyp[cpu] == SCCB_PTYP_CP )
-                ++cp;
-        }
-    }
-    result = MIN(cp + reserved, possible);
-    return (result);
-}
-
-
 /*-------------------------------------------------------------------*/
 /*  stsi_capability - Generate capability matrix                     */
 /*-------------------------------------------------------------------*/
@@ -6667,7 +6643,7 @@ static void stsi_capability (const stsicap_request)
      * number of online CP engines plus reserved (possible CP) CPU
      * count, or the number of host real logical processors.
      */
-    RealCPUs = RealCPCount();
+    RealCPUs = get_RealCPCount();
 
     /* Create an MSU factor based on the number of possible CPs */
     MSU_Factor  = 0.125 * pow(MSU_Factor_Multiplier,
