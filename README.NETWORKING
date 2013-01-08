@@ -359,6 +359,10 @@ The configuration statement for PTP is as follows:
 
      <devnum1-devnum2> PTP [options] <guest1> <host1> [ <guest2> <host2> ]
 
+or:
+
+     <devnum1-devnum2> PTP [options] <ifname>
+
 where:
 
      <devnum1-devnum2>  is the address pair of the PTP device.
@@ -387,27 +391,25 @@ where:
              option is specified, whichever address family the
              resolver returns first will be used.
 
-             If <guest1>/<host1> or <guest2>/<host2> are IPv4
-             addresses, or host names that resolve to IPv4
-             addresses, <guest1>/<guest2> can be followed by the
-             prefix size expressed in CIDR notation, for example
-             192.168.1.1/24. If the prefix size is specified it
-             can have a value from 0 to 32; if not specified a
-             value of 32 is assumed. The prefix size is used to
+             <host1> or <host2> can be followed by the prefix size
+             expressed in CIDR notation, for example 192.168.1.1/24
+             or 2001:db8:3003:1::543:210f/48. For IPv4 the prefix
+             size can have a value from 0 to 32; if not specified a
+             value of 32 is assumed. For IPv6 the prefix size can
+             have a value from 0 to 128; if not specified a value of
+             128 is assumed. For IPv4 the prefix size is used to
              produce the equivalent subnet mask. For example, a
              value of 24 produces a subnet mask of 255.255.255.0.
-
-             If <guest1>/<host1> or <guest2>/<host2> are IPv6
-             addresses, or host names that resolve to IPv6
-             addresses, <host1>/<host2> can be followed by the
-             prefix size expressed in CIDR notation, for example
-             2001:db8:3003:1::543:210f/48. If the prefix size is
-             specified it can have a value from 0 to 128; if not
-             specified a value of 128 is assumed.
 
              If <guest1>, <host1>, <guest2> or <host2> are numeric
              IPv6 addresses, they can be between braces, for example
              [2001:db8:3003:1::543:210f].
+
+     <ifname>  is the name of the pre-configured TUN interface.
+
+             <ifname> can only be specified on *nix, it cannot be
+             specified on Windows. The named TUN interface must exist
+             and be configured when Hercules starts.
 
      [options]  can be any of the following:
 
@@ -427,13 +429,18 @@ where:
          -t <mtu> or --mtu <mtu>
 
              [*nix only] where <mtu> is the maximum transmission
-             unit size, normally 1500
+             unit size, normally 1500.
 
          -m <MAC Address> or --mac <MAC address>
 
              [Windows only] where <MAC Address> is the optional
              hardware address of the interface in the format of
              either xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx.
+
+         -x <ifname> or --if <ifname>
+
+             [*nix only] where <ifname> is the name of the
+             pre-existing TUN interface.
 
          -k <kbuff> or --kbuff <kbuff>
 
@@ -463,6 +470,17 @@ where:
              Warning: This will produce a tremendous amount of
              output to the Hercules console. It is suggested that
              you only enable this at the request of the maintainers.
+
+The following commands are an example of how to create a
+pre-configured TUN interface on Linux.
+    ip tuntap add mode tun dev tun99
+    ip link set dev tun99 mtu 1500
+    ip -f inet addr add dev tun99 192.168.1.1/24
+    ip -f inet6 addr add dev tun99 fe80::1234:5678:9abc:def0/64
+    ip -f inet6 addr add dev tun99 2001:db8:3003:1::543:210f/112
+    ip link set dev tun99 up
+The TUN interface could then be used with a PTP specified as:-
+    E20-E21 PTP tun99
 
 
 =================================================================

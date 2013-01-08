@@ -106,28 +106,28 @@ struct  _PTPBLK
     u_int       fActive4:1;                // IPv4 connection active
     u_int       fActive6:1;                // IPv6 connection active
     u_int       fActiveLL6:1;              // IPv6 link local connection active
+    u_int       fPreconfigured:1;          // TUN interface pre-configured
+    u_int       fPreGuestIPAddr4:1;        // TUN interface pre-configured with guest IPv4 address
 
     int         iKernBuff;                 // Kernel buffer in K bytes.
     int         iIOBuff;                   // I/O buffer in K bytes.
     int         iAFamily;                  // Address family
     char        szTUNCharDevName[256];     // TUN/TAP char device filename (e.g. /dev/net/tun)
-    char        szTUNIfName[IFNAMSIZ];     // TUN/TAP network interface name (e.g. tun0)
+    char        szTUNIfName[IFNAMSIZ];     // TUN interface name (e.g. tun0)
     char        szMaxBfru[8];              // Maximum buffers to use
     char        szMTU[8];                  // MTU size
     char        szMACAddress[32];          // MAC Address
     char        szDriveIPAddr4[20];        // IPv4 Address (Driver)
-    char        szGuestIPAddr4[20];        // IPv4 Address (Guest)
-    char        szGuestPfxSiz4[8];         // IPv4 Prefix Size (Guest)
+    char        szDrivePfxSiz4[8];         // IPv4 Prefix Size (Driver)
     char        szNetMask[20];             // IPv4 Netmask
+    char        szGuestIPAddr4[20];        // IPv4 Address (Guest)
 #if defined(ENABLE_IPV6)
     char        szDriveIPAddr6[48];        // IPv6 Address (Driver)
     char        szDrivePfxSiz6[8];         // IPv6 Prefix Size (Driver)
     char        szGuestIPAddr6[48];        // IPv6 Address (Guest)
-    char        szGuestPfxSiz6[8];         // IPv6 Prefix Size (Guest)
     char        szDriveLLAddr6[48];        // IPv6 Link Local Address (Driver)
     char        szDriveLLxSiz6[8];         // IPv6 Link Local Prefix Size (Driver)
     char        szGuestLLAddr6[48];        // IPv6 Link Local Address (Guest)
-    char        szGuestLLxSiz6[8];         // IPv6 Link Local Prefix Size (Guest)
 #endif /* defined(ENABLE_IPV6) */
 
     int         iMaxBfru;                  // Maximum buffers to use
