@@ -25,12 +25,7 @@
 #include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
 #if !defined(OPTION_W32_CTCI)
-#include <ifaddrs.h>           /* ifaddrs found here */
-// #include <linux/if_link.h>     /* rtnl_link_stats found here */
-// #include <linux/if.h>          /* IFF_... found here */
-// #include <netpacket/packet.h>  /* sockaddr_ll found here */
-// #include <sys/types.h>
-// #include <sys/socket.h>
+#include <ifaddrs.h>
 #endif /* defined(OPTION_W32_CTCI) */
 
 
@@ -526,16 +521,14 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                 "TT32SIOBUFF", pPTPBLK->szTUNIfName, strerror( errno ) );
             }
         }
-#endif /* defined(OPTION_W32_CTCI) */
 
-// #ifdef OPTION_TUNTAP_CLRIPADDR
-//     VERIFY( TUNTAP_ClrIPAddr ( pPTPBLK->szTUNIfName ) == 0 );
-// #endif /* OPTION_TUNTAP_CLRIPADDR */
-
-#if defined( OPTION_W32_CTCI )
 #ifdef OPTION_TUNTAP_SETMACADDR
         VERIFY( TUNTAP_SetMACAddr( pPTPBLK->szTUNIfName, pPTPBLK->szMACAddress  ) == 0 );
 #endif /* OPTION_TUNTAP_SETMACADDR */
+
+#ifdef OPTION_TUNTAP_CLRIPADDR
+        VERIFY( TUNTAP_ClrIPAddr ( pPTPBLK->szTUNIfName ) == 0 );
+#endif /* OPTION_TUNTAP_CLRIPADDR */
 #endif /* defined( OPTION_W32_CTCI ) */
 
         if (pPTPBLK->fIPv4Spec)
@@ -2661,9 +2654,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  PTP_OPTSTRING  "n:x:t:m:d::46" "k:i:"
+  #define  PTP_OPTSTRING  "n:x:t:d::46" "m:k:i:"
 #else
-  #define  PTP_OPTSTRING  "n:x:t:m:d::46"
+  #define  PTP_OPTSTRING  "n:x:t:d::46"
 #endif
 
 #if defined(HAVE_GETOPT_LONG)
@@ -2672,14 +2665,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         static struct option options[] =
         {
             { "dev",     required_argument, NULL, 'n' },
-            { "tundev",  required_argument, NULL, 'x' }, /* Deprecated, line should be removed */
             { "if",      required_argument, NULL, 'x' },
             { "mtu",     required_argument, NULL, 't' },
-            { "mac",     required_argument, NULL, 'm' },
             { "debug",   optional_argument, NULL, 'd' },
             { "inet",    no_argument,       NULL, '4' },
             { "inet6",   no_argument,       NULL, '6' },
 #if defined( OPTION_W32_CTCI )
+            { "mac",     required_argument, NULL, 'm' },
             { "kbuff",   required_argument, NULL, 'k' },
             { "ibuff",   required_argument, NULL, 'i' },
 #endif /* defined( OPTION_W32_CTCI ) */
@@ -2815,21 +2807,6 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //
 //          break;
 
-        case 'm':
-#if defined( OPTION_W32_CTCI )
-            if (ParseMAC( optarg, mac ) != 0 ||
-                strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
-            {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "MAC address", optarg );
-                return -1;
-            }
-            strlcpy( pPTPBLK->szMACAddress, optarg, sizeof(pPTPBLK->szMACAddress) );
-            saw_conf = 1;
-#endif /* defined( OPTION_W32_CTCI ) */
-            break;
-
         case 'd':     // Diagnostics
             pPTPBLK->fDebug = TRUE;
             if (optarg)
@@ -2863,9 +2840,20 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             break;
 
 #if defined( OPTION_W32_CTCI )
+        case 'm':
+            if (ParseMAC( optarg, mac ) != 0 ||
+                strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                      "MAC address", optarg );
+                return -1;
+            }
+            strlcpy( pPTPBLK->szMACAddress, optarg, sizeof(pPTPBLK->szMACAddress) );
+            break;
+
         case 'k':     // Kernel Buffer Size (Windows only)
             iKernBuff = atoi( optarg );
-
             if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
             {
@@ -2874,14 +2862,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "kernel buffer size", optarg );
                 return -1;
             }
-
             pPTPBLK->iKernBuff = iKernBuff * 1024;
-
             break;
 
         case 'i':     // I/O Buffer Size (Windows only)
             iIOBuff = atoi( optarg );
-
             if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
             {
@@ -2890,9 +2875,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "dll i/o buffer size", optarg );
                 return -1;
             }
-
             pPTPBLK->iIOBuff = iIOBuff * 1024;
-
             break;
 #endif /* defined( OPTION_W32_CTCI ) */
 
@@ -2937,8 +2920,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             return -1;
         }
         strlcpy( pPTPBLK->szTUNIfName, argv[0], sizeof(pPTPBLK->szTUNIfName) );
-        pPTPBLK->fPreconfigured = TRUE;
         argc--; argv++;
+        pPTPBLK->fPreconfigured = TRUE;
     }
     else if (argc == 0 && saw_if && !saw_conf) /* Pre-configured using -x option */
     {
