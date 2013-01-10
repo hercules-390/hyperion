@@ -3213,15 +3213,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[95] = myssid & 0xff;
                 break;
             case 0x03:  /* Read attention message for this path-group for
-                          the addressed device Return a "no message"
+                           the addressed device Return a "No Message"
                            message */
-                iobuf[0] = 0x00;                     // Message length
-                iobuf[1] = 0x09;                    // ...
-                iobuf[2] = 0x00;                    // Format: "No message"
-                iobuf[3] = 0x00;                    // Message code: n/a
-                memcpy (iobuf+4, iobuf+8, 4);       // Copy message identifier from bytes 8-11
-                iobuf[8] = 0x00;                    // Flags
-                dev->ckdssdlen = 9;                 // Indicate length of subsystem data prepared
+                /*------------------------------------------------------*/
+                /* PROGRAMMING NOTE: 2013/01/09 Fish                    */
+                /* According to GA32-0274 IBM 3990,9390 Storage Control */
+                /* Reference the Read Attention Message response should */
+                /* be 11 bytes for a 3990-6 with Message Format byte 2  */
+                /* being 0x02 (3990-6/ESS message) with byte 9 and 10   */
+                /* containing additional response information such as a */
+                /* bit map indicating which physical subsystem SPs are  */
+                /* caching. Since Hercules does not yet support caching */
+                /* and thus cannot return a valid SP caching bit map we */
+                /* return a 9 byte response instead with byte 2 = 0x00  */
+                /* (No Message) because an 11 byte response with zeros  */
+                /* in bytes 9 and 10 (no caching SPs bit map flags set) */
+                /* causes problems with certain operating systems. Thus */
+                /* a 9-byte response with byte 2 = 0x00 is the safest   */
+                /* approach to make most operating systems happy.       */
+                /*------------------------------------------------------*/
+                iobuf[0] = 0x00;               /* Message...            */
+                iobuf[1] = 0x09;               /* ...Length             */
+                iobuf[2] = 0x00;               /* Format: "No message"  */
+                iobuf[3] = 0x00;               /* Message code: n/a     */
+                memcpy (iobuf+4, iobuf+8, 4);  /* Copy same message Id
+                                                  from bytes 8-11       */
+                iobuf[8] = 0x00;               /* Flags = 00            */
+                dev->ckdssdlen = 9;            /* Len of prepared data  */
                 break;
             case 0x0E: /* Unit address configuration */
                 /* Prepare unit address configuration record */
@@ -4778,8 +4796,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* LOCATE RECORD EXTENDED                                        */
     /*---------------------------------------------------------------*/
 
-    /* LRE only valid for 3990-6 */
-    if (dev->ckdcu->devt != 0x3990 || dev->ckdcu->model != 0xe9)
+    /* LRE only valid for 3990-3 or 3990-6 (or greater) */
+    if (dev->ckdcu->devt != 0x3990 ||
+        !(MODEL3( dev->ckdcu ) || MODEL6( dev->ckdcu )))
     {
         /* Set command reject sense byte, and unit check status */
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1);
