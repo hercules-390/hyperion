@@ -2924,7 +2924,7 @@ and how they are used.
         <p>
 
         <dl> <!-- begin CTCI parms -->
-        <dt>Linux using preconfigured interfaces:
+        <dt>Required for Linux when using a preconfigured interface:
 
         <dd><p>
             <dl>
@@ -2973,23 +2973,27 @@ and how they are used.
             <p>
 
             <dl> <!-- begin Optional for Windows -->
-            <dl> <!-- (begin INDENT) -->
+
+                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
+                <dd><p>
+                    where <em>'MAC address'</em> is the optional hardware address for
+                    the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
+                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
+                    from the last 3 octets of the specified <code><i>guestip</i></code>.
+                    <p>
 
                 <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
                     <dd>
                 <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
-                    <dd>
-                <p>
+                <dd><p>
+                    See Fish's
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
+                    page for further details and information.
+                    <p>
 
-            </dl> <!-- (end INDENT) -->
             </dl> <!-- end Optional for Windows -->
 
             <p>
-            See Fish's
-            <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
-            page for further details and information.
-
-        <p>
 
         <dt>Optional for both Linux and Windows:
         <dd><p>
@@ -3021,14 +3025,6 @@ and how they are used.
                     document for more information about adapter binding order, and the
                     <a href="http://www.softdevlabs.com/Hercules/ctci-w32-readme.html#herccfg">CTCI-W32 Configuration</a>
                     web page for general information regarding CTCI-W32 configuration.
-                    <p>
-
-                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
-                <dd><p>
-                    where <em>'MAC address'</em> is the optional hardware address for
-                    the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
-                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
-                    from the last 3 octets of the specified <code><i>guestip</i></code>.
                     <p>
 
                 <dt><code>-s <em>netmask</em></code>
