@@ -41,7 +41,8 @@
 #define SSID(_dev) ((_dev)->devnum & ~(DEVICES_PER_SUBSYS-1))
 #define IFID(_dev) ((SSID((_dev)) >> DEVICES_PER_SUBSYS_SHIFT) & 0x7)
 
-/* Test for 3990-6 control unit with extended function */
+/* Test for 3990-3 or 3990-6 control unit */
+#define MODEL3(_cu) ((_cu)->devt == 0x3990 && (_cu)->model == 0xec)
 #define MODEL6(_cu) ((_cu)->devt == 0x3990 && (_cu)->model == 0xe9)
 
 /*-------------------------------------------------------------------*/
