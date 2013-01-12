@@ -294,10 +294,12 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
-                                         pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
+                                         pLCSBLK->Port[pLCSDev->bPort].szNetIfName );
 
+            // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
             WRMSG(HHC00901, "I", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
-                      pLCSBLK->Port[pLCSDev->bPort].szNetDevName, "TAP");
+                                 pLCSDev->pDEVBLK[0]->typname,
+                                 pLCSBLK->Port[pLCSDev->bPort].szNetIfName, "TAP");
 
 #if defined(OPTION_W32_CTCI)
 
@@ -306,20 +308,22 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 struct tt32ctl tt32ctl;
 
                 memset( &tt32ctl, 0, sizeof(tt32ctl) );
-                strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, sizeof(tt32ctl.tt32ctl_name) );
+                strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetIfName, sizeof(tt32ctl.tt32ctl_name) );
 
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
                 {
                     WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
-                          "TT32SDEVBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                          pLCSDev->pDEVBLK[0]->typname,
+                          "TT32SDEVBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetIfName, strerror( errno ) );
                 }
 
                 tt32ctl.tt32ctl_iobuffsize = pLCSBLK->iIOBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
                 {
                     WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
-                          "TT32SIOBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                          pLCSDev->pDEVBLK[0]->typname,
+                          "TT32SIOBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetIfName, strerror( errno ) );
                 }
             }
 #endif
@@ -746,7 +750,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],
-              pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetDevName,
+              pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetIfName,
               pLCSDEV->pLCSBLK->fDebug ? " -d" : "",
               ( pDEVBLK->devnum & 1 ) == 0 ? pLCSDEV->pDEVBLK[0]->excps : pLCSDEV->pDEVBLK[1]->excps );
 }
@@ -1245,13 +1249,13 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
-    VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetDevName, "0.0.0.0" ) == 0 );
-    VERIFY( TUNTAP_SetMTU   ( pLCSPORT->szNetDevName,  "1500"   ) == 0 );
+    VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetIfName, "0.0.0.0" ) == 0 );
+    VERIFY( TUNTAP_SetMTU   ( pLCSPORT->szNetIfName,  "1500"   ) == 0 );
 
 #ifdef OPTION_TUNTAP_SETMACADDR
     if (pLCSPORT->fLocalMAC)
     {
-        VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetDevName,
+        VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetIfName,
                                    pLCSPORT->szMACAddress ) == 0 );
     }
 #endif // OPTION_TUNTAP_SETMACADDR
@@ -1318,7 +1322,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 
         // Enable the interface by turning on the IFF_UP flag...
-        VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetDevName, nIFFlags ) == 0 );
+        VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, nIFFlags ) == 0 );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1328,7 +1332,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
         for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
         {
-            VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetDevName,
+            VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
                              pLCSRTE->pszNetAddr,
                              pLCSRTE->pszNetMask,
                              NULL,
@@ -1352,7 +1356,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( pLCSDEV->pszIPAddress )
     {
-        VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetDevName,
+        VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
                          pLCSDEV->pszIPAddress,
                          "255.255.255.255",
                          NULL,
@@ -1389,7 +1393,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     usleep( 250*1000 );
 
     // Disable the interface by turning off the IFF_UP flag...
-    VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetDevName, 0 ) == 0 );
+    VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, 0 ) == 0 );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1400,7 +1404,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( pLCSDEV->pszIPAddress )
     {
-        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetDevName,
+        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
                          pLCSDEV->pszIPAddress,
                          "255.255.255.255",
                          NULL,
@@ -1413,7 +1417,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
     {
-        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetDevName,
+        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
                          pLCSRTE->pszNetAddr,
                          pLCSRTE->pszNetMask,
                          NULL,
@@ -1539,7 +1543,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     memset( &ifr, 0, sizeof( ifr ) );
 
-    strcpy( ifr.ifr_name, pLCSPORT->szNetDevName );
+    strcpy( ifr.ifr_name, pLCSPORT->szNetIfName );
 
     pPortMAC  = (BYTE*) &pLCSPORT->MAC_Address;
 
@@ -1548,7 +1552,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
-        WRMSG(HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetDevName, strerror( errno ) );
+        WRMSG(HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetIfName, strerror( errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0x0002 );
         return;
@@ -1563,14 +1567,14 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     /* Report what MAC address we will really be using */
     // "CTC: lcs device '%s' using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
-    WRMSG(HHC00942, "I", pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
+    WRMSG(HHC00942, "I", pLCSPORT->szNetIfName, *(pIFaceMAC+0),*(pIFaceMAC+1),
                                     *(pIFaceMAC+2),*(pIFaceMAC+3),
                                     *(pIFaceMAC+4),*(pIFaceMAC+5));
 
     /* Issue warning if different from specified value */
     if (memcmp( pPortMAC, pIFaceMAC, IFHWADDRLEN ) != 0)
     {
-        WRMSG(HHC00943, "W", pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
+        WRMSG(HHC00943, "W", pLCSPORT->szNetIfName, *(pPortMAC+0),*(pPortMAC+1),
                                         *(pPortMAC+2),*(pPortMAC+3),
                                         *(pPortMAC+4),*(pPortMAC+5));
 
@@ -1904,7 +1908,7 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
     // Housekeeping - Cleanup Port Block
 
     memset( pLCSPORT->MAC_Address,  0, sizeof( MAC ) );
-    memset( pLCSPORT->szNetDevName, 0, IFNAMSIZ );
+    memset( pLCSPORT->szNetIfName, 0, IFNAMSIZ );
     memset( pLCSPORT->szMACAddress, 0, 32 );
 
     for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSPORT->pRoutes )

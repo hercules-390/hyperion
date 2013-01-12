@@ -107,13 +107,13 @@ typedef struct _NED {
 /*00D*/ BYTE    manufact[3];
 /*010*/ BYTE    plant[2];
         union   {
-/*012*/      BYTE    code[12];
-             struct  {
-/*012*/           BYTE    serial[4];
-/*016*/           BYTE    sequence[8];
-             };
+/*012*/   BYTE    code[12];
+          struct  {
+/*012*/     BYTE    serial[4];
+/*016*/     BYTE    sequence[8];
+          };
         } seq;
-/*01E*/ HWORD   tag;
+/*01E*/ BYTE    tag[2];
 // }; struct { BYTE zz[31]; }; };
 } NED;
 

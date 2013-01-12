@@ -246,9 +246,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     if( rc < 0 ) return -1;
 
-    // "%1d:%04X CTC: device '%s', type '%s' opened"
+    // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
     WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-              pDevCTCBLK->szTUNIfName, "TUN");
+                         pDevCTCBLK->pDEVBLK[0]->typname,
+                         pDevCTCBLK->szTUNIfName, "TUN");
 
     if (!pDevCTCBLK->fPreconfigured)
     {
@@ -264,16 +265,18 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
             {
-                // "%1d:%04X CTC: ioctl '%s' failed for device '%s': '%s'"
+                // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
                 WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+                      pDevCTCBLK->pDEVBLK[0]->typname,
                       "TT32SDEVBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
 
             tt32ctl.tt32ctl_iobuffsize = pDevCTCBLK->iIOBuff;
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
             {
-                // "%1d:%04X CTC: ioctl '%s' failed for device '%s': '%s'"
+                // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
                 WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
+                      pDevCTCBLK->pDEVBLK[0]->typname,
                       "TT32SIOBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
         }
