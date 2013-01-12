@@ -179,8 +179,20 @@ static CKDCU ckdcutab[] = {
  {"3830",       0x3830,0x02,0x00,0x00,0x00,0x00000000,0,0,0,0,0,0,0,0,24},
  {"3880",       0x3880,0x05,0x09,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0,24},
  {"3990",       0x3990,0xc2,0x10,0x00,0x00,0xd0000000,0x40fa0100,0,0,0,0,0,0,0,32},
- {"3990-3",     0x3990,0xec,0x06,0x00,0x00,0xd0000010,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0,32},
- {"3990-6",     0x3990,0xe9,0x15,0x48,0x15,0x50000010,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0,32},
+ /*
+    PROGRAMMING NOTE: the 00001000 features bit (RAMAC Data striping
+    and compaction on parallel channels) is apparently needed in order
+    to allow SMS to create VSAM Extended Format Datasets (as well as
+    RDC bytes 51-53 needing to be set properly too). We set them even
+    though we do not directly support RAID since the user may provide
+    such support themselves by placing their Hercules dasd file on a
+    RAID array and it's important to be able to create VSAM Extended
+    Format datasets since doing so is common in the real world so we
+    need to "support" allowing them to do so.
+*/
+ {"3990-3",     0x3990,0xec,0x06,0x00,0x00,0xd0001010,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0,32},
+ {"3990-6",     0x3990,0xe9,0x15,0x48,0x15,0x50001010,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0,32},
+
  {"9343",       0x9343,0xe0,0x11,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0,32}
 /*"2105",       0x2105,0xe8,0x15,0x48,0x15,0x50000037,0x40fa0100,0x41270004,0x423e01a0,0x433e0008,0,0,0,0,32}, */
 } ;
@@ -432,14 +444,36 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[47] = 0x01;                         // Track set
     devchar[48] = (BYTE)(ckd->f6);              // F6
     store_hw(devchar+49, ckd->rpscalc);         // RPS factor
-//--REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE
-//  devchar[51] = MODEL6(cu) ? 0x0f : 0x00;     // reserved byte 51             !!! REMOVE !!!
-//  Setting of byte 51 is in ERROR when Hercules does not support the feature   !!! REMOVE !!!
-//  for which a threshold is being set.                                         !!! REMOVE !!!
-//--REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE-REMOVE
+    devchar[51] =  0x00;                        // reserved byte 51
+    /*---------------------------------------------------------------*/
+    /* 2013/01/09 Fish                                               */
+    /* RDC bytes 51-53 are reserved for model-3, model-6 and higher  */
+    /* control units and define a feature buffer lower/upper limit.  */
+    /* The lower limit might not need to be precisely 0x0f, but it   */
+    /* cannot be zero or else VSAM Extended Format Datasets cannot   */
+    /* be created by SMS. The precise value is unknown but was 0x0f  */
+    /* in previous versions of Hercules so we use that value. Bytes  */
+    /* 52-53 were previously always zero but defining them to be a   */
+    /* value larger than byte 51 seems to make logical sense since   */
+    /* we know it's an upper limit. I was told 0x7f was reasonable.  */
+    /*---------------------------------------------------------------*/
+    if (MODEL3(cu) || MODEL6(cu))               // Model-3/-6/greater?
+    {
+        devchar[51] =  0x0f;                    // reserved (feature buffer lower limit)
+
+        if (MODEL3(cu))                         // 3990-3
+        {
+            devchar[52] =  0x00;                // reserved (always zero)
+            devchar[53] =  0x3f;                // reserved (feature buffer upper limit)
+        }
+        else                                    // 3990-6 or greater
+        {
+            devchar[52] =  0x00;                // reserved (high byte feature buffer upper limit)
+            devchar[53] =  0x7f;                // reserved (low byte  feature buffer upper limit)
+        }
+    }
     devchar[54] = cu->funcfeat;                 // device/CU functions/features
     devchar[56] = cu->typecode;                 // Real CU type code
-
     /*---------------------------------------------------------------*/
     /* 2007/05/04 @kl                                                */
     /* The following line to set devchar[57] to 0xff was restored    */
