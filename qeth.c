@@ -3376,6 +3376,14 @@ END_RESOLVER_SECTION
 
 HDL_REGISTER_SECTION;
 {
+//               Hercules's          Our
+//               registered          overriding
+//               entry-point         entry-point
+//               name                value
+#if defined( WIN32 )
+  HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
+  HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
+#endif
 }
 END_REGISTER_SECTION
 
