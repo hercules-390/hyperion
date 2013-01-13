@@ -12,13 +12,13 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 /* Default parm:   iface /dev/net/tun                                */
-/* Optional parms: hwaddr  <mac address of interface  >              */
-/*                 ipaddr  <IPv4 address and prefix length of if>    */
-/*                 netmask <netmask of interface  >                  */
-/*                 ipaddr6 <IPv6 address and prefix length of if>    */
-/*                 mtu     <mtu of interface  >                      */
+/* Optional parms: ifname  <name of interface>                       */
+/*                 hwaddr  <MAC address>                             */
+/*                 ipaddr  <IPv4 address and prefix length>          */
+/*                 netmask <IPv4 netmask>                            */
+/*                 ipaddr6 <IPv6 address and prefix length>          */
+/*                 mtu     <MTU>                                     */
 /*                 chpid   <channel path id>                         */
-/*                 dev     <name of interface  >                     */
 /*                 debug                                             */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
@@ -111,54 +111,77 @@ int      GetMTU( char*, char*, int, int* );
 /* Constants                                                         */
 /*-------------------------------------------------------------------*/
 static const NED configuration_data[] = {
-    { /* .code     = */ NODE_NED + NODE_SNIND,
-      /* .type     = */ NODE_TIODV,
-      /* .class    = */ NODE_CCOMM,
-      /* (.ua)     = */ 0,
-      /* .devtype  = */ _001732,
-      /* .model    = */ _001,
-      /* .manufact = */ _HRC,
-      /* .plant    = */ _ZZ,
-      /* .seq.code = */ _SERIAL },
+    { /* .code       = */ NODE_NED + NODE_SNIND,
+      /* .type       = */ NODE_TIODV,
+      /* .class      = */ NODE_CCOMM,
+      /* (.ua)       = */ 0,
+      /* .devtype    = */ _001732,
+      /* .model      = */ _001,
+      /* .manufact   = */ _HRC,
+      /* .plant      = */ _ZZ,
+      /* .seq.code   = */ _SERIAL,
+      /* (.tag)      = */ 0,0 },
 
-    { /* .code     = */ NODE_NED + NODE_SNIND,
-      /* .type     = */ NODE_TCU,
-      /* (.class)  = */ 0,
-      /* (.ua)     = */ 0,
-      /* .devtype  = */ _001731,
-      /* .model    = */ _001,
-      /* .manufact = */ _HRC,
-      /* .plant    = */ _ZZ,
-      /* .seq.code = */ _SERIAL },
+    { /* .code       = */ NODE_NED + NODE_SNIND,
+      /* .type       = */ NODE_TCU,
+      /* (.class)    = */ 0,
+      /* (.ua)       = */ 0,
+      /* .devtype    = */ _001731,
+      /* .model      = */ _001,
+      /* .manufact   = */ _HRC,
+      /* .plant      = */ _ZZ,
+      /* .seq.code   = */ _SERIAL,
+      /* (.tag)      = */ 0,0 },
 
-    { /* .code     = */ NODE_NED + NODE_TOKEN + NODE_SNIND,
-      /* (.type)   = */ 0,
-      /* .class    = */ NODE_CCOMM,
-      /* (.ua)     = */ 0,
-      /* .devtype  = */ _001730,
-      /* .model    = */ _004,
-      /* .manufact = */ _HRC,
-      /* .plant    = */ _ZZ,
-      /* .seq.code = */ _SERIAL },
+    { /* .code       = */ NODE_NED + NODE_TOKEN + NODE_SNIND,
+      /* (.type)     = */ 0,
+      /* .class      = */ NODE_CCOMM,
+      /* (.ua)       = */ 0,
+      /* .devtype    = */ _001730,
+      /* .model      = */ _004,
+      /* .manufact   = */ _HRC,
+      /* .plant      = */ _ZZ,
+      /* .seq.code   = */ _SERIAL,
+      /* (.tag)      = */ 0,0 },
 
-    { /* .code     = */ NODE_GNEQ }
+    { /* .code       = */ NODE_GNEQ,
+      /* (.type)     = */ 0,
+      /* (.class)    = */ 0,
+      /* (.ua)       = */ 0,
+      /* (.devtype)  = */ 0,0,0,0,0,0,
+      /* (.model)    = */ 0,0,0,
+      /* (.manufact) = */ 0,0,0,
+      /* (.plant)    = */ 0,0,
+      /* (.seq.code) = */ 0,0,0,0,0,0,0,0,0,0,0,0,
+      /* (.tag)      = */ 0,0 },
 };
 
 
 static const NED node_data[] = {
-    { /* .code     = */ NODE_NED,
-      /* (.type)   = */ 0,
-      /* .class    = */ NODE_CCOMM,
-      /* (.ua)     = */ 0,
-      /* .devtype  = */ _001730,
-      /* .model    = */ _004,
-      /* .manufact = */ _HRC,
-      /* .plant    = */ _ZZ,
-      /* .seq.code = */ _SERIAL },
+    { /* .code       = */ NODE_NED,
+      /* (.type)     = */ 0,
+      /* .class      = */ NODE_CCOMM,
+      /* (.ua)       = */ 0,
+      /* .devtype    = */ _001730,
+      /* .model      = */ _004,
+      /* .manufact   = */ _HRC,
+      /* .plant      = */ _ZZ,
+      /* .seq.code   = */ _SERIAL,
+      /* (.tag)      = */ 0,0 },
 
-    { /* .code     = */ NODE_GNEQ }
+    { /* .code       = */ NODE_GNEQ,
+      /* (.type)     = */ 0,
+      /* (.class)    = */ 0,
+      /* (.ua)       = */ 0,
+      /* (.devtype)  = */ 0,0,0,0,0,0,
+      /* (.model)    = */ 0,0,0,
+      /* (.manufact) = */ 0,0,0,
+      /* (.plant)    = */ 0,0,
+      /* (.seq.code) = */ 0,0,0,0,0,0,0,0,0,0,0,0,
+      /* (.tag)      = */ 0,0 },
 };
 
+      /* .seq.code   = *   _SERIAL, */
 
 #define SII_SIZE 4
 
@@ -456,12 +479,19 @@ U16 offph;
                 /* Set Non-Blocking mode */
                 socket_set_blocking_mode(grp->ttfd,0);
 
+                // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
+                WRMSG(HHC00901, "I", SSID_TO_LCSS(dev->ssid),
+                                     dev->devnum,
+                                     dev->typname,
+                                     grp->ttifname,
+                                     (grp->l3 ? "TUN" : "TAP") );
+
 #if defined(IFF_DEBUG)
                 if (grp->debug)
                     VERIFY(!TUNTAP_SetFlags(grp->ttifname,IFF_DEBUG));
 #endif /*defined(IFF_DEBUG)*/
 #if defined( OPTION_TUNTAP_SETMACADDR )
-                if(grp->tthwaddr)
+                if(!grp->l3 && grp->tthwaddr)
                     VERIFY(!TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr));
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
                 if(grp->ttipaddr)
@@ -476,9 +506,7 @@ U16 offph;
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
 #if defined(ENABLE_IPV6)
                 if(grp->ttipaddr6)
-                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttifname,
-                                              grp->ttipaddr6,
-                                              grp->ttpfxlen6));
+                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6));
 #endif /*defined(ENABLE_IPV6)*/
                 if(grp->ttmtu)
                     VERIFY(!TUNTAP_SetMTU(grp->ttifname,grp->ttmtu));
@@ -492,17 +520,15 @@ U16 offph;
                     /* devices MAC address, e.g. Read MAC address. So let's */
                     /* create a MAC address for ourselves, pretending that  */
                     /* it was specified on the config statement.            */
-                    /* See tuntap.c for MAC address related notes.          */
                     {
                     MAC mac;
                     char cmac[24];
                     int i;
 
-                        mac[0] = 0x00;
-                        mac[1] = 0x00;
-                        mac[2] = 0x5E;
-                        for( i = 3; i < 6; i++ )
+                        for( i = 0; i < 6; i++ )
                             mac[i] = (int)((rand()/(RAND_MAX+1.0))*256);
+                        mac[0] &= 0xFE;  /* Clear multicast bit. */
+                        mac[0] |= 0x02;  /* Set local assignment bit. */
                         snprintf( cmac, sizeof(cmac),
                                   "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
                                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
@@ -759,7 +785,6 @@ U16 offph;
 //              char ipmask[16];
                 BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto;
-// ZZ FIXME WE ALSO NEED TO SUPPORT IPV6 HERE
 
                     DBGTRC(dev, "SETIP (L3 Set IP)\n");
 
@@ -1226,8 +1251,6 @@ static void process_output_queue(DEVBLK *dev)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int oq = dev->qdio.o_qpos;
 int mq = dev->qdio.o_qcnt;
-//  int  ipktver;
-//  char cpktver[8];
 
     while (mq--)
         if(dev->qdio.o_qmask & (0x80000000 >> oq))
@@ -1303,6 +1326,8 @@ mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
 //          // Trace the IP packet before sending to TUN interface
 //          if( grp->debug )
 //          {
+//          int  ipktver;
+//          char cpktver[8];
 //              ipktver = (((buf+sizeof(OSA_HDR2))[0] & 0xF0) >> 4);
 //              if (ipktver == 4)
 //                strcpy( cpktver, "IPv4" );
@@ -1387,7 +1412,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 OSA_GRP *grp;
-int grouped;
+int grouped = 0;
 int i;
 
     if(!dev->group)
@@ -1439,6 +1464,11 @@ int i;
             if(grp->tuntap)
                 free(grp->tuntap);
             grp->tuntap = strdup(argv[++i]);
+            continue;
+        }
+        else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
+        {
+            strlcpy( grp->ttifname, argv[++i], sizeof(grp->ttifname) );
             continue;
         }
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
@@ -1552,11 +1582,6 @@ int i;
             else
                 dev->pmcw.chpid[0] = chpid;
 
-            continue;
-        }
-        else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
-        {
-            strlcpy( grp->ttifname, argv[++i], sizeof(grp->ttifname) );
             continue;
         }
 #if defined(QETH_DEBUG) || defined(IFF_DEBUG)
@@ -2001,6 +2026,13 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
+
+//      /* Display various information, maybe */
+//      if( grp->debug )
+//      {
+//          mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
+//      }
+
         break;
 
 
@@ -2034,6 +2066,13 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
+
+//      /* Display various information, maybe */
+//      if( grp->debug )
+//      {
+//          mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
+//      }
+
         break;
     }
 
@@ -2052,6 +2091,13 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
+
+//      /* Display various information, maybe */
+//      if( grp->debug )
+//      {
+//          mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
+//      }
+
         break;
     }
 
@@ -2080,6 +2126,13 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
+
+//      /* Display various information, maybe */
+//      if( grp->debug )
+//      {
+//          mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
+//      }
+
         break;
     }
 
@@ -2225,24 +2278,27 @@ int num;                                /* Number of bytes to move   */
 
 #if defined( OPTION_W32_CTCI )
             } while (0 == rc || (rc < 0 && HSO_errno == HSO_EINTR));
-        } while (rc > 0 && dev->scsw.flag2 & SCSW2_Q);
-#else
-        } while (dev->scsw.flag2 & SCSW2_Q);
 #endif
+        } while (
+#if defined( OPTION_W32_CTCI )
+                 rc > 0 &&
+#endif
+                           dev->scsw.flag2 & SCSW2_Q);
 
         PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0, 0, rc );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
-    }
+
         break;
+    }
 
 
     default:
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, _("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+        DBGTRC(dev, _("Unknown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;

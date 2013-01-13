@@ -736,8 +736,8 @@ do { \
 // reserve 009xx for ctc related messages
 /*ctc_ctci.c*/
 #define HHC00900 "%1d:%04X CTC: error in function %s: %s"
-#define HHC00901 "%1d:%04X CTC: interface %s, type %s opened"
-#define HHC00902 "%1d:%04X CTC: ioctl %s failed for device %s: %s"
+#define HHC00901 "%1d:%04X %s: interface %s, type %s opened"
+#define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
 #define HHC00904 "%1d:%04X CTC: halt or clear recognized"
 #define HHC00905 "%1d:%04X CTC: received %d bytes size frame"
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
@@ -1888,8 +1888,6 @@ do { \
 #define HHC03953 "%1d:%04X PTP: IPv4: Drive %s/%s (%s): Guest %s"
 #define HHC03954 "%1d:%04X PTP: IPv6: Drive %s/%s %s/%s: Guest %s"
 #define HHC03960 "%1d:%04X %s: error in function %s: %s"
-#define HHC03961 "%1d:%04X %s: device %s, type %s opened"
-#define HHC03962 "%1d:%04X %s: ioctl %s failed for device %s: %s"
 #define HHC03964 "%1d:%04X %s: halt or clear recognized"
 #define HHC03965 "%id:%04X %s: Preconfigured interface %s does not exist or is not accessible by Hercules"
 #define HHC03971 "%1d:%04X %s: error writing to device %s: %s"

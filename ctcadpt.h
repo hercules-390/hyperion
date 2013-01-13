@@ -294,7 +294,7 @@ struct  _CTCBLK
     char        szNetMask[32];            // Netmask for P2P link
     char        szMTU[32];
     char        szTUNCharDevName[256];    // TUN/TAP special char device filename (/dev/net/tun)
-    char        szTUNIfName[IFNAMSIZ];    // Network interface Name (tun0)
+    char        szTUNIfName[IFNAMSIZ];    // Network Interface Name (e.g. tun0)
     char        szMACAddress[32];         // MAC Address
 };
 
@@ -465,7 +465,7 @@ struct  _LCSPORT
     TID         tid;                      // Read Thread ID
     pid_t       pid;                      // Read Thread pid
     int         icDevices;                // Device count
-    char        szNetDevName[IFNAMSIZ];   // Network Device Name
+    char        szNetIfName[IFNAMSIZ];    // Network Interface Name (e.g. tap0)
     char        szMACAddress[32];         // MAC Address
     char        szGWAddress[32];          // Gateway for W32
 };

@@ -483,8 +483,8 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         free( pPTPBLK );
         return -1;
     }
-    // HHC03961 "%1d:%04X %s: device '%s', type '%s' opened"
-    WRMSG(HHC03961, "I", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
+    // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
+    WRMSG(HHC00901, "I", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid), pPTPBLK->pDEVBLKRead->devnum,
                          pPTPBLK->pDEVBLKRead->typname, pPTPBLK->szTUNIfName, "TUN" );
 
     // Copy the fd to make panel.c happy
@@ -506,8 +506,8 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             tt32ctl.tt32ctl_devbuffsize = pPTPBLK->iKernBuff;
             if (TUNTAP_IOCtl( pPTPBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0)
             {
-                // HHC03962 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid),
+                // HHC00902 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid),
                                 pPTPBLK->pDEVBLKRead->devnum, pPTPBLK->pDEVBLKRead->typname,
                                 "TT32SDEVBUFF", pPTPBLK->szTUNIfName, strerror( errno ) );
             }
@@ -515,8 +515,8 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             tt32ctl.tt32ctl_iobuffsize = pPTPBLK->iIOBuff;
             if (TUNTAP_IOCtl( pPTPBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0)
             {
-                // HHC03962 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC03962, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid),
+                // HHC00902 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pPTPBLK->pDEVBLKRead->ssid),
                                 pPTPBLK->pDEVBLKRead->devnum, pPTPBLK->pDEVBLKRead->typname,
                                 "TT32SIOBUFF", pPTPBLK->szTUNIfName, strerror( errno ) );
             }
@@ -3601,8 +3601,8 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
     close(fd);
 
     if (rc < 0) {
-        // HHC03962 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-        WRMSG(HHC03962, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+        // HHC00902 "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
+        WRMSG(HHC00902, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              "SIOCGIFMTU", pPTPBLK->szTUNIfName, strerror(errno) );
         return -1;
     }
