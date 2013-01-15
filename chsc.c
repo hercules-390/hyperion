@@ -27,10 +27,9 @@
 
 #include "chsc.h"
 
-
 #if defined(FEATURE_CHSC)
 
-#if 0
+
 static int ARCH_DEP(chsc_get_conf_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, rsp_len;
@@ -45,12 +44,14 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
     memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
 
-    STORE_HW(chsc_rsp12->len1,80);
-    STORE_FW(chsc_rsp12->info1,0x10);
-    STORE_FW(chsc_rsp12->info2,0x10);
-    STORE_FW(chsc_rsp12->info3,0xFF);
- 
-    STORE_FW(chsc_rsp12->test,0xE3C5E2E3);
+    chsc_rsp12->flags |= CHSC_RSP12_F1_CV;
+
+// ??    STORE_HW(chsc_rsp12->len1,80);
+// ??    STORE_FW(chsc_rsp12->info1,0x10);
+// ??    STORE_FW(chsc_rsp12->info2,0x10);
+// ??    STORE_FW(chsc_rsp12->info3,0xFF);
+
+// ??    STORE_FW(chsc_rsp12->test,0xE3C5E2E3);
 
     /* Store response length */
     STORE_HW(chsc_rsp->length,rsp_len);
@@ -64,7 +65,6 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
     return 0;
 
 }
-#endif
 
 
 static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
@@ -103,10 +103,10 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
         if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
         {
             int n;
-            chsc_rsp4->sch_val = 1;
+            chsc_rsp4->flags |= CHSC_RSP4_F1_SCH_VALID;
             if(dev->pmcw.flag5 & PMCW5_V)
-                chsc_rsp4->dev_val = 1;
-            chsc_rsp4->st = (dev->pmcw.flag25 & PMCW25_TYPE) >> 5;
+                chsc_rsp4->flags |= CHSC_RSP4_F1_DEV_VALID;
+            chsc_rsp4->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
             chsc_rsp4->unit_addr = dev->devnum & 0xff;
             STORE_HW(chsc_rsp4->devno,dev->devnum);
             chsc_rsp4->path_mask = dev->pmcw.pim;
@@ -134,10 +134,9 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 }
 
 
-#if 0
 static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, cun;
 
 CHSC_REQ6 *chsc_req6 = (CHSC_REQ6 *)(chsc_req);
 CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
@@ -171,12 +170,12 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
         {
             int n;
 
-            chsc_rsp6->sch_val = 1;
+            chsc_rsp6->flags |= CHSC_RSP6_F1_SCH_VALID;
             if(dev->pmcw.flag5 & PMCW5_V)
-                chsc_rsp6->dev_val = 1;
-            chsc_rsp6->st = (dev->pmcw.flag25 & PMCW25_TYPE) >> 5;
+                chsc_rsp6->flags |= CHSC_RSP6_F1_DEV_VALID;
+            chsc_rsp6->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
 
-            chsc_rsp6->fla_valid_mask = dev->pmcw.pim;
+            chsc_rsp6->path_mask = dev->pmcw.pim;
 
             STORE_HW(chsc_rsp6->devnum,dev->devnum);
 
@@ -184,7 +183,11 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
 
             memcpy(chsc_rsp6->chpid, dev->pmcw.chpid, 8);
             for(n = 0; n < 7; n++)
-                STORE_HW(chsc_rsp6->fla[n], dev->fla[n]);
+            {
+                cun = dev->fla[n];
+                cun &= 0xFFF0;
+                STORE_HW(chsc_rsp6->cun[n], cun);
+            }
         }
     }
 
@@ -200,7 +203,6 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
     return 0;
 
 }
-#endif
 
 
 static int ARCH_DEP(chsc_get_css_info) (REGS *regs, CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
@@ -247,9 +249,7 @@ U16 req_len, rsp_len;
     CHSC_SB(chsc_rsp10->general_char,41);         /* Adapter Int Fac */
 
     CHSC_SB(chsc_rsp10->chsc_char,1);            /* 0x0002 Supported */
-#if 0
     CHSC_SB(chsc_rsp10->chsc_char,2);            /* 0x0006 Supported */
-#endif
     CHSC_SB(chsc_rsp10->chsc_char,3);            /* 0x0004 Supported */
     CHSC_SB(chsc_rsp10->chsc_char,8);            /* 0x0024 Supported */
 
@@ -423,7 +423,7 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
                 /* No reaon code */
                 STORE_FW(chsc_rsp->info,0);
                 return rc;
-            } 
+            }
 
     /* Store response length */
     STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
@@ -475,15 +475,14 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
                 if (dev->allocated
-                  && (dev->pmcw.chpid[0] == chp) 
+                  && (dev->pmcw.chpid[0] == chp)
                   && dev->chptype[0])
                 {
-                    chsc_rsp2->flags  = 0x80;
-                    chsc_rsp2->chp_type = dev->chptype[0];
-//                  chsc_rsp2->lsn    = 0;
-//                  chsc_rsp2->swla   = 0;
-//                  chsc_rsp2->chla   = 0;
-//                  chsc_rsp2->chpp   = 0;
+                    chsc_rsp2->flags    |= CHSC_RSP2_F1_CHPID_VALID;
+                    chsc_rsp2->chp_type  = dev->chptype[0];
+//                  chsc_rsp2->lsn       = 0;
+//                  chsc_rsp2->swla      = 0;
+//                  chsc_rsp2->chla      = 0;
                 }
         }
         else
@@ -584,11 +583,9 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             regs->psw.cc = ARCH_DEP(chsc_get_css_info) (regs, chsc_req, chsc_rsp);
             break;
 
-#if 0
-        case 0x0012: // 0x0012
+        case CHSC_REQ_CNFINFO: /* 0x0012  Store Configuration Information */
             regs->psw.cc = ARCH_DEP(chsc_get_conf_info) (chsc_req, chsc_rsp);
             break;
-#endif
 
 #if defined(_FEATURE_QDIO_THININT)
         case CHSC_REQ_SETSSSI: // 0x0021

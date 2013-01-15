@@ -1601,9 +1601,11 @@ int i;
 
     }
 
-    if(grouped)
-        for(i = 0; i < OSA_GROUP_SIZE; i++)
-            dev->group->memdev[i]->fla[0] = dev->group->memdev[0]->devnum;
+    if(grouped) {
+        for(i = 0; i < OSA_GROUP_SIZE; i++) {
+            dev->group->memdev[i]->fla[0] = dev->group->memdev[i]->devnum;
+        }
+    }
 
     return 0;
 } /* end function qeth_init_handler */
@@ -1817,13 +1819,13 @@ int num;                                /* Number of bytes to move   */
         return;
     }
 
-//  /* Display various information, maybe */
-//  if( grp->debug )
-//  {
-//      // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
-//      WRMSG(HHC03992, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-//          code, flags, count, chained, prevcode, ccwseq );
-//  }
+//! /* Display various information, maybe */
+//! if( grp->debug )
+//! {
+//!     // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+//!     WRMSG(HHC03992, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//!         code, flags, count, chained, prevcode, ccwseq );
+//! }
 
     /* Process depending on CCW opcode */
     switch (code) {
@@ -2027,11 +2029,11 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//      /* Display various information, maybe */
-//      if( grp->debug )
-//      {
-//          mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
-//      }
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
+//!     }
 
         break;
 
@@ -2067,11 +2069,11 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//      /* Display various information, maybe */
-//      if( grp->debug )
-//      {
-//          mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
-//      }
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
+//!     }
 
         break;
     }
@@ -2092,11 +2094,11 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//      /* Display various information, maybe */
-//      if( grp->debug )
-//      {
-//          mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
-//      }
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
+//!     }
 
         break;
     }
@@ -2127,11 +2129,11 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//      /* Display various information, maybe */
-//      if( grp->debug )
-//      {
-//          mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
-//      }
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
+//!     }
 
         break;
     }
@@ -2146,6 +2148,12 @@ int num;                                /* Number of bytes to move   */
         QDIO_QDES0 *qdes;
         int accerr;
         int i;
+
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_description( dev, "*** Establish Queues entry ***" );
+//!     }
 
         dev->qdio.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
         dev->qdio.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
@@ -2214,6 +2222,12 @@ int num;                                /* Number of bytes to move   */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
 
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_description( dev, "*** Establish Queues exit ***" );
+//!     }
+
         break;
     }
 
@@ -2225,6 +2239,12 @@ int num;                                /* Number of bytes to move   */
     {
     fd_set readset;
     int rc;
+
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_description( dev, "*** Activate Queues entry ***" );
+//!     }
 
         dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
 
@@ -2267,6 +2287,14 @@ int num;                                /* Number of bytes to move   */
                 raise_adapter_interrupt(dev);
             }
 
+//!         /* Display various information, maybe */
+//!         if( grp->debug )
+//!         {
+//!             mpc_display_stuff( dev, "i_qmask", (BYTE*)&dev->qdio.i_qmask, 4, ' ' );
+//!             mpc_display_stuff( dev, "o_qmask", (BYTE*)&dev->qdio.o_qmask, 4, ' ' );
+//!             mpc_display_stuff( dev, "readset", (BYTE*)&readset, sizeof(readset), ' ' );
+//!         }
+
 #if defined( OPTION_W32_CTCI )
             do {
 #endif
@@ -2290,6 +2318,12 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
+//!     /* Display various information, maybe */
+//!     if( grp->debug )
+//!     {
+//!         mpc_display_description( dev, "*** Activate Queues exit ***" );
+//!     }
+
         break;
     }
 
@@ -2305,13 +2339,13 @@ int num;                                /* Number of bytes to move   */
 
     } /* end switch(code) */
 
-//  /* Display various information, maybe */
-//  if( grp->debug )
-//  {
-//      // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
-//      WRMSG(HHC03993, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-//          *unitstat, *residual, *more );
-//  }
+//! /* Display various information, maybe */
+//! if( grp->debug )
+//! {
+//!     // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+//!     WRMSG(HHC03993, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//!         *unitstat, *residual, *more );
+//! }
 
 } /* end function qeth_execute_ccw */
 
