@@ -3223,14 +3223,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 /* being 0x02 (3990-6/ESS message) with byte 9 and 10   */
                 /* containing additional response information such as a */
                 /* bit map indicating which physical subsystem SPs are  */
-                /* caching. Since Hercules does not yet support caching */
-                /* and thus cannot return a valid SP caching bit map we */
-                /* return a 9 byte response instead with byte 2 = 0x00  */
-                /* (No Message) because an 11 byte response with zeros  */
-                /* in bytes 9 and 10 (no caching SPs bit map flags set) */
-                /* causes problems with certain operating systems. Thus */
-                /* a 9-byte response with byte 2 = 0x00 is the safest   */
-                /* approach to make most operating systems happy.       */
+                /* caching. Since Hercules doesn't support a compatible */
+                /* form of caching and an equivalent SP caching bit map */
+                /* isn't maintained we return a 9 byte response instead */
+                /* with byte 2 = 0x00 (No Message) since an 11 byte re- */
+                /* sponse with zeros in bytes 9 and 10 causes problems  */
+                /* with certain operating systems. Returning a 9-byte   */
+                /* response with byte 2 = 0x00 instead is therefore the */
+                /* safest approach to take since most operating systems */
+                /* seem to accept such a response without complaint.    */
                 /*------------------------------------------------------*/
                 iobuf[0] = 0x00;               /* Message...            */
                 iobuf[1] = 0x09;               /* ...Length             */
