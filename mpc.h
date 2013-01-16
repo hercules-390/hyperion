@@ -483,6 +483,7 @@ typedef struct _MPC_IEAR {
 #define IDX_RSP_FLAGS_NOPORTREQ 0x80
 /*00C*/ FWORD   token;          /* Issues rm_r token                 */
 /*010*/ HWORD   flevel;         /* Funtion level                     */
+#define IDX_RSP_FLEVEL_0201     0x0201
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
     } MPC_IEAR;
 

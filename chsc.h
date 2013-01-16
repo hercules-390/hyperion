@@ -80,7 +80,7 @@ typedef struct _CHSC_REQ1 {             /* Reset Control Unit        */
     } CHSC_REQ1;
 
 
-typedef struct _CHSC_REQ2 {             /* Store Channel Path Descri */
+typedef struct _CHSC_REQ2 {             /* Store Channel Path Description */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ BYTE    flags;
@@ -97,7 +97,7 @@ typedef struct _CHSC_REQ2 {             /* Store Channel Path Descri */
     } CHSC_REQ2;
 
 
-typedef struct _CHSC_REQ4 {
+typedef struct _CHSC_REQ4 {             /* Store Subchannel Description Data */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   ssidfmt;
@@ -110,7 +110,7 @@ typedef struct _CHSC_REQ4 {
     } CHSC_REQ4;
 
 
-typedef struct _CHSC_REQ6 {
+typedef struct _CHSC_REQ6 {             /* Store Subchannel Control-Unit Data */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   ssidfmt;
@@ -125,24 +125,32 @@ typedef struct _CHSC_REQ6 {
     } CHSC_REQ6;
 
 
-typedef struct _CHSC_REQ12 {
+typedef struct _CHSC_REQC  {
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ FWORD   unknown4[3];
+    } CHSC_REQC;
+
+
+typedef struct _CHSC_REQ10 {            /* Store Channel-Subsystem Characteristics */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ FWORD   resv[3];
-    } CHSC_REQ12;
+    } CHSC_REQ10;
 
-//??  typedef struct _CHSC_REQ12 {
-//??  /*000*/ HWORD   length;                 /* Offset to response field  */
-//??  /*002*/ HWORD   req;                    /* Request code              */
-//??  /*004*/ BYTE    flags;
-//??  #define CHSC_CI_FLAGS_M         0x40
-//??  #define CHSC_CI_FLAGS_FMT       0x0F
-//??  /*005*/ BYTE    cssid;
-//??  /*006*/ BYTE    ssid;
-//??  #define CHSC_CI_SSID_MASK       0x03
-//??  /*007*/ BYTE    resv007;
-//??  /*008*/ DBLWRD  resv008;
-//??      } CHSC_REQ12;
+
+typedef struct _CHSC_REQ12 {            /* Store Configuration Information */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    flags;
+#define CHSC_REQ12_FLAGS_M      0x20
+#define CHSC_REQ12_FLAGS_FMT    0x0F
+/*005*/ BYTE    cssid;
+/*006*/ BYTE    ssid;
+#define CHSC_REQ12_SSID_MASK    0x03
+/*007*/ BYTE    resv007;
+/*008*/ DBLWRD  resv008;
+    } CHSC_REQ12;
 
 
 typedef struct _CHSC_REQ21 {
@@ -175,11 +183,31 @@ typedef struct _CHSC_REQ24 {
 /*004*/ HWORD   ssidfmt;
 #define CHSC_REQ24_SSID         0x0030
 #define CHSC_REQ24_FMT          0x000f
-/*006*/ HWORD   first_sch;
+/*006*/ HWORD   first_sch;              /* First subchannel number   */
 /*008*/ HWORD   resv1;
-/*00A*/ HWORD   last_sch;
+/*00A*/ HWORD   last_sch;               /* Last subchannel number    */
 /*00C*/ FWORD   resv2;
     } CHSC_REQ24;
+
+
+typedef struct _CHSC_REQ26 {
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ HWORD   unknown4;
+/*006*/ HWORD   first_cun;              /* First control unit number */
+/*008*/ HWORD   unknown8;
+/*00A*/ HWORD   last_cun;               /* Last control unit number  */
+/*00C*/ FWORD   unknownc;
+    } CHSC_REQ26;
+
+
+typedef struct _CHSC_REQ30 {
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    unknown4;
+/*005*/ BYTE    unknown5[3];
+/*008*/ FWORD   unknown8[6];
+    } CHSC_REQ30;
 
 
 typedef struct _CHSC_REQ31 {            /* Enable Facility Request   */
@@ -314,13 +342,14 @@ typedef struct _CHSC_RSP12 {
 /*014*/ FWORD   rse;                    /* Remaining Subchannel Elements */
 /*018*/ FWORD   rcue;                   /* Remaining Control-Unit Elements */
 /*01C*/ FWORD   rsce;                   /* Remaining Shared-Cluster Elements */
-/*020*/ FWORD   resv3[2];
+/*020*/ FWORD   unknown1[2];
 /*028*/ FWORD   cct[16];                /* Current-Configuration Token */
 /*068*/ FWORD   tct[16];                /* Target-Configuration Token */
 /*0A8*/ FWORD   resv4;
 /*0AC*/ HWORD   pnv;                    /* Partition-Names Valid mask */
 /*0AE*/ HWORD   resv5;
 /*0B0*/ DBLWRD  pn[16];                 /* Partition Names           */
+/*130*/ FWORD   unknown2[488];
     } CHSC_RSP12;
 
 //??  typedef struct _CHSC_RSP12 {
@@ -337,8 +366,7 @@ typedef struct _CHSC_RSP12 {
 
 
 typedef struct _CHSC_RSP24 {
-/*000*/ BYTE    flags;
-/* flags for st qdio sch data */
+/*000*/ BYTE flags;                             /* flags for st qdio sch data */
 #define CHSC_FLAG_QDIO_CAPABILITY       0x80
 #define CHSC_FLAG_VALIDITY              0x40
 /*001*/ BYTE    resv1;
@@ -361,8 +389,7 @@ typedef struct _CHSC_RSP24 {
 /*00B*/ BYTE    ocnt;
 /*00C*/ BYTE    resv3;
 /*00D*/ BYTE    mbccnt;
-/*00E*/ HWORD   qdioac2;
-/* qdio adapter-characteristics-2 flag */
+/*00E*/ HWORD qdioac2;                          /* qdio adapter-characteristics-2 flag */
 #define QETH_SNIFF_AVAIL                0x0008  /* Promisc mode avail */
 #define QETH_AC2_DATA_DIV_AVAILABLE     0x0010
 #define QETH_AC2_DATA_DIV_ENABLED       0x0002
@@ -378,7 +405,7 @@ typedef struct _CHSC_RSP24 {
 
 
 typedef struct _CHSC_RSP31 {
-/*000*/ FWORD   resv1;
+/*000*/ FWORD   unknown;
     } CHSC_RSP31;
 
 

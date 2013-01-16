@@ -184,9 +184,11 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
             memcpy(chsc_rsp6->chpid, dev->pmcw.chpid, 8);
             for(n = 0; n < 7; n++)
             {
-                cun = dev->fla[n];
-                cun &= 0xFFF0;
-                STORE_HW(chsc_rsp6->cun[n], cun);
+                if(dev->pmcw.pim & (0x80 >> n))
+                {
+                    cun = ((dev->devnum & 0x00F0) << 4) | dev->pmcw.chpid[n];
+                    STORE_HW(chsc_rsp6->cun[n], cun);
+                }
             }
         }
     }

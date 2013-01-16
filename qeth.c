@@ -971,7 +971,7 @@ U16 reqtype;
         {
             iear->resp = IDX_RSP_RESP_OK;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
-            STORE_HW(iear->flevel, 0x0201);
+            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->token, ODTOKEN);
 
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
@@ -993,7 +993,7 @@ U16 reqtype;
         {
             iear->resp = IDX_RSP_RESP_OK;
             iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
-            STORE_HW(iear->flevel, 0x0201);
+            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->token, ODTOKEN);
 
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
@@ -2149,12 +2149,6 @@ int num;                                /* Number of bytes to move   */
         int accerr;
         int i;
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_description( dev, "*** Establish Queues entry ***" );
-//!     }
-
         dev->qdio.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
         dev->qdio.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
 
@@ -2222,12 +2216,6 @@ int num;                                /* Number of bytes to move   */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_description( dev, "*** Establish Queues exit ***" );
-//!     }
-
         break;
     }
 
@@ -2239,12 +2227,6 @@ int num;                                /* Number of bytes to move   */
     {
     fd_set readset;
     int rc;
-
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_description( dev, "*** Activate Queues entry ***" );
-//!     }
 
         dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
 
@@ -2317,12 +2299,6 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
-
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_description( dev, "*** Activate Queues exit ***" );
-//!     }
 
         break;
     }
