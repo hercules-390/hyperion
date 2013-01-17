@@ -93,20 +93,6 @@ typedef struct _CHSC_RSP {
 
 
 /*-------------------------------------------------------------------*/
-/* Reset Control Unit request. The response is a CHSC_RSP            */
-/*-------------------------------------------------------------------*/
-typedef struct _CHSC_REQ1 {             /* Reset Control Unit        */
-/*000*/ HWORD   length;                 /* Offset to response field  */
-/*002*/ HWORD   req;                    /* Request code              */
-/*004*/ BYTE    resv1[3];
-/*007*/ BYTE    chpid;
-/*008*/ HWORD   resv2;
-/*00A*/ HWORD   sch;                    /* Subchannel number         */
-/*00C*/ FWORD   resv3;
-    } CHSC_REQ1;
-
-
-/*-------------------------------------------------------------------*/
 /* Store Channel Path Description request and responses.             */
 /*-------------------------------------------------------------------*/
 typedef struct _CHSC_REQ2 {             /* Store Channel Path Description */
@@ -411,6 +397,18 @@ typedef struct _CHSC_REQ31 {            /* Enable Facility */
 /*-------------------------------------------------------------------*/
 /* Some requests that aren't supported yet.                          */
 /*-------------------------------------------------------------------*/
+
+/* Reset Control Unit request. The response is a CHSC_RSP            */
+typedef struct _CHSC_REQ1 {             /* Reset Control Unit        */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    resv1[3];
+/*007*/ BYTE    chpid;
+/*008*/ HWORD   resv2;
+/*00A*/ HWORD   sch;                    /* Subchannel number         */
+/*00C*/ FWORD   resv3;
+    } CHSC_REQ1;
+
 typedef struct _CHSC_REQC  {
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
