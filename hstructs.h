@@ -551,15 +551,18 @@ struct SYSBLK {
         TID     cmdtid;                 /* Active command thread     */
         char   *cmdsep;                 /* Single Char cmd Sep       */
         BYTE    sysgroup;               /* Panel Command grouping    */
-#define SYSGROUP_SYSOPER     0x01     /* computer operator functions */
-#define SYSGROUP_SYSMAINT    0x02     /* Maintenance functions       */
-#define SYSGROUP_SYSPROG     0x04     /* Systems Programmer functions*/
-#define SYSGROUP_SYSNONE     0x08     /* Command valid with no group */
-#define SYSGROUP_SYSCONFIG   0x10     /* System Configuration Funcs  */
-#define SYSGROUP_SYSDEVEL    0x20     /* Developer functions         */
-#define SYSGROUP_SYSDEBUG    0x40     /* Internal Debug functions    */
-#define SYSGROUP_SYSNDIAG    0x80     /* Not supported by DIAG008    */
-#define SYSGROUP_SYSALL      0x7F
+#define SYSGROUP_SYSOPER     0x01       /* Computer operator group   */
+#define SYSGROUP_SYSMAINT    0x02       /* System Maintainer group   */
+#define SYSGROUP_SYSPROG     0x04       /* System Programmer group   */
+#define SYSGROUP_SYSNONE     0x08       /* Command valid w/no group  */
+#define SYSGROUP_SYSCONFIG   0x10       /* System Configuration group*/
+#define SYSGROUP_SYSDEVEL    0x20       /* Hercules Developer group  */
+#define SYSGROUP_SYSDEBUG    0x40       /* Internal Debug group      */
+#define SYSGROUP_SYSNDIAG    0x80       /* Not supported by DIAG008  */
+#define SYSGROUP_SYSALL      0x7F       /* All groups but no DIAG008 */
+#define SYSGROUP_PROGDEVELDEBUG ( SYSGROUP_SYSPROG  | \
+                                  SYSGROUP_SYSDEVEL | \
+                                  SYSGROUP_SYSDEBUG )
 #if defined(_DEBUG) || defined(DEBUG)
   #define  DEFAULT_SYSGROUP     SYSGROUP_SYSALL
 #else

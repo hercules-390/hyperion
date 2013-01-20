@@ -15,6 +15,51 @@
 
 #if defined( _FW_REF )          /* (pre-table build pass) */
 
+//  -------------- (template for new commands) ----------------
+//  -------------- (template for new commands) ----------------
+//
+//#define xxx_cmd_desc            "Short XXX description"
+//#define xxx_cmd_help            \
+//                                \
+//  "Much longer, more detailed xxx command description...\n"                     \
+//  "Use other commands as reference for typical formatting and wording.\n"       \
+//
+//  -------------- (template for new commands) ----------------
+//  -------------- (template for new commands) ----------------
+
+
+#define $test_cmd_desc           "Your custom command (*DANGEROUS!*)"
+#define $test_cmd_help          \
+                                \
+  "Performs whatever test function *YOU* specifically coded it to do.\n\n"      \
+                                                                                \
+  "                  * * * *  WARNING!  * * * *\n\n"                            \
+                                                                                \
+  "DO NOT RUN THIS COMMAND UNLESS *YOU* SPECIFICALLY CODED THE FUNCTION\n"      \
+  "THAT THIS COMMAND INVOKES! Unless you wrote it yourself you probably\n"      \
+  "don't know it does. It could perform any function at all from crashing\n"    \
+  "Hercules to launching a nuclear strike. You have been warned!\n"
+
+#define $zapcmd_cmd_desc        "Enable/disable command (*CAREFUL!*)"
+#define $zapcmd_cmd_help        \
+                                \
+  "Format:\n\n"                                                                 \
+                                                                                \
+  "    $zapcmd  cmdname  CFG|NOCFG|CMD|NOCMD\n\n"                               \
+                                                                                \
+  "For normal non-Debug production release builds, use the sequence:\n\n"       \
+                                                                                \
+    "    msglvl   VERBOSE      (optional)\n"                                    \
+    "    msglvl   DEBUG        (optional)\n"                                    \
+    "    cmdlvl   DEBUG        (*required!*) (because not DEBUG build,\n"       \
+    "    $zapcmd  cmdname  CMD                and $zapcmd is SYSDEBUG)\n\n"     \
+                                                                                \
+    "In other words, the $zapcmd is itself a 'debug' level command, and\n"      \
+    "thus in order to use it, the debug cmdlvl must be set first (which\n"      \
+    "is the default for Debug builds but not normal production builds).\n"      \
+    "Note: it is possible to disable the $zapcmd itself so BE CAREFUL!\n"
+
+#define $locate_cmd_desc        "Display sysblk, regs or hostinfo"
 #define bangmsg_cmd_desc        "SCP priority messsage"
 #define bangmsg_cmd_help        \
                                 \
@@ -1261,17 +1306,19 @@
 #define sysclear_cmd_help       \
                                 \
   "Performs the System Reset Clear manual control function. Same as\n"           \
-  "the \"sysreset\" command but also clears main storage to 0. Also,\n"          \
-  "registers control registers, etc.. are reset to their initial value.\n"       \
+  "the \"sysreset clear\" command. Clears main storage to 0, and all\n"          \
+  "registers, control registers, etc.. are reset to their initial value.\n"      \
   "At this point, the system is essentially in the same state as it was\n"       \
-  "just after having been started\n"
+  "when it was first started.\n"
 
 #define sysepoch_cmd_desc       "Set sysepoch parameter"
 #define sysreset_cmd_desc       "System Reset manual operation"
 #define sysreset_cmd_help       \
                                 \
-  "Performs the System Reset manual control function. A CPU and I/O\n"           \
-  "subsystem reset are performed.\n"
+  "Performs the System Reset manual control function. Without any arguments\n"   \
+  "or with the \"normal\" argument then only a CPU and I/O subsystem reset\n"    \
+  "are performed. When the \"clear\" argument is given then this command is\n"   \
+  "identical in functionality to the \"sysclear\" command.\n"
 
 #define tminus_cmd_desc         "Turn off instruction tracing"
 #define t_cmd_desc              "Instruction trace"
@@ -1389,9 +1436,9 @@
 //MMAND( "x{+/-}zz",  "flag on/off cmd", NULL,        SYSCMDNOPER, NULL )  // 'OnOffCommand'   (special handling)
 
 //       "1...5...9",               function                type flags          description             long help
-COMMAND( "$test",                   test_cmd,               SYSDEBUG,           NULL,                   NULL                )
-COMMAND( "$zapcmd",                 zapcmd_cmd,             SYSDEBUG,           NULL,                   NULL                )
-CMDABBR( "locate",   3,             locate_cmd,             SYSDEBUG,           NULL,                   NULL                )
+COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
+CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  $zapcmd_cmd_desc,       $zapcmd_cmd_help    )
+CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  $locate_cmd_desc,       NULL                )
 
 COMMAND( "cache",                   cache_cmd,              SYSCONFIG,          cache_cmd_desc,         cache_cmd_help      )
 COMMAND( "cckd",                    cckd_cmd,               SYSCONFIG,          cckd_cmd_desc,          cckd_cmd_help       )
