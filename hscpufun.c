@@ -284,6 +284,7 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
             RELEASE_INTLOCK(NULL);
+            // "System reset/clear rejected: all CPU's must be stopped"
             WRMSG(HHC02235, "E");
             return -1;
         }
@@ -302,11 +303,36 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 /*-------------------------------------------------------------------*/
 int sysreset_cmd(int ac,char *av[],char *cmdline)
 {
-    int rc = reset_cmd(ac,av,cmdline,0);
-    if ( rc >= 0 )
+    int rc;
+
+    if (ac < 2)
+        rc = reset_cmd( ac, av, cmdline, 0 );
+    else if (ac == 2)
     {
-        WRMSG( HHC02311, "I", av[0] );
+        if (!strcasecmp( "clear", av[1] ))
+        {
+            rc = reset_cmd( ac, av, cmdline, 1 );
+        }
+        else if (!strcasecmp( "normal", av[1] ))
+        {
+            rc = reset_cmd( ac, av, cmdline, 0 );
+        }
+        else
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", av[1], "" );
+            rc = -1;
+        }
     }
+    else // (ac > 2)
+    {
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", av[2], "" );
+        rc = -1;
+    }
+
+    if (rc >= 0)
+        WRMSG( HHC02311, "I", cmdline ); // "%s completed"
 
     return rc;
 }
@@ -317,12 +343,17 @@ int sysreset_cmd(int ac,char *av[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int sysclear_cmd(int ac,char *av[],char *cmdline)
 {
-    int rc = reset_cmd(ac,av,cmdline,1);
+    int rc;
 
-    if ( rc >= 0 )
+    if (ac > 1)
     {
-        WRMSG( HHC02311, "I", av[0] );
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", av[1], "" );
+        rc = -1;
     }
+
+    if ((rc = reset_cmd( ac, av, cmdline, 1 )) >= 0)
+        WRMSG( HHC02311, "I", av[0] ); // "%s completed"
 
     return rc;
 }
