@@ -49,7 +49,7 @@
 #endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 
-static const NED configuration_data[] = {
+static const NODE configuration_data[] = {
     { /* .code     = */ NODE_NED + NODE_SNIND,
       /* .type     = */ NODE_TIODV,
       /* .class    = */ NODE_CDASD,
@@ -84,7 +84,7 @@ static const NED configuration_data[] = {
 };
 
 
-static const NED node_data[] = {
+static const NODE node_data[] = {
     { /* .code     = */ NODE_NED,
       /* (.type)   = */ 0,
       /* .class    = */ NODE_CDASD,
@@ -951,7 +951,7 @@ int num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        NED *rcd = (NED*)iobuf;
+        NODE *rcd = (NODE*)iobuf;
 
         /* Copy configuration data from tempate */
         memcpy (iobuf, configuration_data, sizeof(configuration_data));
@@ -1004,7 +1004,7 @@ int num;                                /* Number of bytes to move   */
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
     {
-        NED *rni = (NED*)iobuf;
+        NODE *rni = (NODE*)iobuf;
 
         /* Copy configuration data from tempate */
         memcpy (iobuf, node_data, sizeof(node_data));

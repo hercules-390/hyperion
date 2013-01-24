@@ -110,7 +110,7 @@ int      GetMTU( char*, char*, int, int* );
 /*-------------------------------------------------------------------*/
 /* Constants                                                         */
 /*-------------------------------------------------------------------*/
-static const NED configuration_data[] = {
+static const NODE configuration_data[] = {
     { /* .code       = */ NODE_NED + NODE_SNIND,
       /* .type       = */ NODE_TIODV,
       /* .class      = */ NODE_CCOMM,
@@ -157,7 +157,7 @@ static const NED configuration_data[] = {
 };
 
 
-static const NED node_data[] = {
+static const NODE node_data[] = {
     { /* .code       = */ NODE_NED,
       /* (.type)     = */ 0,
       /* .class      = */ NODE_CCOMM,
@@ -2029,12 +2029,14 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
-//!     }
-
+        /* Display formatted Sense Id information, maybe */
+        if( grp->debug )
+        {
+            char buf[1024];
+            // HHC03995 "%1d:%04X %s: %s:\n%s"
+            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
+        }
         break;
 
 
@@ -2043,7 +2045,7 @@ int num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        NED *rcd = (NED*)iobuf;
+        NODE *rcd = (NODE*)iobuf;
 
         /* Copy configuration data from tempate */
         memcpy (iobuf, configuration_data, sizeof(configuration_data));
@@ -2069,12 +2071,14 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
-//!     }
-
+        /* Display formatted Read Configuration Data records, maybe */
+        if( grp->debug )
+        {
+            char buf[1024];
+            // HHC03995 "%1d:%04X %s: %s:\n%s"
+            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
+        }
         break;
     }
 
@@ -2109,7 +2113,7 @@ int num;                                /* Number of bytes to move   */
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
     {
-        NED *rni = (NED*)iobuf;
+        NODE *rni = (NODE*)iobuf;
 
         /* Copy configuration data from tempate */
         memcpy (iobuf, node_data, sizeof(node_data));
@@ -2129,12 +2133,14 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
-//!     }
-
+        /* Display formatted Read Node Information, maybe */
+        if( grp->debug )
+        {
+            char buf[1024];
+            // HHC03995 "%1d:%04X %s: %s:\n%s"
+            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
+        }
         break;
     }
 

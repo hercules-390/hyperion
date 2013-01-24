@@ -7,6 +7,8 @@
 #if !defined(_ZFCP_H)
 #define _ZFCP_H
 
+#include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
+
 /*-------------------------------------------------------------------*/
 /* Number of Devices ZFCP subchannels per channel                    */
 /*-------------------------------------------------------------------*/

@@ -21,6 +21,7 @@
 #include "opcode.h"
 #include "inline.h"
 #include "hconsole.h"
+#include "esa390io.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -1050,6 +1051,497 @@ size_t  n;
     return buf;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Format SDC (Self Describing Component) information                */
+/*-------------------------------------------------------------------*/
+const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
+{
+    size_t  n;
+    BYTE c;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !sdc)
+        return buf;
+
+#define SDCCHAR( fld, n ) \
+    isgraph((c = guest_to_host( sdc->fld[n] ))) ? c : '?'
+
+    n = (size_t) snprintf( buf, bufsz-1,
+
+        "SDC: type/model:%c%c%c%c%c%c-%c%c%c mfg:%c%c%c plant:%c%c seq/serial:%c%c%c%c%c%c%c%c%c%c%c%c\n"
+
+        , SDCCHAR(type,0),SDCCHAR(type,1),SDCCHAR(type,2),SDCCHAR(type,3),SDCCHAR(type,4),SDCCHAR(type,5)
+        , SDCCHAR(model,0),SDCCHAR(model,1),SDCCHAR(model,2)
+        , SDCCHAR(mfr,0),SDCCHAR(mfr,1),SDCCHAR(mfr,2)
+        , SDCCHAR(plant,0),SDCCHAR(plant,1)
+        , SDCCHAR(serial,0),SDCCHAR(serial,1),SDCCHAR(serial,2),SDCCHAR(serial,3),SDCCHAR(serial,4),SDCCHAR(serial,5)
+        , SDCCHAR(serial,6),SDCCHAR(serial,7),SDCCHAR(serial,8),SDCCHAR(serial,9),SDCCHAR(serial,10),SDCCHAR(serial,11)
+    );
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* NEQ (Node-Element Qualifier) type table                           */
+/*-------------------------------------------------------------------*/
+static const char* NED_NEQ_type[] =
+{
+    "UNUSED", "NEQ", "GENEQ", "NED",
+};
+
+
+/*-------------------------------------------------------------------*/
+/* Format NED (Node-Element Descriptor)                              */
+/*-------------------------------------------------------------------*/
+const char* FormatNED( NED* ned, char* buf, size_t bufsz )
+{
+    size_t  n;
+    const char* typ;
+    char bad_typ[4];
+    char sdc_info[256];
+    static const char* sn_ind[] = { "NEXT", "UNIQUE", "NODE", "CODE3" };
+    static const char* ned_type[] = { "UNSPEC", "DEVICE", "CTLUNIT" };
+    static const char* dev_class[] =
+    {
+        "UNKNOWN",
+        "DASD",
+        "TAPE",
+        "READER",
+        "PUNCH",
+        "PRINTER",
+        "COMM",
+        "DISPLAY",
+        "CONSOLE",
+        "CTCA",
+        "SWITCH",
+        "PROTO",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ned)
+        return buf;
+
+    if (ned->type < _countof( ned_type ))
+        typ = ned_type[ ned->type ];
+    else
+    {
+        snprintf( bad_typ, sizeof(bad_typ)-1, "%u", ned->type );
+        bad_typ[3] = 0;
+        typ = bad_typ;
+    }
+
+
+    if (ned->type == NED_TYP_DEVICE)
+    {
+        const char* cls;
+        char bad_class[4];
+
+        if (ned->cls < _countof( dev_class ))
+            cls = dev_class[ ned->cls ];
+        else
+        {
+            snprintf( bad_class, sizeof(bad_class)-1, "%u", ned->cls );
+            bad_class[3] = 0;
+            cls = bad_class;
+        }
+
+        n = (size_t) snprintf( buf, bufsz-1,
+
+            "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02.2X%02.2X\n     %s"
+
+            , (ned->flags & 0x20) ? "*" : " "
+            , (ned->flags & 0x01) ? "(EMULATED) " : ""
+            , typ
+            , cls
+            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
+            , sn_ind[ (ned->flags >> 3) & 0x03 ]
+            , ned->tag[0], ned->tag[1]
+            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
+        );
+    }
+    else
+    {
+        n = (size_t) snprintf( buf, bufsz-1,
+
+            "NED:%s%styp:%s lvl:%s sn:%s tag:%02.2X%02.2X\n     %s"
+
+            , (ned->flags & 0x20) ? "*" : " "
+            , (ned->flags & 0x01) ? "(EMULATED) " : ""
+            , typ
+            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
+            , sn_ind[ (ned->flags >> 3) & 0x03 ]
+            , ned->tag[0], ned->tag[1]
+            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
+        );
+    }
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format NEQ (Node-Element Qualifier)                               */
+/*-------------------------------------------------------------------*/
+const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
+{
+    size_t  n;
+    BYTE* byte = (BYTE*) neq;
+    U16 iid;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !neq)
+        return buf;
+
+    iid = fetch_hw( &neq->iid );
+
+    n = (size_t) snprintf( buf, bufsz-1,
+
+        "NEQ: typ:%s IID:%02.2X%02.2X DDTO:%u\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+
+        , NED_NEQ_type[ neq->flags >> 6 ]
+        , (BYTE)(iid >> 8), (BYTE)(iid & 0xFF)
+        , neq->ddto
+        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
+        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
+        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
+        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
+    );
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format RCD (Read Configuration Data) response                     */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
+{
+    size_t  n;
+    char temp[256];
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !rcd)
+        return buf;
+
+    ASSERT( (len % sizeof(NED)) == 0 );
+
+    for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
+    {
+        switch (rcd[0] >> 6)
+        {
+        case FIELD_IS_NEQ:
+        case FIELD_IS_GENEQ:
+
+            FormatNEQ( (NEQ*)rcd, temp, sizeof(temp)-1);
+            break;
+
+        case FIELD_IS_NED:
+
+            FormatNED( (NED*)rcd, temp, sizeof(temp)-1);
+            break;
+
+        case FIELD_IS_UNUSED:
+
+            n = (size_t) snprintf( temp, sizeof(temp)-1, "n/a\n" );
+            if (n < sizeof(temp))
+                temp[n] = 0;
+            break;
+        }
+
+        strlcat( buf, temp, bufsz );
+    }
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format ND (Node Descriptor)                                       */
+/*-------------------------------------------------------------------*/
+const char* FormatND( ND* nd, char* buf, size_t bufsz )
+{
+    size_t  n;
+    const char* val;
+    const char* cls;
+    const char* by3;
+    const char* typ;
+    char bad_cls[4];
+    char sdc_info[256];
+    static const char* css_class[] = { "UNKNOWN", "CHPATH", "CTCA" };
+    static const char* val_type[] =
+    {
+        "VALID", "UNSURE", "INVALID", "3", "4", "5", "6", "7",
+    };
+    static const char* dev_class[] =
+    {
+        "UNKNOWN",
+        "DASD",
+        "TAPE",
+        "READER",
+        "PUNCH",
+        "PRINTER",
+        "COMM",
+        "DISPLAY",
+        "CONSOLE",
+        "CTCA",
+        "SWITCH",
+        "PROTO",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !nd)
+        return buf;
+
+    val = val_type[ nd->flags >> 5 ];
+
+    switch (nd->flags >> 5)
+    {
+    case ND_VAL_VALID:
+    case ND_VAL_UNSURE:
+
+        cls = NULL;
+        if (nd->flags & 0x01)
+        {
+            typ = "CSS";
+            by3 = "CHPID";
+            if (nd->cls < _countof( css_class ))
+                cls = css_class[ nd->cls ];
+        }
+        else
+        {
+            typ = "DEV";
+            by3 = (nd->cls == ND_DEV_PROTO) ? "LINK" : "BYTE3";
+            if (nd->cls < _countof( dev_class ))
+                cls = dev_class[ nd->cls ];
+        }
+        if (!cls)
+        {
+            snprintf( bad_cls, sizeof(bad_cls)-1, "%u", nd->cls );
+            bad_cls[3] = 0;
+            cls = bad_cls;
+        }
+        n = (size_t) snprintf( buf, bufsz-1,
+
+            "ND:  val:%s typ:%s cls:%s %s:%02.2X tag:%02.2X%02.2X\n     %s"
+
+            , val
+            , typ
+            , cls
+            , by3, nd->ua
+            , nd->tag[0], nd->tag[1]
+            , FormatSDC( &nd->info, sdc_info, sizeof(sdc_info))
+        );
+        break;
+
+    case ND_VAL_INVALID:
+
+        n = (size_t) snprintf( buf, bufsz-1, "ND:  val:INVALID\n" );
+        break;
+
+    default:
+
+        n = (size_t) snprintf( buf, bufsz-1, "ND:  val:%u (invalid)\n",
+            (int)(nd->flags >> 5) );
+        break;
+    }
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format NQ (Node Qualifier)                                        */
+/*-------------------------------------------------------------------*/
+const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
+{
+    size_t  n;
+    BYTE* byte = (BYTE*) nq;
+    static const char* type[] =
+    {
+        "IIL", "MODEP", "2", "3", "4", "5", "6", "7",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !nq)
+        return buf;
+
+    n = (size_t) snprintf( buf, bufsz-1,
+
+        "NQ:  %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X  (typ:%s)\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+
+        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
+        , type[ nq->flags >> 5 ]
+        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
+        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
+        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
+    );
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format RNI (Read Node Identifier) response                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
+{
+    ND* nd; NQ* nq;
+    char nd_buf[256];
+    char nq_buf[256];
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !rni)
+        return buf;
+
+    ASSERT( len == (sizeof(ND) + sizeof(NQ)) );
+
+    nd = (ND*) rni;
+    nq = (NQ*)(nd+1);
+
+    FormatND( nd, nd_buf, sizeof(nd_buf)-1);
+    strlcat( buf, nd_buf, bufsz );
+
+    FormatNQ( nq, nq_buf, sizeof(nq_buf)-1);
+    strlcat( buf, nq_buf, bufsz );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format CIW (Command Information Word)                             */
+/*-------------------------------------------------------------------*/
+const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
+{
+    size_t  n;
+    static const char* type[] =
+    {
+        "RCD", "SII", "RNI", "3  ", "4  ", "5  ", "6  ", "7  ",
+        "8  ", "9  ", "10 ", "11 ", "12 ", "13 ", "14 ", "15 ",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ciw)
+        return buf;
+
+    if ((ciw[0] & 0xC0) == 0x40)
+    {
+        n = (size_t) snprintf( buf, bufsz-1,
+
+            "CIW: %02.2X%02.2X%02.2X%02.2X  typ:%s op:%02.2X len:%u\n"
+
+            , ciw[0], ciw[1], ciw[2], ciw[3]
+            , type[ ciw[0] & 0x0F ]
+            , ciw[1]
+            , fetch_hw( ciw+2 )
+        );
+    }
+    else
+    {
+        n = (size_t) snprintf( buf, bufsz-1,
+
+            "CIW: %02.2X%02.2X%02.2X%02.2X  not a CIW\n"
+
+            , ciw[0]
+            , ciw[1]
+            , ciw[2]
+            , ciw[3]
+        );
+    }
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Format SID (Sense ID) response                                    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
+{
+    size_t  n;
+    char temp[128];
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ciw)
+        return buf;
+
+    ASSERT( (len % 4) == 0 );
+
+    n = (size_t) snprintf( buf, bufsz-1,
+
+        "%02.2X CU=%02.2X%02.2X-%02.2X DEV=%02.2X%02.2X-%02.2X %02.2X\n"
+
+        , ciw[0]
+        , ciw[1], ciw[2], ciw[3]
+        , ciw[4], ciw[5], ciw[6]
+        , ciw[7]
+    );
+
+    if (n < bufsz)
+        buf[n] = 0;
+
+    for (ciw += 8; len > 0; ciw += 4, len -= 4)
+    {
+        FormatCIW( ciw, temp, sizeof(temp)-1);
+        strlcat( buf, temp, bufsz );
+    }
+
+    return buf;
+}
 
 #endif /*!defined(_HSCMISC_C)*/
 

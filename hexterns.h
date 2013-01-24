@@ -63,6 +63,16 @@
 #define HCMD_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _HSCMISC_C_
+#ifndef _HENGINE_DLL_
+#define HMISC_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define HMISC_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define HMISC_DLL_IMPORT DLL_EXPORT
+#endif
+
 #ifndef _HSCEMODE_C_
 #ifndef _HENGINE_DLL_
 #define HCEM_DLL_IMPORT DLL_IMPORT
@@ -537,6 +547,9 @@ const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz );
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz );
 const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT const char* FormatRNI( BYTE* iobuf, int num, char* buf, size_t bufsz );
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (REGS *regs, int argc, char *argv[], char *cmdline);
 void alter_display_virt (REGS *regs, int argc, char *argv[], char *cmdline);

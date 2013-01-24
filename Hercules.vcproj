@@ -1423,6 +1423,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\esa390io.h"
+							>
+						</File>
+						<File
 							RelativePath=".\extstring.h"
 							>
 						</File>

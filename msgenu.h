@@ -1903,6 +1903,7 @@ do { \
 #define HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
 #define HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
 #define HHC03994 "%1d:%04X %s: Status %02X"
+#define HHC03995 "%1d:%04X %s: %s:\n%s"
 
 
 // reserve 04xxx for host os specific component messages

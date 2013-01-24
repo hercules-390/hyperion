@@ -7,6 +7,8 @@
 #if !defined(_QETH_H)
 #define _QETH_H
 
+#include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
+
 
 /* We need all frames from CTCI-W32 */
 #if defined( OPTION_W32_CTCI )
@@ -72,7 +74,7 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 /*-------------------------------------------------------------------*/
 /* OSA Node Element Descriptor                                       */
 /*-------------------------------------------------------------------*/
-typedef struct _NED {
+typedef struct _NODE {
 /*000*/ BYTE    code;
 #define NODE_UNUS       0x00
 #define NODE_SNEQ       0x40
@@ -115,7 +117,7 @@ typedef struct _NED {
         } seq;
 /*01E*/ BYTE    tag[2];
 // }; struct { BYTE zz[31]; }; };
-} NED;
+} NODE;
 
 #define _001730 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF0 }
 #define _001731 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF1 }
