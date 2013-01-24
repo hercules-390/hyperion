@@ -1534,7 +1534,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
     if (n < bufsz)
         buf[n] = 0;
 
-    for (ciw += 8; len > 0; ciw += 4, len -= 4)
+    for (ciw += 8, len -= 8; len > 0; ciw += 4, len -= 4)
     {
         FormatCIW( ciw, temp, sizeof(temp)-1);
         strlcat( buf, temp, bufsz );
