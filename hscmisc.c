@@ -1242,6 +1242,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 {
     size_t  n;
     char temp[256];
+    char* p;
 
     if (!buf)
         return NULL;
@@ -1277,6 +1278,11 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 
         strlcat( buf, temp, bufsz );
     }
+
+    // (remove trailing blanks, including trailing CRLF)
+    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
+        ; // (nop)
+    p[1] = 0;
 
     return buf;
 }
@@ -1430,6 +1436,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
     ND* nd; NQ* nq;
     char nd_buf[256];
     char nq_buf[256];
+    char* p; int n;
 
     if (!buf)
         return NULL;
@@ -1448,6 +1455,11 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
 
     FormatNQ( nq, nq_buf, sizeof(nq_buf)-1);
     strlcat( buf, nq_buf, bufsz );
+
+    // (remove trailing blanks, including trailing CRLF)
+    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
+        ; // (nop)
+    p[1] = 0;
 
     return buf;
 }
@@ -1511,6 +1523,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 {
     size_t  n;
     char temp[128];
+    char* p;
 
     if (!buf)
         return NULL;
@@ -1539,6 +1552,11 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
         FormatCIW( ciw, temp, sizeof(temp)-1);
         strlcat( buf, temp, bufsz );
     }
+
+    // (remove trailing blanks, including trailing CRLF)
+    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
+        ; // (nop)
+    p[1] = 0;
 
     return buf;
 }
