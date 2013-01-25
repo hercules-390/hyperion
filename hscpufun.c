@@ -378,7 +378,6 @@ size_t  maxb;
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
-char *strtok_str = NULL;
 
 #if defined(OPTION_IPLPARM)
 char save_loadparm[16];
@@ -469,7 +468,7 @@ int  rest_loadparm = FALSE;
     /* If the ipl device is not a valid hex number we assume */
     /* This is a load from the service processor             */
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
-        rc = load_hmc(strtok_r(cmdline+3+clear," \t", &strtok_str ), sysblk.pcpu, clear);
+        rc = load_hmc(argv[1], sysblk.pcpu, clear);
     else
     {
 #if defined(_FEATURE_SCSI_IPL)
