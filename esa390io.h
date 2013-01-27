@@ -187,7 +187,7 @@ ATTRIBUTE_PACKED; typedef struct NQ NQ;
 
 // Byte 0: bits 3-4: Serial-number indicator
 
-#define NED_SN_NEXT         0           /* Same as next non-zero     */
+#define NED_SN_NEXT         0           /* Use next non-0 indicator  */
 #define NED_SN_UNIQUE       1           /* Installation-unique       */
 #define NED_SN_NODE         2           /* Normal node element       */
 #define NED_SN_CODE3        3           /* (same meaning as code 2)  */
