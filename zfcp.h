@@ -4,7 +4,7 @@
 /* This implementation is based on the S/390 Linux implementation    */
 
 
-#if !defined(_ZFCP_H)
+#ifndef _ZFCP_H
 #define _ZFCP_H
 
 #include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
@@ -34,26 +34,44 @@
 
 
 /*-------------------------------------------------------------------*/
-/* ZFCP Node Element Descriptor                                      */
-/*-------------------------------------------------------------------*/
-#define _001740 { 0xF0,0xF0,0xF1,0xF7,0xF4,0xF0 }
-#define _001741 { 0xF0,0xF0,0xF1,0xF7,0xF4,0xF1 }
-#define _001742 { 0xF0,0xF0,0xF1,0xF7,0xF4,0xF2 }
-#define _90M    { 0xF9,0xF0,0xF0 }
-// #define _HRC    { 0xC8,0xD9,0xC3 }
-// #define _ZZ     { 0xE9,0xE9 }
-// #define _SERIAL { 0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,
-//                   0xF0,0xF0,0xF0,0xF0,0xF0,0xF0 }
-
-
-/*-------------------------------------------------------------------*/
 /* ZFCP CCW Assignments                                              */
 /*-------------------------------------------------------------------*/
-#define ZFCP_RCD                0xFA
-#define ZFCP_EQ                 0x1B
-#define ZFCP_AQ                 0x1F
-#define ZFCP_SII                0x81
-#define ZFCP_RNI                0x82
+#define ZFCP_RCD        0xFA            /* Read Configuration Data   */
+#define ZFCP_SII        0x81            /* Set Interface ID          */
+#define ZFCP_RNI        0x82            /* Read Node Identifier      */
+#define ZFCP_EQ         0x1B            /* Establish Queues          */
+#define ZFCP_AQ         0x1F            /* Activate Queues           */
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Configuration Data Constants                                  */
+/*-------------------------------------------------------------------*/
+
+#define  ZFCP_RCD_CIW           MAKE_CIW( CIW_TYP_RCD, ZFCP_RCD, sizeof(configuration_data) )
+#define  ZFCP_SII_CIW           MAKE_CIW( CIW_TYP_SII, ZFCP_SII, SII_SIZE )
+#define  ZFCP_RNI_CIW           MAKE_CIW( CIW_TYP_RNI, ZFCP_RNI, sizeof(node_data) )
+#define  ZFCP_EQ_CIW            MAKE_CIW( CIW_TYP_3,   ZFCP_EQ,  4096 )
+#define  ZFCP_AQ_CIW            MAKE_CIW( CIW_TYP_4,   ZFCP_AQ,  0 )
+
+#define  ZFCP_SNSID_1731_03     0x17, 0x31, 0x03    // 1731 model 3
+#define  ZFCP_SNSID_1732_03     0x17, 0x32, 0x03    // 1732 model 3
+
+#define  ZFCP_SDC_TYPE_1740     _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF4, 0xF0 )
+#define  ZFCP_SDC_TYPE_1741     _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF4, 0xF1 )
+#define  ZFCP_SDC_TYPE_1742     _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF4, 0xF2 )
+#define  ZFCP_SDC_MODEL_90M     _SDC_MOD( 0xF9, 0xF0, 0xF0 )
+
+#define  ZFCP_DEVICE_SDC        MAKE_SDC( ZFCP_SDC_TYPE_1742, ZFCP_SDC_MODEL_90M, MFR_HRC, PLANT_ZZ, SEQ_000000000001 )
+#define  ZFCP_CTLUNIT_SDC       MAKE_SDC( ZFCP_SDC_TYPE_1741, ZFCP_SDC_MODEL_90M, MFR_HRC, PLANT_ZZ, SEQ_000000000002 )
+#define  ZFCP_TOKEN_SDC         MAKE_SDC( ZFCP_SDC_TYPE_1740, ZFCP_SDC_MODEL_90M, MFR_HRC, PLANT_ZZ, SEQ_000000000003 )
+
+#define  ZFCP_DEVICE_NED        MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_DEVICE,  NED_DEV_DASD, NED_RELATED,   ZFCP_DEVICE_SDC,  TAG_00 )
+#define  ZFCP_CTLUNIT_NED       MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_CTLUNIT, NED_DEV_DASD, NED_UNRELATED, ZFCP_CTLUNIT_SDC, TAG_00 )
+#define  ZFCP_TOKEN_NED         MAKE_NED( FIELD_IS_NED, NED_TOKEN_NED,  NED_SN_NODE, NED_REAL, NED_TYP_UNSPEC,  NED_DEV_DASD, NED_UNRELATED, ZFCP_TOKEN_SDC,   TAG_00 )
+#define  ZFCP_GENERAL_NEQ       NULL_GENEQ
+
+#define  ZFCP_ND                MAKE_ND( ND_TYP_DEVICE, ND_DEV_COMM, ND_CHPID_FF, ZFCP_CTLUNIT_SDC, TAG_00 )
+#define  ZFCP_NQ                NULL_MODEP_NQ
 
 
 /*-------------------------------------------------------------------*/
@@ -75,7 +93,7 @@ typedef struct _ZFCP_GRP {
 
     int   reqpci;               /* PCI has been requested            */
 
-    U32   iid;                  /* Interface ID                      */
+    U32   iir;                  /* Interface ID record               */
 
     int   debug;                /* Adapter in IFF_DEBUG mode         */
 
@@ -119,4 +137,4 @@ typedef struct _ZFCP_HDR2 {
 #define RSP_BUFSZ       4096
 
 
-#endif /*!defined(_ZFCP_H)*/
+#endif /* _ZFCP_H */

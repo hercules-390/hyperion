@@ -108,95 +108,33 @@ int      GetMTU( char*, char*, int, int* );
 
 
 /*-------------------------------------------------------------------*/
-/* Constants                                                         */
+/* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
-static const NODE configuration_data[] = {
-    { /* .code       = */ NODE_NED + NODE_SNIND,
-      /* .type       = */ NODE_TIODV,
-      /* .class      = */ NODE_CCOMM,
-      /* (.ua)       = */ 0,
-      /* .devtype    = */ _001732,
-      /* .model      = */ _001,
-      /* .manufact   = */ _HRC,
-      /* .plant      = */ _ZZ,
-      /* .seq.code   = */ _SERIAL,
-      /* (.tag)      = */ 0,0 },
+static const NED  osa_device_ned[]  = OSA_DEVICE_NED;
+static const NED  osa_ctlunit_ned[] = OSA_CTLUNIT_NED;
+static const NED  osa_token_ned[]   = OSA_TOKEN_NED;
+static const NEQ  osa_general_neq[] = OSA_GENERAL_NEQ;
 
-    { /* .code       = */ NODE_NED + NODE_SNIND,
-      /* .type       = */ NODE_TCU,
-      /* (.class)    = */ 0,
-      /* (.ua)       = */ 0,
-      /* .devtype    = */ _001731,
-      /* .model      = */ _001,
-      /* .manufact   = */ _HRC,
-      /* .plant      = */ _ZZ,
-      /* .seq.code   = */ _SERIAL,
-      /* (.tag)      = */ 0,0 },
+static NED configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
 
-    { /* .code       = */ NODE_NED + NODE_TOKEN + NODE_SNIND,
-      /* (.type)     = */ 0,
-      /* .class      = */ NODE_CCOMM,
-      /* (.ua)       = */ 0,
-      /* .devtype    = */ _001730,
-      /* .model      = */ _004,
-      /* .manufact   = */ _HRC,
-      /* .plant      = */ _ZZ,
-      /* .seq.code   = */ _SERIAL,
-      /* (.tag)      = */ 0,0 },
+static const ND  osa_nd[] = OSA_ND;
+static const NQ  osa_nq[] = OSA_NQ;
 
-    { /* .code       = */ NODE_GNEQ,
-      /* (.type)     = */ 0,
-      /* (.class)    = */ 0,
-      /* (.ua)       = */ 0,
-      /* (.devtype)  = */ 0,0,0,0,0,0,
-      /* (.model)    = */ 0,0,0,
-      /* (.manufact) = */ 0,0,0,
-      /* (.plant)    = */ 0,0,
-      /* (.seq.code) = */ 0,0,0,0,0,0,0,0,0,0,0,0,
-      /* (.tag)      = */ 0,0 },
-};
+static ND node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
 
+#define SII_SIZE    sizeof(U32)
 
-static const NODE node_data[] = {
-    { /* .code       = */ NODE_NED,
-      /* (.type)     = */ 0,
-      /* .class      = */ NODE_CCOMM,
-      /* (.ua)       = */ 0,
-      /* .devtype    = */ _001730,
-      /* .model      = */ _004,
-      /* .manufact   = */ _HRC,
-      /* .plant      = */ _ZZ,
-      /* .seq.code   = */ _SERIAL,
-      /* (.tag)      = */ 0,0 },
-
-    { /* .code       = */ NODE_GNEQ,
-      /* (.type)     = */ 0,
-      /* (.class)    = */ 0,
-      /* (.ua)       = */ 0,
-      /* (.devtype)  = */ 0,0,0,0,0,0,
-      /* (.model)    = */ 0,0,0,
-      /* (.manufact) = */ 0,0,0,
-      /* (.plant)    = */ 0,0,
-      /* (.seq.code) = */ 0,0,0,0,0,0,0,0,0,0,0,0,
-      /* (.tag)      = */ 0,0 },
-};
-
-      /* .seq.code   = *   _SERIAL, */
-
-#define SII_SIZE 4
-
-static const BYTE sense_id_bytes[] = {
-    0xFF,
-    0x17, 0x31, 0x01,                   // Control Unit Type
-    0x17, 0x32, 0x01,                   // Device Type
-    0x00,
-    0x40, OSA_RCD,0x00,                 // Read Configuration Data CIW
-                        sizeof(configuration_data),
-    0x41, OSA_SII,0x00, SII_SIZE,       // Set Interface Identifier CIW
-    0x42, OSA_RNI,0x00,                 // Read Node Identifier CIW
-                        sizeof(node_data),
-    0x43, OSA_EQ, 0x10, 0x00,           // Establish Queues CIW
-    0x44, OSA_AQ, 0x00, 0x00            // Activate Queues CIW
+static const BYTE sense_id_bytes[] =
+{
+    0xFF,                               /* Always 0xFF               */
+    OSA_SNSID_1731_01,                  /* Control Unit type/model   */
+    OSA_SNSID_1732_01,                  /* I/O Device   type/model   */
+    0x00,                               /* Always 0x00               */
+    OSA_RCD_CIW,                        /* Read Config. Data CIW     */
+    OSA_SII_CIW,                        /* Set Interface Id. CIW     */
+    OSA_RNI_CIW,                        /* Read Node Identifier CIW  */
+    OSA_EQ_CIW,                         /* Establish Queues CIW      */
+    OSA_AQ_CIW                          /* Activate Queues CIW       */
 };
 
 
@@ -239,8 +177,6 @@ static BYTE qeth_immed_commands [256] =
 
 
 #if defined(QETH_DEBUG)
-//  void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, int iLen, BYTE bDir )
-//        mpc_display_stuff( dev, "???", iobuf, length, FROM_GUEST );
 static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
 {
 int i;
@@ -1417,13 +1353,12 @@ int i;
 
     if(!dev->group)
     {
+        dev->numsense = 32;
+        memset (dev->sense, 0, sizeof(dev->sense));
         dev->numdevid = sizeof(sense_id_bytes);
         memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
-
         dev->devtype = dev->devid[1] << 8 | dev->devid[2];
-
         dev->chptype[0] = CHP_TYPE_OSD;
-
         dev->pmcw.flag4 |= PMCW4_Q;
 
         if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
@@ -1618,24 +1553,44 @@ static void qeth_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
 char qdiostat[80] = {0};
+char incomplete[16] = {0};
+char status[sizeof(qdiostat)] = {0};
+char active[8] = {0};
+OSA_GRP *grp;
 
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, devclass, buflen, buffer );
 
+    grp = (OSA_GRP*)dev->group->grp_data;
+
     if (dev->group->acount == OSA_GROUP_SIZE)
     {
-        OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-        snprintf( qdiostat, sizeof(qdiostat), "%s%stx[%u] rx[%u] "
-            , grp->ttifname[0] ? grp->ttifname : ""
-            , grp->ttifname[0] ? " "         : ""
+        char ttifname[IFNAMSIZ+2];
+
+        strlcpy( ttifname, grp->ttifname, sizeof(ttifname));
+        if (ttifname[0])
+            strlcat( ttifname, " ", sizeof(ttifname));
+
+        snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u] "
+            , ttifname
             , dev->qdio.txcnt
             , dev->qdio.rxcnt
         );
     }
 
-    snprintf( buffer, buflen, "QDIO %s%s%sIO[%" I64_FMT "u]"
-        , (dev->group->acount == OSA_GROUP_SIZE) ? "" : "*Incomplete "
-        , (dev->scsw.flag2 & SCSW2_Q) ? qdiostat : ""
-        , (dev->qdio.idxstate == MPC_IDX_STATE_INACTIVE) ? "" : "IDX "
+    if (dev->group->acount != OSA_GROUP_SIZE)
+        strlcpy( incomplete, "*Incomplete ", sizeof( incomplete ));
+
+    if (dev->scsw.flag2 & SCSW2_Q)
+        strlcpy( status, qdiostat, sizeof( status ));
+
+    if (dev->qdio.idxstate != MPC_IDX_STATE_INACTIVE)
+        strlcpy( active, "IDX ", sizeof( active ));
+
+    snprintf( buffer, buflen, "QDIO %s%s%s%sIO[%" I64_FMT "u]"
+        , incomplete
+        , status
+        , active
+        , grp ? (grp->debug ? "debug " : "") : ""
         , dev->excps
     );
 
@@ -1800,9 +1755,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int num;                                /* Number of bytes to move   */
 
     UNREFERENCED(flags);
-    UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
-    UNREFERENCED(chained);
 
     /* Clear the output */
     *more = 0;
@@ -1991,7 +1944,49 @@ int num;                                /* Number of bytes to move   */
         break;
 
 
-    case 0x14: // SENSE COMMAND BYTE - BASIC MODE
+    case 0x14:
+    /*---------------------------------------------------------------*/
+    /* SENSE COMMAND BYTE                                            */
+    /*---------------------------------------------------------------*/
+    {
+        // PROGRAMMING NOTE: I'm still not sure about this. The
+        // Sense Command Byte command is known to be a 3088 CTCA
+        // command, so I suspect we should never be seeing this
+        // command because we don't support CTCA emulation mode.
+
+        // I suspect the reason we're currently seeing it MAY be
+        // because we still don't have something right and z/OS
+        // is thus getting confused into thinking the OSA device
+        // is currently configured to emulate a 3088 CTCA device.
+
+        // However, since rejecting it causes z/OS to go into a
+        // disabled wait, we are going to temporarily treat it
+        // as a valid command until we can positively determine
+        // whether or not it is a bona fide valid OSA command.
+#if 0
+        /* We currently do not support emulated 3088 CTCA mode */
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+#else
+        /* The Sense Command Byte command returns a single byte
+           being the CCW opcode from the other end of the CTCA */
+        static const int len = 1;               /* cmd length */
+        static const BYTE opcode = 0x03;        /* CCW opcode */
+
+        /* Calculate residual byte count */
+        num = (count < len) ? count : len;
+        *residual = count - num;
+        if (count < len) *more = 1;
+
+        /* Copy the CTCA command byte to channel I/O buffer */
+        *iobuf = opcode;
+
+        /* Return normal i/o completion status */
+        *unitstat = CSW_CE | CSW_DE;
+#endif
+        break;
+    }
+
     case 0x04:
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */
@@ -2045,28 +2040,35 @@ int num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        NODE *rcd = (NODE*)iobuf;
+        int len = sizeof(configuration_data);
+        NED *dev_ned = (NED*)iobuf;     /* Device NED is first       */
+        NED *ctl_ned = dev_ned + 1;     /* Control Unit NED is next  */
+        NED *tkn_ned = ctl_ned + 1;     /* Token NED is last NED     */
+        NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
+        DEVBLK *cua;                    /* Our Control Unit device   */
 
         /* Copy configuration data from tempate */
-        memcpy (iobuf, configuration_data, sizeof(configuration_data));
+        memcpy (iobuf, configuration_data, len);
 
-        /* Insert chpid & unit address in the device ned */
-        STORE_HW((rcd+0)->tag,dev->devnum);
+        /* The first device in the group is the control unit */
+        cua = dev->group->memdev[0];
 
-        /* Use unit address of first OSA device as control unit address */
-        STORE_HW((rcd+1)->tag,dev->group->memdev[0]->devnum);
+        /* Insert the Channel Path ID (CHPID) into all of the NEDs */
+        dev_ned->tag[0] = dev->pmcw.chpid[0];
+        ctl_ned->tag[0] = cua->pmcw.chpid[0];
+        tkn_ned->tag[0] = cua->pmcw.chpid[0];
 
-        /* Use unit address of first OSA device as control unit address */
-        STORE_HW((rcd+2)->tag,dev->group->memdev[0]->devnum);
+        /* Insert the device's device number into its device NED. */
+        dev_ned->tag[1] = dev->devnum & 0xFF;
 
-        /* Use unit address of first OSA device as control unit address */
-        (rcd+3)->class = (dev->group->memdev[0]->devnum >> 8) & 0xFF;
-        (rcd+3)->ua = dev->group->memdev[0]->devnum & 0xFF;
+        /* Insert the control unit address into the General NEQ */
+        gen_neq->iid[0] = cua->pmcw.chpid[0];
+        gen_neq->iid[1] = cua->devnum & 0xFF;
 
         /* Calculate residual byte count */
-        num = (count < sizeof(configuration_data) ? count : sizeof(configuration_data));
+        num = (count < len ? count : len);
         *residual = count - num;
-        if (count < sizeof(configuration_data)) *more = 1;
+        if (count < len) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2088,7 +2090,23 @@ int num;                                /* Number of bytes to move   */
     /* SET INTERFACE IDENTIFIER                                      */
     /*---------------------------------------------------------------*/
     {
-        FETCH_FW(grp->iid,iobuf);
+        U32 iir;                    /* Work area to validate IIR     */
+        FETCH_FW(iir,iobuf);        /* Fetch IIR into work area      */
+
+        /* Command Reject if the Interface ID Record is invalid.
+           Note: we only support one interface with an ID of 0. */
+        if ((iir & 0xFFFCFFFF) != 0xB0000000 ||
+            (iir & 0x00030000) == 0x00030000)
+        {
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Save the requested Interface ID for later unless it's
+           not chained (to a presumably following RNI command) */
+        if (chained)
+            grp->iir = iir;
 
         /* Calculate residual byte count */
         num = (count < SII_SIZE) ? count : SII_SIZE;
@@ -2113,22 +2131,46 @@ int num;                                /* Number of bytes to move   */
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
     {
-        NODE *rni = (NODE*)iobuf;
+        int len = sizeof(node_data);
+        ND *nd = (ND*)iobuf;            /* Node Descriptor pointer   */
+        DEVBLK *cua;                    /* Our Control Unit device   */
+
+        /* Command Reject if not chained from Set Interface ID */
+        if (!chained || prevcode != OSA_SII)
+        {
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* The first device in the group is the control unit */
+        cua = dev->group->memdev[0];
+
+        /* If the Node Selector was zero an ND and one or more
+           NQs are returned. Otherwise just the ND is returned. */
+        if ((grp->iir & 0x00030000) != 0)
+            len = sizeof(ND);
 
         /* Copy configuration data from tempate */
-        memcpy (iobuf, node_data, sizeof(node_data));
+        memcpy (iobuf, node_data, len);
 
-        /* Insert chpid & unit address in the device ned */
-        STORE_HW((rni+0)->tag,dev->devnum);
+        /* Insert the CHPID of the node into the Node Descriptor ND */
+        nd->tag[0] = dev->pmcw.chpid[0];
 
-        /* Use unit address of first OSA device as control unit address */
-        (rni+1)->class = (dev->group->memdev[0]->devnum >> 8) & 0xFF;
-        (rni+1)->ua = dev->group->memdev[0]->devnum & 0xFF;
+        /* Update the Node Qualifier information if they want it */
+        if (len > sizeof(ND))
+        {
+            NQ *nq = (NQ*)nd + 1;       /* Point to Node Qualifier */
+
+            /* Insert the CULA CHPID and device number into the NQ */
+            nq->rsrvd[1] = cua->pmcw.chpid[0];
+            nq->rsrvd[2] = cua->devnum & 0xFF;
+        }
 
         /* Calculate residual byte count */
-        num = (count < sizeof(node_data) ? count : sizeof(node_data));
+        num = (count < len ? count : len);
         *residual = count - num;
-        if (count < sizeof(node_data)) *more = 1;
+        if (count < len) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3429,9 +3471,17 @@ DEVHND qeth_device_hndinfo =
 
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY( HERCULES );
-     HDL_DEPENDENCY( DEVBLK );
-     HDL_DEPENDENCY( SYSBLK );
+    HDL_DEPENDENCY( HERCULES );
+    HDL_DEPENDENCY( DEVBLK );
+    HDL_DEPENDENCY( SYSBLK );
+
+    memcpy( (NED*)&configuration_data[0], &osa_device_ned [0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[1], &osa_ctlunit_ned[0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[2], &osa_token_ned  [0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[3], &osa_general_neq[0], sizeof( NEQ ));
+
+    memcpy( (ND*)&node_data[0], &osa_nd[0], sizeof( ND ));
+    memcpy( (ND*)&node_data[1], &osa_nq[0], sizeof( NQ ));
 }
 END_DEPENDENCY_SECTION
 

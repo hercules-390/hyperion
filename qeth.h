@@ -4,7 +4,7 @@
 /* This implementation is based on the S/390 Linux implementation    */
 
 
-#if !defined(_QETH_H)
+#ifndef _QETH_H
 #define _QETH_H
 
 #include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
@@ -41,8 +41,6 @@
 /* Maximum number of supported Queues (Read or Write)                */
 /*-------------------------------------------------------------------*/
 #define QDIO_MAXQ               32
-
-
 #define OSA_MAXMAC              32
 
 
@@ -72,74 +70,49 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 
 
 /*-------------------------------------------------------------------*/
-/* OSA Node Element Descriptor                                       */
-/*-------------------------------------------------------------------*/
-typedef struct _NODE {
-/*000*/ BYTE    code;
-#define NODE_UNUS       0x00
-#define NODE_SNEQ       0x40
-#define NODE_GNEQ       0x80
-#define NODE_NED        0xC0
-#define NODE_TOKEN      0x20
-#define NODE_SNIND      0x10
-#define NODE_SUBSN      0x08
-#define NODE_RECON      0x04
-#define NODE_EMULA      0x02
-//  union { struct {
-/*001*/ BYTE    type;
-#define NODE_TUNSP      0
-#define NODE_TIODV      1
-#define NODE_TCU        2
-/*002*/ BYTE    class;
-#define NODE_CUNSP      0
-#define NODE_CDASD      1
-#define NODE_CTAPE      2
-#define NODE_CURIN      3
-#define NODE_CUROT      4
-#define NODE_CPRT       5
-#define NODE_CCOMM      6
-#define NODE_CFST       7
-#define NODE_CLMT       8
-#define NODE_CCTCA      9
-#define NODE_CSWIT     10
-#define NODE_CCTRL     11
-/*003*/ BYTE    ua;
-/*004*/ BYTE    devtype[6];
-/*00A*/ BYTE    model[3];
-/*00D*/ BYTE    manufact[3];
-/*010*/ BYTE    plant[2];
-        union   {
-/*012*/   BYTE    code[12];
-          struct  {
-/*012*/     BYTE    serial[4];
-/*016*/     BYTE    sequence[8];
-          };
-        } seq;
-/*01E*/ BYTE    tag[2];
-// }; struct { BYTE zz[31]; }; };
-} NODE;
-
-#define _001730 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF0 }
-#define _001731 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF1 }
-#define _001732 { 0xF0,0xF0,0xF1,0xF7,0xF3,0xF2 }
-#define _001    { 0xF0,0xF0,0xF1 }
-#define _004    { 0xF0,0xF0,0xF4 }
-#define _HRC    { 0xC8,0xD9,0xC3 }
-#define _ZZ     { 0xE9,0xE9 }
-#define _SERIAL { 0xF0,0xF0,0xF0,0xF0,0xF0,0xF0, \
-                  0xF0,0xF0,0xF0,0xF0,0xF0,0xF0 }
-
-
-/*-------------------------------------------------------------------*/
 /* OSA CCW Assignments                                               */
 /*-------------------------------------------------------------------*/
-#define OSA_RCD                 0xFA
-#define OSA_EQ                  0x1B
-#define OSA_AQ                  0x1F
-#define OSA_SII                 0x81
-#define OSA_RNI                 0x82
+#define OSA_RCD         0xFA            /* Read Configuration Data   */
+#define OSA_SII         0x81            /* Set Interface ID          */
+#define OSA_RNI         0x82            /* Read Node Identifier      */
+#define OSA_EQ          0x1B            /* Establish Queues          */
+#define OSA_AQ          0x1F            /* Activate Queues           */
+  
+  
+/*-------------------------------------------------------------------*/
+/* OSA Configuration Data Constants                                  */
+/*-------------------------------------------------------------------*/
+#define  OSA_RCD_CIW            MAKE_CIW( CIW_TYP_RCD, OSA_RCD, sizeof(configuration_data) )
+#define  OSA_SII_CIW            MAKE_CIW( CIW_TYP_SII, OSA_SII, SII_SIZE )
+#define  OSA_RNI_CIW            MAKE_CIW( CIW_TYP_RNI, OSA_RNI, sizeof(node_data) )
+#define  OSA_EQ_CIW             MAKE_CIW( CIW_TYP_3,   OSA_EQ,  4096 )
+#define  OSA_AQ_CIW             MAKE_CIW( CIW_TYP_4,   OSA_AQ,  0 )
+
+#define  OSA_SNSID_1730_01      0x17, 0x30, 0x01    // 1730 model 1
+#define  OSA_SNSID_1731_01      0x17, 0x31, 0x01    // 1731 model 1
+#define  OSA_SNSID_1732_01      0x17, 0x32, 0x01    // 1732 model 1
+
+#define  OSA_SDC_TYPE_1730      _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF3, 0xF0 )
+#define  OSA_SDC_TYPE_1731      _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF3, 0xF1 )
+#define  OSA_SDC_TYPE_1732      _SDC_TYP( 0xF0, 0xF0, 0xF1, 0xF7, 0xF3, 0xF2 )
+#define  OSA_SDC_TYPE_9676      _SDC_TYP( 0xF0, 0xF0, 0xF9, 0xF6, 0xF7, 0xF6 )
+
+#define  OSA_DEVICE_SDC         MAKE_SDC( OSA_SDC_TYPE_1732, MODEL_001, MFR_HRC, PLANT_ZZ, SEQ_000000000000 )
+#define  OSA_CTLUNIT_SDC        MAKE_SDC( OSA_SDC_TYPE_1731, MODEL_001, MFR_HRC, PLANT_ZZ, SEQ_000000000000 )
+#define  OSA_TOKEN_SDC          MAKE_SDC( OSA_SDC_TYPE_1732, MODEL_001, MFR_HRC, PLANT_ZZ, SEQ_000000000000 )
+
+#define  OSA_DEVICE_NED         MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_DEVICE,  NED_DEV_COMM, NED_RELATED,   OSA_DEVICE_SDC,  TAG_00 )
+#define  OSA_CTLUNIT_NED        MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_CTLUNIT, NED_DEV_COMM, NED_UNRELATED, OSA_CTLUNIT_SDC, TAG_00 )
+#define  OSA_TOKEN_NED          MAKE_NED( FIELD_IS_NED, NED_TOKEN_NED,  NED_SN_NODE, NED_REAL, NED_TYP_DEVICE,  NED_DEV_COMM, NED_UNRELATED, OSA_TOKEN_SDC,   TAG_00 )
+#define  OSA_GENERAL_NEQ        NULL_GENEQ
+
+#define  OSA_ND                 MAKE_ND( ND_TYP_DEVICE, ND_DEV_COMM, ND_CHPID_FF, OSA_CTLUNIT_SDC, TAG_00 )
+#define  OSA_NQ                 NULL_MODEP_NQ
 
 
+/*-------------------------------------------------------------------*/
+/* OSA MAC structure                                                 */
+/*-------------------------------------------------------------------*/
 typedef struct _OSA_MAC {
         BYTE    addr[6];
         int     type;
@@ -184,7 +157,7 @@ typedef struct _OSA_GRP {
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
 
-    U32   iid;                  /* Interface ID                      */
+    U32   iir;                  /* Interface ID record               */
 
     int   debug;                /* Adapter in IFF_DEBUG mode         */
 
@@ -249,4 +222,4 @@ typedef struct _OSA_HDR2 {
 #define RSP_BUFSZ       4096
 
 
-#endif /*!defined(_QETH_H)*/
+#endif /*_QETH_H*/
