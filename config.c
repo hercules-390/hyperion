@@ -442,43 +442,51 @@ int  cpu;
 }
 
 #if defined(OPTION_FAST_DEVLOOKUP)
+
 /* 4 next functions used for fast device lookup cache management */
-static void AddDevnumFastLookup(DEVBLK *dev,U16 lcss,U16 devnum)
+
+static void AddDevnumFastLookup( DEVBLK *dev, U16 lcss, U16 devnum )
 {
     unsigned int Channel;
-    if(sysblk.devnum_fl==NULL)
-    {
-        sysblk.devnum_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        memset(sysblk.devnum_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-    }
-    Channel=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
-    if(sysblk.devnum_fl[Channel]==NULL)
-    {
-        sysblk.devnum_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        memset(sysblk.devnum_fl[Channel], 0, sizeof(DEVBLK *)*256);
-    }
-    sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
+
+    BYTE bAlreadyHadLock = try_obtain_lock( &sysblk.config );
+
+    if (sysblk.devnum_fl == NULL)
+        sysblk.devnum_fl = (DEVBLK***)
+            calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
+
+    Channel = (devnum >> 8) | ((lcss & (FEATURE_LCSS_MAX-1)) << 8);
+
+    if (sysblk.devnum_fl[Channel] == NULL)
+        sysblk.devnum_fl[Channel] = (DEVBLK**)
+            calloc( 256, sizeof( DEVBLK* ));
+
+    sysblk.devnum_fl[Channel][devnum & 0xff] = dev;
+
+    if (!bAlreadyHadLock)
+        release_lock( &sysblk.config );
 }
 
-
-static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
+static void AddSubchanFastLookup( DEVBLK *dev, U16 ssid, U16 subchan )
 {
     unsigned int schw;
-#if 0
-    logmsg(_("DEBUG : ASFL Adding %d\n"),subchan);
-#endif
-    if(sysblk.subchan_fl==NULL)
-    {
-        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-        memset(sysblk.subchan_fl, 0, sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
-    }
-    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid)<<8);
-    if(sysblk.subchan_fl[schw]==NULL)
-    {
-        sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        memset(sysblk.subchan_fl[schw], 0,sizeof(DEVBLK *)*256);
-    }
-    sysblk.subchan_fl[schw][subchan & 0xff]=dev;
+
+    BYTE bAlreadyHadLock = try_obtain_lock( &sysblk.config );
+
+    if (sysblk.subchan_fl == NULL)
+        sysblk.subchan_fl = (DEVBLK***)
+            calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
+
+    schw = (subchan >> 8) | (SSID_TO_LCSS( ssid ) << 8);
+
+    if (sysblk.subchan_fl[schw] == NULL)
+        sysblk.subchan_fl[schw] = (DEVBLK**)
+            calloc( 256, sizeof( DEVBLK* ));
+
+    sysblk.subchan_fl[schw][subchan & 0xff] = dev;
+
+    if (!bAlreadyHadLock)
+        release_lock( &sysblk.config );
 }
 
 
