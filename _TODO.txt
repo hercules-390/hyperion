@@ -10,6 +10,14 @@
 
 -------------------------------------------------------------------------------
 
+  modify fthread to maintain the thread's name in its FTHREAD list of
+  threads and provide a function to return a copy of that information
+  (linked list of thread ids and thread names), and then modify the
+  minidump BuildUserStreams function in bootstrap.c to save that info
+  so we can know which threads are which when we analyze a crash dump.
+
+-------------------------------------------------------------------------------
+
   Per Mark Gaubatz, we need a new dasd util to fix CE/SA alt cyl issue
   for existing dasds created using the old dasdinit.
 
