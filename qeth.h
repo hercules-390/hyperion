@@ -43,6 +43,9 @@
 #define QDIO_MAXQ               32
 #define OSA_MAXMAC              32
 
+#define QETH_QDIO_READQ          1    /* Number of read queues       */
+#define QETH_QDIO_WRITEQ         4    /* Number of write queues      */
+
 
 /*-------------------------------------------------------------------*/
 /* Convert Subchannel Token to IO ID (LCSS & SSID)                   */
@@ -77,8 +80,8 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 #define OSA_RNI         0x82            /* Read Node Identifier      */
 #define OSA_EQ          0x1B            /* Establish Queues          */
 #define OSA_AQ          0x1F            /* Activate Queues           */
-  
-  
+
+
 /*-------------------------------------------------------------------*/
 /* OSA Configuration Data Constants                                  */
 /*-------------------------------------------------------------------*/

@@ -1713,11 +1713,6 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 
     if(dev->pmcw.flag4 & PMCW4_Q)
     {
-#if 0
-rsp24->pcnt = 0x10;
-rsp24->icnt = 0x01;
-rsp24->ocnt = 0x20;
-#endif
         rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
         rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
@@ -1736,11 +1731,11 @@ rsp24->ocnt = 0x20;
             rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
-#if 1 // ZZTEST
-          rsp24->icnt = QDIO_MAXQ;
-          rsp24->ocnt = QDIO_MAXQ;
-          rsp24->mbccnt = 0x04;
-#endif
+        rsp24->icnt = QETH_QDIO_READQ;
+        rsp24->ocnt = QETH_QDIO_WRITEQ;
+
+        rsp24->qdioac1 |= AC1_UNKNOWN80;
+        STORE_HW(rsp24->qdioac2, QETH_AC2_UNKNOWN4000+QETH_AC2_UNKNOWN2000);
     }
 
     return 0;
@@ -2161,7 +2156,7 @@ int num;                                /* Number of bytes to move   */
         nd->tag[0] = dev->pmcw.chpid[0];
 
         /* Update the Node Qualifier information if they want it */
-        if (len > sizeof(ND))
+        if (len > (int)sizeof(ND))
         {
             NQ *nq = (NQ*)nd + 1;       /* Point to Node Qualifier */
 
