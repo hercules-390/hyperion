@@ -1537,8 +1537,11 @@ int i;
     }
 
     if(grouped) {
+        DEVBLK *cua = dev->group->memdev[0];
+        U16 destlink = 0x000D; // ZZ FIXME: where should this come from?
         for(i = 0; i < OSA_GROUP_SIZE; i++) {
-            dev->group->memdev[i]->fla[0] = dev->group->memdev[i]->devnum;
+            dev->group->memdev[i]->fla[0] =
+                (destlink << 8) | (cua->devnum & 0x00FF);
         }
     }
 
