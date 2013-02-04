@@ -900,7 +900,8 @@ U16 reqtype;
     case IDX_ACT_TYPE_READ:
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),
+                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -922,7 +923,8 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),(iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),
+                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -937,7 +939,8 @@ U16 reqtype;
         break;
 
     default:
-        DBGTRC(dev, _("QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n"),reqtype,dev->devnum);
+        DBGTRC(dev, _("QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n"),
+            reqtype,dev->devnum);
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
         // Free the buffer.
@@ -1952,41 +1955,9 @@ int num;                                /* Number of bytes to move   */
     /* SENSE COMMAND BYTE                                            */
     /*---------------------------------------------------------------*/
     {
-        // PROGRAMMING NOTE: I'm still not sure about this. The
-        // Sense Command Byte command is known to be a 3088 CTCA
-        // command, so I suspect we should never be seeing this
-        // command because we don't support CTCA emulation mode.
-
-        // I suspect the reason we're currently seeing it MAY be
-        // because we still don't have something right and z/OS
-        // is thus getting confused into thinking the OSA device
-        // is currently configured to emulate a 3088 CTCA device.
-
-        // However, since rejecting it causes z/OS to go into a
-        // disabled wait, we are going to temporarily treat it
-        // as a valid command until we can positively determine
-        // whether or not it is a bona fide valid OSA command.
-#if 0
         /* We currently do not support emulated 3088 CTCA mode */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-#else
-        /* The Sense Command Byte command returns a single byte
-           being the CCW opcode from the other end of the CTCA */
-        static const int len = 1;               /* cmd length */
-        static const BYTE opcode = 0x03;        /* CCW opcode */
-
-        /* Calculate residual byte count */
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if (count < len) *more = 1;
-
-        /* Copy the CTCA command byte to channel I/O buffer */
-        *iobuf = opcode;
-
-        /* Return normal i/o completion status */
-        *unitstat = CSW_CE | CSW_DE;
-#endif
         break;
     }
 
@@ -2093,6 +2064,22 @@ int num;                                /* Number of bytes to move   */
     /* SET INTERFACE IDENTIFIER                                      */
     /*---------------------------------------------------------------*/
     {
+        // ZZ FIXME: PROGRAMMING NOTE: z/VM appears to always reject
+        // this command so for the time being so will we. Since we're
+        // not 100% sure about this however (we may later determine
+        // that we actually need it), we shall simply disable it via
+        // temporary #if statements. Once we know for certain we can
+        // then remove the #ifs and keep the only code we need.
+
+#if 1   // ZZ FIXME: should we be doing this?
+
+        /* z/VM 5.3 always rejects this command so we will too */
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        break;
+
+#else   // ZZ FIXME: or should we be doing this instead?
+
         U32 iir;                    /* Work area to validate IIR     */
         FETCH_FW(iir,iobuf);        /* Fetch IIR into work area      */
 
@@ -2126,6 +2113,8 @@ int num;                                /* Number of bytes to move   */
 //!     }
 
         break;
+
+#endif // ZZ FIXME
     }
 
 
