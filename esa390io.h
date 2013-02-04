@@ -207,7 +207,7 @@ ATTRIBUTE_PACKED; typedef struct NQ NQ;
 
 // Byte 2: Device class (if byte 1 = device)
 
-#define NED_DEV_UNKNOWN     0           /* Unspecified class         */
+#define NED_DEV_UNSPEC      0           /* Unspecified class         */
 #define NED_DEV_DASD        1           /* DASD class                */
 #define NED_DEV_TAPE        2           /* Magnetic tape class       */
 #define NED_DEV_READER      3           /* Unit record input         */
@@ -301,6 +301,7 @@ ATTRIBUTE_PACKED; typedef struct NEQ NEQ;
 #define  MODEL_002          _SDC_MOD( 0xF0, 0xF0, 0xF2 )
 #define  MODEL_003          _SDC_MOD( 0xF0, 0xF0, 0xF3 )
 #define  MODEL_004          _SDC_MOD( 0xF0, 0xF0, 0xF4 )
+#define  MODEL_005          _SDC_MOD( 0xF0, 0xF0, 0xF5 )
 
 #define  MFR_HRC            _SDC_MFR( 0xC8, 0xD9, 0xC3 )
 #define  PLANT_ZZ           _SDC_PLT( 0xE9, 0xE9 )
