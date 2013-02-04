@@ -453,7 +453,7 @@ typedef struct _MPC_IEA {
 #define IDX_ACT_FLEVEL_READ     0x0000
 #define IDX_ACT_FLEVEL_WRITE    0xFFFF
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
-/*016*/ BYTE    dataset[8];     /* Portname                          */
+/*016*/ BYTE    dataset[8];     /* Name                              */
 /*01E*/ HWORD   datadev;        /* Data Device Number                */
 /*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
 /*021*/ BYTE    ddua;           /* Data Device Unit Address          */
@@ -478,7 +478,7 @@ typedef struct _MPC_IEAR {
 #define IDX_RSP_RESP_OK         0x02
 /*009*/ BYTE    cause;          /* Negative response cause code      */
 #define IDX_RSP_CAUSE_INUSE     0x19
-/*00A*/ BYTE    resv010;        /*                                   */
+/*00A*/ BYTE    resv00A;        /*                                   */
 /*00B*/ BYTE    flags;          /* Flags                             */
 #define IDX_RSP_FLAGS_NOPORTREQ 0x80
 /*00C*/ FWORD   token;          /* Issues rm_r token                 */

@@ -51,7 +51,8 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp);
 
     memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
 
-    chsc_rsp12->flags |= CHSC_RSP12_F1_CV;
+    chsc_rsp12->unknow00A = 0x01;
+    chsc_rsp12->pnum = 1;
 
     /* Store response length */
     STORE_HW(chsc_rsp12->length,rsp_len);
