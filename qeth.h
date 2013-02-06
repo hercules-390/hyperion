@@ -38,14 +38,22 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Maximum number of supported Queues (Read or Write)                */
+/* Maximum number of supported Queues (Read or Write), and           */
+/* the actual number of supported Queues (Read and Write)            */
 /*-------------------------------------------------------------------*/
 #define QDIO_MAXQ               32
-#define OSA_MAXMAC              32
-
 #define QETH_QDIO_READQ          1    /* Number of read queues       */
 #define QETH_QDIO_WRITEQ         4    /* Number of write queues      */
 
+
+/*-------------------------------------------------------------------*/
+/* Miscellaneous                                                     */
+/*-------------------------------------------------------------------*/
+#define OSA_MAXMAC              32
+
+#define ODTOKEN 0xD8C5E3C8      /* OSA device token (QETH edcdic)    */
+
+#define UCLEVEL 0xC8D9C3F1      /* Microcode level (HRC1 edcdic)     */
 
 /*-------------------------------------------------------------------*/
 /* Convert Subchannel Token to IO ID (LCSS & SSID)                   */
@@ -169,8 +177,6 @@ typedef struct _OSA_GRP {
     BYTE  gtcmconn[4];          /* Guest token cm connection         */
     BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
     BYTE  gtulpconn[4];         /* Guest token ulp connection        */
-
-#define ODTOKEN 0x9885a388      /* OSA device token (qeth lc edcdic) */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */

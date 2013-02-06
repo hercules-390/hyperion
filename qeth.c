@@ -886,12 +886,18 @@ OSA_BHR *rsp_bhr;
 MPC_IEAR *iear;
 U16 reqtype;
 
-    /* Allocate a buffer in which the IEAR will be built. */
-    rsp_bhr = alloc_buffer( dev, sizeof(MPC_IEAR)+10 );
+    /* Allocate a buffer to which the IEA will be copied */
+    /* and then modified, to become the IEAR.            */
+    rsp_bhr = alloc_buffer( dev, sizeof(MPC_IEA)+10 );
     if (!rsp_bhr)
         return;
     rsp_bhr->datalen = sizeof(MPC_IEAR);
+
+    /* Point to response IEAR. */
     iear = (MPC_IEAR*)((BYTE*)rsp_bhr + SizeBHR);
+
+    /* Copy request to response buffer. */
+    memcpy(iear, iea, sizeof(MPC_IEA));
 
     FETCH_HW(reqtype, iea->type);
 
@@ -906,10 +912,12 @@ U16 reqtype;
         }
         else
         {
-            iear->resp = IDX_RSP_RESP_OK;
-            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
-            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+            iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
+            iear->resp |= IDX_RSP_RESP_OK;
+            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + 0x40);
             STORE_FW(iear->token, ODTOKEN);
+            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+            STORE_FW(iear->uclevel, UCLEVEL);
 
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
@@ -929,10 +937,12 @@ U16 reqtype;
         }
         else
         {
-            iear->resp = IDX_RSP_RESP_OK;
-            iear->flags = IDX_RSP_FLAGS_NOPORTREQ;
-            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+            iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
+            iear->resp |= IDX_RSP_RESP_OK;
+            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + 0x40);
             STORE_FW(iear->token, ODTOKEN);
+            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+            STORE_FW(iear->uclevel, UCLEVEL);
 
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
