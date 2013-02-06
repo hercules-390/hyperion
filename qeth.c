@@ -879,7 +879,7 @@ U16 offph;
 /*-------------------------------------------------------------------*/
 /* Device Command Routine                                            */
 /*-------------------------------------------------------------------*/
-static void osa_device_cmd(DEVBLK *dev, MPC_IEA *iea)
+static void osa_device_cmd(DEVBLK *dev, MPC_IEA *iea, int ieasize)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 OSA_BHR *rsp_bhr;
@@ -888,16 +888,16 @@ U16 reqtype;
 
     /* Allocate a buffer to which the IEA will be copied */
     /* and then modified, to become the IEAR.            */
-    rsp_bhr = alloc_buffer( dev, sizeof(MPC_IEA)+10 );
+    rsp_bhr = alloc_buffer( dev, ieasize+10 );
     if (!rsp_bhr)
         return;
-    rsp_bhr->datalen = sizeof(MPC_IEAR);
+    rsp_bhr->datalen = ieasize;
 
     /* Point to response IEAR. */
     iear = (MPC_IEAR*)((BYTE*)rsp_bhr + SizeBHR);
 
     /* Copy request to response buffer. */
-    memcpy(iear, iea, sizeof(MPC_IEA));
+    memcpy(iear, iea, ieasize);
 
     FETCH_HW(reqtype, iea->type);
 
@@ -914,7 +914,7 @@ U16 reqtype;
         {
             iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
             iear->resp |= IDX_RSP_RESP_OK;
-            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + 0x40);
+            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, ODTOKEN);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, UCLEVEL);
@@ -939,7 +939,7 @@ U16 reqtype;
         {
             iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
             iear->resp |= IDX_RSP_RESP_OK;
-            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + 0x40);
+            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, ODTOKEN);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, UCLEVEL);
@@ -1800,11 +1800,12 @@ int num;                                /* Number of bytes to move   */
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
     {
+    int      datalen, length;
     U32      first4;
-    int      length;
 
         /* Get the first 4-bytes of the data. */
         FETCH_FW( first4, iobuf );
+        length = datalen = count;
 
         /* */
         if (first4 == MPC_TH_FIRST4)
@@ -1824,19 +1825,17 @@ int num;                                /* Number of bytes to move   */
             if( grp->debug )
             {
                 mpc_display_description( dev, "Request" );
-                mpc_display_osa_iea( dev, (MPC_IEA*)iobuf, FROM_GUEST );
+                mpc_display_osa_iea( dev, (MPC_IEA*)iobuf, FROM_GUEST, datalen );
             }
             /* Process the IEA. */
-            osa_device_cmd(dev,(MPC_IEA*)iobuf);
+            osa_device_cmd(dev,(MPC_IEA*)iobuf,datalen);
         }
         else
         {
             /* Display the unrecognised data. */
             mpc_display_description( dev, "Unrecognised Request" );
-            if (count >= 256)
+            if (length >= 256)
                 length = 256;
-            else
-                length = count;
             mpc_display_stuff( dev, "???", iobuf, length, FROM_GUEST );
         }
 
@@ -1856,7 +1855,7 @@ int num;                                /* Number of bytes to move   */
     {
     OSA_BHR *bhr;
     BYTE    *iodata;
-    int      datalen;
+    int      datalen, length;
     U32      first4;
 
         /* */
@@ -1870,7 +1869,21 @@ int num;                                /* Number of bytes to move   */
 
                 /* Point to the data and get its length. */
                 iodata = (BYTE*)bhr + SizeBHR;
-                datalen = bhr->datalen;
+                length = datalen = bhr->datalen;
+
+                /* Set the residual length and normal status. */
+                if (count >= datalen)
+                {
+                    *more     = 0;
+                    *residual = count - datalen;
+                }
+                else
+                {
+                    datalen   = count;
+                    *more     = 1;
+                    *residual = 0;
+                }
+                *unitstat = CSW_CE | CSW_DE;
 
                 /* Get the first 4-bytes of the data. */
                 FETCH_FW( first4, iodata );
@@ -1890,29 +1903,23 @@ int num;                                /* Number of bytes to move   */
                         mpc_display_osa_th_etc( dev, (MPC_TH*)iodata, TO_GUEST, 0 );
                     }
                 }
-                else  /* must be an IEAR */
+                else if (first4 == MPC_IEA_FIRST4)
                 {
                     /* Display the IEAR, maybe. */
                     if( grp->debug )
                     {
                         mpc_display_description( dev, "Response" );
-                        mpc_display_osa_iear( dev, (MPC_IEAR*)iodata, TO_GUEST );
+                        mpc_display_osa_iear( dev, (MPC_IEAR*)iodata, TO_GUEST, datalen );
                     }
-                }
-
-                /* Set the residual length and normal status. */
-                if (count >= datalen)
-                {
-                    *more     = 0;
-                    *residual = count - datalen;
                 }
                 else
                 {
-                    datalen   = count;
-                    *more     = 1;
-                    *residual = 0;
+                    /* Display the unrecognised data. */
+                    mpc_display_description( dev, "Unrecognised Response" );
+                    if (length >= 256)
+                        length = 256;
+                    mpc_display_stuff( dev, "???", iodata, length, TO_GUEST );
                 }
-                *unitstat = CSW_CE | CSW_DE;
 
                 /* Copy the data to be read. */
                 memcpy( iobuf, iodata, datalen );

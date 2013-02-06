@@ -431,24 +431,36 @@ typedef struct _MPC_IEA {
 /*002*/ HWORD   ddc;            /* Device Directed Command           */
 #define IDX_ACT_DDC     0x8000
 /*004*/ FWORD   thsn;           /* Transport Header Sequence Number  */
+/* The following 2-bytes are almost certainly not a half word.
+   The first byte is probably 2 or more bit fields. If there are
+   2 bit fields, the first field is 6-bits long, the second field
+   is 2-bits long. If there are 3 (or more!) bit fields, things
+   are less certain. The last 2 bits (bits  6-7) are a field,
+   and the preceeding 2 bits (bits 4-5) are probably a field,
+   10 indicating read and 01 indicating write. What the first
+   4 bits (bits 0-3, only seen 0001) signify is unknown. What
+   the second byte (only seen 0x01) signifies is also unknown.       */
 /*008*/ HWORD   type;           /* IDX_ACT type (read or write)      */
 #define IDX_ACT_TYPE_READ       0x1901
 #define IDX_ACT_TYPE_WRITE      0x1501
 /*00A*/ BYTE    datapath;       /* Number of data paths              */
 /*00B*/ BYTE    port;           /* Port number (bit 0 set)           */
-#define IDX_ACT_PORT_MASK       0x3F
 #define IDX_ACT_PORT_ACTIVATE   0x80
 #define IDX_ACT_PORT_STANDBY    0x40
+#define IDX_ACT_PORT_MASK       0x3F
 /*00C*/ FWORD   token;          /* Issuer token                      */
 /*010*/ HWORD   flevel;         /* Function level                    */
 #define IDX_ACT_FLEVEL_READ     0x0000
 #define IDX_ACT_FLEVEL_WRITE    0xFFFF
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
 /*016*/ BYTE    dataset[8];     /* Name                              */
-/*01E*/ HWORD   datadev;        /* Data Device Number                */
-/*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
-/*021*/ BYTE    ddua;           /* Data Device Unit Address          */
-/*022*/ } MPC_IEA;
+/* The following 4-bytes are repeated for each data path */
+/*01E*/ struct {
+/*01E*/     HWORD   ddev;       /* Data Device Number                */
+/*020*/     BYTE    ddcua;      /* Data Device Control Unit Address  */
+/*021*/     BYTE    ddua;       /* Data Device Unit Address          */
+/*022*/   } data;
+/*var*/ } MPC_IEA;
 #define MPC_IEA_FIRST4 0x00008000  /*                                */
 
 
@@ -469,18 +481,22 @@ typedef struct _MPC_IEAR {
 #define IDX_RSP_RESP_OK         0x02
 /*009*/ BYTE    cause;          /* Negative response cause code      */
 #define IDX_RSP_CAUSE_INUSE     0x19
-/*00A*/ BYTE    resv00A;        /*                                   */
+/*00A*/ BYTE    datapath;       /* Number of data paths              */
 /*00B*/ BYTE    flags;          /* Flags                             */
 #define IDX_RSP_FLAGS_NOPORTREQ 0x80
-/*00C*/ FWORD   token;          /* Issues rm_r token                 */
-/*010*/ HWORD   flevel;         /* Funtion level                     */
+#define IDX_RSP_FLAGS_40        0x40  /* Significance unknown */
+/*00C*/ FWORD   token;          /* QETHs Issuer token                */
+/*010*/ HWORD   flevel;         /* Function level                    */
 #define IDX_RSP_FLEVEL_0201     0x0201
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
 /*016*/ BYTE    dataset[8];     /* Name                              */
-/*01E*/ HWORD   datadev;        /* Data Device Number                */
-/*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
-/*021*/ BYTE    ddua;           /* Data Device Unit Address          */
-/*022*/ } MPC_IEAR;
+/* The following 4-bytes are repeated for each data path */
+/*01E*/ struct {
+/*01E*/     HWORD   ddev;       /* Data Device Number                */
+/*020*/     BYTE    ddcua;      /* Data Device Control Unit Address  */
+/*021*/     BYTE    ddua;       /* Data Device Unit Address          */
+/*022*/   } data;
+/*var*/ } MPC_IEAR;
 
 
 /*-------------------------------------------------------------------*/
@@ -508,7 +524,7 @@ typedef struct _MPC_IPA {
 #define IPA_PROTO_IPV6  0x0006
 /*00C*/ FWORD   ipas;           /* Supported IP Assist mask          */
 /*010*/ FWORD   ipae;           /* Enabled IP Assist mask            */
-    } MPC_IPA;
+/*014*/ } MPC_IPA;
 
 
 #define IPA_ARP_PROCESSING      0x00000001L  /*  *  *                */
@@ -912,8 +928,8 @@ MPC_DLL_IMPORT void  mpc_display_rrh_and_pix( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, 
 MPC_DLL_IMPORT void  mpc_display_rrh_and_ipa( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir );
 MPC_DLL_IMPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
 MPC_DLL_IMPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH, BYTE bDir, int iLimit );
-MPC_DLL_IMPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir );
-MPC_DLL_IMPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir );
+MPC_DLL_IMPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir, int iSize );
+MPC_DLL_IMPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir, int iSize );
 MPC_DLL_IMPORT void  mpc_display_osa_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
 MPC_DLL_IMPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, BYTE bDir, int iLimit );
 

@@ -527,11 +527,11 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
 /*--------------------------------------------------------------------*/
 /* mpc_display_osa_iea():                                             */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir )
+DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE bDir, int iSize )
 {
 
     /* Display MPC_IEA. */
-    mpc_display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, sizeof(MPC_IEA), bDir );
+    mpc_display_stuff( pDEVBLK, "IEA", (BYTE*)pMPC_IEA, iSize, bDir );
 
     return;
 }   /* End function  mpc_display_osa_iea() */
@@ -539,11 +539,11 @@ DLL_EXPORT void  mpc_display_osa_iea( DEVBLK* pDEVBLK, MPC_IEA* pMPC_IEA, BYTE b
 /*--------------------------------------------------------------------*/
 /* mpc_display_osa_iear():                                            */
 /*--------------------------------------------------------------------*/
-DLL_EXPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir )
+DLL_EXPORT void  mpc_display_osa_iear( DEVBLK* pDEVBLK, MPC_IEAR* pMPC_IEAR, BYTE bDir, int iSize )
 {
 
     /* Display MPC_IEAR. */
-    mpc_display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, sizeof(MPC_IEAR), bDir );
+    mpc_display_stuff( pDEVBLK, "IEAR", (BYTE*)pMPC_IEAR, iSize, bDir );
 
     return;
 }   /* End function  mpc_display_osa_iear() */
