@@ -424,26 +424,17 @@ typedef struct _MPC_PUS MPC_PUS, *PMPC_PUS;
 /*===================================================================*/
 
 /*-------------------------------------------------------------------*/
-/* Header for MPC command frames                                     */
+/* Identification Exchange Activate                                  */
 /*-------------------------------------------------------------------*/
-typedef struct _MPC_HDR {
+typedef struct _MPC_IEA {
 /*000*/ HWORD   resv000;        /*                                   */
 /*002*/ HWORD   ddc;            /* Device Directed Command           */
 #define IDX_ACT_DDC     0x8000
 /*004*/ FWORD   thsn;           /* Transport Header Sequence Number  */
-    } MPC_HDR;
-
-
-/*-------------------------------------------------------------------*/
-/* Identification Exchange Activate                                  */
-/*-------------------------------------------------------------------*/
-typedef struct _MPC_IEA {
-/*000*/ MPC_HDR hdr;
 /*008*/ HWORD   type;           /* IDX_ACT type (read or write)      */
 #define IDX_ACT_TYPE_READ       0x1901
 #define IDX_ACT_TYPE_WRITE      0x1501
-/*00A*/ BYTE    resv00a;        /*                                   */
-#define IDX_ACT_RESV00A  0x01
+/*00A*/ BYTE    datapath;       /* Number of data paths              */
 /*00B*/ BYTE    port;           /* Port number (bit 0 set)           */
 #define IDX_ACT_PORT_MASK       0x3F
 #define IDX_ACT_PORT_ACTIVATE   0x80
@@ -457,7 +448,7 @@ typedef struct _MPC_IEA {
 /*01E*/ HWORD   datadev;        /* Data Device Number                */
 /*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
 /*021*/ BYTE    ddua;           /* Data Device Unit Address          */
-    } MPC_IEA;
+/*022*/ } MPC_IEA;
 #define MPC_IEA_FIRST4 0x00008000  /*                                */
 
 
@@ -466,10 +457,10 @@ typedef struct _MPC_IEA {
 /*-------------------------------------------------------------------*/
 typedef struct _MPC_IEAR {
 /*000*/ HWORD   resv000;        /*                                   */
-/*002*/ BYTE    cmd;            /* Response code                     */
-#define IDX_RSP_CMD_MASK        0xC0
-#define IDX_RSP_CMD_TERM        0xC0 /* IDX_TERMINATE received       */
-/*003*/ BYTE    resv003;        /*                                   */
+/*002*/ HWORD   ddc;            /* Device Directed Command           */
+#define IDX_RSP_DDC             0x8000
+#define IDX_RSP_CMD_MASK        0xC000
+#define IDX_RSP_CMD_TERM        0xC000 /* IDX_TERMINATE received     */
 /*004*/ BYTE    reason;         /* Reason code                       */
 #define IDX_RSP_REASON_INVPORT  0x22
 /*005*/ BYTE    resv005[3];     /*                                   */
@@ -485,7 +476,11 @@ typedef struct _MPC_IEAR {
 /*010*/ HWORD   flevel;         /* Funtion level                     */
 #define IDX_RSP_FLEVEL_0201     0x0201
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
-    } MPC_IEAR;
+/*016*/ BYTE    dataset[8];     /* Name                              */
+/*01E*/ HWORD   datadev;        /* Data Device Number                */
+/*020*/ BYTE    ddcua;          /* Data Device Control Unit Address  */
+/*021*/ BYTE    ddua;           /* Data Device Unit Address          */
+/*022*/ } MPC_IEAR;
 
 
 /*-------------------------------------------------------------------*/
