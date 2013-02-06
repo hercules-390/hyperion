@@ -203,8 +203,8 @@ static void do_shutdown_wait()
 void do_shutdown()
 {
 TID tid;
-    if ( sysblk.shutimmed ) 
-        do_shutdown_now();                   
+    if ( sysblk.shutimmed )
+        do_shutdown_now();
     else
     {
         if(is_wait_sigq_pending())
@@ -304,16 +304,16 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
 int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen, char *hdr)
 {
     int len=0;
-    
+
     /* Display the general purpose registers */
-    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F)) 
+    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F))
         || (opcode == 0xB3 && (
                 (inst[1] >= 0x80 && inst[1] <= 0xCF)
                 || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
            )))
     {
         len += display_regs (regs, buf + len, buflen - len - 1, hdr);
-        if (sysblk.showregsfirst) 
+        if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
@@ -321,7 +321,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
         len += display_cregs (regs, buf + len, buflen - len - 1, hdr);
-        if (sysblk.showregsfirst) 
+        if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
@@ -329,7 +329,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
         len += display_aregs (regs, buf + len, buflen - len - 1, hdr);
-        if (sysblk.showregsfirst) 
+        if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
@@ -344,7 +344,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
        )
     {
         len += display_fregs (regs, buf + len, buflen - len - 1, hdr);
-        if (sysblk.showregsfirst) 
+        if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
     return(len);
@@ -427,7 +427,7 @@ int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
     int i;
     U32 ars[16];
-    
+
     for(i=0;i<16;i++)
     {
         ars[i]=regs->AR(i);
@@ -442,7 +442,7 @@ int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
 /*-------------------------------------------------------------------*/
 int display_fregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
-char cpustr[32] = "";               
+char cpustr[32] = "";
 
     if(sysblk.cpus>1)
         MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
@@ -488,7 +488,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
-    
+
     MSGBUF(devstr, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
@@ -501,7 +501,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
                 dev->csw[4], dev->csw[5], dev->csw[6], dev->csw[7]);
 
         u.status = (U8)dev->csw[4];
-        len+=snprintf(buf+len,buflen-len-1,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n", 
+        len+=snprintf(buf+len,buflen-len-1,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n",
             hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
@@ -514,7 +514,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
             u.b.b7 ? "UE " : "");
 
         u.status = (U8)dev->csw[5];
-        len+=snprintf(buf+len,buflen-len-1,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n", 
+        len+=snprintf(buf+len,buflen-len-1,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n",
             hdr,
             u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
@@ -526,8 +526,8 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
             u.b.b6 ? "ICC " : "",
             u.b.b7 ? "CC " : "");
 
-    } 
-    else 
+    }
+    else
     {
         len+=snprintf(buf+len,buflen-len-1,
                 "%s Subchannel Number[%04X]\n"
@@ -539,8 +539,8 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
                 "%s   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
                 "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
                 "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
-                devstr, dev->subchan, 
-                hdr, 
+                devstr, dev->subchan,
+                hdr,
                 hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                 dev->pmcw.intparm[2], dev->pmcw.intparm[3],
                 hdr, dev->pmcw.flag4, dev->pmcw.flag5,
@@ -569,7 +569,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 
         u.status = (U8)dev->scsw.unitstat;
         len+=snprintf(buf+len,buflen-len-1,
-            "%s    Device Status     %s%s%s%s%s%s%s%s%s\n", 
+            "%s    Device Status     %s%s%s%s%s%s%s%s%s\n",
             hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "Attention " : "",
             u.b.b1 ? "SM " : "",
@@ -579,10 +579,10 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
             u.b.b5 ? "DE " : "",
             u.b.b6 ? "UC " : "",
             u.b.b7 ? "UE " : "");
-        
+
         u.status = (U8)dev->scsw.chanstat;
         len+=snprintf(buf+len,buflen-len-1,
-            "%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n", 
+            "%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n",
             hdr, u.status == 0 ? "is Normal" : "",
             u.b.b0 ? "PCI " : "",
             u.b.b1 ? "IL " : "",
@@ -843,7 +843,7 @@ static const BYTE  numerc  =  _countof( erctab );
         if (n < bufsz)
             *(buf + n) = 0;             // (null terminate)
 
-        if (n > 0 && 
+        if (n > 0 &&
             *(buf + n - 1) == ',')      // (remove trailing comma)
             *(buf + n - 1) = 0;         // (remove trailing comma)
     }
@@ -1055,10 +1055,19 @@ size_t  n;
 /*-------------------------------------------------------------------*/
 /* Format SDC (Self Describing Component) information                */
 /*-------------------------------------------------------------------*/
+
+static BYTE
+sdcchar(BYTE c)
+{
+    /* This  suberfuge  resolved a compiler bug that leads to a slew */
+    /* of warnings about c possibly being undefined.                 */
+    c = guest_to_host( c );
+    return isgraph(c) ? c : '?';
+}
+
 const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
 {
-    size_t  n;
-    BYTE c;
+    size_t n;
 
     if (!buf)
         return NULL;
@@ -1067,8 +1076,7 @@ const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
     if (bufsz <= 1 || !sdc)
         return buf;
 
-#define SDCCHAR( fld, n ) \
-    isgraph((c = guest_to_host( sdc->fld[n] ))) ? c : '?'
+    #define SDCCHAR(fld, n) sdcchar(sdc->fld[n])
 
     n = (size_t) snprintf( buf, bufsz-1,
 
@@ -1158,7 +1166,7 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
 
         n = (size_t) snprintf( buf, bufsz-1,
 
-            "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02.2X%02.2X\n     %s"
+            "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
 
             , (ned->flags & 0x20) ? "*" : " "
             , (ned->flags & 0x01) ? "(EMULATED) " : ""
@@ -1174,7 +1182,7 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
     {
         n = (size_t) snprintf( buf, bufsz-1,
 
-            "NED:%s%styp:%s lvl:%s sn:%s tag:%02.2X%02.2X\n     %s"
+            "NED:%s%styp:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
 
             , (ned->flags & 0x20) ? "*" : " "
             , (ned->flags & 0x01) ? "(EMULATED) " : ""
@@ -1213,11 +1221,11 @@ const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
 
     n = (size_t) snprintf( buf, bufsz-1,
 
-        "NEQ: typ:%s IID:%02.2X%02.2X DDTO:%u\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "NEQ: typ:%s IID:%02X%02X DDTO:%u\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
 
         , NED_NEQ_type[ neq->flags >> 6 ]
         , (BYTE)(iid >> 8), (BYTE)(iid & 0xFF)
@@ -1358,7 +1366,7 @@ const char* FormatND( ND* nd, char* buf, size_t bufsz )
         }
         n = (size_t) snprintf( buf, bufsz-1,
 
-            "ND:  val:%s typ:%s cls:%s %s:%02.2X tag:%02.2X%02.2X\n     %s"
+            "ND:  val:%s typ:%s cls:%s %s:%02X tag:%02X%02X\n     %s"
 
             , val
             , typ
@@ -1409,10 +1417,10 @@ const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
 
     n = (size_t) snprintf( buf, bufsz-1,
 
-        "NQ:  %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X  (typ:%s)\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
-        "     %02.2X%02.2X%02.2X%02.2X %02.2X%02.2X%02.2X%02.2X\n"
+        "NQ:  %02X%02X%02X%02X %02X%02X%02X%02X  (typ:%s)\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
 
         , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
         , type[ nq->flags >> 5 ]
@@ -1488,7 +1496,7 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
     {
         n = (size_t) snprintf( buf, bufsz-1,
 
-            "CIW: %02.2X%02.2X%02.2X%02.2X  typ:%s op:%02.2X len:%u\n"
+            "CIW: %02X%02X%02X%02X  typ:%s op:%02X len:%u\n"
 
             , ciw[0], ciw[1], ciw[2], ciw[3]
             , type[ ciw[0] & 0x0F ]
@@ -1500,7 +1508,7 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
     {
         n = (size_t) snprintf( buf, bufsz-1,
 
-            "CIW: %02.2X%02.2X%02.2X%02.2X  not a CIW\n"
+            "CIW: %02X%02X%02X%02X  not a CIW\n"
 
             , ciw[0]
             , ciw[1]
@@ -1536,7 +1544,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 
     n = (size_t) snprintf( buf, bufsz-1,
 
-        "%02.2X CU=%02.2X%02.2X-%02.2X DEV=%02.2X%02.2X-%02.2X %02.2X\n"
+        "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
 
         , ciw[0]
         , ciw[1], ciw[2], ciw[3]
@@ -1675,7 +1683,7 @@ RADR    raddr;                          /* Real address              */
 int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 
-    n = snprintf (buf, bufl-1, "%s%c:"F_VADR":", hdr, 
+    n = snprintf (buf, bufl-1, "%s%c:"F_VADR":", hdr,
                  ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
     *xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
@@ -2038,12 +2046,12 @@ REGS   *regs;                           /* Copied regs               */
 
     if ( sysblk.cpus > 1 )
         n += snprintf (buf + n, sizeof(buf)-n-1, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
-    n += snprintf (buf + n, sizeof(buf)-n-1, 
+    n += snprintf (buf + n, sizeof(buf)-n-1,
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
-    n += snprintf (buf + n, sizeof(buf)-n-1, 
+    n += snprintf (buf + n, sizeof(buf)-n-1,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
@@ -2175,7 +2183,7 @@ REGS   *regs;                           /* Copied regs               */
         || opcode == 0xC6)
     {
         S64 offset = 2LL*(S32)(fetch_fw(inst+2));
-        addr1 = (likely(!regs->execflag)) ? 
+        addr1 = (likely(!regs->execflag)) ?
                         PSW_IA(regs, offset) : \
                         (regs->ET + offset) & ADDRESS_MAXWRAP(regs);
         b1 = 0;
@@ -2189,7 +2197,7 @@ REGS   *regs;                           /* Copied regs               */
                                                 ACCTYPE_READ, "", &xcode);
         else
             ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), b1,
-                                (opcode == 0x44 
+                                (opcode == 0x44
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f))
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
@@ -2203,7 +2211,7 @@ REGS   *regs;                           /* Copied regs               */
 
         if ( sysblk.cpus > 1 )
         {
-            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ", 
+            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
         }
         n += snprintf(buf+n, sizeof(buf)-n-1, "%s\n", buf2);
@@ -2228,10 +2236,10 @@ REGS   *regs;                           /* Copied regs               */
         if ( !(sysblk.emsg & EMSG_TEXT) )
             n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
 #endif
-        
+
         if ( sysblk.cpus > 1 )
         {
-            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ", 
+            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
         }
         n += snprintf(buf + n, sizeof(buf)-n-1, "%s\n", buf2);
