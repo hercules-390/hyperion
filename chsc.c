@@ -42,7 +42,7 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp);
 
     rsp_len = sizeof(CHSC_RSP12);
 
-    if (rsp_len > (0x1000 - req_len)) {
+    if (rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         STORE_HW( chsc_rsp->length, sizeof(CHSC_RSP));
         STORE_HW( chsc_rsp->rsp, CHSC_REQ_ERRREQ);
         STORE_FW( chsc_rsp->info, 0);
@@ -87,7 +87,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
 
     if(l_sch < f_sch
-      || rsp_len > (0x1000 - req_len)) {
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
         /* Store request error */
@@ -153,7 +153,7 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
 
     if(l_sch < f_sch
-      || rsp_len > (0x1000 - req_len)) {
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
         /* Store request error */
@@ -222,7 +222,7 @@ U16 req_len, rsp_len;
 
     rsp_len = sizeof(CHSC_RSP10);
 
-    if(rsp_len > (0x1000 - req_len)) {
+    if(rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
         /* Store request error */
@@ -322,7 +322,7 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
 
     if(l_sch < f_sch
-      || rsp_len > (0x1000 - req_len)) {
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
         /* Store request error */
@@ -368,7 +368,7 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
     /* Calculate response length */
     rsp_len = sizeof(CHSC_RSP);
 
-    if (rsp_len > (0x1000 - req_len)) {
+    if (rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         STORE_HW( chsc_rsp->length, sizeof(CHSC_RSP));
         STORE_HW( chsc_rsp->rsp, CHSC_REQ_ERRREQ);
         STORE_FW( chsc_rsp->info, 0);
@@ -454,7 +454,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
 
     if(chsc_req2->first_chpid > chsc_req2->last_chpid
-      || rsp_len > (0x1000 - req_len)) {
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
 // ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2)) {
         /* Set response field length */
         STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
@@ -557,7 +557,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     chsc_rsp = (CHSC_RSP*)((BYTE*)chsc_req + req_len);
 
     if((req_len < sizeof(CHSC_REQ))
-      || (req_len > (0x1000 - sizeof(CHSC_RSP))))
+      || (req_len > (CHSC_REQRSP_SIZE - sizeof(CHSC_RSP))))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     FETCH_HW(req,chsc_req->req);

@@ -94,6 +94,14 @@ typedef struct _CHSC_RSP {
 
 
 /*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: as far as we know the maximum size of a CHSC    */
+/* instruction's request + response buffer can never exceed 0x1000   */
+/* and the response buffer immediately follows the request itself.   */
+/*-------------------------------------------------------------------*/
+#define CHSC_REQRSP_SIZE    0x1000      /* Max reqest + response len */
+
+
+/*-------------------------------------------------------------------*/
 /* Store Channel Path Description request and responses.             */
 /*-------------------------------------------------------------------*/
 typedef struct _CHSC_REQ2 {             /* Store Channel Path Description */
