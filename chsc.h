@@ -415,9 +415,9 @@ typedef struct CHSC_REQ24 {             /* Store Subchann. QDIO Data */
 /*004*/ HWORD   ssidfmt;
 #define CHSC_REQ24_SSID         0x0030
 #define CHSC_REQ24_FMT          0x000f
-/*006*/ HWORD   first_sch;              /* First subchannel number   */
+/*006*/ HWORD   f_sch;                  /* First subchannel number   */
 /*008*/ HWORD   resv1;
-/*00A*/ HWORD   last_sch;               /* Last subchannel number    */
+/*00A*/ HWORD   l_sch;                  /* Last subchannel number    */
 /*00C*/ FWORD   resv2;
 /*010*/ } ATTRIBUTE_PACKED;
 

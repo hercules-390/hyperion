@@ -310,8 +310,8 @@ U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
 CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
 CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
 
-    FETCH_HW(f_sch,chsc_req24->first_sch);
-    FETCH_HW(l_sch,chsc_req24->last_sch);
+    FETCH_HW(f_sch,chsc_req24->f_sch);
+    FETCH_HW(l_sch,chsc_req24->l_sch);
     FETCH_HW(lcss,chsc_req24->ssidfmt);
     lcss &= CHSC_REQ24_SSID;
     lcss >>= 4;
