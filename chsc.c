@@ -42,29 +42,15 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
 
-    if (rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        STORE_HW( chsc_rsp->length, sizeof(CHSC_RSP));
-        STORE_HW( chsc_rsp->rsp, CHSC_REQ_ERRREQ);
-        STORE_FW( chsc_rsp->info, 0);
-        return 0;
-    }
+    if (rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
 
     chsc_rsp12->unknow00A = 0x01;
     chsc_rsp12->pnum = 1;
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
-
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
@@ -87,15 +73,8 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
 
     if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        /* Set response field length */
-        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-        /* Store request error */
-        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-        /* No reaon code */
-        STORE_FW(chsc_rsp->info,0);
-        return 0;
-    }
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp4++)
     {
@@ -121,17 +100,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
         }
     }
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
-
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
@@ -153,15 +122,8 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
 
     if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        /* Set response field length */
-        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-        /* Store request error */
-        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-        /* No reaon code */
-        STORE_FW(chsc_rsp->info,0);
-        return 0;
-    }
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp6++)
     {
@@ -194,17 +156,7 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
         }
     }
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
-
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
@@ -220,15 +172,8 @@ U16 req_len, rsp_len;
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP10);
 
-    if(rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        /* Set response field length */
-        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-        /* Store request error */
-        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-        /* No reaon code */
-        STORE_FW(chsc_rsp->info,0);
-        return 0;
-    }
+    if(rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     memset(chsc_rsp10->general_char, 0, sizeof(chsc_rsp10->general_char));
     memset(chsc_rsp10->chsc_char, 0, sizeof(chsc_rsp10->chsc_char));
@@ -288,16 +233,7 @@ U16 req_len, rsp_len;
 //  CHSC_SB(chsc_rsp10->chsc_char,107);   /* Set Channel Subsys Char */
 //  CHSC_SB(chsc_rsp10->chsc_char,108);                /* Fast CHSCs */
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
@@ -320,15 +256,8 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
 
     if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        /* Set response field length */
-        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-        /* Store request error */
-        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-        /* No reaon code */
-        STORE_FW(chsc_rsp->info,0);
-        return 0;
-    }
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp24++)
     {
@@ -339,17 +268,7 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
                 (dev->hnd->ssqd)(dev, chsc_rsp24);
     }
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
-
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
@@ -366,16 +285,8 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
     /* Calculate response length */
     rsp_len = sizeof(CHSC_RSP);
 
-    if (rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-        STORE_HW( chsc_rsp->length, sizeof(CHSC_RSP));
-        STORE_HW( chsc_rsp->rsp, CHSC_REQ_ERRREQ);
-        STORE_FW( chsc_rsp->info, 0);
-        return 0;
-    }
-
-    /* Prepare the response */
-    STORE_HW( chsc_rsp->length, rsp_len );
-    STORE_FW( chsc_rsp->info, 0);
+    if (rsp_len > (CHSC_REQRSP_SIZE - req_len))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     /* Fetch requested facility and enable it */
     FETCH_HW( facility, chsc_req31->facility );
@@ -394,7 +305,7 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
         break;
     }
 
-    return 0;  /* call success */
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 #endif
 
@@ -414,24 +325,10 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
     if((dev = find_device_by_subchan(ssid)))
         if(dev->hnd->ssci)
             if(!(rc = (dev->hnd->ssci)(dev, chsc_req21)))
-            {
-                /* Store response length */
-                STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-                /* Store request OK */
-                STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-                /* No reaon code */
-                STORE_FW(chsc_rsp->info,0);
-                return rc;
-            }
+                return chsc_req_ok(chsc_rsp, sizeof(CHSC_RSP), 0);
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-    /* Store request OK */
-//  STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-    return 0;
+//  return chsc_req_errreq(chsc_rsp, 0);
+    return chsc_req_ok(chsc_rsp, sizeof(CHSC_RSP), 0);
 }
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
@@ -452,16 +349,9 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
 
     if(chsc_req2->first_chpid > chsc_req2->last_chpid
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
-// ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2)) {
-        /* Set response field length */
-        STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-        /* Store request error */
-        STORE_HW(chsc_rsp->rsp,CHSC_REQ_ERRREQ);
-        /* No reaon code */
-        STORE_FW(chsc_rsp->info,0);
-        return 0;
-    }
+      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+// ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     for(chp = chsc_req2->first_chpid; chp <= chsc_req2->last_chpid; chp++, chsc_rsp2++, chsc_rsp2f1++)
     {
@@ -506,18 +396,10 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
         }
     }
 
-    /* Store response length */
-    STORE_HW(chsc_rsp->length,rsp_len);
-
-    /* Store request OK */
-    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
-
-    /* No reaon code */
-    STORE_FW(chsc_rsp->info,0);
-
-    return 0;
-
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
+
+
 /*-------------------------------------------------------------------*/
 /* B25F CHSC  - Channel Subsystem Call                         [RRE] */
 /*-------------------------------------------------------------------*/
