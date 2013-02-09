@@ -418,7 +418,7 @@ typedef struct CHSC_RSP12 CHSC_RSP12;
 
 
 /*-------------------------------------------------------------------*/
-/* CHSC_REQ21: ??? request. The response is a CHSC_RSP.              */
+/* CHSC_REQ21: Set Subchannel Indicator.  Response is CHSC_RSP.      */
 /*-------------------------------------------------------------------*/
 typedef struct CHSC_REQ21 {
 /*000*/ HWORD   length;                 /* Offset to response field  */

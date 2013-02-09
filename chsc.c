@@ -30,6 +30,9 @@
 #if defined(FEATURE_CHSC)
 
 
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ12: Store Configuration Information                       */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_get_conf_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, rsp_len;
@@ -53,108 +56,147 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 }
 
 
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ4: Store Subchannel Description Data                      */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, max_rsp;
+U16 req_len, rsp_len, lcss, max_rsp, work;
+int sch, f_sch, l_sch, num_sch, max_sch;
 
 CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
 CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 
-    FETCH_HW(f_sch,chsc_req4->f_sch);
-    FETCH_HW(l_sch,chsc_req4->l_sch);
+    FETCH_HW(work,chsc_req4->f_sch); f_sch = work;
+    FETCH_HW(work,chsc_req4->l_sch); l_sch = work;
     FETCH_HW(lcss,chsc_req4->ssidfmt);
     lcss &= CHSC_REQ4_SSID;
     lcss >>= 4;
 
     FETCH_HW(req_len, chsc_req4->length);
 
-    rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
-
     if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP4))) || l_sch < f_sch)
         return chsc_req_errreq(chsc_rsp, 0);
 
-    for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp4++)
+    num_sch = (l_sch - f_sch) + 1;
+    max_sch = sysblk.highsubchan[lcss]-1;
+    max_rsp = (U16) min((int)max_rsp, num_sch);
+    rsp_len = sizeof(CHSC_RSP) + (max_rsp * sizeof(CHSC_RSP4));
+
+    if (f_sch <= max_sch)
     {
     DEVBLK *dev;
-        memset(chsc_rsp4, 0, sizeof(CHSC_RSP4) );
-        if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
+
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp4++)
         {
-            int n;
-            chsc_rsp4->flags |= CHSC_RSP4_F1_SCH_VALID;
-            if(dev->pmcw.flag5 & PMCW5_V)
-                chsc_rsp4->flags |= CHSC_RSP4_F1_DEV_VALID;
-            chsc_rsp4->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
-            chsc_rsp4->path_mask = dev->pmcw.pim;
-            chsc_rsp4->unit_addr = dev->devnum & 0xff;
-            STORE_HW(chsc_rsp4->devno,dev->devnum);
-            STORE_HW(chsc_rsp4->sch, sch);
-            memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
-            if(dev->fla[0])
-                chsc_rsp4->fla_valid_mask = dev->pmcw.pim;
-            for(n = 0; n < 8; n++)
-                if(dev->pmcw.pim & (0x80 >> n))
-                    STORE_HW(chsc_rsp4->fla[n], dev->fla[n]);
-        }
-    }
-
-    return chsc_req_ok(chsc_rsp, rsp_len, 0);
-}
-
-
-static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
-{
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, cun, max_rsp;
-
-CHSC_REQ6 *chsc_req6 = (CHSC_REQ6 *)(chsc_req);
-CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
-
-    FETCH_HW(f_sch,chsc_req6->f_sch);
-    FETCH_HW(l_sch,chsc_req6->l_sch);
-    FETCH_HW(lcss,chsc_req6->ssidfmt);
-    lcss &= CHSC_REQ6_SSID;
-
-    FETCH_HW(req_len, chsc_req6->length);
-
-    rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
-
-    if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP6))) || l_sch < f_sch)
-        return chsc_req_errreq(chsc_rsp, 0);
-
-    for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp6++)
-    {
-    DEVBLK *dev;
-        memset(chsc_rsp6, 0, sizeof(CHSC_RSP6) );
-        if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
-        {
-            int n;
-
-            chsc_rsp6->flags |= CHSC_RSP6_F1_SCH_VALID;
-            if(dev->pmcw.flag5 & PMCW5_V)
-                chsc_rsp6->flags |= CHSC_RSP6_F1_DEV_VALID;
-            chsc_rsp6->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
-
-            chsc_rsp6->path_mask = dev->pmcw.pim;
-
-            STORE_HW(chsc_rsp6->devnum,dev->devnum);
-
-            STORE_HW(chsc_rsp6->sch, sch);
-
-            memcpy(chsc_rsp6->chpid, dev->pmcw.chpid, 8);
-            for(n = 0; n < 8; n++)
+            memset(chsc_rsp4, 0, sizeof(CHSC_RSP4) );
+            if (sch <= max_sch)
             {
-                if(dev->pmcw.pim & (0x80 >> n))
+                if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
                 {
-                    cun = ((dev->devnum & 0x00F0) << 4) | dev->pmcw.chpid[n];
-                    STORE_HW(chsc_rsp6->cun[n], cun);
+                    int n;
+                    chsc_rsp4->flags |= CHSC_RSP4_F1_SCH_VALID;
+                    if(dev->pmcw.flag5 & PMCW5_V)
+                        chsc_rsp4->flags |= CHSC_RSP4_F1_DEV_VALID;
+                    chsc_rsp4->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
+                    chsc_rsp4->path_mask = dev->pmcw.pim;
+                    chsc_rsp4->unit_addr = dev->devnum & 0xff;
+                    STORE_HW(chsc_rsp4->devno,dev->devnum);
+                    STORE_HW(chsc_rsp4->sch, sch);
+                    memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
+                    if(dev->fla[0])
+                        chsc_rsp4->fla_valid_mask = dev->pmcw.pim;
+                    for(n = 0; n < 8; n++)
+                        if(dev->pmcw.pim & (0x80 >> n))
+                        {
+                            STORE_HW(chsc_rsp4->fla[n], dev->fla[n]);
+                        }
                 }
             }
         }
     }
+    else /* f_sch > max_sch */
+    {
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp4++)
+            memset(chsc_rsp4, 0, sizeof(CHSC_RSP4) );
+    }
 
     return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 
 
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ6: Store Subchannel Control-Unit Data                     */
+/*-------------------------------------------------------------------*/
+static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
+{
+U16 req_len, rsp_len, lcss, cun, max_rsp, work;
+int sch, f_sch, l_sch, num_sch, max_sch;
+
+CHSC_REQ6 *chsc_req6 = (CHSC_REQ6 *)(chsc_req);
+CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
+
+    FETCH_HW(work,chsc_req6->f_sch); f_sch = work;
+    FETCH_HW(work,chsc_req6->l_sch); l_sch = work;
+    FETCH_HW(lcss,chsc_req6->ssidfmt);
+    lcss &= CHSC_REQ6_SSID;
+//  lcss >>= 0;
+
+    FETCH_HW(req_len, chsc_req6->length);
+
+    if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP6))) || l_sch < f_sch)
+        return chsc_req_errreq(chsc_rsp, 0);
+
+    num_sch = (l_sch - f_sch) + 1;
+    max_sch = sysblk.highsubchan[lcss]-1;
+    max_rsp = (U16) min((int)max_rsp, num_sch);
+    rsp_len = sizeof(CHSC_RSP) + (max_rsp * sizeof(CHSC_RSP6));
+
+    if (f_sch <= max_sch)
+    {
+    DEVBLK *dev;
+
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp6++)
+        {
+            memset(chsc_rsp6, 0, sizeof(CHSC_RSP6) );
+            if (sch <= max_sch)
+            {
+                if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
+                {
+                    int n;
+                    chsc_rsp6->flags |= CHSC_RSP6_F1_SCH_VALID;
+                    if(dev->pmcw.flag5 & PMCW5_V)
+                        chsc_rsp6->flags |= CHSC_RSP6_F1_DEV_VALID;
+                    chsc_rsp6->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
+                    chsc_rsp6->path_mask = dev->pmcw.pim;
+                    STORE_HW(chsc_rsp6->devnum,dev->devnum);
+                    STORE_HW(chsc_rsp6->sch, sch);
+                    memcpy(chsc_rsp6->chpid, dev->pmcw.chpid, 8);
+                    for(n = 0; n < 8; n++)
+                    {
+                        if(dev->pmcw.pim & (0x80 >> n))
+                        {
+                            cun = ((dev->devnum & 0x00F0) << 4) | dev->pmcw.chpid[n];
+                            STORE_HW(chsc_rsp6->cun[n], cun);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else /* f_sch > max_sch */
+    {
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp6++)
+            memset(chsc_rsp6, 0, sizeof(CHSC_RSP6) );
+    }
+
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ10: Store Channel-Subsystem Characteristics               */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_get_css_info) (REGS *regs, CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 CHSC_RSP10 *chsc_rsp10;
@@ -231,33 +273,52 @@ U16 req_len, rsp_len;
 }
 
 
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ24: Store Subchannel QDIO Data                            */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, max_rsp;
+U16 req_len, rsp_len, lcss, max_rsp, work;
+int sch, f_sch, l_sch, num_sch, max_sch;
 
 CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
 CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
 
-    FETCH_HW(f_sch,chsc_req24->f_sch);
-    FETCH_HW(l_sch,chsc_req24->l_sch);
+    FETCH_HW(work,chsc_req24->f_sch); f_sch = work;
+    FETCH_HW(work,chsc_req24->l_sch); l_sch = work;
     FETCH_HW(lcss,chsc_req24->ssidfmt);
     lcss &= CHSC_REQ24_SSID;
     lcss >>= 4;
 
     FETCH_HW(req_len, chsc_req24->length);
 
-    rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
-
     if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP24))) || l_sch < f_sch)
         return chsc_req_errreq(chsc_rsp, 0);
 
-    for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp24++)
+    num_sch = (l_sch - f_sch) + 1;
+    max_sch = sysblk.highsubchan[lcss]-1;
+    max_rsp = (U16) min((int)max_rsp, num_sch);
+    rsp_len = sizeof(CHSC_RSP) + (max_rsp * sizeof(CHSC_RSP24));
+
+    if (f_sch <= max_sch)
     {
     DEVBLK *dev;
-        memset(chsc_rsp24, 0, sizeof(CHSC_RSP24) );
-        if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
-            if(dev->hnd->ssqd)
-                (dev->hnd->ssqd)(dev, chsc_rsp24);
+
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp24++)
+        {
+            memset(chsc_rsp24, 0, sizeof(CHSC_RSP24) );
+            if (sch <= max_sch)
+            {
+                if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
+                    if(dev->hnd->ssqd)
+                        (dev->hnd->ssqd)(dev, chsc_rsp24);
+            }
+        }
+    }
+    else /* f_sch > max_sch */
+    {
+        for(sch = f_sch; sch <= l_sch && max_rsp; sch++, max_rsp--, chsc_rsp24++)
+            memset(chsc_rsp24, 0, sizeof(CHSC_RSP24) );
     }
 
     return chsc_req_ok(chsc_rsp, rsp_len, 0);
@@ -265,6 +326,9 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
 
 
 #if 0
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ31: Enable Facility                                       */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_enable_facility) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, rsp_len, facility;
@@ -301,6 +365,9 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
 
 
 #if defined(_FEATURE_QDIO_THININT)
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ21: Set Subchannel Indicator                              */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_set_sci) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 DEVBLK *dev;
@@ -323,33 +390,41 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
 
+/*-------------------------------------------------------------------*/
+/* CHSC_REQ2: Store Channel Path Description                         */
+/*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_get_chp_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
 U16 req_len, rsp_len, max_rsp;
-int fmt1, chp;
+int fmt1, chp, f_chp, l_chp, num_chps;
 size_t rsp_size;
+DEVBLK *dev;
 
 CHSC_REQ2   *chsc_req2   = (CHSC_REQ2 *)  (chsc_req);
 CHSC_RSP2   *chsc_rsp2   = (CHSC_RSP2 *)  (chsc_rsp+1);
 CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
+    f_chp = chsc_req2->first_chpid;
+    l_chp = chsc_req2->last_chpid;
+
     FETCH_HW(req_len, chsc_req2->length);
 
     fmt1 = (chsc_req2->flags & CHSC_REQ2_F1_C) ? 1 : 0;
     rsp_size = fmt1 ? sizeof(CHSC_RSP2F1) : sizeof(CHSC_RSP2);
-    rsp_len = sizeof(CHSC_RSP) + ((1 + chsc_req2->last_chpid - chsc_req2->first_chpid) * rsp_size);
 
-    if(chsc_req2->first_chpid > chsc_req2->last_chpid
-      || !(max_rsp = chsc_max_rsp(req_len, rsp_size)))
-// ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2))
+    if(!(max_rsp = chsc_max_rsp(req_len, rsp_size))
+// ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2)
+      || f_chp > l_chp)
         return chsc_req_errreq(chsc_rsp, 0);
 
-    for(chp = chsc_req2->first_chpid; chp <= chsc_req2->last_chpid; chp++, chsc_rsp2++, chsc_rsp2f1++)
-    {
-        if(!fmt1)
-        {
-        DEVBLK *dev;
+    num_chps = (l_chp - f_chp) + 1;
+    max_rsp  = (U16) min((int)max_rsp, num_chps);
+    rsp_len  = sizeof(CHSC_RSP) + (max_rsp * rsp_size);
 
+    if (!fmt1)
+    {
+        for(chp = f_chp; chp <= l_chp && max_rsp; chp++, max_rsp--, chsc_rsp2++)
+        {
             memset(chsc_rsp2, 0, sizeof(CHSC_RSP2));
             chsc_rsp2->chpid = chp;
 
@@ -366,10 +441,11 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
                     break;
                 }
         }
-        else
+    }
+    else
+    {
+        for(chp = f_chp; chp <= l_chp && max_rsp; chp++, max_rsp--, chsc_rsp2f1++)
         {
-        DEVBLK *dev;
-
             memset(chsc_rsp2f1, 0, sizeof(CHSC_RSP2F1));
             chsc_rsp2f1->chpid = chp;
 
@@ -408,7 +484,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     RRE(inst, regs, r1, r2);
 
-//  ARCH_DEP(display_inst) (regs, inst);
+    ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
 
@@ -443,7 +519,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     /* Verify we have write access to the page */
     ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
 
-    TRACE("*** CHSC 0x%04X\n", req);
+    n = 0; /* not unsupported */
+    TRACE("*** CHSC 0x%04X entry\n", req);
 
     switch(req) {
 
@@ -491,7 +568,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
 
         default:
-            TRACE("*** CHSC 0x%04X (*UNSUPPORTED*)\n", req);
+            n = 1; /* indicate UNSUPPORTED */
         chsc_error:
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
@@ -504,6 +581,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             regs->psw.cc = 0;
             break;
     }
+
+    TRACE("*** CHSC 0x%04X exit%s\n", req, n ? " (*UNSUPPORTED*)" : "");
 }
 #endif /*defined(FEATURE_CHSC)*/
 
