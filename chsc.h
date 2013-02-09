@@ -125,6 +125,28 @@ typedef struct CHSC_RSP CHSC_RSP;
 
 
 /*-------------------------------------------------------------------*/
+/* chsc_max_rsp: return maximum possible number of response entries  */
+/*  req_len   =  request length FETCH_HW(req_len, chsc_req->length)  */
+/*  rsp_size  =  size of one response entry, sizeof(CHSC_RSPxx)      */
+/* returned value:  maximum possible response entries, or 0 if error */
+/*-------------------------------------------------------------------*/
+static INLINE U16 chsc_max_rsp( U16 req_len, size_t rsp_size )
+{
+register U16 max_rsp;
+    if (0
+        || rsp_size > (CHSC_REQRSP_SIZE - sizeof(CHSC_REQ) - sizeof(CHSC_RSP))
+        || req_len  > (CHSC_REQRSP_SIZE - sizeof(CHSC_RSP) - rsp_size)
+    )
+        return 0;
+    if (!rsp_size)
+        max_rsp = (CHSC_REQRSP_SIZE - req_len) / sizeof(CHSC_RSP);
+    else
+        max_rsp = (CHSC_REQRSP_SIZE - req_len - sizeof(CHSC_RSP)) / rsp_size;
+    return max_rsp;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* chsc_req_ok: respond CHSC_REQ_OK to good CHSC request             */
 /*-------------------------------------------------------------------*/
 static INLINE int chsc_req_ok( CHSC_RSP *chsc_rsp, U16 rsp_len, U32 info )

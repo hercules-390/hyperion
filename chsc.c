@@ -41,7 +41,7 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
 
-    if (rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!chsc_max_rsp(req_len, sizeof(CHSC_RSP12)))
         return chsc_req_errreq(chsc_rsp, 0);
 
     memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
@@ -55,7 +55,7 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
 static int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, max_rsp;
 
 CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
 CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
@@ -70,8 +70,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
 
-    if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP4))) || l_sch < f_sch)
         return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp4++)
@@ -104,7 +103,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
 
 static int ARCH_DEP(chsc_get_cu_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, cun;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, cun, max_rsp;
 
 CHSC_REQ6 *chsc_req6 = (CHSC_REQ6 *)(chsc_req);
 CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
@@ -118,8 +117,7 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
 
-    if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP6))) || l_sch < f_sch)
         return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp6++)
@@ -168,7 +166,7 @@ U16 req_len, rsp_len;
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP10);
 
-    if(rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!chsc_max_rsp(req_len, sizeof(CHSC_RSP10)))
         return chsc_req_errreq(chsc_rsp, 0);
 
     memset(chsc_rsp10->general_char, 0, sizeof(chsc_rsp10->general_char));
@@ -235,7 +233,7 @@ U16 req_len, rsp_len;
 
 static int ARCH_DEP(chsc_get_ssqd) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, sch, f_sch, l_sch, rsp_len, lcss;
+U16 req_len, sch, f_sch, l_sch, rsp_len, lcss, max_rsp;
 
 CHSC_REQ24 *chsc_req24 = (CHSC_REQ24 *)(chsc_req);
 CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
@@ -250,8 +248,7 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
 
-    if(l_sch < f_sch
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!(max_rsp = chsc_max_rsp(req_len, sizeof(CHSC_RSP24))) || l_sch < f_sch)
         return chsc_req_errreq(chsc_rsp, 0);
 
     for(sch = f_sch; sch <= l_sch; sch++, chsc_rsp24++)
@@ -278,7 +275,7 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
 
     rsp_len = sizeof(CHSC_RSP);
 
-    if (rsp_len > (CHSC_REQRSP_SIZE - req_len))
+    if (!chsc_max_rsp(req_len, 0))
         return chsc_req_errreq(chsc_rsp, 0);
 
     /* Fetch requested facility and enable it */
@@ -328,8 +325,9 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
 
 static int ARCH_DEP(chsc_get_chp_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
-U16 req_len, rsp_len;
-int chp;
+U16 req_len, rsp_len, max_rsp;
+int fmt1, chp;
+size_t rsp_size;
 
 CHSC_REQ2   *chsc_req2   = (CHSC_REQ2 *)  (chsc_req);
 CHSC_RSP2   *chsc_rsp2   = (CHSC_RSP2 *)  (chsc_rsp+1);
@@ -337,22 +335,23 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
     FETCH_HW(req_len, chsc_req2->length);
 
-    rsp_len = sizeof(CHSC_RSP) + ((1 + chsc_req2->last_chpid - chsc_req2->first_chpid) * ((chsc_req2->flags & CHSC_REQ2_F1_C) ? sizeof(CHSC_RSP2F1) :  sizeof(CHSC_RSP2)));
-
+    fmt1 = (chsc_req2->flags & CHSC_REQ2_F1_C) ? 1 : 0;
+    rsp_size = fmt1 ? sizeof(CHSC_RSP2F1) : sizeof(CHSC_RSP2);
+    rsp_len = sizeof(CHSC_RSP) + ((1 + chsc_req2->last_chpid - chsc_req2->first_chpid) * rsp_size);
 
     if(chsc_req2->first_chpid > chsc_req2->last_chpid
-      || rsp_len > (CHSC_REQRSP_SIZE - req_len))
+      || !(max_rsp = chsc_max_rsp(req_len, rsp_size)))
 // ZZ || (chsc_req2->rfmt != 1 && chsc_req2->rfmt != 2))
         return chsc_req_errreq(chsc_rsp, 0);
 
     for(chp = chsc_req2->first_chpid; chp <= chsc_req2->last_chpid; chp++, chsc_rsp2++, chsc_rsp2f1++)
     {
-        if(!(chsc_req2->flags & CHSC_REQ2_F1_C))
+        if(!fmt1)
         {
         DEVBLK *dev;
 
-            memset(chsc_rsp2, 0, sizeof(CHSC_RSP2) );
-            chsc_rsp2->chpid  = chp;
+            memset(chsc_rsp2, 0, sizeof(CHSC_RSP2));
+            chsc_rsp2->chpid = chp;
 
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
                 if (dev->allocated
@@ -371,18 +370,18 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
         {
         DEVBLK *dev;
 
-            memset(chsc_rsp2f1, 0, sizeof(CHSC_RSP2F1) );
-            chsc_rsp2f1->chpid  = chp;
+            memset(chsc_rsp2f1, 0, sizeof(CHSC_RSP2F1));
+            chsc_rsp2f1->chpid = chp;
 
             for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
                 if (dev->allocated
                   && (dev->pmcw.chpid[0] == chp)
                   && dev->chptype[0])
                 {
-                    chsc_rsp2f1->flags  = 0x80;
-                    chsc_rsp2f1->chp_type = dev->chptype[0];
-//                  chsc_rsp2f1->lsn    = 0;
-//                  chsc_rsp2f1->chpp   = 0;
+                    chsc_rsp2f1->flags    |= CHSC_RSP2F1_F1_CHPID_VALID;
+                    chsc_rsp2f1->chp_type  = dev->chptype[0];
+//                  chsc_rsp2f1->lsn       = 0;
+//                  chsc_rsp2f1->chpp      = 0;
 //                  STORE_HW(chsc_rsp2f1->mdc,0x0000);
 //                  STORE_HW(chsc_rsp2f1->flags2,0x0000);
                     break;
