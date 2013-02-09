@@ -37,7 +37,6 @@ U16 req_len, rsp_len;
 CHSC_REQ12 *chsc_req12 = (CHSC_REQ12 *)(chsc_req);
 CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
-    /* Fetch length of request */
     FETCH_HW(req_len, chsc_req12->length);
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
@@ -67,7 +66,6 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
     lcss &= CHSC_REQ4_SSID;
     lcss >>= 4;
 
-    /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req4->length);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP4));
@@ -87,9 +85,9 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
             if(dev->pmcw.flag5 & PMCW5_V)
                 chsc_rsp4->flags |= CHSC_RSP4_F1_DEV_VALID;
             chsc_rsp4->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
+            chsc_rsp4->path_mask = dev->pmcw.pim;
             chsc_rsp4->unit_addr = dev->devnum & 0xff;
             STORE_HW(chsc_rsp4->devno,dev->devnum);
-            chsc_rsp4->path_mask = dev->pmcw.pim;
             STORE_HW(chsc_rsp4->sch, sch);
             memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
             if(dev->fla[0])
@@ -116,7 +114,6 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
     FETCH_HW(lcss,chsc_req6->ssidfmt);
     lcss &= CHSC_REQ6_SSID;
 
-    /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req6->length);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP6));
@@ -167,7 +164,6 @@ U16 req_len, rsp_len;
 
     chsc_rsp10 = (CHSC_RSP10 *)(chsc_rsp+1);
 
-    /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req->length);
 
     rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP10);
@@ -176,7 +172,7 @@ U16 req_len, rsp_len;
         return chsc_req_errreq(chsc_rsp, 0);
 
     memset(chsc_rsp10->general_char, 0, sizeof(chsc_rsp10->general_char));
-    memset(chsc_rsp10->chsc_char, 0, sizeof(chsc_rsp10->chsc_char));
+    memset(chsc_rsp10->chsc_char,    0, sizeof(chsc_rsp10->chsc_char));
 
 #if defined(FEATURE_REGION_RELOCATE)
     CHSC_SB(chsc_rsp10->general_char,2);
@@ -250,7 +246,6 @@ CHSC_RSP24 *chsc_rsp24 = (CHSC_RSP24 *)(chsc_rsp+1);
     lcss &= CHSC_REQ24_SSID;
     lcss >>= 4;
 
-    /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req24->length);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + l_sch - f_sch) * sizeof(CHSC_RSP24));
@@ -279,10 +274,8 @@ U16 req_len, rsp_len, facility;
 
 CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
 
-    /* Fetch length of request field */
     FETCH_HW( req_len, chsc_req31->length );
 
-    /* Calculate response length */
     rsp_len = sizeof(CHSC_RSP);
 
     if (rsp_len > (CHSC_REQRSP_SIZE - req_len))
@@ -319,7 +312,7 @@ int rc;
 
 CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
 
-    /* Fetch length of request field */
+    /* Fetch requested Subchannel Id */
     FETCH_FW(ssid, chsc_req21->ssid);
 
     if((dev = find_device_by_subchan(ssid)))
@@ -338,11 +331,10 @@ static int ARCH_DEP(chsc_get_chp_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 U16 req_len, rsp_len;
 int chp;
 
-CHSC_REQ2 *chsc_req2 = (CHSC_REQ2 *)(chsc_req);
-CHSC_RSP2 *chsc_rsp2 = (CHSC_RSP2 *)(chsc_rsp+1);
+CHSC_REQ2   *chsc_req2   = (CHSC_REQ2 *)  (chsc_req);
+CHSC_RSP2   *chsc_rsp2   = (CHSC_RSP2 *)  (chsc_rsp+1);
 CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
-    /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req2->length);
 
     rsp_len = sizeof(CHSC_RSP) + ((1 + chsc_req2->last_chpid - chsc_req2->first_chpid) * ((chsc_req2->flags & CHSC_REQ2_F1_C) ? sizeof(CHSC_RSP2F1) :  sizeof(CHSC_RSP2)));
@@ -372,6 +364,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 //                  chsc_rsp2->lsn       = 0;
 //                  chsc_rsp2->swla      = 0;
 //                  chsc_rsp2->chla      = 0;
+                    break;
                 }
         }
         else
@@ -392,6 +385,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 //                  chsc_rsp2f1->chpp   = 0;
 //                  STORE_HW(chsc_rsp2f1->mdc,0x0000);
 //                  STORE_HW(chsc_rsp2f1->flags2,0x0000);
+                    break;
                 }
         }
     }
@@ -423,26 +417,34 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     PTT(PTT_CL_INF,"CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
+    /* Check operand-1 for page alignment */
     n = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
 
     if(n & 0xFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    /* Get pointer to request/response */
     mn = MADDR(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
     chsc_req = (CHSC_REQ*)(mn);
 
     /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req->length);
 
+    /* Point to beginning of response field */
     chsc_rsp = (CHSC_RSP*)((BYTE*)chsc_req + req_len);
 
+    /* Check for invalid request length */
     if((req_len < sizeof(CHSC_REQ))
       || (req_len > (CHSC_REQRSP_SIZE - sizeof(CHSC_RSP))))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
+    /* Fetch the CHSC request code */
     FETCH_HW(req,chsc_req->req);
 
+    /* Verify we have write access to the page */
     ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
+
+    TRACE("*** CHSC 0x%04X\n", req);
 
     switch(req) {
 
@@ -467,7 +469,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             break;
 
 #if defined(_FEATURE_QDIO_THININT)
-        case CHSC_REQ_SETSSSI: // 0x0021
+
+        case CHSC_REQ_SETSSSI: /* 0x0021  Set Subchannel Indicator */
             if(FACILITY_ENABLED(QDIO_THININT, regs))
             {
                 regs->psw.cc = ARCH_DEP(chsc_set_sci) (chsc_req, chsc_rsp);
@@ -475,7 +478,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             }
             else
                 goto chsc_error;
-            /* Fall through to unkown request if thinint not supported */
+
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
         case CHSC_REQ_GETSSQD: /* 0x0024  Store Subchannel QDIO Data */
@@ -489,18 +492,18 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
 
         default:
+            TRACE("*** CHSC 0x%04X (*UNSUPPORTED*)\n", req);
         chsc_error:
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
                 break;
-            /* Set response field length */
             STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-            /* Store unsupported command code */
             STORE_HW(chsc_rsp->rsp,CHSC_REQ_INVALID);
-            /* No reaon code */
+            /* No reason code */
             STORE_FW(chsc_rsp->info,0);
-            /* The instr. succeeds even if request does not? */
+            /* Return cc0 even for unsupported requests?? */
             regs->psw.cc = 0;
+            break;
     }
 }
 #endif /*defined(FEATURE_CHSC)*/
