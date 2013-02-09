@@ -20,14 +20,31 @@
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "chsc.h"
 
 #if defined(FEATURE_CHSC)
+
+//#define CHSC_DEBUG
+
+#if defined(DEBUG) && !defined(QETH_DEBUG)
+ #define CHSC_DEBUG
+#endif
+
+#if defined(CHSC_DEBUG)
+ #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+ #include "dbgtrace.h"                   // (Fish: DEBUGGING)
+ #define  NO_CHSC_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
+#endif
+
+#if defined( _MSVC_ ) && defined( NO_CHSC_OPTIMIZE )
+  #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
+#endif
+
+#if defined(CHSC_DEBUG)
+  static inline void DUMP_CHSC_REQRSP(U16 req, CHSC_REQ *chsc_req);
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -484,7 +501,10 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     RRE(inst, regs, r1, r2);
 
+    /* Display instruction if debugging */
+    #if defined(CHSC_DEBUG)
     ARCH_DEP(display_inst) (regs, inst);
+    #endif
 
     PRIV_CHECK(regs);
 
@@ -518,9 +538,6 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     /* Verify we have write access to the page */
     ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
-
-    n = 0; /* not unsupported */
-    TRACE("*** CHSC 0x%04X entry\n", req);
 
     switch(req) {
 
@@ -568,7 +585,6 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
 
         default:
-            n = 1; /* indicate UNSUPPORTED */
         chsc_error:
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
@@ -582,7 +598,10 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             break;
     }
 
-    TRACE("*** CHSC 0x%04X exit%s\n", req, n ? " (*UNSUPPORTED*)" : "");
+    /* Show results if debugging */
+    #if defined(CHSC_DEBUG)
+    DUMP_CHSC_REQRSP( req, chsc_req );
+    #endif
 }
 #endif /*defined(FEATURE_CHSC)*/
 
@@ -599,5 +618,70 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
  #define  _GEN_ARCH _ARCHMODE3
  #include "chsc.c"
 #endif
+
+/*-------------------------------------------------------------------*/
+/* DUMP CHSC Request/Response buffer debugging function              */
+/*-------------------------------------------------------------------*/
+#if defined(CHSC_DEBUG)
+static inline void DUMP_CHSC_REQRSP(U16 req, CHSC_REQ *chsc_req)
+{
+U16 req_len, rsp_len;
+CHSC_RSP *chsc_rsp;
+BYTE* p;
+int disp, len;
+#ifndef DUMPLINE
+#define DUMPLINE MSGBUF(linebuf,"      +%04X:%s  |%s|\n",disp-16,hexbuf,charbuf)
+#endif
+BYTE linebuf[6+1+4+1+((1+8)*4)+2+1+16+1+1+1] = {0};
+BYTE hexbuf[((1+8)*4)+1] = {0};
+BYTE charbuf[16+1] = {0};
+BYTE hex[2+1] = {0};
+BYTE c;
+BYTE dumpbuf[32*1024] = {0};
+
+    p = (BYTE*) chsc_req;
+    FETCH_HW(req_len, chsc_req->length);
+    chsc_rsp = (CHSC_RSP*)(p + req_len);
+    FETCH_HW(rsp_len, chsc_rsp->length);
+    len = (req_len + rsp_len);
+    memset(charbuf, '.', 16);
+
+    for (disp=0; disp < len; disp++, p++)
+    {
+        if (disp && !(disp & 15))
+        {
+            DUMPLINE;
+            strlcat(dumpbuf, linebuf, sizeof(dumpbuf));
+            hexbuf[0] = 0;
+        }
+        if (!(disp & 3))
+            strlcat(hexbuf, " ", sizeof(hexbuf));
+        MSGBUF( hex, "%2.2X", *p );
+        strlcat(hexbuf, hex, sizeof(hexbuf));
+        c = guest_to_host(*p);
+        if (!isprint(c) || iscntrl(c)) c = '.';
+        charbuf[disp & 15] = c;
+    }
+
+    /* Finish partial last line */
+    if (disp & 15)
+    {
+        for (; disp & 15; disp++)
+        {
+            if (!(disp & 3))
+                strlcat(hexbuf, " ", sizeof(hexbuf));
+            strlcat(hexbuf, "  ", sizeof(hexbuf));
+            charbuf[disp & 15] = ' ';
+        }
+    }
+
+    /* Last line */
+    DUMPLINE;
+    strlcat(dumpbuf, linebuf, sizeof(dumpbuf));
+
+    logmsg("CHSC 0x%04X: req_len=0x%04X, rsp_len=0x%04X\n%s",
+        req, req_len, rsp_len, dumpbuf);
+}
+#endif /*defined(CHSC_DEBUG)*/
 
 #endif /*!defined(_GEN_ARCH)*/
