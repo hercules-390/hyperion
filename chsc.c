@@ -115,7 +115,7 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
             memcpy(chsc_rsp4->chpid, dev->pmcw.chpid, 8);
             if(dev->fla[0])
                 chsc_rsp4->fla_valid_mask = dev->pmcw.pim;
-            for(n = 0; n < 7; n++)
+            for(n = 0; n < 8; n++)
                 if(dev->pmcw.pim & (0x80 >> n))
                     STORE_HW(chsc_rsp4->fla[n], dev->fla[n]);
         }
@@ -183,7 +183,7 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
             STORE_HW(chsc_rsp6->sch, sch);
 
             memcpy(chsc_rsp6->chpid, dev->pmcw.chpid, 8);
-            for(n = 0; n < 7; n++)
+            for(n = 0; n < 8; n++)
             {
                 if(dev->pmcw.pim & (0x80 >> n))
                 {
