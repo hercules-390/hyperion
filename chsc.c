@@ -35,12 +35,12 @@ static int ARCH_DEP(chsc_get_conf_info) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 U16 req_len, rsp_len;
 
 CHSC_REQ12 *chsc_req12 = (CHSC_REQ12 *)(chsc_req);
-CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp);
+CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
     /* Fetch length of request */
     FETCH_HW(req_len, chsc_req12->length);
 
-    rsp_len = sizeof(CHSC_RSP12);
+    rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
 
     if (rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         STORE_HW( chsc_rsp->length, sizeof(CHSC_RSP));
@@ -55,13 +55,13 @@ CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp);
     chsc_rsp12->pnum = 1;
 
     /* Store response length */
-    STORE_HW(chsc_rsp12->length,rsp_len);
+    STORE_HW(chsc_rsp->length,rsp_len);
 
     /* Store request OK */
-    STORE_HW(chsc_rsp12->rsp,CHSC_REQ_OK);
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
 
     /* No reaon code */
-    STORE_FW(chsc_rsp12->info,0);
+    STORE_FW(chsc_rsp->info,0);
 
     return 0;
 
@@ -213,14 +213,12 @@ static int ARCH_DEP(chsc_get_css_info) (REGS *regs, CHSC_REQ *chsc_req, CHSC_RSP
 CHSC_RSP10 *chsc_rsp10;
 U16 req_len, rsp_len;
 
-    UNREFERENCED(chsc_req);
-
-    chsc_rsp10 = (CHSC_RSP10 *)(chsc_rsp);
+    chsc_rsp10 = (CHSC_RSP10 *)(chsc_rsp+1);
 
     /* Fetch length of request field */
     FETCH_HW(req_len, chsc_req->length);
 
-    rsp_len = sizeof(CHSC_RSP10);
+    rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP10);
 
     if(rsp_len > (CHSC_REQRSP_SIZE - req_len)) {
         /* Set response field length */
@@ -291,13 +289,13 @@ U16 req_len, rsp_len;
 //  CHSC_SB(chsc_rsp10->chsc_char,108);                /* Fast CHSCs */
 
     /* Store response length */
-    STORE_HW(chsc_rsp10->length,rsp_len);
+    STORE_HW(chsc_rsp->length,rsp_len);
 
     /* Store request OK */
-    STORE_HW(chsc_rsp10->rsp,CHSC_REQ_OK);
+    STORE_HW(chsc_rsp->rsp,CHSC_REQ_OK);
 
     /* No reaon code */
-    STORE_FW(chsc_rsp10->info,0);
+    STORE_FW(chsc_rsp->info,0);
 
     return 0;
 }

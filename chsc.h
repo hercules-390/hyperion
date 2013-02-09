@@ -307,18 +307,15 @@ typedef struct CHSC_REQ10 CHSC_REQ10;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP10 only */
 typedef struct CHSC_RSP10 {             /* Store Channel-Subsystem Characteristics */
-/*000*/ HWORD   length;                 /* Length of response field  */
-/*002*/ HWORD   rsp;                    /* Reponse code              */
-/*004*/ FWORD   info;
-/*008*/ FWORD   general_char[510];
-/*800*/ FWORD   chsc_char[508];         /* ZZ: Linux/390 code indicates
+/*000*/ FWORD   general_char[510];
+/*7F8*/ FWORD   chsc_char[508];         /* ZZ: Linux/390 code indicates
                                            this field has a length of
                                            518, however, that would
                                            mean that the entire CHSC
                                            request would be 4K + 16
                                            in length which is probably
                                            an error -    *JJ/10/10/04*/
-/*FF0*/ } ATTRIBUTE_PACKED;
+/*FE8*/ } ATTRIBUTE_PACKED;
 
 typedef struct CHSC_RSP10 CHSC_RSP10;
 
@@ -347,32 +344,29 @@ typedef struct CHSC_REQ12 CHSC_REQ12;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP12 only */
 typedef struct CHSC_RSP12 {             /* Store Config. Information */
-/*000*/ HWORD   length;                 /* Length of response field  */
-/*002*/ HWORD   rsp;                    /* Reponse code              */
-/*004*/ FWORD   info;
-/*008*/ BYTE    resv008;
-/*009*/ BYTE    flags;                  /* Flags                     */
+/*000*/ BYTE    resv008;
+/*001*/ BYTE    flags;                  /* Flags                     */
 #define CHSC_RSP12_F1_CM   0x80         /* Configuration Mode        */
 #define CHSC_RSP12_F1_CV   0x40         /* Configuration Valid       */
 #define CHSC_RSP12_F1_CC   0x20         /* Configuration Changed     */
 #define CHSC_RSP12_F1_TP   0x10         /* Token Present             */
 #define CHSC_RSP12_F1_PPV  0x08         /* Program-Parameter Valid   */
-/*00A*/ BYTE    unknow00A;              /* ???                       */
-/*00B*/ BYTE    pnum;                   /* Partition Number          */
-/*00C*/ FWORD   pp[4];                  /* Program Parameter         */
-/*01C*/ FWORD   rse;                    /* Remaining Subchannel Elements */
-/*020*/ FWORD   rcue;                   /* Remaining Control-Unit Elements */
-/*024*/ FWORD   rsce;                   /* Remaining Shared-Cluster Elements */
-/*028*/ FWORD   unknow028;
-/*02C*/ FWORD   unknow02C;
-/*030*/ FWORD   cct[16];                /* Current-Configuration Token */
-/*070*/ FWORD   tct[16];                /* Target-Configuration Token */
-/*0B0*/ FWORD   resv0B0;
-/*0B4*/ HWORD   pnv;                    /* Partition-Names Valid mask */
-/*0B6*/ HWORD   resv0B6;
-/*0B8*/ DBLWRD  pn[16];                 /* Partition Names           */
-/*138*/ FWORD   unknow138[488];
-/*8D8*/ } ATTRIBUTE_PACKED;
+/*002*/ BYTE    unknow00A;              /* ???                       */
+/*003*/ BYTE    pnum;                   /* Partition Number          */
+/*004*/ FWORD   pp[4];                  /* Program Parameter         */
+/*014*/ FWORD   rse;                    /* Remaining Subchannel Elements */
+/*018*/ FWORD   rcue;                   /* Remaining Control-Unit Elements */
+/*01C*/ FWORD   rsce;                   /* Remaining Shared-Cluster Elements */
+/*020*/ FWORD   unknow028;
+/*024*/ FWORD   unknow02C;
+/*028*/ FWORD   cct[16];                /* Current-Configuration Token */
+/*068*/ FWORD   tct[16];                /* Target-Configuration Token */
+/*0A8*/ FWORD   resv0B0;
+/*0AC*/ HWORD   pnv;                    /* Partition-Names Valid mask */
+/*0AE*/ HWORD   resv0B6;
+/*0B0*/ DBLWRD  pn[16];                 /* Partition Names           */
+/*130*/ FWORD   unknow138[488];
+/*8D0*/ } ATTRIBUTE_PACKED;
 
 typedef struct CHSC_RSP12 CHSC_RSP12;
 
