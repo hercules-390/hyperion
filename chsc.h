@@ -176,7 +176,7 @@ static INLINE int chsc_req_errreq( CHSC_RSP *chsc_rsp, U32 info )
 typedef struct CHSC_REQ2 {              /* Store Channel Path Desc   */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
-/*004*/ BYTE    flags;
+/*004*/ BYTE    flags1;
 #define CHSC_REQ2_F1_M          0x20
 #define CHSC_REQ2_F1_C          0x10
 #define CHSC_REQ2_F1_FMT        0x0F
@@ -197,7 +197,7 @@ typedef struct CHSC_REQ2 CHSC_REQ2;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by one or more CHSC_RSP2 */
 typedef struct CHSC_RSP2 {              /* Store Channel Path Desc   */
-/*000*/ BYTE    flags;                  /* Flags                     */
+/*000*/ BYTE    flags1;                 /* Flags                     */
 #define CHSC_RSP2_F1_CHPID_VALID  0x80  /*                           */
 #define CHSC_RSP2_F1_CHLA_VALID   0x40  /*                           */
 #define CHSC_RSP2_F1_LSN_VALID    0x20  /*                           */
@@ -219,7 +219,7 @@ typedef struct CHSC_RSP2 CHSC_RSP2;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by one or more CHSC_RSP2F1 */
 typedef struct CHSC_RSP2F1 {            /* Store Channel Path Desc   */
-/*000*/ BYTE    flags;                  /* Flags                     */
+/*000*/ BYTE    flags1;                 /* Flags                     */
 #define CHSC_RSP2F1_F1_CHPID_VALID 0x80 /*                           */
 #define CHSC_RSP2F1_F1_LSN_VALID   0x20 /*                           */
 /*001*/ BYTE    lsn;                    /* Logical Switch Number     */
@@ -262,7 +262,7 @@ typedef struct CHSC_REQ4 CHSC_REQ4;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by zero, one or more CHSC_RSP4 */
 typedef struct CHSC_RSP4 {              /* Store Subchann Descr Data */
-/*000*/ BYTE    flags;                  /* Flags                     */
+/*000*/ BYTE    flags1;                 /* Flags                     */
 #define CHSC_RSP4_F1_SCH_VALID    0x80  /* Subchannel valid          */
 #define CHSC_RSP4_F1_DEV_VALID    0x40  /* Device number valid       */
 #define CHSC_RSP4_F1_ST           0x38  /* Subchannel type           */
@@ -312,7 +312,7 @@ typedef struct CHSC_REQ6 CHSC_REQ6;
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by zero, one or more CHSC_RSP6 */
 typedef struct CHSC_RSP6 {              /* Store Subchann. CU Data   */
-/*000*/ BYTE    flags;                  /* Flags                     */
+/*000*/ BYTE    flags1;                 /* Flags                     */
 #define CHSC_RSP6_F1_SCH_VALID    0x80  /* Subchannel valid          */
 #define CHSC_RSP6_F1_DEV_VALID    0x40  /* Device number valid       */
 #define CHSC_RSP6_F1_ST           0x38  /* Subchannel type           */

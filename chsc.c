@@ -112,10 +112,10 @@ CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp+1);
                 if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
                 {
                     int n;
-                    chsc_rsp4->flags |= CHSC_RSP4_F1_SCH_VALID;
+                    chsc_rsp4->flags1 |= CHSC_RSP4_F1_SCH_VALID;
                     if(dev->pmcw.flag5 & PMCW5_V)
-                        chsc_rsp4->flags |= CHSC_RSP4_F1_DEV_VALID;
-                    chsc_rsp4->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
+                        chsc_rsp4->flags1 |= CHSC_RSP4_F1_DEV_VALID;
+                    chsc_rsp4->flags1 |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
                     chsc_rsp4->path_mask = dev->pmcw.pim;
                     chsc_rsp4->unit_addr = dev->devnum & 0xff;
                     STORE_HW(chsc_rsp4->devno,dev->devnum);
@@ -181,10 +181,10 @@ CHSC_RSP6 *chsc_rsp6 = (CHSC_RSP6 *)(chsc_rsp+1);
                 if((dev = find_device_by_subchan((LCSS_TO_SSID(lcss) << 16)|sch)))
                 {
                     int n;
-                    chsc_rsp6->flags |= CHSC_RSP6_F1_SCH_VALID;
+                    chsc_rsp6->flags1 |= CHSC_RSP6_F1_SCH_VALID;
                     if(dev->pmcw.flag5 & PMCW5_V)
-                        chsc_rsp6->flags |= CHSC_RSP6_F1_DEV_VALID;
-                    chsc_rsp6->flags |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
+                        chsc_rsp6->flags1 |= CHSC_RSP6_F1_DEV_VALID;
+                    chsc_rsp6->flags1 |= ((dev->pmcw.flag25 & PMCW25_TYPE) >> 2);
                     chsc_rsp6->path_mask = dev->pmcw.pim;
                     STORE_HW(chsc_rsp6->devnum,dev->devnum);
                     STORE_HW(chsc_rsp6->sch, sch);
@@ -354,7 +354,7 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
 
     FETCH_HW( req_len, chsc_req31->length );
 
-    rsp_len = sizeof(CHSC_RSP);
+    rsp_len = sizeof(CHSC_RSP) + 0;
 
     if (!chsc_max_rsp(req_len, 0))
         return chsc_req_errreq(chsc_rsp, 0);
@@ -387,11 +387,19 @@ CHSC_REQ31* chsc_req31 = (CHSC_REQ31*) (chsc_req);
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(chsc_set_sci) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
 {
+U16 req_len, rsp_len;
 DEVBLK *dev;
 U32 ssid;
 int rc;
 
 CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
+
+    FETCH_HW( req_len, chsc_req21->length );
+
+    rsp_len = sizeof(CHSC_RSP) + 0;
+
+    if (!chsc_max_rsp(req_len, 0))
+        return chsc_req_errreq(chsc_rsp, 0);
 
     /* Fetch requested Subchannel Id */
     FETCH_FW(ssid, chsc_req21->ssid);
@@ -402,7 +410,7 @@ CHSC_REQ21 *chsc_req21 = (CHSC_REQ21 *)(chsc_req);
                 return chsc_req_ok(chsc_rsp, sizeof(CHSC_RSP), 0);
 
 //  return chsc_req_errreq(chsc_rsp, 0);
-    return chsc_req_ok(chsc_rsp, sizeof(CHSC_RSP), 0);
+    return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
@@ -426,7 +434,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
 
     FETCH_HW(req_len, chsc_req2->length);
 
-    fmt1 = (chsc_req2->flags & CHSC_REQ2_F1_C) ? 1 : 0;
+    fmt1 = (chsc_req2->flags1 & CHSC_REQ2_F1_C) ? 1 : 0;
     rsp_size = fmt1 ? sizeof(CHSC_RSP2F1) : sizeof(CHSC_RSP2);
 
     if(!(max_rsp = chsc_max_rsp(req_len, rsp_size))
@@ -450,7 +458,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
                   && (dev->pmcw.chpid[0] == chp)
                   && dev->chptype[0])
                 {
-                    chsc_rsp2->flags    |= CHSC_RSP2_F1_CHPID_VALID;
+                    chsc_rsp2->flags1   |= CHSC_RSP2_F1_CHPID_VALID;
                     chsc_rsp2->chp_type  = dev->chptype[0];
 //                  chsc_rsp2->lsn       = 0;
 //                  chsc_rsp2->swla      = 0;
@@ -471,7 +479,7 @@ CHSC_RSP2F1 *chsc_rsp2f1 = (CHSC_RSP2F1 *)(chsc_rsp+1);
                   && (dev->pmcw.chpid[0] == chp)
                   && dev->chptype[0])
                 {
-                    chsc_rsp2f1->flags    |= CHSC_RSP2F1_F1_CHPID_VALID;
+                    chsc_rsp2f1->flags1   |= CHSC_RSP2F1_F1_CHPID_VALID;
                     chsc_rsp2f1->chp_type  = dev->chptype[0];
 //                  chsc_rsp2f1->lsn       = 0;
 //                  chsc_rsp2f1->chpp      = 0;
