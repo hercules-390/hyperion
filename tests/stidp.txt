@@ -12,7 +12,7 @@ r 218=0E46         # MVCL R4,R6        Fill SYSIB with padding byte
 r 21A=98010358     # LM R0,R1,FC111    Load R0=FC-SC1,R1=SC2
 r 21E=B27D9000     # STSI 0(R9)        Store System Information
 r 222=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
-r 224=B2B20310     # LPSWE DISWAIT     Load disabled wait PSW
+r 226=B2B20310     # LPSWE DISWAIT     Load disabled wait PSW
 r 300=07020001800000000000000000AAAAAA # WAITPSW Enabled wait state PSW
 r 310=00020001800000000000000000BADBAD # DISWAIT Disabled wait state PSW
 r 350=0000000000000000                 # CPU ID from STIDP
