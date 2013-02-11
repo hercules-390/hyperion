@@ -4953,9 +4953,9 @@ u_int     id;
             }
 
             if(id)
-                sysblk.cpuid &= ~0x8000ULL;
-            else
                 sysblk.cpuid |= 0x8000ULL;
+            else
+                sysblk.cpuid &= ~0x8000ULL;
         }
         else
         {
