@@ -48,9 +48,14 @@
 #include "ctcadpt.h"
 #include "hercifc.h"
 
-#define QETH_DEBUG
+/*-------------------------------------------------------------------*/
+/* QETH Debugging                                                    */
+/*-------------------------------------------------------------------*/
 
-#if defined(DEBUG) && !defined(QETH_DEBUG)
+#define ENABLE_QETH_DEBUG   1    // 1:enable, 0:disable, #undef:default
+
+#if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) || \
+    (defined(ENABLE_QETH_DEBUG) && ENABLE_QETH_DEBUG)
  #define QETH_DEBUG
 #endif
 

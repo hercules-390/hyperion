@@ -26,9 +26,14 @@
 
 #if defined(FEATURE_CHSC)
 
-//#define CHSC_DEBUG
+/*-------------------------------------------------------------------*/
+/* CHSC Debugging                                                    */
+/*-------------------------------------------------------------------*/
 
-#if defined(DEBUG) && !defined(QETH_DEBUG)
+#define ENABLE_CHSC_DEBUG   0    // 1:enable, 0:disable, #undef:default
+
+#if (!defined(ENABLE_CHSC_DEBUG) && defined(DEBUG)) || \
+    (defined(ENABLE_CHSC_DEBUG) && ENABLE_CHSC_DEBUG)
  #define CHSC_DEBUG
 #endif
 
