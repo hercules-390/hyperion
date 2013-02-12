@@ -303,7 +303,7 @@
   "'cpu 14 gpr' will execute the 'gpr' command on cpu 20, but will not\n"       \
   "change the target cpu for subsequent panel displays and commands.\n"
 
-#define cpuidfmt_cmd_desc       "Set format 0/1 STIDP generation"
+#define cpuidfmt_cmd_desc       "Set format BASIC/0/1 STIDP generation"
 #define cpumodel_cmd_desc       "Set CPU model number"
 #define cpuprio_cmd_desc        "Set/Display cpuprio parameter"
 #define cpuserial_cmd_desc      "Set CPU serial number"
@@ -692,10 +692,11 @@
 #define lparnum_cmd_help        \
                                 \
   "Specifies the one- or two-digit hexadecimal LPAR identification\n"            \
-  "number stored by the STIDP instruction. If a one-digit number\n"              \
-  "is specified then STIDP stores a format-0 CPU ID. If a two-digit\n"           \
-  "number is specified then STIDP stores a format-1 CPU ID. If\n"                \
-  "LPARNUM is not specified, then STIDP stores a basic-mode CPUID"
+  "number stored by the STIDP instruction, or BASIC. If a one-digit\n"           \
+  "number is specified then STIDP stores a format-0 CPU ID. If a \n"             \
+  "two-digit number is specified then STIDP stores a format-1 CPU ID.\n"         \
+  "If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID. The\n"            \
+  "default is BASIC."
 
 #define ls_cmd_desc             "List directory contents"
 #define lsdep_cmd_desc          "List module dependencies"
