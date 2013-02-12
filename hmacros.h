@@ -233,8 +233,8 @@
 #define str_caseless_eq(_a,_b)      (!strcasecmp(_a,_b))
 #define str_caseless_ne(_a,_b)      (strcasecmp(_a,_b))
 
-#define str_caseless_eq_n(_a,_b,_n) (!strcasencmp(_a,_b,_n))
-#define str_caseless_ne_n(_a,_b,_n) (strcasencmp(_a,_b,_n))
+#define str_caseless_eq_n(_a,_b,_n) (!strncasecmp(_a,_b,_n))
+#define str_caseless_ne_n(_a,_b,_n) (strncasecmp(_a,_b,_n))
 
 /*-------------------------------------------------------------------*/
 /* some handy array/struct macros...                                 */
