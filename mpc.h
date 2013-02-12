@@ -1,7 +1,7 @@
 /* MPC.H        (c) Copyright Jan Jaeger,  2010-2012                 */
 /*              (c) Copyright Ian Shorter, 2011-2012                 */
 /*              (c) Copyright Harold Grovesteen, 2011-2012           */
-/*              MPC                                                  */
+/*              MPC (Multi-Path Channel) functions                   */
 
 /* This implementation is based on the S/390 Linux implementation    */
 
