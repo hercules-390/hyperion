@@ -1244,25 +1244,59 @@ const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
 
 
 /*-------------------------------------------------------------------*/
+/* Helper function to format data as just individual BYTES           */
+/*-------------------------------------------------------------------*/
+static void FormatBytes( BYTE* data, int len, char* buf, size_t bufsz )
+{
+    char temp[4];
+    int  i;
+
+    for (i=0; i < len; ++i)
+    {
+        if (i == 4)
+            strlcat( buf, " ", bufsz );
+        MSGBUF( temp, "%02X", data[i] );
+        strlcat( buf, temp, bufsz );
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Helper function to remove trailing blanks including CRLF          */
+/*-------------------------------------------------------------------*/
+static void TrimEnd( char* buf )
+{
+    size_t n; char* p;
+
+    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
+        ; // (nop)
+    p[1] = 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Format RCD (Read Configuration Data) response                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 {
     size_t  n;
     char temp[256];
-    char* p;
 
     if (!buf)
         return NULL;
     if (bufsz)
         buf[0] = 0;
-    if (bufsz <= 1 || !rcd)
+    if (bufsz <= 1 || !rcd || !len)
         return buf;
-
-    ASSERT( (len % sizeof(NED)) == 0 );
 
     for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
     {
+        if (len < sizeof(NED))
+        {
+            FormatBytes( rcd, len, buf, bufsz );
+            break;
+        }
+
         switch (rcd[0] >> 6)
         {
         case FIELD_IS_NEQ:
@@ -1287,10 +1321,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
         strlcat( buf, temp, bufsz );
     }
 
-    // (remove trailing blanks, including trailing CRLF)
-    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
-        ; // (nop)
-    p[1] = 0;
+    TrimEnd( buf );
 
     return buf;
 }
@@ -1441,33 +1472,45 @@ const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
 {
-    ND* nd; NQ* nq;
-    char nd_buf[256];
-    char nq_buf[256];
-    char* p; int n;
-
     if (!buf)
         return NULL;
     if (bufsz)
         buf[0] = 0;
-    if (bufsz <= 1 || !rni)
+    if (bufsz <= 1 || !rni || !len)
         return buf;
 
-    ASSERT( len == (sizeof(ND) + sizeof(NQ)) );
+    if (len >= sizeof(ND))
+    {
+        char work[256];
 
-    nd = (ND*) rni;
-    nq = (NQ*)(nd+1);
+        register ND* nd = (ND*) rni;
 
-    FormatND( nd, nd_buf, sizeof(nd_buf)-1);
-    strlcat( buf, nd_buf, bufsz );
+        FormatND( nd, work, sizeof(work)-1);
+        strlcat( buf, work, bufsz );
 
-    FormatNQ( nq, nq_buf, sizeof(nq_buf)-1);
-    strlcat( buf, nq_buf, bufsz );
+        len -= sizeof(ND);
+        rni += sizeof(ND);
 
-    // (remove trailing blanks, including trailing CRLF)
-    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
-        ; // (nop)
-    p[1] = 0;
+        if (len >= sizeof(NQ))
+        {
+            register NQ* nq = (NQ*) rni;
+
+            FormatNQ( nq, work, sizeof(work)-1);
+            strlcat( buf, work, bufsz );
+
+            len -= sizeof(NQ);
+            rni += sizeof(NQ);
+
+            if (len)
+                FormatBytes( rni, len, buf, bufsz );
+        }
+        else
+            FormatBytes( rni, len, buf, bufsz );
+    }
+    else
+        FormatBytes( rni, len, buf, bufsz );
+
+    TrimEnd( buf );
 
     return buf;
 }
@@ -1531,40 +1574,45 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 {
     size_t  n;
     char temp[128];
-    char* p;
 
     if (!buf)
         return NULL;
     if (bufsz)
         buf[0] = 0;
-    if (bufsz <= 1 || !ciw)
+    if (bufsz <= 1 || !ciw || !len)
         return buf;
 
-    ASSERT( (len % 4) == 0 );
-
-    n = (size_t) snprintf( buf, bufsz-1,
-
-        "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
-
-        , ciw[0]
-        , ciw[1], ciw[2], ciw[3]
-        , ciw[4], ciw[5], ciw[6]
-        , ciw[7]
-    );
-
-    if (n < bufsz)
-        buf[n] = 0;
-
-    for (ciw += 8, len -= 8; len > 0; ciw += 4, len -= 4)
+    if (len < 8)
+        FormatBytes( ciw, len, buf, bufsz );
+    else
     {
-        FormatCIW( ciw, temp, sizeof(temp)-1);
-        strlcat( buf, temp, bufsz );
-    }
+        n = (size_t) snprintf( buf, bufsz-1,
 
-    // (remove trailing blanks, including trailing CRLF)
-    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
-        ; // (nop)
-    p[1] = 0;
+            "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
+
+            , ciw[0]
+            , ciw[1], ciw[2], ciw[3]
+            , ciw[4], ciw[5], ciw[6]
+            , ciw[7]
+        );
+
+        if (n < bufsz)
+            buf[n] = 0;
+
+        ciw += 8;
+        len -= 8;
+
+        for (; len >= 4; ciw += 4, len -= 4)
+        {
+            FormatCIW( ciw, temp, sizeof(temp)-1);
+            strlcat( buf, temp, bufsz );
+        }
+
+        if (len)
+            FormatBytes( ciw, len, buf, bufsz );
+
+        TrimEnd( buf );
+    }
 
     return buf;
 }
