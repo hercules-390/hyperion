@@ -4766,21 +4766,23 @@ BYTE    c;
             else
                 sysblk.cpuid |=  0x8000ULL; /* Set CPUID format 1     */
 
-            if ( MLVL(VERBOSE) )
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+            {
+                char buf[20];
+                MSGBUF(buf, "%02X", sysblk.lparnum);
+                set_symbol("LPARNUM", buf);
+                set_symbol("CPUIDMFT", (n == 1) ? "0" : "1");
+                if (MLVL( VERBOSE ))
+                    WRMSG(HHC02204, "I", argv[0], buf);
+            }
+#else /* !defined(OPTION_CONFIG_SYMBOLS) || !defined(OPTION_BUILTIN_SYMBOLS) */
+            if (MLVL( VERBOSE ))
             {
                 char buf[20];
                 MSGBUF(buf, "%02X", sysblk.lparnum);
                 WRMSG(HHC02204, "I", argv[0], buf);
             }
-
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-            {
-                char buf[20];
-                set_symbol("LPARNUM", buf);
-                set_symbol("CPUIDMFT", (n == 1) ? "0" : "1");
-            }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-
         }
         else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
         {
@@ -4793,14 +4795,12 @@ BYTE    c;
                 MSGBUF( buf, "%02X", sysblk.lparnum);
                 WRMSG(HHC02204, "I", argv[0], buf);
             }
-
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             {
                 set_symbol("LPARNUM", "BASIC");
                 set_symbol("CPUIDFMT", "BASIC");
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-
         }
         else
         {
