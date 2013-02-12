@@ -390,7 +390,8 @@ DLL_EXPORT pid_t  fork( void )
 
 DLL_EXPORT int sched_yield ( void )
 {
-    Sleep(0);
+    if (!SwitchToThread())
+        Sleep(0);
     return 0;
 }
 
