@@ -550,6 +550,11 @@ int     dll_count;                      /* index into array          */
                  | ((U64) 0x000001 << 32)
                  | ((U64)   0x0586 << 16);
 
+    /* Set LPAR mode to BASIC with CPUIDFMT 0 */
+    sysblk.lparmode = 0;
+    sysblk.lparnum = 0;
+    /* sysblk.cpuid = ~&0x8000ULL   // Set to zero in default CPU identifier */
+
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_NONE;
 
@@ -614,10 +619,9 @@ int     dll_count;                      /* index into array          */
     {
         char buf[8];
 
-        set_symbol("LPARNAME", str_lparname() );
-
-        MSGBUF( buf, "%02X", sysblk.lparnum );
-        set_symbol("LPARNUM", buf );
+        set_symbol("LPARNAME", str_lparname());
+        set_symbol("LPARNUM", "BASIC");
+        set_symbol("CPUIDFMT", "0");
 
         MSGBUF( buf, "%06X", (unsigned int) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
         set_symbol( "CPUSERIAL", buf );

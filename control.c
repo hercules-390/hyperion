@@ -6414,19 +6414,24 @@ U64     dreg;                           /* Double word workarea      */
     /* Load the CPU ID */
     dreg = sysblk.cpuid;
 
-    /* If fmt1 cpuid and the digits are zero, insert the two digit lpar id */
-    if((dreg & 0x8000ULL) && !(dreg & 0x00FF000000000000ULL))
-        dreg |= ((U64)(sysblk.lparnum & 0xFF) << 48);
-    else
+    if (sysblk.lparmode)
     {
-        /* For fmt0 Insert a single digit lpar id */
-        if(!(dreg & 0x000F000000000000ULL))
-            dreg |= ((U64)(sysblk.lparnum & 0xF) << 48);
+        /* If fmt1 cpuid and the digits are zero, insert the two digit LPAR id */
+        if((dreg & 0x8000ULL) && !(dreg & 0x00FF000000000000ULL))
+            dreg |= ((U64)(sysblk.lparnum & 0xFF) << 48);
+        else
+        {
+            /* For fmt0 Insert a single digit LPAR id */
+            if(!(dreg & 0x000F000000000000ULL))
+                dreg |= ((U64)(sysblk.lparnum & 0xF) << 48);
 
-        /* If first digit of serial is zero, insert processor id */
-        if(!(dreg & 0x00F0000000000000ULL))
-            dreg |= (U64)(regs->cpuad & 0x0F) << 52;
+            /* If first digit of serial is zero, insert processor id */
+            if(!(dreg & 0x00F0000000000000ULL))
+                dreg |= (U64)(regs->cpuad & 0x0F) << 52;
+        }
     }
+    else if(!(dreg & 0x00FF000000000000ULL))
+        dreg |= (U64)(regs->cpuad & 0xFF) << 52;
 
     /* Store CPU ID at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );

@@ -4747,32 +4747,74 @@ BYTE    c;
     /* Update LPAR identification number if operand is specified */
     if ( argc == 2 )
     {
-        if ( strlen(argv[1]) >= 1 && strlen(argv[1]) <= 2
-          && sscanf(argv[1], "%hx%c", &id, &c) == 1)
+        int n = strlen(argv[1]);
+
+        if ( (n == 2 || n == 1)
+             && sscanf(argv[1], "%hx%c", &id, &c) == 1)
         {
+            if (sysblk.cpuid & 0x00FF000000000000ULL)
+            {
+                WRMSG(HHC02205, "E", argv[1], ": CPUSERIAL number greater than 00FFFF (hex)");
+                return -1;
+            }
+
+            sysblk.lparmode = 1;    /* Indicate LPAR mode active */
             sysblk.lparnum = id;
+
+            if (n == 1)
+                sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0     */
+            else
+                sysblk.cpuid |=  0x8000ULL; /* Set CPUID format 1     */
+
+            if ( MLVL(VERBOSE) )
+            {
+                char buf[20];
+                MSGBUF(buf, "%02X", sysblk.lparnum);
+                WRMSG(HHC02204, "I", argv[0], buf);
+            }
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+            {
+                char buf[20];
+                set_symbol("LPARNUM", buf);
+                set_symbol("CPUIDMFT", (n == 1) ? "0" : "1");
+            }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
+        }
+        else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
+        {
+            sysblk.lparmode = 0;        /* LPAR mode inactive         */
+            sysblk.lparnum  = 0;        /* Clear out LPAR number      */
+            sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0         */
             if ( MLVL(VERBOSE) )
             {
                 char buf[20];
                 MSGBUF( buf, "%02X", sysblk.lparnum);
                 WRMSG(HHC02204, "I", argv[0], buf);
+            }
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-                set_symbol("LPARNUM", buf );
+            {
+                set_symbol("LPARNUM", "BASIC");
+                set_symbol("CPUIDFMT", "BASIC");
+            }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
-            }
         }
         else
         {
-            WRMSG(HHC02205, "E", argv[1], ": must be within 00 to 3F (hex)" );
+            WRMSG(HHC02205, "E", argv[1], ": must be BASIC, 0 to F (hex) or 00 to FF (hex)");
             return -1;
         }
     }
     else
     {
         char buf[20];
-        MSGBUF( buf, "%02X", sysblk.lparnum);
+        if (sysblk.lparmode)
+            MSGBUF( buf, "%02X", sysblk.lparnum);
+        else
+            strncpy(buf, "BASIC", sizeof(buf));
         WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
@@ -4893,10 +4935,20 @@ BYTE    c;
     /* Update CPU serial if operand is specified */
     if (argc == 2)
     {
-        if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 7)
+        int n = strlen(argv[1]);
+
+
+        if ( (n >= 1) && (n <= 6)
           && (sscanf(argv[1], "%x%c", &cpuserial, &c) == 1) )
         {
             char buf[8];
+
+            if (sysblk.lparmode && (cpuserial > 0x00FFFFUL))
+            {
+                WRMSG(HHC02205, "E", argv[1], ": Limited to 00FFFF (hex) in LPAR mode");
+                return -1;
+            }
+
             sprintf(buf,"%06X",cpuserial);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
@@ -4931,7 +4983,7 @@ BYTE    c;
 
 
 /*-------------------------------------------------------------------*/
-/* cpuidfmt command - set or display STIDP format {0|1}              */
+/* cpuidfmt command - set or display STIDP format {0|1|BASIC}        */
 /*-------------------------------------------------------------------*/
 int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -4940,11 +4992,12 @@ u_int     id;
     UNREFERENCED(cmdline);
 
     /* Update CPU ID format if operand is specified */
-    if (argc > 1)
+    if (argc > 1 && argv[1] != NULL)
     {
-        if (argv[1] != NULL
-          && strlen(argv[1]) == 1
-          && sscanf(argv[1], "%u", &id) == 1)
+        int n = strlen(argv[1]);
+
+        if (strlen(argv[1]) == 1
+            && sscanf(argv[1], "%u", &id) == 1)
         {
             if (id > 1)
             {
@@ -4952,10 +5005,46 @@ u_int     id;
                 return -1;
             }
 
+            if (!sysblk.lparmode)
+            {
+                WRMSG(HHC02205, "E", argv[1],": not in LPAR mode");
+                return -1;
+            }
+
             if(id)
                 sysblk.cpuid |= 0x8000ULL;
+            else if (sysblk.lparnum > 0x0F)
+            {
+                WRMSG(HHC02205, "E", argv[1],": LPAR number greater than 0F (hex)");
+                return -1;
+            }
             else
                 sysblk.cpuid &= ~0x8000ULL;
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+            set_symbol("CPUIDMFT", (sysblk.cpuid & 0x8000ULL) ? "1" : "0");
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
+        }
+        else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
+        {
+            if (sysblk.lparmode)
+            {
+                WRMSG(HHC02205, "E", argv[1],": In LPAR mode");
+                return -1;
+            }
+            sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0         */
+            if ( MLVL(VERBOSE) )
+            {
+                char buf[20];
+                MSGBUF( buf, "%02X", sysblk.lparnum);
+                WRMSG(HHC02204, "I", argv[0], buf);
+            }
+
+#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+            set_symbol("CPUIDFMT", "BASIC");
+#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
         }
         else
         {
@@ -4965,14 +5054,20 @@ u_int     id;
         if ( MLVL(VERBOSE) )
         {
             char buf[40];
-            MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+            if (sysblk.lparmode)
+                MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+            else
+                strncpy(buf, "BASIC", sizeof(buf));
             WRMSG(HHC02204, "I", argv[0], buf);
         }
     }
     else
     {
         char buf[40];
-        MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+        if (sysblk.lparmode)
+            MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+        else
+            strncpy(buf, "BASIC", sizeof(buf));
         WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
