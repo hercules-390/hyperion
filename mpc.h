@@ -311,8 +311,8 @@ struct _MPC_PUS                    /*                                */
 /*01C*/      BYTE   unknown1C[16]; /* ???, only seen nulls.          */
            } b;                    /*                                */
 #define SIZE_PUS_02_B  0x002C      /* Size of MPC_PUS_02_B           */
-           struct _c {             /* PUS_02_A contents              */
-/*004*/      BYTE   userdata[8];   /* User data                      */
+           struct _c {             /* PUS_02_C contents              */
+/*004*/      BYTE   nulls[8];      /* Nulls                          */
            } c;                    /*                                */
 #define SIZE_PUS_02_C  0x000C      /* Size of MPC_PUS_02_C           */
          } pus_02;                 /* PUS_02 contents end            */
@@ -376,9 +376,10 @@ struct _MPC_PUS                    /*                                */
 // fine PUS_LINK_TYPE_LANE_ETH1000  0x83   /*                        */
 // fine PUS_LINK_TYPE_LANE          0x88   /*                        */
 // fine PUS_LINK_TYPE_ATM_NATIVE    0x90   /*                        */
+/*015*/      BYTE   unknown15[3];  /* ???                            */
          } pus_0A;                 /*                                */
 #define SIZE_PUS_0A_A  0x0014      /* Size of MPC_PUS_0A             */
-#define SIZE_PUS_0A_B  0x0015      /* Size of MPC_PUS_0A             */
+#define SIZE_PUS_0A_B  0x0018      /* Size of MPC_PUS_0A             */
 
          struct _pus_0B {          /* PUS_0B contents                */
 /*004*/      BYTE   cua[2];        /*                                */
@@ -525,6 +526,8 @@ typedef struct _MPC_IPA {
 /*00C*/ FWORD   ipas;           /* Supported IP Assist mask          */
 /*010*/ FWORD   ipae;           /* Enabled IP Assist mask            */
 /*014*/ } MPC_IPA;
+#define SIZE_IPA        0x0014  /* Size of MPC_IPA                   */
+#define SIZE_IPA_SHORT  0x0010  /* Size of short (16-byte) MPC_IPA   */
 
 
 #define IPA_ARP_PROCESSING      0x00000001L  /*  *  *                */

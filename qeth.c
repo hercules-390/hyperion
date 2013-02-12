@@ -544,7 +544,57 @@ U16 offph;
 
             switch(ipa->cmd) {
 
-            case IPA_CMD_SETADPPARMS:
+            case IPA_CMD_STARTLAN:  /* 0x01 */
+                /* Note: the MPC_IPA may be 16-bytes in length, not 20-bytes. */
+                {
+                U32  uLoselen;
+                U32  uLength1;
+                U32  uLength3;
+
+                    DBGTRC(dev, _("STARTLAN\n"));
+
+                    if (lendata > SIZE_IPA_SHORT) {
+                        uLoselen = lendata - SIZE_IPA_SHORT;
+                        uLength3 = SIZE_IPA_SHORT;
+                        uLength1 = rqsize - uLoselen;
+                        rsp_bhr->datalen = uLength1;
+                        STORE_FW( rsp_th->length, uLength1 );
+                        STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
+                        STORE_F3( rsp_rrh->lenalda, uLength3 );
+                        STORE_F3( rsp_ph->lendata, uLength3 );
+                    }
+
+                    if (TUNTAP_SetFlags( grp->ttifname, 0
+                        | IFF_UP
+                        | QETH_RUNNING
+                        | QETH_PROMISC
+                        | IFF_MULTICAST
+                        | IFF_BROADCAST
+#if defined(IFF_DEBUG)
+                        | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(IFF_DEBUG)*/
+                    ))
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    else
+                    {
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        grp->ipae |= IPA_SETADAPTERPARMS;
+                    }
+                }
+                break;
+
+            case IPA_CMD_STOPLAN:  /* 0x02 */
+                {
+                    DBGTRC(dev, _("STOPLAN\n"));
+
+                    if( TUNTAP_SetFlags(grp->ttifname,0) )
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                break;
+
+            case IPA_CMD_SETADPPARMS:  /* 0xB8 */
                 {
                 MPC_IPA_SAP *sap = (MPC_IPA_SAP*)(ipa+1);
                 U32 cmd;
@@ -554,7 +604,7 @@ U16 offph;
 
                     switch(cmd) {
 
-                    case IPA_SAP_QUERY:
+                    case IPA_SAP_QUERY:  /*0x00000001 */
                         {
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             DBGTRC(dev, "Query SubCommands\n");
@@ -565,7 +615,7 @@ U16 offph;
                         }
                         break;
 
-                    case IPA_SAP_SETMAC:
+                    case IPA_SAP_SETMAC:     /* 0x00000002 */
                         {
                         SAP_SMA *sma = (SAP_SMA*)(sap+1);
                         U32 cmd;
@@ -574,7 +624,7 @@ U16 offph;
                             FETCH_FW(cmd,sma->cmd);
                             switch(cmd) {
 
-                            case IPA_SAP_SMA_CMD_READ:
+                            case IPA_SAP_SMA_CMD_READ:  /* 0 */
                                 DBGTRC(dev, "SETMAC Read MAC address\n");
                                 if(grp->tthwaddr) {
                                   ParseMAC( grp->tthwaddr, mac );
@@ -591,10 +641,10 @@ U16 offph;
                                 STORE_HW(ipa->rc,IPA_RC_OK);
                                 break;
 
-//                          case IPA_SAP_SMA_CMD_REPLACE:
-//                          case IPA_SAP_SMA_CMD_ADD:
-//                          case IPA_SAP_SMA_CMD_DEL:
-//                          case IPA_SAP_SMA_CMD_RESET:
+//                          case IPA_SAP_SMA_CMD_REPLACE:  /* 1 */
+//                          case IPA_SAP_SMA_CMD_ADD:  /* 2 */
+//                          case IPA_SAP_SMA_CMD_DEL:  /* 4 */
+//                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
 
                             default:
                                 DBGTRC(dev, "SETMAC unsupported command (%08x)\n",cmd);
@@ -604,7 +654,7 @@ U16 offph;
                         }
                         break;
 
-                    case IPA_SAP_PROMISC:
+                    case IPA_SAP_PROMISC:    /* 0x00000800 */
                         {
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
@@ -616,7 +666,7 @@ U16 offph;
                         }
                         break;
 
-                    case IPA_SAP_SETACCESS:
+                    case IPA_SAP_SETACCESS:  /* 0x00010000 */
                         DBGTRC(dev, "Set Access\n");
                         STORE_HW(sap->rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
@@ -633,41 +683,7 @@ U16 offph;
                 /* end case IPA_CMD_SETADPPARMS: */
                 break;
 
-            case IPA_CMD_STARTLAN:
-                /* Note: the MPC_IPA may be 16-bytes in length, not 20-bytes. */
-                {
-                    DBGTRC(dev, _("STARTLAN\n"));
-
-                    if (TUNTAP_SetFlags( grp->ttifname, 0
-                        | IFF_UP
-                        | QETH_RUNNING
-                        | QETH_PROMISC
-                        | IFF_MULTICAST
-                        | IFF_BROADCAST
-#if defined(IFF_DEBUG)
-                        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(IFF_DEBUG)*/
-                    ))
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
-                    else
-                    {
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                    }
-                }
-                break;
-
-            case IPA_CMD_STOPLAN:
-                {
-                    DBGTRC(dev, _("STOPLAN\n"));
-
-                    if( TUNTAP_SetFlags(grp->ttifname,0) )
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                }
-                break;
-
-            case IPA_CMD_SETVMAC:
+            case IPA_CMD_SETVMAC:  /* 0x25 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
@@ -679,7 +695,7 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_DELVMAC:
+            case IPA_CMD_DELVMAC:  /* 0x26 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
@@ -691,7 +707,7 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_SETGMAC:
+            case IPA_CMD_SETGMAC:  /* 0x23 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
@@ -703,7 +719,7 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_DELGMAC:
+            case IPA_CMD_DELGMAC:  /* 0x24 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
@@ -715,7 +731,7 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_SETIP:
+            case IPA_CMD_SETIP:  /* 0xB1 */
                 {
                 char ipaddr[16];
 //              char ipmask[16];
@@ -748,13 +764,13 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_QIPASSIST:
+            case IPA_CMD_QIPASSIST:  /* 0xB2 */
                 DBGTRC(dev, "QIPASSIST (L3 Query IP Assist)\n");
                 grp->ipae |= IPA_SETADAPTERPARMS;
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
-            case IPA_CMD_SETASSPARMS:
+            case IPA_CMD_SETASSPARMS:  /* 0xB3 */
                 {
                 MPC_IPA_SAS *sas = (MPC_IPA_SAS*)(ipa+1);
                 U32 ano;
@@ -771,22 +787,22 @@ U16 offph;
 
                     switch(cmd) {
 
-                    case IPA_SAS_CMD_START:
+                    case IPA_SAS_CMD_START:      /* 0x0001 */
                         grp->ipae |= ano;
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
-                    case IPA_SAS_CMD_STOP:
+                    case IPA_SAS_CMD_STOP:       /* 0x0002 */
                         grp->ipae &= (0xFFFFFFFF - ano);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
-                    case IPA_SAS_CMD_CONFIGURE:
-                    case IPA_SAS_CMD_ENABLE:
-                    case IPA_SAS_CMD_0005:
-                    case IPA_SAS_CMD_0006:
+                    case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
+                    case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
+                    case IPA_SAS_CMD_0005:       /* 0x0005 */
+                    case IPA_SAS_CMD_0006:       /* 0x0006 */
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
@@ -801,27 +817,27 @@ U16 offph;
                 /* end case IPA_CMD_SETASSPARMS: */
                 break;
 
-            case IPA_CMD_SETIPM:
+            case IPA_CMD_SETIPM:  /* 0xB4 */
                 DBGTRC(dev, "L3 Set IPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
-            case IPA_CMD_DELIPM:
+            case IPA_CMD_DELIPM:  /* 0xB5 */
                 DBGTRC(dev, "L3 Del IPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
-            case IPA_CMD_SETRTG:
+            case IPA_CMD_SETRTG:  /* 0xB6 */
                 DBGTRC(dev, "L3 Set Routing\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
-            case IPA_CMD_DELIP:
+            case IPA_CMD_DELIP:  /* 0xB7 */
                 DBGTRC(dev, "L3 Del IP\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
-            case IPA_CMD_CREATEADDR:
+            case IPA_CMD_CREATEADDR:  /* 0xC3 */
                 {
                 BYTE *sip = (BYTE*)(ipa+1);
                 MAC  mac;
@@ -843,7 +859,7 @@ U16 offph;
                 }
                 break;
 
-            case IPA_CMD_SETDIAGASS:
+            case IPA_CMD_SETDIAGASS:  /* 0xB9 */
                 DBGTRC(dev, "L3 Set Diag parms\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
@@ -854,10 +870,11 @@ U16 offph;
             }
             /* end switch(ipa->cmd) */
 
-            ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
+//          ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
+            ipa->iid = IPA_IID_HOST;
             grp->ipae &= grp->ipas;
             STORE_FW(ipa->ipas,grp->ipas);
-            if (lendata >= sizeof(MPC_IPA))
+            if (lendata >= SIZE_IPA)
                 STORE_FW(ipa->ipae,grp->ipae);
 
             // Add response buffer to chain.
@@ -915,7 +932,7 @@ U16 reqtype;
             iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
             iear->resp |= IDX_RSP_RESP_OK;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-            STORE_FW(iear->token, ODTOKEN);
+            STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, UCLEVEL);
 
@@ -940,7 +957,7 @@ U16 reqtype;
             iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
             iear->resp |= IDX_RSP_RESP_OK;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-            STORE_FW(iear->token, ODTOKEN);
+            STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, UCLEVEL);
 
@@ -1981,7 +1998,7 @@ int num;                                /* Number of bytes to move   */
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
-        if (count < dev->numsense) *more = 1;
+//???   if (count < dev->numsense) *more = 1;
 
         /* Copy device sense bytes to channel I/O buffer */
         memcpy (iobuf, dev->sense, num);
@@ -2002,7 +2019,7 @@ int num;                                /* Number of bytes to move   */
         /* Calculate residual byte count */
         num = (count < dev->numdevid) ? count : dev->numdevid;
         *residual = count - num;
-        if (count < dev->numdevid) *more = 1;
+//???   if (count < dev->numdevid) *more = 1;
 
         /* Copy device identifier bytes to channel I/O buffer */
         memcpy (iobuf, dev->devid, num);
@@ -2017,6 +2034,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
+//          mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
         }
         break;
 
@@ -2066,6 +2084,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
+//          mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
         }
         break;
     }
@@ -2118,11 +2137,11 @@ int num;                                /* Number of bytes to move   */
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
 
-//!     /* Display various information, maybe */
-//!     if( grp->debug )
-//!     {
-//!         mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
-//!     }
+        /* Display various information, maybe */
+        if( grp->debug )
+        {
+            mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
+        }
 
         break;
 
@@ -2186,6 +2205,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
+//          mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
         }
         break;
     }
@@ -2492,7 +2512,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
 MPC_PUS *req_pus_01;
 MPC_PUS *req_pus_02;
-U16      len_pus_02;
 
 OSA_BHR *rsp_bhr;
 MPC_TH  *rsp_th;
@@ -2518,13 +2537,15 @@ U16 uLength4;
          /* FIXME Expected pus not present, error message please. */
          return NULL;
     }
-    FETCH_HW( len_pus_02, req_pus_02->length);
+
+    /* Copy the guests CM Filter token from request PUS_TYPE_01. */
+    memcpy( grp->gtcmfilt, req_pus_01->vc.pus_01.token, MPC_TOKEN_LENGTH );
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_01 +                     // first MPC_PUS
-               len_pus_02;                       // second MPC_PUS
+               SIZE_PUS_02_C;                    // second MPC_PUS
     uLength3 = SIZE_PUK + uLength4;              // the MPC_PUK and the MPC_PUSs (the data)
-    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;     // the MPC_TH/MPC_RRH/MPC_PH
+    uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
@@ -2536,7 +2557,7 @@ U16 uLength4;
     // Fix-up various pointers
     rsp_th = (MPC_TH*)((BYTE*)rsp_bhr + SizeBHR);
     rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th + SIZE_TH);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH);
+    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH_1);
     rsp_puk = (MPC_PUK*)((BYTE*)rsp_ph + SIZE_PH);
     rsp_pus_01 = (MPC_PUS*)((BYTE*)rsp_puk + SIZE_PUK);
     rsp_pus_02 = (MPC_PUS*)((BYTE*)rsp_pus_01 + SIZE_PUS_01);
@@ -2553,7 +2574,7 @@ U16 uLength4;
     rsp_rrh->proto = PROTOCOL_UNKNOWN;
     STORE_HW( rsp_rrh->numph, 1 );
 //  STORE_FW( rsp_rrh->seqnum, ++grp->seqnumis );
-    STORE_HW( rsp_rrh->offph, SIZE_RRH );
+    STORE_HW( rsp_rrh->offph, SIZE_RRH_1 );
     STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
     STORE_F3( rsp_rrh->lenalda, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
@@ -2577,14 +2598,12 @@ U16 uLength4;
     rsp_pus_01->vc.pus_01.proto = PROTOCOL_UNKNOWN;
     rsp_pus_01->vc.pus_01.unknown05 = 0x04;           /* !!! */
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_01->vc.pus_01.token, ODTOKEN );
+    STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN2 );
 
-    // Prepare second MPC_PUS
-//  STORE_HW( rsp_pus_02->length, SIZE_PUS_02_C );
-//  rsp_pus_02->what = PUS_WHAT_04;
-//  rsp_pus_02->type = PUS_TYPE_02;
-//  STORE_DW( rsp_pus_02->vc.pus_02.c.userdata, 0x5555555555555555 );
-    memcpy( rsp_pus_02, req_pus_02, len_pus_02 );
+    // Prepare second MPC_PUS (which will contain 8-bytes of nulls)
+    STORE_HW( rsp_pus_02->length, SIZE_PUS_02_C );
+    rsp_pus_02->what = PUS_WHAT_04;
+    rsp_pus_02->type = PUS_TYPE_02;
 
     return rsp_bhr;
 }
@@ -2633,7 +2652,7 @@ U16 uLength4;
                SIZE_PUS_08 +                     // second MPC_PUS
                SIZE_PUS_07;                      // third MPC_PUS
     uLength3 = SIZE_PUK + uLength4;              // the MPC_PUK and the MPC_PUSs (the data)
-    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;     // the MPC_TH/MPC_RRH/MPC_PH
+    uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
@@ -2645,7 +2664,7 @@ U16 uLength4;
     // Fix-up various pointers
     rsp_th = (MPC_TH*)((BYTE*)rsp_bhr + SizeBHR);
     rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th + SIZE_TH);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH);
+    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH_1);
     rsp_puk = (MPC_PUK*)((BYTE*)rsp_ph + SIZE_PH);
     rsp_pus_04 = (MPC_PUS*)((BYTE*)rsp_puk + SIZE_PUK);
     rsp_pus_08 = (MPC_PUS*)((BYTE*)rsp_pus_04 + SIZE_PUS_04);
@@ -2663,7 +2682,7 @@ U16 uLength4;
     rsp_rrh->proto = PROTOCOL_UNKNOWN;
     STORE_HW( rsp_rrh->numph, 1 );
 //  STORE_FW( rsp_rrh->seqnum, ++grp->seqnumis );
-    STORE_HW( rsp_rrh->offph, SIZE_RRH );
+    STORE_HW( rsp_rrh->offph, SIZE_RRH_1 );
     STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
     STORE_F3( rsp_rrh->lenalda, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
@@ -2692,7 +2711,7 @@ U16 uLength4;
     rsp_pus_08->what = PUS_WHAT_04;
     rsp_pus_08->type = PUS_TYPE_08;
     rsp_pus_08->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_08->vc.pus_08.token, ODTOKEN );
+    STORE_FW( rsp_pus_08->vc.pus_08.token, QTOKEN3 );
 
     // Prepare third MPC_PUS
     STORE_HW( rsp_pus_07->length, SIZE_PUS_07 );
@@ -2780,7 +2799,10 @@ U16 uMTU;
          return NULL;
     }
 
-    /* Remember something from request PUS_TYPE_01. */
+    /* Copy the guests ULP Filter token from request PUS_TYPE_01. */
+    memcpy( grp->gtulpfilt, req_pus_01->vc.pus_01.token, MPC_TOKEN_LENGTH );
+
+    /* Remember whether we are using layer2 or layer3. */
     grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
 
     /* Determine length of request and response PUS_TYPE_0A. */
@@ -2804,7 +2826,7 @@ U16 uMTU;
     uLength4 = SIZE_PUS_01 +                     // first MPC_PUS
                len_rsp_pus_0A;                   // second MPC_PUS
     uLength3 = SIZE_PUK + uLength4;              // the MPC_PUK and the MPC_PUSs (the data)
-    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;     // the MPC_TH/MPC_RRH/MPC_PH
+    uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
@@ -2816,7 +2838,7 @@ U16 uMTU;
     // Fix-up various pointers
     rsp_th = (MPC_TH*)((BYTE*)rsp_bhr + SizeBHR);
     rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th + SIZE_TH);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH);
+    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH_1);
     rsp_puk = (MPC_PUK*)((BYTE*)rsp_ph + SIZE_PH);
     rsp_pus_01 = (MPC_PUS*)((BYTE*)rsp_puk + SIZE_PUK);
     rsp_pus_0A = (MPC_PUS*)((BYTE*)rsp_pus_01 + SIZE_PUS_01);
@@ -2835,7 +2857,7 @@ U16 uMTU;
     STORE_HW( rsp_rrh->numph, 1 );
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     memcpy( rsp_rrh->ackseq, req_rrh->seqnum, 4 );
-    STORE_HW( rsp_rrh->offph, SIZE_RRH );
+    STORE_HW( rsp_rrh->offph, SIZE_RRH_1 );
     STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
     STORE_F3( rsp_rrh->lenalda, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
@@ -2859,7 +2881,7 @@ U16 uMTU;
     rsp_pus_01->vc.pus_01.proto = req_pus_01->vc.pus_01.proto;
     rsp_pus_01->vc.pus_01.unknown05 = 0x04;           /* !!! */
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_01->vc.pus_01.token, ODTOKEN );
+    STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN4 );
 
     // Prepare second MPC_PUS
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
@@ -2921,7 +2943,7 @@ U16 uLength4;
                SIZE_PUS_07 +                     // third MPC_PUS
                len_pus_0B;                       // fourth MPC_PUS
     uLength3 = SIZE_PUK + uLength4;              // the MPC_PUK and the MPC_PUSs (the data)
-    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;     // the MPC_TH/MPC_RRH/MPC_PH
+    uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
@@ -2933,7 +2955,7 @@ U16 uLength4;
     // Fix-up various pointers
     rsp_th = (MPC_TH*)((BYTE*)rsp_bhr + SizeBHR);
     rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th + SIZE_TH);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH);
+    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH_1);
     rsp_puk = (MPC_PUK*)((BYTE*)rsp_ph + SIZE_PH);
     rsp_pus_04 = (MPC_PUS*)((BYTE*)rsp_puk + SIZE_PUK);
     rsp_pus_08 = (MPC_PUS*)((BYTE*)rsp_pus_04 + SIZE_PUS_04);
@@ -2954,7 +2976,7 @@ U16 uLength4;
     STORE_HW( rsp_rrh->numph, 1 );
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     memcpy( rsp_rrh->ackseq, req_rrh->seqnum, 4 );
-    STORE_HW( rsp_rrh->offph, SIZE_RRH );
+    STORE_HW( rsp_rrh->offph, SIZE_RRH_1 );
     STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
     STORE_F3( rsp_rrh->lenalda, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
@@ -2983,7 +3005,7 @@ U16 uLength4;
     rsp_pus_08->what = PUS_WHAT_04;
     rsp_pus_08->type = PUS_TYPE_08;
     rsp_pus_08->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_08->vc.pus_08.token, ODTOKEN );
+    STORE_FW( rsp_pus_08->vc.pus_08.token, QTOKEN5 );
 
     // Prepare third MPC_PUS
     STORE_HW( rsp_pus_07->length, SIZE_PUS_07 );
@@ -3026,7 +3048,7 @@ U16 uLength4;
     // Fix-up various lengths
     uLength4 = SIZE_PUS_04;                      // first MPC_PUS
     uLength3 = SIZE_PUK + uLength4;              // the MPC_PUK and the MPC_PUSs (the data)
-    uLength2 = SIZE_TH + SIZE_RRH + SIZE_PH;     // the MPC_TH/MPC_RRH/MPC_PH
+    uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Allocate a buffer in which the response will be build.
@@ -3038,7 +3060,7 @@ U16 uLength4;
     // Fix-up various pointers
     rsp_th = (MPC_TH*)((BYTE*)rsp_bhr + SizeBHR);
     rsp_rrh = (MPC_RRH*)((BYTE*)rsp_th + SIZE_TH);
-    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH);
+    rsp_ph = (MPC_PH*)((BYTE*)rsp_rrh + SIZE_RRH_1);
     rsp_puk = (MPC_PUK*)((BYTE*)rsp_ph + SIZE_PH);
     rsp_pus_04 = (MPC_PUS*)((BYTE*)rsp_puk + SIZE_PUK);
 
@@ -3056,7 +3078,7 @@ U16 uLength4;
     STORE_HW( rsp_rrh->numph, 1 );
     STORE_FW( rsp_rrh->seqnum, ++grp->seqnumcm );
     memcpy( rsp_rrh->ackseq, req_rrh->seqnum, 4 );
-    STORE_HW( rsp_rrh->offph, SIZE_RRH );
+    STORE_HW( rsp_rrh->offph, SIZE_RRH_1 );
     STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
     STORE_F3( rsp_rrh->lenalda, uLength3 );
     rsp_rrh->tokenx5 = MPC_TOKEN_X5;
@@ -3111,6 +3133,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* There will be a single MPC_PUS_03 containing the grp->gtcmfilt token */
 
     /* There will be no response. */
 
