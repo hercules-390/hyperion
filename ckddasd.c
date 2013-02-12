@@ -1804,7 +1804,11 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         }
 
         /* Test for multitrack operation */
-        if ((code & 0x80) == 0)
+        /* LRE Read any does not do multitrack for read any:         */
+        /* "If  the  number  of  read commands exceeds the number of */
+        /* data  records  on  the  track,  one  or  more of the data */
+        /* records will be read again.  No exception is reported."   */
+        if ((code & 0x80) == 0 || CKDOPER_RDANY == (CKDOPER_CODE & dev->ckdloper))
         {
             /* If non-multitrack, return to start of current track */
             cyl = dev->ckdcurcyl;
@@ -1813,7 +1817,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             if (rc < 0) return -1;
 
             /* Set index marker found flag */
-            dev->ckdxmark = 1;
+            if (CKDOPER_RDANY != (CKDOPER_CODE & dev->ckdloper))
+                dev->ckdxmark = 1;
         }
         else
         {
