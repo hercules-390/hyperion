@@ -1804,7 +1804,11 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         }
 
         /* Test for multitrack operation */
-        if ((code & 0x80) == 0)
+        /* LRE Read any does not do multitrack.                      */
+        /* "If  the  number  of  read commands exceeds the number of */
+        /* data  records  on  the  track,  one  or  more of the data */
+        /* records will be read again.  No exception is reported."   */
+        if ((code & 0x80) == 0 || CKDOPER_RDANY == (CKDOPER_CODE & dev->ckdloper))
         {
             /* If non-multitrack, return to start of current track */
             cyl = dev->ckdcurcyl;
@@ -1813,7 +1817,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             if (rc < 0) return -1;
 
             /* Set index marker found flag */
-            dev->ckdxmark = 1;
+            if (CKDOPER_RDANY != (CKDOPER_CODE & dev->ckdloper))
+                dev->ckdxmark = 1;
         }
         else
         {
@@ -5282,6 +5287,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     case CKDOPER_ORIENT_DATA:
         /* For count or data orientation, search the track
            for a count field matching the specified CCHHR */
+        /* Except  that read any doesn't skip a record.  This may be */
+        /* wrong in general, but for read any we want R1 next.       */
+        if (CKDOPER_RDANY != (CKDOPER_CODE & dev->ckdloper))
         while (1)
         {
             /* Read next count field and exit at end of track
