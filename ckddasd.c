@@ -1807,7 +1807,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         /* LRE Read any does not do multitrack.                      */
         /* "If  the  number  of  read commands exceeds the number of */
         /* data  records  on  the  track,  one  or  more of the data */
-        /* records will be read again.  No exception is reported."   */
+        /* records  will  be read again.  No exception is reported." */
+        /* Search CCWs are not allowed in this mode.                 */
         if ((code & 0x80) == 0 || CKDOPER_RDANY == (CKDOPER_CODE & dev->ckdloper))
         {
             /* If non-multitrack, return to start of current track */
@@ -1817,8 +1818,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             if (rc < 0) return -1;
 
             /* Set index marker found flag */
-            if (CKDOPER_RDANY != (CKDOPER_CODE & dev->ckdloper))
-                dev->ckdxmark = 1;
+            dev->ckdxmark = 1;
         }
         else
         {
