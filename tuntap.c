@@ -35,7 +35,7 @@
 // Declarations
 // ====================================================================
 
-#ifndef OPTION_W32_CTCI
+#if !defined(OPTION_W32_CTCI)
 
 static int IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
 static int ifc_fd[2] = { -1, -1 };
@@ -49,13 +49,16 @@ static void tuntap_term(void)
     kill(ifc_pid, SIGINT);
 }
 
-#endif
+#endif /* if !defined(OPTION_W32_CTCI) */
 
 
 // ====================================================================
 // Primary Module Entry Points
 // ====================================================================
 
+//
+// TUNTAP_SetMode           (TUNTAP_CreateInterface helper)
+//
 static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
 {
     int rc;
@@ -142,6 +145,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
     return rc;
 }   // End of function  TUNTAP_SetMode()
 
+
 //
 // TUNTAP_CreateInterface
 //
@@ -220,7 +224,6 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     if( fd < 0 )
     {
         WRMSG(HHC00137, "E", pszTUNDevice, strerror( errno ) );
-
         return -1;
     }
 
@@ -276,11 +279,11 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     return 0;
 }   // End of function  TUNTAP_CreateInterface()
 
+
 //
 // Redefine 'TUNTAP_IOCtl' for the remainder of the functions.
 // This forces all 'ioctl' calls to go to 'hercifc'.
 //
-
 #if !defined( OPTION_W32_CTCI )
   #undef  TUNTAP_IOCtl
   #define TUNTAP_IOCtl    IFC_IOCtl
@@ -291,7 +294,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 // TUNTAP_ClrIPAddr
 //
 
-int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
+int             TUNTAP_ClrIPAddr( char* pszNetDevName )
 {
     struct hifr hifr;
 
@@ -309,12 +312,13 @@ int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
 }   // End of function  TUNTAP_ClrIPAddr()
 #endif /* OPTION_TUNTAP_CLRIPADDR */
 
+
 //
 // TUNTAP_SetIPAddr
 //
 
-int             TUNTAP_SetIPAddr( char*   pszNetDevName,
-                                  char*   pszIPAddr )
+int             TUNTAP_SetIPAddr( char*  pszNetDevName,
+                                  char*  pszIPAddr )
 {
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -346,12 +350,13 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_SetIPAddr()
 
+
 //
 // TUNTAP_SetDestAddr
 //
 
-int             TUNTAP_SetDestAddr( char*   pszNetDevName,
-                                    char*   pszDestAddr )
+int             TUNTAP_SetDestAddr( char*  pszNetDevName,
+                                    char*  pszDestAddr )
 {
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -381,12 +386,13 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFDSTADDR, (char*)&hifr );
 }   // End of function  TUNTAP_SetDestAddr()
 
+
 //
 // TUNTAP_SetNetMask
 //
 #ifdef OPTION_TUNTAP_SETNETMASK
-int           TUNTAP_SetNetMask( char*   pszNetDevName,
-                                 char*   pszNetMask )
+int           TUNTAP_SetNetMask( char*  pszNetDevName,
+                                 char*  pszNetMask )
 {
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -417,14 +423,15 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
 }   // End of function  TUNTAP_SetNetMask()
 #endif // OPTION_TUNTAP_SETNETMASK
 
+
 #if defined(ENABLE_IPV6)
 //
 // TUNTAP_SetIPAddr6
 //
 
-int             TUNTAP_SetIPAddr6( char*   pszNetDevName,
-                                   char*   pszIPAddr6,
-                                   char*   pszPrefixSize6 )
+int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
+                                   char*  pszIPAddr6,
+                                   char*  pszPrefixSize6 )
 {
     struct hifr         hifr;
     int                 iPfxSiz;
@@ -477,8 +484,8 @@ int             TUNTAP_SetIPAddr6( char*   pszNetDevName,
 //
 // TUNTAP_SetMTU
 //
-int             TUNTAP_SetMTU( char*   pszNetDevName,
-                               char*   pszMTU )
+int             TUNTAP_SetMTU( char*  pszNetDevName,
+                               char*  pszMTU )
 {
     struct hifr         hifr;
     int                 iMTU;
@@ -516,8 +523,8 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 // TUNTAP_SetMACAddr
 //
 #ifdef OPTION_TUNTAP_SETMACADDR
-int           TUNTAP_SetMACAddr( char*   pszNetDevName,
-                                 char*   pszMACAddr )
+int           TUNTAP_SetMACAddr( char*  pszNetDevName,
+                                 char*  pszMACAddr )
 {
     struct hifr         hifr;
     struct sockaddr*    addr;
@@ -553,8 +560,8 @@ int           TUNTAP_SetMACAddr( char*   pszNetDevName,
 // TUNTAP_SetFlags
 //
 
-int             TUNTAP_SetFlags ( char*   pszNetDevName,
-                                  int     iFlags )
+int             TUNTAP_SetFlags ( char*  pszNetDevName,
+                                  int    iFlags )
 {
     struct hifr         hifr;
 
@@ -577,8 +584,8 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 // TUNTAP_GetFlags
 //
 
-int      TUNTAP_GetFlags ( char*   pszNetDevName,
-                           int*    piFlags )
+int      TUNTAP_GetFlags ( char*  pszNetDevName,
+                           int*   piFlags )
 {
     struct hifr         hifr;
     struct sockaddr_in* sin;
@@ -624,15 +631,16 @@ int      TUNTAP_GetFlags ( char*   pszNetDevName,
     return rc;
 }   // End of function  TUNTAP_GetFlags()
 
+
 //
 // TUNTAP_AddRoute
 //
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
-int           TUNTAP_AddRoute( char*   pszNetDevName,
-                               char*   pszDestAddr,
-                               char*   pszNetMask,
-                               char*   pszGWAddr,
-                               int     iFlags )
+int           TUNTAP_AddRoute( char*  pszNetDevName,
+                               char*  pszDestAddr,
+                               char*  pszNetMask,
+                               char*  pszGWAddr,
+                               int    iFlags )
 {
     struct rtentry      rtentry;
     struct sockaddr_in* sin;
@@ -688,15 +696,16 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 }   // End of function  TUNTAP_AddRoute()
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
+
 //
 // TUNTAP_DelRoute
 //
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
-int           TUNTAP_DelRoute( char*   pszNetDevName,
-                               char*   pszDestAddr,
-                               char*   pszNetMask,
-                               char*   pszGWAddr,
-                               int     iFlags )
+int           TUNTAP_DelRoute( char*  pszNetDevName,
+                               char*  pszDestAddr,
+                               char*  pszNetMask,
+                               char*  pszGWAddr,
+                               int    iFlags )
 {
     struct rtentry      rtentry;
     struct sockaddr_in* sin;
@@ -705,7 +714,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRMSG(HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -919,18 +928,39 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
 // The following functions used by Win32 *and* NON-Win32 platforms...
 
-/* ------------------------------------------------------------------ */
-/* build_herc_iface_mac                                               */
-/* ------------------------------------------------------------------ */
+/*--------------------------------------------------------------------*/
+/*                  build_herc_iface_mac                              */
+/*--------------------------------------------------------------------*/
+/* This function generates a default MAC address. The generated MAC   */
+/* address is in the form 02:00:5E:xx:xx:xx where 'xx' are either     */
+/* randomly generated values or else based on the passed IP address.  */
+/* To build a MAC using random values pass NULL for the IP addr ptr.  */
+/*--------------------------------------------------------------------*/
 void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
 {
-    // Routine to build a default MAC address for the CTCI devices
-    // virtual interface... (used by ctc_ctci.c CTCI_Init function)
+    // Routine to build a default MAC address for
+    // CTCI/LCS/QETH device virtual interfaces...
 
-    if (!in_ip || !out_mac)
+BYTE ip[4];
+
+    if (!out_mac)
     {
         ASSERT( FALSE );
-        return;                 // (nothing for us to do!)
+        return;             // (nothing for us to do!)
+    }
+
+    // We base our default MAC address on the last three bytes
+    // of the IPv4 address (see further below). If it doesn't
+    // have an IP address assigned to it yet however (in_ip is
+    // NULL), then we temporarily generate a random IP address
+    // only for the purpose of generating a default/random MAC.
+
+    if (in_ip)
+        memcpy( ip, in_ip, 4 );   // (use the passed value)
+    else                          // (else create temporary)
+    {
+        int i; for(i=0; i < 4; i++)
+            ip[i] = (BYTE)(rand() % 256);
     }
 
 #if defined( OPTION_W32_CTCI )
@@ -940,8 +970,12 @@ void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
     // an older version of TunTap32 that doesn't have the function
     // then we'll do it ourselves just like before...
 
-    if (tt32_build_herc_iface_mac( out_mac, in_ip ))
+    if (tt32_build_herc_iface_mac( out_mac, ip ))
+    {
+        out_mac[0] &= ~0x01;    // (ensure broadcast bit off)
+        out_mac[0] |=  0x02;    // (set local assignment bit)
         return;
+    }
 
 #endif
 
@@ -994,12 +1028,12 @@ void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
     //    00-00-5E-ip-ip-ip   (move in low-order 3 bytes of destination IP address)
     //    00-00-5E-8p-ip-ip   ('OR' on the x'80' high-order bit)
 
-    *(out_mac+0) = 0x00;
-    *(out_mac+1) = 0x00;
-    *(out_mac+2) = 0x5E;
-    *(out_mac+3) = *(in_ip+1) | 0x80;
-    *(out_mac+4) = *(in_ip+2);
-    *(out_mac+5) = *(in_ip+3);
+    out_mac[0] = 0x02;          // (set local assignment bit)
+    out_mac[1] = 0x00;
+    out_mac[2] = 0x5E;
+    out_mac[3] = ip[1] | 0x80;  // (Hercules *UNOFFICIAL* range)
+    out_mac[4] = ip[2];
+    out_mac[5] = ip[3];
 }
 
 
@@ -1063,13 +1097,52 @@ int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
     return 0;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* FormatMAC                                                          */
+/* ------------------------------------------------------------------ */
+//
+// Format a binary hardware MAC address into a string value.
+//
+// Input:
+//      mac          Pointer to BYTE array containing the MAC Address
+//                   that MUST be at least IFHWADDRLEN bytes long.
+//
+// Output:
+//      ppszMACAddr  Address of a char pointer that will be updated
+//                   with the malloc'ed string address of the formatted
+//                   MAC Address in the format "xx:xx:xx:xx:xx:xx".
+//                   It is the caller's responsibility to free() it.
+//
+// Returns:
+//      0 on success, -1 otherwise
+//
+int FormatMAC( char** ppszMACAddr, BYTE* mac )
+{
+    char szMAC[3 * IFHWADDRLEN] = {0};
+
+    if (!ppszMACAddr || !mac)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+
+    if (!(*ppszMACAddr = strdup( szMAC )))
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    return 0;
+}
+
+
 /* ------------------------------------------------------------------ */
 /* packet_trace                                                       */
 /* ------------------------------------------------------------------ */
-//
-// Subroutine to trace the contents of a buffer
-//
-
 void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 {
     int           offset;

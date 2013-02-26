@@ -19,13 +19,12 @@
 #endif
 
 // ====================================================================
-// Declarations
+//                      Declarations
 // ====================================================================
 
 //
 // Create TUN/TAP Interface
 //
-
 extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
                                           int     iFlags,
                                           int*    pfd,
@@ -66,12 +65,11 @@ extern int      TUNTAP_SetMTU           ( char*   pszNetDevName,
 extern int      TUNTAP_SetMACAddr       ( char*   pszNetDevName,
                                           char*   pszMACAddr );
 #endif
-
 extern int      TUNTAP_SetFlags         ( char*   pszNetDevName,
                                           int     iFlags );
+
 extern int      TUNTAP_GetFlags         ( char*   pszNetDevName,
                                           int*    piFlags );
-
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 extern int      TUNTAP_AddRoute         ( char*   pszNetDevName,
                                           char*   pszDestAddr,
@@ -85,16 +83,16 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           int     iFlags );
 #endif
 
-// (the following functions used by Win32 *and* NON-Win32 platforms)
+// (functions used by *BOTH* Win32 *and* NON-Win32 platforms)
+
 extern void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
-
 extern int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
-
+extern int  FormatMAC( char** ppszMACAddr, BYTE* mac );
 extern void packet_trace( BYTE *addr, int len, BYTE dir );
 
-//
-// Helper Macros
-//
+// ====================================================================
+//                      Helper Macros
+// ====================================================================
 
 #if defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           tt32_open
@@ -104,7 +102,7 @@ extern void packet_trace( BYTE *addr, int len, BYTE dir );
   #define TUNTAP_BegMWrite(f,n) tt32_beg_write_multi(f,n)
   #define TUNTAP_EndMWrite(f)   tt32_end_write_multi(f)
   #define TUNTAP_IOCtl          tt32_ioctl
-#else
+#else // !defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           open
   #define TUNTAP_Close          close
   #define TUNTAP_Read           read
