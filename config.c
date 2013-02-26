@@ -686,6 +686,13 @@ DEVBLK**dvpp;
 static
 void ret_devblk(DEVBLK *dev)
 {
+    /* PROGRAMMING NOTE: the device buffer will be freed by the
+       'attach_device' function whenever it gets reused and not
+       here where you would normally expect it to be done since
+       doing it here might cause Hercules to crash due to poorly
+       written device handlers that still access the buffer for
+       a brief period after the device has been detached.
+    */
     /* Mark device invalid */
     dev->allocated = 0;
     dev->pmcw.flag5 &= ~PMCW5_V;
@@ -714,6 +721,7 @@ int     i;                              /* Loop index                */
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 
+    /* Free the argv array */
     for (i = 0; i < dev->argc; i++)
         if (dev->argv[i])
             free(dev->argv[i]);
@@ -722,7 +730,7 @@ int     i;                              /* Loop index                */
 
     free(dev->typname);
 
-    // detach all devices in group
+    /* detach all devices in group */
     if(dev->group)
     {
     int i;
@@ -1246,6 +1254,15 @@ int     i;                              /* Loop index                */
     /* Obtain device data buffer */
     if (dev->bufsize != 0)
     {
+        /* PROGRAMMING NOTE: we free the device buffer here, not in
+           the 'ret_devblk' function (where you would normally expect
+           it to be done) since doing it in 'ret_devblk' might cause
+           Hercules to crash due to poorly written device handlers
+           that continue accessing the buffer for a brief period even
+           though the device has already been detached.
+        */
+        if (dev->buf)
+            free( dev->buf );
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
