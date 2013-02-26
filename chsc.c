@@ -30,7 +30,7 @@
 /* CHSC Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_CHSC_DEBUG   0    // 1:enable, 0:disable, #undef:default
+#define ENABLE_CHSC_DEBUG   0    // 1:always, 0:never, #undef:maybe
 
 #if (!defined(ENABLE_CHSC_DEBUG) && defined(DEBUG)) || \
     (defined(ENABLE_CHSC_DEBUG) && ENABLE_CHSC_DEBUG)
