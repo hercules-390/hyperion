@@ -2088,7 +2088,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     memset( &addr, 0, sizeof( struct in_addr ) );
 
     // Set some initial defaults
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
     pLCSBLK->pszTUNDevice   = strdup( tt32_get_default_iface() );
 #else
     pLCSBLK->pszTUNDevice   = strdup( HERCTUN_DEV );
