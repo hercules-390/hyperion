@@ -11,12 +11,6 @@
 
 #include "hercules.h"
 
-#if defined( HAVE_STRUCT_SOCKADDR_IN_SIN_LEN )
-  #define set_sockaddr_in_sin_len( sockaddr_in_ptr ) \
-    (sockaddr_in_ptr)->sin_len = sizeof( struct sockaddr_in )
-#else
-  #define set_sockaddr_in_sin_len( sockaddr_in_ptr )
-#endif
 
 // ====================================================================
 //                      Declarations
@@ -59,8 +53,14 @@ extern int      TUNTAP_SetIPAddr6       ( char*   pszNetDevName,
                                           char*   pszIPAddr6,
                                           char*   pszPrefixLen6 );
 
+extern int      TUNTAP_GetMTU           ( char*   pszNetDevName,
+                                          char**  ppszMTU );
+
 extern int      TUNTAP_SetMTU           ( char*   pszNetDevName,
                                           char*   pszMTU );
+
+extern int      TUNTAP_GetMACAddr       ( char*   pszNetDevName,
+                                          char**  ppszMACAddr );
 #ifdef OPTION_TUNTAP_SETMACADDR
 extern int      TUNTAP_SetMACAddr       ( char*   pszNetDevName,
                                           char*   pszMACAddr );
@@ -94,6 +94,13 @@ extern void packet_trace( BYTE *addr, int len, BYTE dir );
 //                      Helper Macros
 // ====================================================================
 
+#if defined( HAVE_STRUCT_SOCKADDR_IN_SIN_LEN )
+  #define set_sockaddr_in_sin_len( sockaddr_in_ptr ) \
+    (sockaddr_in_ptr)->sin_len = sizeof( struct sockaddr_in )
+#else
+  #define set_sockaddr_in_sin_len( sockaddr_in_ptr )
+#endif
+
 #if defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           tt32_open
   #define TUNTAP_Close          tt32_close
@@ -110,7 +117,7 @@ extern void packet_trace( BYTE *addr, int len, BYTE dir );
   #define TUNTAP_BegMWrite(f,n)
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl
-#endif // defined( WIN32 )
+#endif // defined( OPTION_W32_CTCI )
 
 #if defined( WIN32 )
 

@@ -124,6 +124,7 @@
 /*-------------------------------------------------------------------*/
 
 #undef    OPTION_TUNTAP_SETNETMASK      /* (default initial setting) */
+#undef    OPTION_TUNTAP_GETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_SETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_DELADD_ROUTES   /* (default initial setting) */
 #undef    OPTION_TUNTAP_CLRIPADDR       /* (default initial setting) */
@@ -133,6 +134,11 @@
             HAVE_DECL_SIOCSIFNETMASK
 
   #define OPTION_TUNTAP_SETNETMASK      /* TUNTAP_SetNetMask works   */
+#endif
+#if defined(HAVE_DECL_SIOCGIFHWADDR) && \
+            HAVE_DECL_SIOCGIFHWADDR
+
+  #define OPTION_TUNTAP_GETMACADDR      /* TUNTAP_GetMACAddr works   */
 #endif
 #if defined(HAVE_DECL_SIOCSIFHWADDR) && \
             HAVE_DECL_SIOCSIFHWADDR

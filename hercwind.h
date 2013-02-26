@@ -170,6 +170,7 @@ typedef u_int32_t           in_addr_t;
 // The following are needed by hostopts.h...
 
 #define HAVE_DECL_SIOCSIFNETMASK  1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCGIFHWADDR   1     // (manually defined in tuntap.h)
 #define HAVE_DECL_SIOCSIFHWADDR   1     // (manually defined in tuntap.h)
 #define HAVE_DECL_SIOCADDRT       0     // (unsupported by CTCI-W32)
 #define HAVE_DECL_SIOCDELRT       0     // (unsupported by CTCI-W32)

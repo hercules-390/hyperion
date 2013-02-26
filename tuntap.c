@@ -464,6 +464,55 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_SetIPAddr6()
 #endif /* defined(ENABLE_IPV6) */
+
+
+//
+// TUNTAP_GetMTU
+//
+int             TUNTAP_GetMTU( char*   pszNetDevName,
+                               char**  ppszMTU )
+{
+    struct hifr         hifr;
+    int                 rc;
+    char                szMTU[8] = {0};
+
+    if( !pszNetDevName || !*pszNetDevName )
+    {
+        // "Invalid net device name %s"
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        return -1;
+    }
+
+    if( !ppszMTU )
+    {
+        // HHC00136 "Error in function %s: %s"
+        WRMSG(HHC00136, "E", "TUNTAP_GetMTU", "Invalid parameters" );
+        return -1;
+    }
+
+    *ppszMTU = NULL;
+
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+
+    rc = TUNTAP_IOCtl( 0, SIOCGIFMTU, (char*)&hifr );
+    if( rc < 0 )
+    {
+        // HHC00136 "Error in function %s: %s"
+        WRMSG( HHC00136, "E", "TUNTAP_GetMTU", strerror( errno ));
+        return -1;
+    }
+
+    MSGBUF( szMTU, "%u", hifr.hifr_mtu );
+    if (!(*ppszMTU = strdup( szMTU )))
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+    return 0;
+}   // End of function  TUNTAP_GetMTU()
+
+
 //
 // TUNTAP_SetMTU
 //
@@ -498,6 +547,53 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFMTU, (char*)&hifr );
 }   // End of function  TUNTAP_SetMTU()
+
+
+//
+// TUNTAP_GetMACAddr
+//
+int           TUNTAP_GetMACAddr( char*   pszNetDevName,
+                                 char**  ppszMACAddr )
+{
+#if !defined(OPTION_TUNTAP_GETMACADDR)
+    return -1; // (unsupported)
+#else // defined(OPTION_TUNTAP_GETMACADDR)
+    struct hifr         hifr;
+    struct sockaddr*    addr;
+    int                 rc;
+
+    if( !pszNetDevName || !*pszNetDevName )
+    {
+        // "Invalid net device name %s"
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        return -1;
+    }
+
+    if( !ppszMACAddr )
+    {
+        // HHC00136 "Error in function %s: %s"
+        WRMSG(HHC00136, "E", "TUNTAP_GetMACAddr", "Invalid parameters" );
+        return -1;
+    }
+
+    *ppszMACAddr = NULL;
+
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    addr = (struct sockaddr*)&hifr.hifr_hwaddr;
+    addr->sa_family = 1;    // ARPHRD_ETHER
+
+    rc = TUNTAP_IOCtl( 0, SIOCGIFHWADDR, (char*)&hifr );
+    if( rc < 0 )
+    {
+        // HHC00136 "Error in function %s: %s"
+        WRMSG( HHC00136, "E", "TUNTAP_GetMACAddr", strerror( errno ));
+        return -1;
+    }
+
+    return FormatMAC( ppszMACAddr, addr->sa_data );
+#endif // defined(OPTION_TUNTAP_GETMACADDR)
+}   // End of function  TUNTAP_GetMACAddr()
 
 
 //
