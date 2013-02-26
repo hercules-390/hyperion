@@ -195,7 +195,7 @@ struct  _IP6FRM
 {
     BYTE      bVersTCFlow[4];            // 0x00 Vers:4, TC:8 FlowID:20
     BYTE      bPayloadLength[2];         // 0x04
-    BYTE      bNextHeader;               // 0x06
+    BYTE      bNextHeader;               // 0x06 (same as IPv4 Protocol)
     BYTE      bHopLimit;                 // 0x07
     BYTE      bSrcAddr[16];              // 0x08
     BYTE      bDstAddr[16];              // 0x18
