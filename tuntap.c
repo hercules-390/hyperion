@@ -239,7 +239,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         memset( &hifr, 0, sizeof( hifr ) );
         hifr.hifr_flags = iFlags & ~(iFlags & IFF_OSOCK) & 0xffff;
         if(*pszNetDevName)
-            strcpy( hifr.hifr_name, pszNetDevName );
+            strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
 
         if( TUNTAP_SetMode (fd, &hifr, iFlags) < 0 )
         {
@@ -274,7 +274,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             return -1;
         }
     }
-#endif
+#endif // !defined( OPTION_W32_CTCI )
 
     return 0;
 }   // End of function  TUNTAP_CreateInterface()
@@ -289,16 +289,13 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
   #define TUNTAP_IOCtl    IFC_IOCtl
 #endif
 
-#ifdef   OPTION_TUNTAP_CLRIPADDR
 //
 // TUNTAP_ClrIPAddr
 //
-
+#ifdef   OPTION_TUNTAP_CLRIPADDR
 int             TUNTAP_ClrIPAddr( char* pszNetDevName )
 {
     struct hifr hifr;
-
-    memset( &hifr, 0, sizeof( struct hifr ) );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -306,7 +303,8 @@ int             TUNTAP_ClrIPAddr( char* pszNetDevName )
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
 
     return TUNTAP_IOCtl( 0, SIOCDIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_ClrIPAddr()
@@ -323,20 +321,18 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
     struct hifr         hifr;
     struct sockaddr_in* sin;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
-    sin = (struct sockaddr_in*)&hifr.hifr_addr;
-
-    sin->sin_family = AF_INET;
-    set_sockaddr_in_sin_len( sin );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    sin = (struct sockaddr_in*)&hifr.hifr_addr;
+    sin->sin_family = AF_INET;
+    set_sockaddr_in_sin_len( sin );
+    hifr.hifr_afamily = AF_INET;
 
     if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
@@ -344,8 +340,6 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
         WRMSG( HHC00141, "E", pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
-
-    hifr.hifr_afamily = AF_INET;
 
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_SetIPAddr()
@@ -361,20 +355,17 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     struct hifr         hifr;
     struct sockaddr_in* sin;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
-    sin = (struct sockaddr_in*)&hifr.hifr_addr;
-
-    sin->sin_family = AF_INET;
-    set_sockaddr_in_sin_len( sin );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    sin = (struct sockaddr_in*)&hifr.hifr_addr;
+    sin->sin_family = AF_INET;
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
@@ -397,20 +388,17 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     struct hifr         hifr;
     struct sockaddr_in* sin;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
-    sin = (struct sockaddr_in*)&hifr.hifr_netmask;
-
-    sin->sin_family = AF_INET;
-    set_sockaddr_in_sin_len( sin );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    sin = (struct sockaddr_in*)&hifr.hifr_netmask;
+    sin->sin_family = AF_INET;
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
@@ -424,11 +412,10 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
 #endif // OPTION_TUNTAP_SETNETMASK
 
 
-#if defined(ENABLE_IPV6)
 //
 // TUNTAP_SetIPAddr6
 //
-
+#if defined(ENABLE_IPV6)
 int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
                                    char*  pszIPAddr6,
                                    char*  pszPrefixSize6 )
@@ -436,25 +423,15 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
     struct hifr         hifr;
     int                 iPfxSiz;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
-
     if( !pszIPAddr6 )
     {
         WRMSG( HHC00141, "E", pszNetDevName, "NULL" );
-        return -1;
-    }
-
-    if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
-    {
-        WRMSG( HHC00141, "E", pszNetDevName, pszIPAddr6 );
         return -1;
     }
 
@@ -465,17 +442,23 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
     }
 
     iPfxSiz = atoi( pszPrefixSize6 );
-
     if( iPfxSiz < 0 || iPfxSiz > 128 )
     {
         WRMSG(HHC00153, "E", pszNetDevName, pszPrefixSize6 );
         return -1;
     }
 
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+
+    if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
+    {
+        WRMSG( HHC00141, "E", pszNetDevName, pszIPAddr6 );
+        return -1;
+    }
+
     hifr.hifr6_prefixlen = iPfxSiz;
-
     hifr.hifr6_ifindex = hif_nametoindex( pszNetDevName );
-
     hifr.hifr_afamily = AF_INET6;
 
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&hifr );
@@ -490,15 +473,11 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
     struct hifr         hifr;
     int                 iMTU;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRMSG(HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
-
-    strcpy( hifr.hifr_name, pszNetDevName );
 
     if( !pszMTU  || !*pszMTU )
     {
@@ -507,17 +486,19 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
     }
 
     iMTU = atoi( pszMTU );
-
     if( iMTU < 46 || iMTU > 65536 )
     {
         WRMSG( HHC00144, "E", pszNetDevName, pszMTU );
         return -1;
     }
 
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
     hifr.hifr_mtu = iMTU;
 
     return TUNTAP_IOCtl( 0, SIOCSIFMTU, (char*)&hifr );
 }   // End of function  TUNTAP_SetMTU()
+
 
 //
 // TUNTAP_SetMACAddr
@@ -530,31 +511,31 @@ int           TUNTAP_SetMACAddr( char*  pszNetDevName,
     struct sockaddr*    addr;
     MAC                 mac;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
-    addr = (struct sockaddr*)&hifr.hifr_hwaddr;
-
-    addr->sa_family = AF_UNIX;
-
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
-    strcpy( hifr.hifr_name, pszNetDevName );
-
     if( !pszMACAddr || ParseMAC( pszMACAddr, mac ) != 0 )
     {
+        // "Net device %s: Invalid MAC address %s"
         WRMSG( HHC00145, "E", pszNetDevName, pszMACAddr ? pszMACAddr : "NULL" );
-            return -1;
+        return -1;
     }
 
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    addr = (struct sockaddr*)&hifr.hifr_hwaddr;
     memcpy( addr->sa_data, mac, IFHWADDRLEN );
+    addr->sa_family = 1;    // ARPHRD_ETHER
 
     return TUNTAP_IOCtl( 0, SIOCSIFHWADDR, (char*)&hifr );
+
 }   // End of function  TUNTAP_SetMACAddr()
 #endif // OPTION_TUNTAP_SETMACADDR
+
 
 //
 // TUNTAP_SetFlags
@@ -565,20 +546,19 @@ int             TUNTAP_SetFlags ( char*  pszNetDevName,
 {
     struct hifr         hifr;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
+    memset( &hifr, 0, sizeof( struct hifr ) );
     strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name) );
-
     hifr.hifr_flags = iFlags;
 
     return TUNTAP_IOCtl( 0, SIOCSIFFLAGS, (char*)&hifr );
 }   // End of function  TUNTAP_SetFlags()
+
 
 //
 // TUNTAP_GetFlags
@@ -591,19 +571,16 @@ int      TUNTAP_GetFlags ( char*  pszNetDevName,
     struct sockaddr_in* sin;
     int                 rc;
 
-    memset( &hifr, 0, sizeof( struct hifr ) );
-
-    sin = (struct sockaddr_in*)&hifr.hifr_addr;
-
-    sin->sin_family = AF_INET;
-
     if( !pszNetDevName || !*pszNetDevName )
     {
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
+    memset( &hifr, 0, sizeof( struct hifr ) );
     strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name) );
+    sin = (struct sockaddr_in*)&hifr.hifr_addr;
+    sin->sin_family = AF_INET;
 
     // PROGRAMMING NOTE: hercifc can't "get" information,
     // only "set" it. Thus because we normally use hercifc
@@ -760,6 +737,7 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCDELRT, (char*)&rtentry );
 }   // End of function  TUNTAP_DelRoute()
 #endif // OPTION_TUNTAP_DELADD_ROUTES
+
 
 #if !defined( OPTION_W32_CTCI )
 // ====================================================================
@@ -925,6 +903,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 }   // End of function  IFC_IOCtl()
 
 #endif // !defined( OPTION_W32_CTCI )
+
 
 // The following functions used by Win32 *and* NON-Win32 platforms...
 
