@@ -157,13 +157,13 @@ typedef struct _QDIO_SL {
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_SBALE {
 /*000*/ BYTE    flags[4];       /* Flags                             */
-#define SBAL_FLAGS0_LAST_ENTRY   0x40
-#define SBAL_FLAGS0_CONTIGUOUS   0x20
-#define SBAL_FLAGS0_FRAG_MASK    0x0C
-#define SBAL_FLAGS0_FRAG_FIRST   0x04
-#define SBAL_FLAGS0_FRAG_MIDDLE  0x08
-#define SBAL_FLAGS0_FRAG_LAST    0x0C
-#define SBAL_FLAGS1_PCI_REQ      0x40
+#define SBALE_FLAG0_LAST_ENTRY  0x40
+#define SBALE_FLAG0_CONTIGUOUS  0x20
+#define SBALE_FLAG0_FRAG_MASK   0x0C
+#define SBALE_FLAG0_FRAG_FIRST  0x04
+#define SBALE_FLAG0_FRAG_MIDDLE 0x08
+#define SBALE_FLAG0_FRAG_LAST   0x0C
+#define SBALE_FLAG3_PCI_REQ     0x40
 /*004*/ FWORD   length;         /* Storage length                    */
 /*008*/ DBLWRD  addr;           /* Storage Address                   */
     } QDIO_SBALE;

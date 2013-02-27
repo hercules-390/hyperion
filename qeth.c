@@ -1165,11 +1165,11 @@ mpc_display_stuff( dev, "INPUT BUF", (BYTE*)hdr2, olen+sizeof(OSA_HDR2), ' ' );
                     else
                     {
                         if(ns)
-                            sbal->sbale[ns-1].flags[0] = SBAL_FLAGS0_LAST_ENTRY;
+                            sbal->sbale[ns-1].flags[0] = SBALE_FLAG0_LAST_ENTRY;
                         return;
                     }
                     if(ns)
-                        sbal->sbale[ns-1].flags[0] = SBAL_FLAGS0_LAST_ENTRY;
+                        sbal->sbale[ns-1].flags[0] = SBALE_FLAG0_LAST_ENTRY;
                 }
                 else /* Buffer not empty */
                 {
@@ -1320,7 +1320,7 @@ mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
 else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
                         }
 
-                        if((sbal->sbale[ns].flags[1] & SBAL_FLAGS1_PCI_REQ))
+                        if((sbal->sbale[ns].flags[1] & SBALE_FLAG3_PCI_REQ))
                         {
 #if defined(_FEATURE_QDIO_THININT)
                             set_dsci(dev,DSCI_IOCOMP);
