@@ -106,11 +106,10 @@ OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
 void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
 
 /*-------------------------------------------------------------------*/
-/* Functions, entirely internal to qeth.c but should be in tuntap.c  */
+/* Internal helper functions                                         */
 /*-------------------------------------------------------------------*/
 int      GetMACAddr( char*, char*, int, MAC* );
 int      GetMTU( char*, char*, int, int* );
-
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -509,12 +508,10 @@ U16 offph;
 
             default:
                 rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
-
             }
 
             // Add response buffer to chain.
             add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
-
         }
         break;
 
@@ -568,7 +565,7 @@ U16 offph;
                 U32  uLength1;
                 U32  uLength3;
 
-                    DBGTRC(dev, _("STARTLAN\n"));
+                    DBGTRC(dev, "STARTLAN\n");
 
                     if (lendata > SIZE_IPA_SHORT) {
                         uLoselen = lendata - SIZE_IPA_SHORT;
@@ -602,7 +599,7 @@ U16 offph;
 
             case IPA_CMD_STOPLAN:  /* 0x02 */
                 {
-                    DBGTRC(dev, _("STOPLAN\n"));
+                    DBGTRC(dev, "STOPLAN\n");
 
                     if( TUNTAP_SetFlags(grp->ttifname,0) )
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
@@ -676,7 +673,7 @@ U16 offph;
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
-                            grp->promisc = promisc ? MAC_PROMISC : promisc;
+                            grp->promisc = promisc ? MAC_PROMISC : 0;
                             DBGTRC(dev, "Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
@@ -896,7 +893,6 @@ U16 offph;
 
             // Add response buffer to chain.
             add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
-
         }
         /* end case RRH_TYPE_IPA: */
         break;
@@ -940,7 +936,7 @@ U16 reqtype;
     case IDX_ACT_TYPE_READ:
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n"),
+            DBGTRC(dev, "QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n",
                 (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
@@ -965,7 +961,7 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, _("QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n"),
+            DBGTRC(dev, "QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n",
                 (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
@@ -983,7 +979,7 @@ U16 reqtype;
         break;
 
     default:
-        DBGTRC(dev, _("QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n"),
+        DBGTRC(dev, "QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n",
             reqtype,dev->devnum);
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
@@ -1004,7 +1000,7 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
-    DBGTRC(dev, _("Adapter Interrupt dev(%4.4x)\n"),dev->devnum);
+    DBGTRC(dev, "Adapter Interrupt dev(%4.4X)\n",dev->devnum);
 
     obtain_lock(&dev->lock);
     dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
@@ -1407,7 +1403,7 @@ int i;
             initialize_lock(&grp->qlock);
             initialize_lock(&grp->qblock);
 
-            /* Open write signalling pipe */
+            /* Creat ACTIVATE QUEUES signalling pipe */
             create_pipe(grp->ppfd);
 
             /* Set Non-Blocking mode */
@@ -1419,6 +1415,7 @@ int i;
 #else /*!defined( OPTION_W32_CTCI )*/
             grp->tuntap = strdup(TUNTAP_NAME);
 #endif /*defined( OPTION_W32_CTCI )*/
+            grp->ttfd = -1;
         }
         else
             grp = dev->group->grp_data;
@@ -1565,11 +1562,13 @@ int i;
             grp->debug = 0;
             continue;
         }
-#endif
+#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
         else
             logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
 
     }
+
+    dev->fd = -1;
 
     if(grouped) {
         DEVBLK *cua = dev->group->memdev[0];
@@ -1581,6 +1580,7 @@ int i;
     }
 
     return 0;
+
 } /* end function qeth_init_handler */
 
 
@@ -1621,7 +1621,7 @@ OSA_GRP *grp;
     if (dev->scsw.flag2 & SCSW2_Q)
         strlcpy( status, qdiostat, sizeof( status ));
 
-    if (dev->qdio.idxstate != MPC_IDX_STATE_INACTIVE)
+    if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         strlcpy( active, "IDX ", sizeof( active ));
 
     snprintf( buffer, buflen, "QDIO %s%s%s%sIO[%" I64_FMT "u]"
@@ -1644,8 +1644,13 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     if(!dev->member && dev->group->grp_data)
     {
-        if(grp->ttfd)
-            TUNTAP_Close(grp->ttfd);
+        int ttfd = grp->ttfd;
+
+        grp->ttfd = -1;
+        dev->fd = -1;
+
+        if(ttfd)
+            TUNTAP_Close(ttfd);
 
         if(grp->ppfd[0])
             close_pipe(grp->ppfd[0]);
@@ -1668,6 +1673,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttpfxlen6);
         if(grp->ttmtu)
             free(grp->ttmtu);
+
         remove_and_free_any_buffers_on_chain( grp );
 
         destroy_condition(&grp->qcond);
@@ -1677,7 +1683,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         free(dev->group->grp_data);
         dev->group->grp_data = NULL;
     }
-
+    else
+        dev->fd = -1;
     return 0;
 } /* end function qeth_close_device */
 
@@ -1809,7 +1816,7 @@ int num;                                /* Number of bytes to move   */
 //! if( grp->debug )
 //! {
 //!     // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
-//!     WRMSG(HHC03992, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//!     WRMSG(HHC03992, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
 //!         code, flags, count, chained, prevcode, ccwseq );
 //! }
 
@@ -1949,7 +1956,7 @@ int num;                                /* Number of bytes to move   */
                 /* Free the buffer. */
                 free( bhr );
 
-                break;
+                break; /*for*/
             }
             else
             {
@@ -1964,14 +1971,15 @@ int num;                                /* Number of bytes to move   */
                     /* Return unit check with status modifier */
                     dev->sense[0] = 0;
                     *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
-                    break;
+                    break; /*for*/
                 }
             }
 
-        }   /* for ( ; ; ) */
+        } /* end for (;;) */
 
-        break;
-    }
+        break; /*switch*/
+
+    } /* end case 0x02: READ */
 
 
     case 0x03:
@@ -2037,7 +2045,7 @@ int num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
 //          mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
         }
@@ -2087,7 +2095,7 @@ int num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
 //          mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
         }
@@ -2208,7 +2216,7 @@ int num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
 //          mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
         }
@@ -2376,7 +2384,6 @@ int num;                                /* Number of bytes to move   */
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
-
         break;
     }
 
@@ -2385,7 +2392,7 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, _("Unknown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+        DBGTRC(dev, "Unknown CCW dev(%4.4x) code(%2.2x)\n",dev->devnum,code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2396,7 +2403,7 @@ int num;                                /* Number of bytes to move   */
 //! if( grp->debug )
 //! {
 //!     // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
-//!     WRMSG(HHC03993, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+//!     WRMSG(HHC03993, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
 //!         *unitstat, *residual, *more );
 //! }
 
@@ -2411,7 +2418,7 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd;
 
-    DBGTRC(dev, _("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC(dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -2452,7 +2459,7 @@ static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    DBGTRC(dev, _("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC(dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -2491,7 +2498,7 @@ static int qeth_do_sync(DEVBLK *dev, U32 qmask)
     UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
     UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
 
-    DBGTRC(dev, _("SIGA-s dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC(dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     return 0;
 }
@@ -2539,8 +2546,9 @@ U16 uLength4;
     req_pus_02 = mpc_point_pus( dev, req_puk, PUS_TYPE_02 );
     if( !req_pus_01 || !req_pus_02 )
     {
-         /* FIXME Expected pus not present, error message please. */
-         return NULL;
+        /* FIXME Expected pus not present, error message please. */
+        DBGTRC(dev, "process_cm_enable: Expected pus not present\n");
+        return NULL;
     }
 
     /* Copy the guests CM Filter token from request PUS_TYPE_01. */
@@ -2645,8 +2653,9 @@ U16 uLength4;
     req_pus_06 = mpc_point_pus( dev, req_puk, PUS_TYPE_06 );
     if( !req_pus_04 || !req_pus_06 )
     {
-         /* FIXME Expected pus not present, error message please. */
-         return NULL;
+        /* FIXME Expected pus not present, error message please. */
+        DBGTRC(dev, "process_cm_setup: Expected pus not present\n");
+        return NULL;
     }
 
     /* Copy the guests CM Connection token from request PUS_TYPE_04. */
@@ -2800,8 +2809,9 @@ U16 uMTU;
     req_pus_0A = mpc_point_pus( dev, req_puk, PUS_TYPE_0A );
     if( !req_pus_01 || !req_pus_0A )
     {
-         /* FIXME Expected pus not present, error message please. */
-         return NULL;
+        /* FIXME Expected pus not present, error message please. */
+        DBGTRC(dev, "process_ulp_enable: Expected pus not present\n");
+        return NULL;
     }
 
     /* Copy the guests ULP Filter token from request PUS_TYPE_01. */
@@ -2934,8 +2944,9 @@ U16 uLength4;
     req_pus_0B = mpc_point_pus( dev, req_puk, PUS_TYPE_0B );
     if( !req_pus_04 || !req_pus_06 || !req_pus_0B )
     {
-         /* FIXME Expected pus not present, error message please. */
-         return NULL;
+        /* FIXME Expected pus not present, error message please. */
+        DBGTRC(dev, "process_ulp_setup: Expected pus not present\n");
+        return NULL;
     }
     FETCH_HW( len_pus_0B, req_pus_0B->length);
 
@@ -3159,6 +3170,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     UNREFERENCED(req_puk);
 
     /* FIXME Error message please. */
+    DBGTRC(dev, "process_unknown_puk\n");
 
     /* There will be no response. */
 
@@ -3200,33 +3212,8 @@ OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
 /*--------------------------------------------------------------------*/
 void*    add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
 {
+    add_buffer_to_chain( grp, bhr );
 
-    // Prepare OSA_BHR for adding to chain.
-    if (!bhr)                              // Any OSA_BHR been passed?
-        return NULL;
-    bhr->next = NULL;                      // Clear the pointer to next OSA_BHR
-
-    // Obtain the buffer chain lock.
-    obtain_lock( &grp->qblock );
-
-    // Add OSA_BHR to end of chain.
-    if (grp->firstbhr)                     // if there are already OSA_BHRs
-    {
-        grp->lastbhr->next = bhr;          // Add the OSA_BHR to
-        grp->lastbhr = bhr;                // the end of the chain
-        grp->numbhr++;                     // Increment number of OSA_BHRs
-    }
-    else
-    {
-        grp->firstbhr = bhr;               // Make the OSA_BHR
-        grp->lastbhr = bhr;                // the only OSA_BHR
-        grp->numbhr = 1;                   // on the chain
-    }
-
-    // Release the buffer chain lock.
-    release_lock( &grp->qblock );
-
-    //
     obtain_lock( &grp->qlock );
     signal_condition( &grp->qcond );
     release_lock( &grp->qlock );
