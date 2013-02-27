@@ -239,7 +239,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     /* would appear that the bit is permanent so that hercifc cannot */
     /* configure the interface.                                      */
     rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharDevName,
+#if defined(BUILD_HERCIFC)
                                  (pDevCTCBLK->fPreconfigured ? IFF_NO_HERCIFC : 0) |
+#endif // __HERCIFC_H_
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
                                  pDevCTCBLK->szTUNIfName );

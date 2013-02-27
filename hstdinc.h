@@ -106,10 +106,6 @@
     #include <net/route.h>
   #endif
 #endif
-// (just make it easier to #include hercifc.h)
-#if defined(BUILD_HERCIFC) || defined(_MSVC_) || !defined(HAVE_LINUX_IF_TUN_H) || !defined(HAVE_NET_IF_H)
-  #define NEED_HERCIFC_H
-#endif
 #ifdef HAVE_NET_IF_H
   #include <net/if.h>
 #endif

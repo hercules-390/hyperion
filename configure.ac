@@ -536,6 +536,13 @@ AC_CHECK_HEADERS( linux/if_tun.h, [hc_cv_have_linux_if_tun_h=yes], [hc_cv_have_l
 AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_sys_ioctl_h=no]    )
 
 #------------------------------------------------------------------------------
+#  PROGRAMMING NOTE: On Linux struct in6_ifreq is defined in linux/ipv6.h.
+#  On other systems it may be defined in netinet6/in6_var.h or elsewhere.
+
+AC_CHECK_HEADERS( linux/ipv6.h,       [hc_cv_have_linux_ipv6_h=yes],       [hc_cv_have_linux_ipv6_h=no] )
+AC_CHECK_HEADERS( netinet6/in6_var.h, [hc_cv_have_netinet6_in6_var_h=yes], [hc_cv_have_netinet6_in6_var_h=no] )
+
+#------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: on *BSD systems sys/param.h must be #included before
 #  sys/mount.h as it contains the #define of NGROUPS.
 
@@ -839,6 +846,18 @@ AC_CHECK_MEMBERS( [struct in_addr.s_addr],
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+] )
+
+AC_CHECK_MEMBERS( [struct in6_ifreq.ifr6_addr],
+                  [hc_cv_have_in6_ifreq_ifr6_addr=yes  ],
+                  [hc_cv_have_in6_ifreq_ifr6_addr=no   ],
+[
+#ifdef HAVE_LINUX_IPV6_H
+#include <linux/ipv6.h>
+#endif
+#ifdef HAVE_NETINET6_IN6_VAR_H
+#include <netinet6/in6_var.h>
 #endif
 ] )
 
@@ -1688,6 +1707,16 @@ if test "$hc_cv_ena_regina_rexx" = "yes" ; then
       test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
 
       AC_MSG_RESULT( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
+      hc_error=yes
+   fi
+
+fi
+
+if test "$hc_cv_ena_ipv6" = "yes" ; then
+
+   if test "$hc_cv_have_in6_ifreq_ifr6_addr" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: IPv6 support requested but struct in6_ifreq is not available] )
       hc_error=yes
    fi
 

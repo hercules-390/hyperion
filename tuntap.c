@@ -243,10 +243,13 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
         if( TUNTAP_SetMode (fd, &hifr, iFlags) < 0 )
         {
+#if !defined( OPTION_W32_CTCI )
             logmsg("nohif %x\n", IFF_NO_HERCIFC & iFlags);
             if (EPERM == errno && (IFF_NO_HERCIFC & iFlags))
                 WRMSG(HHC00154, "E", hifr.hifr_name);
-            else WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
+            else
+#endif // !defined( OPTION_W32_CTCI )
+                WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
             return -1;
         }
 
@@ -591,7 +594,7 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
         return -1;
     }
 
-    return FormatMAC( ppszMACAddr, addr->sa_data );
+    return FormatMAC( ppszMACAddr, (BYTE*) addr->sa_data );
 #endif // defined(OPTION_TUNTAP_GETMACADDR)
 }   // End of function  TUNTAP_GetMACAddr()
 

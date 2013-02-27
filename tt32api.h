@@ -5,7 +5,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (C) 2002-2011, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2002-2013, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //  TT32API.h  --  TunTap32 DLL exported functions interface
@@ -40,15 +40,18 @@
 //  11/06/08    3.3.0   Additional counters...
 //  05/18/10    3.3.0   Additional zero MAC address counters...
 //  01/17/11    3.3.0   Added socketpair
-//  02/03/11    3.3.0   _O_TT32SOCK open as SOCKET option
+//  02/03/11    3.3.0   _O_TT32NOTIFY packet arrival notification option
 //  03/08/11    3.3.0   tuntap32_beg_write_multi, tuntap32_end_write_multi
 //  03/10/11    3.3.0   Add '_ex' entry-points for calc_checksum, 
 //                      calc_inet_checksum and build_herc_iface_mac.
+//  02/21/13    3.3.0   Added #include for new "TT32if.h" header
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _TT32API_H_
 #define _TT32API_H_
+
+#include "TT32if.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                            TunTap32.dll name
@@ -98,41 +101,53 @@ extern "C"
 {
 #endif
 
-#define TT32MINMTU   (     60)          // minimum MTU value
-#define TT32DEFMTU   (   1500)          // default MTU value
-#define TT32MAXMTU  ((64*1024)-14)      // maximum MTU value  (14 == eth_hdr_size)
+// Flags...
 
-#define _O_TT32SOCK     0x08000000      // v3.3 tuntap32_open flag: open as SOCKET
+#define _O_TT32NOTIFY   0x08000000          // open flag: notify when packets arrive
 
-#define TT32_MAX_MULTICAST_LIST_ENTRIES  (32)
+// Constants...
 
-#define TT32SDEVBUFF    _IOW('T', 220, int)  // (def: 1M)
-#define TT32GDEVBUFF    _IOR('T', 220, int)
-#define TT32SIOBUFF     _IOW('T', 221, int)  // (def: 64K)
-#define TT32GIOBUFF     _IOR('T', 221, int)
-#define TT32STIMEOUT    _IOW('T', 222, int)  // (def: 5 secs; _O_TT32SOCK: 0 secs)
-#define TT32GTIMEOUT    _IOR('T', 222, int)
-#define TT32GSTATS      _IOR('T', 223, int)
+#define TT32MINMTU      (     60)           // minimum MTU value
+#define TT32DEFMTU      (   1500)           // default MTU value
+#define TT32MAXMTU      ((64*1024)-14)      // maximum MTU value  (14 == eth_hdr_size)
 
-struct tt32ctl
+#define TT32_MAX_MULTICAST_LIST_ENTRIES   (32)
+
+// ioctl codes...
+
+#define TUNSETNOCSUM    _IOW('T', 200, int)     // (UNSUPPORTED)
+#define TUNSETDEBUG     _IOW('T', 201, int)     // (UNSUPPORTED)
+#define TUNSETIFF       _IOW('T', 202, int)     // Set TUN/TAP Flags
+#define TUNSETPERSIST   _IOW('T', 203, int)     // (UNSUPPORTED)
+#define TUNSETOWNER     _IOW('T', 204, int)     // (UNSUPPORTED)
+
+#define TT32SDEVBUFF    _IOW('T', 220, int)     // Set Kernel buffer size
+#define TT32GDEVBUFF    _IOR('T', 220, int)     // Get Kernel buffer size
+#define TT32SIOBUFF     _IOW('T', 221, int)     // Set Read buffer size
+#define TT32GIOBUFF     _IOR('T', 221, int)     // Get Read buffer size
+#define TT32STIMEOUT    _IOW('T', 222, int)     // Set Read timeout value
+#define TT32GTIMEOUT    _IOR('T', 222, int)     // Get Read timeout value
+#define TT32GSTATS      _IOR('T', 223, int)     // Retrieve statistics
+
+struct tt32ctl                          // ioctl request structure
 {
     union
     {
-        char    ctln_name[IFNAMSIZ];    // iface name (e.g. "tun0")
+        char    ctln_name[IFNAMSIZ];    // iface name (e.g. "tap0", "tun1", etc)
     } tt32_ctln;
 
     union
     {
-        int     ctlu_devbuffsize;       // Kernel buffer size
-        int     ctlu_iobuffsize;        // Read buffer size
-        int     ctlu_readtimeout;       // Read timeout value
+        int     ctlu_devbuffsize;       // Kernel buffer size   (def: 1M)
+        int     ctlu_iobuffsize;        // Read buffer size     (def: 64K)
+        int     ctlu_readtimeout;       // Read timeout value   (def: 5 secs)
     } tt32_ctlu;
 };
 
-#define tt32ctl_name         tt32_ctln.ctln_name
-#define tt32ctl_devbuffsize  tt32_ctlu.ctlu_devbuffsize
-#define tt32ctl_iobuffsize   tt32_ctlu.ctlu_iobuffsize
-#define tt32ctl_readtimeout  tt32_ctlu.ctlu_readtimeout
+#define tt32ctl_name          tt32_ctln.ctln_name
+#define tt32ctl_devbuffsize   tt32_ctlu.ctlu_devbuffsize
+#define tt32ctl_iobuffsize    tt32_ctlu.ctlu_iobuffsize
+#define tt32ctl_readtimeout   tt32_ctlu.ctlu_readtimeout
 
 // WinPCap device driver capture buffer sizes
 

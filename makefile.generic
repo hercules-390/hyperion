@@ -187,7 +187,7 @@ HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            fthreads.h wthreads.h hbyteswp.h hercifc.h hercules.h \
            hetlib.h ftlib.h hostinfo.h httpmisc.h htypes.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
-           parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
+           parser.h sllib.h tapedev.h tt32.h tt32if.h tt32api.h tuntap.h version.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h \
