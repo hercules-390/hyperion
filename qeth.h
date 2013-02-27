@@ -152,34 +152,28 @@ typedef struct _OSA_GRP {
 
     char *tuntap;               /* Interface path name               */
     char  ttifname[IFNAMSIZ];   /* Interface network name            */
+
     char *tthwaddr;             /* MAC address of the interface      */
+    char *ttmtu;                /* MTU of the interface              */
+
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
     char *ttnetmask;            /* IPv4 Netmask of the interface     */
+
     char *ttipaddr6;            /* IPv6 address of the interface     */
     char *ttpfxlen6;            /* IPv6 Prefix length of interface   */
-    char *ttmtu;                /* MTU of the interface              */
 
-    int   ttfd;                 /* File Descriptor TUNTAP Device     */
-    int   ppfd[2];              /* File Descriptor pair write pipe   */
-
-    int   reqpci;               /* PCI has been requested            */
-
-    int   l3;                   /* Adapter in layer 3 mode           */
 
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
 
-    U32   iir;                  /* Interface ID record               */
-
     int   debug;                /* Adapter in IFF_DEBUG mode         */
+    int   l3;                   /* Adapter in layer 3 mode           */
+    int   reqpci;               /* PCI has been requested            */
 
-    BYTE  gtissue[4];           /* Guest token issuer                */
-    BYTE  gtcmfilt[4];          /* Guest token cm filter             */
-    BYTE  gtcmconn[4];          /* Guest token cm connection         */
-    BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
-    BYTE  gtulpconn[4];         /* Guest token ulp connection        */
+    int   ttfd;                 /* File Descriptor TUNTAP Device     */
+    int   ppfd[2];              /* Thread signalling socket pipe     */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
@@ -187,19 +181,45 @@ typedef struct _OSA_GRP {
 
     U32   ipas;                 /* Supported IP assist mask          */
     U32   ipae;                 /* Enabled IP assist mask            */
+    U32   iir;                  /* Interface ID record               */
 
-    } OSA_GRP;
+    BYTE  gtissue[4];           /* Guest token issuer                */
+    BYTE  gtcmfilt[4];          /* Guest token cm filter             */
+    BYTE  gtcmconn[4];          /* Guest token cm connection         */
+    BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
+    BYTE  gtulpconn[4];         /* Guest token ulp connection        */
+
+} OSA_GRP;
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Header Id Types                                               */
+/*-------------------------------------------------------------------*/
+#define HDR_ID_LAYER3  0x01     /* Standard IPv4/IPv6 Packet         */
+#define HDR_ID_LAYER2  0x02     /* Ethernet Layer 2 Frame            */
+#define HDR_ID_TSO     0x03     /* Layer 3 TCP Segmentation Offload  */
+#define HDR_ID_OSN     0x04     /* Channel Data Link Control (CDLC)  */
+
+
+/*-------------------------------------------------------------------*/
+/* Pack below OSA Layer headers to byte boundary...                  */
+/*-------------------------------------------------------------------*/
+
+#undef ATTRIBUTE_PACKED
+#if defined(_MSVC_)
+ #pragma pack(push)
+ #pragma pack(1)
+ #define ATTRIBUTE_PACKED
+#else
+ #define ATTRIBUTE_PACKED __attribute__((packed))
+#endif
 
 
 /*-------------------------------------------------------------------*/
 /* OSA Layer 2 Header                                                */
 /*-------------------------------------------------------------------*/
-typedef struct _OSA_HDR2 {
-/*000*/ BYTE    id;             /*                                   */
-#define HDR2_ID_LAYER3  0x01
-#define HDR2_ID_LAYER2  0x02
-#define HDR2_ID_TSO     0x03
-#define HDR2_ID_OSN     0x04
+struct OSA_HDR2 {
+/*000*/ BYTE    id;             /* Packet Id                         */
 /*001*/ BYTE    flags[3];       /*                                   */
 #define HDR2_FLAGS0_PASSTHRU    0x10
 #define HDR2_FLAGS0_IPV6        0x80
@@ -219,13 +239,25 @@ typedef struct _OSA_HDR2 {
 /*008*/ HWORD   seqno;          /*                                   */
 /*00A*/ HWORD   vlanid;         /*                                   */
 /*00C*/ FWORD   resv00c[5];     /*                                   */
-    } OSA_HDR2;
+/*020*/ } ATTRIBUTE_PACKED;
+
+typedef struct OSA_HDR2 OSA_HDR2;
 
 
+
+
+#if defined(_MSVC_)
+ #pragma pack(pop)
+#endif
+
+
+#if !defined( OPTION_W32_CTCI )
 /*-------------------------------------------------------------------*/
 /* Default pathname of the TUNTAP adapter                            */
 /*-------------------------------------------------------------------*/
 #define TUNTAP_NAME "/dev/net/tun"
+
+#endif /*!defined( OPTION_W32_CTCI )*/
 
 
 #endif /*_QETH_H*/
