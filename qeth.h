@@ -9,7 +9,6 @@
 
 #include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
 
-
 /* We need all frames from CTCI-W32 */
 #if defined( OPTION_W32_CTCI )
   #define QETH_PROMISC      IFF_PROMISC
@@ -51,13 +50,13 @@
 /*-------------------------------------------------------------------*/
 #define OSA_MAXMAC              32
 
-#define QTOKEN1 0xD8C5E3F1      /* QETH token 1 (QET1 edcdic)        */
-#define QTOKEN2 0xD8C5E3F2      /* QETH token 2 (QET2 edcdic)        */
-#define QTOKEN3 0xD8C5E3F3      /* QETH token 3 (QET3 edcdic)        */
-#define QTOKEN4 0xD8C5E3F4      /* QETH token 4 (QET4 edcdic)        */
-#define QTOKEN5 0xD8C5E3F5      /* QETH token 5 (QET5 edcdic)        */
+#define QTOKEN1 0xD8C5E3F1      /* QETH token 1 (QET1 ebcdic)        */
+#define QTOKEN2 0xD8C5E3F2      /* QETH token 2 (QET2 ebcdic)        */
+#define QTOKEN3 0xD8C5E3F3      /* QETH token 3 (QET3 ebcdic)        */
+#define QTOKEN4 0xD8C5E3F4      /* QETH token 4 (QET4 ebcdic)        */
+#define QTOKEN5 0xD8C5E3F5      /* QETH token 5 (QET5 ebcdic)        */
 
-#define UCLEVEL 0xC8D9C3F1      /* Microcode level (HRC1 edcdic)     */
+#define UCLEVEL 0xC8D9C3F1      /* Microcode level (HRC1 ebcdic)     */
 
 /*-------------------------------------------------------------------*/
 /* Convert Subchannel Token to IO ID (LCSS & SSID)                   */
@@ -129,7 +128,7 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 /* OSA MAC structure                                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_MAC {
-        BYTE    addr[6];
+        BYTE    addr[IFHWADDRLEN];
         int     type;
 #define MAC_TYPE_NONE   0x00
 #define MAC_TYPE_BRDCST 0x01
@@ -227,12 +226,6 @@ typedef struct _OSA_HDR2 {
 /* Default pathname of the TUNTAP adapter                            */
 /*-------------------------------------------------------------------*/
 #define TUNTAP_NAME "/dev/net/tun"
-
-
-/*-------------------------------------------------------------------*/
-/* Response buffer size                                              */
-/*-------------------------------------------------------------------*/
-#define RSP_BUFSZ       4096
 
 
 #endif /*_QETH_H*/

@@ -166,7 +166,9 @@ static BYTE qeth_immed_commands [256] =
 
 
 /*-------------------------------------------------------------------*/
-/* STORCHK macro: check storage access & update ref & change bits    */
+/* STORCHK macro: check storage access & update ref & change bits.   */
+/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
+/* Storage key ref & change bits are only updated if successful.     */
 /*-------------------------------------------------------------------*/
 #define STORCHK(_addr,_len,_key,_acc,_dev) \
   (((((_addr) + (_len)) > (_dev)->mainlim) \
@@ -216,9 +218,9 @@ static inline int register_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
 int i;
     for(i = 0; i < OSA_MAXMAC; i++)
-        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,6))
+        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
         {
-            memcpy(grp->mac[i].addr,mac,6);
+            memcpy(grp->mac[i].addr,mac,IFHWADDRLEN);
             grp->mac[i].type = type;
             return type;
         }
@@ -233,7 +235,7 @@ static inline int deregister_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
 int i;
     for(i = 0; i < OSA_MAXMAC; i++)
-        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,6))
+        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
         {
             grp->mac[i].type = MAC_TYPE_NONE;
             return type;
@@ -250,10 +252,10 @@ static inline int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
 int i;
     for(i = 0; i < OSA_MAXMAC; i++)
     {
-        if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,6))
+        if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
             return grp->mac[i].type | grp->promisc;
     }
-    return grp->l3 ? type | grp->promisc : grp->promisc;
+    return grp->promisc;
 }
 
 
@@ -273,6 +275,7 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#define SET_ALSI(_dev,_bits)    set_alsi((_dev),(_bits))
 
 
 /*-------------------------------------------------------------------*/
@@ -310,6 +313,7 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
 
 
 /*-------------------------------------------------------------------*/
@@ -327,6 +331,14 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#define CLR_DSCI(_dev,_bits)    clr_dsci((_dev),(_bits))
+
+#else /*!defined(_FEATURE_QDIO_THININT)*/
+
+#define SET_ALSI(_dev,_bits)    /* (do nothing) */
+#define SET_DSCI(_dev,_bits)    /* (do nothing) */
+#define CLR_DSCI(_dev,_bits)    /* (do nothing) */
+
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
 
@@ -1055,9 +1067,7 @@ int nobuff = 1;
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_QDIO_THININT)
-                        set_alsi(dev,ALSI_ERROR);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                        SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
                         DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
                         return;
@@ -1074,9 +1084,7 @@ int nobuff = 1;
                         {
                             slsb->slsbe[ib] = SLSBE_ERROR;
                             STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_QDIO_THININT)
-                            set_alsi(dev,ALSI_ERROR);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                            SET_ALSI(dev,ALSI_ERROR);
                             grp->reqpci = TRUE;
                             DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
                             return;
@@ -1144,9 +1152,7 @@ mpc_display_stuff( dev, "INPUT BUF", (BYTE*)hdr2, olen+sizeof(OSA_HDR2), ' ' );
 
                     if(tlen > 0)
                     {
-#if defined(_FEATURE_QDIO_THININT)
-                        set_dsci(dev,DSCI_IOCOMP);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                        SET_DSCI(dev,DSCI_IOCOMP);
                         grp->reqpci = TRUE;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
                         STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -1247,9 +1253,7 @@ int mq = dev->qdio.o_qcnt;
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_QDIO_THININT)
-                        set_alsi(dev,ALSI_ERROR);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                        SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
                         DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
                         return;
@@ -1266,9 +1270,7 @@ int mq = dev->qdio.o_qcnt;
                         {
                             slsb->slsbe[ob] = SLSBE_ERROR;
                             STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_QDIO_THININT)
-                            set_alsi(dev,ALSI_ERROR);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                            SET_ALSI(dev,ALSI_ERROR);
                             grp->reqpci = TRUE;
                             DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
                             return;
@@ -1322,9 +1324,7 @@ else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
 
                         if((sbal->sbale[ns].flags[3] & SBALE_FLAG3_PCI_REQ))
                         {
-#if defined(_FEATURE_QDIO_THININT)
-                            set_dsci(dev,DSCI_IOCOMP);
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+                            SET_DSCI(dev,DSCI_IOCOMP);
                             grp->reqpci = TRUE;
                         }
                     }
