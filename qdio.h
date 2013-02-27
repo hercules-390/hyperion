@@ -53,7 +53,7 @@ typedef struct _QDIO_DEV {
     BYTE  qibk;                 /* Queue Information Block Key       */
     U64   qiba;                 /* Queue Information Block Address   */
 
-    U64   alsi;                 /* Adapter Local Summ Indicator      */
+    U64   alsi;                 /* Adapter Local Summary Indicator   */
 #define ALSI_ERROR      0x80    /* ZZ TO BE CONFIRMED                */
     U64   dsci;                 /* Device status change Indicator    */
 #define DSCI_IOCOMP     0x01    /* ZZ TO BE CONFIRMED                */
@@ -126,6 +126,11 @@ typedef struct _QDIO_QIB {
 /*080*/ BYTE    parm[128];      /* Model Dependent Parameters        */
     } QDIO_QIB;
 
+/*-------------------------------------------------------------------*/
+/* Maximum number of Storage array entries                           */
+/*-------------------------------------------------------------------*/
+#define QMAXBUFS   128          /* Maximum Number of Buffers         */
+#define QMAXSTBK    16          /* Maximum Storage block entries     */
 
 /*-------------------------------------------------------------------*/
 /* Storage List Information Block (SLIB)                             */
@@ -135,7 +140,7 @@ typedef struct _QDIO_SLIB {
 /*008*/ DBLWRD  sla;            /* Storage List Address              */
 /*010*/ DBLWRD  slsba;          /* Storage List State Block Address  */
 /*018*/ BYTE    resv018[1000];
-/*400*/ DBLWRD  slibe[128];     /* Storage List Info Block Entry     */
+/*400*/ DBLWRD  slibe[QMAXBUFS];/* Storage List Info. Block Entries  */
     } QDIO_SLIB;
 
 
@@ -143,7 +148,7 @@ typedef struct _QDIO_SLIB {
 /* Storage List (SL)                                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_SL {
-/*000*/ DBLWRD  sbala[128];     /* Storage Block Address List address*/
+/*000*/ DBLWRD  sbala[QMAXBUFS];/* Storage Block Address List address*/
     } QDIO_SL;
 
 
@@ -168,7 +173,7 @@ typedef struct _QDIO_SBALE {
 /* Storage Block Address List (SBAL)                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_SBAL {
-/*000*/ QDIO_SBALE sbale[16];   /* Storage Block Address List entry  */
+/*000*/ QDIO_SBALE sbale[QMAXSTBK];/* Storage Block Addr. List entry */
     } QDIO_SBAL;
 
 
@@ -176,7 +181,7 @@ typedef struct _QDIO_SBAL {
 /* Storage List State Block (SLSB)                                   */
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_SLSB {
-/*000*/ BYTE    slsbe[128];     /* Storage Block Address List entry  */
+/*000*/ BYTE    slsbe[QMAXBUFS];/* Storage Block Address List entry  */
 #define SLSBE_OWNER             0xC0 /* Owner Mask                   */
 #define SLSBE_OWNER_OS          0x80 /* Control Program is owner     */
 #define SLSBE_OWNER_CU          0x40 /* Control Unit is owner        */
