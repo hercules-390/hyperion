@@ -115,15 +115,15 @@ int      GetMTU( char*, char*, int, int* );
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
-static const NED  osa_device_ned[]  = OSA_DEVICE_NED;
-static const NED  osa_ctlunit_ned[] = OSA_CTLUNIT_NED;
-static const NED  osa_token_ned[]   = OSA_TOKEN_NED;
-static const NEQ  osa_general_neq[] = OSA_GENERAL_NEQ;
+static const NED  osa_device_ned[]  = {OSA_DEVICE_NED};
+static const NED  osa_ctlunit_ned[] = {OSA_CTLUNIT_NED};
+static const NED  osa_token_ned[]   = {OSA_TOKEN_NED};
+static const NEQ  osa_general_neq[] = {OSA_GENERAL_NEQ};
 
 static NED configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
 
-static const ND  osa_nd[] = OSA_ND;
-static const NQ  osa_nq[] = OSA_NQ;
+static const ND  osa_nd[] = {OSA_ND};
+static const NQ  osa_nq[] = {OSA_NQ};
 
 static ND node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
 
