@@ -1320,7 +1320,7 @@ mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
 else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
                         }
 
-                        if((sbal->sbale[ns].flags[1] & SBALE_FLAG3_PCI_REQ))
+                        if((sbal->sbale[ns].flags[3] & SBALE_FLAG3_PCI_REQ))
                         {
 #if defined(_FEATURE_QDIO_THININT)
                             set_dsci(dev,DSCI_IOCOMP);
