@@ -559,6 +559,7 @@ typedef struct _MPC_IPA {
                  | IPA_MULTICASTING \
                  | IPA_SETADAPTERPARMS \
                  | IPA_PASSTHRU \
+                 | IPA_INBOUND_PASSTHRU \
                  | IPA_SOURCE_MAC \
                  )
 
