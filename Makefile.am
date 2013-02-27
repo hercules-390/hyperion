@@ -735,7 +735,7 @@ noinst_HEADERS = hostinfo.h     \
                  fthreads.h     \
                  w32chan.h      \
                  w32ctca.h      \
-                 tt32.h         \
+                 hifr.h         \
                  tt32if.h       \
                  tt32api.h      \
                  resolve.h      \
