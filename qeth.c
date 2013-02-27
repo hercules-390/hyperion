@@ -569,7 +569,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     InitMTU( dev, grp );
     if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0)
         qeth_errnum_msg( dev, grp, rc,
-            "W", "TUNTAP_SetIPAddr6() failed" );
+            "W", "TUNTAP_SetMTU() failed" );
 
     return 0;
 }
@@ -3112,15 +3112,15 @@ int num;                                /* Number of bytes to move   */
             {
                 read_pipe(grp->ppfd[0],&sig,1);
                 DBGTRC(dev, "ACTIVATE QUEUES SIGNAL %d RECEIVED\n",sig);
+
+                /* Exit immediately if requested to do so */
+                if (sig == QDSIG_HALT)
+                    break;
+
+                /* Set packing flags */
+                grp->rdpack = (sig == QDSIG_RDMULT) ? 1 : 0;
+                grp->wrpack = (sig == QDSIG_WRMULT) ? 1 : 0;
             }
-
-            /* Exit immediately if requested to do so */
-            if (sig == QDSIG_HALT)
-                break;
-
-            /* Set packing flags */
-            grp->rdpack = (sig == QDSIG_RDMULT) ? 1 : 0;
-            grp->wrpack = (sig == QDSIG_WRMULT) ? 1 : 0;
 
             /* Process the Input Queue if needed */
             if(dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
@@ -3600,6 +3600,8 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
+U16 uMTU;
+
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
@@ -3686,10 +3688,13 @@ U16 uLength4;
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
     STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN4 );
 
+    InitMTU( dev, grp );
+    uMTU = grp->uMTU ? grp->uMTU : (U16) atoi( QETH_DEF_MTU );
+
     // Prepare second MPC_PUS
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
     STORE_HW( rsp_pus_0A->length, len_rsp_pus_0A );
-    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, grp->uMTU );
+    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, uMTU );
     rsp_pus_0A->vc.pus_0A.linktype = PUS_LINK_TYPE_FAST_ETH;
 
     return rsp_bhr;
@@ -4111,30 +4116,65 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
+    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
+    int ttfd;                   /* Interface file descriptor (temp)  */
     static const BYTE zeromac[IFHWADDRLEN] = {0};
-    char szMAC[3*IFHWADDRLEN] = {0};
-    int rc;
+    char* tthwaddr;
+    BYTE iMAC[ IFHWADDRLEN ];
+    int rc = 0;
 
     if (grp->tthwaddr)
         return;
 
+    /* Create TEMPORARY interface if needed */
+    if ((ttfd = grp->ttfd) < 0)
+    {
+        rc = TUNTAP_CreateInterface
+        (
+            grp->tuntap,
+            0
+                | IFF_NO_PI
+                | IFF_OSOCK
+                | (grp->l3 ? IFF_TUN : IFF_TAP)
+            ,
+            &ttfd,
+            ttifname
+
+        );
+    }
+    else
+        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
+
     /* Retrieve the MAC Address directly from the tuntap interface */
-    rc = TUNTAP_GetMACAddr( grp->ttifname, &grp->tthwaddr );
+    if (!(rc < 0))
+        rc = TUNTAP_GetMACAddr( ttifname, &tthwaddr );
+
+    /* Close the temporary interface if we created one */
+    if (grp->ttfd < 0)
+        TUNTAP_Close( ttfd );
+
+    /* Did we get what we wanted? */
     if (0
         || rc != 0
-        || ParseMAC( grp->tthwaddr, grp->iMAC ) != 0
-        || memcmp( grp->iMAC, zeromac, IFHWADDRLEN ) == 0
+        || ParseMAC( tthwaddr, iMAC ) != 0
+        || memcmp( iMAC, zeromac, IFHWADDRLEN ) == 0
     )
     {
+        char szMAC[3*IFHWADDRLEN] = {0};
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
-        if (grp->tthwaddr)
-            free( grp->tthwaddr );
-        build_herc_iface_mac( grp->iMAC, NULL );
+        if (tthwaddr)
+            free( tthwaddr );
+        build_herc_iface_mac( iMAC, NULL );
         MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
-            grp->iMAC[0], grp->iMAC[1], grp->iMAC[2],
-            grp->iMAC[3], grp->iMAC[4], grp->iMAC[5] );
-        grp->tthwaddr = strdup( szMAC );
+            iMAC[0], iMAC[1], iMAC[2],
+            iMAC[3], iMAC[4], iMAC[5] );
+        tthwaddr = strdup( szMAC );
     }
+
+    grp->tthwaddr = strdup( tthwaddr );
+    memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
+
+    free( tthwaddr );
 }
 
 
@@ -4143,29 +4183,61 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 {
-    int nMTU;
-    int rc;
+    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
+    int ttfd;                   /* Interface file descriptor (temp)  */
+    char* ttmtu;
+    U16 uMTU;
+    int rc = 0;
 
-    if (grp->ttmtu && grp->uMTU)
+    if (grp->ttmtu)
         return;
 
-    /* Retrieve the MTU value directly from the tuntap interface */
-    rc = TUNTAP_GetMTU( grp->ttifname, &grp->ttmtu );
+    /* Create TEMPORARY interface if needed */
+    if ((ttfd = grp->ttfd) < 0)
+    {
+        rc = TUNTAP_CreateInterface
+        (
+            grp->tuntap,
+            0
+                | IFF_NO_PI
+                | IFF_OSOCK
+                | (grp->l3 ? IFF_TUN : IFF_TAP)
+            ,
+            &ttfd,
+            ttifname
+
+        );
+    }
+    else
+        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
+
+    /* Retrieve the MTU value directly from the TUNTAP interface */
+    if (!(rc < 0))
+        rc = TUNTAP_GetMTU( ttifname, &ttmtu );
+
+    /* Close the temporary interface if we created one */
+    if (grp->ttfd < 0)
+        TUNTAP_Close( ttfd );
+
+    /* Did we get what we wanted? */
     if (0
         || rc != 0
-        || !(nMTU = atoi( grp->ttmtu ))
-        || nMTU < (60    - 14)
-        || nMTU > (65535 - 14)
+        || !(uMTU = (U16) atoi( ttmtu ))
+        || uMTU < (60    - 14)
+        || uMTU > (65535 - 14)
     )
     {
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
-        if (grp->ttmtu)
-            free( grp->ttmtu );
-        grp->ttmtu = strdup( DEF_MTU_STR );
+        if (ttmtu)
+            free( ttmtu );
+        ttmtu = strdup( DEF_MTU_STR );
+        uMTU = (U16) atoi( ttmtu );
     }
-    nMTU = atoi( grp->ttmtu );
-    ASSERT( nMTU >= (60 - 14) && nMTU <= (65535 - 14));
-    grp->uMTU = (U16) nMTU;
+
+    grp->ttmtu = strdup( ttmtu );
+    grp->uMTU  = uMTU;
+
+    free( ttmtu );
 }
 
 

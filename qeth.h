@@ -200,6 +200,7 @@ typedef struct _OSA_GRP {
 
     BYTE  iMAC[IFHWADDRLEN];    /* MAC of the interface              */
     U16   uMTU;                 /* MTU of the interface              */
+#define QETH_DEF_MTU   "1500"   /* Default MTU size                  */
 
     BYTE  gtissue[4];           /* Guest token issuer                */
     BYTE  gtcmfilt[4];          /* Guest token cm filter             */
