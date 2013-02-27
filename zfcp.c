@@ -68,15 +68,15 @@
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
-static const NED  zfcp_device_ned[]  = ZFCP_DEVICE_NED;
-static const NED  zfcp_ctlunit_ned[] = ZFCP_CTLUNIT_NED;
-static const NED  zfcp_token_ned[]   = ZFCP_TOKEN_NED;
-static const NEQ  zfcp_general_neq[] = ZFCP_GENERAL_NEQ;
+static const NED  zfcp_device_ned[]  = {ZFCP_DEVICE_NED};
+static const NED  zfcp_ctlunit_ned[] = {ZFCP_CTLUNIT_NED};
+static const NED  zfcp_token_ned[]   = {ZFCP_TOKEN_NED};
+static const NEQ  zfcp_general_neq[] = {ZFCP_GENERAL_NEQ};
 
 static NED  configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
 
-static const ND  zfcp_nd[] = ZFCP_ND;
-static const NQ  zfcp_nq[] = ZFCP_NQ;
+static const ND  zfcp_nd[] = {ZFCP_ND};
+static const NQ  zfcp_nq[] = {ZFCP_NQ};
 
 static ND  node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
 
