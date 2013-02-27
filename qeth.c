@@ -108,8 +108,8 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
 /*-------------------------------------------------------------------*/
 /* Internal helper functions                                         */
 /*-------------------------------------------------------------------*/
-int      GetMACAddr( char*, char*, int, MAC* );
-int      GetMTU( char*, char*, int, int* );
+void InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
+void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -342,6 +342,240 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 
 
 /*-------------------------------------------------------------------*/
+/* Issue generic error message with return code and strerror msg.    */
+/* Returns the same errnum value that was passed.                    */
+/*-------------------------------------------------------------------*/
+static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
+                            int errnum, char* msgcode, char* errmsg )
+{
+    char strerr[256] = {0};
+    char msgbuf[256] = {0};
+
+    if (errnum >= 0)
+        strlcpy( strerr, strerror( errnum ), sizeof( strerr ));
+    else
+        strlcpy( strerr, "An unidentified error has occurred", sizeof( strerr ));
+
+    /* "function() failed, rc=99 (0x00000063): an error occurred" */
+    MSGBUF( msgbuf, "%s, rc=%d (0x%08X): %s",
+        errmsg, errnum, errnum, strerr);
+
+    // HHC03996 "%1d:%04X %s: %s: %s"
+    if (str_caseless_eq("E",msgcode))
+        WRMSG( HHC03996, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            "QETH", grp->ttifname, msgbuf);
+    else if (str_caseless_eq("W",msgcode))
+        WRMSG( HHC03996, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            "QETH", grp->ttifname, msgbuf);
+    else /* "I" information presumed */
+        WRMSG( HHC03996, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            "QETH", grp->ttifname, msgbuf);
+    return errnum;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Report what values we are using                                   */
+/*-------------------------------------------------------------------*/
+static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
+{
+    char not[8];
+    strlcpy( not, enabled ? "" : "not ", sizeof( not ));
+
+    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+        grp->ttifname, not, "MAC", grp->tthwaddr );
+
+    if (grp->ttipaddr)
+    {
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, not, "IPv4", grp->ttipaddr );
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, not, "MASK", grp->ttnetmask );
+    }
+
+    if (grp->ttipaddr6)
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, not, "IPv6", grp->ttipaddr6 );
+
+    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+        grp->ttifname, not, "MTU", grp->ttmtu );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Enable the TUNTAP interface  (set IFF_UP flag)                    */
+/*-------------------------------------------------------------------*/
+static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
+{
+    int rc;
+
+    if (grp->enabled)
+        return 0;
+
+    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
+        | IFF_UP
+        | QETH_RUNNING
+        | QETH_PROMISC
+        | IFF_MULTICAST
+        | IFF_BROADCAST
+#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+        | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+    )) != 0)
+        qeth_errnum_msg( dev, grp, rc,
+            "E", "qeth_enable_interface() failed" );
+    grp->enabled = 1;
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Disable the TUNTAP interface  (clear IFF_UP flag)                 */
+/*-------------------------------------------------------------------*/
+static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
+{
+    int rc;
+
+    if (!grp->enabled)
+        return 0;
+
+    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
+        | QETH_RUNNING
+        | QETH_PROMISC
+        | IFF_MULTICAST
+        | IFF_BROADCAST
+#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+        | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+    )) != 0)
+        qeth_errnum_msg( dev, grp, rc,
+            "E", "qeth_disable_interface() failed" );
+
+    grp->enabled = 0;
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Set the interface's IP address and subnet mask                    */
+/*-------------------------------------------------------------------*/
+static int qeth_set_addr_parms (DEVBLK *dev, OSA_GRP *grp)
+{
+    int rc;
+
+    /* If possible, assign an IPv4 address to the interface */
+    if(grp->ttipaddr)
+#if defined( OPTION_W32_CTCI )
+        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetDestAddr() failed" );
+#else /*!defined( OPTION_W32_CTCI )*/
+        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr() failed" );
+#endif /*defined( OPTION_W32_CTCI )*/
+
+    /* Same thing with the IPv4 subnet mask */
+#if defined( OPTION_TUNTAP_SETNETMASK )
+    if(grp->ttnetmask)
+        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetNetMask() failed" );
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+
+    /* Assign it an IPv6 address too, if possible */
+#if defined(ENABLE_IPV6)
+    if(grp->ttipaddr6)
+        if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr6() failed" );
+#endif /*defined(ENABLE_IPV6)*/
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Create the TUNTAP interface                                       */
+/*-------------------------------------------------------------------*/
+static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
+{
+    int i, rc;
+
+    /* Discard the old interface by closing the TUNTAP device */
+    if (grp->ttfd >= 0)
+    {
+        int ttfd = grp->ttfd;
+        grp->ttfd = -1;
+        for (i=0; i < dev->group->acount; i++)
+            dev->group->memdev[i]->fd = -1;
+        TUNTAP_Close( ttfd );
+    }
+
+    /* Create the new interface by opening the TUNTAP device */
+    if ((rc = TUNTAP_CreateInterface
+    (
+        grp->tuntap,
+        0
+            | IFF_NO_PI
+            | IFF_OSOCK
+            | (grp->l3 ? IFF_TUN : IFF_TAP)
+        ,
+        &grp->ttfd,
+        grp->ttifname
+
+    )) != 0)
+        return qeth_errnum_msg( dev, grp, rc,
+            "E", "TUNTAP_CreateInterface() failed" );
+
+    /* Update DEVBLK file descriptors */
+    for (i=0; i < dev->group->acount; i++)
+        dev->group->memdev[i]->fd = grp->ttfd;
+
+    // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
+    WRMSG( HHC00901, "I", SSID_TO_LCSS(dev->ssid),
+                         dev->devnum,
+                         dev->typname,
+                         grp->ttifname,
+                         (grp->l3 ? "TUN" : "TAP"));
+
+    /* Enable TUNTAP debugging if requested */
+#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+    if (grp->debug)
+        if ((rc = TUNTAP_SetFlags( grp->ttifname, IFF_DEBUG )) != 0)
+            qeth_errnum_msg( dev, grp, rc,
+                "W", "TUNTAP_SetFlags(IFF_DEBUG) failed" );
+#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+
+    /* Set NON-Blocking mode by disabling Blocking mode */
+    if ((rc = socket_set_blocking_mode(grp->ttfd,0)) != 0)
+        qeth_errnum_msg( dev, grp, rc,
+            "W", "socket_set_blocking_mode() failed" );
+
+    /* Make sure the interface has a valid MAC address */
+    InitMACAddr( dev, grp );
+#if defined( OPTION_TUNTAP_SETMACADDR )
+    if(!grp->l3 && grp->tthwaddr)
+        if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetMACAddr() failed" );
+#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+
+    /* Set the interface's IP address and subnet mask */
+    if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
+        return rc;
+
+    /* Set the interface's MTU size */
+    InitMTU( dev, grp );
+    if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0)
+        qeth_errnum_msg( dev, grp, rc,
+            "W", "TUNTAP_SetIPAddr6() failed" );
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
 static void osa_adapter_cmd(DEVBLK *dev, MPC_TH *req_th)
@@ -411,83 +645,9 @@ U16 offph;
                 rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 if( !rsp_bhr )
                     break;
-
-                VERIFY
-                (
-                    TUNTAP_CreateInterface
-                    (
-                        grp->tuntap,
-                        0
-                            | IFF_NO_PI
-                            | IFF_OSOCK
-                            | (grp->l3 ? IFF_TUN : IFF_TAP)
-                        ,
-                        &grp->ttfd,
-                        grp->ttifname
-                    )
-                    == 0
-                );
-
-                /* Set Non-Blocking mode */
-                socket_set_blocking_mode(grp->ttfd,0);
-
-                // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
-                WRMSG(HHC00901, "I", SSID_TO_LCSS(dev->ssid),
-                                     dev->devnum,
-                                     dev->typname,
-                                     grp->ttifname,
-                                     (grp->l3 ? "TUN" : "TAP") );
-
-#if defined(IFF_DEBUG)
-                if (grp->debug)
-                    VERIFY(!TUNTAP_SetFlags(grp->ttifname,IFF_DEBUG));
-#endif /*defined(IFF_DEBUG)*/
-#if defined( OPTION_TUNTAP_SETMACADDR )
-                if(!grp->l3 && grp->tthwaddr)
-                    VERIFY(!TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr));
-#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-                if(grp->ttipaddr)
-#if defined( OPTION_W32_CTCI )
-                    VERIFY(!TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr));
-#else /*!defined( OPTION_W32_CTCI )*/
-                    VERIFY(!TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr));
-#endif /*defined( OPTION_W32_CTCI )*/
-#if defined( OPTION_TUNTAP_SETNETMASK )
-                if(grp->ttnetmask)
-                    VERIFY(!TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask));
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
-#if defined(ENABLE_IPV6)
-                if(grp->ttipaddr6)
-                    VERIFY(!TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6));
-#endif /*defined(ENABLE_IPV6)*/
-                if(grp->ttmtu)
-                    VERIFY(!TUNTAP_SetMTU(grp->ttifname,grp->ttmtu));
-
-                if ( grp->l3 && !grp->tthwaddr )
-                {
-                    /* Small problem ahoy. We have started a TUN interface  */
-                    /* and the config statement did not specify a MAC       */
-                    /* address. At various points in the future the guest   */
-                    /* may output requests relating to, he expects, the     */
-                    /* devices MAC address, e.g. Read MAC address. So let's */
-                    /* create a MAC address for ourselves, pretending that  */
-                    /* it was specified on the config statement.            */
-                    {
-                    MAC mac;
-                    char cmac[24];
-                    int i;
-
-                        for( i = 0; i < 6; i++ )
-                            mac[i] = (int)((rand()/(RAND_MAX+1.0))*256);
-                        mac[0] &= 0xFE;  /* Clear multicast bit. */
-                        mac[0] |= 0x02;  /* Set local assignment bit. */
-                        snprintf( cmac, sizeof(cmac),
-                                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
-                                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
-                        grp->tthwaddr = strdup(cmac);
-                    }
-                }
-
+                if (qeth_create_interface( dev, grp ) != 0)
+                    qeth_errnum_msg( dev, grp, -1,
+                        "E", "qeth_create_interface() failed" );
                 break;
 
             case PUK_TYPE_SETUP:
@@ -578,22 +738,14 @@ U16 offph;
                         STORE_F3( rsp_ph->lendata, uLength3 );
                     }
 
-                    if (TUNTAP_SetFlags( grp->ttifname, 0
-                        | IFF_UP
-                        | QETH_RUNNING
-                        | QETH_PROMISC
-                        | IFF_MULTICAST
-                        | IFF_BROADCAST
-#if defined(IFF_DEBUG)
-                        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(IFF_DEBUG)*/
-                    ))
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
-                    else
+                    if (!qeth_enable_interface( dev, grp ))
                     {
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         grp->ipae |= IPA_SETADAPTERPARMS;
+                        qeth_report_using( dev, grp, 1 );
                     }
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
                 }
                 break;
 
@@ -601,10 +753,14 @@ U16 offph;
                 {
                     DBGTRC(dev, "STOPLAN\n");
 
-                    if( TUNTAP_SetFlags(grp->ttifname,0) )
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
-                    else
+                    if (!qeth_disable_interface( dev, grp ))
+                    {
                         STORE_HW(ipa->rc,IPA_RC_OK);
+                        grp->ipae &= ~IPA_SETADAPTERPARMS;
+                        qeth_report_using( dev, grp, 0 );
+                    }
+                    else
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
                 }
                 break;
 
@@ -633,24 +789,17 @@ U16 offph;
                         {
                         SAP_SMA *sma = (SAP_SMA*)(sap+1);
                         U32 cmd;
-                        MAC mac;
 
                             FETCH_FW(cmd,sma->cmd);
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
                                 DBGTRC(dev, "SETMAC Read MAC address\n");
-                                if(grp->tthwaddr) {
-                                  ParseMAC( grp->tthwaddr, mac );
-                                }
-                                else {
-                                  GetMACAddr( grp->ttifname, NULL, 0, &mac );
-                                }
                                 STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
                                 STORE_FW(sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
                                 STORE_FW(sma->nomacs,1);
-                                memcpy(sma->addr, &mac, IFHWADDRLEN);
+                                memcpy(sma->addr, grp->iMAC, IFHWADDRLEN);
                                 STORE_HW(sap->rc,IPA_RC_OK);
                                 STORE_HW(ipa->rc,IPA_RC_OK);
                                 break;
@@ -747,24 +896,49 @@ U16 offph;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
                 {
-                char ipaddr[16];
-//              char ipmask[16];
                 BYTE *ip = (BYTE*)(ipa+1);
-                U16  proto;
+                U16  proto, retcode;
 
                     DBGTRC(dev, "SETIP (L3 Set IP)\n");
 
                     FETCH_HW(proto,ipa->proto);
+                    retcode = IPA_RC_OK;
 
                     if (proto == IPA_PROTO_IPV4)
                     {
-                        snprintf(ipaddr,sizeof(ipaddr),"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                        VERIFY(!TUNTAP_SetDestAddr(grp->ttifname,ipaddr));
+                        char ipaddr[16] = {0};
+                        char ipmask[16] = {0};
+                        int rc = 0;
+                        int was_enabled;
 
-#if defined( OPTION_TUNTAP_SETNETMASK )
-//                      snprintf(ipmask,sizeof(ipmask),"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-//                      VERIFY(!TUNTAP_SetNetMask(grp->ttifname,ipmask));
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+
+                        if (grp->ttipaddr)
+                            free( grp->ttipaddr );
+                        grp->ttipaddr = strdup( ipaddr );
+
+                        if (grp->ttnetmask)
+                            free( grp->ttnetmask );
+                        grp->ttnetmask = strdup( ipmask );
+
+                        /* PROGRAMMING NOTE: cannot change the interface
+                           once it has been enabled. Thus we temporarily
+                           disable it, make our changes, and then enable
+                           it again.
+                        */
+                        if ((was_enabled = grp->enabled))
+                            qeth_disable_interface( dev, grp );
+
+                        if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
+                        {
+                            qeth_errnum_msg( dev, grp, rc,
+                                "E", "IPA_CMD_SETIP failed" );
+                            retcode = IPA_RC_FFFF;
+                        }
+
+                        if (was_enabled)
+                            qeth_enable_interface( dev, grp );
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
@@ -774,7 +948,7 @@ U16 offph;
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
-                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    STORE_HW(ipa->rc,retcode);
                 }
                 break;
 
@@ -854,21 +1028,12 @@ U16 offph;
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
                 {
                 BYTE *sip = (BYTE*)(ipa+1);
-                MAC  mac;
 
                     DBGTRC(dev, "L3 Create IPv6 addr from MAC\n");
-
-                    if(grp->tthwaddr) {
-                      ParseMAC( grp->tthwaddr, mac );
-                    }
-                    else {
-                      GetMACAddr( grp->ttifname, NULL, 0, &mac );
-                    }
-
-                    memcpy( sip, &mac, IFHWADDRLEN );
-                    sip[6] = 0xFF;
-                    sip[7] = 0xFE;
-
+                    memcpy( sip+0, &grp->iMAC[0], IFHWADDRLEN/2 );
+                    sip[3] = 0xFF;
+                    sip[4] = 0xFE;
+                    memcpy( sip+5, &grp->iMAC[3], IFHWADDRLEN/2 );
                     STORE_HW(ipa->rc,IPA_RC_OK);
                 }
                 break;
@@ -1016,360 +1181,940 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 }
 
 
-// We must go through the queues/buffers in a round robin manner
-// so that buffers are re-used on a LRU (Least Recently Used) basis.
-// When no buffers are available we must keep our current position.
-// When a buffer becomes available we will advance to that location.
-// When we reach the end of the buffer queue we will advance to the
-// next available queue.
-// When a queue is newly enabled then we will start at the beginning
-// of the queue (this is handled in signal adapter).
+/*-------------------------------------------------------------------*/
+/* Internal function return code flags                               */
+/*-------------------------------------------------------------------*/
+
+typedef short QRC;              /* Internal function return code     */
+
+#define QRC_SUCCESS      0      /* Successful completion             */
+#define QRC_EIOERR      -1      /* Device i/o error reading/writing  */
+#define QRC_ESTORCHK    -2      /* STORCHK failure (Prot Key Chk)    */
+#define QRC_ENOSPC      -3      /* Out of Storage Blocks             */
+#define QRC_EPKEOF      -4      /* EOF while looking for packets     */
+#define QRC_EPKTYP      -5      /* Unsupported output packet type    */
+#define QRC_EPKSIZ      -6      /* Output packet/frame too large     */
+#define QRC_EZEROBLK    -7      /* Zero Length Storage Block         */
+#define QRC_EPKSBLEN    -8      /* Packet length <-> SBALE mismatch  */
+#define QRC_ESBPKCPY    -9      /* Packet copy wrong ending SBALE    */
+
 
 /*-------------------------------------------------------------------*/
-/* Process Input Queue                                               */
+/* Helper function to report errors associated with an SBALE.        */
 /*-------------------------------------------------------------------*/
-static void process_input_queue(DEVBLK *dev)
+QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
+                 QDIO_SBAL *sbal, BYTE sbalk, int sb )
+{
+    U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
+    U64 sba;
+    U32 sblen;
+
+    FETCH_DW( sba,   sbal->sbale[sb].addr   );
+    FETCH_FW( sblen, sbal->sbale[sb].length );
+
+    DBGTRC( dev, msg, sb, sbala, sbalk, sba, sblen,
+        sbal->sbale[sb].flags[0],
+        sbal->sbale[sb].flags[3]);
+
+    return qrc;
+}
+/*-------------------------------------------------------------------*/
+/* Helper macro to call above helper function.                       */
+/*-------------------------------------------------------------------*/
+#define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
+    SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
+        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X\n",            \
+        (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check for logically last SBALE                    */
+/*-------------------------------------------------------------------*/
+#define WR_LOGICALLY_LAST_SBALE( _flag0 )   (!grp->wrpack ?         \
+  ( (_flag0) & SBALE_FLAG0_LAST_ENTRY) :                            \
+  (((_flag0) & SBALE_FLAG0_LAST_ENTRY) ||                           \
+  (((_flag0) & SBALE_FLAG0_FRAG_LAST) == SBALE_FLAG0_FRAG_LAST )))
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check if absolutely the last SBALE                */
+/*-------------------------------------------------------------------*/
+#define IS_ABSOLUTELY_LAST_SBALE( _flag0 )                          \
+  ((_flag0) & SBALE_FLAG0_LAST_ENTRY)
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to set the SBALE fragment flags                      */
+/*-------------------------------------------------------------------*/
+#define SET_SBALE_FRAG( _flag0, _frag )                             \
+  do {                                                              \
+    (_flag0) &= ~(SBALE_FLAG0_LAST_ENTRY | SBALE_FLAG0_FRAG_MASK);  \
+    (_flag0) |= (_frag);                                            \
+  } while (0)
+
+
+/*-------------------------------------------------------------------*/
+/* Determine if TUN/TAP device has more packets waiting for us.      */
+/* Does a 'select' on the TUN/TAP device using a zero timeout        */
+/* and returns 1 if more packets are waiting or 0 (false) otherwise. */
+/* Note: boolean function. Does not report errors. If the select     */
+/* call fails then this function simply returns 0 = false (EOF).     */
+/*-------------------------------------------------------------------*/
+static BYTE more_packets( DEVBLK* dev )
+{
+    fd_set readset;
+    struct timeval tv = {0,0};
+    FD_ZERO( &readset );
+    FD_SET( dev->fd, &readset );
+    return (select( dev->fd+1, &readset, NULL, NULL, &tv ) > 0);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Read one packet/frame from TUN/TAP device into dev->buf.          */
+/* dev->buflen updated with length of packet/frame just read.        */
+/*-------------------------------------------------------------------*/
+static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
+{
+    int errnum;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", 0, dev->bufsize, 0 );
+    dev->buflen = TUNTAP_Read( dev->fd, dev->buf, dev->bufsize );
+    errnum = errno;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", 0, dev->bufsize, dev->buflen );
+
+    if (unlikely(dev->buflen < 0))
+    {
+        // HHC03972 "%1d:%04X %s: error reading from device %s: %s"
+        WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            "QETH", grp->ttifname, strerror( errnum ));
+        errno = errnum;
+        return QRC_EIOERR;
+    }
+
+    if (unlikely(dev->buflen == 0))
+    {
+        errno = EAGAIN;
+        return QRC_EPKEOF;
+    }
+
+    return QRC_SUCCESS;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Copy data fragment into OSA queue buffer storage.                 */
+/* Uses the entries from the passed Storage Block Address List to    */
+/* split the fragment across several storage areas as needed.        */
+/*-------------------------------------------------------------------*/
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sbalk is the associated protection key for the queue buffer.      */
+/* sb is a ptr to the current SBAL Storage Block number.             */
+/* sboff is a ptr to the offset into the Storage Block.              */
+/* sbrem is a ptr to how much of the current Storage Block remains.  */
+/* src points to the data to be copied and rem is its length.        */
+/*-------------------------------------------------------------------*/
+static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
+                                     QDIO_SBAL *sbal, BYTE sbalk,
+                                     int* sb, U32* sboff, U32* sbrem,
+                                     BYTE* src, int rem )
+{
+    U64 sba;                            /* Storage Block Address     */
+    BYTE *dst;                          /* Destination address       */
+    int len;                            /* Copy length (work)        */
+    BYTE flag0;                         /* SBALE flag                */
+
+    /* Initialize destination address */
+
+    FETCH_DW( sba, sbal->sbale[*sb].addr );
+    dst = (BYTE*)(dev->mainstor + sba + *sboff);
+
+    flag0 = SBALE_FLAG0_FRAG_FIRST;
+
+    while (rem > 0)
+    {
+        /* End of current storage block? */
+        if (!*sbrem)
+        {
+            ASSERT( *sboff ); /*(sanity check)*/
+
+            /* Done using this storage block */
+            STORE_FW( sbal->sbale[*sb].length, *sboff );
+            SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+
+            /* Request interrupt if needed */
+            if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
+            {
+                SET_DSCI(dev,DSCI_IOCOMP);
+                grp->reqpci = TRUE;
+            }
+
+            /* Start new storage block */
+            if (*sb >= (QMAXSTBK-1))
+                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
+            *sb = *sb + 1;
+            flag0 = SBALE_FLAG0_FRAG_MIDDLE;
+            *sboff = 0;
+        }
+
+        /* First time using this storage block? */
+        if (!*sboff)
+        {
+            FETCH_DW(  sba,   sbal->sbale[*sb].addr   );
+            FETCH_FW( *sbrem, sbal->sbale[*sb].length );
+            if (!*sbrem)
+                return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
+            if (STORCHK(sba,(*sbrem)-1,sbalk,STORKEY_CHANGE,dev))
+                return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
+            dst = (BYTE*)(dev->mainstor + sba);
+        }
+
+        /* Continue copying data to storage block */
+        len = min( *sbrem, (U32)rem );
+        memcpy( dst, src, len );
+
+        dst   += len;
+        src   += len;
+        rem   -= len;
+        *sboff += len;
+        *sbrem -= len;
+    }
+
+    /* Mark last fragment and exit */
+    flag0 = SBALE_FLAG0_FRAG_LAST;
+    SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+    return QRC_SUCCESS;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Copy packet/frame from dev->buf into OSA queue buffer storage.    */
+/* Uses the entries from the passed Storage Block Address List to    */
+/* split the packet/frame across several storage areas as needed.    */
+/* dev->buflen should be set to the length of the packet/frame.      */
+/*-------------------------------------------------------------------*/
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sb is the Storage Block number to begin processing with.          */
+/* sbalk is the associated protection key for the queue buffer.      */
+/* hdr points to pre-built OSA_HDR2/OSA_HDR3 and hdrlen is its size. */
+/*-------------------------------------------------------------------*/
+static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, int sb, BYTE sbalk,
+                                   BYTE* hdr, int hdrlen )
+{
+    U32 sboff = 0;  /*see note*/        /* Storage Block offset      */ 
+    U32 sbrem = 1;  /*see note*/        /* Storage Block remaining   */
+    int ssb = sb;                       /* Saved starting sb value   */
+    QRC qrc;                            /* Return code               */
+
+    /* PROGRAMMING NOTE: to kick things off, we need to ensure that
+       sboff is zero and sbrem is NON-zero so copy_fragment_to_storage
+       knows this is the first time using this storage block and thus
+       initialize itself using the first storage block's values. */
+
+    /* Clear last-entry flag in starting entry */
+    sbal->sbale[sb].flags[0] &= ~SBALE_FLAG0_LAST_ENTRY;
+
+    /* Start with the header first */
+    if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
+        &sb, &sboff, &sbrem, hdr, hdrlen )) < 0 )
+        return qrc;
+    ASSERT( sb < QMAXSTBK );
+
+    /* Then copy the packet */
+    if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
+        &sb, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
+        return qrc;
+    ASSERT( sb < QMAXSTBK );
+
+    /* Mark end of buffer */
+    sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
+    STORE_FW( sbal->sbale[sb].length, sboff );
+
+    /* Count packets received */
+    dev->qdio.rxcnt++;
+
+    /* Dump the individual SBALE entries */
+    if( grp->debug )
+    {
+        U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
+        U64 sba;
+        BYTE *maddr;
+        int i;
+
+        for (i=ssb; i <= sb; i++)
+        {
+            FETCH_DW( sba,   sbal->sbale[i].addr   );
+            FETCH_FW( sbrem, sbal->sbale[i].length );
+            maddr = (BYTE*)(dev->mainstor + sba);
+            DBGTRC( dev, "SBAL(%d): %llx Addr: %llx Len: %04X (%d) flags[0,3]: %2.2X %2.2X\n",
+                i, sbala, sba, sbrem, sbrem, sbal->sbale[i].flags[0], sbal->sbale[i].flags[1] );
+            mpc_display_stuff( dev, "INPUT BUF", maddr, sbrem, '<' );
+        }
+    }
+
+    return QRC_SUCCESS;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Read one L2 frame from TAP device into queue buffer storage.      */
+/*-------------------------------------------------------------------*/
+static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
+                            QDIO_SBAL *sbal, BYTE sbalk )
+{
+    OSA_HDR2 o2hdr;
+    ETHFRM* eth;
+    int mactype;
+    QRC qrc;
+    int sb = 0;     /* Start with Storage Block zero */
+
+    do {
+        /* Find (another) frame for our MAC */
+        eth = (ETHFRM*)dev->buf;
+        for(;;)
+        {
+            if ((qrc = read_packet( dev, grp )) < 0)
+                return qrc; /*(probably EOF)*/
+
+            /* Verify the frame is being sent to us */
+            if (!(mactype = validate_mac( eth->bDestMAC, MAC_TYPE_ANY, grp )))
+                continue; /* (try next packet) */
+            /* We found a frame being sent to our MAC */
+            break;
+        }
+
+        /* Build the Layer 2 OSA header */
+        memset( &o2hdr, 0, sizeof( OSA_HDR2 ));
+        STORE_HW( o2hdr.pktlen, dev->buflen );
+        o2hdr.id = HDR_ID_LAYER2;
+
+        switch( mactype & MAC_TYPE_ANY ) {
+        case MAC_TYPE_UNICST:
+            o2hdr.flags[2] |= HDR2_FLAGS2_UNICAST;
+            break;
+        case MAC_TYPE_BRDCST:
+            o2hdr.flags[2] |= HDR2_FLAGS2_BROADCAST;
+            break;
+        case MAC_TYPE_MLTCST:
+            o2hdr.flags[2] |= HDR2_FLAGS2_MULTICAST;
+            break;
+        }
+
+        /* Copy header and frame to buffer storage block(s) */
+        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
+                                      (BYTE*) &o2hdr, sizeof( o2hdr ));
+    }
+    while (qrc == QRC_SUCCESS && grp->rdpack && more_packets( dev )
+        && ++sb < QMAXSTBK);
+
+    if (sb >= QMAXSTBK)
+        return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,QMAXSTBK-1);
+
+    return qrc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Determine Layer 3 IPv6 cast type                                  */
+/*-------------------------------------------------------------------*/
+static int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
+{
+    static const BYTE dest_zero[16] = {0};
+    BYTE dest_work[16];
+    int i;
+
+    if (dest_addr[0] == 0xFF)
+        return L3_CAST_MULTICAST;
+
+    if (memcmp( dest_addr, dest_zero, 16 ) == 0)
+        return L3_CAST_NOCAST;
+
+    memcpy( dest_work, dest_addr, 16 );
+
+    /* Ignore prefix bits */
+    for (i=0; i < 16 && grp->pfxmask6[i] != 0xFF; i++)
+        dest_work[i] &= grp->pfxmask6[i];
+
+    /* If non-prefix bits are all zero then anycast */
+    if (memcmp( dest_work, dest_zero, 16 ) == 0)
+        return L3_CAST_ANYCAST;
+
+    return L3_CAST_UNICAST;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Determine Layer 3 IPv4 cast type                                  */
+/*-------------------------------------------------------------------*/
+static int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
+{
+    if (!dstaddr)
+        return L3_CAST_NOCAST;
+
+    if ((dstaddr & 0xE0000000) == 0xE0000000)
+        return L3_CAST_MULTICAST;
+
+    if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
+        return L3_CAST_BROADCAST;
+
+    return L3_CAST_UNICAST;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Read one L3 packet from TUN device into queue buffer storage.     */
+/*-------------------------------------------------------------------*/
+static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
+                            QDIO_SBAL *sbal, BYTE sbalk )
+{
+    static const BYTE udp = 17;
+    QRC qrc;
+    OSA_HDR3 o3hdr;
+    int sb = 0;     /* Start with Storage Block zero */
+
+    do
+    {
+        /* Read another packet into the device buffer */
+        if ((qrc = read_packet( dev, grp )) != 0)
+            return qrc;
+
+        /* Build the Layer 3 OSA header */
+        memset( &o3hdr, 0, sizeof( OSA_HDR3 ));
+        STORE_HW( o3hdr.length, dev->buflen );
+        o3hdr.id = HDR_ID_LAYER3;
+//      STORE_HW( o3hdr.frame_offset, ???? ); // TSO only?
+//      STORE_FW( o3hdr.token, ???? );
+
+        if (grp->ttipaddr6)
+        {
+            IP6FRM* ip6 = (IP6FRM*)dev->buf;
+            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
+            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6 |
+                (l3_cast_type_ipv6( o3hdr.dest_addr, grp ) & HDR3_FLAGS_CASTMASK);
+            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else
+        {
+            U32 dstaddr;
+            U16 checksum;
+            IP4FRM* ip4 = (IP4FRM*)dev->buf;
+            FETCH_FW( dstaddr, &ip4->lDstIP );
+            STORE_FW( o3hdr.dest_addr, dstaddr );
+            FETCH_HW( checksum, ip4->hwChecksum );
+            STORE_HW( o3hdr.in_cksum, checksum );
+            o3hdr.flags = l3_cast_type_ipv4( dstaddr, grp );
+            o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+
+        // FIX ME: should we be validating the IPv4/IPv6 destination address?
+        // (similarly to the way we validate the destination MAC for Layer 2?)
+
+        /* Copy header and packet to buffer storage block(s) */
+        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
+                                      (BYTE*) &o3hdr, sizeof( o3hdr ));
+    }
+    while (qrc == QRC_SUCCESS && grp->rdpack && more_packets( dev )
+        && ++sb < QMAXSTBK);
+
+    if (sb >= QMAXSTBK)
+        return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,QMAXSTBK-1);
+
+    return qrc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                   Process Input Queues                            */
+/*-------------------------------------------------------------------*/
+/* We must go through the queues/buffers in a round robin manner     */
+/* so that buffers are re-used on a LRU (Least Recently Used) basis. */
+/* When no buffers are available we must keep our current position.  */
+/* When a buffer becomes available we will advance to that location. */
+/* When we reach the end of the buffer queue we will advance to the  */
+/* next available queue. When a queue is newly enabled we start at   */
+/* the beginning of the queue (this is handled in signal adapter).   */
+/*-------------------------------------------------------------------*/
+static void process_input_queues( DEVBLK *dev )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int iq = dev->qdio.i_qpos;
-int mq = dev->qdio.i_qcnt;
-int nobuff = 1;
+int sqn = dev->qdio.i_qpos;             /* Starting queue number     */
+int mq = dev->qdio.i_qcnt;              /* Maximum number of queues  */
+int qn = sqn;                           /* Working queue number      */
+int did_read = 0;                       /* Indicates some data read  */
 
-    DBGTRC(dev, "Input Qpos(%d) Bpos(%d)\n",dev->qdio.i_qpos,dev->qdio.i_bpos[dev->qdio.i_qpos]);
+    DBGTRC(dev, "Input Qpos(%d) Bpos(%d)\n", qn, dev->qdio.i_bpos[qn]);
 
-    while (mq--)
-        if(dev->qdio.i_qmask & (0x80000000 >> iq))
+    do
+    {
+        if(dev->qdio.i_qmask & (0x80000000 >> qn))
         {
-        int ib = dev->qdio.i_bpos[iq];
-        QDIO_SLSB *slsb;
-        int mb = 128;
-            slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[iq]);
+        QDIO_SLSB *slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[qn]);
+        int sbn = dev->qdio.i_bpos[qn]; /* Starting buffer number    */
+        int mb = QMAXBUFS;              /* Maximum number of buffers */
+        int bn = sbn;                   /* Working buffer number     */
+        QRC qrc;                        /* Internal return code      */
 
-            while(mb--)
-                if(slsb->slsbe[ib] == SLSBE_INPUT_EMPTY)
+            do
+            {
+                if(slsb->slsbe[bn] == SLSBE_INPUT_EMPTY)
                 {
-                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.i_sla[iq]);
-                U64 sa; U32 len; BYTE *buf;
-                U64 la;
-                QDIO_SBAL *sbal;
-                int olen = 0; int tlen = 0;
-                int ns;
-                int mactype = 0;
+                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.i_sla[qn]);
+                U64 sbala;              /* Storage Block Address List*/
+                BYTE sk;                /* Storage Key               */
 
-                    DBGTRC(dev, _("Input Queue(%d) Buffer(%d)\n"),iq,ib);
+                    DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
 
-                    FETCH_DW(sa,sl->sbala[ib]);
-                    if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
+                    sk = dev->qdio.i_slk[qn];
+                    FETCH_DW( sbala, sl->sbala[bn] );
+
+                    /* Verify Storage Block Address List is accessible */
+                    if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
                     {
-                        slsb->slsbe[ib] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-                        SET_ALSI(dev,ALSI_ERROR);
-                        grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
-                        return;
-                    }
-                    sbal = (QDIO_SBAL*)(dev->mainstor + sa);
-
-                    for(ns = 0; ns < 16; ns++)
-                    {
-                        FETCH_DW(la,sbal->sbale[ns].addr);
-                        FETCH_FW(len,sbal->sbale[ns].length);
-                        if(!len)
-                            break;  // Or should this be continue - ie a discontiguous sbal???
-                        if(STORCHK(la,len-1,dev->qdio.i_sbalk[iq],STORKEY_CHANGE,dev))
-                        {
-                            slsb->slsbe[ib] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-                            SET_ALSI(dev,ALSI_ERROR);
-                            grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
-                            return;
-                        }
-                        buf = (BYTE*)(dev->mainstor + la);
-
-// ZZ FIXME
-// ZZ INCOMPLETE PROCESS BUFFER HERE
-// ZZ THIS CODE IS NOT QUITE RIGHT YET!!!!
-// ZZ THIS CODE MUST BE ABLE TO SPLIT FRAMES INTO MULTIPLE SEGMENTS
-                        if(len > sizeof(OSA_HDR2))
-                        {
-                            do {
-                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", ns, len-sizeof(OSA_HDR2), 0 );
-                                olen = TUNTAP_Read(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
-                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", ns, len-sizeof(OSA_HDR2), olen );
-if(olen > 0)
-if( grp->debug )
-{
-mpc_display_stuff( dev, "INPUT TAP", buf+sizeof(OSA_HDR2), olen, ' ' );
-}
-if (olen > 0 && !validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp))
-{ DBGTRC(dev, "INPUT DROPPED, INVALID MAC\n"); }
-                                nobuff = 0;
-                            } while (olen > 0 && !(mactype = validate_mac(buf+sizeof(OSA_HDR2),MAC_TYPE_ANY,grp)));
-
-                        }
-                        if(olen > 0)
-                        {
-                        OSA_HDR2 *hdr2 = (OSA_HDR2*)buf;
-                            memset(hdr2, 0, sizeof(OSA_HDR2));
-
-                            dev->qdio.rxcnt++;
-
-                            hdr2->id = grp->l3 ? HDR2_ID_LAYER3 : HDR2_ID_LAYER2;
-                            STORE_HW(hdr2->pktlen,olen);
-
-                            switch(mactype & MAC_TYPE_ANY) {
-                            case MAC_TYPE_UNICST:
-                                hdr2->flags[2] |= HDR2_FLAGS2_UNICAST;
-                                break;
-                            case MAC_TYPE_BRDCST:
-                                hdr2->flags[2] |= HDR2_FLAGS2_BROADCAST;
-                                break;
-                            case MAC_TYPE_MLTCST:
-                                hdr2->flags[2] |= HDR2_FLAGS2_MULTICAST;
-                                break;
-                            }
-
-                            tlen += olen;
-                            STORE_FW(sbal->sbale[ns].length,olen+sizeof(OSA_HDR2));
-if(sa && la && len)
-{
-if( grp->debug )
-{
-DBGTRC(dev, "SBAL(%d): %llx ADDR: %llx LEN: %d ",ns,sa,la,len);
-DBGTRC(dev, "FLAGS %2.2x %2.2x\n",sbal->sbale[ns].flags[0],sbal->sbale[ns].flags[1]);
-mpc_display_stuff( dev, "INPUT BUF", (BYTE*)hdr2, olen+sizeof(OSA_HDR2), ' ' );
-}
-}
-                        }
-                        else
-                            break;
-                    }
-
-                    if(tlen > 0)
-                    {
-                        SET_DSCI(dev,DSCI_IOCOMP);
-                        grp->reqpci = TRUE;
-                        slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
-                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-                        if(++ib >= 128)
-                        {
-                            ib = 0;
-                            dev->qdio.i_bpos[iq] = ib;
-                            if(++iq >= dev->qdio.i_qcnt)
-                                iq = 0;
-                            dev->qdio.i_qpos = iq;
-                            mq = dev->qdio.o_qcnt;
-                        }
-                        dev->qdio.i_bpos[iq] = ib;
-                        mb = 128;
+                        DBGTRC(dev, _("STORCHK Error SBALA(%llx), Key(%2.2X)\n"), sbala, sk);
+                        qrc = QRC_ESTORCHK;
                     }
                     else
                     {
-                        if(ns)
-                            sbal->sbale[ns-1].flags[0] = SBALE_FLAG0_LAST_ENTRY;
+                        /* Read packets into this empty buffer */
+                        QDIO_SBAL *sbal = (QDIO_SBAL*)(dev->mainstor + sbala);
+                        sk = dev->qdio.i_sbalk[qn];
+                        did_read = 1;
+
+                        if (grp->l3)
+                            qrc = read_L3_packets( dev, grp, sbal, sk );
+                        else
+                            qrc = read_L2_packets( dev, grp, sbal, sk );
+
+                        /* Mark the buffer as having been completed */
+                        if (qrc >= 0)
+                        {
+                            slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
+                            SET_DSCI(dev,DSCI_IOCOMP);
+                            grp->reqpci = TRUE;
+                            return;
+                        }
+                        else if (qrc == QRC_EPKEOF)
+                        {
+                            /* We didn't find any packets/frames meant
+                            for us (perhaps the destination MAC or IP
+                            addresses didn't match) so just return. */
+                            return;   /* (nothing for us to do) */
+                        }
+                    }
+
+                    /* Handle errors here since both read_L2_packets
+                       and read_L3_packets may also return an error */
+                    if (qrc < 0)
+                    {
+                        slsb->slsbe[bn] = SLSBE_ERROR;
+                        STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        SET_ALSI(dev,ALSI_ERROR);
+                        grp->reqpci = TRUE;
                         return;
                     }
-                    if(ns)
-                        sbal->sbale[ns-1].flags[0] = SBALE_FLAG0_LAST_ENTRY;
-                }
-                else /* Buffer not empty */
-                {
-                    if(++ib >= 128)
-                    {
-                        ib = 0;
-                        dev->qdio.i_bpos[iq] = ib;
-                        if(++iq >= dev->qdio.i_qcnt)
-                            iq = 0;
-                        dev->qdio.i_qpos = iq;
-                    }
-                    dev->qdio.i_bpos[iq] = ib;
-                }
-        }
-        else
-            if(++iq >= dev->qdio.i_qcnt)
-                iq = 0;
 
-    if(nobuff)
+                } /* end if (SLSBE_INPUT_EMPTY) */
+
+                /* Go on to the next buffer... */
+                if(++bn >= mb)
+                    bn = 0;
+            }
+            while ((dev->qdio.i_bpos[qn] = bn) != sbn);
+
+        } /* end if(dev->qdio.i_qmask & (0x80000000 >> qn)) */
+
+        /* Go on to the next queue... */
+        if(++qn >= mq)
+            qn = 0;
+    }
+    while ((dev->qdio.i_qpos = qn) != sqn);
+
+    /* PROGRAMMING NOTE: If we did not actually perform a read
+       from the tuntap device in the logic above, then we need
+       to do so here at this time. We were called for a reason.
+       There are supposedly packets to be read but since we did
+       not attempt to read any of them we need to do so at this
+       time. Failure to do this causes ACTIVATE QUEUES to call
+       us continuously, over and over and over again and again
+       and again, because its 'select' function still indicates
+       that the socket still has unread data waiting to be read.
+    */
+    if (!did_read && more_packets( dev ))
     {
     char buff[4096];
     int n;
-#if defined( OPTION_W32_CTCI )
-        do {
-#endif
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
-            n = TUNTAP_Read(grp->ttfd, buff, sizeof(buff));
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
-
-            if(n > 0)
-            {
-                grp->reqpci = TRUE;
-if( grp->debug )
-{
-mpc_display_stuff( dev, "TAP DROPPED", (BYTE*)&buff, n, ' ' );
-}
-            }
-#if defined( OPTION_W32_CTCI )
-        } while (n > 0);
-#endif
+        DBGTRC(dev, "Input dropped (No available buffers)\n");
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
+        n = TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
+        if(n > 0)
+            grp->reqpci = TRUE;
     }
 }
+/* end process_input_queues */
 
 
 /*-------------------------------------------------------------------*/
-/* Process Output Queue                                              */
+/* Write one L2/L3 packet/frame to the TUN/TAP device.               */
 /*-------------------------------------------------------------------*/
-static void process_output_queue(DEVBLK *dev)
+static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
+                         BYTE* pkt, int pktlen )
+{
+    int wrote, errnum;
+
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", 0, pktlen, 0 );
+    wrote = TUNTAP_Write( dev->fd, pkt, pktlen );
+    errnum = errno;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", 0, pktlen, 0 );
+
+    if (likely(wrote == pktlen))
+    {
+        dev->qdio.txcnt++;
+        return QRC_SUCCESS;
+    }
+
+    // HHC03971 "%1d:%04X %s: error writing to device %s: %s"
+    WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        "QETH", grp->ttifname, strerror( errnum ));
+    errno = errnum;
+    return QRC_EIOERR;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Copy packet/frame data from one/more OSA queue storage buffers    */
+/* into DEVBLK device buffer. Uses the entries from the passed       */
+/* Storage Block Address List to copy the packet/frame data which    */
+/* might be split across several storage areas. Stops when either    */
+/* the entire output packet has been consolidated into the DEVBLK    */
+/* buffer or the ending Storage Block is reached and consumed.       */
+/*-------------------------------------------------------------------*/
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sbalk is the associated protection key for the queue buffer.      */
+/* sb is a ptr to the current SBAL Storage Block number.             */
+/* sbsrc is where in the first Storage Block to begin copying from.  */
+/* sblen is the length of the first Storage Block minus the OSA hdr. */
+/* dev->bufrem holds the expected packet/frame size and dev->buflen  */
+/* starts at zero. Both are updated as the copying proceeds.         */
+/*-------------------------------------------------------------------*/
+static QRC copy_storage_fragment( DEVBLK* dev, OSA_GRP *grp,
+                                  QDIO_SBAL *sbal, BYTE sbalk,
+                                  int* sb, BYTE* sbsrc, U32 sblen )
+{
+    U64 sba;                            /* Storage Block Address     */
+    BYTE *dst;                          /* Destination address       */
+    U32 len;                            /* Copy length               */
+
+    dst = dev->buf + dev->buflen;       /* Build destination pointer */
+
+    /* Copy data from each Storage Block in turn until the entire
+       packet/frame has been copied or we reach the ending Block. */
+    while (dev->bufres > 0)
+    {
+        /* End of current storage block? */
+        if (!sblen)
+        {
+            /* Is this the last storage block? */
+            if (WR_LOGICALLY_LAST_SBALE( sbal->sbale[*sb].flags[0] ))
+            {
+                /* We have copied as much data as we possibly can but
+                dev->bufres is not zero so the Storage Blocks Entries
+                are wrong. THIS SHOULD NEVER OCCUR since our device
+                buffer size is always set to the maximum size of 64K. */
+                return SBALE_ERROR( QRC_EPKSBLEN, dev,sbal,sbalk,*sb);
+            }
+
+            /* Request interrupt if needed */
+            if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
+            {
+                SET_DSCI(dev,DSCI_IOCOMP);
+                grp->reqpci = TRUE;
+            }
+
+            /* Retrieve the next storage block entry */
+            if (*sb >= (QMAXSTBK-1))
+                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
+            *sb = *sb + 1;
+            FETCH_DW( sba,   sbal->sbale[*sb].addr   );
+            FETCH_FW( sblen, sbal->sbale[*sb].length );
+            if (!sblen)
+                return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
+            if (STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev))
+                return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
+            sbsrc = (BYTE*)(dev->mainstor + sba);
+        }
+
+        /* Copying packet/frame data to from this storage block */
+        len = min( (U32)dev->bufres, sblen );
+        memcpy( dst, sbsrc, len );
+
+        dst         += len;
+        dev->buflen += len;
+        dev->bufres -= len;
+        sbsrc       += len;
+        sblen       -= len;
+    }
+
+    /* We have finished copying the entire packet/frame. Check
+       to make sure we ended on the expected Storage Block. */
+    if (!WR_LOGICALLY_LAST_SBALE( sbal->sbale[*sb].flags[0] ))
+        return SBALE_ERROR( QRC_ESBPKCPY, dev,sbal,sbalk,*sb);
+
+    return QRC_SUCCESS;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Write all packets/frames in this primed buffer. Automatically     */
+/* handles output packing mode by continuing to next storage Block.  */
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sbalk is the associated protection key for the queue buffer.      */
+/*-------------------------------------------------------------------*/
+static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, BYTE sbalk )
+{
+    U64 sba;                            /* Storage Block Address     */
+    BYTE* hdr;                          /* Ptr to OSA packet header  */
+    BYTE* pkt;                          /* Ptr to packet or frame    */
+    U32 sblen;                          /* Length of Storage Block   */
+    int hdrlen;                         /* Length of OSA header      */
+    int pktlen;                         /* Packet or frame length    */
+    int sb;                             /* Storage Block number      */
+    int ssb;                            /* Starting Storage Block    */
+    QRC qrc;                            /* Internal return code      */
+    BYTE hdr_id;                        /* OSA Header Block Id       */
+    BYTE flag0;                         /* Storage Block Flag        */
+    BYTE skip = 0;                      /* Internal work flag        */
+
+    ssb = sb = 0;     /* Start with Storage Block zero */
+    do
+    {
+        /* Retrieve the (next) Storage Block and check its key */
+        FETCH_DW( sba,   sbal->sbale[sb].addr   );
+        FETCH_FW( sblen, sbal->sbale[sb].length );
+        if (!sblen)
+            return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,sb);
+        if (STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev ))
+            return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,sb);
+        hdr = (BYTE*)(dev->mainstor + sba);
+
+        /* Verify Block is long enough to hold the full OSA header.
+           FIX ME: there is nothing in the specs that requires the
+           header to not span multiple Storage Blocks so we should
+           should probably support it, but at the moment we do not.
+        */
+        if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
+            WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                "QETH", "** FIX ME! ** OSA_HDR SPANS MULTIPLE STORAGE BLOCKS!" );
+
+        /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
+        hdr_id = hdr[0];
+        skip = 0;
+
+        switch (hdr_id)
+        {
+        U16 length;
+        case HDR_ID_LAYER2:
+        {
+            ETHFRM* eth;
+            OSA_HDR2* o2hdr = (OSA_HDR2*)hdr;
+            hdrlen = sizeof(OSA_HDR2);
+            pkt = hdr + hdrlen;
+            FETCH_HW( length, o2hdr->pktlen );
+            pktlen = length;
+            eth = (ETHFRM*)pkt;
+            if (!validate_mac( eth->bSrcMAC, MAC_TYPE_UNICST, grp ))
+            {
+                DBGTRC(dev, "Output dropped (Bad source MAC)\n");
+                skip = 1;   /*(don't write this frame)*/
+            }
+            break;
+        }
+        case HDR_ID_LAYER3:
+        {
+            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
+            hdrlen = sizeof(OSA_HDR3);
+            pkt = hdr + hdrlen;
+            FETCH_HW( length, o3hdr->length );
+            pktlen = length;
+            break;
+        }
+        case HDR_ID_TSO:
+        case HDR_ID_OSN:
+        default:
+            return SBALE_ERROR( QRC_EPKTYP, dev,sbal,sbalk,sb);
+        }
+
+        /* Make sure the packet/frame will fit into our device buffer */
+        if (pktlen > dev->bufsize)
+            return SBALE_ERROR( QRC_EPKSIZ, dev,sbal,sbalk,sb);
+
+        /* Copy packet/frame data into DEVBLK buffer */
+        sblen -= hdrlen;
+        dev->bufres = pktlen;
+        dev->buflen = 0;
+
+        if ((qrc = copy_storage_fragment( dev, grp, sbal, sbalk,
+                                          &sb, pkt, sblen )) < 0)
+            return qrc;
+
+        /* Make sure we did that right */
+        flag0 = sbal->sbale[sb].flags[0];
+        ASSERT(1
+            && dev->bufres == 0
+            && dev->buflen == pktlen
+            && WR_LOGICALLY_LAST_SBALE( flag0 )
+        );
+
+        /* Trace the pack/frame if debugging is enabled */
+        if( grp->debug )
+        {
+            U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
+            char cWhat[32] = {0};
+            DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
+                ssb, sb, sbala, dev->buflen, dev->buflen );
+            MSGBUF( cWhat, "OUTPUT BUF%s", skip ? " (SKIPPED)" : "" );
+            mpc_display_stuff( dev, cWhat, dev->buf, dev->buflen, '>' );
+        }
+
+        if (!skip)
+            qrc = write_packet( dev, grp, dev->buf, dev->buflen );
+    }
+    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ));
+    return qrc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                  Process Output Queues                            */
+/*-------------------------------------------------------------------*/
+static void process_output_queues( DEVBLK *dev )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int oq = dev->qdio.o_qpos;
-int mq = dev->qdio.o_qcnt;
+int sqn = dev->qdio.o_qpos;             /* Starting queue number     */
+int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
+int qn = sqn;                           /* Working queue number      */
+int found_buff = 0;
 
-    while (mq--)
-        if(dev->qdio.o_qmask & (0x80000000 >> oq))
+    DBGTRC(dev, "Output Qpos(%d) Bpos(%d)\n", qn, dev->qdio.o_bpos[qn] );
+
+    do
+    {
+        if(dev->qdio.o_qmask & (0x80000000 >> qn))
         {
-        int ob = dev->qdio.o_bpos[oq];
-        QDIO_SLSB *slsb;
-        int mb = 128;
-            slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[oq]);
+        QDIO_SLSB *slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[qn]);
+        int sbn = dev->qdio.o_bpos[qn]; /* Starting buffer number    */
+        int mb = QMAXBUFS;              /* Maximum number of buffers */
+        int bn = sbn;                   /* Working buffer number     */
 
-            while(mb--)
-                if(slsb->slsbe[ob] == SLSBE_OUTPUT_PRIMED)
+            do
+            {
+                if(slsb->slsbe[bn] == SLSBE_OUTPUT_PRIMED)
                 {
-                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.o_sla[oq]);
-                U64 sa; U32 len; BYTE *buf;
-                U64 la;
-                QDIO_SBAL *sbal;
-                int ns;
+                QDIO_SL *sl = (QDIO_SL*)(dev->mainstor + dev->qdio.o_sla[qn]);
+                U64 sbala;              /* Storage Block Address List*/
+                BYTE sk;                /* Storage Key               */
+                QRC qrc;                /* Internal return code      */
 
-                    DBGTRC(dev, _("Output Queue(%d) Buffer(%d)\n"),oq,ob);
+                    found_buff = 1;
+                    DBGTRC(dev, "Output Queue(%d) Buffer(%d)\n", qn, bn);
+                    sk = dev->qdio.o_slk[qn];
+                    FETCH_DW( sbala, sl->sbala[bn] );
 
-                    FETCH_DW(sa,sl->sbala[ob]);
-                    if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
+                    /* Verify Storage Block Address List is accessible */
+                    if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
                     {
-                        slsb->slsbe[ob] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
+                        qrc = QRC_ESTORCHK;
+                    }
+                    else
+                    {
+                        /* Write packets from this primed buffer */
+                        QDIO_SBAL *sbal = (QDIO_SBAL*)(dev->mainstor + sbala);
+
+                        sk = dev->qdio.o_sbalk[qn];
+
+                        if ((qrc = write_buffered_packets( dev, grp, sbal, sk )) >= 0)
+                        {
+                            slsb->slsbe[bn] = SLSBE_OUTPUT_COMPLETED;
+                            STORAGE_KEY( dev->qdio.o_slsbla[qn], dev ) |= (STORKEY_REF|STORKEY_CHANGE);
+                        }
+                    }
+
+                    /* Packets written or an error has ocurred */
+                    grp->reqpci = TRUE;
+
+                    /* Handle errors */
+                    if (qrc < 0)
+                    {
+                        slsb->slsbe[bn] = SLSBE_ERROR;
+                        STORAGE_KEY(dev->qdio.o_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
                         return;
                     }
-                    sbal = (QDIO_SBAL*)(dev->mainstor + sa);
 
-                    for(ns = 0; ns < 16; ns++)
-                    {
-                        FETCH_DW(la,sbal->sbale[ns].addr);
-                        FETCH_FW(len,sbal->sbale[ns].length);
-                        if(!len)
-                            break;  // Or should this be continue - ie a discontiguous sbal???
-                        if(STORCHK(la,len-1,dev->qdio.o_sbalk[oq],STORKEY_REF,dev))
-                        {
-                            slsb->slsbe[ob] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-                            SET_ALSI(dev,ALSI_ERROR);
-                            grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
-                            return;
-                        }
-                        buf = (BYTE*)(dev->mainstor + la);
+                } /* end if(SLSBE_OUTPUT_PRIMED) */
 
-// ZZ FIXME
-// ZZ INCOMPLETE PROCESS BUFFER HERE
-// ZZ THIS CODE IS NOT QUITE RIGHT YET IT MUST BE ABLE TO ASSEMBLE
-// ZZ MULTIPLE FRAGMENTS INTO ONE ETHERNET FRAME
+                /* Go on to the next buffer... */
+                if(++bn >= mb)
+                    bn = 0;
+            }
+            while ((dev->qdio.o_bpos[qn] = bn) != sbn);
 
-if(sa && la && len)
-{
-if( grp->debug )
-{
-DBGTRC(dev, "SBAL(%d): %llx ADDR: %llx LEN: %d ",ns,sa,la,len);
-DBGTRC(dev, "FLAGS %2.2x %2.2x\n",sbal->sbale[ns].flags[0],sbal->sbale[ns].flags[1]);
-mpc_display_stuff( dev, "OUTPUT BUF", buf, len, ' ' );
+        } /* end if(dev->qdio.o_qmask & (0x80000000 >> qn)) */
+
+        /* Go on to the next queue... */
+        if(++qn >= mq)
+            qn = 0;
+    }
+    while ((dev->qdio.o_qpos = qn) != sqn);
+
+    if (!found_buff)
+        DBGTRC(dev, "process_output_queues: Nothing written.\n");
 }
-}
-                        if(len > sizeof(OSA_HDR2))
-                        {
-                            if(validate_mac(buf+sizeof(OSA_HDR2)+6,MAC_TYPE_UNICST,grp))
-                            {
+/* end process_output_queues */
 
-//          // Trace the IP packet before sending to TUN interface
-//          if( grp->debug )
-//          {
-//          int  ipktver;
-//          char cpktver[8];
-//              ipktver = (((buf+sizeof(OSA_HDR2))[0] & 0xF0) >> 4);
-//              if (ipktver == 4)
-//                strcpy( cpktver, "IPv4" );
-//              else if (ipktver == 6)
-//                strcpy( cpktver, "IPv6" );
-//              else
-//                strcpy( cpktver, "???" );
-//              // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
-//              WRMSG(HHC03907, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-//                                   cpktver, len-sizeof(OSA_HDR2), grp->ttifname );
-//              packet_trace( buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2), '<' );
-//          }
 
-                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", ns, len-sizeof(OSA_HDR2), 0 );
-                                TUNTAP_Write(grp->ttfd, buf+sizeof(OSA_HDR2), len-sizeof(OSA_HDR2));
-                                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", ns, len-sizeof(OSA_HDR2), 0 );
-                                dev->qdio.txcnt++;
-                            }
-else { DBGTRC(dev, "OUTPUT DROPPED, INVALID MAC\n"); }
-                        }
+/*-------------------------------------------------------------------*/
+/* Halt device signalling                                            */
+/*-------------------------------------------------------------------*/
+static void qeth_signal_halt (OSA_GRP *grp)
+{
+fd_set readset;
+BYTE sig = QDSIG_HALT;
 
-                        if((sbal->sbale[ns].flags[3] & SBALE_FLAG3_PCI_REQ))
-                        {
-                            SET_DSCI(dev,DSCI_IOCOMP);
-                            grp->reqpci = TRUE;
-                        }
-                    }
+    /* Send signal */
+    write_pipe( grp->ppfd[1], &sig, 1 );
 
-                    slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
-                    STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
-                    if(++ob >= 128)
-                    {
-                        ob = 0;
-                        dev->qdio.o_bpos[oq] = ob;
-                        if(++oq >= dev->qdio.o_qcnt)
-                            oq = 0;
-                        dev->qdio.o_qpos = oq;
-                        mq = dev->qdio.o_qcnt;
-                    }
-                    dev->qdio.o_bpos[oq] = ob;
-                    mb = 128;
-                }
-                else
-                    if(++ob >= 128)
-                    {
-                        ob = 0;
-                        if(++oq >= dev->qdio.o_qcnt)
-                            oq = 0;
-                    }
-
-        }
-        else
-            if(++oq >= dev->qdio.o_qcnt)
-                oq = 0;
+    /* Wait for reply */
+    FD_ZERO( &readset );
+    FD_SET( grp->ppfd[0], &readset );
+    select( grp->ppfd[0]+1, &readset, NULL, NULL, NULL );
+    read_pipe( grp->ppfd[0], &sig, 1 );
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Halt device handler                                               */
 /*-------------------------------------------------------------------*/
-static void qeth_halt_device ( DEVBLK *dev)
+static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    /* Signal QDIO end if QDIO is active */
+    /* Signal ACTIVATE QUEUES loop to exit if QDIO is active */
     if(dev->scsw.flag2 & SCSW2_Q)
     {
         dev->scsw.flag2 &= ~SCSW2_Q;
-        write_pipe(grp->ppfd[1],"*",1);
+        qeth_signal_halt(grp);
     }
     else
         if(dev->group->acount == OSA_GROUP_SIZE)
+        {
+            /* Tell READ loop to not wait for IDX response */
+            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
             signal_condition(&grp->qcond);
+        }
 }
 
 
@@ -1565,18 +2310,42 @@ int i;
 #endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
         else
             logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
-
     }
 
     dev->fd = -1;
+    dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
-    if(grouped) {
-        DEVBLK *cua = dev->group->memdev[0];
-        U16 destlink = 0x000D; // ZZ FIXME: where should this come from?
+    if (grouped)
+    {
+        DEVBLK *cua;
+        U16 destlink;
+        int i, pfxlen;
+
+        /* Initialize each device's Full Link Address array */
+        cua = dev->group->memdev[0];
+        destlink = 0x000D; // ZZ FIXME: where should this come from?
         for(i = 0; i < OSA_GROUP_SIZE; i++) {
             dev->group->memdev[i]->fla[0] =
                 (destlink << 8) | (cua->devnum & 0x00FF);
         }
+
+        /* Initialize IPv4 mask field */
+        if (grp->ttpfxlen)
+            grp->pfxmask4 = (0xFFFFFFFF >> atoi(grp->ttpfxlen));
+        else
+            grp->pfxmask4 = 0xFFFFFFFF;
+
+        /* Initialize IPv6 mask field */
+        if (grp->ttpfxlen6 && (pfxlen = atoi(grp->ttpfxlen6)) >= 1 && pfxlen <= 128 )
+        {
+            int quo = pfxlen / 8;
+            int rem = pfxlen % 8;
+            memset( &grp->pfxmask6[0],   0x00,    quo );
+            memset( &grp->pfxmask6[quo], 0xFF, 16-quo );
+            grp->pfxmask6[quo] = (0xFF >> rem);
+        }
+        else
+            memset( &grp->pfxmask6[0], 0xFF, 16 );
     }
 
     return 0;
@@ -1645,6 +2414,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if(!dev->member && dev->group->grp_data)
     {
         int ttfd = grp->ttfd;
+
+        qeth_halt_device(dev);
 
         grp->ttfd = -1;
         dev->fd = -1;
@@ -1886,17 +2657,36 @@ int num;                                /* Number of bytes to move   */
     BYTE    *iodata;
     int      datalen, length;
     U32      first4;
-
-        /* */
-        for ( ; ; )
+        /*
+        ** Our purpose is to satisfy the program's request to read
+        ** an IDX response. If there is a response queued (chained)
+        ** then we return our response thereby satisfying the read,
+        ** and exit with normal CSW status.
+        **
+        ** If we don't have an IDX response queued/chained though,
+        ** then how we react depends on whether IDX handshaking is
+        ** still active or not.
+        **
+        ** If IDX is not active (i.e. our dev->qdio.idxstate field
+        ** is not MPC_IDX_STATE_ACTIVE) we return with a CSW status
+        ** of unit check with status modifier (i.e. the read failed
+        ** because there were no response buffers queued/chained to
+        ** satisfy their read request with).
+        **
+        ** Otherwise as long as IDX is still active, we simply wait
+        ** until a response is eventually queued (chained) so we can
+        ** then use it to satisfy their read request with. That is
+        ** to say, we will wait forever for a response to be queued
+        ** as long as IDX is still active (we only exit when there
+        ** is a response to give them or IDX is no longer active).
+        */
+        while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
-
-            /* Remove first, or only, buffer from chain. */
+            /* Remove IDX response buffer from chain. */
             bhr = remove_buffer_from_chain( grp );
             if (bhr)
             {
-
-                /* Point to the data and get its length. */
+                /* Point to response data and get its length. */
                 iodata = (BYTE*)bhr + SizeBHR;
                 length = datalen = bhr->datalen;
 
@@ -1914,10 +2704,9 @@ int num;                                /* Number of bytes to move   */
                 }
                 *unitstat = CSW_CE | CSW_DE;
 
-                /* Get the first 4-bytes of the data. */
+                /* What type of IDX response is this? */
                 FETCH_FW( first4, iodata );
 
-                /* */
                 if (first4 == MPC_TH_FIRST4)
                 {
                     MPC_TH *th = (MPC_TH*)iodata;
@@ -1950,32 +2739,29 @@ int num;                                /* Number of bytes to move   */
                     mpc_display_stuff( dev, "???", iodata, length, TO_GUEST );
                 }
 
-                /* Copy the data to be read. */
+                /* Copy IDX response data to i/o buffer. */
                 memcpy( iobuf, iodata, datalen );
 
-                /* Free the buffer. */
+                /* Free IDX response buffer. Read is complete. */
                 free( bhr );
-
-                break; /*for*/
+                break; /*while*/
             }
-            else
+
+            /* There are no IDX response buffers chained. */
+            if(dev->qdio.idxstate != MPC_IDX_STATE_ACTIVE)
             {
-                if(dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
-                {
-                    obtain_lock(&grp->qlock);
-                    wait_condition(&grp->qcond, &grp->qlock);
-                    release_lock(&grp->qlock);
-                }
-                else
-                {
-                    /* Return unit check with status modifier */
-                    dev->sense[0] = 0;
-                    *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
-                    break; /*for*/
-                }
+                /* Return unit check with status modifier. */
+                dev->sense[0] = 0;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
+                break; /*while*/
             }
 
-        } /* end for (;;) */
+            /* Wait for an IDX response buffer to be chained. */
+            obtain_lock(&grp->qlock);
+            wait_condition(&grp->qcond, &grp->qlock);
+            release_lock(&grp->qlock);
+
+        } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
 
         break; /*switch*/
 
@@ -2311,48 +3097,59 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     {
     fd_set readset;
-    int rc;
+    int rc=0, fd; BYTE sig;
 
         dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
-
         FD_ZERO( &readset );
-
         dev->scsw.flag2 |= SCSW2_Q;
-
         PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0, 0, 0 );
 
-        do {
-            /* Process the Input Queue if data has been received */
+        while (1)
+        {
+            /* Read pipe signal if one was sent */
+            sig = QDSIG_RESET;
+            if(FD_ISSET(grp->ppfd[0],&readset))
+            {
+                read_pipe(grp->ppfd[0],&sig,1);
+                DBGTRC(dev, "ACTIVATE QUEUES SIGNAL %d RECEIVED\n",sig);
+            }
+
+            /* Exit immediately if requested to do so */
+            if (sig == QDSIG_HALT)
+                break;
+
+            /* Set packing flags */
+            grp->rdpack = (sig == QDSIG_RDMULT) ? 1 : 0;
+            grp->wrpack = (sig == QDSIG_WRMULT) ? 1 : 0;
+
+            /* Process the Input Queue if needed */
             if(dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
             {
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0, 0, 0 );
-                process_input_queue(dev);
+                process_input_queues(dev);
                 PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0, 0, 0 );
             }
 
-            /* Process Output Queue if data needs to be sent */
-            if(FD_ISSET(grp->ppfd[0],&readset))
+            /* Process the Output Queue if requested */
+            if(dev->qdio.o_qmask && (sig == QDSIG_WRIT || sig == QDSIG_WRMULT))
             {
-            char c;
-                read_pipe(grp->ppfd[0],&c,1);
-
-                if(dev->qdio.o_qmask)
-                {
-                    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0, 0, 0 );
-                    process_output_queue(dev);
-                    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0, 0, 0 );
-                }
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0, 0, 0 );
+                process_output_queues(dev);
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0, 0, 0 );
             }
 
-            if(dev->qdio.i_qmask)
-                FD_SET(grp->ttfd, &readset);
-            FD_SET(grp->ppfd[0], &readset);
-
+            /* Present adapter interrupt if needed */
             if(grp->reqpci)
             {
                 grp->reqpci = FALSE;
                 raise_adapter_interrupt(dev);
             }
+
+            FD_ZERO( &readset );
+            if(dev->qdio.i_qmask)
+                FD_SET(grp->ttfd, &readset);
+            FD_SET(grp->ppfd[0], &readset);
+            fd = (grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0];
 
 //!         /* Display various information, maybe */
 //!         if( grp->debug )
@@ -2362,25 +3159,18 @@ int num;                                /* Number of bytes to move   */
 //!             mpc_display_stuff( dev, "readset", (BYTE*)&readset, sizeof(readset), ' ' );
 //!         }
 
-#if defined( OPTION_W32_CTCI )
-            do {
-#endif
-
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
-                rc = select (((grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0]) + 1,
-                    &readset, NULL, NULL, NULL);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
-
-#if defined( OPTION_W32_CTCI )
-            } while (0 == rc || (rc < 0 && HSO_errno == HSO_EINTR));
-#endif
-        } while (
-#if defined( OPTION_W32_CTCI )
-                 rc > 0 &&
-#endif
-                           dev->scsw.flag2 & SCSW2_Q);
-
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
+            rc = select( fd+1, &readset, NULL, NULL, NULL );
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
+        }
         PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0, 0, rc );
+
+        /* Reply to halt signal */
+        if (sig == QDSIG_HALT)
+        {
+            BYTE sig = QDSIG_HALT;
+            write_pipe(grp->ppfd[1],&sig,1);
+        }
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2444,22 +3234,23 @@ int noselrd;
         dev->qdio.i_qmask = qmask;
     }
 
-    /* Send signal to QDIO thread */
+    /* Send signal to ACTIVATE QUEUES device thread loop */
     if(noselrd && dev->qdio.i_qmask)
-        write_pipe(grp->ppfd[1],"*",1);
+    {
+        BYTE b = QDSIG_READ;
+        write_pipe(grp->ppfd[1],&b,1);
+    }
 
     return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
-/* Signal Adapter Initiate Output                                    */
+/* Signal Adapter Initiate Output/Multiple helper function           */
 /*-------------------------------------------------------------------*/
-static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
+static int qeth_do_initiate_output(DEVBLK *dev, U32 qmask, BYTE sig)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
-    DBGTRC(dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -2482,11 +3273,33 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         dev->qdio.o_qmask = qmask;
     }
 
-    /* Send signal to QDIO thread */
+    /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
-        write_pipe(grp->ppfd[1],"*",1);
+        write_pipe(grp->ppfd[1],&sig,1);
 
     return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Signal Adapter Initiate Output                                    */
+/*-------------------------------------------------------------------*/
+static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    DBGTRC(dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
+    return qeth_do_initiate_output( dev, qmask, QDSIG_WRIT );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Signal Adapter Initiate Output Multiple                           */
+/*-------------------------------------------------------------------*/
+static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    DBGTRC(dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
+    return qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT );
 }
 
 
@@ -2501,17 +3314,6 @@ static int qeth_do_sync(DEVBLK *dev, U32 qmask)
     DBGTRC(dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     return 0;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Signal Adapter Initiate Output Multiple                           */
-/*-------------------------------------------------------------------*/
-static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
-{
-    DBGTRC(dev, _("SIGA-m dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
-
-    return qeth_initiate_output(dev, qmask);
 }
 
 
@@ -2798,9 +3600,6 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-int iMTU;
-U16 uMTU;
-
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
@@ -2825,17 +3624,6 @@ U16 uMTU;
     FETCH_HW( len_req_pus_0A, req_pus_0A->length);
     if( len_req_pus_0A > SIZE_PUS_0A_B )
         len_rsp_pus_0A = len_req_pus_0A;
-
-    /* Determine the MTU. */
-    if(grp->ttmtu)
-    {
-        iMTU = atoi( grp->ttmtu );
-    }
-    else
-    {
-        GetMTU( grp->ttifname, NULL, 0, &iMTU );
-    }
-    uMTU = iMTU;
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_01 +                     // first MPC_PUS
@@ -2901,7 +3689,7 @@ U16 uMTU;
     // Prepare second MPC_PUS
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
     STORE_HW( rsp_pus_0A->length, len_rsp_pus_0A );
-    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, uMTU );
+    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, grp->uMTU );
     rsp_pus_0A->vc.pus_0A.linktype = PUS_LINK_TYPE_FAST_ETH;
 
     return rsp_bhr;
@@ -3319,121 +4107,65 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 
 
 /*-------------------------------------------------------------------*/
-/* Get MAC address                                                   */
+/* Initialize MAC address                                            */
 /*-------------------------------------------------------------------*/
-int      GetMACAddr( char*   pszIfName,
-                     char*   pszMACAddr,
-                     int     szMACAddrLen,
-                     MAC*    pMACAddr )
+void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
-#if defined(SIOCGIFHWADDR)
-    int fd, rc;
-    struct hifr hifr;
+    static const BYTE zeromac[IFHWADDRLEN] = {0};
+    char szMAC[3*IFHWADDRLEN] = {0};
+    int rc;
 
-    memset( &hifr, 0, sizeof(struct hifr) );
-    strncpy( hifr.hifr_name, pszIfName, sizeof(hifr.hifr_name)-1 );
+    if (grp->tthwaddr)
+        return;
 
-    if (pszMACAddr) {
-        memset( pszMACAddr, 0, szMACAddrLen );
+    /* Retrieve the MAC Address directly from the tuntap interface */
+    rc = TUNTAP_GetMACAddr( grp->ttifname, &grp->tthwaddr );
+    if (0
+        || rc != 0
+        || ParseMAC( grp->tthwaddr, grp->iMAC ) != 0
+        || memcmp( grp->iMAC, zeromac, IFHWADDRLEN ) == 0
+    )
+    {
+        DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
+        if (grp->tthwaddr)
+            free( grp->tthwaddr );
+        build_herc_iface_mac( grp->iMAC, NULL );
+        MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+            grp->iMAC[0], grp->iMAC[1], grp->iMAC[2],
+            grp->iMAC[3], grp->iMAC[4], grp->iMAC[5] );
+        grp->tthwaddr = strdup( szMAC );
     }
-    if (pMACAddr) {
-        memset( pMACAddr, 0, IFHWADDRLEN );
-    }
-
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    rc = TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&hifr );
-    close(fd);
-
-    if (rc < 0 )
-        return -1;
-
-    if (pszMACAddr) {
-        snprintf( pszMACAddr, szMACAddrLen-1,
-                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[0],
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[1],
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[2],
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[3],
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[4],
-                  (unsigned char)hifr.hifr_hwaddr.sa_data[5] );
-    }
-    if (pMACAddr) {
-    memcpy( pMACAddr, &hifr.hifr_hwaddr, IFHWADDRLEN );
-    }
-
-    return 0;
-#else /* !defined(SIOCGIFHWADDR) */
-    MAC mac;
-
-    mac[0] = 0x00;
-    mac[1] = 0x00;
-    mac[2] = 0x5E;
-    mac[3] = 0x12;
-    mac[4] = 0x34;
-    mac[5] = 0x56;
-
-    if (pszMACAddr) {
-        snprintf( pszMACAddr, szMACAddrLen-1,
-                  "%02X:%02X:%02X:%02X:%02X:%02X",  /* upper case */
-                  (unsigned char)mac[0],
-                  (unsigned char)mac[1],
-                  (unsigned char)mac[2],
-                  (unsigned char)mac[3],
-                  (unsigned char)mac[4],
-                  (unsigned char)mac[5] );
-    }
-    if (pMACAddr) {
-    memcpy( pMACAddr, &mac, IFHWADDRLEN );
-    }
-
-    return 0;
-#endif /* defined(SIOCGIFHWADDR) */
 }
 
+
 /*-------------------------------------------------------------------*/
-/* Get MTU value                                                     */
+/* Initialize MTU value                                              */
 /*-------------------------------------------------------------------*/
-int      GetMTU( char*   pszIfName,
-                 char*   pszMTU,
-                 int     szMTULen,
-                 int*    pMTU )
+void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 {
-    int fd, rc;
-    struct hifr hifr;
+    int nMTU;
+    int rc;
 
-    memset( &hifr, 0, sizeof(struct hifr) );
-    strncpy( hifr.hifr_name, pszIfName, sizeof(hifr.hifr_name)-1 );
+    if (grp->ttmtu && grp->uMTU)
+        return;
 
-    if (pszMTU) {
-        memset( pszMTU, 0, szMTULen );
+    /* Retrieve the MTU value directly from the tuntap interface */
+    rc = TUNTAP_GetMTU( grp->ttifname, &grp->ttmtu );
+    if (0
+        || rc != 0
+        || !(nMTU = atoi( grp->ttmtu ))
+        || nMTU < (60    - 14)
+        || nMTU > (65535 - 14)
+    )
+    {
+        DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
+        if (grp->ttmtu)
+            free( grp->ttmtu );
+        grp->ttmtu = strdup( DEF_MTU_STR );
     }
-    if (pMTU) {
-        *pMTU = 0;
-    }
-
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        return -1;
-    }
-
-    rc = TUNTAP_IOCtl( fd, SIOCGIFMTU, (char*)&hifr );
-    if (rc < 0 ) {
-        close(fd);
-        return -1;
-    }
-
-    if (pszMTU) {
-        snprintf( pszMTU, szMTULen-1,
-                  "%d",
-                  hifr.hifr_mtu );
-    }
-    if (pMTU) {
-        *pMTU = hifr.hifr_mtu;
-    }
-
-    close(fd);
-
-    return 0;
+    nMTU = atoi( grp->ttmtu );
+    ASSERT( nMTU >= (60 - 14) && nMTU <= (65535 - 14));
+    grp->uMTU = (U16) nMTU;
 }
 
 

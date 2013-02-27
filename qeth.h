@@ -163,17 +163,32 @@ typedef struct _OSA_GRP {
     char *ttipaddr6;            /* IPv6 address of the interface     */
     char *ttpfxlen6;            /* IPv6 Prefix length of interface   */
 
+    BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */
+    U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */
 
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter in promiscuous mode       */
 #define MAC_PROMISC     0x80
 
+    int   enabled;              /* Interface is enabled (IFF_UP)     */
     int   debug;                /* Adapter in IFF_DEBUG mode         */
     int   l3;                   /* Adapter in layer 3 mode           */
+    int   rdpack;               /* Adapter in read packing mode      */
+    int   wrpack;               /* Adapter in write packing mode     */
     int   reqpci;               /* PCI has been requested            */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
+
+    /* Socket pipe signals written to pipe to request something      */
+
+#define QDSIG_WRIT      0       /* SIGA Initiate Output              */
+#define QDSIG_READ      1       /* SIGA Initiate Input               */
+#define QDSIG_SYNC      2       /* SIGA Synchronize                  */
+#define QDSIG_WRMULT    3       /* SIGA Output Multiple              */
+#define QDSIG_RDMULT    88      /* SIGA Input Multiple               */
+#define QDSIG_HALT      99      /* Halt Device signalling            */
+#define QDSIG_RESET     255     /* Used to reset signal flag         */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
@@ -182,6 +197,9 @@ typedef struct _OSA_GRP {
     U32   ipas;                 /* Supported IP assist mask          */
     U32   ipae;                 /* Enabled IP assist mask            */
     U32   iir;                  /* Interface ID record               */
+
+    BYTE  iMAC[IFHWADDRLEN];    /* MAC of the interface              */
+    U16   uMTU;                 /* MTU of the interface              */
 
     BYTE  gtissue[4];           /* Guest token issuer                */
     BYTE  gtcmfilt[4];          /* Guest token cm filter             */
@@ -199,6 +217,16 @@ typedef struct _OSA_GRP {
 #define HDR_ID_LAYER2  0x02     /* Ethernet Layer 2 Frame            */
 #define HDR_ID_TSO     0x03     /* Layer 3 TCP Segmentation Offload  */
 #define HDR_ID_OSN     0x04     /* Channel Data Link Control (CDLC)  */
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Layer 3 IPv4/IPv6 cast types                                  */
+/*-------------------------------------------------------------------*/
+#define L3_CAST_NOCAST      0       /* No cast                       */
+#define L3_CAST_MULTICAST   4       /* Multicast                     */
+#define L3_CAST_BROADCAST   5       /* Broadcast                     */
+#define L3_CAST_UNICAST     6       /* Unicast                       */
+#define L3_CAST_ANYCAST     7       /* Anycast                       */
 
 
 /*-------------------------------------------------------------------*/
@@ -244,6 +272,40 @@ struct OSA_HDR2 {
 typedef struct OSA_HDR2 OSA_HDR2;
 
 
+/*-------------------------------------------------------------------*/
+/* OSA Layer 3 Header                                                */
+/*-------------------------------------------------------------------*/
+struct OSA_HDR3 {
+/*000*/ BYTE    id;             /* Packet Id                         */
+/*001*/ BYTE    flags;          /* Flags                             */
+
+#define HDR3_FLAGS_IPV6       0x80  /* 1=IPv6, 0=IPv4                */
+#define HDR3_FLAGS_PASSTHRU   0x10  /* Pass through packet (IPv6)    */
+#define HDR3_FLAGS_CASTMASK   0x07  /* Cast type                     */
+#define HDR3_FLAGS_UNUSED     0x68  /* Unused bits; must be zero     */
+
+/*002*/ HWORD   in_cksum;       /* Inbound checksum (TSO: sequence#) */
+/*004*/ FWORD   token;          /* Token  ????      (TSO: reserved)  */
+/*008*/ HWORD   length;         /* Packet size (not including HDR)   */
+/*00A*/ BYTE    vlan_prio;      /* (not used)                        */
+/*00B*/ BYTE    ext_flags;      /* Extended Buffer flags             */
+
+#define HDR3_EXFLAG_UNUSED    0x80  /* Unused; must be zero          */
+#define HDR3_EXFLAG_UDP       0x40  /* 1=UDP packet; 0=TCP           */
+#define HDR3_EXFLAG_TPCKSUM   0x20  /* Trnspt cksum; 1=chked, 0=not  */
+#define HDR3_EXFLAG_PKCKSUM   0x10  /* PktHdr cksum; 1=chked, 0=not  */
+#define HDR3_EXFLAG_SRCMAC    0x08  /* External source MAC present   */
+#define HDR3_EXFLAG_VLANTAG   0x04  /* VLAN Tag in dest_addr 12-13   */
+#define HDR3_EXFLAG_TOKENID   0x02  /* Token Id present              */
+#define HDR3_EXFLAG_VLANID    0x01  /* vlan_id field present         */
+
+/*00C*/ HWORD   vlan_id;        /* VLAN ID (if HDR3_EXFLAG_VLANID)   */
+/*00E*/ HWORD   frame_offset;   /* Frame offset (TSO only?)          */
+/*010*/ BYTE    dest_addr[16];  /* Destination address: IPv4[12-15]
+                                   HDR3_EXFLAG_VLANTAG: VTag[12-13]  */
+/*020*/ } ATTRIBUTE_PACKED;     /* Total length: 32 bytes            */
+
+typedef struct OSA_HDR3 OSA_HDR3;
 
 
 #if defined(_MSVC_)
