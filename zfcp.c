@@ -34,11 +34,27 @@
 #include "chsc.h"
 #include "zfcp.h"
 
-#define ZFCP_DEBUG
+/*-------------------------------------------------------------------*/
+/* ZFCP Debugging                                                    */
+/*-------------------------------------------------------------------*/
 
-#if defined(DEBUG) && !defined(ZFCP_DEBUG)
+#define ENABLE_ZFCP_DEBUG   1    // 1:always, 0:never, #undef:maybe
+
+#if (!defined(ENABLE_ZFCP_DEBUG) && defined(DEBUG)) || \
+    (defined(ENABLE_ZFCP_DEBUG) && ENABLE_ZFCP_DEBUG)
  #define ZFCP_DEBUG
 #endif
+
+#if defined(ZFCP_DEBUG)
+ #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
+ #include "dbgtrace.h"                   // (Fish: DEBUGGING)
+ #define  NO_ZFCP_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
+#endif
+
+#if defined( _MSVC_ ) && defined( NO_ZFCP_OPTIMIZE )
+  #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
+#endif
+
 
 
 #if defined( OPTION_DYNAMIC_LOAD )
@@ -79,6 +95,7 @@ static const BYTE sense_id_bytes[] =
     ZFCP_AQ_CIW,                        /* Activate Queues CIW       */
 };
 
+
 static BYTE zfcp_immed_commands [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
@@ -102,7 +119,9 @@ static BYTE zfcp_immed_commands [256] =
 
 
 /*-------------------------------------------------------------------*/
-/* STORCHK macro: check storage access & update ref & change bits    */
+/* STORCHK macro: check storage access & update ref & change bits.   */
+/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
+/* Storage key ref & change bits are only updated if successful.     */
 /*-------------------------------------------------------------------*/
 #define STORCHK(_addr,_len,_key,_acc,_dev) \
   (((((_addr) + (_len)) > (_dev)->mainlim) \
