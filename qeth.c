@@ -2901,7 +2901,7 @@ int num;                                /* Number of bytes to move   */
         // temporary #if statements. Once we know for certain we can
         // then remove the #ifs and keep the only code we need.
 
-#if 1   // ZZ FIXME: should we be doing this?
+#if 0   // ZZ FIXME: should we be doing this?
 
         /* z/VM 5.3 always rejects this command so we will too */
         dev->sense[0] = SENSE_CR;
