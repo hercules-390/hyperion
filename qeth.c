@@ -52,18 +52,21 @@
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   1    // 1:enable, 0:disable, #undef:default
+#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
+#define QETH_TIMING_DEBUG
+#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
-#if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) || \
-    (defined(ENABLE_QETH_DEBUG) && ENABLE_QETH_DEBUG)
- #define QETH_DEBUG
+
+#if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) ||  \
+    ( defined(ENABLE_QETH_DEBUG) && ENABLE_QETH_DEBUG)
+  #define QETH_DEBUG
 #endif
 
 #if defined(QETH_DEBUG)
- #define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
- #include "dbgtrace.h"                   // (Fish: DEBUGGING)
- #define  NO_QETH_OPTIMIZE               // (Fish: DEBUGGING) (MSVC only)
- #define  QETH_TIMING_DEBUG              // (Fish: DEBUG speed/timing)
+  #define  ENABLE_TRACING_STMTS   1     // (Fish: DEBUGGING)
+  #include "dbgtrace.h"                 // (Fish: DEBUGGING)
+  #define  NO_QETH_OPTIMIZE             // (Fish: DEBUGGING) (MSVC only)
+  #define  QETH_TIMING_DEBUG            // (Fish: DEBUG speed/timing)
 #endif
 
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
@@ -77,6 +80,48 @@
   #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3)
 #endif
 
+#if defined(QETH_DEBUG)
+  #define DBGTRC(_dev, ...)                 \
+    do {                                    \
+      DEVGRP *devgrp = (_dev)->group;       \
+      if (devgrp) {                         \
+        OSA_GRP* grp = devgrp->grp_data;    \
+        if(grp && grp->debug)               \
+          TRACE(__VA_ARGS__);               \
+      }                                     \
+    } while(0)
+#else
+  #define DBGTRC(_dev, ...)
+#endif
+
+#if defined( QETH_DUMP_DATA )
+  static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
+  {
+  DEVGRP* group = dev->group;
+    if (group) {
+    OSA_GRP* grp = group->grp_data;
+      if(grp && grp->debug) {
+      int i;
+        logmsg(_("DATA: %4.4X %s"), len, name);
+        for(i = 0; i < len; i++) {
+          if(!(i & 15))
+            logmsg(_("\n%4.4X:"), i);
+          logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
+        }
+        logmsg(_("\n"));
+      }
+    }
+  }
+  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
+    mpc_display_stuff( dev, _msg, _adr, _len, _dir )
+#else
+  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)   /* (do nothing) */
+#endif // QETH_DUMP_DATA
+
+
+/*-------------------------------------------------------------------*/
+/* Hercules Dynamic Loader (HDL)                                     */
+/*-------------------------------------------------------------------*/
 #if defined( OPTION_DYNAMIC_LOAD )
   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
     SYSBLK *psysblk;
@@ -180,34 +225,6 @@ static BYTE qeth_immed_commands [256] =
 && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
   ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
-
-
-#if defined(QETH_DEBUG)
-static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
-{
-int i;
-
-    if(!((OSA_GRP*)(dev->group->grp_data))->debug)
-        return;
-
-    logmsg(_("DATA: %4.4X %s"), len, name);
-    for(i = 0; i < len; i++)
-    {
-        if(!(i & 15))
-            logmsg(_("\n%4.4X:"), i);
-        logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
-    }
-    logmsg(_("\n"));
-}
-#define DBGTRC(_dev, ...)                          \
-do {                                               \
-  if(((OSA_GRP*)((_dev)->group->grp_data))->debug) \
-        TRACE(__VA_ARGS__);                        \
-} while(0)
-#else
- #define DBGTRC(_dev, ...)
- #define DUMP(_dev, _name, _ptr, _len)
-#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -1448,7 +1465,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
             maddr = (BYTE*)(dev->mainstor + sba);
             DBGTRC( dev, "SBAL(%d): %llx Addr: %llx Len: %04X (%d) flags[0,3]: %2.2X %2.2X\n",
                 i, sbala, sba, sbrem, sbrem, sbal->sbale[i].flags[0], sbal->sbale[i].flags[1] );
-            mpc_display_stuff( dev, "INPUT BUF", maddr, sbrem, '<' );
+            MPC_DUMP_DATA( "INPUT BUF", maddr, sbrem, '<' );
         }
     }
 
@@ -1974,7 +1991,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
                 ssb, sb, sbala, dev->buflen, dev->buflen );
             MSGBUF( cWhat, "OUTPUT BUF%s", skip ? " (SKIPPED)" : "" );
-            mpc_display_stuff( dev, cWhat, dev->buf, dev->buflen, '>' );
+            MPC_DUMP_DATA( cWhat, dev->buf, dev->buflen, '>' );
         }
 
         if (!skip)
@@ -1994,7 +2011,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int sqn = dev->qdio.o_qpos;             /* Starting queue number     */
 int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
-int found_buff = 0;
+int found_buff = 0;                     /* Found primed o/p buffer   */
 
     DBGTRC(dev, "Output Qpos(%d) Bpos(%d)\n", qn, dev->qdio.o_bpos[qn] );
 
@@ -2636,7 +2653,7 @@ int num;                                /* Number of bytes to move   */
             mpc_display_description( dev, "Unrecognised Request" );
             if (length >= 256)
                 length = 256;
-            mpc_display_stuff( dev, "???", iobuf, length, FROM_GUEST );
+            MPC_DUMP_DATA( "???", iobuf, length, FROM_GUEST );
         }
 
         /* Return normal status */
@@ -2736,7 +2753,7 @@ int num;                                /* Number of bytes to move   */
                     mpc_display_description( dev, "Unrecognised Response" );
                     if (length >= 256)
                         length = 256;
-                    mpc_display_stuff( dev, "???", iodata, length, TO_GUEST );
+                    MPC_DUMP_DATA( "???", iodata, length, TO_GUEST );
                 }
 
                 /* Copy IDX response data to i/o buffer. */
@@ -2833,7 +2850,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
-//          mpc_display_stuff( dev, "SID", iobuf, num, ' ' );
+//          MPC_DUMP_DATA( "SID", iobuf, num, ' ' );
         }
         break;
 
@@ -2883,7 +2900,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
-//          mpc_display_stuff( dev, "RCD", iobuf, num, ' ' );
+//          MPC_DUMP_DATA( "RCD", iobuf, num, ' ' );
         }
         break;
     }
@@ -2938,9 +2955,7 @@ int num;                                /* Number of bytes to move   */
 
         /* Display various information, maybe */
         if( grp->debug )
-        {
-            mpc_display_stuff( dev, "SII", iobuf, num, ' ' );
-        }
+            MPC_DUMP_DATA( "SII", iobuf, num, ' ' );
 
         break;
 
@@ -3004,7 +3019,7 @@ int num;                                /* Number of bytes to move   */
             // HHC03995 "%1d:%04X %s: %s:\n%s"
             WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
-//          mpc_display_stuff( dev, "RNI", iobuf, num, ' ' );
+//          MPC_DUMP_DATA( "RNI", iobuf, num, ' ' );
         }
         break;
     }
@@ -3154,9 +3169,9 @@ int num;                                /* Number of bytes to move   */
 //!         /* Display various information, maybe */
 //!         if( grp->debug )
 //!         {
-//!             mpc_display_stuff( dev, "i_qmask", (BYTE*)&dev->qdio.i_qmask, 4, ' ' );
-//!             mpc_display_stuff( dev, "o_qmask", (BYTE*)&dev->qdio.o_qmask, 4, ' ' );
-//!             mpc_display_stuff( dev, "readset", (BYTE*)&readset, sizeof(readset), ' ' );
+//!             MPC_DUMP_DATA( "i_qmask", (BYTE*)&dev->qdio.i_qmask, 4, ' ' );
+//!             MPC_DUMP_DATA( "o_qmask", (BYTE*)&dev->qdio.o_qmask, 4, ' ' );
+//!             MPC_DUMP_DATA( "readset", (BYTE*)&readset, sizeof(readset), ' ' );
 //!         }
 
             PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
