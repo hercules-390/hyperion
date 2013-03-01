@@ -1873,16 +1873,10 @@ int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
 
-UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
 
-    /* We require only one operand */
-    if (argc != 1)
-    {
-        // "Missing or invalid argument(s)"
-        WRMSG( HHC17000, "E" );
-        return;
-    }
-    opnd = argv[0];
+    opnd = cmdline+1;
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -1941,18 +1935,11 @@ BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
 char    type;
 
-    UNREFERENCED(cmdline);
-
-    /* We require only one operand */
-    if (argc != 1)
-    {
-        // "Missing or invalid argument(s)"
-        WRMSG( HHC17000, "E" );
-        return;
-    }
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
 
     /* Parse optional address-space prefix */
-    opnd = argv[0];
+    opnd = cmdline+1;
     type = toupper( *opnd );
 
     if (1
