@@ -3223,6 +3223,9 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd;
 
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-r", qmask,
+        qmask & ~(0xffffffff >> dev->qdio.i_qcnt), 0 );
+
     DBGTRC(dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
     /* Return CC1 if the device is not QDIO active */
@@ -3302,6 +3305,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-w", qmask,
+        qmask & ~(0xffffffff >> dev->qdio.o_qcnt), 0 );
     DBGTRC(dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
     return qeth_do_initiate_output( dev, qmask, QDSIG_WRIT );
 }
@@ -3313,6 +3318,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-m", qmask,
+        qmask & ~(0xffffffff >> dev->qdio.o_qcnt), 0 );
     DBGTRC(dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
     return qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT );
 }
@@ -3325,6 +3332,10 @@ static int qeth_do_sync(DEVBLK *dev, U32 qmask)
 {
     UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
     UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
+
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-s", qmask,
+        qmask & ~(0xffffffff >> dev->qdio.o_qcnt),
+        qmask & ~(0xffffffff >> dev->qdio.i_qcnt));
 
     DBGTRC(dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
 
