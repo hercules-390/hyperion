@@ -42,11 +42,11 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "chsc.h"
-#include "qeth.h"
 #include "mpc.h"
 #include "tuntap.h"
 #include "ctcadpt.h"
 #include "hercifc.h"
+#include "qeth.h"
 
 /*-------------------------------------------------------------------*/
 /* QETH Debugging                                                    */
