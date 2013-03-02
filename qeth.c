@@ -137,6 +137,7 @@ OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+int process_ulp_enable_extract( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
@@ -659,12 +660,15 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
-                rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
-                if( !rsp_bhr )
+                if (process_ulp_enable_extract( dev, req_th, req_rrh, req_puk ) != 0)
+                {
+                    rsp_bhr = NULL;
                     break;
+                }
                 if (qeth_create_interface( dev, grp ) != 0)
                     qeth_errnum_msg( dev, grp, -1,
                         "E", "qeth_create_interface() failed" );
+                rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
@@ -1418,7 +1422,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
                                    QDIO_SBAL *sbal, int sb, BYTE sbalk,
                                    BYTE* hdr, int hdrlen )
 {
-    U32 sboff = 0;  /*see note*/        /* Storage Block offset      */ 
+    U32 sboff = 0;  /*see note*/        /* Storage Block offset      */
     U32 sbrem = 1;  /*see note*/        /* Storage Block remaining   */
     int ssb = sb;                       /* Saved starting sb value   */
     QRC qrc;                            /* Return code               */
@@ -3601,6 +3605,35 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 }
 
 /*-------------------------------------------------------------------*/
+/* Process the ULP_ENABLE request from the guest to extract values.  */
+/*-------------------------------------------------------------------*/
+int process_ulp_enable_extract( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+{
+OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
+MPC_PUS *req_pus_01;
+MPC_PUS *req_pus_0A;
+
+    UNREFERENCED(req_th);
+    UNREFERENCED(req_rrh);
+
+    /* Point to the expected MPC_PUS and check they are present. */
+    req_pus_01 = mpc_point_pus( dev, req_puk, PUS_TYPE_01 );
+    req_pus_0A = mpc_point_pus( dev, req_puk, PUS_TYPE_0A );
+    if( !req_pus_01 || !req_pus_0A )
+    {
+        /* FIXME Expected pus not present, error message please. */
+        DBGTRC(dev, "process_ulp_enable: Expected pus not present\n");
+        return -1;
+    }
+
+    /* Remember whether we are using layer2 or layer3. */
+    grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest.                    */
 /*-------------------------------------------------------------------*/
 OSA_BHR* process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
@@ -3626,8 +3659,6 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-U16 uMTU;
-
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
 
@@ -3643,9 +3674,6 @@ U16 uMTU;
 
     /* Copy the guests ULP Filter token from request PUS_TYPE_01. */
     memcpy( grp->gtulpfilt, req_pus_01->vc.pus_01.token, MPC_TOKEN_LENGTH );
-
-    /* Remember whether we are using layer2 or layer3. */
-    grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
 
     /* Determine length of request and response PUS_TYPE_0A. */
     len_rsp_pus_0A = SIZE_PUS_0A_B;
@@ -3714,13 +3742,10 @@ U16 uMTU;
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
     STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN4 );
 
-    InitMTU( dev, grp );
-    uMTU = grp->uMTU ? grp->uMTU : (U16) atoi( QETH_DEF_MTU );
-
     // Prepare second MPC_PUS
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
     STORE_HW( rsp_pus_0A->length, len_rsp_pus_0A );
-    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, uMTU );
+    STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, grp->uMTU );
     rsp_pus_0A->vc.pus_0A.linktype = PUS_LINK_TYPE_FAST_ETH;
 
     return rsp_bhr;
@@ -4216,7 +4241,10 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     int rc = 0;
 
     if (grp->ttmtu)
+    {
+        grp->uMTU = (U16) atoi( grp->ttmtu );
         return;
+    }
 
     /* Create TEMPORARY interface if needed */
     if ((ttfd = grp->ttfd) < 0)
