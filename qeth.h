@@ -124,6 +124,12 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 #define  OSA_NQ                 NULL_MODEP_NQ
 
 
+// Mac OSX has no IFHWADDRLEN
+#if !defined(IFHWADDRLEN)
+ #define IFHWADDRLEN 6
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /* OSA MAC structure                                                 */
 /*-------------------------------------------------------------------*/
