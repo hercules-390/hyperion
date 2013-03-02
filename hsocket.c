@@ -24,7 +24,7 @@ PURPOSE:   This routine is used in place of read to read a passed number
 PARAMETERS:
    1.   fd        -  int (INPUT)
                      This is the file descriptor for the socket to be read.
- 
+
    2.   ptr        - pointer to void (OUTPUT)
                      This is a pointer to where the data is to be put.
 
@@ -35,7 +35,7 @@ FUNCTIONS :
 
    1.   Read in a loop till an error occurs or the data is read.
 
-OUTPUTS:  
+OUTPUTS:
    data into the buffer
 
 *************************************************************************/
@@ -94,7 +94,7 @@ PURPOSE:   This routine is used in place of write to write a passed number
 PARAMETERS:
    1.   fd        -  int (OUTPUT)
                      This is the file descriptor for the socket to be written.
- 
+
    2.   ptr        - pointer to void (INPUT)
                      This is a pointer to where the data is to be gotten from.
 
@@ -104,12 +104,12 @@ PARAMETERS:
 FUNCTIONS :
    1.   Write in a loop till an error occurs or the data is written.
 
-OUTPUTS:  
+OUTPUTS:
    Data to the socket.
 
 *************************************************************************/
 
-/* 
+/*
  * Write "n" bytes to a descriptor.
  * Use in place of write() when fd is a stream socket.
  */
@@ -136,7 +136,7 @@ while (nleft > 0)
       return(nwritten);      /* error */
 #endif
 
-   
+
    nleft -= nwritten;
    ptr   += nwritten;
 }  /* end of do while */
@@ -144,3 +144,32 @@ while (nleft > 0)
 return(nbytes - nleft);
 
 } /* end of write_socket */
+
+
+/************************************************************************
+
+  NAME:     disable_nagle - disable Nagle's algorithm for the socket.
+
+  PURPOSE:  This routine is used to disable Nagle's algorithm for those
+            sockets which need to send their data with miminum delay,
+            such as notification pipes or telnet console devices, etc.
+
+  RETURNS:  Returns 0 if successful or -1 if unsuccessful.
+
+*************************************************************************/
+
+DLL_EXPORT int disable_nagle(int fd)
+{
+static const int nodelay = 1;
+
+    int rc = setsockopt
+    (
+        fd,                 /* socket affected          */
+        IPPROTO_TCP,        /* set option at TCP level  */
+        TCP_NODELAY,        /* the name of the option   */
+        (char*)&nodelay,    /* pointer to option value  */
+        sizeof(nodelay)     /* length of option value   */
+    );
+    return rc;
+
+} /* end of disable_nagle */

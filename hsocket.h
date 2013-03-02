@@ -153,5 +153,6 @@
 
 HSOCK_DLL_IMPORT int read_socket(int fd, void *ptr, int nbytes);
 HSOCK_DLL_IMPORT int write_socket(int fd, const void *ptr, int nbytes);
+HSOCK_DLL_IMPORT int disable_nagle(int fd);
 
 #endif /*!defined(_HSOCKET_H)*/
