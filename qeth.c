@@ -1239,6 +1239,7 @@ typedef short QRC;              /* Internal function return code     */
 #define QRC_EZEROBLK    -7      /* Zero Length Storage Block         */
 #define QRC_EPKSBLEN    -8      /* Packet length <-> SBALE mismatch  */
 #define QRC_ESBPKCPY    -9      /* Packet copy wrong ending SBALE    */
+#define QRC_ESBNOEOF   -10      /* No last Last Storage Block flag   */
 
 
 /*-------------------------------------------------------------------*/
@@ -1363,13 +1364,9 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
     U64 sba;                            /* Storage Block Address     */
     BYTE *dst;                          /* Destination address       */
     int len;                            /* Copy length (work)        */
-    BYTE flag0;                         /* SBALE flag                */
+    BYTE flag0;                         /* SBALE fragment flag       */
 
-    /* Initialize destination address */
-
-    FETCH_DW( sba, sbal->sbale[*sb].addr );
-    dst = (BYTE*)(dev->mainstor + sba + *sboff);
-
+    /* Initialize starting fragment flag */
     flag0 = SBALE_FLAG0_FRAG_FIRST;
 
     while (rem > 0)
@@ -1377,40 +1374,34 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
         /* End of current storage block? */
         if (!*sbrem)
         {
-            ASSERT( *sboff ); /*(sanity check)*/
-
-            /* Done using this storage block */
-            STORE_FW( sbal->sbale[*sb].length, *sboff );
-            SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
-
-            /* Request interrupt if needed */
-            if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
+            if (*sboff)
             {
-                SET_DSCI(dev,DSCI_IOCOMP);
-                grp->reqpci = TRUE;
+                /* Done using this storage block */
+                STORE_FW( sbal->sbale[*sb].length, *sboff );
+                sbal->sbale[*sb].flags[0] &= ~SBALE_FLAG0_LAST_ENTRY;
+                SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+
+                /* Start new storage block */
+                if (*sb >= (QMAXSTBK-1))
+                    return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
+
+                *sb = *sb + 1;
+                flag0 = SBALE_FLAG0_FRAG_MIDDLE;
             }
 
-            /* Start new storage block */
-            if (*sb >= (QMAXSTBK-1))
-                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
-            *sb = *sb + 1;
-            flag0 = SBALE_FLAG0_FRAG_MIDDLE;
-            *sboff = 0;
-        }
-
-        /* First time using this storage block? */
-        if (!*sboff)
-        {
+            /* Check this Storage Blocks key and length */
             FETCH_DW(  sba,   sbal->sbale[*sb].addr   );
             FETCH_FW( *sbrem, sbal->sbale[*sb].length );
             if (!*sbrem)
                 return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
             if (STORCHK(sba,(*sbrem)-1,sbalk,STORKEY_CHANGE,dev))
                 return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
+
+            /* Get new destination address */
             dst = (BYTE*)(dev->mainstor + sba);
         }
 
-        /* Continue copying data to storage block */
+        /* Continue copying data to Storage Block */
         len = min( *sbrem, (U32)rem );
         memcpy( dst, src, len );
 
@@ -1422,6 +1413,7 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
     }
 
     /* Mark last fragment and exit */
+    STORE_FW( sbal->sbale[*sb].length, *sboff );
     flag0 = SBALE_FLAG0_FRAG_LAST;
     SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
     return QRC_SUCCESS;
@@ -1443,56 +1435,23 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
                                    QDIO_SBAL *sbal, int sb, BYTE sbalk,
                                    BYTE* hdr, int hdrlen )
 {
-    U32 sboff = 0;  /*see note*/        /* Storage Block offset      */
-    U32 sbrem = 1;  /*see note*/        /* Storage Block remaining   */
+    U32 sboff = 0;                      /* Storage Block offset      */ 
+    U32 sbrem = 0;                      /* Storage Block remaining   */
     int ssb = sb;                       /* Saved starting sb value   */
     QRC qrc;                            /* Return code               */
-
-    /* PROGRAMMING NOTE: to kick things off, we need to ensure that
-       sboff is zero and sbrem is NON-zero so copy_fragment_to_storage
-       knows this is the first time using this storage block and thus
-       initialize itself using the first storage block's values. */
-
-    /* Clear last-entry flag in starting entry */
-    sbal->sbale[sb].flags[0] &= ~SBALE_FLAG0_LAST_ENTRY;
 
     /* Start with the header first */
     if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
         &sb, &sboff, &sbrem, hdr, hdrlen )) < 0 )
         return qrc;
-    ASSERT( sb < QMAXSTBK );
 
-    /* Then copy the packet */
+    /* Then copy the packet/frame */
     if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
         &sb, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
         return qrc;
-    ASSERT( sb < QMAXSTBK );
-
-    /* Mark end of buffer */
-    sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
-    STORE_FW( sbal->sbale[sb].length, sboff );
 
     /* Count packets received */
     dev->qdio.rxcnt++;
-
-    /* Dump the individual SBALE entries */
-    if( grp->debug )
-    {
-        U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-        U64 sba;
-        BYTE *maddr;
-        int i;
-
-        for (i=ssb; i <= sb; i++)
-        {
-            FETCH_DW( sba,   sbal->sbale[i].addr   );
-            FETCH_FW( sbrem, sbal->sbale[i].length );
-            maddr = (BYTE*)(dev->mainstor + sba);
-            DBGTRC( dev, "SBAL(%d): %llx Addr: %llx Len: %04X (%d) flags[0,3]: %2.2X %2.2X\n",
-                i, sbala, sba, sbrem, sbrem, sbal->sbale[i].flags[0], sbal->sbale[i].flags[1] );
-            MPC_DUMP_DATA( "INPUT BUF", maddr, sbrem, '<' );
-        }
-    }
 
     return QRC_SUCCESS;
 }
@@ -1542,15 +1501,22 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
             break;
         }
 
+        /* Dump the frame just received */
+        if( grp->debug )
+        {
+            MPC_DUMP_DATA( "INPUT L2 HDR",   (BYTE*)&o2hdr,   (int)sizeof(o2hdr), '<' );
+            MPC_DUMP_DATA( "INPUT L2 FRAME", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+        }
+
         /* Copy header and frame to buffer storage block(s) */
         qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
                                       (BYTE*) &o2hdr, sizeof( o2hdr ));
     }
-    while (qrc == QRC_SUCCESS && grp->rdpack && more_packets( dev )
-        && ++sb < QMAXSTBK);
+    while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
 
-    if (sb >= QMAXSTBK)
-        return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,QMAXSTBK-1);
+    /* Mark end of buffer */
+    if (sb >= QMAXSTBK) sb--;
+    sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
 
     return qrc;
 }
@@ -1648,18 +1614,22 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
         }
 
-        // FIX ME: should we be validating the IPv4/IPv6 destination address?
-        // (similarly to the way we validate the destination MAC for Layer 2?)
+        /* Dump the packet just received */
+        if( grp->debug )
+        {
+            MPC_DUMP_DATA( "INPUT L3 HDR",    (BYTE*)&o3hdr,   (int)sizeof(o3hdr), '<' );
+            MPC_DUMP_DATA( "INPUT L3 PACKET", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+        }
 
         /* Copy header and packet to buffer storage block(s) */
         qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
                                       (BYTE*) &o3hdr, sizeof( o3hdr ));
     }
-    while (qrc == QRC_SUCCESS && grp->rdpack && more_packets( dev )
-        && ++sb < QMAXSTBK);
+    while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
 
-    if (sb >= QMAXSTBK)
-        return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,QMAXSTBK-1);
+    /* Mark end of buffer */
+    if (sb >= QMAXSTBK) sb--;
+    sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
 
     return qrc;
 }
@@ -1729,6 +1699,7 @@ int did_read = 0;                       /* Indicates some data read  */
                         if (qrc >= 0)
                         {
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
+                            STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                             SET_DSCI(dev,DSCI_IOCOMP);
                             grp->reqpci = TRUE;
                             return;
@@ -1895,11 +1866,6 @@ static QRC copy_storage_fragment( DEVBLK* dev, OSA_GRP *grp,
         sblen       -= len;
     }
 
-    /* We have finished copying the entire packet/frame. Check
-       to make sure we ended on the expected Storage Block. */
-    if (!WR_LOGICALLY_LAST_SBALE( sbal->sbale[*sb].flags[0] ))
-        return SBALE_ERROR( QRC_ESBPKCPY, dev,sbal,sbalk,*sb);
-
     return QRC_SUCCESS;
 }
 
@@ -1924,11 +1890,14 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     QRC qrc;                            /* Internal return code      */
     BYTE hdr_id;                        /* OSA Header Block Id       */
     BYTE flag0;                         /* Storage Block Flag        */
-    BYTE skip = 0;                      /* Internal work flag        */
 
-    ssb = sb = 0;     /* Start with Storage Block zero */
+    sb = 0;                             /* Start w/Storage Block 0   */
+
     do
     {
+        /* Save starting Storage Block number */
+        ssb = sb;
+
         /* Retrieve the (next) Storage Block and check its key */
         FETCH_DW( sba,   sbal->sbale[sb].addr   );
         FETCH_FW( sblen, sbal->sbale[sb].length );
@@ -1949,8 +1918,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
         hdr_id = hdr[0];
-        skip = 0;
-
         switch (hdr_id)
         {
         U16 length;
@@ -1963,11 +1930,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             FETCH_HW( length, o2hdr->pktlen );
             pktlen = length;
             eth = (ETHFRM*)pkt;
-            if (!validate_mac( eth->bSrcMAC, MAC_TYPE_UNICST, grp ))
-            {
-                DBGTRC(dev, "Output dropped (Bad source MAC)\n");
-                skip = 1;   /*(don't write this frame)*/
-            }
             break;
         }
         case HDR_ID_LAYER3:
@@ -1998,30 +1960,26 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                                           &sb, pkt, sblen )) < 0)
             return qrc;
 
-        /* Make sure we did that right */
+        /* Save ending flag */
         flag0 = sbal->sbale[sb].flags[0];
-        ASSERT(1
-            && dev->bufres == 0
-            && dev->buflen == pktlen
-            && WR_LOGICALLY_LAST_SBALE( flag0 )
-        );
 
         /* Trace the pack/frame if debugging is enabled */
-        if( grp->debug )
+        if (grp->debug)
         {
             U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-            char cWhat[32] = {0};
             DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
                 ssb, sb, sbala, dev->buflen, dev->buflen );
-            MSGBUF( cWhat, "OUTPUT BUF%s", skip ? " (SKIPPED)" : "" );
-            MPC_DUMP_DATA( cWhat, dev->buf, dev->buflen, '>' );
+            MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
         }
 
-        if (!skip)
-            qrc = write_packet( dev, grp, dev->buf, dev->buflen );
+        qrc = write_packet( dev, grp, dev->buf, dev->buflen );
     }
-    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ));
-    return qrc;
+    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ) && ++sb < QMAXSTBK);
+
+    if (sb < QMAXSTBK)
+        return qrc;
+
+    return SBALE_ERROR( QRC_ESBNOEOF, dev,sbal,sbalk,sb-1);
 }
 
 
@@ -2074,20 +2032,16 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                         sk = dev->qdio.o_sbalk[qn];
 
                         if ((qrc = write_buffered_packets( dev, grp, sbal, sk )) >= 0)
-                        {
                             slsb->slsbe[bn] = SLSBE_OUTPUT_COMPLETED;
-                            STORAGE_KEY( dev->qdio.o_slsbla[qn], dev ) |= (STORKEY_REF|STORKEY_CHANGE);
-                        }
                     }
 
                     /* Packets written or an error has ocurred */
-                    grp->reqpci = TRUE;
+                    STORAGE_KEY(dev->qdio.o_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
 
                     /* Handle errors */
                     if (qrc < 0)
                     {
                         slsb->slsbe[bn] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.o_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
                         return;
