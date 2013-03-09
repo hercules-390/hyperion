@@ -120,7 +120,8 @@ struct _MPC_TH                     /* Transport Header               */
                                    /* 4-bytes isn't clear. The only  */
                                    /* contents that have been seen   */
                                    /* are 0x00E00000.                */
-#define MPC_TH_FIRST4 0x00E00000   /*                                */
+#define MPC_TH_FIRST4  0x00E00000  /*                                */
+#define MPC_END_FIRST4 0x0000C000  /* Adapter shutdown/close?        */
 /*004*/  FWORD  seqnum;            /* Sequence number.               */
 /*008*/  FWORD  offrrh;            /* Offset from the start of the   */
                                    /* MPC_TH to the first (or only)  */

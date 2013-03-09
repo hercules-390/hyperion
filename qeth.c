@@ -2669,6 +2669,15 @@ int num;                                /* Number of bytes to move   */
             /* Process the IEA. */
             osa_device_cmd(dev,(MPC_IEA*)iobuf,datalen);
         }
+        else if (first4 == MPC_END_FIRST4)
+        {
+            /* Only ever seen during z/OS shutdown */
+            if( grp->debug )
+            {
+                mpc_display_description( dev, "Shutdown Notify" );
+                MPC_DUMP_DATA( "END", iobuf, length, FROM_GUEST );
+            }
+        }
         else
         {
             /* Display the unrecognised data. */
@@ -2767,6 +2776,15 @@ int num;                                /* Number of bytes to move   */
                     {
                         mpc_display_description( dev, "Response" );
                         mpc_display_osa_iear( dev, (MPC_IEAR*)iodata, TO_GUEST, datalen );
+                    }
+                }
+                else if (first4 == MPC_END_FIRST4)
+                {
+                    /* Only ever seen during z/OS shutdown */
+                    if( grp->debug )
+                    {
+                        mpc_display_description( dev, "Shutdown Acknowledge" );
+                        MPC_DUMP_DATA( "END", iobuf, length, TO_GUEST );
                     }
                 }
                 else
