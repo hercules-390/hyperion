@@ -9,14 +9,16 @@
 
 #include "esa390io.h"       /* Need ND/NQ and NED/NEQ structures     */
 
-/* We need all frames from CTCI-W32 */
-#if defined( OPTION_W32_CTCI )
-  #define QETH_PROMISC      IFF_PROMISC
-#else
-  #define QETH_PROMISC      0
-#endif
 
-/* Some systems need IFF_RUNNING to be set */
+/*-------------------------------------------------------------------*/
+/* TUNTAP interface promiscuous mode option                          */
+/*-------------------------------------------------------------------*/
+#define QETH_PROMISC        (grp->promisc ? IFF_PROMISC : 0)
+
+
+/*-------------------------------------------------------------------*/
+/* Some TUNTAP platforms need IFF_RUNNING to be set                  */
+/*-------------------------------------------------------------------*/
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
   #define QETH_RUNNING      IFF_RUNNING
 #else
