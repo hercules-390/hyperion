@@ -53,15 +53,17 @@
 /*-------------------------------------------------------------------*/
 
 #define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
-#define QETH_TIMING_DEBUG
+#define QETH_TIMING_DEBUG       // #define to debug speed/performance
 #define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
+/* (enable debugging if needed/requested) */
 #if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) ||  \
     ( defined(ENABLE_QETH_DEBUG) && ENABLE_QETH_DEBUG)
   #define QETH_DEBUG
 #endif
 
+/* (activate debugging if debugging is enabled) */
 #if defined(QETH_DEBUG)
   #define  ENABLE_TRACING_STMTS   1     // (Fish: DEBUGGING)
   #include "dbgtrace.h"                 // (Fish: DEBUGGING)
@@ -69,10 +71,12 @@
   #define  QETH_TIMING_DEBUG            // (Fish: DEBUG speed/timing)
 #endif
 
+/* (disable optimizations if debugging) */
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
+/* (debug QETH speed/performance issues) */
 #if defined( QETH_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
   #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3) \
                             PTT( _class, _string, _tr1, _tr2, _tr3)
@@ -80,6 +84,7 @@
   #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3)
 #endif
 
+/* (activate DBGTRC statements if needed) */
 #if defined(QETH_DEBUG)
   #define DBGTRC(_dev, ...)                 \
     do {                                    \
@@ -87,13 +92,27 @@
       if (devgrp) {                         \
         OSA_GRP* grp = devgrp->grp_data;    \
         if(grp && grp->debug)               \
-          TRACE(__VA_ARGS__);               \
+          TRACE("QETH: " __VA_ARGS__);      \
+      }                                     \
+    } while(0)
+  #define DBGTRC2(_dev, _msg, ...)          \
+    do {                                    \
+      DEVGRP *devgrp = (_dev)->group;       \
+      if (devgrp) {                         \
+        OSA_GRP* grp = devgrp->grp_data;    \
+        if(grp && grp->debug) {             \
+          char buf[256];                    \
+          MSGBUF(buf,_msg,__VA_ARGS__);     \
+          TRACE("QETH: %s", buf);           \
+        }                                   \
       }                                     \
     } while(0)
 #else
   #define DBGTRC(_dev, ...)
+  #define DBGTRC2(_dev, _msg, ...)
 #endif
 
+/* (activate tracing of I/O data buffers) */
 #if defined( QETH_DUMP_DATA )
   static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
   {
@@ -137,7 +156,7 @@ OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-int process_ulp_enable_extract( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+int      process_ulp_enable_extract( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
@@ -310,6 +329,7 @@ static inline void clr_alsi(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#define CLR_ALSI(_dev,_bits)    clr_alsi((_dev),(_bits))
 
 
 /*-------------------------------------------------------------------*/
@@ -353,6 +373,7 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 #else /*!defined(_FEATURE_QDIO_THININT)*/
 
 #define SET_ALSI(_dev,_bits)    /* (do nothing) */
+#define CLR_ALSI(_dev,_bits)    /* (do nothing) */
 #define SET_DSCI(_dev,_bits)    /* (do nothing) */
 #define CLR_DSCI(_dev,_bits)    /* (do nothing) */
 
@@ -1122,7 +1143,7 @@ U16 reqtype;
     case IDX_ACT_TYPE_READ:
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "QETH: IDX ACTIVATE READ Invalid OSA Port %d for %s Device %4.4x\n",
+            DBGTRC(dev, "IDX Activate Read: Invalid OSA Port %d for %s Device %4.4x\n",
                 (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
@@ -1147,7 +1168,7 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "QETH: IDX ACTIVATE WRITE Invalid OSA Port %d for device %4.4x\n",
+            DBGTRC(dev, "IDX Activate Write: Invalid OSA Port %d for device %4.4x\n",
                 (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
@@ -1165,7 +1186,7 @@ U16 reqtype;
         break;
 
     default:
-        DBGTRC(dev, "QETH: IDX ACTIVATE Invalid Request %4.4x for device %4.4x\n",
+        DBGTRC(dev, "IDX Activate: Invalid Request %4.4x for device %4.4x\n",
             reqtype,dev->devnum);
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
@@ -1233,7 +1254,7 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    DBGTRC( dev, msg, sb, sbala, sbalk, sba, sblen,
+    DBGTRC2( dev, msg, sb, sbala, sbalk, sba, sblen,
         sbal->sbale[sb].flags[0],
         sbal->sbale[sb].flags[3]);
 
@@ -1663,8 +1684,6 @@ int mq = dev->qdio.i_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int did_read = 0;                       /* Indicates some data read  */
 
-    DBGTRC(dev, "Input Qpos(%d) Bpos(%d)\n", qn, dev->qdio.i_bpos[qn]);
-
     do
     {
         if(dev->qdio.i_qmask & (0x80000000 >> qn))
@@ -1691,7 +1710,7 @@ int did_read = 0;                       /* Indicates some data read  */
                     /* Verify Storage Block Address List is accessible */
                     if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
                     {
-                        DBGTRC(dev, _("STORCHK Error SBALA(%llx), Key(%2.2X)\n"), sbala, sk);
+                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
                         qrc = QRC_ESTORCHK;
                     }
                     else
@@ -2017,8 +2036,6 @@ int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int found_buff = 0;                     /* Found primed o/p buffer   */
 
-    DBGTRC(dev, "Output Qpos(%d) Bpos(%d)\n", qn, dev->qdio.o_bpos[qn] );
-
     do
     {
         if(dev->qdio.o_qmask & (0x80000000 >> qn))
@@ -2037,8 +2054,9 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                 BYTE sk;                /* Storage Key               */
                 QRC qrc;                /* Internal return code      */
 
-                    found_buff = 1;
                     DBGTRC(dev, "Output Queue(%d) Buffer(%d)\n", qn, bn);
+
+                    found_buff = 1;
                     sk = dev->qdio.o_slk[qn];
                     FETCH_DW( sbala, sl->sbala[bn] );
 
@@ -2092,7 +2110,7 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
     while ((dev->qdio.o_qpos = qn) != sqn);
 
     if (!found_buff)
-        DBGTRC(dev, "process_output_queues: Nothing written.\n");
+        DBGTRC(dev, "No primed o/p buffers found\n");
 }
 /* end process_output_queues */
 
@@ -2310,7 +2328,7 @@ int i;
             int chpid;
             char c;
             if(sscanf(argv[++i], "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
-                logmsg(_("QETH: Invalid channel path id %s for device %4.4X\n"),argv[i],dev->devnum);
+                logmsg(_("Invalid channel path id %s for device %4.4X\n"),argv[i],dev->devnum);
 
             else
                 dev->pmcw.chpid[0] = chpid;
@@ -2330,7 +2348,7 @@ int i;
         }
 #endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
         else
-            logmsg(_("QETH: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
+            logmsg(_("Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
     }
 
     dev->fd = -1;
@@ -3130,7 +3148,7 @@ int num;                                /* Number of bytes to move   */
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
                 read_pipe(grp->ppfd[0],&sig,1);
-                DBGTRC(dev, "ACTIVATE QUEUES SIGNAL %d RECEIVED\n",sig);
+                DBGTRC(dev, "Activate Queues: signal %d received\n",sig);
 
                 /* Exit immediately if requested to do so */
                 if (sig == QDSIG_HALT)
