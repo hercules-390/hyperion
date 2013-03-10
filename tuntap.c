@@ -498,7 +498,15 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
     memset( &hifr, 0, sizeof( struct hifr ) );
     strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
 
+#if defined( OPTION_W32_CTCI )
     rc = TUNTAP_IOCtl( 0, SIOCGIFMTU, (char*)&hifr );
+#else // (non-Win32 platforms)
+    {
+        int sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
+        rc = ioctl( sockfd, SIOCGIFMTU, &hifr );
+        close( sockfd );
+    }
+#endif
     if( rc < 0 )
     {
         // HHC00136 "Error in function %s: %s"
@@ -512,6 +520,7 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
         errno = ENOMEM;
         return -1;
     }
+
     return 0;
 }   // End of function  TUNTAP_GetMTU()
 
@@ -558,9 +567,7 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
 int           TUNTAP_GetMACAddr( char*   pszNetDevName,
                                  char**  ppszMACAddr )
 {
-#if !defined(OPTION_TUNTAP_GETMACADDR)
-    return -1; // (unsupported)
-#else // defined(OPTION_TUNTAP_GETMACADDR)
+#if defined(OPTION_TUNTAP_GETMACADDR)
     struct hifr         hifr;
     struct sockaddr*    addr;
     int                 rc;
@@ -586,7 +593,15 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
     addr = (struct sockaddr*)&hifr.hifr_hwaddr;
     addr->sa_family = 1;    // ARPHRD_ETHER
 
+#if defined( OPTION_W32_CTCI )
     rc = TUNTAP_IOCtl( 0, SIOCGIFHWADDR, (char*)&hifr );
+#else // (non-Win32 platforms)
+    {
+        int sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
+        rc = ioctl( sockfd, SIOCGIFHWADDR, &hifr );
+        close( sockfd );
+    }
+#endif
     if( rc < 0 )
     {
         // HHC00136 "Error in function %s: %s"
@@ -595,6 +610,9 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
     }
 
     return FormatMAC( ppszMACAddr, (BYTE*) addr->sa_data );
+#else // defined(OPTION_TUNTAP_GETMACADDR)
+    WRMSG(HHC00136, "E", "TUNTAP_GetMACAddr", "Unsupported" );
+    return -1; // (unsupported)
 #endif // defined(OPTION_TUNTAP_GETMACADDR)
 }   // End of function  TUNTAP_GetMACAddr()
 
