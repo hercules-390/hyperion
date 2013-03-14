@@ -1817,7 +1817,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Make sure the packet/frame fits in the device buffer */
-        if (pktlen > (U32)dev->bufsize)
+        if (pktlen > dev->bufsize)
             return SBALE_ERROR( QRC_EPKSIZ, dev,sbal,sbalk,sb);
 
         /* Copy the actual packet/frame into the device buffer */
