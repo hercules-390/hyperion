@@ -1297,6 +1297,50 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
 
 /*-------------------------------------------------------------------*/
+/* Determine Layer 3 IPv4 cast type                                  */
+/*-------------------------------------------------------------------*/
+static int inline l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
+{
+    if (!dstaddr)
+        return L3_CAST_NOCAST;
+    if ((dstaddr & 0xE0000000) == 0xE0000000)
+        return L3_CAST_MULTICAST;
+    if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
+        return L3_CAST_BROADCAST;
+    return L3_CAST_UNICAST;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Determine Layer 3 IPv6 cast type                                  */
+/*-------------------------------------------------------------------*/
+static int inline l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
+{
+    static const BYTE dest_zero[16] = {0};
+    BYTE dest_work[16];
+    int i;
+
+    if (dest_addr[0] == 0xFF)
+        return L3_CAST_MULTICAST;
+
+    if (memcmp( dest_addr, dest_zero, 16 ) == 0)
+        return L3_CAST_NOCAST;
+
+    memcpy( dest_work, dest_addr, 16 );
+
+    /* Ignore prefix bits */
+    for (i=0; i < 16 && grp->pfxmask6[i] != 0xFF; i++)
+        dest_work[i] &= grp->pfxmask6[i];
+
+    /* If non-prefix bits are all zero then anycast */
+    if (memcmp( dest_work, dest_zero, 16 ) == 0)
+        return L3_CAST_ANYCAST;
+
+    return L3_CAST_UNICAST;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Determine if TUN/TAP device has more packets waiting for us.      */
 /* Does a 'select' on the TUN/TAP device using a zero timeout        */
 /* and returns 1 if more packets are waiting or 0 (false) otherwise. */
@@ -1345,9 +1389,36 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 
 
 /*-------------------------------------------------------------------*/
+/* Write one L2/L3 packet/frame to the TUN/TAP device.               */
+/*-------------------------------------------------------------------*/
+static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
+                         BYTE* pkt, int pktlen )
+{
+    int wrote, errnum;
+
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", 0, pktlen, 0 );
+    wrote = TUNTAP_Write( dev->fd, pkt, pktlen );
+    errnum = errno;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", 0, pktlen, 0 );
+
+    if (likely(wrote == pktlen))
+    {
+        dev->qdio.txcnt++;
+        return QRC_SUCCESS;
+    }
+
+    // HHC03971 "%1d:%04X %s: error writing to device %s: %s"
+    WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        "QETH", grp->ttifname, strerror( errnum ));
+    errno = errnum;
+    return QRC_EIOERR;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Copy data fragment into OSA queue buffer storage.                 */
 /* Uses the entries from the passed Storage Block Address List to    */
-/* split the fragment across several storage areas as needed.        */
+/* split the fragment across several Storage Blocks as needed.       */
 /*-------------------------------------------------------------------*/
 /* sbal points to the Storage Block Address List for the buffer.     */
 /* sbalk is the associated protection key for the queue buffer.      */
@@ -1371,25 +1442,24 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
 
     while (rem > 0)
     {
-        /* End of current storage block? */
+        /* End of current Storage Block? */
         if (!*sbrem)
         {
             if (*sboff)
             {
-                /* Done using this storage block */
+                /* Done using this Storage Block */
                 STORE_FW( sbal->sbale[*sb].length, *sboff );
                 sbal->sbale[*sb].flags[0] &= ~SBALE_FLAG0_LAST_ENTRY;
                 SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
 
-                /* Start new storage block */
+                /* Go on to next Storage Block */
                 if (*sb >= (QMAXSTBK-1))
                     return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
-
                 *sb = *sb + 1;
                 flag0 = SBALE_FLAG0_FRAG_MIDDLE;
             }
 
-            /* Check this Storage Blocks key and length */
+            /* Check new Storage Block's key and length */
             FETCH_DW(  sba,   sbal->sbale[*sb].addr   );
             FETCH_FW( *sbrem, sbal->sbale[*sb].length );
             if (!*sbrem)
@@ -1421,9 +1491,89 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
 
 
 /*-------------------------------------------------------------------*/
+/* Copy packet/frame data from one/more OSA queue storage buffers    */
+/* into DEVBLK device buffer. Uses the entries from the passed       */
+/* Storage Block Address List to copy the packet/frame data which    */
+/* might be split across several Storage Blocks. Stops when either   */
+/* the entire output packet has been consolidated into the DEVBLK    */
+/* buffer or the ending Storage Block is reached and consumed.       */
+/*-------------------------------------------------------------------*/
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sbalk is the associated protection key for the queue buffer.      */
+/* sb is a ptr to the current SBAL Storage Block number.             */
+/* sbsrc is where in the first Storage Block to begin copying from.  */
+/* sblen is the length of the first Storage Block minus the OSA hdr. */
+/* dev->bufres holds the expected packet/frame size and dev->buflen  */
+/* starts at zero. Both are updated as the copying proceeds.         */
+/*-------------------------------------------------------------------*/
+static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, BYTE sbalk,
+                                   int* sb, BYTE* sbsrc, U32 sblen )
+{
+    U64 sba;                            /* Storage Block Address     */
+    BYTE *dst;                          /* Destination address       */
+    U32 len;                            /* Copy length               */
+
+    dst = dev->buf + dev->buflen;       /* Build destination pointer */
+
+    /* Copy data from each Storage Block in turn until the entire
+       packet/frame has been copied or we reach the ending Block. */
+    while (dev->bufres > 0)
+    {
+        /* End of current storage block? */
+        if (!sblen)
+        {
+            /* Is this the last storage block? */
+            if (WR_LOGICALLY_LAST_SBALE( sbal->sbale[*sb].flags[0] ))
+            {
+                /* We have copied as much data as we possibly can but
+                dev->bufres is not zero so the Storage Blocks Entries
+                are wrong. THIS SHOULD NEVER OCCUR since our device
+                buffer size is always set to the maximum size of 64K. */
+                return SBALE_ERROR( QRC_EPKSBLEN, dev,sbal,sbalk,*sb);
+            }
+
+            /* Request interrupt if needed */
+            if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
+            {
+                SET_DSCI(dev,DSCI_IOCOMP);
+                grp->reqpci = TRUE;
+            }
+
+            /* Retrieve the next storage block entry */
+            if (*sb >= (QMAXSTBK-1))
+                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
+            *sb = *sb + 1;
+            FETCH_DW( sba,   sbal->sbale[*sb].addr   );
+            FETCH_FW( sblen, sbal->sbale[*sb].length );
+            if (!sblen)
+                return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
+            if (STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev))
+                return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
+
+            /* Point to new data source */
+            sbsrc = (BYTE*)(dev->mainstor + sba);
+        }
+
+        /* Copying packet/frame to device from this storage block */
+        len = min( (U32)dev->bufres, sblen );
+        memcpy( dst, sbsrc, len );
+
+        dst         += len;
+        dev->buflen += len;
+        dev->bufres -= len;
+        sbsrc       += len;
+        sblen       -= len;
+    }
+
+    return QRC_SUCCESS;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Copy packet/frame from dev->buf into OSA queue buffer storage.    */
 /* Uses the entries from the passed Storage Block Address List to    */
-/* split the packet/frame across several storage areas as needed.    */
+/* split the packet/frame across several Storage Blocks as needed.   */
 /* dev->buflen should be set to the length of the packet/frame.      */
 /*-------------------------------------------------------------------*/
 /* sbal points to the Storage Block Address List for the buffer.     */
@@ -1438,7 +1588,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
     U32 sboff = 0;                      /* Storage Block offset      */ 
     U32 sbrem = 0;                      /* Storage Block remaining   */
     int ssb = sb;                       /* Saved starting sb value   */
-    QRC qrc;                            /* Return code               */
+    QRC qrc;                            /* Internal return code      */
 
     /* Start with the header first */
     if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
@@ -1504,8 +1654,8 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Dump the frame just received */
         if( grp->debug )
         {
-            MPC_DUMP_DATA( "INPUT L2 HDR",   (BYTE*)&o2hdr,   (int)sizeof(o2hdr), '<' );
-            MPC_DUMP_DATA( "INPUT L2 FRAME", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+            MPC_DUMP_DATA( "INPUT L2 HDR", (BYTE*)&o2hdr,   (int)sizeof(o2hdr), '<' );
+            MPC_DUMP_DATA( "INPUT L2 FRM", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
         }
 
         /* Copy header and frame to buffer storage block(s) */
@@ -1519,53 +1669,6 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
     sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
 
     return qrc;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Determine Layer 3 IPv6 cast type                                  */
-/*-------------------------------------------------------------------*/
-static int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
-{
-    static const BYTE dest_zero[16] = {0};
-    BYTE dest_work[16];
-    int i;
-
-    if (dest_addr[0] == 0xFF)
-        return L3_CAST_MULTICAST;
-
-    if (memcmp( dest_addr, dest_zero, 16 ) == 0)
-        return L3_CAST_NOCAST;
-
-    memcpy( dest_work, dest_addr, 16 );
-
-    /* Ignore prefix bits */
-    for (i=0; i < 16 && grp->pfxmask6[i] != 0xFF; i++)
-        dest_work[i] &= grp->pfxmask6[i];
-
-    /* If non-prefix bits are all zero then anycast */
-    if (memcmp( dest_work, dest_zero, 16 ) == 0)
-        return L3_CAST_ANYCAST;
-
-    return L3_CAST_UNICAST;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Determine Layer 3 IPv4 cast type                                  */
-/*-------------------------------------------------------------------*/
-static int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
-{
-    if (!dstaddr)
-        return L3_CAST_NOCAST;
-
-    if ((dstaddr & 0xE0000000) == 0xE0000000)
-        return L3_CAST_MULTICAST;
-
-    if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
-        return L3_CAST_BROADCAST;
-
-    return L3_CAST_UNICAST;
 }
 
 
@@ -1617,8 +1720,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Dump the packet just received */
         if( grp->debug )
         {
-            MPC_DUMP_DATA( "INPUT L3 HDR",    (BYTE*)&o3hdr,   (int)sizeof(o3hdr), '<' );
-            MPC_DUMP_DATA( "INPUT L3 PACKET", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+            MPC_DUMP_DATA( "INPUT L3 HDR", (BYTE*)&o3hdr,   (int)sizeof(o3hdr), '<' );
+            MPC_DUMP_DATA( "INPUT L3 PKT", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
         }
 
         /* Copy header and packet to buffer storage block(s) */
@@ -1632,6 +1735,120 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
 
     return qrc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Write all packets/frames in this primed buffer. Automatically     */
+/* handles output packing mode by continuing to next storage Block.  */
+/* sbal points to the Storage Block Address List for the buffer.     */
+/* sbalk is the associated protection key for the queue buffer.      */
+/*-------------------------------------------------------------------*/
+static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, BYTE sbalk )
+{
+    U64 sba;                            /* Storage Block Address     */
+    BYTE* hdr;                          /* Ptr to OSA packet header  */
+    BYTE* pkt;                          /* Ptr to packet or frame    */
+    U32 sblen;                          /* Length of Storage Block   */
+    int hdrlen;                         /* Length of OSA header      */
+    int pktlen;                         /* Packet or frame length    */
+    int sb;                             /* Storage Block number      */
+    int ssb;                            /* Starting Storage Block    */
+    QRC qrc;                            /* Internal return code      */
+    BYTE hdr_id;                        /* OSA Header Block Id       */
+    BYTE flag0;                         /* Storage Block Flag        */
+
+    sb = 0;                             /* Start w/Storage Block 0   */
+
+    do
+    {
+        /* Save starting Storage Block number */
+        ssb = sb;
+
+        /* Retrieve the (next) Storage Block and check its key */
+        FETCH_DW( sba,   sbal->sbale[sb].addr   );
+        FETCH_FW( sblen, sbal->sbale[sb].length );
+        if (!sblen)
+            return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,sb);
+        if (STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev ))
+            return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,sb);
+
+        /* Get pointer to OSA header */
+        hdr = (BYTE*)(dev->mainstor + sba);
+
+        /* Verify Block is long enough to hold the full OSA header.
+           FIX ME: there is nothing in the specs that requires the
+           header to not span multiple Storage Blocks so we should
+           should probably support it, but at the moment we do not. */
+        if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
+            WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                "QETH", "** FIX ME ** OSA_HDR spans multiple storage blocks." );
+
+        /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
+        hdr_id = hdr[0];
+        switch (hdr_id)
+        {
+        U16 length;
+        case HDR_ID_LAYER2:
+        {
+            ETHFRM* eth;
+            OSA_HDR2* o2hdr = (OSA_HDR2*)hdr;
+            hdrlen = sizeof(OSA_HDR2);
+            pkt = hdr + hdrlen;
+            FETCH_HW( length, o2hdr->pktlen );
+            pktlen = length;
+            eth = (ETHFRM*)pkt;
+            break;
+        }
+        case HDR_ID_LAYER3:
+        {
+            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
+            hdrlen = sizeof(OSA_HDR3);
+            pkt = hdr + hdrlen;
+            FETCH_HW( length, o3hdr->length );
+            pktlen = length;
+            break;
+        }
+        case HDR_ID_TSO:
+        case HDR_ID_OSN:
+        default:
+            return SBALE_ERROR( QRC_EPKTYP, dev,sbal,sbalk,sb);
+        }
+
+        /* Make sure the packet/frame fits in the device buffer */
+        if (pktlen > (U32)dev->bufsize)
+            return SBALE_ERROR( QRC_EPKSIZ, dev,sbal,sbalk,sb);
+
+        /* Copy the actual packet/frame into the device buffer */
+        sblen -= hdrlen;
+        dev->bufres = pktlen;
+        dev->buflen = 0;
+
+        if ((qrc = copy_storage_fragments( dev, grp, sbal, sbalk,
+                                           &sb, pkt, sblen )) < 0)
+            return qrc;
+
+        /* Save ending flag */
+        flag0 = sbal->sbale[sb].flags[0];
+
+        /* Trace the pack/frame if debugging is enabled */
+        if (grp->debug)
+        {
+            U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
+            DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
+                ssb, sb, sbala, dev->buflen, dev->buflen );
+            MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
+        }
+
+        qrc = write_packet( dev, grp, dev->buf, dev->buflen );
+    }
+    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ) && ++sb < QMAXSTBK);
+
+    if (sb < QMAXSTBK)
+        return qrc;
+
+    return SBALE_ERROR( QRC_ESBNOEOF, dev,sbal,sbalk,sb-1);
 }
 
 
@@ -1766,224 +1983,6 @@ int did_read = 0;                       /* Indicates some data read  */
 
 
 /*-------------------------------------------------------------------*/
-/* Write one L2/L3 packet/frame to the TUN/TAP device.               */
-/*-------------------------------------------------------------------*/
-static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
-                         BYTE* pkt, int pktlen )
-{
-    int wrote, errnum;
-
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", 0, pktlen, 0 );
-    wrote = TUNTAP_Write( dev->fd, pkt, pktlen );
-    errnum = errno;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", 0, pktlen, 0 );
-
-    if (likely(wrote == pktlen))
-    {
-        dev->qdio.txcnt++;
-        return QRC_SUCCESS;
-    }
-
-    // HHC03971 "%1d:%04X %s: error writing to device %s: %s"
-    WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QETH", grp->ttifname, strerror( errnum ));
-    errno = errnum;
-    return QRC_EIOERR;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Copy packet/frame data from one/more OSA queue storage buffers    */
-/* into DEVBLK device buffer. Uses the entries from the passed       */
-/* Storage Block Address List to copy the packet/frame data which    */
-/* might be split across several storage areas. Stops when either    */
-/* the entire output packet has been consolidated into the DEVBLK    */
-/* buffer or the ending Storage Block is reached and consumed.       */
-/*-------------------------------------------------------------------*/
-/* sbal points to the Storage Block Address List for the buffer.     */
-/* sbalk is the associated protection key for the queue buffer.      */
-/* sb is a ptr to the current SBAL Storage Block number.             */
-/* sbsrc is where in the first Storage Block to begin copying from.  */
-/* sblen is the length of the first Storage Block minus the OSA hdr. */
-/* dev->bufrem holds the expected packet/frame size and dev->buflen  */
-/* starts at zero. Both are updated as the copying proceeds.         */
-/*-------------------------------------------------------------------*/
-static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
-                                   QDIO_SBAL *sbal, BYTE sbalk,
-                                   int* sb, BYTE* sbsrc, U32 sblen )
-{
-    U64 sba;                            /* Storage Block Address     */
-    BYTE *dst;                          /* Destination address       */
-    U32 len;                            /* Copy length               */
-
-    dst = dev->buf + dev->buflen;       /* Build destination pointer */
-
-    /* Copy data from each Storage Block in turn until the entire
-       packet/frame has been copied or we reach the ending Block. */
-    while (dev->bufres > 0)
-    {
-        /* End of current storage block? */
-        if (!sblen)
-        {
-            /* Is this the last storage block? */
-            if (WR_LOGICALLY_LAST_SBALE( sbal->sbale[*sb].flags[0] ))
-            {
-                /* We have copied as much data as we possibly can but
-                dev->bufres is not zero so the Storage Blocks Entries
-                are wrong. THIS SHOULD NEVER OCCUR since our device
-                buffer size is always set to the maximum size of 64K. */
-                return SBALE_ERROR( QRC_EPKSBLEN, dev,sbal,sbalk,*sb);
-            }
-
-            /* Request interrupt if needed */
-            if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
-            {
-                SET_DSCI(dev,DSCI_IOCOMP);
-                grp->reqpci = TRUE;
-            }
-
-            /* Retrieve the next storage block entry */
-            if (*sb >= (QMAXSTBK-1))
-                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
-            *sb = *sb + 1;
-            FETCH_DW( sba,   sbal->sbale[*sb].addr   );
-            FETCH_FW( sblen, sbal->sbale[*sb].length );
-            if (!sblen)
-                return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
-            if (STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev))
-                return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
-            sbsrc = (BYTE*)(dev->mainstor + sba);
-        }
-
-        /* Copying packet/frame data to from this storage block */
-        len = min( (U32)dev->bufres, sblen );
-        memcpy( dst, sbsrc, len );
-
-        dst         += len;
-        dev->buflen += len;
-        dev->bufres -= len;
-        sbsrc       += len;
-        sblen       -= len;
-    }
-
-    return QRC_SUCCESS;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Write all packets/frames in this primed buffer. Automatically     */
-/* handles output packing mode by continuing to next storage Block.  */
-/* sbal points to the Storage Block Address List for the buffer.     */
-/* sbalk is the associated protection key for the queue buffer.      */
-/*-------------------------------------------------------------------*/
-static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
-                                   QDIO_SBAL *sbal, BYTE sbalk )
-{
-    U64 sba;                            /* Storage Block Address     */
-    BYTE* hdr;                          /* Ptr to OSA packet header  */
-    BYTE* pkt;                          /* Ptr to packet or frame    */
-    U32 sblen;                          /* Length of Storage Block   */
-    int hdrlen;                         /* Length of OSA header      */
-    int pktlen;                         /* Packet or frame length    */
-    int sb;                             /* Storage Block number      */
-    int ssb;                            /* Starting Storage Block    */
-    QRC qrc;                            /* Internal return code      */
-    BYTE hdr_id;                        /* OSA Header Block Id       */
-    BYTE flag0;                         /* Storage Block Flag        */
-
-    sb = 0;                             /* Start w/Storage Block 0   */
-
-    do
-    {
-        /* Save starting Storage Block number */
-        ssb = sb;
-
-        /* Retrieve the (next) Storage Block and check its key */
-        FETCH_DW( sba,   sbal->sbale[sb].addr   );
-        FETCH_FW( sblen, sbal->sbale[sb].length );
-        if (!sblen)
-            return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,sb);
-        if (STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev ))
-            return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,sb);
-        hdr = (BYTE*)(dev->mainstor + sba);
-
-        /* Verify Block is long enough to hold the full OSA header.
-           FIX ME: there is nothing in the specs that requires the
-           header to not span multiple Storage Blocks so we should
-           should probably support it, but at the moment we do not.
-        */
-        if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
-            WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                "QETH", "** FIX ME! ** OSA_HDR SPANS MULTIPLE STORAGE BLOCKS!" );
-
-        /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
-        hdr_id = hdr[0];
-        switch (hdr_id)
-        {
-        U16 length;
-        case HDR_ID_LAYER2:
-        {
-            ETHFRM* eth;
-            OSA_HDR2* o2hdr = (OSA_HDR2*)hdr;
-            hdrlen = sizeof(OSA_HDR2);
-            pkt = hdr + hdrlen;
-            FETCH_HW( length, o2hdr->pktlen );
-            pktlen = length;
-            eth = (ETHFRM*)pkt;
-            break;
-        }
-        case HDR_ID_LAYER3:
-        {
-            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
-            hdrlen = sizeof(OSA_HDR3);
-            pkt = hdr + hdrlen;
-            FETCH_HW( length, o3hdr->length );
-            pktlen = length;
-            break;
-        }
-        case HDR_ID_TSO:
-        case HDR_ID_OSN:
-        default:
-            return SBALE_ERROR( QRC_EPKTYP, dev,sbal,sbalk,sb);
-        }
-
-        /* Make sure the packet/frame will fit into our device buffer */
-        if (pktlen > dev->bufsize)
-            return SBALE_ERROR( QRC_EPKSIZ, dev,sbal,sbalk,sb);
-
-        /* Copy packet/frame data into DEVBLK buffer */
-        sblen -= hdrlen;
-        dev->bufres = pktlen;
-        dev->buflen = 0;
-
-        if ((qrc = copy_storage_fragments( dev, grp, sbal, sbalk,
-                                           &sb, pkt, sblen )) < 0)
-            return qrc;
-
-        /* Save ending flag */
-        flag0 = sbal->sbale[sb].flags[0];
-
-        /* Trace the pack/frame if debugging is enabled */
-        if (grp->debug)
-        {
-            U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-            DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
-                ssb, sb, sbala, dev->buflen, dev->buflen );
-            MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
-        }
-
-        qrc = write_packet( dev, grp, dev->buf, dev->buflen );
-    }
-    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ) && ++sb < QMAXSTBK);
-
-    if (sb < QMAXSTBK)
-        return qrc;
-
-    return SBALE_ERROR( QRC_ESBNOEOF, dev,sbal,sbalk,sb-1);
-}
-
-
-/*-------------------------------------------------------------------*/
 /*                  Process Output Queues                            */
 /*-------------------------------------------------------------------*/
 static void process_output_queues( DEVBLK *dev )
@@ -2070,7 +2069,7 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
 
 
 /*-------------------------------------------------------------------*/
-/* Halt device signalling                                            */
+/* Halt device related functions...                                  */
 /*-------------------------------------------------------------------*/
 static void qeth_signal_halt (OSA_GRP *grp)
 {
@@ -2087,10 +2086,6 @@ BYTE sig = QDSIG_HALT;
     read_pipe( grp->ppfd[0], &sig, 1 );
 }
 
-
-/*-------------------------------------------------------------------*/
-/* Halt device handler                                               */
-/*-------------------------------------------------------------------*/
 static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -3106,7 +3101,8 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     {
     fd_set readset;
-    int rc=0, fd; BYTE sig;
+    int fd, rc=0;
+    BYTE sig;
 
         dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
         FD_ZERO( &readset );
