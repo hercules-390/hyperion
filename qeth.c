@@ -1808,9 +1808,9 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 /* dev->bufrem holds the expected packet/frame size and dev->buflen  */
 /* starts at zero. Both are updated as the copying proceeds.         */
 /*-------------------------------------------------------------------*/
-static QRC copy_storage_fragment( DEVBLK* dev, OSA_GRP *grp,
-                                  QDIO_SBAL *sbal, BYTE sbalk,
-                                  int* sb, BYTE* sbsrc, U32 sblen )
+static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, BYTE sbalk,
+                                   int* sb, BYTE* sbsrc, U32 sblen )
 {
     U64 sba;                            /* Storage Block Address     */
     BYTE *dst;                          /* Destination address       */
@@ -1956,8 +1956,8 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         dev->bufres = pktlen;
         dev->buflen = 0;
 
-        if ((qrc = copy_storage_fragment( dev, grp, sbal, sbalk,
-                                          &sb, pkt, sblen )) < 0)
+        if ((qrc = copy_storage_fragments( dev, grp, sbal, sbalk,
+                                           &sb, pkt, sblen )) < 0)
             return qrc;
 
         /* Save ending flag */
