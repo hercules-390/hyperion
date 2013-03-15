@@ -1299,7 +1299,7 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 /*-------------------------------------------------------------------*/
 /* Determine Layer 3 IPv4 cast type                                  */
 /*-------------------------------------------------------------------*/
-static int inline l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
+static inline int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
 {
     if (!dstaddr)
         return L3_CAST_NOCAST;
@@ -1314,7 +1314,7 @@ static int inline l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
 /*-------------------------------------------------------------------*/
 /* Determine Layer 3 IPv6 cast type                                  */
 /*-------------------------------------------------------------------*/
-static int inline l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
+static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
 {
     static const BYTE dest_zero[16] = {0};
     BYTE dest_work[16];
@@ -1420,55 +1420,60 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 /* Uses the entries from the passed Storage Block Address List to    */
 /* split the fragment across several Storage Blocks as needed.       */
 /*-------------------------------------------------------------------*/
+/* src points to the data to be copied into the Storage Block.       */
+/* rem is the src data length (how much remains to be copied).       */
 /* sbal points to the Storage Block Address List for the buffer.     */
-/* sbalk is the associated protection key for the queue buffer.      */
+/* sbalk is the Storage Block's associated protection key.           */
 /* sb is a ptr to the current SBAL Storage Block number.             */
-/* sboff is a ptr to the offset into the Storage Block.              */
+/* sboff is a ptr to the offset into the current Storage Block.      */
 /* sbrem is a ptr to how much of the current Storage Block remains.  */
-/* src points to the data to be copied and rem is its length.        */
 /*-------------------------------------------------------------------*/
-static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
-                                     QDIO_SBAL *sbal, BYTE sbalk,
-                                     int* sb, U32* sboff, U32* sbrem,
+static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
+                                     BYTE sbalk, int* sb,
+                                     U32* sboff, U32* sbrem,
                                      BYTE* src, int rem )
 {
     U64 sba;                            /* Storage Block Address     */
-    BYTE *dst;                          /* Destination address       */
+    BYTE *dst = NULL;                   /* Destination address       */
     int len;                            /* Copy length (work)        */
     BYTE flag0;                         /* SBALE fragment flag       */
 
     /* Initialize starting fragment flag */
     flag0 = SBALE_FLAG0_FRAG_FIRST;
 
+    /* While src bytes remain to be copied */
     while (rem > 0)
     {
         /* End of current Storage Block? */
-        if (!*sbrem)
+        if (!*sbrem && *sboff)
         {
-            if (*sboff)
-            {
-                /* Done using this Storage Block */
-                STORE_FW( sbal->sbale[*sb].length, *sboff );
-                sbal->sbale[*sb].flags[0] &= ~SBALE_FLAG0_LAST_ENTRY;
-                SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+            /* Done using this Storage Block */
+            STORE_FW( sbal->sbale[*sb].length, *sboff );
+            STORE_FW( sbal->sbale[*sb].flags,     0   );
+            SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
 
-                /* Go on to next Storage Block */
-                if (*sb >= (QMAXSTBK-1))
-                    return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
-                *sb = *sb + 1;
-                flag0 = SBALE_FLAG0_FRAG_MIDDLE;
-            }
+            /* Go on to next Storage Block */
+            if (*sb >= (QMAXSTBK-1))
+                return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
+            *sb = *sb + 1;
+            flag0 = SBALE_FLAG0_FRAG_MIDDLE;
+            *sboff = 0;
+        }
 
-            /* Check new Storage Block's key and length */
+        /* Starting a new Storage Block? */
+        if (!*sboff || !dst)
+        {
+            /* Check the Storage Block's length and key */
             FETCH_DW(  sba,   sbal->sbale[*sb].addr   );
             FETCH_FW( *sbrem, sbal->sbale[*sb].length );
             if (!*sbrem)
                 return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
             if (STORCHK(sba,(*sbrem)-1,sbalk,STORKEY_CHANGE,dev))
                 return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
+            *sbrem -= *sboff;
 
-            /* Get new destination address */
-            dst = (BYTE*)(dev->mainstor + sba);
+            /* Calculate new destination address */
+            dst = (BYTE*)(dev->mainstor + sba + *sboff);
         }
 
         /* Continue copying data to Storage Block */
@@ -1484,6 +1489,7 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, OSA_GRP *grp,
 
     /* Mark last fragment and exit */
     STORE_FW( sbal->sbale[*sb].length, *sboff );
+    STORE_FW( sbal->sbale[*sb].flags,     0   );
     flag0 = SBALE_FLAG0_FRAG_LAST;
     SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
     return QRC_SUCCESS;
@@ -1581,22 +1587,21 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
 /* sbalk is the associated protection key for the queue buffer.      */
 /* hdr points to pre-built OSA_HDR2/OSA_HDR3 and hdrlen is its size. */
 /*-------------------------------------------------------------------*/
-static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
-                                   QDIO_SBAL *sbal, int sb, BYTE sbalk,
+static QRC copy_packet_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
+                                   int sb, BYTE sbalk,
                                    BYTE* hdr, int hdrlen )
 {
     U32 sboff = 0;                      /* Storage Block offset      */ 
     U32 sbrem = 0;                      /* Storage Block remaining   */
-    int ssb = sb;                       /* Saved starting sb value   */
     QRC qrc;                            /* Internal return code      */
 
     /* Start with the header first */
-    if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
+    if ((qrc = copy_fragment_to_storage( dev, sbal, sbalk,
         &sb, &sboff, &sbrem, hdr, hdrlen )) < 0 )
         return qrc;
 
     /* Then copy the packet/frame */
-    if ((qrc = copy_fragment_to_storage( dev, grp, sbal, sbalk,
+    if ((qrc = copy_fragment_to_storage( dev, sbal, sbalk,
         &sb, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
         return qrc;
 
@@ -1659,7 +1664,7 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Copy header and frame to buffer storage block(s) */
-        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
+        qrc = copy_packet_to_storage( dev, sbal, sb, sbalk,
                                       (BYTE*) &o2hdr, sizeof( o2hdr ));
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
@@ -1725,7 +1730,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Copy header and packet to buffer storage block(s) */
-        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
+        qrc = copy_packet_to_storage( dev, sbal, sb, sbalk,
                                       (BYTE*) &o3hdr, sizeof( o3hdr ));
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
