@@ -202,14 +202,14 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
 
         if( pDEVBLK )
         {
-            // HHC03981 "%1d:%04X %s: %s: %s %s %s"
+            // HHC03981 "%1d:%04X %s: %s: %s %s  %s"
             WRMSG(HHC03981, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 cWhat, print_line, print_ascii, print_ebcdic );
+                                 cWhat, print_line, print_ebcdic, print_ascii );
         }
         else
         {
-            // HHC03982 "%s: %s %s %s"
-            WRMSG(HHC03982, "I", cWhat, print_line, print_ascii, print_ebcdic );
+            // HHC03982 "%s: %s %s  %s"
+            WRMSG(HHC03982, "I", cWhat, print_line, print_ebcdic, print_ascii );
         }
     }
 
