@@ -54,7 +54,7 @@
 
 #define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_TIMING_DEBUG       // #define to debug speed/performance
-#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
+//#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
 /* (enable debugging if needed/requested) */
@@ -3216,52 +3216,56 @@ int num;                                /* Number of bytes to move   */
 static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int noselrd;
+int noselrd, rc = 0;
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-r", qmask,
-        qmask & ~(0xffffffff >> dev->qdio.i_qcnt), 0 );
-
-    DBGTRC(dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
+    DBGTRC( dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
-        return 1;
-
-    /* Is there a read select */
-    noselrd = !dev->qdio.i_qmask;
-
-    /* Validate Mask */
-    qmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
-
-    /* Reset Queue Positions */
-    if(qmask != dev->qdio.i_qmask)
     {
-    int n;
-        for(n = 0; n < dev->qdio.i_qcnt; n++)
-            if(!(dev->qdio.i_qmask & (0x80000000 >> n)))
-                dev->qdio.i_bpos[n] = 0;
-        if(!dev->qdio.i_qmask)
-            dev->qdio.i_qpos = 0;
+        DBGTRC( dev, "SIGA-r dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        rc = 1;
+    }
+    else
+    {
+        /* Is there a read select */
+        noselrd = !dev->qdio.i_qmask;
 
-        /* Update Read Queue Mask */
-        dev->qdio.i_qmask = qmask;
+        /* Validate Mask */
+        qmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
+
+        /* Reset Queue Positions */
+        if(qmask != dev->qdio.i_qmask)
+        {
+        int n;
+            for(n = 0; n < dev->qdio.i_qcnt; n++)
+                if(!(dev->qdio.i_qmask & (0x80000000 >> n)))
+                    dev->qdio.i_bpos[n] = 0;
+            if(!dev->qdio.i_qmask)
+                dev->qdio.i_qpos = 0;
+
+            /* Update Read Queue Mask */
+            dev->qdio.i_qmask = qmask;
+        }
+
+        /* Send signal to ACTIVATE QUEUES device thread loop */
+        if(noselrd && dev->qdio.i_qmask)
+        {
+            BYTE b = QDSIG_READ;
+            write_pipe(grp->ppfd[1],&b,1);
+        }
     }
 
-    /* Send signal to ACTIVATE QUEUES device thread loop */
-    if(noselrd && dev->qdio.i_qmask)
-    {
-        BYTE b = QDSIG_READ;
-        write_pipe(grp->ppfd[1],&b,1);
-    }
-
-    return 0;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+    return rc;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Initiate Output/Multiple helper function           */
 /*-------------------------------------------------------------------*/
-static int qeth_do_initiate_output(DEVBLK *dev, U32 qmask, BYTE sig)
+static int qeth_do_initiate_output( DEVBLK *dev, U32 qmask, BYTE sig )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -3297,44 +3301,62 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Initiate Output                                    */
 /*-------------------------------------------------------------------*/
-static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
+static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 {
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-w", qmask,
-        qmask & ~(0xffffffff >> dev->qdio.o_qcnt), 0 );
-    DBGTRC(dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
-    return qeth_do_initiate_output( dev, qmask, QDSIG_WRIT );
+    int rc;
+    DBGTRC( dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+
+    if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
+        DBGTRC( dev, "SIGA-w dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+    return rc;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Initiate Output Multiple                           */
 /*-------------------------------------------------------------------*/
-static int qeth_initiate_output_mult(DEVBLK *dev, U32 qmask)
+static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 {
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-m", qmask,
-        qmask & ~(0xffffffff >> dev->qdio.o_qcnt), 0 );
-    DBGTRC(dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
-    return qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT );
+    int rc;
+    DBGTRC( dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+
+    if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
+        DBGTRC( dev, "SIGA-m dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+    return rc;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Sync                                               */
 /*-------------------------------------------------------------------*/
-static int qeth_do_sync(DEVBLK *dev, U32 qmask)
+static int qeth_do_sync( DEVBLK *dev, U32 qmask )
 {
+    int rc = 0;
     UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
     UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "SIGA-s", qmask,
-        qmask & ~(0xffffffff >> dev->qdio.o_qcnt),
-        qmask & ~(0xffffffff >> dev->qdio.i_qcnt));
+    DBGTRC( dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", qmask, 0, dev->devnum );
 
-    DBGTRC(dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n",dev->devnum,qmask);
+    /* Return CC1 if the device is not QDIO active */
+    if(!(dev->scsw.flag2 & SCSW2_Q))
+    {
+        DBGTRC( dev, "SIGA-s dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        rc = 1;
+    }
+    else
+    {
+        /* (nop; do nothing) */
+    }
 
-    return 0;
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", qmask, 0, dev->devnum );
+    return rc;
 }
 
 
