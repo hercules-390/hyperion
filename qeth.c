@@ -1425,21 +1425,18 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 /* sbal points to the Storage Block Address List for the buffer.     */
 /* sbalk is the Storage Block's associated protection key.           */
 /* sb is a ptr to the current SBAL Storage Block number.             */
+/* frag0 is the SBALE's current first/middle fragment flag.          */
 /* sboff is a ptr to the offset into the current Storage Block.      */
 /* sbrem is a ptr to how much of the current Storage Block remains.  */
 /*-------------------------------------------------------------------*/
 static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
-                                     BYTE sbalk, int* sb,
+                                     BYTE sbalk, int* sb, BYTE* frag0,
                                      U32* sboff, U32* sbrem,
                                      BYTE* src, int rem )
 {
     U64 sba;                            /* Storage Block Address     */
     BYTE *dst = NULL;                   /* Destination address       */
     int len;                            /* Copy length (work)        */
-    BYTE flag0;                         /* SBALE fragment flag       */
-
-    /* Initialize starting fragment flag */
-    flag0 = SBALE_FLAG0_FRAG_FIRST;
 
     /* While src bytes remain to be copied */
     while (rem > 0)
@@ -1450,13 +1447,13 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
             /* Done using this Storage Block */
             STORE_FW( sbal->sbale[*sb].length, *sboff );
             STORE_FW( sbal->sbale[*sb].flags,     0   );
-            SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+            SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], *frag0 );
 
             /* Go on to next Storage Block */
             if (*sb >= (QMAXSTBK-1))
                 return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
             *sb = *sb + 1;
-            flag0 = SBALE_FLAG0_FRAG_MIDDLE;
+            *frag0 = SBALE_FLAG0_FRAG_MIDDLE;
             *sboff = 0;
         }
 
@@ -1487,11 +1484,7 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
         *sbrem -= len;
     }
 
-    /* Mark last fragment and exit */
-    STORE_FW( sbal->sbale[*sb].length, *sboff );
-    STORE_FW( sbal->sbale[*sb].flags,     0   );
-    flag0 = SBALE_FLAG0_FRAG_LAST;
-    SET_SBALE_FRAG( sbal->sbale[*sb].flags[0], flag0 );
+    /* PROGRAMMING NOTE: the CALLER will mark last fragment! */
     return QRC_SUCCESS;
 }
 
@@ -1587,26 +1580,48 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
 /* sbalk is the associated protection key for the queue buffer.      */
 /* hdr points to pre-built OSA_HDR2/OSA_HDR3 and hdrlen is its size. */
 /*-------------------------------------------------------------------*/
-static QRC copy_packet_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
-                                   int sb, BYTE sbalk,
+static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
+                                   QDIO_SBAL *sbal, int sb, BYTE sbalk,
                                    BYTE* hdr, int hdrlen )
 {
+    int ssb = sb;                       /* Starting Storage Block    */
     U32 sboff = 0;                      /* Storage Block offset      */ 
     U32 sbrem = 0;                      /* Storage Block remaining   */
+    BYTE frag0;                         /* SBALE fragment flag       */
     QRC qrc;                            /* Internal return code      */
 
     /* Start with the header first */
+    frag0 = SBALE_FLAG0_FRAG_FIRST;
     if ((qrc = copy_fragment_to_storage( dev, sbal, sbalk,
-        &sb, &sboff, &sbrem, hdr, hdrlen )) < 0 )
+        &sb, &frag0, &sboff, &sbrem, hdr, hdrlen )) < 0 )
         return qrc;
 
     /* Then copy the packet/frame */
     if ((qrc = copy_fragment_to_storage( dev, sbal, sbalk,
-        &sb, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
+        &sb, &frag0, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
         return qrc;
+
+    /* Mark last fragment */
+    frag0 = SBALE_FLAG0_FRAG_LAST;
+    STORE_FW( sbal->sbale[sb].length, sboff );
+    STORE_FW( sbal->sbale[sb].flags,     0   );
+    SET_SBALE_FRAG( sbal->sbale[sb].flags[0], frag0 );
 
     /* Count packets received */
     dev->qdio.rxcnt++;
+
+    /* Dump the SBALE's we consumed */
+    if (grp->debug)
+    {
+        int  i;
+        for (i=ssb; i <= sb; i++)
+        {
+            FETCH_FW( sbrem, sbal->sbale[i].length );
+            frag0 = sbal->sbale[i].flags[0];
+            DBGTRC( dev, "Input SBALE(%d): flag: %02X Len: %04X (%d)\n",
+                i, frag0, sbrem, sbrem );
+        }
+    }
 
     return QRC_SUCCESS;
 }
@@ -1664,7 +1679,7 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Copy header and frame to buffer storage block(s) */
-        qrc = copy_packet_to_storage( dev, sbal, sb, sbalk,
+        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
                                       (BYTE*) &o2hdr, sizeof( o2hdr ));
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
@@ -1730,7 +1745,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Copy header and packet to buffer storage block(s) */
-        qrc = copy_packet_to_storage( dev, sbal, sb, sbalk,
+        qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
                                       (BYTE*) &o3hdr, sizeof( o3hdr ));
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
@@ -1840,9 +1855,8 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Trace the pack/frame if debugging is enabled */
         if (grp->debug)
         {
-            U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
-            DBGTRC( dev, "Output Frame/Packet built from SBAL(%d-%d): %llx; Len: %04X (%d)\n",
-                ssb, sb, sbala, dev->buflen, dev->buflen );
+            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
+                ssb, sb, dev->buflen, dev->buflen );
             MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
         }
 
@@ -2949,7 +2963,15 @@ int num;                                /* Number of bytes to move   */
 
         /* Display various information, maybe */
         if( grp->debug )
+        {
+            /* PROGRAMMING NOTE: because "MPC_DUMP_DATA" might get
+               translated to an empty clause for non-DEBUG builds,
+               it's VERY IMPORTANT to use braces so that the next
+               statement isn't accidentally skipped if grp->debug
+               happens to be false. (oops!)
+            */
             MPC_DUMP_DATA( "SII", iobuf, num, ' ' );
+        }
 
         break;
 
