@@ -108,8 +108,8 @@
       }                                     \
     } while(0)
 #else
-  #define DBGTRC(_dev, ...)
-  #define DBGTRC2(_dev, _msg, ...)
+#define DBGTRC(_dev, ...)           do{;}while(0)
+  #define DBGTRC2(_dev, _msg, ...)  do{;}while(0)
 #endif
 
 /* (activate tracing of I/O data buffers) */
@@ -134,7 +134,7 @@
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
 #else
-  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)   /* (do nothing) */
+  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)    do{;}while(0)
 #endif // QETH_DUMP_DATA
 
 
@@ -1248,6 +1248,13 @@ typedef short QRC;              /* Internal function return code     */
 QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
                  QDIO_SBAL *sbal, BYTE sbalk, int sb )
 {
+#if !defined(QETH_DEBUG)
+    UNREFERENCED(msg);
+    UNREFERENCED(dev);
+    UNREFERENCED(sbal);
+    UNREFERENCED(sbalk);
+    UNREFERENCED(sb);
+#else /* defined(QETH_DEBUG) */
     U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
     U64 sba;
     U32 sblen;
@@ -1258,7 +1265,7 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
     DBGTRC2( dev, msg, sb, sbala, sbalk, sba, sblen,
         sbal->sbale[sb].flags[0],
         sbal->sbale[sb].flags[3]);
-
+#endif /*defined(QETH_DEBUG)*/
     return qrc;
 }
 /*-------------------------------------------------------------------*/
@@ -2960,15 +2967,7 @@ int num;                                /* Number of bytes to move   */
 
         /* Display various information, maybe */
         if( grp->debug )
-        {
-            /* PROGRAMMING NOTE: because "MPC_DUMP_DATA" might get
-               translated to an empty clause for non-DEBUG builds,
-               it's VERY IMPORTANT to use braces so that the next
-               statement isn't accidentally skipped if grp->debug
-               happens to be false. (oops!)
-            */
             MPC_DUMP_DATA( "SII", iobuf, num, ' ' );
-        }
 
         break;
 
@@ -3195,10 +3194,13 @@ int num;                                /* Number of bytes to move   */
 
             /* Prepare to wait for additional packets or pipe signal */
             FD_ZERO( &readset );
+            FD_SET((fd = grp->ppfd[0]), &readset);
             if(dev->qdio.i_qmask)
+            {
                 FD_SET(grp->ttfd, &readset);
-            FD_SET(grp->ppfd[0], &readset);
-            fd = (grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0];
+                if (fd < grp->ttfd)
+                    fd = grp->ttfd;
+            }
 
             /* Wait (but only very briefly) for more work to arrive */
             PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0,0,0 );
@@ -4257,6 +4259,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     )
     {
         char szMAC[3*IFHWADDRLEN] = {0};
+        UNREFERENCED(dev); /*(referenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
         if (tthwaddr)
             free( tthwaddr );
@@ -4326,6 +4329,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
         || uMTU > (65535 - 14)
     )
     {
+        UNREFERENCED(dev); /*(referenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
         if (ttmtu)
             free( ttmtu );
