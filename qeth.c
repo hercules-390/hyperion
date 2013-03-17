@@ -52,8 +52,8 @@
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
-#define QETH_TIMING_DEBUG       // #define to debug speed/performance
+#define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
+//#define QETH_TIMING_DEBUG       // #define to debug speed/performance
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
@@ -2080,9 +2080,6 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
             qn = 0;
     }
     while ((dev->qdio.o_qpos = qn) != sqn);
-
-    if (!found_buff)
-        DBGTRC(dev, "No primed o/p buffers found\n");
 }
 /* end process_output_queues */
 
@@ -3127,15 +3124,28 @@ int num;                                /* Number of bytes to move   */
     /* ACTIVATE QUEUES                                               */
     /*---------------------------------------------------------------*/
     {
-    fd_set readset;
-    int fd, rc=0;
-    BYTE sig;
+    fd_set readset;                         /* select read set       */
+    struct timeval tv;                      /* select polling        */
+    int fd;                                 /* select fd             */
+    int rc=0;                               /* select rc (0=timeout) */
+    BYTE sig;                               /* thread pipe signal    */
 
-        dev->qdio.i_qmask = dev->qdio.o_qmask = 0;
-        FD_ZERO( &readset );
-        dev->scsw.flag2 |= SCSW2_Q;
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0, 0, 0 );
+        /*
+        ** PROGRAMMING NOTE: we use a relatively short timeout value
+        ** for our select so that we can react fairly quickly to the
+        ** guest readying (priming) additional output buffers in its
+        ** existing Output Queue(s) because a SIGA-w is not required.
+        */
+        tv.tv_sec  = 0;
+        tv.tv_usec = 50000;                 /* 50 milliseconds       */
+        dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
+        dev->qdio.i_qmask = 0;              /* No input queues yet   */
+        dev->qdio.o_qmask = 0;              /* No output queues yet  */
+        FD_ZERO( &readset );                /* Init empty read set   */
 
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0,0,0 );
+
+        /* Loop until halt signal is received via notification pipe */
         while (1)
         {
             /* Read pipe signal if one was sent */
@@ -3149,25 +3159,31 @@ int num;                                /* Number of bytes to move   */
                 if (sig == QDSIG_HALT)
                     break;
 
-                /* Set packing flags */
-                grp->rdpack = (sig == QDSIG_RDMULT) ? 1 : 0;
-                grp->wrpack = (sig == QDSIG_WRMULT) ? 1 : 0;
+                /* Update packing mode flags if requested */
+                if (QDSIG_READ   == sig) grp->rdpack = 0;
+                if (QDSIG_RDMULT == sig) grp->rdpack = 1;
+                if (QDSIG_WRIT   == sig) grp->wrpack = 0;
+                if (QDSIG_WRMULT == sig) grp->wrpack = 1;
             }
 
-            /* Process the Input Queue if needed */
-            if(dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
+            /* Process the Input Queue if any packets have arrived */
+            if(rc != 0 && dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0, 0, 0 );
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0,0,0 );
                 process_input_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0, 0, 0 );
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0,0,0 );
             }
 
-            /* Process the Output Queue if requested */
-            if(dev->qdio.o_qmask && (sig == QDSIG_WRIT || sig == QDSIG_WRMULT))
+            /* ALWAYS process all Output Queues each time regardless of
+               whether the guest has recently executed a SIGA-w or not
+               since most guests expect OSA devices to behave that way.
+               (SIGA-w are NOT required to cause processing o/p queues)
+            */
+            if(dev->qdio.o_qmask)
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0, 0, 0 );
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0,0,0 );
                 process_output_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0, 0, 0 );
+                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0,0,0 );
             }
 
             /* Present adapter interrupt if needed */
@@ -3177,25 +3193,19 @@ int num;                                /* Number of bytes to move   */
                 raise_adapter_interrupt(dev);
             }
 
+            /* Prepare to wait for additional packets or pipe signal */
             FD_ZERO( &readset );
             if(dev->qdio.i_qmask)
                 FD_SET(grp->ttfd, &readset);
             FD_SET(grp->ppfd[0], &readset);
             fd = (grp->ttfd > grp->ppfd[0]) ? grp->ttfd : grp->ppfd[0];
 
-//!         /* Display various information, maybe */
-//!         if( grp->debug )
-//!         {
-//!             MPC_DUMP_DATA( "i_qmask", (BYTE*)&dev->qdio.i_qmask, 4, ' ' );
-//!             MPC_DUMP_DATA( "o_qmask", (BYTE*)&dev->qdio.o_qmask, 4, ' ' );
-//!             MPC_DUMP_DATA( "readset", (BYTE*)&readset, sizeof(readset), ' ' );
-//!         }
-
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0, 0, 0 );
-            rc = select( fd+1, &readset, NULL, NULL, NULL );
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0, 0, rc );
+            /* Wait (but only very briefly) for more work to arrive */
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0,0,0 );
+            rc = select( fd+1, &readset, NULL, NULL, &tv );
+            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0,0,rc );
         }
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0, 0, rc );
+        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0,0,rc );
 
         /* Reply to halt signal */
         if (sig == QDSIG_HALT)
