@@ -1730,7 +1730,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             U16 checksum;
             IP4FRM* ip4 = (IP4FRM*)dev->buf;
             FETCH_FW( dstaddr, &ip4->lDstIP );
-            STORE_FW( o3hdr.dest_addr, dstaddr );
+            STORE_FW( &o3hdr.dest_addr[12], dstaddr );
             FETCH_HW( checksum, ip4->hwChecksum );
             STORE_HW( o3hdr.in_cksum, checksum );
             o3hdr.flags = l3_cast_type_ipv4( dstaddr, grp );
