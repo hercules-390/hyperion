@@ -299,7 +299,7 @@ setCpuId(const unsigned int cpu,
                  initialized ? regs->cpuserial : sysblk.cpuserial;
 
     /* Determine and create MCEL */
-    MCEL = arg_MCEL >= 0 ? arg_MCEL :
+    MCEL = arg_MCEL >= 0 ? (U32)arg_MCEL :
              initialized ? regs->cpuid : sysblk.cpuid;
     MCEL &= 0x7FFF;
 

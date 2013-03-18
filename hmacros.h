@@ -432,7 +432,7 @@ calloc_aligned(size_t size, size_t alignment)
 
 #if defined(_MSVC_)
     #define  OPTION_CALLOC_GUESTMEM
-#elif
+#else
     #undef   OPTION_CALLOC_GUESTMEM
 #endif
 
