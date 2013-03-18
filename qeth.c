@@ -948,17 +948,15 @@ U16 offph;
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else
                     {
+                        if (grp->tthwaddr)
+                            free( grp->tthwaddr );
+
+                        grp->tthwaddr = strdup( tthwaddr );
+                        memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
+                        qeth_report_using( dev, grp, 1 );
+
                         if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                        {
                             STORE_HW(ipa->rc,IPA_RC_OK);
-
-                            if (grp->tthwaddr)
-                                free( grp->tthwaddr );
-
-                            grp->tthwaddr = strdup( tthwaddr );
-                            memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-                            qeth_report_using( dev, grp, 1 );
-                        }
                         else
                             STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
                     }
