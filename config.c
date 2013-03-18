@@ -1124,28 +1124,11 @@ int   i;
         join_thread (sysblk.cputid[cpu], NULL);
         detach_thread( sysblk.cputid[cpu] );
 
-        /* Now that the thread is detached, release associated regs */
-        if (sysblk.regs[i])
-        {
-            register REGS*  currentregs = sysblk.regs[i];
-
-            /* Free associated guestregs */
-            if (currentregs->guestregs)
-            {
-                if (currentregs->guestregs->hostregs == currentregs)
-                {
-                    currentregs->guestregs->guestregs = 0;
-                    currentregs->guestregs->hostregs = 0;
-                }
-                free_aligned(currentregs->guestregs);
-                currentregs->guestregs = 0;
-            }
-
-            /* Free current regs */
-            currentregs->hostregs = 0;
-            sysblk.regs[i] = 0;
-            free_aligned(currentregs);
-        }
+        /*-----------------------------------------------------------*/
+        /* Note: While this is the logical place to cleanup and to   */
+        /*       release the associated regs context, there is post  */
+        /*       processing that is done by various callers.         */
+        /*-----------------------------------------------------------*/
     }
     else
     {
