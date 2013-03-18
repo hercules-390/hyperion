@@ -321,10 +321,18 @@ int locate_regs(int argc, char *argv[], char *cmdline)
     if ( argc == 2 )
     {
         int ok = TRUE;
-        U64 loc = swap_byte_U64(sysblk.regs[cpu]->blkloc);
+        U64 loc;
         char hdr[32];
         char tlr[32];
         char blknam[32];
+
+        if(!regs)
+        {
+            WRMSG( HHC90000, "D", "REGS not assigned" );
+            return -1;
+        }
+
+        loc = swap_byte_U64(regs->blkloc);
 
         MSGBUF( blknam, "%-4.4s_%2.2s%2.2X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
         MSGBUF( hdr, "%-16.16s", blknam );
@@ -338,24 +346,24 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        if ( swap_byte_U32(sysblk.regs[cpu]->blksiz) != (U32)sizeof(REGS) )
+        if ( swap_byte_U32(regs->blksiz) != (U32)sizeof(REGS) )
         {
             MSGBUF( msgbuf, "REGS[%2.2X] size wrong; is %u, should be %u",
                             cpu,
-                            swap_byte_U32(sysblk.regs[cpu]->blksiz),
+                            swap_byte_U32(regs->blksiz),
                             (U32)sizeof(REGS));
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
         { /* verify header */
-            if ( memcmp( sysblk.regs[cpu]->blknam,
+            if ( memcmp( regs->blknam,
                          hdr,
-                         sizeof(sysblk.regs[cpu]->blknam) ) != 0 )
+                         sizeof(regs->blknam) ) != 0 )
             {
                 char sstr[32];
 
                 memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, sysblk.regs[cpu]->blknam, sizeof(sysblk.regs[cpu]->blknam) );
+                memcpy( sstr, regs->blknam, sizeof(regs->blknam) );
 
                 MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s",
                                 cpu, sstr, hdr);
@@ -369,13 +377,13 @@ int locate_regs(int argc, char *argv[], char *cmdline)
             memset( str, SPACE, sizeof(str) );
             memcpy( str, HDL_VERS_REGS, strlen(HDL_VERS_REGS) );
 
-            if ( memcmp( sysblk.regs[cpu]->blkver,
+            if ( memcmp( regs->blkver,
                          str,
-                         sizeof(sysblk.regs[cpu]->blkver) ) != 0 )
+                         sizeof(regs->blkver) ) != 0 )
             {
                 char sstr[32];
                 memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, sysblk.regs[cpu]->blkver, sizeof(sysblk.regs[cpu]->blkver) );
+                memcpy( sstr, regs->blkver, sizeof(regs->blkver) );
 
                 MSGBUF( msgbuf, "REGS[%2.2X] version wrong; is %s, should be %s", cpu, sstr, str);
                 WRMSG( HHC90000, "D", msgbuf );
@@ -384,12 +392,12 @@ int locate_regs(int argc, char *argv[], char *cmdline)
         }
         {   /* verify trailer */
 
-            if ( memcmp(sysblk.regs[cpu]->blkend, tlr, sizeof(sysblk.regs[cpu]->blkend)) != 0 )
+            if ( memcmp(regs->blkend, tlr, sizeof(regs->blkend)) != 0 )
             {
                 char sstr[32];
                 memset( sstr, 0, sizeof(sstr) );
 
-                memcpy( sstr, sysblk.regs[cpu]->blkend, sizeof(sysblk.regs[cpu]->blkend) );
+                memcpy( sstr, regs->blkend, sizeof(regs->blkend) );
 
                 MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is %s, should be %s",
                                 cpu, sstr, tlr);

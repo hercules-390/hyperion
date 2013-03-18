@@ -583,7 +583,7 @@ DEVBLK**dvpp;
 
     if(!dev)
     {
-        if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
+        if (!(dev = (DEVBLK*)malloc_aligned((sizeof(DEVBLK)+4095) & ~4095,4096)))
         {
             char buf[64];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
@@ -1123,6 +1123,29 @@ int   i;
 
         join_thread (sysblk.cputid[cpu], NULL);
         detach_thread( sysblk.cputid[cpu] );
+
+        /* Now that the thread is detached, release associated regs */
+        if (sysblk.regs[i])
+        {
+            register REGS*  currentregs = sysblk.regs[i];
+
+            /* Free associated guestregs */
+            if (currentregs->guestregs)
+            {
+                if (currentregs->guestregs->hostregs == currentregs)
+                {
+                    currentregs->guestregs->guestregs = 0;
+                    currentregs->guestregs->hostregs = 0;
+                }
+                free_aligned(currentregs->guestregs);
+                currentregs->guestregs = 0;
+            }
+
+            /* Free current regs */
+            currentregs->hostregs = 0;
+            sysblk.regs[i] = 0;
+            free_aligned(currentregs);
+        }
     }
     else
     {
@@ -1262,8 +1285,8 @@ int     i;                              /* Loop index                */
            though the device has already been detached.
         */
         if (dev->buf)
-            free( dev->buf );
-        dev->buf = malloc (dev->bufsize);
+            free_aligned( dev->buf );
+        dev->buf = malloc_aligned (dev->bufsize, 4096);
         if (dev->buf == NULL)
         {
             char buf[64];

@@ -281,7 +281,7 @@ U64     dreg;
      /* Initialize guestregs if first time */
      if (GUESTREGS == NULL)
      {
-        GUESTREGS = calloc (1, sizeof(REGS));
+        GUESTREGS = malloc_aligned(sizeof(REGS), 4096);
         if (GUESTREGS == NULL)
          {
              logmsg(MSG(HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, "calloc()", strerror(errno)));

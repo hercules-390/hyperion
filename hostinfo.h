@@ -27,12 +27,9 @@
 typedef struct HOST_INFO
 {
 #define HDL_NAME_HOST_INFO  "HOST_INFO"
-#define HDL_VERS_HOST_INFO  "3.08"      /* Internal Version Number   */
+#define HDL_VERS_HOST_INFO  "4.00"      /* Internal Version Number   */
 #define HDL_SIZE_HOST_INFO  sizeof(HOST_INFO)
-        BYTE    blknam[16];             /* Name of block             */
-        BYTE    blkver[8];              /* Version Number            */
-        U64     blkloc;                 /* Address of block    big-e */
-        U32     blksiz;                 /* size of block       big-e */
+        BLOCK_HEADER;                   /* Name of block             */
 /*-------------------- HDR /\ ---------------------------------------*/
 
         char    sysname[20];
@@ -73,7 +70,7 @@ typedef struct HOST_INFO
         RADR    AvailVirtual;           /* Virtual Space in use      */
 
 /*-------------------- TLR \/ ---------------------------------------*/
-        BYTE    blkend[16];             /* eye-end                   */
+        BLOCK_TRAILER;                  /* eye-end                   */
 
 } HOST_INFO;
 
