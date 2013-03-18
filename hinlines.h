@@ -259,15 +259,14 @@ createCpuId(const U64 model, const U64 version, const U64 serial, const U64 MCEL
 
 /**********************************************************************/
 /*                                                                    */
-/* setCpuId - Set the CPU ID for the requested CPU                    */
+/* setCpuIdregs - Set the CPU ID for the requested CPU context        */
 /*                                                                    */
 /**********************************************************************/
 
 static INLINE void
-setCpuId(const unsigned int cpu,
-         S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL)
+setCpuIdregs(REGS* regs, const unsigned int cpu,
+             S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL)
 {
-    register REGS*  regs;
     register int    initialized;
     register U16    model;
     register U8     version;
@@ -276,11 +275,6 @@ setCpuId(const unsigned int cpu,
 
     /* Return if CPU out-of-range */
     if (cpu >= MAX_CPU_ENGINES)
-        return;
-
-    /* Return if CPU undefined */
-    regs = sysblk.regs[cpu];
-    if (regs == NULL)
         return;
 
     /* Determine if uninitialized */
@@ -345,6 +339,33 @@ setCpuId(const unsigned int cpu,
 
     /* Construct new CPU ID */
     regs->cpuid = createCpuId(model, version, serial, MCEL);
+}
+
+
+/**********************************************************************/
+/*                                                                    */
+/* setCpuId - Set the CPU ID for the requested CPU                    */
+/*                                                                    */
+/**********************************************************************/
+
+static INLINE void
+setCpuId(const unsigned int cpu,
+         S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL)
+{
+    register REGS*  regs;
+
+    /* Return if CPU out-of-range */
+    if (cpu >= MAX_CPU_ENGINES)
+        return;
+
+    /* Return if CPU undefined */
+    regs = sysblk.regs[cpu];
+    if (regs == NULL)
+        return;
+
+    /* Set new CPU ID */
+    setCpuIdregs(regs, cpu, arg_model, arg_version, arg_serial, arg_MCEL);
+
 }
 
 

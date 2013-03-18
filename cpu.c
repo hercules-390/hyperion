@@ -1301,8 +1301,8 @@ int i;
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
 
-    /* Set initial CPU ID */
-    setCpuId(cpu, -1, -1, -1, -1);
+    /* Set initial CPU ID by REGS context */
+    setCpuIdregs(regs, cpu, -1, -1, -1, -1);
 
     /* Save CPU creation time without epoch set, as epoch may change. When using
      * the field, subtract the current epoch from any time being used in
