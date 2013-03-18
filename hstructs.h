@@ -72,7 +72,11 @@ struct REGS {                           /* Processor registers       */
 #define HDL_VERS_REGS   "4.00"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
 /*000*/ BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
-        ALIGN_64                        /* Reserve 030-03F           */
+/*030*/ U64     cpuid;                  /* Formatted CPU ID          */
+/*038*/ U32     cpuserial;              /* CPU serial number         */
+/*03C*/ U16     cpumodel;               /* CPU model number          */
+/*03E*/ U8      cpuversion;             /* CPU version code          */
+/*03F*/ U8      _cpu_reserved;          /* Reserved for future use   */
                                         /* --- 64-byte cache line -- */
 /*040*/ SYSBLK *sysblk;                 /* Pointer to sysblk         */
         ALIGN_8
@@ -463,6 +467,9 @@ struct SYSBLK {
         u_int   xpndstor_locked:1;      /* Expanded storage locked   */
         U64     todstart;               /* Time of initialisation    */
         U64     cpuid;                  /* CPU identifier for STIDP  */
+        U32     cpuserial;              /* CPU serial number         */
+        U16     cpumodel;               /* CPU model number          */
+        BYTE    cpuversion;             /* CPU version code          */
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */

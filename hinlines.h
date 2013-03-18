@@ -235,4 +235,117 @@ fmt_memsize_MB( const U64 memsizeMB )
 
 #endif /* !defined(_fmt_memsize_) */
 
+
+/*********************************************************************/
+/*                                                                   */
+/*      createCpuId - Create the requested CPU ID                    */
+/*                                                                   */
+/*********************************************************************/
+
+static INLINE U64
+createCpuId(const U64 model, const U64 version, const U64 serial, const U64 MCEL)
+{
+    register U64 result;
+    result   = version;
+    result <<= 24;
+    result  |= serial;
+    result <<= 16;
+    result  |= model;
+    result <<= 16;
+    result  |= MCEL;
+    return result;
+}
+
+
+/**********************************************************************/
+/*                                                                    */
+/* setCpuId - Set the CPU ID for the requested CPU                    */
+/*                                                                    */
+/**********************************************************************/
+
+static INLINE void
+setCpuId(const unsigned int cpu,
+         S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL)
+{
+    register REGS*  regs;
+    register int    initialized;
+    register U16    model;
+    register U8     version;
+    register U32    serial;
+    register U16    MCEL;
+
+    /* Return if CPU out-of-range */
+    if (cpu >= MAX_CPU_ENGINES)
+        return;
+
+    /* Return if CPU undefined */
+    regs = sysblk.regs[cpu];
+    if (regs == NULL)
+        return;
+
+    /* Determine if uninitialized */
+    initialized = (regs->cpuid != 0);
+
+    /* Determine and create model number */
+    model = arg_model >= 0 ? arg_model & 0x000FFFF :
+               initialized ? regs->cpumodel : sysblk.cpumodel;
+
+    /* Determine and create version code */
+    version = arg_version >= 0 ? arg_version & 0xFF :
+                   initialized ? regs->cpuversion : sysblk.cpuversion;
+
+    /* Determine and create serial number */
+    serial = arg_serial >= 0 ? arg_serial & 0x00FFFFFF :
+                 initialized ? regs->cpuserial : sysblk.cpuserial;
+
+    /* Determine and create MCEL */
+    MCEL = arg_MCEL >= 0 ? arg_MCEL :
+             initialized ? regs->cpuid : sysblk.cpuid;
+    MCEL &= 0x7FFF;
+
+    /* Register new CPU ID settings */
+    regs->cpumodel = model;
+    regs->cpuversion = version;
+    regs->cpuserial = serial;
+
+    /* Handle LPAR formatting */
+    if (sysblk.lparmode)
+    {
+        /* Version and MCEL are zero in LPAR mode */
+
+        version = 0;
+
+        if (sysblk.cpuidfmt)     /* Format 1 CPU ID */
+        {
+            /* Set Format 1 bit (bit 48 or MCEL bit 0) */
+            MCEL = 0x8000;
+
+            /* Use LPAR number to a maximum of 255 */
+            if (!(serial & 0x00FF0000))
+                serial |= min(sysblk.lparnum, 255) << 16;
+        }
+
+        else            /* Format 0 CPU ID */
+        {
+            /* Use a single digit LPAR id to a maximum of 15*/
+            if (!(serial & 0x000F0000))
+                serial |= min(sysblk.lparnum, 15) << 16;
+
+            /* and a single digit CPU ID to a maximum of 15 */
+            if (!(serial & 0x00F00000))
+                serial |= min(regs->cpuad, 15) << 20;
+        }
+    }
+    else    /* BASIC mode */
+    {
+       /* Use a single digit CPU ID to a maximum of 15 */
+       if (!(serial & 0x00F00000))
+           serial |= min(regs->cpuad, 15) << 20;
+    }
+
+    /* Construct new CPU ID */
+    regs->cpuid = createCpuId(model, version, serial, MCEL);
+}
+
+
 #endif // _HINLINES_H

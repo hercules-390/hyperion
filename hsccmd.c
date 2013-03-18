@@ -190,6 +190,69 @@ static inline int all_stopped()
 }
 
 
+/* Set/update all CPU IDs */
+static INLINE int
+setAllCpuIds(const S32 model, const S16 version, const S32 serial, const S32 MCEL)
+{
+    int i;
+
+    /* Determine and update system CPU model */
+    if (model >= 0)
+        sysblk.cpumodel = model & 0x0000FFFF;
+
+    /* Determine and update CPU version */
+    if (version >= 0)
+        sysblk.cpuversion = version & 0xFF;
+
+    /* Determine and update CPU serial number */
+    if (serial >= 0)
+        sysblk.cpuserial = serial & 0x00FFFFFF;
+
+    /* Determine and update MCEL */
+    if (sysblk.lparmode)
+        i = sysblk.cpuidfmt ? 0x8000 : 0;
+    else if (MCEL >= 0)
+        i = MCEL & 0xFFFF;
+    else if ((sysblk.cpuid & 0xFFFF) == 0x8000)
+        i = 0;
+    else
+        i = sysblk.cpuid & 0xFFFF;
+
+    /* Set the system global CPU ID */
+    sysblk.cpuid = createCpuId(sysblk.cpumodel, sysblk.cpuversion, sysblk.cpuserial, i);
+
+    /* Set a tailored CPU ID for each and every defined CPU */
+    for ( i = 0; i < MAX_CPU_ENGINES; ++i )
+        setCpuId(i, model, version, serial, MCEL);
+
+   return 1;
+}
+
+/* Obtain INTLOCK and then set all CPU IDs */
+static INLINE int
+setAllCpuIds_lock(const S32 model, const S16 version, const S32 serial, const S32 MCEL)
+{
+    int result;
+
+    /* Obtain INTLOCK */
+    OBTAIN_INTLOCK(NULL);
+
+    /* Call unlocked version of setAllCpuIds */
+    result = setAllCpuIds(model, version, serial, MCEL);
+
+   /* Release INTLOCK and return */
+   RELEASE_INTLOCK(NULL);
+   return result;
+}
+
+/* Re-set all CPU IDs based on sysblk CPU ID updates */
+static INLINE int
+resetAllCpuIds()
+{
+    return setAllCpuIds(-1, -1, -1, -1);
+}
+
+
 /* maxrates command - report maximum seen mips/sios rates */
 
 #ifdef OPTION_MIPS_COUNTING
@@ -4752,30 +4815,38 @@ BYTE    c;
         if ( (n == 2 || n == 1)
              && sscanf(argv[1], "%hx%c", &id, &c) == 1)
         {
-            if (sysblk.cpuid & 0x00FF000000000000ULL)
+            if (sysblk.cpuserial & ~0x00FFFF)
             {
                 WRMSG(HHC02205, "E", argv[1], ": CPUSERIAL number greater than 00FFFF (hex)");
                 return -1;
             }
 
-            sysblk.lparmode = 1;    /* Indicate LPAR mode active */
-            sysblk.lparnum = id;
+            /* Obtain INTLOCK */
+            OBTAIN_INTLOCK(NULL);
 
-            if (n == 1)
-                sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0     */
-            else
-                sysblk.cpuid |=  0x8000ULL; /* Set CPUID format 1     */
+            /* Set new LPAR number and CPU ID format */
+            sysblk.lparmode = 1;
+            sysblk.lparnum = id;
+            sysblk.cpuidfmt = (n > 1);
+
+            /* Update CPU IDs indicating LPAR mode active */
+            if (!resetAllCpuIds())
+                return -1;
+
+            /* Release INTLOCK */
+            RELEASE_INTLOCK(NULL);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             {
                 char buf[20];
                 MSGBUF(buf, "%02X", sysblk.lparnum);
                 set_symbol("LPARNUM", buf);
-                set_symbol("CPUIDFMT", (n == 1) ? "0" : "1");
+                set_symbol("CPUIDFMT", (n > 1) ? "1" : "0");
                 if (MLVL( VERBOSE ))
                     WRMSG(HHC02204, "I", argv[0], buf);
             }
 #else /* !defined(OPTION_CONFIG_SYMBOLS) || !defined(OPTION_BUILTIN_SYMBOLS) */
+
             if (MLVL( VERBOSE ))
             {
                 char buf[20];
@@ -4786,9 +4857,22 @@ BYTE    c;
         }
         else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
         {
-            sysblk.lparmode = 0;        /* LPAR mode inactive         */
-            sysblk.lparnum  = 0;        /* Clear out LPAR number      */
-            sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0         */
+            /* Obtain INTLOCK */
+            OBTAIN_INTLOCK(NULL);
+
+            /* Update all CPU identifiers to CPUID format 0 with LPAR
+             * mode inactive and LPAR number 0.
+             */
+            sysblk.lparmode = 0;
+            sysblk.lparnum  = 0;
+            sysblk.cpuidfmt = 0;
+
+            if (!resetAllCpuIds())
+                return -1;
+
+            /* Release INTLOCK */
+            RELEASE_INTLOCK(NULL);
+
             if ( MLVL(VERBOSE) )
             {
                 char buf[20];
@@ -4837,14 +4921,16 @@ BYTE    c;
         {
             char buf[8];
 
+            /* Update all CPU identifiers */
+            if (!setAllCpuIds_lock(-1, cpuverid, -1, -1))
+                return -1;
+
             MSGBUF(buf,"%02X",cpuverid);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUVERID", buf);
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
-            sysblk.cpuid &= 0x00FFFFFFFFFFFFFFULL;
-            sysblk.cpuid |= (U64)cpuverid << 56;
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
         }
@@ -4853,11 +4939,12 @@ BYTE    c;
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return -1;
         }
+
     }
     else if ( argc == 1 )
     {
         char msgbuf[8];
-        MSGBUF( msgbuf, "%02X",(unsigned int)((sysblk.cpuid & 0xFF00000000000000ULL) >> 56));
+        MSGBUF( msgbuf, "%02X", sysblk.cpuversion );
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
@@ -4887,14 +4974,18 @@ BYTE    c;
           && (sscanf(argv[1], "%x%c", &cpumodel, &c) == 1) )
         {
             char buf[8];
+
+
+            /* Update all CPU IDs */
+            if (!setAllCpuIds_lock(cpumodel, -1, -1, -1))
+                return -1;
+
             sprintf(buf,"%04X",cpumodel);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUMODEL", buf);
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
-            sysblk.cpuid &= 0xFFFFFFFF0000FFFFULL;
-            sysblk.cpuid |= (U64)cpumodel << 16;
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
         }
@@ -4907,7 +4998,7 @@ BYTE    c;
     else if ( argc == 1 )
     {
         char msgbuf[8];
-        MSGBUF( msgbuf, "%04X",(unsigned int)((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16));
+        MSGBUF( msgbuf, "%04X", sysblk.cpumodel);
         WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
     else
@@ -4947,14 +5038,16 @@ BYTE    c;
                 return -1;
             }
 
+            /* Update all CPU IDs */
+            if (!setAllCpuIds_lock(-1, -1, cpuserial, -1))
+                return -1;
+
             sprintf(buf,"%06X",cpuserial);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("CPUSERIAL", buf);
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
-            sysblk.cpuid &= 0xFF000000FFFFFFFFULL;
-            sysblk.cpuid |= (U64)cpuserial << 32;
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
         }
@@ -5009,19 +5102,31 @@ u_int     id;
                 return -1;
             }
 
-            if(id)
-                sysblk.cpuid |= 0x8000ULL;
-            else if (sysblk.lparnum > 0x0F)
+            if(!id && sysblk.lparnum > 0x0F)
             {
                 WRMSG(HHC02205, "E", argv[1],": LPAR number greater than 0F (hex)");
                 return -1;
             }
-            else
-                sysblk.cpuid &= ~0x8000ULL;
+
+            if (sysblk.cpuidfmt != id)
+            {
+                /* Obtain INTLOCK */
+                OBTAIN_INTLOCK(NULL);
+
+                sysblk.cpuidfmt = id;
+
+                /* Update all CPU IDs */
+                if (!resetAllCpuIds())
+                    return -1;
+
+                /* Release INTLOCK */
+                RELEASE_INTLOCK(NULL);
 
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-            set_symbol("CPUIDFMT", (sysblk.cpuid & 0x8000ULL) ? "1" : "0");
+                set_symbol("CPUIDFMT", (sysblk.cpuidfmt) ? "1" : "0");
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+
+            }
         }
         else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
         {
@@ -5030,17 +5135,29 @@ u_int     id;
                 WRMSG(HHC02205, "E", argv[1],": In LPAR mode");
                 return -1;
             }
-            sysblk.cpuid &= ~0x8000ULL; /* Set CPUID format 0         */
-            if ( MLVL(VERBOSE) )
+
+            if (sysblk.cpuidfmt)
             {
-                char buf[20];
-                MSGBUF( buf, "%02X", sysblk.lparnum);
-                WRMSG(HHC02204, "I", argv[0], buf);
-            }
+
+                /* Obtain INTLOCK */
+                OBTAIN_INTLOCK(NULL);
+
+                sysblk.cpuidfmt = 0;
+
+                /* Update all CPU IDs */
+                if (!resetAllCpuIds())
+                    return -1;
+
+                /* Release INTLOCK */
+                RELEASE_INTLOCK(NULL);
+
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-            set_symbol("CPUIDFMT", "BASIC");
+                set_symbol("CPUIDFMT", "BASIC");
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
 
+                if ( MLVL(VERBOSE) )
+                    WRMSG(HHC02204, "I", argv[0], "BASIC");
+            }
         }
         else
         {
@@ -5051,7 +5168,7 @@ u_int     id;
         {
             char buf[40];
             if (sysblk.lparmode)
-                MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+                MSGBUF( buf, "%d", sysblk.cpuidfmt );
             else
                 strncpy(buf, "BASIC", sizeof(buf));
             WRMSG(HHC02204, "I", argv[0], buf);
@@ -5061,7 +5178,7 @@ u_int     id;
     {
         char buf[40];
         if (sysblk.lparmode)
-            MSGBUF( buf, "%d", (sysblk.cpuid & 0x8000ULL) ? 1 : 0);
+            MSGBUF( buf, "%d", sysblk.cpuidfmt );
         else
             strncpy(buf, "BASIC", sizeof(buf));
         WRMSG(HHC02203, "I", argv[0], buf);

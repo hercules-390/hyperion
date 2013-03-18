@@ -6401,7 +6401,6 @@ DEF_INST(store_cpu_id)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* Double word workarea      */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -6411,30 +6410,8 @@ U64     dreg;                           /* Double word workarea      */
 
     DW_CHECK(effective_addr2, regs);
 
-    /* Load the CPU ID */
-    dreg = sysblk.cpuid;
-
-    if (sysblk.lparmode)
-    {
-        /* If fmt1 cpuid and the digits are zero, insert the two digit LPAR id */
-        if((dreg & 0x8000ULL) && !(dreg & 0x00FF000000000000ULL))
-            dreg |= ((U64)(sysblk.lparnum & 0xFF) << 48);
-        else
-        {
-            /* For fmt0 Insert a single digit LPAR id */
-            if(!(dreg & 0x000F000000000000ULL))
-                dreg |= ((U64)(sysblk.lparnum & 0xF) << 48);
-
-            /* If first digit of serial is zero, insert processor id */
-            if(!(dreg & 0x00F0000000000000ULL))
-                dreg |= (U64)(regs->cpuad & 0x0F) << 52;
-        }
-    }
-    else if(!(dreg & 0x00FF000000000000ULL))
-        dreg |= (U64)(regs->cpuad & 0xFF) << 52;
-
     /* Store CPU ID at operand address */
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    ARCH_DEP(vstore8) ( regs->cpuid, effective_addr2, b2, regs );
 
 }
 
@@ -6888,7 +6865,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 get_model(sysib111->model);
                 for(i = 0; i < 4; i++)
                     sysib111->type[i] =
-                        hexebcdic[(sysblk.cpuid >> (28 - (i*4))) & 0x0F];
+                        hexebcdic[(sysblk.cpumodel >> (12 - (i*4))) & 0x0F];
                 get_modelcapa(sysib111->modcapaid);
                 if (sysib111->modcapaid[0] == '\0')
                     memcpy(sysib111->modcapaid, sysib111->model, sizeof(sysib111->model));
@@ -6897,7 +6874,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
-                    hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
+                    hexebcdic[(sysblk.cpuserial >> (20 - (i*4))) & 0x0F];
                 get_plant(sysib111->plant);
                 STORE_FW(sysib111->mcaprating,  sysblk.cpmcr);
                 STORE_FW(sysib111->mpcaprating, sysblk.cpmpcr);
@@ -6934,7 +6911,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
                 for(i = 0; i < 6; i++)
                     sysib121->seqc[(sizeof(sysib121->seqc) - 6) + i] =
-                        hexebcdic[sysblk.cpuid >> (52 - (i*4)) & 0x0F];
+                        hexebcdic[sysblk.cpuserial >> (20 - (i*4)) & 0x0F];
                 get_plant(sysib121->plant);
                 STORE_HW(sysib121->cpuad,regs->cpuad);
                 regs->psw.cc = 0;
@@ -7007,7 +6984,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
-                    hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
+                    hexebcdic[(regs->cpuserial >> (20 - (i*4))) & 0x0F];
                 get_plant(sysib221->plant);
                 STORE_HW(sysib221->lcpuid,regs->cpuad);
                 STORE_HW(sysib221->cpuad,regs->cpuad);

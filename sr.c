@@ -171,6 +171,12 @@ BYTE     psw[16];
     TRACE("SR: Saving Expanded Storage...\n");
     SR_WRITE_BUF   (file,SR_SYS_XPNDSTOR,sysblk.xpndstor,4096*sysblk.xpndsize);
     SR_WRITE_VALUE (file,SR_SYS_CPUID,sysblk.cpuid,sizeof(sysblk.cpuid));
+    SR_WRITE_VALUE (file,SR_SYS_CPUMODEL,sysblk.cpumodel,sizeof(sysblk.cpumodel));
+    SR_WRITE_VALUE (file,SR_SYS_CPUVERSION,sysblk.cpuversion,sizeof(sysblk.cpuversion));
+    SR_WRITE_VALUE (file,SR_SYS_CPUSERIAL,sysblk.cpuserial,sizeof(sysblk.cpuserial));
+    SR_WRITE_VALUE (file,SR_SYS_LPARMODE,(int)sysblk.lparmode,sizeof(int));
+    SR_WRITE_VALUE (file,SR_SYS_LPARNUM,sysblk.lparnum,sizeof(sysblk.lparnum));
+    SR_WRITE_VALUE (file,SR_SYS_CPUIDFMT,sysblk.cpuidfmt,sizeof(sysblk.cpuidfmt));
     SR_WRITE_VALUE (file,SR_SYS_IPLDEV,sysblk.ipldev,sizeof(sysblk.ipldev));
     SR_WRITE_VALUE (file,SR_SYS_IPLCPU,sysblk.iplcpu,sizeof(sysblk.iplcpu));
     SR_WRITE_VALUE (file,SR_SYS_MBO,sysblk.mbo,sizeof(sysblk.mbo));
@@ -547,6 +553,38 @@ S64      dreg;
         case SR_SYS_XPNDSTOR:
             TRACE("SR: Restoring Expanded Storage...\n");
             SR_READ_BUF(file, sysblk.xpndstor, xpndsize * 4096);
+            break;
+
+        case SR_SYS_CPUID:
+            SR_READ_VALUE(file, len, &sysblk.cpuid, sizeof(sysblk.cpuid));
+             break;
+
+        case SR_SYS_CPUMODEL:
+            SR_READ_VALUE(file, len, &sysblk.cpumodel, sizeof(sysblk.cpumodel));
+             break;
+
+        case SR_SYS_CPUVERSION:
+            SR_READ_VALUE(file, len, &sysblk.cpuversion, sizeof(sysblk.cpuversion));
+            break;
+
+        case SR_SYS_CPUSERIAL:
+            SR_READ_VALUE(file, len, &sysblk.cpuserial, sizeof(sysblk.cpuserial));
+            break;
+
+        case SR_SYS_LPARMODE:
+        {
+            int value;
+            SR_READ_VALUE (file, len, &value, sizeof(int));
+            sysblk.lparmode = value;
+            break;
+        }
+
+        case SR_SYS_LPARNUM:
+            SR_READ_VALUE (file, len, &sysblk.lparnum, sizeof(sysblk.lparnum));
+            break;
+
+        case SR_SYS_CPUIDFMT:
+            SR_READ_VALUE (file, len, &sysblk.cpuidfmt, sizeof(sysblk.cpuidfmt));
             break;
 
         case SR_SYS_IPLDEV:
@@ -1201,7 +1239,7 @@ S64      dreg;
             }
             SR_READ_BUF(file, &dev->pgid, len);
             break;
-   
+
         /* By Adrian - SR_DEV_DRVPWD */
         case SR_DEV_DRVPWD:
             SR_SKIP_NULL_DEV(dev, file, len);
@@ -1212,9 +1250,9 @@ S64      dreg;
                 goto sr_error_exit;
             }
             SR_READ_BUF(file, &dev->drvpwd, len);
-            break;   
-   
-   
+            break;
+
+
 
         case SR_DEV_BUSY:
             SR_SKIP_NULL_DEV(dev, file, len);

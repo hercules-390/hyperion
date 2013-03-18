@@ -289,11 +289,11 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
 
     /* Locate the device block */
     dev = find_device_by_devnum (0,devnum);
-    
+
     /* Return 0 if device is not found */
     if (!dev)
        return 0;
-    
+
     /* Indicate the device is dedicated - all Hercules devices are */
     vdat->vdevstat = DS_DED;
 
@@ -336,7 +336,7 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
     /* Indicate if the device is busy */
     if ( (dev->busy && dev->ioactive == DEV_SYS_LOCAL) || dev->startpending )
         vdat->vdevstat |= DS_BUSY;
-    
+
     /* Set virtual device flags, and real device model and features */
     vdat->vdevflag = 0x00;
     rdat->rdevmodl = 0x00;
@@ -344,9 +344,9 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
 
     if (dev->hnd->reserve)           /* Indicate if RESERVE/RELEASE supported */
         vdat->vdevflag |= DF_RSRL;
-    
+
 #if defined(FEATURE_MIDAW)
-    /* If DIAGNOSE X'210', indicate if MIDAW's are supported */ 
+    /* If DIAGNOSE X'210', indicate if MIDAW's are supported */
     if (code==0x210)
         vdat->vdevflag |= DF_MIDAW;
 #endif /* FEATURE_MIDAW */
@@ -396,7 +396,7 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
          if (rdat->rdevtyp==DT_CTCA)
             rdat->rdevfeat = DRF_CTCA;
      }
-     
+
      /* Return the located DEVBLK to the caller */
      return dev;
 
@@ -419,12 +419,12 @@ VRDCRCDT        rdat;                   /* Real device data          */
          ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
      }
 #endif /* FEATURE_ESAME */
-    
+
     /* Return console information if R1 register is all ones */
     if (regs->GR_L(r1) == 0xFFFFFFFF)
     {
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if ( dev->allocated 
+            if ( dev->allocated
                  && ( dev->devtype == 0x3215 || dev->devtype == 0x1503 )
                )
             {
@@ -440,7 +440,7 @@ VRDCRCDT        rdat;                   /* Real device data          */
     dev = ARCH_DEP(vmdevice_data) (0x24,devnum,&vdat,&rdat);
 
     /* Return condition code 3 if device does not exist */
-    if (!dev) 
+    if (!dev)
         return 3;
 
     /* Return virtual device information in the R2 register */
@@ -625,7 +625,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 
         if (dev->ccwtrace || dev->ccwstep)
         {
-            WRMSG(HHC01952, "I", 
+            WRMSG(HHC01952, "I",
                     SSID_TO_LCSS(dev->ssid), dev->devnum,
                     (ioparm.type == HCPSBIOP_WRITE ? "WRITE" : "READ"),
                     blknum, absadr, blksize);
@@ -936,7 +936,7 @@ U32        idaddr;                      /* Address of storage operand*/
 U32        idlen;                       /* Length of storage operand */
 BYTE       buf[40];                     /* Extended identification   */
 #if defined( HAVE_GETLOGIN_R )
-  #if !defined(LOGIN_NAME_MAX)  
+  #if !defined(LOGIN_NAME_MAX)
     #define LOGIN_NAME_MAX 100
   #endif
 char       unam[LOGIN_NAME_MAX+1];      /* User name                 */
@@ -976,11 +976,11 @@ BYTE       c;                           /* Character work area       */
     buf[10] = ver & 0xff;
 
     /* Byte 11 contains version number from STIDP */
-    buf[11] = sysblk.cpuid >> 56;
+    buf[11] = regs->cpuversion;
 
     /* Bytes 12-13 contain MCEL length from STIDP */
-    buf[12] = (sysblk.cpuid >> 8) & 0xFF;
-    buf[13] = sysblk.cpuid & 0xFF;
+    buf[12] = (regs->cpuid >> 8) & 0xFF;
+    buf[13] = regs->cpuid & 0xFF;
 
     /* Bytes 14-15 contain the CP address */
     buf[14] = (regs->cpuad >> 8) & 0xFF;
@@ -1125,7 +1125,7 @@ char    msgbuf[512];                    /* Message work area         */
             char* p = bufo;
             while (*p && isspace(*p)) p++;
             if ((*(p+0) == 's' || *(p+0) == 'S') &&
-                (*(p+1) == 'h' || *(p+1) == 'H') && 
+                (*(p+1) == 'h' || *(p+1) == 'H') &&
                 isspace(*(p+2))) shcmd = 1;
         }
         if ((sysblk.diag8cmd & DIAG8CMD_ENABLE)
@@ -1255,10 +1255,10 @@ DEVBLK   *dev;             /* -> Device block                        */
 VRDCBLOK vrdc;             /* VRDCBLOK                               */
 RADR     blokaddr;         /* Location of the VRDCBLOK               */
 U16      bloklen;          /* Length from the VRDCBLOK               */
-#if 0 
+#if 0
 /* Only required if implementation is for the z/VM 5.3 level */
 U16      reserved;         /* Bytes 14 and 15                        */
-#endif 
+#endif
 U16      devnum;           /* Device number from the VRDCBLOK        */
 
 
@@ -1272,7 +1272,7 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
-    
+
     blokaddr = regs->GR_L(r1);
 
     /* Fetch the first 4 bytes of the VRDCBLOK */
@@ -1316,7 +1316,7 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
         PTT(PTT_CL_ERR,"*DIAG210",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         return 3;
     }
-    
+
     /* Set the underlying device and real device features */
     vrdc.vrdcundv=0x00;
     vrdc.vrdcrdaf=0x00;
@@ -1344,7 +1344,7 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
     }
     else if (vrdc.vrdcvdat.vdevcls == DC_FBA)
         memcpy(&vrdc.vrdcrdc,dev->devchar,32);
-    
+
     /* Set Path Group ID */
     memcpy(&vrdc.vrdcpgid,dev->pgid,11);
 
@@ -1395,7 +1395,7 @@ S64     stglen;                        /* Storage extent area length */
         return;
 
     case 0x00000004: /* Provide BYUSER ID value */
-            
+
         /* Program check if Rx and Ry are the same registers or        */
         /* or Ry is not an even register or the address provided       */
         /* in Rx is not on a doubleword boundary or if running         */
@@ -1410,7 +1410,7 @@ S64     stglen;                        /* Storage extent area length */
         }
         regs->GR_L(r2+1)=0x4; /* Indicate no BYUSER ID for Hercules */
         return;
-        
+
     case 0x00000008: /* Return number of lines per page */
 #if defined(FEATURE_ESAME)
 
@@ -1424,7 +1424,7 @@ S64     stglen;                        /* Storage extent area length */
 
         /* Get the device number from the Rx register */
         devnum=regs->GR_LHL(r1);
-       
+
         /* Locate the device block */
         dev = find_device_by_devnum(0,devnum);
 
@@ -1444,7 +1444,7 @@ S64     stglen;                        /* Storage extent area length */
            regs->GR_L(r2) = 4; /* Set return code to indicate an invalid device */
         }
         return;
-        
+
 #if defined(FEATURE_ESAME)
     case 0x0000000C: /* Return highest addressable byte for z/Architecture machine */
          regs->GR_G(r1) = regs->mainlim;
@@ -1452,12 +1452,12 @@ S64     stglen;                        /* Storage extent area length */
          return;
 
     case 0x00000010: /* Set storage extent */
-            
+
          /* Obtain the storage extent area real address from Rx */
          /* and its length from Rx+1                            */
          stgarea=regs->GR_G(r1);
          stglen=regs->GR_G(r1+1); /* Length is treated as a signed value */
-         
+
          /* Program check if Rx is not an even register or the address */
          /* provided in Rx is not on a quadword boundary or the length */
          /* provided in Rx+1 is not positive or not a multiple of 16   */
@@ -1465,17 +1465,17 @@ S64     stglen;                        /* Storage extent area length */
          {
              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
          }
-         
+
          /* Convert real addres to absolute address */
          stgarea=APPLY_PREFIXING(stgarea,regs->PX );
-         
+
          /* Check to ensure extent information can be stored */
          if (stgarea > regs->mainlim - 16)
          {
              regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
          }
          /* Set start of storage extent to zero */
-         ARCH_DEP(store_doubleword_absolute)(0,stgarea,regs); 
+         ARCH_DEP(store_doubleword_absolute)(0,stgarea,regs);
          /* Set end of storage extent to last addressable byte of main storage */
          ARCH_DEP(store_doubleword_absolute)(regs->mainlim,stgarea+8,regs);
          /* Set number of extents to 1 in Ry */

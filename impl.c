@@ -545,15 +545,17 @@ int     dll_count;                      /* index into array          */
     /* Save TOD of when we were first IMPL'ed */
     time( &sysblk.impltime );
 
-    /* set default CPU identifier */
-    sysblk.cpuid = ((U64)     0x00 << 56)
-                 | ((U64) 0x000001 << 32)
-                 | ((U64)   0x0586 << 16);
-
     /* Set LPAR mode to BASIC with CPUIDFMT 0 */
     sysblk.lparmode = 0;
     sysblk.lparnum = 0;
-    /* sysblk.cpuid = ~&0x8000ULL   // Set to zero in default CPU identifier */
+    sysblk.cpuidfmt = 0;
+
+    /* set default CPU identifier */
+    sysblk.cpumodel = 0x0586;
+    sysblk.cpuversion = 0xFD;
+    sysblk.cpuserial = 0x000001;
+    sysblk.cpuid = createCpuId(sysblk.cpumodel, sysblk.cpuversion,
+                               sysblk.cpuserial, 0);
 
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_NONE;
@@ -621,12 +623,12 @@ int     dll_count;                      /* index into array          */
 
         set_symbol("LPARNAME", str_lparname());
         set_symbol("LPARNUM", "BASIC");
-        set_symbol("CPUIDFMT", "0");
+        set_symbol("CPUIDFMT", "BASIC");
 
-        MSGBUF( buf, "%06X", (unsigned int) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32) );
+        MSGBUF( buf, "%06X", sysblk.cpuserial );
         set_symbol( "CPUSERIAL", buf );
 
-        MSGBUF( buf, "%04X", (unsigned int) ((sysblk.cpuid & 0x00000000FFFF0000ULL) >> 16) );
+        MSGBUF( buf, "%04X", sysblk.cpumodel );
         set_symbol( "CPUMODEL", buf );
 
     }
