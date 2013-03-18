@@ -891,12 +891,56 @@ U16 offph;
             case IPA_CMD_SETVMAC:  /* 0x25 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
+                char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+                int rc = 0;
+                int was_enabled;
 
                     DBGTRC(dev, "Set VMAC\n");
-                    if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                        STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
+                        ,ipa_mac->macaddr[0]
+                        ,ipa_mac->macaddr[1]
+                        ,ipa_mac->macaddr[2]
+                        ,ipa_mac->macaddr[3]
+                        ,ipa_mac->macaddr[4]
+                        ,ipa_mac->macaddr[5]
+                    );
+
+                    /* PROGRAMMING NOTE: cannot change the interface
+                       once it has been enabled. Thus we temporarily
+                       disable it, make our changes, and then enable
+                       it again.
+                    */
+                    if ((was_enabled = grp->enabled))
+                        qeth_disable_interface( dev, grp );
+
+                    if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
+                    {
+                        qeth_errnum_msg( dev, grp, rc,
+                            "E", "IPA_CMD_SETVMAC failed" );
+                    }
+
+                    if (was_enabled)
+                        qeth_enable_interface( dev, grp );
+
+                    if (rc != 0)
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else
-                        STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                    {
+                        if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
+                        {
+                            STORE_HW(ipa->rc,IPA_RC_OK);
+
+                            if (grp->tthwaddr)
+                                free( grp->tthwaddr );
+
+                            grp->tthwaddr = strdup( tthwaddr );
+                            memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
+                            qeth_report_using( dev, grp, 1 );
+                        }
+                        else
+                            STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                    }
                 }
                 break;
 
