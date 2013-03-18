@@ -358,37 +358,36 @@
 #define  HPC_MAINSTOR     1        /* mainstor being allocated/freed */
 #define  HPC_XPNDSTOR     2        /* xpndstor being allocated/freed */
 
-#if defined(_MSVC_) & 0
+#if defined(_MSVC_)
     #define    malloc_aligned(_size,_alignment) \
                _aligned_malloc(_size,_alignment)
 
     #define    free_aligned(_ptr) \
                _aligned_free(_ptr)
 
-#elif 0
-    #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-        static INLINE void *
-        malloc_aligned(size_t size, size_t alignment)
+#elif _BSD_SOURCE ||                                                   \
+      (_XOPEN_SOURCE >= 500 ||                                         \
+       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&                     \
+       !(_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
+    static INLINE void *
+    malloc_aligned(size_t size, size_t alignment)
+    {
+        void*           result;
+        register int    rc;
+
+        rc = posix_memalign(&result, alignment, size);
+        if (rc)
         {
-            void*           result;
-            register int    rc;
-
-            rc = posix_memalign(&result, alignment, size);
-            if (rc)
-            {
-                result = NULL;
-                errno = rc;
-            }
-
-            return result;
+            result = NULL;
+            errno = rc;
         }
-    #else   /* "Ancient" systems - pre-2001 POSIX Standard*/
-        #define malloc_aligned(_size,_alignment)\
-                memalign((_alignment),(_size))
-    #endif
+
+        return result;
+    }
 
     #define free_aligned(_ptr) \
             free(_ptr)
+
 #else
     static INLINE void*
     malloc_aligned(size_t size, size_t alignment)
