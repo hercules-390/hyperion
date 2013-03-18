@@ -1102,7 +1102,6 @@ do { \
 
 #define BLOCK_HEADER struct                                            \
 {                                                                      \
-        CACHE_ALIGN                                                    \
 /*000*/ BYTE    blknam[16];             /* Name of block   REGS_CP00 */\
 /*010*/ BYTE    blkver[8];              /* Version Number            */\
 /*018*/ BYTE    _blkhdr_reserved1[8];                                  \

@@ -905,7 +905,6 @@ struct SYSBLK {
         time_t  SSD_time;               /* SSD requested time        */
 #endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
-        ALIGN_16
         BLOCK_TRAILER;                  /* eye-end                   */
 };
 
