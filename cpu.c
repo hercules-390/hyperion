@@ -1382,19 +1382,21 @@ int i;
 /*-------------------------------------------------------------------*/
 void *cpu_uninit (int cpu, REGS *regs)
 {
-    if (regs->host)
+    int processHostRegs = (regs == sysblk.regs[cpu]);
+
+    if (processHostRegs)
     {
         obtain_lock (&sysblk.cpulock[cpu]);
         if (regs->guestregs)
         {
             cpu_uninit (cpu, regs->guestregs);
-            free_aligned(regs->guestregs);
+            regs->guestregs = NULL;
         }
     }
 
     destroy_condition(&regs->intcond);
 
-    if (regs->host)
+    if (processHostRegs)
     {
 #ifdef FEATURE_VECTOR_FACILITY
         /* Mark Vector Facility offline */
