@@ -648,39 +648,39 @@ U32   code;
         if( HDC4(debug_diagnose, code, r1, r2, regs) )
             return;
 
-    /*  Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221:    */
-    /*                                                               */
-    /*          DS 0H                                                */
-    /*          DC X'8302',S(SHUTDATA)     MUST BE R0 AND R2         */
-    /*          ...                                                  */
-    /*          DS 0H                                                */
-    /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'       */
+        /* Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221: */
+        /*                                                           */
+        /*          DS 0H                                            */
+        /*          DC X'8302',S(SHUTDATA)     MUST BE R0 AND R2     */
+        /*          ...                                              */
+        /*          DS 0H                                            */
+        /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'   */
 
-    if (0 == r1 && 2 == r2
-         && sysblk.cpuversion != 0xFF
-         && (sysblk.cpumodel == 0x4361
-          || (sysblk.cpumodel & 0xFFF9) == 0x9371   /* (937X) */
-          || sysblk.cpumodel == 0x9221)
-       )
-    {
-        if (0x0000FFFF == ARCH_DEP(vfetch4)(effective_addr2, b2, regs))
+        if (0 == r1 && 2 == r2
+             && sysblk.cpuversion != 0xFF
+             && (sysblk.cpumodel == 0x4361
+              || (sysblk.cpumodel & 0xFFF9) == 0x9371   /* (937X) */
+              || sysblk.cpumodel == 0x9221)
+           )
         {
-            /* If diag8cmd is not enabled then we are not allowed
-             * to manipulate the real machine i.e. hercules itself
-             */
-        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
-            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+            if (0x0000FFFF == ARCH_DEP(vfetch4)(effective_addr2, b2, regs))
+            {
+                /* If diag8cmd is not enabled then we are not allowed
+                 * to manipulate the real machine i.e. hercules itself
+                 */
+                if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
+                    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
+                regs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_INTERRUPT(regs);
 
-            /* Release the configuration */
-            do_shutdown();
+                /* Release the configuration */
+                do_shutdown();
 
-            /* Power Off: exit hercules */
-            exit(0);
+                /* Power Off: exit hercules */
+                exit(0);
+            }
         }
-    }
 
 #if defined(FEATURE_S370_CHANNEL) && defined(OPTION_NOP_MODEL158_DIAGNOSE)
         if (regs->cpumodel != 0x0158)
