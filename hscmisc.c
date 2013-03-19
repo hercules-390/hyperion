@@ -2104,7 +2104,8 @@ REGS   *regs;                           /* Copied regs               */
 #endif
             n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
 
-        if (!iregs->ghostregs) free(regs);
+        if (!iregs->ghostregs)
+            free_aligned( regs );
         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
         return;
     }
@@ -2294,7 +2295,7 @@ REGS   *regs;                           /* Copied regs               */
     }
 
     if (!iregs->ghostregs)
-        free (regs);
+        free_aligned( regs );
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
 } /* end function display_inst */
@@ -2362,7 +2363,7 @@ void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
     }
 
     if (!iregs->ghostregs)
-        free(regs);
+        free_aligned( regs );
 } /* end function alter_display_virt */
 
 
@@ -2394,7 +2395,7 @@ void display_inst(REGS *iregs, BYTE *inst)
     }
 
     if (!iregs->ghostregs)
-        free (regs);
+        free_aligned( regs );
 }
 
 
@@ -2426,7 +2427,7 @@ void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
     }
 
     if (!iregs->ghostregs)
-        free(regs);
+        free_aligned( regs );
 }
 
 /*-------------------------------------------------------------------*/
