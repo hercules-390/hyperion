@@ -282,6 +282,7 @@ U64     dreg;
      if (GUESTREGS == NULL)
      {
         GUESTREGS = malloc_aligned(sizeof(REGS), 4096);
+        memset( GUESTREGS, 0, sizeof(REGS) );
         if (GUESTREGS == NULL)
          {
              logmsg(MSG(HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, "calloc()", strerror(errno)));

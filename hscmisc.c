@@ -730,7 +730,7 @@ static REGS  *copy_regs (REGS *regs)
  size_t size;
 
     size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
-    newregs = malloc(size);
+    newregs = malloc_aligned(size, 4096);
     if (newregs == NULL)
     {
         char buf[64];

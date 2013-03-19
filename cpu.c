@@ -1412,7 +1412,7 @@ void *cpu_uninit (int cpu, REGS *regs)
         release_lock (&sysblk.cpulock[cpu]);
     }
 
-    free_aligned(regs);
+    free_aligned(regs->guestregs);
 
     return NULL;
 }
