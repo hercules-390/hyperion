@@ -1382,16 +1382,20 @@ int i;
 /*-------------------------------------------------------------------*/
 void *cpu_uninit (int cpu, REGS *regs)
 {
-    int processHostRegs = (regs == sysblk.regs[cpu]);
+    int processHostRegs = (regs->host &&
+                           regs == sysblk.regs[cpu]);
 
     if (processHostRegs)
     {
         obtain_lock (&sysblk.cpulock[cpu]);
+
+        /* If pointing to guest REGS structure, free the guest REGS
+         * structure ONLY if it is not ourself, and set the guest REGS
+         * pointer to NULL;
+         */
         if (regs->guestregs)
-        {
-            cpu_uninit (cpu, regs->guestregs);
-            regs->guestregs = NULL;
-        }
+            regs->guestregs = regs == regs->guestregs ? NULL :
+                              cpu_uninit (cpu, regs->guestregs);
     }
 
     destroy_condition(&regs->intcond);
@@ -1412,7 +1416,8 @@ void *cpu_uninit (int cpu, REGS *regs)
         release_lock (&sysblk.cpulock[cpu]);
     }
 
-    free_aligned(regs->guestregs);
+    /* Free the REGS structure */
+    free_aligned(regs);
 
     return NULL;
 }

@@ -253,6 +253,45 @@ resetAllCpuIds()
 }
 
 
+
+/* Enable/Disable LPAR mode */
+static INLINE void
+enable_lparmode(const int enable)
+{
+    static const int    fbyte = STFL_LOGICAL_PARTITION / 8;
+    static const int    fbit = 0x80 >> (STFL_LOGICAL_PARTITION % 8);
+
+    if(enable)
+    {
+#if defined(_370)
+        sysblk.facility_list[ARCH_370][fbyte] |= fbit;
+#endif
+#if defined(_390)
+        sysblk.facility_list[ARCH_390][fbyte] |= fbit;
+#endif
+#if defined(_900)
+        sysblk.facility_list[ARCH_900][fbyte] |= fbit;
+#endif
+    }
+    else
+    {
+#if defined(_370)
+        sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
+#endif
+#if defined(_390)
+        sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
+#endif
+#if defined(_900)
+        sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
+#endif
+
+    }
+
+    /* Set system lparmode indicator accordingly */
+    sysblk.lparmode = enable;
+}
+
+
 /* maxrates command - report maximum seen mips/sios rates */
 
 #ifdef OPTION_MIPS_COUNTING
@@ -4815,17 +4854,11 @@ BYTE    c;
         if ( (n == 2 || n == 1)
              && sscanf(argv[1], "%hx%c", &id, &c) == 1)
         {
-            if (sysblk.cpuserial & ~0x00FFFF)
-            {
-                WRMSG(HHC02205, "E", argv[1], ": CPUSERIAL number greater than 00FFFF (hex)");
-                return -1;
-            }
-
             /* Obtain INTLOCK */
             OBTAIN_INTLOCK(NULL);
 
             /* Set new LPAR number and CPU ID format */
-            sysblk.lparmode = 1;
+            enable_lparmode(1);
             sysblk.lparnum = id;
             sysblk.cpuidfmt = (n > 1);
 
@@ -4863,7 +4896,7 @@ BYTE    c;
             /* Update all CPU identifiers to CPUID format 0 with LPAR
              * mode inactive and LPAR number 0.
              */
-            sysblk.lparmode = 0;
+            enable_lparmode(0);
             sysblk.lparnum  = 0;
             sysblk.cpuidfmt = 0;
 
@@ -5031,12 +5064,6 @@ BYTE    c;
           && (sscanf(argv[1], "%x%c", &cpuserial, &c) == 1) )
         {
             char buf[8];
-
-            if (sysblk.lparmode && (cpuserial > 0x00FFFFUL))
-            {
-                WRMSG(HHC02205, "E", argv[1], ": Limited to 00FFFF (hex) in LPAR mode");
-                return -1;
-            }
 
             /* Update all CPU IDs */
             if (!setAllCpuIds_lock(-1, -1, cpuserial, -1))
