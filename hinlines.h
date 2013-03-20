@@ -289,7 +289,7 @@ setCpuIdregs(REGS* regs, const unsigned int cpu,
                    initialized ? regs->cpuversion : sysblk.cpuversion;
 
     /* Determine and create serial number */
-    serial = arg_serial >= 0 ? arg_serial & 0x00FFFFFF :
+    serial = arg_serial >= 0 ? arg_serial :
                  initialized ? regs->cpuserial : sysblk.cpuserial;
 
     /* Determine and create MCEL */
@@ -306,8 +306,12 @@ setCpuIdregs(REGS* regs, const unsigned int cpu,
     if (sysblk.lparmode)
     {
         /* Version and MCEL are zero in LPAR mode */
-
         version = 0;
+
+        /* Overlay CPUID serial nibbles 0 and 1 with LPAR or LPAR/CPU.
+         * The full serial number is maintained in STSI information.
+         */
+        serial &= 0x0000FFFF;
 
         if (sysblk.cpuidfmt)     /* Format 1 CPU ID */
         {
@@ -315,26 +319,33 @@ setCpuIdregs(REGS* regs, const unsigned int cpu,
             MCEL = 0x8000;
 
             /* Use LPAR number to a maximum of 255 */
-            if (!(serial & 0x00FF0000))
-                serial |= min(sysblk.lparnum, 255) << 16;
+            serial |= min(sysblk.lparnum, 255) << 16;
         }
 
         else            /* Format 0 CPU ID */
         {
+            /* Clear MCEL and leave Format 1 bit as zero */
+            MCEL = 0;
+
             /* Use a single digit LPAR id to a maximum of 15*/
-            if (!(serial & 0x000F0000))
-                serial |= min(sysblk.lparnum, 15) << 16;
+            serial |= min(sysblk.lparnum, 15) << 16;
 
             /* and a single digit CPU ID to a maximum of 15 */
-            if (!(serial & 0x00F00000))
-                serial |= min(regs->cpuad, 15) << 20;
+            serial |= min(regs->cpuad, 15) << 20;
         }
     }
     else    /* BASIC mode */
     {
-       /* Use a single digit CPU ID to a maximum of 15 */
-       if (!(serial & 0x00F00000))
-           serial |= min(regs->cpuad, 15) << 20;
+        /* If more than one CPU permitted, use a single digit CPU ID to
+         * a maximum of 15.
+         */
+        if (sysblk.maxcpu <= 1)
+            serial &= 0x00FFFFFF;
+        else
+        {
+            serial &= 0x000FFFFF;
+            serial |= min(regs->cpuad, 15) << 20;
+        }
     }
 
     /* Construct new CPU ID */
