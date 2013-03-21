@@ -6810,19 +6810,25 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  2
                )
            )
+#if defined(_FEATURE_HYPERVISOR)
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_LPAR
             && (0
+                || !FACILITY_ENABLED(LOGICAL_PARTITION,regs)
+                || !sysblk.lparmode
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  2
                )
            )
+#endif /*defined(_FEATURE_HYPERVISOR*/
+#if defined(_FEATURE_EMULATE_VM)
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_VM
             && (0
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
                )
            )
+#endif /*defined(_FEATURE_EMULATE_VM)*/
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRINFO
             && (0

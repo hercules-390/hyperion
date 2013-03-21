@@ -369,7 +369,7 @@
       (_XOPEN_SOURCE >= 500 ||                                         \
        _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&                     \
        !(_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
-    static INLINE void *
+    static INLINE void*
     malloc_aligned(size_t size, size_t alignment)
     {
         void*           result;
@@ -413,18 +413,18 @@
     }
 
     static INLINE void
-    free_aligned(void *ptr)
+    free_aligned(void* ptr)
     {
         free(((void**)ptr)[-1]);
     }
 #endif
 
-static INLINE void *
+static INLINE void*
 calloc_aligned(size_t size, size_t alignment)
 {
-    void*   result = malloc_aligned(size, alignment);
+    register void*  result = malloc_aligned(size, alignment);
 
-    if (result)
+    if (result != NULL)
         memset(result, 0, size);
 
     return result;
