@@ -289,7 +289,7 @@ setCpuIdregs(REGS* regs, const unsigned int cpu,
                    initialized ? regs->cpuversion : sysblk.cpuversion;
 
     /* Determine and create serial number */
-    serial = arg_serial >= 0 ? arg_serial :
+    serial = arg_serial >= 0 ? (U32)arg_serial :
                  initialized ? regs->cpuserial : sysblk.cpuserial;
 
     /* Determine and create MCEL */
