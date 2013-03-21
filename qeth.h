@@ -11,22 +11,6 @@
 
 
 /*-------------------------------------------------------------------*/
-/* TUNTAP interface promiscuous mode option                          */
-/*-------------------------------------------------------------------*/
-#define QETH_PROMISC        (grp->promisc ? IFF_PROMISC : 0)
-
-
-/*-------------------------------------------------------------------*/
-/* Some TUNTAP platforms need IFF_RUNNING to be set                  */
-/*-------------------------------------------------------------------*/
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-  #define QETH_RUNNING      IFF_RUNNING
-#else
-  #define QETH_RUNNING      0
-#endif
-
-
-/*-------------------------------------------------------------------*/
 /* OSA Port Number                                                   */
 /*-------------------------------------------------------------------*/
 #define OSA_PORTNO 0

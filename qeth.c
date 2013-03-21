@@ -53,7 +53,7 @@
 /* VS 2010 Compiler Crash Workaround                                 */
 /*-------------------------------------------------------------------*/
 #if defined(_MSVC_)
-    
+
     /* Keep store_f3 defined as a macro, but redefine to a local
      * variant.
      */
@@ -61,7 +61,7 @@
     #define store_f3(_ptr,_value) store_f3_local((_ptr),(_value))
 
     /* Local definition for store_f3 */
-    static __inline__ void store_f3_local(void *ptr, const U32 value) 
+    static __inline__ void store_f3_local(void *ptr, const U32 value)
     {
         U32 temp = CSWAP32(value) >> 8;
         memcpy((BYTE *)ptr, (BYTE *)&temp, 3);
@@ -474,13 +474,15 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 
     if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
         | IFF_UP
-        | QETH_RUNNING
-        | QETH_PROMISC
         | IFF_MULTICAST
         | IFF_BROADCAST
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 #if defined(QETH_DEBUG) || defined(IFF_DEBUG)
         | (grp->debug ? IFF_DEBUG : 0)
 #endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
@@ -500,58 +502,21 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         return 0;
 
     if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | QETH_RUNNING
-        | QETH_PROMISC
         | IFF_MULTICAST
         | IFF_BROADCAST
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 #if defined(QETH_DEBUG) || defined(IFF_DEBUG)
         | (grp->debug ? IFF_DEBUG : 0)
 #endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_disable_interface() failed" );
 
     grp->enabled = 0;
     return rc;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Set the interface's IP address and subnet mask                    */
-/*-------------------------------------------------------------------*/
-static int qeth_set_addr_parms (DEVBLK *dev, OSA_GRP *grp)
-{
-    int rc;
-
-    /* If possible, assign an IPv4 address to the interface */
-    if(grp->ttipaddr)
-#if defined( OPTION_W32_CTCI )
-        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetDestAddr() failed" );
-#else /*!defined( OPTION_W32_CTCI )*/
-        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr() failed" );
-#endif /*defined( OPTION_W32_CTCI )*/
-
-    /* Same thing with the IPv4 subnet mask */
-#if defined( OPTION_TUNTAP_SETNETMASK )
-    if(grp->ttnetmask)
-        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetNetMask() failed" );
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
-
-    /* Assign it an IPv6 address too, if possible */
-#if defined(ENABLE_IPV6)
-    if(grp->ttipaddr6)
-        if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr6() failed" );
-#endif /*defined(ENABLE_IPV6)*/
-
-    return 0;
 }
 
 
@@ -599,37 +564,76 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
                          grp->ttifname,
                          (grp->l3 ? "TUN" : "TAP"));
 
-    /* Enable TUNTAP debugging if requested */
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
-    if (grp->debug)
-        if ((rc = TUNTAP_SetFlags( grp->ttifname, IFF_DEBUG )) != 0)
-            qeth_errnum_msg( dev, grp, rc,
-                "W", "TUNTAP_SetFlags(IFF_DEBUG) failed" );
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
-
     /* Set NON-Blocking mode by disabling Blocking mode */
     if ((rc = socket_set_blocking_mode(grp->ttfd,0)) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
     /* Make sure the interface has a valid MAC address */
-    InitMACAddr( dev, grp );
+    if (grp->tthwaddr) {
 #if defined( OPTION_TUNTAP_SETMACADDR )
-    if(!grp->l3 && grp->tthwaddr)
         if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetMACAddr() failed" );
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+    } else {
+        InitMACAddr( dev, grp );
+    }
 
-    /* Set the interface's IP address and subnet mask */
-    if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
-        return rc;
+    /* If possible, assign an IPv4 address to the interface */
+    if(grp->ttipaddr)
+#if defined( OPTION_W32_CTCI )
+        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetDestAddr() failed" );
+#else /*!defined( OPTION_W32_CTCI )*/
+        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr() failed" );
+#endif /*defined( OPTION_W32_CTCI )*/
+
+    /* Same thing with the IPv4 subnet mask */
+#if defined( OPTION_TUNTAP_SETNETMASK )
+    if(grp->ttnetmask)
+        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetNetMask() failed" );
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+
+    /* Assign it an IPv6 address too, if possible */
+#if defined(ENABLE_IPV6)
+    if(grp->ttipaddr6)
+        if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr6() failed" );
+#endif /*defined(ENABLE_IPV6)*/
 
     /* Set the interface's MTU size */
-    InitMTU( dev, grp );
-    if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0)
-        qeth_errnum_msg( dev, grp, rc,
-            "W", "TUNTAP_SetMTU() failed" );
+    if (grp->ttmtu) {
+        if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0) {
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetMTU() failed" );
+        }
+        grp->uMTU = (U16) atoi( grp->ttmtu );
+    } else {
+        InitMTU( dev, grp );
+    }
+
+    /* Enable the interface */
+    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
+        | IFF_UP
+        | IFF_MULTICAST
+        | IFF_BROADCAST
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+        | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
+    )) != 0)
+        return qeth_errnum_msg( dev, grp, rc,
+            "E", "TUNTAP_SetFlags failed" );
 
     return 0;
 }
@@ -1001,7 +1005,7 @@ U16 offph;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
                 {
-                BYTE *ip = (BYTE*)(ipa+1);
+//!                  BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto, retcode;
 
                     DBGTRC(dev, "SETIP (L3 Set IP)\n");
@@ -1009,49 +1013,49 @@ U16 offph;
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
 
-                    if (proto == IPA_PROTO_IPV4)
-                    {
-                        char ipaddr[16] = {0};
-                        char ipmask[16] = {0};
-                        int rc = 0;
-                        int was_enabled;
-
-                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-
-                        if (grp->ttipaddr)
-                            free( grp->ttipaddr );
-                        grp->ttipaddr = strdup( ipaddr );
-
-                        if (grp->ttnetmask)
-                            free( grp->ttnetmask );
-                        grp->ttnetmask = strdup( ipmask );
-
-                        /* PROGRAMMING NOTE: cannot change the interface
-                           once it has been enabled. Thus we temporarily
-                           disable it, make our changes, and then enable
-                           it again.
-                        */
-                        if ((was_enabled = grp->enabled))
-                            qeth_disable_interface( dev, grp );
-
-                        if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
-                        {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "IPA_CMD_SETIP failed" );
-                            retcode = IPA_RC_FFFF;
-                        }
-
-                        if (was_enabled)
-                            qeth_enable_interface( dev, grp );
-                    }
-#if defined(ENABLE_IPV6)
-                    else if (proto == IPA_PROTO_IPV6)
-                    {
-                        /* Hmm... What does one do with an IPv6 address? */
-                        /* SetDestAddr isn't valid for IPv6.             */
-                    }
-#endif /*defined(ENABLE_IPV6)*/
+//!                     if (proto == IPA_PROTO_IPV4)
+//!                     {
+//!                         char ipaddr[16] = {0};
+//!                         char ipmask[16] = {0};
+//!                         int rc = 0;
+//!                         int was_enabled;
+//!
+//!                         MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+//!                         MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+//!
+//!                         if (grp->ttipaddr)
+//!                             free( grp->ttipaddr );
+//!                         grp->ttipaddr = strdup( ipaddr );
+//!
+//!                         if (grp->ttnetmask)
+//!                             free( grp->ttnetmask );
+//!                         grp->ttnetmask = strdup( ipmask );
+//!
+//!                         /* PROGRAMMING NOTE: cannot change the interface
+//!                            once it has been enabled. Thus we temporarily
+//!                            disable it, make our changes, and then enable
+//!                            it again.
+//!                         */
+//!                         if ((was_enabled = grp->enabled))
+//!                             qeth_disable_interface( dev, grp );
+//!
+//!                         if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
+//!                         {
+//!                             qeth_errnum_msg( dev, grp, rc,
+//!                                 "E", "IPA_CMD_SETIP failed" );
+//!                             retcode = IPA_RC_FFFF;
+//!                         }
+//!
+//!                         if (was_enabled)
+//!                             qeth_enable_interface( dev, grp );
+//!                     }
+//! #if defined(ENABLE_IPV6)
+//!                     else if (proto == IPA_PROTO_IPV6)
+//!                     {
+//!                         /* Hmm... What does one do with an IPv6 address? */
+//!                         /* SetDestAddr isn't valid for IPv6.             */
+//!                     }
+//! #endif /*defined(ENABLE_IPV6)*/
 
                     STORE_HW(ipa->rc,retcode);
                 }
@@ -1655,7 +1659,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
                                    BYTE* hdr, int hdrlen )
 {
     int ssb = sb;                       /* Starting Storage Block    */
-    U32 sboff = 0;                      /* Storage Block offset      */ 
+    U32 sboff = 0;                      /* Storage Block offset      */
     U32 sbrem = 0;                      /* Storage Block remaining   */
     BYTE frag0;                         /* SBALE fragment flag       */
     QRC qrc;                            /* Internal return code      */
@@ -2370,7 +2374,6 @@ int i;
 
             continue;
         }
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
         else if (!strcasecmp("debug",argv[i]))
         {
             grp->debug = 1;
@@ -2381,7 +2384,6 @@ int i;
             grp->debug = 0;
             continue;
         }
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
         else
             logmsg(_("Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
     }
@@ -3256,11 +3258,12 @@ int num;                                /* Number of bytes to move   */
             }
 
             /* Prepare to wait for additional packets or pipe signal */
+            fd = grp->ppfd[0];
             FD_ZERO( &readset );
-            FD_SET((fd = grp->ppfd[0]), &readset);
+            FD_SET( grp->ppfd[0], &readset );
             if(dev->qdio.i_qmask)
             {
-                FD_SET(grp->ttfd, &readset);
+                FD_SET( grp->ttfd, &readset );
                 if (fd < grp->ttfd)
                     fd = grp->ttfd;
             }
@@ -4277,42 +4280,13 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
-    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
-    int ttfd;                   /* Interface file descriptor (temp)  */
     static const BYTE zeromac[IFHWADDRLEN] = {0};
     char* tthwaddr;
     BYTE iMAC[ IFHWADDRLEN ];
     int rc = 0;
 
-    if (grp->tthwaddr)
-        return;
-
-    /* Create TEMPORARY interface if needed */
-    if ((ttfd = grp->ttfd) < 0)
-    {
-        rc = TUNTAP_CreateInterface
-        (
-            grp->tuntap,
-            0
-                | IFF_NO_PI
-                | IFF_OSOCK
-                | (grp->l3 ? IFF_TUN : IFF_TAP)
-            ,
-            &ttfd,
-            ttifname
-
-        );
-    }
-    else
-        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
-
     /* Retrieve the MAC Address directly from the tuntap interface */
-    if (!(rc < 0))
-        rc = TUNTAP_GetMACAddr( ttifname, &tthwaddr );
-
-    /* Close the temporary interface if we created one */
-    if (grp->ttfd < 0)
-        TUNTAP_Close( ttfd );
+    rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
 
     /* Did we get what we wanted? */
     if (0
@@ -4345,44 +4319,12 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 {
-    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
-    int ttfd;                   /* Interface file descriptor (temp)  */
     char* ttmtu;
     U16 uMTU;
     int rc = 0;
 
-    if (grp->ttmtu)
-    {
-        grp->uMTU = (U16) atoi( grp->ttmtu );
-        return;
-    }
-
-    /* Create TEMPORARY interface if needed */
-    if ((ttfd = grp->ttfd) < 0)
-    {
-        rc = TUNTAP_CreateInterface
-        (
-            grp->tuntap,
-            0
-                | IFF_NO_PI
-                | IFF_OSOCK
-                | (grp->l3 ? IFF_TUN : IFF_TAP)
-            ,
-            &ttfd,
-            ttifname
-
-        );
-    }
-    else
-        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
-
     /* Retrieve the MTU value directly from the TUNTAP interface */
-    if (!(rc < 0))
-        rc = TUNTAP_GetMTU( ttifname, &ttmtu );
-
-    /* Close the temporary interface if we created one */
-    if (grp->ttfd < 0)
-        TUNTAP_Close( ttfd );
+    rc = TUNTAP_GetMTU( grp->ttifname, &ttmtu );
 
     /* Did we get what we wanted? */
     if (0
@@ -4396,7 +4338,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
         if (ttmtu)
             free( ttmtu );
-        ttmtu = strdup( DEF_MTU_STR );
+        ttmtu = strdup( QETH_DEF_MTU );
         uMTU = (U16) atoi( ttmtu );
     }
 
