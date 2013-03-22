@@ -1445,11 +1445,19 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 
     if (unlikely(dev->buflen < 0))
     {
-        // HHC03972 "%1d:%04X %s: error reading from device %s: %s"
-        WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            "QETH", grp->ttifname, strerror( errnum ));
-        errno = errnum;
-        return QRC_EIOERR;
+        if (errnum = EAGAIN)
+        {
+            errno = EAGAIN;
+            return QRC_EPKEOF;
+        }
+        else
+        {
+            // HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
+            WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                "QETH", grp->ttifname, errnum, strerror( errnum ));
+            errno = errnum;
+            return QRC_EIOERR;
+        }
     }
 
     if (unlikely(dev->buflen == 0))
@@ -1481,9 +1489,9 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
         return QRC_SUCCESS;
     }
 
-    // HHC03971 "%1d:%04X %s: error writing to device %s: %s"
+    // HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
     WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QETH", grp->ttifname, strerror( errnum ));
+        "QETH", grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
     return QRC_EIOERR;
 }
