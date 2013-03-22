@@ -1445,7 +1445,7 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 
     if (unlikely(dev->buflen < 0))
     {
-        if (errnum = EAGAIN)
+        if (errnum == EAGAIN)
         {
             errno = EAGAIN;
             return QRC_EPKEOF;
