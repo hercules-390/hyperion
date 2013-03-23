@@ -1303,13 +1303,7 @@ typedef short QRC;              /* Internal function return code     */
 QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
                  QDIO_SBAL *sbal, BYTE sbalk, int sb )
 {
-#if !defined(QETH_DEBUG)
-    UNREFERENCED(msg);
-    UNREFERENCED(dev);
-    UNREFERENCED(sbal);
-    UNREFERENCED(sbalk);
-    UNREFERENCED(sb);
-#else /* defined(QETH_DEBUG) */
+    char errmsg[256] = {0};
     U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
     U64 sba;
     U32 sblen;
@@ -1317,10 +1311,14 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    DBGTRC2( dev, msg, sb, sbala, sbalk, sba, sblen,
+    MSGBUF( errmsg, msg, sb, sbala, sbalk, sba, sblen,
         sbal->sbale[sb].flags[0],
         sbal->sbale[sb].flags[3]);
-#endif /*defined(QETH_DEBUG)*/
+
+    // HHC03985 "%1d:%04X %s: %s"
+    WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        "QDIO", errmsg );
+
     return qrc;
 }
 /*-------------------------------------------------------------------*/
