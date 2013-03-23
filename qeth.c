@@ -467,9 +467,9 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
         | IFF_RUNNING
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+#if defined(OPTION_W32_CTCI)
         | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+#endif /*defined(OPTION_W32_CTCI)*/
         | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
@@ -495,9 +495,9 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
         | IFF_RUNNING
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+#if defined(OPTION_W32_CTCI)
         | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+#endif /*defined(OPTION_W32_CTCI)*/
         | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
@@ -615,9 +615,9 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
         | IFF_RUNNING
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+#if defined(OPTION_W32_CTCI)
         | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+#endif /*defined(OPTION_W32_CTCI)*/
         | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         return qeth_errnum_msg( dev, grp, rc,
