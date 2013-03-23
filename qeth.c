@@ -1331,19 +1331,33 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
 
 /*-------------------------------------------------------------------*/
-/* Helper macro to check for logically last SBALE                    */
+/* Helper macro to check if last SBALE fragment                      */
 /*-------------------------------------------------------------------*/
-#define WR_LOGICALLY_LAST_SBALE( _flag0 )   (!grp->wrpack ?         \
-  ( (_flag0) & SBALE_FLAG0_LAST_ENTRY) :                            \
-  (((_flag0) & SBALE_FLAG0_LAST_ENTRY) ||                           \
-  (((_flag0) & SBALE_FLAG0_FRAG_LAST) == SBALE_FLAG0_FRAG_LAST )))
+#define IS_LAST_SBALE_FRAGMENT( _flag0 )                            \
+    (((_flag0) & SBALE_FLAG0_FRAG_LAST) == SBALE_FLAG0_FRAG_LAST )
 
 
 /*-------------------------------------------------------------------*/
 /* Helper macro to check if absolutely the last SBALE                */
 /*-------------------------------------------------------------------*/
-#define IS_ABSOLUTELY_LAST_SBALE( _flag0 )                          \
-  ((_flag0) & SBALE_FLAG0_LAST_ENTRY)
+#define IS_LAST_SBALE_ENTRY( _flag0 )                               \
+    ((_flag0) & SBALE_FLAG0_LAST_ENTRY)
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check for logically last SBALE                    */
+/*-------------------------------------------------------------------*/
+#define LOGICALLY_LAST_SBALE( _flag0, _pack )                       \
+    ((_pack) ? (IS_LAST_SBALE_FRAGMENT( _flag0 )                    \
+            ||  IS_LAST_SBALE_ENTRY( _flag0 ))                      \
+             :  IS_LAST_SBALE_ENTRY( _flag0 ))
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check for logically last SBALE    (o/p only)      */
+/*-------------------------------------------------------------------*/
+#define WR_LOGICALLY_LAST_SBALE( _flag0 )                           \
+    LOGICALLY_LAST_SBALE( (_flag0), grp->wrpack )
 
 
 /*-------------------------------------------------------------------*/
@@ -1930,7 +1944,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         qrc = write_packet( dev, grp, dev->buf, dev->buflen );
     }
-    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ) && ++sb < QMAXSTBK);
+    while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
 
     if (sb < QMAXSTBK)
         return qrc;
