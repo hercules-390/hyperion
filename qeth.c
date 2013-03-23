@@ -50,6 +50,15 @@
 
 
 /*-------------------------------------------------------------------*/
+/* QETH Debugging                                                    */
+/*-------------------------------------------------------------------*/
+
+#define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
+#define QETH_TIMING_DEBUG       // #define to debug speed/performance
+//#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
+
+
+/*-------------------------------------------------------------------*/
 /* VS 2010 Compiler Crash Workaround                                 */
 /*-------------------------------------------------------------------*/
 #if defined(_MSVC_)
@@ -69,14 +78,10 @@
 
 #endif
 
+
 /*-------------------------------------------------------------------*/
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
-
-#define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
-//#define QETH_TIMING_DEBUG       // #define to debug speed/performance
-//#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
-
 
 /* (enable debugging if needed/requested) */
 #if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) ||  \
@@ -129,29 +134,12 @@
       }                                     \
     } while(0)
 #else
-#define DBGTRC(_dev, ...)           do{;}while(0)
+  #define DBGTRC(_dev, ...)         do{;}while(0)
   #define DBGTRC2(_dev, _msg, ...)  do{;}while(0)
 #endif
 
 /* (activate tracing of I/O data buffers) */
 #if defined( QETH_DUMP_DATA )
-  static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
-  {
-  DEVGRP* group = dev->group;
-    if (group) {
-    OSA_GRP* grp = group->grp_data;
-      if(grp && grp->debug) {
-      int i;
-        logmsg(_("DATA: %4.4X %s"), len, name);
-        for(i = 0; i < len; i++) {
-          if(!(i & 15))
-            logmsg(_("\n%4.4X:"), i);
-          logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
-        }
-        logmsg(_("\n"));
-      }
-    }
-  }
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
 #else
