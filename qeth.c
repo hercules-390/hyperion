@@ -3443,14 +3443,21 @@ static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Sync                                               */
 /*-------------------------------------------------------------------*/
-static int qeth_do_sync( DEVBLK *dev, U32 qmask )
+static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 {
     int rc = 0;
-    UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
-    UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
 
-    DBGTRC( dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", qmask, 0, dev->devnum );
+    /* Return CC1 if the device is not QDIO active */
+    if(!(dev->scsw.flag2 & SCSW2_Q))
+        return 1;
+
+    /* Validate Input and Output Masks */
+    oqmask &= ~(0xffffffff >> dev->qdio.o_qcnt);
+    iqmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
+
+    DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)\n",
+        dev->devnum, oqmask, iqmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", oqmask, iqmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -3460,10 +3467,20 @@ static int qeth_do_sync( DEVBLK *dev, U32 qmask )
     }
     else
     {
-        /* (nop; do nothing) */
+        /*
+        ** The Synchronize Function updates either the adapter's SLSB
+        ** or program's SLSB with the other's State Block information.
+        ** Buffer states in the program's SLSB indicating control unit
+        ** ownership will cause the adapter's SLSB to be updated for
+        ** that buffer. Buffers in the adapter's SLSB indicating owner-
+        ** ship by the program will cause the program's SLSB to be up-
+        ** dated.
+        */
+        /* FIXME Code missing SIGA-Sync functionality */
+        FIXME("Code missing SIGA-Sync functionality");
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", qmask, 0, dev->devnum );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", oqmask, iqmask, dev->devnum );
     return rc;
 }
 

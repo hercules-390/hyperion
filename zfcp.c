@@ -1374,12 +1374,14 @@ ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Sync                                               */
 /*-------------------------------------------------------------------*/
-static int zfcp_do_sync(DEVBLK *dev, U32 qmask)
+static int zfcp_do_sync(DEVBLK *dev, U32 oqmask, U32 iqmask)
 {
     UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
-    UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
+    UNREFERENCED(oqmask);       /* unreferenced for non-DEBUG builds */
+    UNREFERENCED(iqmask);       /* unreferenced for non-DEBUG builds */
 
-    DBGTRC(dev, _("SIGA-s dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC(dev, _("SIGA-s dev(%4.4x) oqmask(%8.8x) iqmask(%8.8x)\n"),
+        dev->devnum, oqmask, iqmask );
 
     return 0;
 }

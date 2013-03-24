@@ -130,7 +130,7 @@ DEVBLK *dev;                            /* -> device block           */
     case SIGA_FC_S:
 #if SIGA_FC_MAX >= SIGA_FC_S
         if(dev->hnd->siga_s)
-            regs->psw.cc = (dev->hnd->siga_s) (dev, regs->GR_L(2) );
+            regs->psw.cc = (dev->hnd->siga_s) (dev, regs->GR_L(2), regs->GR_L(3) );
         else
         {
             PTIO(ERR,"*SIGA");
