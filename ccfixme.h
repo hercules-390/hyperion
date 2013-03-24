@@ -46,6 +46,7 @@
   #define GCC_VERSION ((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
   #if GCC_VERSION >= 40200
     #define HAVE_GCC_DIAG_PRAGMA
+    #define QPRAGMA( x )                _Pragma( #x )
     #if GCC_VERSION >= 40600
       #define HAVE_GCC_DIAG_PUSHPOP
     #endif
@@ -59,7 +60,7 @@
 #if defined( _MSVC_ )
   #define FIXME( _msg )         __pragma( message( FIXME_LINE  _msg ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define FIXME( _msg )         _Pragma(  message( FIXME_LINE  _msg ))
+  #define FIXME( _msg )         QPRAGMA( message( _msg ))
 #endif
 
 #ifndef   FIXME
@@ -73,7 +74,7 @@
 #if defined( _MSVC_ )
   #define TODO( _msg )          __pragma( message( TODO_LINE  _msg ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define TODO( _msg )          _Pragma(  message( TODO_LINE  _msg ))
+  #define TODO( _msg )          QPRAGMA( message( _msg ))
 #endif
 
 #ifndef   TODO
@@ -87,7 +88,7 @@
 #if defined( _MSVC_ )
   #define WARNING( _msg )       __pragma( message( WARN_LINE  _msg ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define WARNING( _msg )       _Pragma(  message( WARN_LINE  _msg ))
+  #define WARNING( _msg )       QPRAGMA( message( _msg ))
 #endif
 
 #ifndef   WARNING
