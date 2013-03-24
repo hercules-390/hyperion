@@ -6538,7 +6538,7 @@ enum
     stsicap_nominal                     /* Real values, if capped    */
 } stsicap_type;
 
-long double MIPSreal (const stsicap_type)
+long double MIPSreal (const int stsicap_type)
 {
     U64             instcount = 0;     /* Combined instruction count */
     U64             cputime = 0;       /* Combined CPU time in us    */
@@ -6598,7 +6598,7 @@ enum
     stsicap_read
 }   stsicap_request;
 
-static void stsi_capability (const stsicap_request)
+static void stsi_capability (const int stsicap_request)
 {
     /* The MSU and CPU factors used are estimates; actual MSUs assigned
      * to the hardware are determined by exhaustive testing and vendor
@@ -6611,7 +6611,6 @@ static void stsi_capability (const stsicap_request)
 
     static long double  MSU_Factor;
     static int          RealCPUs;
-    static int          initialized = 0;
 
     long double     MIPScpu_current;   /* MIPS per CPU               */
     long double     MIPScpu_nominal;   /* ...                        */
