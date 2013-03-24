@@ -1543,6 +1543,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hmalloc.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hostinfo.h"
 							>
 						</File>
