@@ -1291,7 +1291,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 
     for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
     {
-        if (len < sizeof(NED))
+        if (len < (int)sizeof(NED))
         {
             FormatBytes( rcd, len, buf, bufsz );
             break;
@@ -1479,7 +1479,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
     if (bufsz <= 1 || !rni || !len)
         return buf;
 
-    if (len >= sizeof(ND))
+    if (len >= (int)sizeof(ND))
     {
         char work[256];
 
@@ -1491,7 +1491,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
         len -= sizeof(ND);
         rni += sizeof(ND);
 
-        if (len >= sizeof(NQ))
+        if (len >= (int)sizeof(NQ))
         {
             register NQ* nq = (NQ*) rni;
 
