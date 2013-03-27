@@ -357,8 +357,8 @@ static void adjust_tod_offset(const S64 offset)
 
 
 /* The CPU timer is internally kept as an offset to the thread CPU time
- * used. The CPU timer counts down as the clock approaches the timer
- * epoch.
+ * used in LPAR mode, or TOD clock in BASIC mode. The CPU timer counts
+*  down as the clock approaches the timer epoch.
  *
  * To be in agreement with reporting of time in association with real
  * diagnose code x'204' for partition management and resource reporting,
@@ -403,24 +403,48 @@ thread_cputime_us(const REGS *regs)
 }
 
 
-S64 set_cpu_timer(REGS *regs, const TOD timer)
+static INLINE void
+set_cpu_timer_epoch(REGS *regs, const TOD epoch)
 {
     register REGS*  guestregs = regs->guestregs;
     register REGS*  hostregs  = regs->hostregs;
 
-    regs->cpu_timer         = tod2etod(timer);
-    regs->cpu_timer_epoch   = thread_cputime(regs);
+    /* Set CPU timer epoch */
+    regs->cpu_timer_epoch   = epoch;
 
-    if (hostregs && hostregs != regs && regs->cpu_timer_epoch > hostregs->cpu_timer_epoch)
+    /* Reset epoch value for host and guest */
+    if (hostregs && hostregs != regs)
+        hostregs->cpu_timer_epoch   = epoch;
+    if (guestregs && guestregs != regs)
+        guestregs->cpu_timer_epoch  = epoch;
+}
+
+
+static INLINE void
+cpu_timer_update(REGS *regs, TOD new_epoch)
+{
+    register S64 interval = (S64)(new_epoch - regs->cpu_timer_epoch);
+
+    if (interval > 0)
     {
-        hostregs->cpu_timer        -= regs->cpu_timer_epoch - hostregs->cpu_timer_epoch;
-        hostregs->cpu_timer_epoch   = regs->cpu_timer_epoch;
+        regs->cpu_timer            -= interval;
+        regs->cpu_timer_epoch       = new_epoch;
     }
-    if (guestregs && guestregs != regs && regs->cpu_timer_epoch > guestregs->cpu_timer_epoch)
-    {
-        guestregs->cpu_timer       -= regs->cpu_timer_epoch - guestregs->cpu_timer_epoch;
-        guestregs->cpu_timer_epoch  = regs->cpu_timer_epoch;
-    }
+}
+
+
+static INLINE TOD
+mode_cputime(REGS *regs)
+{
+    return (sysblk.lparmode ? thread_cputime(regs) : host_tod());
+}
+
+
+S64 set_cpu_timer(REGS *regs, const TOD timer)
+{
+    /* Prepare new timer value and epoch value */
+    regs->cpu_timer         = tod2etod(timer);
+    set_cpu_timer_epoch(regs, mode_cputime(regs));
 
     return (timer);
 }
@@ -445,35 +469,36 @@ void save_cpu_timers(REGS *hostregs, TOD *host_timer, REGS *regs, TOD *timer)
 
 S64 cpu_timer(REGS *regs)
 {
+    register TOD    new_epoch    = mode_cputime(regs);
+    register U64    new_epoch_us = etod2us(new_epoch);
     register S64    result;
-    register TOD    new_epoch = thread_cputime(regs);
-    register REGS*  guestregs = regs->guestregs;
-    register REGS*  hostregs  = regs->hostregs;
 
-    /* Update real CPU time used */
-    regs->rcputime = etod2us(new_epoch) - regs->bcputime;
-
-    /* Process CPU timers */
-    if (new_epoch > regs->cpu_timer_epoch)
+    /* Update CPU timer if CPU not stopped */
+    if (regs->cpustate != CPUSTATE_STOPPED)
     {
-        regs->cpu_timer            -= new_epoch - regs->cpu_timer_epoch;
-        regs->cpu_timer_epoch       = new_epoch;
+        register REGS*  guestregs = regs->guestregs;
+        register REGS*  hostregs  = regs->hostregs;
+
+        /* Update real CPU time used */
+        if (regs->bcputime)
+            regs->rcputime += new_epoch_us - regs->bcputime;
+
+        /* Process CPU timers */
+        if (guestregs && guestregs != regs)
+            cpu_timer_update(guestregs, new_epoch);
+
+        if (hostregs && hostregs != regs)
+            cpu_timer_update(hostregs, new_epoch);
+
+        cpu_timer_update(regs, new_epoch);
     }
 
-    if (guestregs && guestregs != regs && new_epoch > guestregs->cpu_timer_epoch)
-    {
+    /* Update base CPU time epoch */
+    regs->bcputime = new_epoch_us;
 
-        guestregs->cpu_timer       -= new_epoch - guestregs->cpu_timer_epoch;
-        guestregs->cpu_timer_epoch  = new_epoch;
-    }
+    /* Fetch CPU timer and change from ETOD format to TOD format */
+    result = (S64)etod2tod(regs->cpu_timer);
 
-    if (hostregs && hostregs != regs && new_epoch > hostregs->cpu_timer_epoch)
-    {
-        hostregs->cpu_timer        -= new_epoch - hostregs->cpu_timer_epoch;
-        hostregs->cpu_timer_epoch   = new_epoch;
-    }
-
-    result = etod2tod(regs->cpu_timer);
     return (result);
 }
 
