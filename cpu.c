@@ -1578,6 +1578,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = host_tod();
 #endif
+        set_cpu_timer_mode(regs);
 
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
@@ -1609,6 +1610,9 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         regs->waittime += host_tod() - regs->waittod;
         regs->waittod = 0;
 #endif
+
+        set_cpu_timer_mode(regs);
+
         RELEASE_INTLOCK(regs);
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */

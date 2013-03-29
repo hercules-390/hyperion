@@ -170,8 +170,8 @@ struct REGS {                           /* Processor registers       */
                                            8-63=Comparator bits 0-55 */
         TOD     cpu_timer;              /* CPU timer                 */
         TOD     cpu_timer_epoch;        /* CPU timer epoch           */
+        U32     cpu_timer_mode;         /* CPU timer source mode     */
         U32     todpr;                  /* TOD programmable register */
-        U32     _reserved_clock;
 
         S64     int_timer;              /* S/370 Interval timer      */
         S64     ecps_vtimer;            /* ECPS Virtual Int. timer   */

@@ -420,28 +420,59 @@ set_cpu_timer_epoch(REGS *regs, const TOD epoch)
 }
 
 
-static INLINE void
+static INLINE S64
 cpu_timer_update(REGS *regs, TOD new_epoch)
 {
-    register S64 interval = (S64)(new_epoch - regs->cpu_timer_epoch);
-
-    if (interval > 0)
+    register S64    result = regs->cpu_timer;
+    if (regs)
     {
-        regs->cpu_timer            -= interval;
-        regs->cpu_timer_epoch       = new_epoch;
+        register S64 interval = (S64)(new_epoch - regs->cpu_timer_epoch);
+
+        if (interval > 0)
+        {
+            result                 -= interval;
+            regs->cpu_timer         = result;
+            regs->cpu_timer_epoch   = new_epoch;
+        }
     }
+
+    return (result);
 }
 
 
 static INLINE TOD
 mode_cputime(REGS *regs)
 {
-    return (sysblk.lparmode ? thread_cputime(regs) : host_tod());
+    return (regs->cpu_timer_mode ? thread_cputime(regs) : host_tod());
+}
+
+
+static INLINE int
+cpu_timer_mode(REGS *regs)
+{
+    return (sysblk.lparmode && !WAITSTATE(&regs->psw));
+}
+
+
+void
+set_cpu_timer_mode(REGS *regs)
+{
+    int newmode = cpu_timer_mode(regs);
+
+    /* Update CPU timer epoch if changing mode */
+    if (newmode != regs->cpu_timer_mode)
+    {
+        cpu_timer(regs);
+        regs->cpu_timer_mode = newmode;
+        set_cpu_timer_epoch(regs, mode_cputime(regs));
+    }
 }
 
 
 S64 set_cpu_timer(REGS *regs, const TOD timer)
 {
+    regs->cpu_timer_mode = cpu_timer_mode(regs);
+
     /* Prepare new timer value and epoch value */
     regs->cpu_timer         = tod2etod(timer);
     set_cpu_timer_epoch(regs, mode_cputime(regs));
@@ -476,28 +507,35 @@ S64 cpu_timer(REGS *regs)
     /* Update CPU timer if CPU not stopped */
     if (regs->cpustate != CPUSTATE_STOPPED)
     {
-        register REGS*  guestregs = regs->guestregs;
-        register REGS*  hostregs  = regs->hostregs;
-
         /* Update real CPU time used */
         if (regs->bcputime)
             regs->rcputime += new_epoch_us - regs->bcputime;
 
         /* Process CPU timers */
-        if (guestregs && guestregs != regs)
-            cpu_timer_update(guestregs, new_epoch);
+        if (regs->host)
+        {
+            register REGS*  tregs = regs->guestregs;
 
-        if (hostregs && hostregs != regs)
-            cpu_timer_update(hostregs, new_epoch);
+            if (tregs != regs)
+                cpu_timer_update(tregs, new_epoch);
+        }
+        else if (regs->guest)
+        {
+            register REGS*  tregs = regs->hostregs;
+            if (tregs != regs)
+                cpu_timer_update(tregs, new_epoch);
+        }
 
-        cpu_timer_update(regs, new_epoch);
+        result = cpu_timer_update(regs, new_epoch);
     }
+    else /* Just fetch the CPU timer */
+        result = regs->cpu_timer;
+
+    /* Change from ETOD format to TOD format */
+    result = (S64)etod2tod(result);
 
     /* Update base CPU time epoch */
     regs->bcputime = new_epoch_us;
-
-    /* Fetch CPU timer and change from ETOD format to TOD format */
-    result = (S64)etod2tod(regs->cpu_timer);
 
     return (result);
 }

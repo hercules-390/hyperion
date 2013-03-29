@@ -152,6 +152,7 @@ S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */
 S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
 S64 cpu_timer_SIE(REGS *);              /* Retrieve SIE CPU timer    */
+void set_cpu_timer_mode(REGS *);        /* Set CPU timer source mode */
 S64 set_cpu_timer(REGS *, const TOD);   /* Set CPU timer             */
 void save_cpu_timers(REGS *, TOD *, REGS *, TOD *);
 void set_cpu_timers(REGS *, const TOD, REGS *, const TOD);

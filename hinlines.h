@@ -377,6 +377,11 @@ setCpuId(const unsigned int cpu,
     /* Set new CPU ID */
     setCpuIdregs(regs, cpu, arg_model, arg_version, arg_serial, arg_MCEL);
 
+    /* Set CPU timer source (a "strange" place, but here as the CPU ID 
+     * must be updated when the LPAR mode or number is update).
+     */
+    set_cpu_timer_mode(regs);
+
 }
 
 
