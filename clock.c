@@ -423,20 +423,25 @@ set_cpu_timer_epoch(REGS *regs, const TOD epoch)
 static INLINE S64
 cpu_timer_update(REGS *regs, TOD new_epoch)
 {
+    register S64    interval = (S64)(new_epoch - regs->cpu_timer_epoch);
     register S64    result = regs->cpu_timer;
-    if (regs)
-    {
-        register S64 interval = (S64)(new_epoch - regs->cpu_timer_epoch);
 
-        if (interval > 0)
-        {
-            result                 -= interval;
-            regs->cpu_timer         = result;
-            regs->cpu_timer_epoch   = new_epoch;
-        }
+    if (interval > 0)
+    {
+        result                 -= interval;
+        regs->cpu_timer_epoch   = new_epoch;
+        regs->cpu_timer         = result;
     }
 
     return (result);
+}
+
+
+static INLINE void
+cpu_timer_update_linked(REGS *regs, REGS *linked_regs, TOD new_epoch)
+{
+    if (linked_regs && linked_regs != regs)
+        cpu_timer_update(linked_regs, new_epoch);
 }
 
 
@@ -504,38 +509,36 @@ S64 cpu_timer(REGS *regs)
     register U64    new_epoch_us = etod2us(new_epoch);
     register S64    result;
 
-    /* Update CPU timer if CPU not stopped */
-    if (regs->cpustate != CPUSTATE_STOPPED)
+    /* If no change from epoch, don't bother updating */
+    if (new_epoch <= regs->cpu_timer_epoch)
     {
-        /* Update real CPU time used */
-        if (regs->bcputime)
-            regs->rcputime += new_epoch_us - regs->bcputime;
+        result = regs->cpu_timer;
+    }
+    /* If CPU is stopped, return the CPU timer without updating */
+    else if (regs->cpustate == CPUSTATE_STOPPED)
+    {
+        result = regs->cpu_timer;
+
+        /* Update base CPU time epoch */
+        regs->bcputime = new_epoch_us;
+
+        /* Update CPU timer epoch */
+        set_cpu_timer_epoch(regs, new_epoch);
+    }
+    else /* Update and return the CPU timer */
+    {
+        /* Update real CPU time used and base CPU time epoch */
+        regs->rcputime += new_epoch_us - regs->bcputime;
+        regs->bcputime  = new_epoch_us;
 
         /* Process CPU timers */
-        if (regs->host)
-        {
-            register REGS*  tregs = regs->guestregs;
-
-            if (tregs != regs)
-                cpu_timer_update(tregs, new_epoch);
-        }
-        else if (regs->guest)
-        {
-            register REGS*  tregs = regs->hostregs;
-            if (tregs != regs)
-                cpu_timer_update(tregs, new_epoch);
-        }
-
         result = cpu_timer_update(regs, new_epoch);
+        cpu_timer_update_linked(regs, regs->hostregs, new_epoch);
+        cpu_timer_update_linked(regs, regs->guestregs, new_epoch);
     }
-    else /* Just fetch the CPU timer */
-        result = regs->cpu_timer;
 
     /* Change from ETOD format to TOD format */
     result = (S64)etod2tod(result);
-
-    /* Update base CPU time epoch */
-    regs->bcputime = new_epoch_us;
 
     return (result);
 }
