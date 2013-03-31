@@ -545,10 +545,10 @@ int     dll_count;                      /* index into array          */
     /* Save TOD of when we were first IMPL'ed */
     time( &sysblk.impltime );
 
-    /* Set LPAR mode to BASIC with CPUIDFMT 0 */
-    sysblk.lparmode = 0;
-    sysblk.lparnum = 0;
-    sysblk.cpuidfmt = 0;
+    /* Set to LPAR mode with LPAR 1, LPAR ID of 01, and CPUIDFMT 0   */
+    sysblk.lparmode = 1;                /* LPARNUM 1    # LPAR ID 01 */
+    sysblk.lparnum = 1;                 /* ...                       */
+    sysblk.cpuidfmt = 0;                /* CPUIDFMT 0                */
 
     /* set default CPU identifier */
     sysblk.cpumodel = 0x0586;
