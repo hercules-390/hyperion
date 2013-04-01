@@ -116,6 +116,7 @@ int main( int argc, char **argv )
 
         switch( ctlreq.iCtlOp )
         {
+#if !defined(__APPLE__)
         case TUNSETIFF:
             pOp  = "TUNSETIFF";
             pArg = &ctlreq.iru.hifr.ifreq;
@@ -123,6 +124,7 @@ int main( int argc, char **argv )
             fd = ctlreq.iProcID;
             answer = 1;
             break;
+#endif
 
         case SIOCSIFADDR:
             pOp  = "SIOCSIFADDR";
