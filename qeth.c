@@ -188,17 +188,14 @@ void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
-static const NED  osa_device_ned[]  = {OSA_DEVICE_NED};
-static const NED  osa_ctlunit_ned[] = {OSA_CTLUNIT_NED};
-static const NED  osa_token_ned[]   = {OSA_TOKEN_NED};
-static const NEQ  osa_general_neq[] = {OSA_GENERAL_NEQ};
 
-static NED configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
+static NED configuration_data[4] = { OSA_DEVICE_NED,    
+                                     OSA_CTLUNIT_NED,
+                                     OSA_TOKEN_NED,
+                                     OSA_GENERAL_NEQ };
 
-static const ND  osa_nd[] = {OSA_ND};
-static const NQ  osa_nq[] = {OSA_NQ};
-
-static ND node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
+static ND node_data[2] = { OSA_ND,
+                           OSA_NQ };
 
 #define SII_SIZE    sizeof(U32)
 
@@ -564,9 +561,12 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetMACAddr() failed" );
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-    } else {
+    }
+#if defined(OPTION_W32_CTCI)
+    else {
         InitMACAddr( dev, grp );
     }
+#endif
 
     /* If possible, assign an IPv4 address to the interface */
     if(grp->ttipaddr)
@@ -919,6 +919,7 @@ U16 offph;
                         ,ipa_mac->macaddr[5]
                     );
 
+#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                     /* PROGRAMMING NOTE: cannot change the interface
                        once it has been enabled. Thus we temporarily
                        disable it, make our changes, and then enable
@@ -945,6 +946,9 @@ U16 offph;
 
                         grp->tthwaddr = strdup( tthwaddr );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
+#else
+                    {
+#endif
                         qeth_report_using( dev, grp, 1 );
 
                         if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
@@ -993,7 +997,7 @@ U16 offph;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
                 {
-//!                  BYTE *ip = (BYTE*)(ipa+1);
+                BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto, retcode;
 
                     DBGTRC(dev, "SETIP (L3 Set IP)\n");
@@ -1001,16 +1005,23 @@ U16 offph;
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
 
-//!                     if (proto == IPA_PROTO_IPV4)
-//!                     {
-//!                         char ipaddr[16] = {0};
-//!                         char ipmask[16] = {0};
-//!                         int rc = 0;
+                    if (proto == IPA_PROTO_IPV4)
+                    {
+                        char ipaddr[16] = {0};
+                        char ipmask[16] = {0};
+                        int rc = 0;
 //!                         int was_enabled;
 //!
-//!                         MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-//!                         MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
 //!
+#if !defined( OPTION_W32_CTCI )
+                        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
+                        {
+                            qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
+                            retcode = IPA_RC_FFFF;
+                        }
+#endif /*!defined( OPTION_W32_CTCI )*/
 //!                         if (grp->ttipaddr)
 //!                             free( grp->ttipaddr );
 //!                         grp->ttipaddr = strdup( ipaddr );
@@ -1036,14 +1047,14 @@ U16 offph;
 //!
 //!                         if (was_enabled)
 //!                             qeth_enable_interface( dev, grp );
-//!                     }
-//! #if defined(ENABLE_IPV6)
-//!                     else if (proto == IPA_PROTO_IPV6)
-//!                     {
-//!                         /* Hmm... What does one do with an IPv6 address? */
-//!                         /* SetDestAddr isn't valid for IPv6.             */
-//!                     }
-//! #endif /*defined(ENABLE_IPV6)*/
+                    }
+#if defined(ENABLE_IPV6)
+                    else if (proto == IPA_PROTO_IPV6)
+                    {
+                        /* Hmm... What does one do with an IPv6 address? */
+                        /* SetDestAddr isn't valid for IPv6.             */
+                    }
+#endif /*defined(ENABLE_IPV6)*/
 
                     STORE_HW(ipa->rc,retcode);
                 }
@@ -4300,6 +4311,7 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 }
 
 
+#if defined(OPTION_W32_CTCI)
 /*-------------------------------------------------------------------*/
 /* Initialize MAC address                                            */
 /*-------------------------------------------------------------------*/
@@ -4337,6 +4349,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
     free( tthwaddr );
 }
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -4431,14 +4444,6 @@ HDL_DEPENDENCY_SECTION;
     HDL_DEPENDENCY( HERCULES );
     HDL_DEPENDENCY( DEVBLK );
     HDL_DEPENDENCY( SYSBLK );
-
-    memcpy( (NED*)&configuration_data[0], &osa_device_ned [0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[1], &osa_ctlunit_ned[0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[2], &osa_token_ned  [0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[3], &osa_general_neq[0], sizeof( NEQ ));
-
-    memcpy( (ND*)&node_data[0], &osa_nd[0], sizeof( ND ));
-    memcpy( (ND*)&node_data[1], &osa_nq[0], sizeof( NQ ));
 }
 END_DEPENDENCY_SECTION
 
