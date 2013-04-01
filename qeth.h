@@ -155,6 +155,8 @@ typedef struct _OSA_GRP {
     char *ttipaddr6;            /* IPv6 address of the interface     */
     char *ttpfxlen6;            /* IPv6 Prefix length of interface   */
 
+    char *ttchpid;              /* chpid                             */
+
     BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */
     U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */
 
@@ -168,6 +170,7 @@ typedef struct _OSA_GRP {
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
     int   reqpci;               /* PCI has been requested            */
+    int   setip;                /* Process IPA_CMD_SETIP (temporary) */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */

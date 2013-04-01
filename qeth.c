@@ -44,6 +44,7 @@
 #include "chsc.h"
 #include "mpc.h"
 #include "tuntap.h"
+#include "resolve.h"
 #include "ctcadpt.h"
 #include "hercifc.h"
 #include "qeth.h"
@@ -188,14 +189,17 @@ void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
+static const NED  osa_device_ned[]  = {OSA_DEVICE_NED};
+static const NED  osa_ctlunit_ned[] = {OSA_CTLUNIT_NED};
+static const NED  osa_token_ned[]   = {OSA_TOKEN_NED};
+static const NEQ  osa_general_neq[] = {OSA_GENERAL_NEQ};
 
-static NED configuration_data[4] = { OSA_DEVICE_NED,    
-                                     OSA_CTLUNIT_NED,
-                                     OSA_TOKEN_NED,
-                                     OSA_GENERAL_NEQ };
+static NED configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
 
-static ND node_data[2] = { OSA_ND,
-                           OSA_NQ };
+static const ND  osa_nd[] = {OSA_ND};
+static const NQ  osa_nq[] = {OSA_NQ};
+
+static ND node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
 
 #define SII_SIZE    sizeof(U32)
 
@@ -561,12 +565,9 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetMACAddr() failed" );
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-    }
-#if defined(OPTION_W32_CTCI)
-    else {
+    } else {
         InitMACAddr( dev, grp );
     }
-#endif
 
     /* If possible, assign an IPv4 address to the interface */
     if(grp->ttipaddr)
@@ -905,8 +906,10 @@ U16 offph;
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 int rc = 0;
                 int was_enabled;
+#endif
 
                     DBGTRC(dev, "Set VMAC\n");
 
@@ -1011,17 +1014,21 @@ U16 offph;
                         char ipmask[16] = {0};
                         int rc = 0;
 //!                         int was_enabled;
-//!
-                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-//!
-#if !defined( OPTION_W32_CTCI )
-                        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
+
+                        if (grp->setip)
                         {
-                            qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
-                            retcode = IPA_RC_FFFF;
-                        }
+                            MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                            MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+
+#if !defined( OPTION_W32_CTCI )
+                            if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
+                            {
+                                qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
+                                retcode = IPA_RC_FFFF;
+                            }
 #endif /*!defined( OPTION_W32_CTCI )*/
+                        }
+
 //!                         if (grp->ttipaddr)
 //!                             free( grp->ttipaddr );
 //!                         grp->ttipaddr = strdup( ipaddr );
@@ -2226,6 +2233,7 @@ int i;
 
     if(!dev->group)
     {
+        /* This code is executed for each device in the group. */
         dev->numsense = 32;
         memset (dev->sense, 0, sizeof(dev->sense));
         dev->numdevid = sizeof(sense_id_bytes);
@@ -2233,9 +2241,12 @@ int i;
         dev->devtype = dev->devid[1] << 8 | dev->devid[2];
         dev->chptype[0] = CHP_TYPE_OSD;
         dev->pmcw.flag4 |= PMCW4_Q;
+        dev->fd = -1;
+        dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
         if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
         {
+            /* This code is executed for the first device in the group. */
             dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
             memset (grp, 0, sizeof(OSA_GRP));
 
@@ -2260,12 +2271,24 @@ int i;
             grp->ttfd = -1;
         }
         else
+            /* This code is executed for the second and subsequent devices in the group. */
             grp = dev->group->grp_data;
     }
     else
+        /* This code is not executed. ??? */
         grp = dev->group->grp_data;
 
-    // process all command line options here
+    /* Process all command line options here.                    */
+    /* This code is executed for each device in the group.       */
+    /* The following configuration statement:-                   */
+    /*    0800-0802 QETH mtu 1492 ipaddr 192.168.2.1 debug       */
+    /* results in exactly the same QETH group as the following   */
+    /* configuration statements:-                                */
+    /*    0802 QETH mtu 1492"                                    */
+    /*    0800 QETH ipaddr 192.168.2.1                           */
+    /*    0801 QETH debug                                        */
+    /* This is either a bug or a design feature, depending       */
+    /* on your point of view.                                    */
     for(i = 0; i < argc; i++)
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
@@ -2282,65 +2305,41 @@ int i;
         }
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
-            MAC mac;
-            if(grp->tthwaddr) {
+            if(grp->tthwaddr)
                 free(grp->tthwaddr);
-                grp->tthwaddr = NULL;
-            }
-            if (ParseMAC( argv[i+1], mac ) == 0)
-                grp->tthwaddr = strdup(argv[i+1]);
-            ++i;
+            grp->tthwaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
         {
-            char            *slash, *prfx;
-            int             prfxsz;
-            uint32_t        mask;
-            struct in_addr  addr4;
-            char            netmask[24];
+            char  *slash, *prfx;
 
-            if(grp->ttipaddr)
+            if(grp->ttipaddr)                  /* Free existing ipaddr     */
                 free(grp->ttipaddr);
-            if(grp->ttpfxlen) {
+            if(grp->ttpfxlen) {                /* Free existing prefix siz */
                 free(grp->ttpfxlen);
                 grp->ttpfxlen = NULL;
             }
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
-                prfx = slash + 1;              /* Point to prefix size     */
-                prfxsz = atoi(prfx);
-                if (( prfxsz >= 0 ) && ( prfxsz <= 32 )) {
-                    switch( prfxsz )
-                    {
-                    case 0:
-                        mask = 0x00000000;
-                        break;
-                    case 32:
-                        mask = 0xFFFFFFFF;
-                        break;
-                    default:
-                        mask = 0xFFFFFFFF ^ ( 0xFFFFFFFF >> prfxsz );
-                        break;
-                    }
-                    addr4.s_addr = htonl(mask);
-                    hinet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
-
-                    if(grp->ttnetmask)
-                        free(grp->ttnetmask);
-                    grp->ttnetmask = strdup(netmask);
-
-                    grp->ttpfxlen = strdup(prfx);
-
-                    slash[0] = 0;              /* Replace slash with null  */
+                if (grp->ttnetmask) {          /* Free existing netmask    */
+                    free(grp->ttnetmask);
+                    grp->ttnetmask = NULL;
                 }
+                prfx = slash + 1;              /* Point to prefix size     */
+                grp->ttpfxlen = strdup(prfx);
+                slash[0] = 0;                  /* Replace slash with null  */
             }
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttnetmask)
+            if(grp->ttpfxlen) {                /* Free existing prefix siz */
+                free(grp->ttpfxlen);
+                grp->ttpfxlen = NULL;
+            }
+            if(grp->ttnetmask)                 /* Free existing netmask    */
                 free(grp->ttnetmask);
             grp->ttnetmask = strdup(argv[++i]);
             continue;
@@ -2349,7 +2348,6 @@ int i;
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-            int   prfxsz;
 
             if(grp->ttipaddr6)
                 free(grp->ttipaddr6);
@@ -2358,13 +2356,7 @@ int i;
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
                 prfx = slash + 1;              /* Point to prefix size     */
-                prfxsz = atoi(prfx);
-                if (( prfxsz >= 0 ) && ( prfxsz <= 128 )) {
-                    slash[0] = 0;              /* Replace slash with null  */
-                }
-                else {
-                    prfx = "128";
-                }
+                slash[0] = 0;                  /* Replace slash with null  */
             }
             else {
                 prfx = "128";
@@ -2383,14 +2375,9 @@ int i;
         }
         else if(!strcasecmp("chpid",argv[i]) && (i+1) < argc)
         {
-            int chpid;
-            char c;
-            if(sscanf(argv[++i], "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
-                logmsg(_("Invalid channel path id %s for device %4.4X\n"),argv[i],dev->devnum);
-
-            else
-                dev->pmcw.chpid[0] = chpid;
-
+            if(grp->ttchpid)
+                free(grp->ttchpid);
+            grp->ttchpid = strdup(argv[++i]);
             continue;
         }
         else if (!strcasecmp("debug",argv[i]))
@@ -2403,18 +2390,182 @@ int i;
             grp->debug = 0;
             continue;
         }
+        else if (!strcasecmp("setip",argv[i]))   /* This option is temporary */
+        {
+            grp->setip = 1;
+            continue;
+        }
+        else if(!strcasecmp("nosetip",argv[i]))  /* This option is temporary */
+        {
+            grp->setip = 0;
+            continue;
+        }
         else
-            logmsg(_("Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
+        {
+            // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
+            WRMSG(HHC03978, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, argv[i] );
+        }
     }
-
-    dev->fd = -1;
-    dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
     if (grouped)
     {
-        DEVBLK *cua;
-        U16 destlink;
-        int i, pfxlen;
+        /* This code is executed for the last device in the group. */
+
+        DEVBLK         *cua;
+        U16             destlink;
+        int             i, rc, pfxsz, pfxlen, chpid;
+        MAC             mac;
+        HRB             hrb;
+        uint32_t        mask;
+        struct in_addr  addr4;
+        char            netmask[24];
+        char            c;
+        char           *p;
+
+        /* Check the grp->tthwaddr value */
+        if (grp->tthwaddr)
+        {
+            if (ParseMAC( grp->tthwaddr, mac ) != 0)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "hwaddr", grp->tthwaddr );
+                free(grp->tthwaddr);
+                grp->tthwaddr = NULL;
+            }
+        }
+
+        /* Check the grp->ttipaddr and grp->ttpfxlen values */
+        if (grp->ttipaddr)
+        {
+            // Check whether a numeric IPv4 address has been specified.
+            memset( &hrb, 0, sizeof(hrb) );
+            hrb.wantafam = AF_INET;
+            hrb.numeric = TRUE;
+            memcpy( hrb.host, grp->ttipaddr, strlen(grp->ttipaddr) );
+            rc = resolve_host( &hrb);
+            if (rc != 0)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "ipaddr", grp->ttipaddr );
+                free(grp->ttipaddr);
+                grp->ttipaddr = NULL;
+                if(grp->ttpfxlen)
+                {
+                    free(grp->ttpfxlen);
+                    grp->ttpfxlen = NULL;
+                }
+            }
+        }
+        if (grp->ttpfxlen)
+        {
+            rc = 0;
+            for (p = grp->ttpfxlen; isdigit(*p); p++) { }
+            if (*p != '\0' || !strlen(grp->ttpfxlen))
+                rc = -1;
+            pfxsz = atoi(grp->ttpfxlen);
+            if (rc != 0 || pfxsz > 32 )
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "ipaddr", grp->ttpfxlen );
+                free(grp->ttpfxlen);
+                grp->ttpfxlen = NULL;
+                if(grp->ttipaddr)
+                {
+                    free(grp->ttipaddr);
+                    grp->ttipaddr = NULL;
+                }
+            }
+            else
+            {
+                switch( pfxsz )
+                {
+                case 0:
+                    mask = 0x00000000;
+                    break;
+                case 32:
+                    mask = 0xFFFFFFFF;
+                    break;
+                default:
+                    mask = 0xFFFFFFFF ^ ( 0xFFFFFFFF >> pfxsz );
+                    break;
+                }
+                addr4.s_addr = htonl(mask);
+                hinet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
+                if(grp->ttnetmask)
+                    free(grp->ttnetmask);
+                grp->ttnetmask = strdup(netmask);
+            }
+        }
+
+#if defined(ENABLE_IPV6)
+        /* Check the grp->ttipaddr6 and grp->ttpfxlen6 values */
+        if (grp->ttipaddr6)
+        {
+            // Check whether a numeric IPv6 address has been specified.
+            memset( &hrb, 0, sizeof(hrb) );
+            hrb.wantafam = AF_INET6;
+            hrb.numeric = TRUE;
+            memcpy( hrb.host, grp->ttipaddr6, strlen(grp->ttipaddr6) );
+            rc = resolve_host( &hrb);
+            if (rc != 0)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "ipaddr6", grp->ttipaddr6 );
+                free(grp->ttipaddr6);
+                grp->ttipaddr6 = NULL;
+                if(grp->ttpfxlen6)
+                {
+                    free(grp->ttpfxlen6);
+                    grp->ttpfxlen6 = NULL;
+                }
+            }
+        }
+        if (grp->ttpfxlen6)
+        {
+            rc = 0;
+            for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
+            if (*p != '\0' || !strlen(grp->ttpfxlen6))
+                rc = -1;
+            pfxsz = atoi(grp->ttpfxlen6);
+            if (rc != 0 || pfxsz > 128 )
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "ipaddr6", grp->ttpfxlen6 );
+                free(grp->ttpfxlen6);
+                grp->ttpfxlen6 = NULL;
+                if(grp->ttipaddr6)
+                {
+                    free(grp->ttipaddr6);
+                    grp->ttipaddr6 = NULL;
+                }
+            }
+        }
+#endif /*defined(ENABLE_IPV6)*/
+
+        /* Check the grp->ttchpid value */
+        if (grp->ttchpid)
+        {
+            if(sscanf(grp->ttchpid, "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "chpid", grp->ttchpid );
+                free(grp->ttchpid);
+                grp->ttchpid = NULL;
+            }
+            else
+            {
+                for (i = 0; i < OSA_GROUP_SIZE; i++)
+                {
+                    dev->group->memdev[i]->pmcw.chpid[0] = chpid;
+                }
+            }
+        }
 
         /* Initialize each device's Full Link Address array */
         cua = dev->group->memdev[0];
@@ -2539,6 +2690,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttpfxlen6);
         if(grp->ttmtu)
             free(grp->ttmtu);
+        if(grp->ttchpid)
+            free(grp->ttchpid);
 
         remove_and_free_any_buffers_on_chain( grp );
 
@@ -3488,7 +3641,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
         ** dated.
         */
         /* FIXME Code missing SIGA-Sync functionality */
-        FIXME("Code missing SIGA-Sync functionality");
+//      FIXME("Code missing SIGA-Sync functionality");
     }
 
     PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", oqmask, iqmask, dev->devnum );
@@ -4311,7 +4464,6 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 }
 
 
-#if defined(OPTION_W32_CTCI)
 /*-------------------------------------------------------------------*/
 /* Initialize MAC address                                            */
 /*-------------------------------------------------------------------*/
@@ -4349,7 +4501,6 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
     free( tthwaddr );
 }
-#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -4444,6 +4595,14 @@ HDL_DEPENDENCY_SECTION;
     HDL_DEPENDENCY( HERCULES );
     HDL_DEPENDENCY( DEVBLK );
     HDL_DEPENDENCY( SYSBLK );
+
+    memcpy( (NED*)&configuration_data[0], &osa_device_ned [0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[1], &osa_ctlunit_ned[0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[2], &osa_token_ned  [0], sizeof( NED ));
+    memcpy( (NED*)&configuration_data[3], &osa_general_neq[0], sizeof( NEQ ));
+
+    memcpy( (ND*)&node_data[0], &osa_nd[0], sizeof( ND ));
+    memcpy( (ND*)&node_data[1], &osa_nq[0], sizeof( NQ ));
 }
 END_DEPENDENCY_SECTION
 
