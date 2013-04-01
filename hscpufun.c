@@ -849,18 +849,18 @@ int rc = 0;
             epoch_sign = ' ';
         }
         MSGBUF( buf, "off = %16.16" I64_FMT "X   %c%s",
-                (epoch_now << 8), epoch_sign,
+                etod2tod(epoch_now), epoch_sign,
                 format_tod(clock_buf,epoch_now_abs,FALSE) );
         WRMSG(HHC02274, "I", buf);
 
         MSGBUF( buf, "ckc = %16.16" I64_FMT "X    %s",
-                (clkc_now << 8), format_tod(clock_buf,clkc_now,TRUE) );
+                etod2tod(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
             MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now );
         else
-            MSGBUF( buf, "cpt = not decrementing" );
+            MSGBUF( buf, "cpt = %16.16" I64_FMT "X         not decrementing", cpt_now );
         WRMSG(HHC02274, "I", buf);
 
 #if defined(_FEATURE_SIE)
@@ -868,7 +868,7 @@ int rc = 0;
         {
 
             MSGBUF( buf, "vtod = %16.16" I64_FMT "X    %s",
-                    (vtod_now << 8), format_tod(clock_buf,vtod_now,TRUE) );
+                    etod2tod(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             if (vepoch_now < 0)
@@ -882,12 +882,12 @@ int rc = 0;
                 vepoch_sign = ' ';
             }
             MSGBUF( buf, "voff = %16.16" I64_FMT "X   %c%s",
-                    (vepoch_now << 8), vepoch_sign,
+                    etod2tod(vepoch_now), vepoch_sign,
                     format_tod(clock_buf,vepoch_now_abs,FALSE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vckc = %16.16" I64_FMT "X    %s",
-                    (vclkc_now << 8), format_tod(clock_buf,vclkc_now,TRUE) );
+                    etod2tod(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", vcpt_now );

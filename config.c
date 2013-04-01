@@ -583,7 +583,7 @@ DEVBLK**dvpp;
 
     if(!dev)
     {
-        if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
+        if (!(dev = (DEVBLK*)malloc_aligned((sizeof(DEVBLK)+4095) & ~4095,4096)))
         {
             char buf[64];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
@@ -1123,6 +1123,12 @@ int   i;
 
         join_thread (sysblk.cputid[cpu], NULL);
         detach_thread( sysblk.cputid[cpu] );
+
+        /*-----------------------------------------------------------*/
+        /* Note: While this is the logical place to cleanup and to   */
+        /*       release the associated regs context, there is post  */
+        /*       processing that is done by various callers.         */
+        /*-----------------------------------------------------------*/
     }
     else
     {
@@ -1262,8 +1268,8 @@ int     i;                              /* Loop index                */
            though the device has already been detached.
         */
         if (dev->buf)
-            free( dev->buf );
-        dev->buf = malloc (dev->bufsize);
+            free_aligned( dev->buf );
+        dev->buf = malloc_aligned (dev->bufsize, 4096);
         if (dev->buf == NULL)
         {
             char buf[64];

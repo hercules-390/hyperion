@@ -514,9 +514,12 @@ and how they are used.
 <a name="CPUSERIAL"></a>
 <dt><code>CPUSERIAL &nbsp; <em>xxxxxx</em></code>
 <dd><p>
-    specifies the 6 hexadecimal digit CPU serial
-    number stored by the STIDP instruction.
-    In LPAR mode, the serial number must be 00FFFF or less.
+    specifies the 6 hexadecimal digit CPU serial number stored by the
+    STIDP instruction. In BASIC mode, the high-order digit may be
+    replaced with the processor number when MAXCPU > 1; in LPAR mode,
+    the two high-order digits are replaced with either the LPAR number
+    or the CPU number and LPAR number with the full serial number
+    available via the STSI instruction.
     The default serial number is 000001.
     <p>
 
@@ -823,7 +826,7 @@ and how they are used.
     If a one-digit number is specified then STIDP stores a format-0 CPU ID.
     If a two-digit number is specified then STIDP stores a format-1 CPU ID.
     If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
-    The default is BASIC.
+    The default is LPARNUM 1 with a format-0 CPU ID.
     <p>
 
 <a name="MAINSIZE"></a>

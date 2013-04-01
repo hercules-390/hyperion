@@ -80,6 +80,14 @@ int build_config (char *hercules_cnf)
 int     i;                              /* Array subscript           */
 int     devtmax;                        /* Max number device threads */
 
+    /* From impl.c, using system defaults of:
+     *
+     * LPARNUM  1                       # LPAR 1 with LPAR ID 01
+     * CPUIDFMT 0                       # CPU ID format 0
+     *
+     */
+
+    /* XPNDSIZE 0                       # Expanded storage size      */
     sysblk.xpndsize = 0;
 
     sysblk.maxcpu = MAX_CPU_ENGINES;

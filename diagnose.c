@@ -109,7 +109,7 @@ static void *stop_cpus_and_ipl(int *ipltype)
   int cpustates;
   CPU_BITMAP mask;
 
-  sysblk.diag8cmd |= DIAG8CMD_RUNNING;               
+  sysblk.diag8cmd |= DIAG8CMD_RUNNING;
   panel_command("stopall");
   sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
   WRMSG(HHC01900, "I");
@@ -137,9 +137,9 @@ static void *stop_cpus_and_ipl(int *ipltype)
     }
   }
   while(cpustates != CPUSTATE_STOPPED);
-  sysblk.diag8cmd |= DIAG8CMD_RUNNING;               
+  sysblk.diag8cmd |= DIAG8CMD_RUNNING;
   panel_command(iplcmd);
-  sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;               
+  sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
   return NULL;
 }
 #endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)*/
@@ -184,7 +184,7 @@ U32   code;
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* The poweroff diagnose is only valid on the 9221 */
-        if(((sysblk.cpuid >> 16 & 0xFFFF) != 0x9221 )
+        if (sysblk.cpumodel != 0x9221
           /* and r1/r2 must contain C'POWEROFF' in EBCDIC */
           || regs->GR_L(r1) != 0xD7D6E6C5
           || regs->GR_L(r2) != 0xD9D6C6C6)
@@ -395,7 +395,7 @@ U32   code;
             case 1:
                 /* Obtain TOD offset to real TOD in R2, R2+1 */
                 regs->GR_L(r2)  = (regs->tod_epoch >> 24) & 0xFFFFFFFF;
-                regs->GR_L(r2+1)= (regs->tod_epoch << 8) & 0xFFFFFFFF; 
+                regs->GR_L(r2+1)= (regs->tod_epoch << 8) & 0xFFFFFFFF;
                 break;
             default:
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -410,8 +410,8 @@ U32   code;
         /* This function is implemented as a no-operation */
         regs->GR_L(r2) = 0;
         break;
-        
-        
+
+
 #if defined(FEATURE_VM_BLOCKIO)
     case 0x250:
     /*---------------------------------------------------------------*/
@@ -428,7 +428,7 @@ U32   code;
     /*---------------------------------------------------------------*/
         ARCH_DEP(vm_info) (r1, r2, regs);
         break;
-        
+
     case 0x264:
     /*---------------------------------------------------------------*/
     /* Diagnose 264: CP Communication                                */
@@ -461,7 +461,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 308: IPL functions                                   */
     /*---------------------------------------------------------------*/
-        switch(r2) 
+        switch(r2)
         {
             TID   tid;                              /* Thread identifier         */
             char *ipltype;                          /* "ipl" or "iplc"           */
@@ -648,42 +648,42 @@ U32   code;
         if( HDC4(debug_diagnose, code, r1, r2, regs) )
             return;
 
-    /*  Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221:    */
-    /*                                                               */
-    /*          DS 0H                                                */
-    /*          DC X'8302',S(SHUTDATA)     MUST BE R0 AND R2         */
-    /*          ...                                                  */
-    /*          DS 0H                                                */
-    /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'       */
+        /* Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221: */
+        /*                                                           */
+        /*          DS 0H                                            */
+        /*          DC X'8302',S(SHUTDATA)     MUST BE R0 AND R2     */
+        /*          ...                                              */
+        /*          DS 0H                                            */
+        /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'   */
 
-    if (0 == r1 && 2 == r2
-         && (sysblk.cpuid >> 56 & 0xFF) != 0xFF
-         && ((sysblk.cpuid >> 16 & 0xFFFF) == 0x4361
-          || (sysblk.cpuid >> 16 & 0xFFF9) == 0x9371    /* (937X) */
-          || (sysblk.cpuid >> 16 & 0xFFFF) == 0x9221)
-       )
-    {
-        if (0x0000FFFF == ARCH_DEP(vfetch4)(effective_addr2, b2, regs))
+        if (0 == r1 && 2 == r2
+             && sysblk.cpuversion != 0xFF
+             && (sysblk.cpumodel == 0x4361
+              || (sysblk.cpumodel & 0xFFF9) == 0x9371   /* (937X) */
+              || sysblk.cpumodel == 0x9221)
+           )
         {
-            /* If diag8cmd is not enabled then we are not allowed
-             * to manipulate the real machine i.e. hercules itself
-             */
-        if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
-            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+            if (0x0000FFFF == ARCH_DEP(vfetch4)(effective_addr2, b2, regs))
+            {
+                /* If diag8cmd is not enabled then we are not allowed
+                 * to manipulate the real machine i.e. hercules itself
+                 */
+                if(!(sysblk.diag8cmd & DIAG8CMD_ENABLE))
+                    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
+                regs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_INTERRUPT(regs);
 
-            /* Release the configuration */
-            do_shutdown();
+                /* Release the configuration */
+                do_shutdown();
 
-            /* Power Off: exit hercules */
-            exit(0);
+                /* Power Off: exit hercules */
+                exit(0);
+            }
         }
-    }
 
 #if defined(FEATURE_S370_CHANNEL) && defined(OPTION_NOP_MODEL158_DIAGNOSE)
-        if((sysblk.cpuid >> 16 & 0xFFFF) != 0x0158)
+        if (regs->cpumodel != 0x0158)
 #endif
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
         return;

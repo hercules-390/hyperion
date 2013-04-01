@@ -1301,6 +1301,9 @@ int i;
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
 
+    /* Set initial CPU ID by REGS context */
+    setCpuIdregs(regs, cpu, -1, -1, -1, -1);
+
     /* Save CPU creation time without epoch set, as epoch may change. When using
      * the field, subtract the current epoch from any time being used in
      * relation to the creation time to yield the correct result.
@@ -1379,19 +1382,25 @@ int i;
 /*-------------------------------------------------------------------*/
 void *cpu_uninit (int cpu, REGS *regs)
 {
-    if (regs->host)
+    int processHostRegs = (regs->host &&
+                           regs == sysblk.regs[cpu]);
+
+    if (processHostRegs)
     {
         obtain_lock (&sysblk.cpulock[cpu]);
+
+        /* If pointing to guest REGS structure, free the guest REGS
+         * structure ONLY if it is not ourself, and set the guest REGS
+         * pointer to NULL;
+         */
         if (regs->guestregs)
-        {
-            cpu_uninit (cpu, regs->guestregs);
-            free (regs->guestregs);
-        }
+            regs->guestregs = regs == regs->guestregs ? NULL :
+                              cpu_uninit (cpu, regs->guestregs);
     }
 
     destroy_condition(&regs->intcond);
 
-    if (regs->host)
+    if (processHostRegs)
     {
 #ifdef FEATURE_VECTOR_FACILITY
         /* Mark Vector Facility offline */
@@ -1406,6 +1415,9 @@ void *cpu_uninit (int cpu, REGS *regs)
         sysblk.cpucreateTOD[cpu] = 0;
         release_lock (&sysblk.cpulock[cpu]);
     }
+
+    /* Free the REGS structure */
+    free_aligned(regs);
 
     return NULL;
 }
@@ -1566,6 +1578,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = host_tod();
 #endif
+        set_cpu_timer_mode(regs);
 
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
@@ -1597,6 +1610,9 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         regs->waittime += host_tod() - regs->waittod;
         regs->waittod = 0;
 #endif
+
+        set_cpu_timer_mode(regs);
+
         RELEASE_INTLOCK(regs);
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
@@ -1612,10 +1628,10 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
-int     i;
+const zz_func   *current_opcode_table;
+register REGS   *regs;
 BYTE   *ip;
-REGS    regs;
-const zz_func *current_opcode_table;
+int     i;
 int     aswitch;
 
 #ifdef OPTION_CAPPING
@@ -1623,26 +1639,34 @@ register int    *caplocked = &sysblk.caplocked[cpu];
          LOCK   *caplock = &sysblk.caplock[cpu];
 #endif
 
+    /* Assign new regs if not already assigned */
+    regs = sysblk.regs[cpu] ?
+           sysblk.regs[cpu] :
+           malloc_aligned(((sizeof(REGS)+4095)&~((size_t)0x0FFF)), 4096);
+
     if (oldregs)
     {
-        memcpy (&regs, oldregs, sizeof(REGS));
-        free (oldregs);
-        regs.blkloc = swap_byte_U64((U64)((uintptr_t)&regs));
-        regs.hostregs = &regs;
-        if (regs.guestregs)
-            regs.guestregs->hostregs = &regs;
-        sysblk.regs[cpu] = &regs;
-        release_lock(&sysblk.cpulock[cpu]);
-        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
+        if (oldregs != regs)
+        {
+            memcpy (regs, oldregs, sizeof(REGS));
+            free_aligned(oldregs);
+            regs->blkloc = swap_byte_U64((U64)((uintptr_t)regs));
+            regs->hostregs = regs;
+            if (regs->guestregs)
+                regs->guestregs->hostregs = regs;
+            sysblk.regs[cpu] = regs;
+            release_lock(&sysblk.cpulock[cpu]);
+            WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
+        }
     }
     else
     {
-        memset(&regs, 0, sizeof(REGS));
+        memset(regs, 0, sizeof(REGS));
 
-        if (cpu_init (cpu, &regs, NULL))
+        if (cpu_init (cpu, regs, NULL))
             return NULL;
 
-        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(&regs));
+        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
         if (regs->vf->online)
@@ -1650,30 +1674,30 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
-    regs.program_interrupt = &ARCH_DEP(program_interrupt);
+    regs->program_interrupt = &ARCH_DEP(program_interrupt);
 #if defined(FEATURE_TRACING)
-    regs.trace_br = (func)&ARCH_DEP(trace_br);
+    regs->trace_br = (func)&ARCH_DEP(trace_br);
 #endif
 
-    regs.tracing = (sysblk.inststep || sysblk.insttrace);
-    regs.ints_state |= sysblk.ints_state;
+    regs->tracing = (sysblk.inststep || sysblk.insttrace);
+    regs->ints_state |= sysblk.ints_state;
 
     /* Establish longjmp destination for cpu thread exit */
-    if (setjmp(regs.exitjmp))
-        return cpu_uninit(cpu, &regs);
+    if (setjmp(regs->exitjmp))
+        return cpu_uninit(cpu, regs);
 
     /* Establish longjmp destination for architecture switch */
-    aswitch = setjmp(regs.archjmp);
+    aswitch = setjmp(regs->archjmp);
 
     /* Switch architecture mode if appropriate */
-    if(sysblk.arch_mode != regs.arch_mode)
+    if(sysblk.arch_mode != regs->arch_mode)
     {
-        PTT(PTT_CL_INF,"*SETARCH",regs.arch_mode,sysblk.arch_mode,cpu);
-        regs.arch_mode = sysblk.arch_mode;
-        oldregs = malloc (sizeof(REGS));
+        PTT(PTT_CL_INF,"*SETARCH",regs->arch_mode,sysblk.arch_mode,cpu);
+        regs->arch_mode = sysblk.arch_mode;
+        oldregs = malloc_aligned(sizeof(REGS), 4096);
         if (oldregs)
         {
-            memcpy(oldregs, &regs, sizeof(REGS));
+            memcpy(oldregs, regs, sizeof(REGS));
             obtain_lock(&sysblk.cpulock[cpu]);
         }
         else
@@ -1681,30 +1705,30 @@ register int    *caplocked = &sysblk.caplocked[cpu];
             char buf[40];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(REGS));
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
-            cpu_uninit (cpu, &regs);
+            cpu_uninit (cpu, regs);
         }
         return oldregs;
     }
 
     /* Initialize Architecture Level Set */
-    init_als(&regs);
-    current_opcode_table=regs.ARCH_DEP(runtime_opcode_xxxx);
+    init_als(regs);
+    current_opcode_table=regs->ARCH_DEP(runtime_opcode_xxxx);
 
     /* Signal cpu has started */
     if(!aswitch)
         signal_condition (&sysblk.cpucond);
 
-    RELEASE_INTLOCK(&regs);
+    RELEASE_INTLOCK(regs);
 
     /* Establish longjmp destination for program check */
-    setjmp(regs.progjmp);
+    setjmp(regs->progjmp);
 
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
-    regs.execflag = 0;
+    regs->execflag = 0;
 
     do {
-        if (INTERRUPT_PENDING(&regs))
-            ARCH_DEP(process_interrupt)(&regs);
+        if (INTERRUPT_PENDING(regs))
+            ARCH_DEP(process_interrupt)(regs);
 
 #ifdef OPTION_CAPPING
         else if (caplocked[0])
@@ -1714,10 +1738,10 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         }
 #endif /* #ifdef OPTION_CAPPING */
 
-        ip = INSTRUCTION_FETCH(&regs, 0);
+        ip = INSTRUCTION_FETCH(regs, 0);
 
-        EXECUTE_INSTRUCTION(current_opcode_table, ip, &regs);
-        regs.instcount++;
+        EXECUTE_INSTRUCTION(current_opcode_table, ip, regs);
+        regs->instcount++;
 
         /* BHe: I have tried several settings. But 2 unrolled */
         /* executes gives (core i7 at my place) the best results. */
@@ -1725,10 +1749,10 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         /* and without the 'i' was slower. That surprised me. */
         for(i = 0; i < 128; i++)
         {
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
-            UNROLLED_EXECUTE(current_opcode_table, &regs);
+            UNROLLED_EXECUTE(current_opcode_table, regs);
+            UNROLLED_EXECUTE(current_opcode_table, regs);
         }
-        regs.instcount += i * 2;
+        regs->instcount += i * 2;
 
     } while (1);
 

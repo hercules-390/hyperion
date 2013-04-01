@@ -357,8 +357,8 @@ static void adjust_tod_offset(const S64 offset)
 
 
 /* The CPU timer is internally kept as an offset to the thread CPU time
- * used. The CPU timer counts down as the clock approaches the timer
- * epoch.
+ * used in LPAR mode, or TOD clock in BASIC mode. The CPU timer counts
+*  down as the clock approaches the timer epoch.
  *
  * To be in agreement with reporting of time in association with real
  * diagnose code x'204' for partition management and resource reporting,
@@ -403,24 +403,84 @@ thread_cputime_us(const REGS *regs)
 }
 
 
-S64 set_cpu_timer(REGS *regs, const TOD timer)
+static INLINE void
+set_cpu_timer_epoch(REGS *regs, const TOD epoch)
 {
     register REGS*  guestregs = regs->guestregs;
     register REGS*  hostregs  = regs->hostregs;
 
-    regs->cpu_timer         = tod2etod(timer);
-    regs->cpu_timer_epoch   = thread_cputime(regs);
+    /* Set CPU timer epoch */
+    regs->cpu_timer_epoch   = epoch;
 
-    if (hostregs && hostregs != regs && regs->cpu_timer_epoch > hostregs->cpu_timer_epoch)
+    /* Reset epoch value for host and guest */
+    if (hostregs && hostregs != regs)
+        hostregs->cpu_timer_epoch   = epoch;
+    if (guestregs && guestregs != regs)
+        guestregs->cpu_timer_epoch  = epoch;
+}
+
+
+static INLINE S64
+cpu_timer_update(REGS *regs, TOD new_epoch)
+{
+    register S64    interval = (S64)(new_epoch - regs->cpu_timer_epoch);
+    register S64    result = regs->cpu_timer;
+
+    if (interval > 0)
     {
-        hostregs->cpu_timer        -= regs->cpu_timer_epoch - hostregs->cpu_timer_epoch;
-        hostregs->cpu_timer_epoch   = regs->cpu_timer_epoch;
+        result                 -= interval;
+        regs->cpu_timer_epoch   = new_epoch;
+        regs->cpu_timer         = result;
     }
-    if (guestregs && guestregs != regs && regs->cpu_timer_epoch > guestregs->cpu_timer_epoch)
+
+    return (result);
+}
+
+
+static INLINE void
+cpu_timer_update_linked(REGS *regs, REGS *linked_regs, TOD new_epoch)
+{
+    if (linked_regs && linked_regs != regs)
+        cpu_timer_update(linked_regs, new_epoch);
+}
+
+
+static INLINE TOD
+mode_cputime(REGS *regs)
+{
+    return (regs->cpu_timer_mode ? thread_cputime(regs) : host_tod());
+}
+
+
+static INLINE int
+cpu_timer_mode(REGS *regs)
+{
+    return (sysblk.lparmode && !WAITSTATE(&regs->psw));
+}
+
+
+void
+set_cpu_timer_mode(REGS *regs)
+{
+    int newmode = cpu_timer_mode(regs);
+
+    /* Update CPU timer epoch if changing mode */
+    if (newmode != regs->cpu_timer_mode)
     {
-        guestregs->cpu_timer       -= regs->cpu_timer_epoch - guestregs->cpu_timer_epoch;
-        guestregs->cpu_timer_epoch  = regs->cpu_timer_epoch;
+        cpu_timer(regs);
+        regs->cpu_timer_mode = newmode;
+        set_cpu_timer_epoch(regs, mode_cputime(regs));
     }
+}
+
+
+S64 set_cpu_timer(REGS *regs, const TOD timer)
+{
+    regs->cpu_timer_mode = cpu_timer_mode(regs);
+
+    /* Prepare new timer value and epoch value */
+    regs->cpu_timer         = tod2etod(timer);
+    set_cpu_timer_epoch(regs, mode_cputime(regs));
 
     return (timer);
 }
@@ -445,35 +505,41 @@ void save_cpu_timers(REGS *hostregs, TOD *host_timer, REGS *regs, TOD *timer)
 
 S64 cpu_timer(REGS *regs)
 {
+    register TOD    new_epoch    = mode_cputime(regs);
+    register U64    new_epoch_us = etod2us(new_epoch);
     register S64    result;
-    register TOD    new_epoch = thread_cputime(regs);
-    register REGS*  guestregs = regs->guestregs;
-    register REGS*  hostregs  = regs->hostregs;
 
-    /* Update real CPU time used */
-    regs->rcputime = etod2us(new_epoch) - regs->bcputime;
-
-    /* Process CPU timers */
-    if (new_epoch > regs->cpu_timer_epoch)
+    /* If no change from epoch, don't bother updating */
+    if (new_epoch <= regs->cpu_timer_epoch)
     {
-        regs->cpu_timer            -= new_epoch - regs->cpu_timer_epoch;
-        regs->cpu_timer_epoch       = new_epoch;
+        result = regs->cpu_timer;
+    }
+    /* If CPU is stopped, return the CPU timer without updating */
+    else if (regs->cpustate == CPUSTATE_STOPPED)
+    {
+        result = regs->cpu_timer;
+
+        /* Update base CPU time epoch */
+        regs->bcputime = new_epoch_us;
+
+        /* Update CPU timer epoch */
+        set_cpu_timer_epoch(regs, new_epoch);
+    }
+    else /* Update and return the CPU timer */
+    {
+        /* Update real CPU time used and base CPU time epoch */
+        regs->rcputime += new_epoch_us - regs->bcputime;
+        regs->bcputime  = new_epoch_us;
+
+        /* Process CPU timers */
+        result = cpu_timer_update(regs, new_epoch);
+        cpu_timer_update_linked(regs, regs->hostregs, new_epoch);
+        cpu_timer_update_linked(regs, regs->guestregs, new_epoch);
     }
 
-    if (guestregs && guestregs != regs && new_epoch > guestregs->cpu_timer_epoch)
-    {
+    /* Change from ETOD format to TOD format */
+    result = (S64)etod2tod(result);
 
-        guestregs->cpu_timer       -= new_epoch - guestregs->cpu_timer_epoch;
-        guestregs->cpu_timer_epoch  = new_epoch;
-    }
-
-    if (hostregs && hostregs != regs && new_epoch > hostregs->cpu_timer_epoch)
-    {
-        hostregs->cpu_timer        -= new_epoch - hostregs->cpu_timer_epoch;
-        hostregs->cpu_timer_epoch   = new_epoch;
-    }
-
-    result = etod2tod(regs->cpu_timer);
     return (result);
 }
 

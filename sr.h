@@ -14,7 +14,7 @@
  * with a config file describing the configuration at suspend time.
  * For example, mainsize and xpndsize must match.  Also, all devices
  * present at suspend time must be present at resume time.
- * 
+ *
  * Disk devices must be at the same state as they were at suspend
  * time.  They can, however, be a different file type.  That is,
  * a disk could be a cckd disk at suspend time.  Then a ckd disk
@@ -27,9 +27,9 @@
  * maximum of two CPUs.  Another example, you will not be able
  * to resume a session in z900 architecture mode for a hercules
  * that was built without z900 architecture.
- * 
+ *
  * Device state
- * 
+ *
  * Currently, device state is only fully saved for CKD disks.
  * Each device class (eg TAPE, RDR, PUN, CTC) will need code
  * to save and restore their state.  Some states may not be
@@ -40,7 +40,7 @@
  *
  * Currently the vector facility state is not saved.
  * Also, the ecpsvm state is not currently saved.
- * 
+ *
  * File Structure
  *
  * The suspend/resume file (.srf) contains some number of `text
@@ -54,9 +54,9 @@
  *
  * The header contains a 4 byte key and a 4 byte length.  Both
  * the key and the length are stored in big-endian byte order.
- * 
+ *
  * There are 3 types of data: STRING, BUF and VALUE.
- * 
+ *
  * A string is a null terminated sequence of bytes.  The string
  * includes the null terminator byte.  The total length of a
  * string cannot exceed SR_MAX_STRING_LENGTH (4096).  The
@@ -76,7 +76,7 @@
  *   SYS     ...    fields from SYSBLK
  *   CPU     ...    fields from REGS
  *   DEV     ...    fields from DEVBLK
- * 
+ *
  * The format of a text unit key value is
  *   ace c t xxx
  *
@@ -95,7 +95,7 @@
  *   #define SR_CPU_GR_1             0xace20021
  *   #define SR_CPU_GR_2             0xace20022
  *   #define SR_CPU_GR_3             0xace20023
- *   .  .  .  .  .  . 
+ *   .  .  .  .  .  .
  *
  * The array can be written during suspend as follows:
  *
@@ -108,7 +108,7 @@
  *   case SR_CPU_GR_1:
  *   case SR_CPU_GR_2:
  *   case SR_CPU_GR_3:
- *   .  .  .  .  .  . 
+ *   .  .  .  .  .  .
  *     i = key - SR_CPU_GR;
  *     SR_READ_VALUE(fd, len, &regs->gr[i], sizeof(regs->gr[0]));
  *     break;
@@ -116,7 +116,7 @@
  * The format of the .srf file is deliberately unstructured to
  * allow for flexibility in future enhancements.  However there
  * are a few restrictions.
- * 
+ *
  * o Key SR_SYS_ARCHNAME shoud be specified before any
  *   SR_CPU keys.  The corresponding CPU is configured
  *   when the SR_CPU key is read, so sysblk.arch_mode must
@@ -146,7 +146,7 @@
 #define SR_HDR_VERSION          0xace00001
 #define SR_HDR_DATE             0xace00002
 
-#define SR_SYS_MASK             0xfffff000 
+#define SR_SYS_MASK             0xfffff000
 #define SR_SYS_STARTED_MASK     0xace10000
 #define SR_SYS_INTS_STATE       0xace10001
 #define SR_SYS_ARCH_NAME        0xace10002
@@ -182,12 +182,19 @@
 #define SR_SYS_MSCHDELAY        0xace10043
 #define SR_SYS_LOADPARM         0xace10044
  /*
-  * Following 3 tags added for Multiple 
+  * Following 3 tags added for Multiple
   * Logical Channel Subsystem support
   */
 #define SR_SYS_IOPENDING_LCSS   0xace10045
 #define SR_SYS_PCIPENDING_LCSS  0xace10046
 #define SR_SYS_ATTNPENDING_LCSS 0xace10047
+
+#define SR_SYS_CPUMODEL         0xace10048
+#define SR_SYS_CPUVERSION       0xace10049
+#define SR_SYS_CPUSERIAL        0xace10050
+#define SR_SYS_LPARMODE         0xace10051
+#define SR_SYS_LPARNUM          0xace10052
+#define SR_SYS_CPUIDFMT         0xace10053
 
 #define SR_SYS_SERVC            0xace11000
 
@@ -374,7 +381,7 @@
 #define SR_CPU_EMERCPU_29       0xace2015d
 #define SR_CPU_EMERCPU_30       0xace2015e
 #define SR_CPU_EMERCPU_31       0xace2015f
- 
+
 #define SR_DEV                  0xace30000
 #define SR_DEV_DEVTYPE          0xace30001
 #define SR_DEV_ARGC             0xace30002
@@ -398,9 +405,9 @@
 #define SR_DEV_SENSE            0xace3001a
 #define SR_DEV_PGSTAT           0xace3001b
 #define SR_DEV_PGID             0xace3001c
- /* By Adrian - SR_DEV_DRVPWD              */   
-#define SR_DEV_DRVPWD           0xace3001d   
-   
+ /* By Adrian - SR_DEV_DRVPWD              */
+#define SR_DEV_DRVPWD           0xace3001d
+
 #define SR_DEV_BUSY             0xace30020
 #define SR_DEV_RESERVED         0xace30021
 #define SR_DEV_SUSPENDED        0xace30022
@@ -415,7 +422,7 @@
 #define SR_DEV_CCWFMT           0xace3002b
 #define SR_DEV_CCWKEY           0xace3002c
 
-#define SR_DEV_MASK             0xfffff000 
+#define SR_DEV_MASK             0xfffff000
 #define SR_DEV_CKD              0xace31000
 #define SR_DEV_FBA              0xace32000
 #define SR_DEV_TTY              0xace33000

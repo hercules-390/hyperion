@@ -913,7 +913,7 @@ static void CheckZeroPadding()
 
     // Calculate how much room remains in the buffer.
 
-    if (!(nBufRem = (U32) ((pOutBuffer + nOutBuffSize) - pOp1)))
+    if (!(nBufRem = (U32)(U64)((pOutBuffer + nOutBuffSize) - pOp1)))
         return;                         // (zero == quick exit)
 
     if (1

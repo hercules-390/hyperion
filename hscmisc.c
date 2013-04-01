@@ -730,7 +730,7 @@ static REGS  *copy_regs (REGS *regs)
  size_t size;
 
     size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
-    newregs = malloc(size);
+    newregs = malloc_aligned(size, 4096);
     if (newregs == NULL)
     {
         char buf[64];
@@ -1291,7 +1291,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 
     for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
     {
-        if (len < sizeof(NED))
+        if (len < (int)sizeof(NED))
         {
             FormatBytes( rcd, len, buf, bufsz );
             break;
@@ -1479,7 +1479,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
     if (bufsz <= 1 || !rni || !len)
         return buf;
 
-    if (len >= sizeof(ND))
+    if (len >= (int)sizeof(ND))
     {
         char work[256];
 
@@ -1491,7 +1491,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
         len -= sizeof(ND);
         rni += sizeof(ND);
 
-        if (len >= sizeof(NQ))
+        if (len >= (int)sizeof(NQ))
         {
             register NQ* nq = (NQ*) rni;
 
@@ -2104,7 +2104,8 @@ REGS   *regs;                           /* Copied regs               */
 #endif
             n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
 
-        if (!iregs->ghostregs) free(regs);
+        if (!iregs->ghostregs)
+            free_aligned( regs );
         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
         return;
     }
@@ -2294,7 +2295,7 @@ REGS   *regs;                           /* Copied regs               */
     }
 
     if (!iregs->ghostregs)
-        free (regs);
+        free_aligned( regs );
     writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
 } /* end function display_inst */
@@ -2362,7 +2363,7 @@ void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
     }
 
     if (!iregs->ghostregs)
-        free(regs);
+        free_aligned( regs );
 } /* end function alter_display_virt */
 
 
@@ -2394,7 +2395,7 @@ void display_inst(REGS *iregs, BYTE *inst)
     }
 
     if (!iregs->ghostregs)
-        free (regs);
+        free_aligned( regs );
 }
 
 
@@ -2426,7 +2427,7 @@ void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
     }
 
     if (!iregs->ghostregs)
-        free(regs);
+        free_aligned( regs );
 }
 
 /*-------------------------------------------------------------------*/

@@ -230,6 +230,7 @@ typedef int   DEVWF  (DEVBLK *dev, int rcd, int off, BYTE *buf,
 typedef int   DEVUF  (DEVBLK *dev);
 typedef void  DEVRR  (DEVBLK *dev);
 typedef int   DEVSA  (DEVBLK *dev, U32 qmask);
+typedef int   DEVSAS (DEVBLK *dev, U32 oqmask, U32 iqmask);
 typedef int   DEVQD  (DEVBLK *dev, void *desc);
 typedef int   DEVSR  (DEVBLK *dev, void *file);
 

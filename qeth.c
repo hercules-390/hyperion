@@ -48,14 +48,40 @@
 #include "hercifc.h"
 #include "qeth.h"
 
+
 /*-------------------------------------------------------------------*/
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
 #define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
-//#define QETH_TIMING_DEBUG       // #define to debug speed/performance
+#define QETH_TIMING_DEBUG       // #define to debug speed/performance
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
+
+/*-------------------------------------------------------------------*/
+/* VS 2010 Compiler Crash Workaround                                 */
+/*-------------------------------------------------------------------*/
+#if defined(_MSVC_)
+
+    /* Keep store_f3 defined as a macro, but redefine to a local
+     * variant.
+     */
+    #undef  store_f3
+    #define store_f3(_ptr,_value) store_f3_local((_ptr),(_value))
+
+    /* Local definition for store_f3 */
+    static __inline__ void store_f3_local(void *ptr, const U32 value)
+    {
+        U32 temp = CSWAP32(value) >> 8;
+        memcpy((BYTE *)ptr, (BYTE *)&temp, 3);
+    }
+
+#endif
+
+
+/*-------------------------------------------------------------------*/
+/* QETH Debugging                                                    */
+/*-------------------------------------------------------------------*/
 
 /* (enable debugging if needed/requested) */
 #if (!defined(ENABLE_QETH_DEBUG) && defined(DEBUG)) ||  \
@@ -108,29 +134,12 @@
       }                                     \
     } while(0)
 #else
-#define DBGTRC(_dev, ...)           do{;}while(0)
+  #define DBGTRC(_dev, ...)         do{;}while(0)
   #define DBGTRC2(_dev, _msg, ...)  do{;}while(0)
 #endif
 
 /* (activate tracing of I/O data buffers) */
 #if defined( QETH_DUMP_DATA )
-  static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
-  {
-  DEVGRP* group = dev->group;
-    if (group) {
-    OSA_GRP* grp = group->grp_data;
-      if(grp && grp->debug) {
-      int i;
-        logmsg(_("DATA: %4.4X %s"), len, name);
-        for(i = 0; i < len; i++) {
-          if(!(i & 15))
-            logmsg(_("\n%4.4X:"), i);
-          logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
-        }
-        logmsg(_("\n"));
-      }
-    }
-  }
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
 #else
@@ -179,17 +188,14 @@ void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
 /*-------------------------------------------------------------------*/
-static const NED  osa_device_ned[]  = {OSA_DEVICE_NED};
-static const NED  osa_ctlunit_ned[] = {OSA_CTLUNIT_NED};
-static const NED  osa_token_ned[]   = {OSA_TOKEN_NED};
-static const NEQ  osa_general_neq[] = {OSA_GENERAL_NEQ};
 
-static NED configuration_data[4]; // (initialized by HDL_DEPENDENCY_SECTION)
+static NED configuration_data[4] = { OSA_DEVICE_NED,    
+                                     OSA_CTLUNIT_NED,
+                                     OSA_TOKEN_NED,
+                                     OSA_GENERAL_NEQ };
 
-static const ND  osa_nd[] = {OSA_ND};
-static const NQ  osa_nq[] = {OSA_NQ};
-
-static ND node_data[2]; // (initialized by HDL_DEPENDENCY_SECTION)
+static ND node_data[2] = { OSA_ND,
+                           OSA_NQ };
 
 #define SII_SIZE    sizeof(U32)
 
@@ -453,13 +459,15 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 
     if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
         | IFF_UP
-        | QETH_RUNNING
-        | QETH_PROMISC
         | IFF_MULTICAST
         | IFF_BROADCAST
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+#if defined(OPTION_W32_CTCI)
         | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+#endif /*defined(OPTION_W32_CTCI)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
@@ -479,58 +487,21 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         return 0;
 
     if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | QETH_RUNNING
-        | QETH_PROMISC
         | IFF_MULTICAST
         | IFF_BROADCAST
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+#if defined(OPTION_W32_CTCI)
         | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
+#endif /*defined(OPTION_W32_CTCI)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_disable_interface() failed" );
 
     grp->enabled = 0;
     return rc;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Set the interface's IP address and subnet mask                    */
-/*-------------------------------------------------------------------*/
-static int qeth_set_addr_parms (DEVBLK *dev, OSA_GRP *grp)
-{
-    int rc;
-
-    /* If possible, assign an IPv4 address to the interface */
-    if(grp->ttipaddr)
-#if defined( OPTION_W32_CTCI )
-        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetDestAddr() failed" );
-#else /*!defined( OPTION_W32_CTCI )*/
-        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr() failed" );
-#endif /*defined( OPTION_W32_CTCI )*/
-
-    /* Same thing with the IPv4 subnet mask */
-#if defined( OPTION_TUNTAP_SETNETMASK )
-    if(grp->ttnetmask)
-        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetNetMask() failed" );
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
-
-    /* Assign it an IPv6 address too, if possible */
-#if defined(ENABLE_IPV6)
-    if(grp->ttipaddr6)
-        if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr6() failed" );
-#endif /*defined(ENABLE_IPV6)*/
-
-    return 0;
 }
 
 
@@ -578,37 +549,79 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
                          grp->ttifname,
                          (grp->l3 ? "TUN" : "TAP"));
 
-    /* Enable TUNTAP debugging if requested */
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
-    if (grp->debug)
-        if ((rc = TUNTAP_SetFlags( grp->ttifname, IFF_DEBUG )) != 0)
-            qeth_errnum_msg( dev, grp, rc,
-                "W", "TUNTAP_SetFlags(IFF_DEBUG) failed" );
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
-
     /* Set NON-Blocking mode by disabling Blocking mode */
     if ((rc = socket_set_blocking_mode(grp->ttfd,0)) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
     /* Make sure the interface has a valid MAC address */
-    InitMACAddr( dev, grp );
+    if (grp->tthwaddr) {
 #if defined( OPTION_TUNTAP_SETMACADDR )
-    if(!grp->l3 && grp->tthwaddr)
         if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetMACAddr() failed" );
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+    }
+#if defined(OPTION_W32_CTCI)
+    else {
+        InitMACAddr( dev, grp );
+    }
+#endif
 
-    /* Set the interface's IP address and subnet mask */
-    if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
-        return rc;
+    /* If possible, assign an IPv4 address to the interface */
+    if(grp->ttipaddr)
+#if defined( OPTION_W32_CTCI )
+        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetDestAddr() failed" );
+#else /*!defined( OPTION_W32_CTCI )*/
+        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr() failed" );
+#endif /*defined( OPTION_W32_CTCI )*/
+
+    /* Same thing with the IPv4 subnet mask */
+#if defined( OPTION_TUNTAP_SETNETMASK )
+    if(grp->ttnetmask)
+        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetNetMask() failed" );
+#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+
+    /* Assign it an IPv6 address too, if possible */
+#if defined(ENABLE_IPV6)
+    if(grp->ttipaddr6)
+        if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetIPAddr6() failed" );
+#endif /*defined(ENABLE_IPV6)*/
 
     /* Set the interface's MTU size */
-    InitMTU( dev, grp );
-    if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0)
-        qeth_errnum_msg( dev, grp, rc,
-            "W", "TUNTAP_SetMTU() failed" );
+    if (grp->ttmtu) {
+        if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0) {
+            return qeth_errnum_msg( dev, grp, rc,
+                "E", "TUNTAP_SetMTU() failed" );
+        }
+        grp->uMTU = (U16) atoi( grp->ttmtu );
+    } else {
+        InitMTU( dev, grp );
+    }
+
+    /* Enable the interface */
+    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
+        | IFF_UP
+        | IFF_MULTICAST
+        | IFF_BROADCAST
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
+        | IFF_RUNNING
+#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+#if defined(OPTION_W32_CTCI)
+        | (grp->debug ? IFF_DEBUG : 0)
+#endif /*defined(OPTION_W32_CTCI)*/
+        | (grp->promisc ? IFF_PROMISC : 0)
+    )) != 0)
+        return qeth_errnum_msg( dev, grp, rc,
+            "E", "TUNTAP_SetFlags failed" );
 
     return 0;
 }
@@ -891,12 +904,58 @@ U16 offph;
             case IPA_CMD_SETVMAC:  /* 0x25 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
+                char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+                int rc = 0;
+                int was_enabled;
 
                     DBGTRC(dev, "Set VMAC\n");
-                    if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                        STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
+                        ,ipa_mac->macaddr[0]
+                        ,ipa_mac->macaddr[1]
+                        ,ipa_mac->macaddr[2]
+                        ,ipa_mac->macaddr[3]
+                        ,ipa_mac->macaddr[4]
+                        ,ipa_mac->macaddr[5]
+                    );
+
+#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
+                    /* PROGRAMMING NOTE: cannot change the interface
+                       once it has been enabled. Thus we temporarily
+                       disable it, make our changes, and then enable
+                       it again.
+                    */
+                    if ((was_enabled = grp->enabled))
+                        qeth_disable_interface( dev, grp );
+
+                    if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
+                    {
+                        qeth_errnum_msg( dev, grp, rc,
+                            "E", "IPA_CMD_SETVMAC failed" );
+                    }
+
+                    if (was_enabled)
+                        qeth_enable_interface( dev, grp );
+
+                    if (rc != 0)
+                        STORE_HW(ipa->rc,IPA_RC_FFFF);
                     else
-                        STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                    {
+                        if (grp->tthwaddr)
+                            free( grp->tthwaddr );
+
+                        grp->tthwaddr = strdup( tthwaddr );
+                        memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
+#else
+                    {
+#endif
+                        qeth_report_using( dev, grp, 1 );
+
+                        if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
+                            STORE_HW(ipa->rc,IPA_RC_OK);
+                        else
+                            STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                    }
                 }
                 break;
 
@@ -951,36 +1010,43 @@ U16 offph;
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
                         int rc = 0;
-                        int was_enabled;
-
+//!                         int was_enabled;
+//!
                         MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
                         MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-
-                        if (grp->ttipaddr)
-                            free( grp->ttipaddr );
-                        grp->ttipaddr = strdup( ipaddr );
-
-                        if (grp->ttnetmask)
-                            free( grp->ttnetmask );
-                        grp->ttnetmask = strdup( ipmask );
-
-                        /* PROGRAMMING NOTE: cannot change the interface
-                           once it has been enabled. Thus we temporarily
-                           disable it, make our changes, and then enable
-                           it again.
-                        */
-                        if ((was_enabled = grp->enabled))
-                            qeth_disable_interface( dev, grp );
-
-                        if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
+//!
+#if !defined( OPTION_W32_CTCI )
+                        if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "IPA_CMD_SETIP failed" );
+                            qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
                             retcode = IPA_RC_FFFF;
                         }
-
-                        if (was_enabled)
-                            qeth_enable_interface( dev, grp );
+#endif /*!defined( OPTION_W32_CTCI )*/
+//!                         if (grp->ttipaddr)
+//!                             free( grp->ttipaddr );
+//!                         grp->ttipaddr = strdup( ipaddr );
+//!
+//!                         if (grp->ttnetmask)
+//!                             free( grp->ttnetmask );
+//!                         grp->ttnetmask = strdup( ipmask );
+//!
+//!                         /* PROGRAMMING NOTE: cannot change the interface
+//!                            once it has been enabled. Thus we temporarily
+//!                            disable it, make our changes, and then enable
+//!                            it again.
+//!                         */
+//!                         if ((was_enabled = grp->enabled))
+//!                             qeth_disable_interface( dev, grp );
+//!
+//!                         if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
+//!                         {
+//!                             qeth_errnum_msg( dev, grp, rc,
+//!                                 "E", "IPA_CMD_SETIP failed" );
+//!                             retcode = IPA_RC_FFFF;
+//!                         }
+//!
+//!                         if (was_enabled)
+//!                             qeth_enable_interface( dev, grp );
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
@@ -1248,13 +1314,7 @@ typedef short QRC;              /* Internal function return code     */
 QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
                  QDIO_SBAL *sbal, BYTE sbalk, int sb )
 {
-#if !defined(QETH_DEBUG)
-    UNREFERENCED(msg);
-    UNREFERENCED(dev);
-    UNREFERENCED(sbal);
-    UNREFERENCED(sbalk);
-    UNREFERENCED(sb);
-#else /* defined(QETH_DEBUG) */
+    char errmsg[256] = {0};
     U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
     U64 sba;
     U32 sblen;
@@ -1262,10 +1322,14 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
     FETCH_DW( sba,   sbal->sbale[sb].addr   );
     FETCH_FW( sblen, sbal->sbale[sb].length );
 
-    DBGTRC2( dev, msg, sb, sbala, sbalk, sba, sblen,
+    MSGBUF( errmsg, msg, sb, sbala, sbalk, sba, sblen,
         sbal->sbale[sb].flags[0],
         sbal->sbale[sb].flags[3]);
-#endif /*defined(QETH_DEBUG)*/
+
+    // HHC03985 "%1d:%04X %s: %s"
+    WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        "QDIO", errmsg );
+
     return qrc;
 }
 /*-------------------------------------------------------------------*/
@@ -1278,19 +1342,33 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
 
 /*-------------------------------------------------------------------*/
-/* Helper macro to check for logically last SBALE                    */
+/* Helper macro to check if last SBALE fragment                      */
 /*-------------------------------------------------------------------*/
-#define WR_LOGICALLY_LAST_SBALE( _flag0 )   (!grp->wrpack ?         \
-  ( (_flag0) & SBALE_FLAG0_LAST_ENTRY) :                            \
-  (((_flag0) & SBALE_FLAG0_LAST_ENTRY) ||                           \
-  (((_flag0) & SBALE_FLAG0_FRAG_LAST) == SBALE_FLAG0_FRAG_LAST )))
+#define IS_LAST_SBALE_FRAGMENT( _flag0 )                            \
+    (((_flag0) & SBALE_FLAG0_FRAG_LAST) == SBALE_FLAG0_FRAG_LAST )
 
 
 /*-------------------------------------------------------------------*/
 /* Helper macro to check if absolutely the last SBALE                */
 /*-------------------------------------------------------------------*/
-#define IS_ABSOLUTELY_LAST_SBALE( _flag0 )                          \
-  ((_flag0) & SBALE_FLAG0_LAST_ENTRY)
+#define IS_LAST_SBALE_ENTRY( _flag0 )                               \
+    ((_flag0) & SBALE_FLAG0_LAST_ENTRY)
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check for logically last SBALE                    */
+/*-------------------------------------------------------------------*/
+#define LOGICALLY_LAST_SBALE( _flag0, _pack )                       \
+    ((_pack) ? (IS_LAST_SBALE_FRAGMENT( _flag0 )                    \
+            ||  IS_LAST_SBALE_ENTRY( _flag0 ))                      \
+             :  IS_LAST_SBALE_ENTRY( _flag0 ))
+
+
+/*-------------------------------------------------------------------*/
+/* Helper macro to check for logically last SBALE    (o/p only)      */
+/*-------------------------------------------------------------------*/
+#define WR_LOGICALLY_LAST_SBALE( _flag0 )                           \
+    LOGICALLY_LAST_SBALE( (_flag0), grp->wrpack )
 
 
 /*-------------------------------------------------------------------*/
@@ -1378,11 +1456,19 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 
     if (unlikely(dev->buflen < 0))
     {
-        // HHC03972 "%1d:%04X %s: error reading from device %s: %s"
-        WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            "QETH", grp->ttifname, strerror( errnum ));
-        errno = errnum;
-        return QRC_EIOERR;
+        if (errnum == EAGAIN)
+        {
+            errno = EAGAIN;
+            return QRC_EPKEOF;
+        }
+        else
+        {
+            // HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
+            WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                "QETH", grp->ttifname, errnum, strerror( errnum ));
+            errno = errnum;
+            return QRC_EIOERR;
+        }
     }
 
     if (unlikely(dev->buflen == 0))
@@ -1414,9 +1500,9 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
         return QRC_SUCCESS;
     }
 
-    // HHC03971 "%1d:%04X %s: error writing to device %s: %s"
+    // HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
     WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QETH", grp->ttifname, strerror( errnum ));
+        "QETH", grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
     return QRC_EIOERR;
 }
@@ -1592,7 +1678,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
                                    BYTE* hdr, int hdrlen )
 {
     int ssb = sb;                       /* Starting Storage Block    */
-    U32 sboff = 0;                      /* Storage Block offset      */ 
+    U32 sboff = 0;                      /* Storage Block offset      */
     U32 sbrem = 0;                      /* Storage Block remaining   */
     BYTE frag0;                         /* SBALE fragment flag       */
     QRC qrc;                            /* Internal return code      */
@@ -1869,7 +1955,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         qrc = write_packet( dev, grp, dev->buf, dev->buflen );
     }
-    while (qrc >= 0 && !IS_ABSOLUTELY_LAST_SBALE( flag0 ) && ++sb < QMAXSTBK);
+    while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
 
     if (sb < QMAXSTBK)
         return qrc;
@@ -2307,7 +2393,6 @@ int i;
 
             continue;
         }
-#if defined(QETH_DEBUG) || defined(IFF_DEBUG)
         else if (!strcasecmp("debug",argv[i]))
         {
             grp->debug = 1;
@@ -2318,7 +2403,6 @@ int i;
             grp->debug = 0;
             continue;
         }
-#endif /*defined(QETH_DEBUG) || defined(IFF_DEBUG)*/
         else
             logmsg(_("Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
     }
@@ -3193,11 +3277,12 @@ int num;                                /* Number of bytes to move   */
             }
 
             /* Prepare to wait for additional packets or pipe signal */
+            fd = grp->ppfd[0];
             FD_ZERO( &readset );
-            FD_SET((fd = grp->ppfd[0]), &readset);
+            FD_SET( grp->ppfd[0], &readset );
             if(dev->qdio.i_qmask)
             {
-                FD_SET(grp->ttfd, &readset);
+                FD_SET( grp->ttfd, &readset );
                 if (fd < grp->ttfd)
                     fd = grp->ttfd;
             }
@@ -3369,14 +3454,21 @@ static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 /*-------------------------------------------------------------------*/
 /* Signal Adapter Sync                                               */
 /*-------------------------------------------------------------------*/
-static int qeth_do_sync( DEVBLK *dev, U32 qmask )
+static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 {
     int rc = 0;
-    UNREFERENCED(dev);          /* unreferenced for non-DEBUG builds */
-    UNREFERENCED(qmask);        /* unreferenced for non-DEBUG builds */
 
-    DBGTRC( dev, "SIGA-s dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", qmask, 0, dev->devnum );
+    /* Return CC1 if the device is not QDIO active */
+    if(!(dev->scsw.flag2 & SCSW2_Q))
+        return 1;
+
+    /* Validate Input and Output Masks */
+    oqmask &= ~(0xffffffff >> dev->qdio.o_qcnt);
+    iqmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
+
+    DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)\n",
+        dev->devnum, oqmask, iqmask );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", oqmask, iqmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -3386,10 +3478,20 @@ static int qeth_do_sync( DEVBLK *dev, U32 qmask )
     }
     else
     {
-        /* (nop; do nothing) */
+        /*
+        ** The Synchronize Function updates either the adapter's SLSB
+        ** or program's SLSB with the other's State Block information.
+        ** Buffer states in the program's SLSB indicating control unit
+        ** ownership will cause the adapter's SLSB to be updated for
+        ** that buffer. Buffers in the adapter's SLSB indicating owner-
+        ** ship by the program will cause the program's SLSB to be up-
+        ** dated.
+        */
+        /* FIXME Code missing SIGA-Sync functionality */
+        FIXME("Code missing SIGA-Sync functionality");
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", qmask, 0, dev->devnum );
+    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", oqmask, iqmask, dev->devnum );
     return rc;
 }
 
@@ -4209,47 +4311,19 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 }
 
 
+#if defined(OPTION_W32_CTCI)
 /*-------------------------------------------------------------------*/
 /* Initialize MAC address                                            */
 /*-------------------------------------------------------------------*/
 void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
-    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
-    int ttfd;                   /* Interface file descriptor (temp)  */
     static const BYTE zeromac[IFHWADDRLEN] = {0};
     char* tthwaddr;
     BYTE iMAC[ IFHWADDRLEN ];
     int rc = 0;
 
-    if (grp->tthwaddr)
-        return;
-
-    /* Create TEMPORARY interface if needed */
-    if ((ttfd = grp->ttfd) < 0)
-    {
-        rc = TUNTAP_CreateInterface
-        (
-            grp->tuntap,
-            0
-                | IFF_NO_PI
-                | IFF_OSOCK
-                | (grp->l3 ? IFF_TUN : IFF_TAP)
-            ,
-            &ttfd,
-            ttifname
-
-        );
-    }
-    else
-        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
-
     /* Retrieve the MAC Address directly from the tuntap interface */
-    if (!(rc < 0))
-        rc = TUNTAP_GetMACAddr( ttifname, &tthwaddr );
-
-    /* Close the temporary interface if we created one */
-    if (grp->ttfd < 0)
-        TUNTAP_Close( ttfd );
+    rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
 
     /* Did we get what we wanted? */
     if (0
@@ -4275,6 +4349,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
     free( tthwaddr );
 }
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -4282,44 +4357,12 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 {
-    char ttifname[IFNAMSIZ];    /* Interface network name    (temp)  */
-    int ttfd;                   /* Interface file descriptor (temp)  */
     char* ttmtu;
     U16 uMTU;
     int rc = 0;
 
-    if (grp->ttmtu)
-    {
-        grp->uMTU = (U16) atoi( grp->ttmtu );
-        return;
-    }
-
-    /* Create TEMPORARY interface if needed */
-    if ((ttfd = grp->ttfd) < 0)
-    {
-        rc = TUNTAP_CreateInterface
-        (
-            grp->tuntap,
-            0
-                | IFF_NO_PI
-                | IFF_OSOCK
-                | (grp->l3 ? IFF_TUN : IFF_TAP)
-            ,
-            &ttfd,
-            ttifname
-
-        );
-    }
-    else
-        strlcpy( ttifname, grp->ttifname, IFNAMSIZ );
-
     /* Retrieve the MTU value directly from the TUNTAP interface */
-    if (!(rc < 0))
-        rc = TUNTAP_GetMTU( ttifname, &ttmtu );
-
-    /* Close the temporary interface if we created one */
-    if (grp->ttfd < 0)
-        TUNTAP_Close( ttfd );
+    rc = TUNTAP_GetMTU( grp->ttifname, &ttmtu );
 
     /* Did we get what we wanted? */
     if (0
@@ -4333,7 +4376,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
         if (ttmtu)
             free( ttmtu );
-        ttmtu = strdup( DEF_MTU_STR );
+        ttmtu = strdup( QETH_DEF_MTU );
         uMTU = (U16) atoi( ttmtu );
     }
 
@@ -4401,14 +4444,6 @@ HDL_DEPENDENCY_SECTION;
     HDL_DEPENDENCY( HERCULES );
     HDL_DEPENDENCY( DEVBLK );
     HDL_DEPENDENCY( SYSBLK );
-
-    memcpy( (NED*)&configuration_data[0], &osa_device_ned [0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[1], &osa_ctlunit_ned[0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[2], &osa_token_ned  [0], sizeof( NED ));
-    memcpy( (NED*)&configuration_data[3], &osa_general_neq[0], sizeof( NEQ ));
-
-    memcpy( (ND*)&node_data[0], &osa_nd[0], sizeof( ND ));
-    memcpy( (ND*)&node_data[1], &osa_nq[0], sizeof( NQ ));
 }
 END_DEPENDENCY_SECTION
 

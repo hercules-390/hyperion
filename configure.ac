@@ -768,6 +768,12 @@ AC_CHECK_FUNCS( sysconf )
 AC_CHECK_FUNCS( mlock )
 AC_CHECK_FUNCS( mlockall )
 AC_CHECK_FUNCS( gettid )
+AC_CHECK_FUNCS( pvalloc )
+AC_CHECK_FUNCS( valloc )
+AC_CHECK_FUNCS( posix_memalign )
+
+
+
 
 AC_CHECK_FUNCS( vsscanf,
                [hc_cv_have_vsscanf=yes],

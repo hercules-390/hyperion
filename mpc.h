@@ -546,7 +546,7 @@ typedef struct _MPC_IPA {
 #define IPA_PASSTHRU            0x00001000L  /*  *  *                */
 #define IPA_FLUSH_ARP_SUPPORT   0x00002000L  /*     *                */
 #define IPA_FULL_VLAN           0x00004000L  /*     *                */
-#define IPA_INBOUND_PASSTHRU    0x00008000L  /*                      */
+#define IPA_INBOUND_PASSTHRU    0x00008000L  /*  *  *                */
 #define IPA_SOURCE_MAC          0x00010000L  /*  *  *                */
 #define IPA_OSA_MC_ROUTER       0x00020000L  /*     *                */
 #define IPA_QUERY_ARP_ASSIST    0x00040000L  /*     *                */

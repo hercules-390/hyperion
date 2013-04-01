@@ -1428,9 +1428,9 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             rv = TUNTAP_Write( pPTPBLK->fd, pData, iPktLen );
             if (rv < 0)
             {
-                // HHC03971 "%1d:%04X %s: error writing to device '%s': '%s'"
+                // HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
                 WRMSG(HHC03971, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                        pPTPBLK->szTUNIfName, strerror( errno ) );
+                        pPTPBLK->szTUNIfName, errno, strerror( errno ) );
                 rv = -3;
                 break;
             }
@@ -2045,9 +2045,9 @@ void*  ptp_read_thread( PTPBLK* pPTPBLK )
         {
             if (!pPTPBLK->fCloseInProgress)
             {
-                // HHC03972 "%1d:%04X %s: error reading from device '%s': '%s'"
+                // HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
                 WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                     pPTPBLK->szTUNIfName, strerror( errno ) );
+                                     pPTPBLK->szTUNIfName, errno, strerror( errno ) );
             }
             break;
         }
