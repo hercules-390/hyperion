@@ -21,25 +21,28 @@
 /*-------------------------------------------------------------------*/
 #if !defined(INLINE)
   #if defined(__GNUC__)
-    #define INLINE __inline__ __attribute__((always_inline))
+    #define INLINE          __inline__ __attribute__((always_inline))
   #elif defined(_MSVC_)
-    #define INLINE __forceinline
+    #define INLINE          __forceinline
   #else
-    #define INLINE inline
+    #define INLINE          __inline
   #endif
 #endif
 #if !defined(_MSVC_)
   #if !defined(__noop)
-    #define __noop(...)
+    #define __noop(...)     do{;}while(0)
   #endif
 #endif
 
+/*-------------------------------------------------------------------*/
+/*      Define min/max macros                                        */
+/*-------------------------------------------------------------------*/
 #if !defined(min)
- #define min(_x, _y) ((_x) < (_y) ? (_x) : (_y))
+  #define min(_x, _y)       ((_x) < (_y) ? (_x) : (_y))
 #endif
 
 #if !defined(max)
- #define max(_x, _y) ((_x) > (_y) ? (_x) : (_y))
+  #define max(_x, _y)       ((_x) > (_y) ? (_x) : (_y))
 #endif
 
 /*-------------------------------------------------------------------*/
