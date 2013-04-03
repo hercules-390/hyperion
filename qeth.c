@@ -108,7 +108,7 @@
   #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3) \
                             PTT( _class, _string, _tr1, _tr2, _tr3)
 #else
-  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3)
+  #define PTT_QETH_TIMING_DEBUG(...)    __noop()
 #endif
 
 /* (activate DBGTRC statements if needed) */
@@ -135,8 +135,8 @@
       }                                     \
     } while(0)
 #else
-  #define DBGTRC(_dev, ...)         do{;}while(0)
-  #define DBGTRC2(_dev, _msg, ...)  do{;}while(0)
+  #define DBGTRC(...)           __noop()
+  #define DBGTRC2(...)          __noop()
 #endif
 
 /* (activate tracing of I/O data buffers) */
@@ -144,7 +144,7 @@
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
 #else
-  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)    do{;}while(0)
+  #define MPC_DUMP_DATA(...)    __noop()
 #endif // QETH_DUMP_DATA
 
 
@@ -3392,7 +3392,7 @@ int num;                                /* Number of bytes to move   */
                 DBGTRC(dev, "Activate Queues: signal %d received\n",sig);
 
                 /* Exit immediately if requested to do so */
-                if (sig == QDSIG_HALT)
+                if (QDSIG_HALT == sig)
                     break;
 
                 /* Update packing mode flags if requested */
