@@ -1287,6 +1287,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\resolve.c"
+							>
+						</File>
+						<File
 							RelativePath=".\rexx.c"
 							>
 						</File>
@@ -1643,6 +1647,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\resolve.h"
+							>
+						</File>
+						<File
 							RelativePath=".\service.h"
 							>
 						</File>
@@ -1672,6 +1680,10 @@
 						</File>
 						<File
 							RelativePath=".\version.h"
+							>
+						</File>
+						<File
+							RelativePath=".\vmd250.h"
 							>
 						</File>
 						<File
