@@ -420,6 +420,7 @@ int w32_internal_rc ( U32* pStat )
     {
         default:                          break;  // (leave errno set to whatever it already is)
         case NO_ERROR:    errno = 0;      break;  // (normal expected i/o result)
+        case ERROR_CRC:   errno = EIO;    break;  // (dirty drive or bad media)
 
         case ERROR_BEGINNING_OF_MEDIA: *pStat |= GMT_BOT     (0xFFFFFFFF); errno = EIO;       break;
         case ERROR_END_OF_MEDIA:       *pStat |= GMT_EOT     (0xFFFFFFFF); errno = ENOSPC;    break;
