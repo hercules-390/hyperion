@@ -112,15 +112,29 @@ int w32_free_ifd( ifd_t  ifd )
 
     lock();
     {
-        if ( ifd >= 0  &&  ifd < W32STAPE_MAX_FDNUMS )
-            g_ifds [ ifd ] = 0;
-        else
-        {
-            rc = -1;
-            errno = EBADF;
-        }
+        rc = w32_free_ifd_nolock( ifd );
     }
     unlock();
+
+    return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Release an internal fd number...
+
+static
+int w32_free_ifd_nolock( ifd_t  ifd )
+{
+    int rc = 0;
+    errno = 0;
+
+    if ( ifd >= 0  &&  ifd < W32STAPE_MAX_FDNUMS )
+        g_ifds [ ifd ] = 0;
+    else
+    {
+        rc = -1;
+        errno = EBADF;
+    }
 
     return rc;
 }
@@ -552,7 +566,7 @@ int w32_close_tape ( ufd_t  ufd )
         g_BOTmsk [ ifd ] = 0xFFFFFFFF;
         g_BOTbot [ ifd ] = 0x00000000;
 
-        VERIFY( w32_free_ifd( ifd ) == 0 );
+        VERIFY( w32_free_ifd_nolock( ifd ) == 0 );
 
         // Close the file...
 
