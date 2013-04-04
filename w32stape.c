@@ -105,24 +105,6 @@ ifd_t  w32_alloc_ifd()
 // Release an internal fd number...
 
 static
-int w32_free_ifd( ifd_t  ifd )
-{
-    int rc = 0;
-    errno = 0;
-
-    lock();
-    {
-        rc = w32_free_ifd_nolock( ifd );
-    }
-    unlock();
-
-    return rc;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// Release an internal fd number...
-
-static
 int w32_free_ifd_nolock( ifd_t  ifd )
 {
     int rc = 0;
@@ -135,6 +117,24 @@ int w32_free_ifd_nolock( ifd_t  ifd )
         rc = -1;
         errno = EBADF;
     }
+
+    return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Release an internal fd number...
+
+static
+int w32_free_ifd( ifd_t  ifd )
+{
+    int rc = 0;
+    errno = 0;
+
+    lock();
+    {
+        rc = w32_free_ifd_nolock( ifd );
+    }
+    unlock();
 
     return rc;
 }
