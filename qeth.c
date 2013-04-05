@@ -55,7 +55,7 @@
 /*-------------------------------------------------------------------*/
 
 #define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
-#define QETH_TIMING_DEBUG       // #define to debug speed/performance
+#define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
@@ -95,7 +95,7 @@
   #define  ENABLE_TRACING_STMTS   1     // (Fish: DEBUGGING)
   #include "dbgtrace.h"                 // (Fish: DEBUGGING)
   #define  NO_QETH_OPTIMIZE             // (Fish: DEBUGGING) (MSVC only)
-  #define  QETH_TIMING_DEBUG            // (Fish: DEBUG speed/timing)
+  #define  QETH_PTT_TRACING             // (Fish: DEBUG speed/debugging)
 #endif
 
 /* (disable optimizations if debugging) */
@@ -103,12 +103,12 @@
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-/* (debug QETH speed/performance issues) */
-#if defined( QETH_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
-  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3) \
-                            PTT( _class, _string, _tr1, _tr2, _tr3)
+/* (QETH speed/performance/debugging) */
+#if defined( QETH_PTT_TRACING ) || defined( OPTION_WTHREADS )
+  #define PTT_QETH_TRACE( _string, _tr1, _tr2, _tr3) \
+          PTT(PTT_CL_INF, _string, _tr1, _tr2, _tr3)
 #else
-  #define PTT_QETH_TIMING_DEBUG(...)    __noop()
+  #define PTT_QETH_TRACE(...)       __noop()
 #endif
 
 /* (activate DBGTRC statements if needed) */
@@ -1456,16 +1456,16 @@ static BYTE more_packets( DEVBLK* dev )
 static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 {
     int errnum;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", 0, dev->bufsize, 0 );
+    PTT_QETH_TRACE( "rdpack entr", dev->bufsize, 0, 0 );
     dev->buflen = TUNTAP_Read( dev->fd, dev->buf, dev->bufsize );
     errnum = errno;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", 0, dev->bufsize, dev->buflen );
 
     if (unlikely(dev->buflen < 0))
     {
         if (errnum == EAGAIN)
         {
             errno = EAGAIN;
+            PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EPKEOF );
             return QRC_EPKEOF;
         }
         else
@@ -1474,6 +1474,7 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
             WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 "QETH", grp->ttifname, errnum, strerror( errnum ));
             errno = errnum;
+            PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EIOERR );
             return QRC_EIOERR;
         }
     }
@@ -1481,9 +1482,11 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
     if (unlikely(dev->buflen == 0))
     {
         errno = EAGAIN;
+        PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EPKEOF );
         return QRC_EPKEOF;
     }
 
+    PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_SUCCESS );
     return QRC_SUCCESS;
 }
 
@@ -1496,14 +1499,14 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 {
     int wrote, errnum;
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", 0, pktlen, 0 );
+    PTT_QETH_TRACE( "wrpack entr", 0, pktlen, 0 );
     wrote = TUNTAP_Write( dev->fd, pkt, pktlen );
     errnum = errno;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", 0, pktlen, 0 );
 
     if (likely(wrote == pktlen))
     {
         dev->qdio.txcnt++;
+        PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_SUCCESS );
         return QRC_SUCCESS;
     }
 
@@ -1511,6 +1514,7 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
     WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
         "QETH", grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
+    PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_EIOERR );
     return QRC_EIOERR;
 }
 
@@ -1898,12 +1902,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         hdr = (BYTE*)(dev->mainstor + sba);
 
         /* Verify Block is long enough to hold the full OSA header.
-           FIX ME: there is nothing in the specs that requires the
+           FIXME: there is nothing in the specs that requires the
            header to not span multiple Storage Blocks so we should
            should probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                "QETH", "** FIX ME ** OSA_HDR spans multiple storage blocks." );
+                "QETH", "** FIXME ** OSA_HDR spans multiple storage blocks." );
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
         hdr_id = hdr[0];
@@ -1990,6 +1994,7 @@ int mq = dev->qdio.i_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int did_read = 0;                       /* Indicates some data read  */
 
+    PTT_QETH_TRACE( "prinq entr", 0,0,0 );
     do
     {
         if(dev->qdio.i_qmask & (0x80000000 >> qn))
@@ -2038,6 +2043,7 @@ int did_read = 0;                       /* Indicates some data read  */
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                             SET_DSCI(dev,DSCI_IOCOMP);
                             grp->reqpci = TRUE;
+                            PTT_QETH_TRACE( "prinq OK", qn,bn,qrc );
                             return;
                         }
                         else if (qrc == QRC_EPKEOF)
@@ -2045,6 +2051,7 @@ int did_read = 0;                       /* Indicates some data read  */
                             /* We didn't find any packets/frames meant
                             for us (perhaps the destination MAC or IP
                             addresses didn't match) so just return. */
+                            PTT_QETH_TRACE( "*prcinq EOF", qn,bn,qrc );
                             return;   /* (nothing for us to do) */
                         }
                     }
@@ -2057,6 +2064,7 @@ int did_read = 0;                       /* Indicates some data read  */
                         STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
+                        PTT_QETH_TRACE( "*prcinq ERR", qn,bn,qrc );
                         return;
                     }
 
@@ -2091,12 +2099,13 @@ int did_read = 0;                       /* Indicates some data read  */
     char buff[4096];
     int n;
         DBGTRC(dev, "Input dropped (No available buffers)\n");
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
+        PTT_QETH_TRACE( "b4 tt read2", -1, sizeof(buff), 0 );
         n = TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
+        PTT_QETH_TRACE( "af tt read2", -1, sizeof(buff), n );
         if(n > 0)
             grp->reqpci = TRUE;
     }
+    PTT_QETH_TRACE( "prinq exit", 0,0,0 );
 }
 /* end process_input_queues */
 
@@ -2112,6 +2121,7 @@ int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int found_buff = 0;                     /* Found primed o/p buffer   */
 
+    PTT_QETH_TRACE( "proutq entr", 0,0,0 );
     do
     {
         if(dev->qdio.o_qmask & (0x80000000 >> qn))
@@ -2162,6 +2172,7 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                         slsb->slsbe[bn] = SLSBE_ERROR;
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->reqpci = TRUE;
+                        PTT_QETH_TRACE( "*proutq ERR", qn,bn,qrc );
                         return;
                     }
 
@@ -2180,6 +2191,8 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
             qn = 0;
     }
     while ((dev->qdio.o_qpos = qn) != sqn);
+
+    PTT_QETH_TRACE( "proutq exit", 0,0,0 );
 }
 /* end process_output_queues */
 
@@ -2661,19 +2674,26 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     {
         int ttfd = grp->ttfd;
 
+        PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
         qeth_halt_device(dev);
+        PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
         grp->ttfd = -1;
         dev->fd = -1;
 
         if(ttfd)
             TUNTAP_Close(ttfd);
+        PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos pipe", 0,0,0 );
         if(grp->ppfd[0])
             close_pipe(grp->ppfd[0]);
         if(grp->ppfd[1])
             close_pipe(grp->ppfd[1]);
+        PTT_QETH_TRACE( "af clos pipe", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos othr", 0,0,0 );
         if(grp->tuntap)
             free(grp->tuntap);
         if(grp->tthwaddr)
@@ -2692,18 +2712,24 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttmtu);
         if(grp->ttchpid)
             free(grp->ttchpid);
+        PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos fbuf", 0,0,0 );
         remove_and_free_any_buffers_on_chain( grp );
+        PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
         destroy_condition(&grp->qcond);
         destroy_lock(&grp->qlock);
         destroy_lock(&grp->qblock);
 
-        free(dev->group->grp_data);
+        PTT_QETH_TRACE( "b4 clos fgrp", 0,0,0 );
+        free( dev->group->grp_data );
         dev->group->grp_data = NULL;
+        PTT_QETH_TRACE( "af clos fgrp", 0,0,0 );
     }
     else
         dev->fd = -1;
+
     return 0;
 } /* end function qeth_close_device */
 
@@ -2883,6 +2909,7 @@ int num;                                /* Number of bytes to move   */
             /* Only ever seen during z/OS shutdown */
             if( grp->debug )
             {
+                PTT_QETH_TRACE( "shut notify", dev->devnum,0,0 );
                 mpc_display_description( dev, "Shutdown Notify" );
                 MPC_DUMP_DATA( "END", iobuf, length, FROM_GUEST );
             }
@@ -2937,10 +2964,15 @@ int num;                                /* Number of bytes to move   */
         ** as long as IDX is still active (we only exit when there
         ** is a response to give them or IDX is no longer active).
         */
+        PTT_QETH_TRACE( "read entr", 0,0,0 );
+
         while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
             /* Remove IDX response buffer from chain. */
+            PTT_QETH_TRACE( "b4 rd rmbuf", 0,0,0 );
             bhr = remove_buffer_from_chain( grp );
+            PTT_QETH_TRACE( "af rd rmbuf", bhr,0,0 );
+
             if (bhr)
             {
                 /* Point to response data and get its length. */
@@ -2992,6 +3024,7 @@ int num;                                /* Number of bytes to move   */
                     /* Only ever seen during z/OS shutdown */
                     if( grp->debug )
                     {
+                        PTT_QETH_TRACE( "shut ack", 0,0,0 );
                         mpc_display_description( dev, "Shutdown Acknowledge" );
                         MPC_DUMP_DATA( "END", iobuf, length, TO_GUEST );
                     }
@@ -3024,10 +3057,13 @@ int num;                                /* Number of bytes to move   */
 
             /* Wait for an IDX response buffer to be chained. */
             obtain_lock(&grp->qlock);
+            PTT_QETH_TRACE( "read wait", 0,0,0 );
             wait_condition(&grp->qcond, &grp->qlock);
             release_lock(&grp->qlock);
 
         } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
+
+        PTT_QETH_TRACE( "read exit", 0,0,0 );
 
         break; /*switch*/
 
@@ -3379,7 +3415,7 @@ int num;                                /* Number of bytes to move   */
         dev->qdio.o_qmask = 0;              /* No output queues yet  */
         FD_ZERO( &readset );                /* Init empty read set   */
 
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0,0,0 );
+        PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Loop until halt signal is received via notification pipe */
         while (1)
@@ -3389,7 +3425,7 @@ int num;                                /* Number of bytes to move   */
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
                 read_pipe(grp->ppfd[0],&sig,1);
-                DBGTRC(dev, "Activate Queues: signal %d received\n",sig);
+                DBGTRC( dev, "Activate Queues: signal 0x%02X received\n", sig );
 
                 /* Exit immediately if requested to do so */
                 if (QDSIG_HALT == sig)
@@ -3405,9 +3441,9 @@ int num;                                /* Number of bytes to move   */
             /* Process the Input Queue if any packets have arrived */
             if(rc != 0 && dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0,0,0 );
+                PTT_QETH_TRACE( "b4 procinpq", 0,0,0 );
                 process_input_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0,0,0 );
+                PTT_QETH_TRACE( "af procinpq", 0,0,0 );
             }
 
             /* ALWAYS process all Output Queues each time regardless of
@@ -3417,9 +3453,9 @@ int num;                                /* Number of bytes to move   */
             */
             if(dev->qdio.o_qmask)
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0,0,0 );
+                PTT_QETH_TRACE( "b4 procoutq", 0,0,0 );
                 process_output_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0,0,0 );
+                PTT_QETH_TRACE( "af procoutq", 0,0,0 );
             }
 
             /* Present adapter interrupt if needed */
@@ -3441,11 +3477,11 @@ int num;                                /* Number of bytes to move   */
             }
 
             /* Wait (but only very briefly) for more work to arrive */
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0,0,0 );
+            PTT_QETH_TRACE( "b4 select", 0,0,0 );
             rc = select( fd+1, &readset, NULL, NULL, &tv );
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0,0,rc );
+            PTT_QETH_TRACE( "af select", 0,0,rc );
         }
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0,0,rc );
+        PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
         /* Reply to halt signal */
         if (sig == QDSIG_HALT)
@@ -3453,6 +3489,8 @@ int num;                                /* Number of bytes to move   */
             BYTE sig = QDSIG_HALT;
             write_pipe(grp->ppfd[1],&sig,1);
         }
+
+        PTT_QETH_TRACE( "actq exit", 0,0,0 );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3491,7 +3529,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd, rc = 0;
 
     DBGTRC( dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+    PTT_QETH_TRACE( "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -3529,7 +3567,7 @@ int noselrd, rc = 0;
         }
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
     return rc;
 }
 
@@ -3577,12 +3615,12 @@ static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 {
     int rc;
     DBGTRC( dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
         DBGTRC( dev, "SIGA-w dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
 }
 
@@ -3594,12 +3632,12 @@ static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 {
     int rc;
     DBGTRC( dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
         DBGTRC( dev, "SIGA-m dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
 }
 
@@ -3621,7 +3659,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 
     DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)\n",
         dev->devnum, oqmask, iqmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", oqmask, iqmask, dev->devnum );
+    PTT_QETH_TRACE( "b4 SIGA-s", oqmask, iqmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -3644,7 +3682,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 //      FIXME("Code missing SIGA-Sync functionality");
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", oqmask, iqmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-s", oqmask, iqmask, dev->devnum );
     return rc;
 }
 
