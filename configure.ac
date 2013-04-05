@@ -630,6 +630,7 @@ AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
 
 AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCSIFBRDADDR,       [hc_cv_have_siocsifbrdaddr=yes],      [hc_cv_have_siocsifbrdaddr=no],      [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCGIFHWADDR,        [hc_cv_have_siocgifhwaddr=yes],       [hc_cv_have_siocgifhwaddr=no],       [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )

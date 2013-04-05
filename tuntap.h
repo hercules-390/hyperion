@@ -104,6 +104,11 @@ extern int      TUNTAP_SetNetMask       ( char*   pszNetDevName,
                                           char*   pszNetMask );
 #endif
 
+#ifdef OPTION_TUNTAP_SETBRDADDR
+extern int      TUNTAP_SetBCastAddr     ( char*   pszNetDevName,
+                                          char*   pszBCastAddr );
+#endif
+
 extern int      TUNTAP_SetIPAddr6       ( char*   pszNetDevName,
                                           char*   pszIPAddr6,
                                           char*   pszPrefixLen6 );

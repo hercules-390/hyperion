@@ -351,7 +351,8 @@ do { \
 #define HHC00152 "Out of memory"
 #define HHC00153 "Net device %s: Invalid prefix length %s"
 #define HHC00154 "Preconfigured interface %s does not exist or is not accessible by Hercules (EPERM)"
-// 00155 - 00159 unused
+#define HHC00155 "Net device %s: Invalid broadcast address %s"
+// 00156 - 00159 unused
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
 

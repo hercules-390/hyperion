@@ -416,6 +416,40 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
 
 
 //
+// TUNTAP_SetBCastAddr
+//
+#ifdef OPTION_TUNTAP_SETBRDADDR
+int           TUNTAP_SetBCastAddr( char*  pszNetDevName,
+                                   char*  pszBCastAddr )
+{
+    struct hifr         hifr;
+    struct sockaddr_in* sin;
+
+    if( !pszNetDevName || !*pszNetDevName )
+    {
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        return -1;
+    }
+
+    memset( &hifr, 0, sizeof( struct hifr ) );
+    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    sin = (struct sockaddr_in*)&hifr.hifr_broadaddr;
+    sin->sin_family = AF_INET;
+    set_sockaddr_in_sin_len( sin );
+
+    if( !pszBCastAddr  ||
+        !inet_aton( pszBCastAddr, &sin->sin_addr ) )
+    {
+        WRMSG( HHC00155, "E", pszNetDevName, !pszBCastAddr ? "NULL" : pszBCastAddr );
+            return -1;
+    }
+
+    return TUNTAP_IOCtl( 0, SIOCSIFBRDADDR, (char*)&hifr );
+}   // End of function  TUNTAP_SetBCastAddr()
+#endif // OPTION_TUNTAP_SETBRDADDR
+
+
+//
 // TUNTAP_SetIPAddr6
 //
 #if defined(ENABLE_IPV6)

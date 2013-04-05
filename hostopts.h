@@ -124,6 +124,7 @@
 /*-------------------------------------------------------------------*/
 
 #undef    OPTION_TUNTAP_SETNETMASK      /* (default initial setting) */
+#undef    OPTION_TUNTAP_SETBRDADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_GETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_SETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_DELADD_ROUTES   /* (default initial setting) */
@@ -132,27 +133,31 @@
 
 #if defined(HAVE_DECL_SIOCSIFNETMASK) && \
             HAVE_DECL_SIOCSIFNETMASK
-
-  #define OPTION_TUNTAP_SETNETMASK      /* TUNTAP_SetNetMask works   */
+    #define OPTION_TUNTAP_SETNETMASK    /* TUNTAP_SetNetMask works   */
 #endif
+
+#if defined(HAVE_DECL_SIOCSIFBRDADDR) && \
+            HAVE_DECL_SIOCSIFBRDADDR
+    #define OPTION_TUNTAP_SETBRDADDR    /* TUNTAP_SetBCastAddr works */
+#endif
+
 #if defined(HAVE_DECL_SIOCGIFHWADDR) && \
             HAVE_DECL_SIOCGIFHWADDR
-
-  #define OPTION_TUNTAP_GETMACADDR      /* TUNTAP_GetMACAddr works   */
+   #define OPTION_TUNTAP_GETMACADDR     /* TUNTAP_GetMACAddr works   */
 #endif
+
 #if defined(HAVE_DECL_SIOCSIFHWADDR) && \
             HAVE_DECL_SIOCSIFHWADDR
-
-  #define OPTION_TUNTAP_SETMACADDR      /* TUNTAP_SetMACAddr works   */
+   #define OPTION_TUNTAP_SETMACADDR     /* TUNTAP_SetMACAddr works   */
 #endif
+
 #if defined(HAVE_DECL_SIOCADDRT) && defined(HAVE_DECL_SIOCDELRT) && \
             HAVE_DECL_SIOCADDRT  &&         HAVE_DECL_SIOCDELRT
-
-  #define OPTION_TUNTAP_DELADD_ROUTES   /* Del/Add Routes    works   */
+ #define OPTION_TUNTAP_DELADD_ROUTES    /* Del/Add Routes    works   */
 #endif
+
 #if defined(HAVE_DECL_SIOCDIFADDR) && \
             HAVE_DECL_SIOCDIFADDR
-
   #define OPTION_TUNTAP_CLRIPADDR       /* TUNTAP_ClrIPAddr works    */
 #endif
 
@@ -188,15 +193,12 @@
 #else
   #undef  OPTION_FISHIO                 /* Use Herc's I/O scheduler  */
 #endif
-
 #if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
     #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
 #endif
-
 #if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
     #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not neither
 #endif
-
 
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
