@@ -18,6 +18,7 @@ typedef struct _QDIO_DEV {
     int     idxstate;           /* IDX state                         */
 #define MPC_IDX_STATE_INACTIVE  0x00 // ZZ THIS FIELD NEEDS TO MOVE
 #define MPC_IDX_STATE_ACTIVE    0x01
+#define MPC_IDX_STATE_HALTING   0x02
 
     int     thinint;            /* Thin Interrupts on PCI            */
 

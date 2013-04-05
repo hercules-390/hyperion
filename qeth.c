@@ -2277,37 +2277,62 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
 /*-------------------------------------------------------------------*/
 /* Halt device related functions...                                  */
 /*-------------------------------------------------------------------*/
-static void qeth_signal_halt (OSA_GRP *grp)
+static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
+{
+    if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+    {
+        DBGTRC( dev, "Halting read device\n" );
+
+        /* Ask, then wait for, the READ CCW loop to exit */
+        obtain_lock( &grp->qlock );
+        PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
+        dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
+        signal_condition( &grp->qcond );
+        wait_condition( &grp->qcond, &grp->qlock );
+        PTT_QETH_TRACE( "af halt read", 0,0,0 );
+        release_lock( &grp->qlock );
+
+        DBGTRC( dev, "Read device halted\n" );
+    }
+}
+
+static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
 {
 fd_set readset;
 BYTE sig = QDSIG_HALT;
 
-    /* Send signal */
-    qeth_write_pipe( grp->ppfd[1], &sig );
+    UNREFERENCED(dev);  /* (unreferenced for non-DEBUG builds) */
 
-    /* Wait for reply */
-    FD_ZERO( &readset );
-    FD_SET( grp->ppfd[0], &readset );
-    qeth_select( grp->ppfd[0]+1, &readset, NULL );
-    qeth_read_pipe( grp->ppfd[0], &sig );
+    if (dev->scsw.flag2 & SCSW2_Q)
+    {
+        DBGTRC( dev, "Halting data device\n" );
+
+        /* Indicate QDIO no longer active, write halt request to
+           signalling pipe, then wait for and read the halt reply. */
+        dev->scsw.flag2 &= ~SCSW2_Q;
+        qeth_write_pipe( grp->ppfd[1], &sig );
+        FD_ZERO( &readset );
+        FD_SET( grp->ppfd[0], &readset );
+        qeth_select( grp->ppfd[0]+1, &readset, NULL );
+        qeth_read_pipe( grp->ppfd[0], &sig );
+
+        DBGTRC( dev, "Data device halted\n" );
+    }
 }
 
 static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    /* Signal ACTIVATE QUEUES loop to exit if QDIO is active */
-    if(dev->scsw.flag2 & SCSW2_Q)
-    {
-        dev->scsw.flag2 &= ~SCSW2_Q;
-        qeth_signal_halt(grp);
-    }
+    if (dev == dev->group->memdev[2])
+        qeth_halt_data_device( dev, grp );
     else
-        if(dev->group->acount == OSA_GROUP_SIZE)
+        if (dev == dev->group->memdev[0])
+            qeth_halt_read_device( dev, grp );
+        else
         {
-            /* Tell READ loop to not wait for IDX response */
-            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
-            signal_condition(&grp->qcond);
+            DBGTRC( dev, "qeth_halt_device: noop!\n" );
+            PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
         }
 }
 
@@ -2591,6 +2616,11 @@ int i;
             }
         }
 
+
+        // warn if ttnetmask/ttpfxlen discrepency
+        // build default ttnetmask/ttpfxlen if undefined
+
+
 #if defined(ENABLE_IPV6)
         /* Check the grp->ttipaddr6 and grp->ttpfxlen6 values */
         if (grp->ttipaddr6)
@@ -2748,19 +2778,19 @@ static int qeth_close_device ( DEVBLK *dev )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    if(!dev->member && dev->group->grp_data)
+    if (!dev->member && dev->group->grp_data)
     {
         int ttfd = grp->ttfd;
 
         PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
-        qeth_halt_device(dev);
+        qeth_halt_read_device( dev->group->memdev[0], grp );
+        qeth_halt_data_device( dev->group->memdev[2], grp );
         PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
         grp->ttfd = -1;
         dev->fd = -1;
-
-        if(ttfd)
+        if(ttfd > 0)
             TUNTAP_Close(ttfd);
         PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
@@ -3140,6 +3170,15 @@ int num;                                /* Number of bytes to move   */
             release_lock(&grp->qlock);
 
         } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
+
+        if (dev->qdio.idxstate == MPC_IDX_STATE_HALTING)
+        {
+            obtain_lock( &grp->qlock );
+            PTT_QETH_TRACE( "read hlt ack", 0,0,0 );
+            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
+            signal_condition( &grp->qcond );
+            release_lock( &grp->qlock );
+        }
 
         PTT_QETH_TRACE( "read exit", 0,0,0 );
 
