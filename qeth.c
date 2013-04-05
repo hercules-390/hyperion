@@ -391,6 +391,80 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 
 
 /*-------------------------------------------------------------------*/
+/* QETH pipe read/write/select...                                    */
+/*-------------------------------------------------------------------*/
+#define  QETH_TEMP_PIPE_ERROR( errnum )  ( errnum == HSO_EINTR    ||  \
+                                           errnum == HSO_EAGAIN   ||  \
+                                           errnum == HSO_EALREADY ||  \
+                                           errnum == HSO_EWOULDBLOCK )
+
+static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 select", 0,0,0 );
+    for (;;)
+    {
+        /* Do the select */
+        rc = select( nfds, rdset, NULL, NULL, tv );
+
+        /* Return if successful */
+        if (rc >= 0)
+            break;
+
+        /* Get error code */
+        errnum = HSO_errno;
+
+        /* Return if non-temporary error */
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+
+        /* Otherwise pause before retrying */
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af select", 0,0,0 );
+    return rc;
+}
+static int qeth_read_pipe (int fd, BYTE *sig)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 rdpipe", 0,0,*sig );
+    for (;;) {
+        rc = read_pipe( fd, sig, 1 );
+        if (rc >= 0)
+            break;
+        errnum = HSO_errno;
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af rdpipe", 0,0,*sig );
+    return rc;
+}
+static int qeth_write_pipe (int fd, BYTE *sig)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 wrpipe", 0,0,*sig );
+    for (;;) {
+        rc = write_pipe( fd, sig, 1 );
+        if (rc >= 0)
+            break;
+        errnum = HSO_errno;
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af wrpipe", 0,0,*sig );
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Issue generic error message with return code and strerror msg.    */
 /* Returns the same errnum value that was passed.                    */
 /*-------------------------------------------------------------------*/
@@ -1445,7 +1519,7 @@ static BYTE more_packets( DEVBLK* dev )
     struct timeval tv = {0,0};
     FD_ZERO( &readset );
     FD_SET( dev->fd, &readset );
-    return (select( dev->fd+1, &readset, NULL, NULL, &tv ) > 0);
+    return (qeth_select( dev->fd+1, &readset, &tv ) > 0);
 }
 
 
@@ -1456,6 +1530,7 @@ static BYTE more_packets( DEVBLK* dev )
 static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 {
     int errnum;
+
     PTT_QETH_TRACE( "rdpack entr", dev->bufsize, 0, 0 );
     dev->buflen = TUNTAP_Read( dev->fd, dev->buf, dev->bufsize );
     errnum = errno;
@@ -2206,13 +2281,13 @@ fd_set readset;
 BYTE sig = QDSIG_HALT;
 
     /* Send signal */
-    write_pipe( grp->ppfd[1], &sig, 1 );
+    qeth_write_pipe( grp->ppfd[1], &sig );
 
     /* Wait for reply */
     FD_ZERO( &readset );
     FD_SET( grp->ppfd[0], &readset );
-    select( grp->ppfd[0]+1, &readset, NULL, NULL, NULL );
-    read_pipe( grp->ppfd[0], &sig, 1 );
+    qeth_select( grp->ppfd[0]+1, &readset, NULL );
+    qeth_read_pipe( grp->ppfd[0], &sig );
 }
 
 static void qeth_halt_device (DEVBLK *dev)
@@ -3424,7 +3499,8 @@ int num;                                /* Number of bytes to move   */
             sig = QDSIG_RESET;
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
-                read_pipe(grp->ppfd[0],&sig,1);
+                qeth_read_pipe( grp->ppfd[0], &sig );
+
                 DBGTRC( dev, "Activate Queues: signal 0x%02X received\n", sig );
 
                 /* Exit immediately if requested to do so */
@@ -3440,11 +3516,7 @@ int num;                                /* Number of bytes to move   */
 
             /* Process the Input Queue if any packets have arrived */
             if(rc != 0 && dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
-            {
-                PTT_QETH_TRACE( "b4 procinpq", 0,0,0 );
                 process_input_queues(dev);
-                PTT_QETH_TRACE( "af procinpq", 0,0,0 );
-            }
 
             /* ALWAYS process all Output Queues each time regardless of
                whether the guest has recently executed a SIGA-w or not
@@ -3452,11 +3524,7 @@ int num;                                /* Number of bytes to move   */
                (SIGA-w are NOT required to cause processing o/p queues)
             */
             if(dev->qdio.o_qmask)
-            {
-                PTT_QETH_TRACE( "b4 procoutq", 0,0,0 );
                 process_output_queues(dev);
-                PTT_QETH_TRACE( "af procoutq", 0,0,0 );
-            }
 
             /* Present adapter interrupt if needed */
             if(grp->reqpci)
@@ -3477,9 +3545,7 @@ int num;                                /* Number of bytes to move   */
             }
 
             /* Wait (but only very briefly) for more work to arrive */
-            PTT_QETH_TRACE( "b4 select", 0,0,0 );
-            rc = select( fd+1, &readset, NULL, NULL, &tv );
-            PTT_QETH_TRACE( "af select", 0,0,rc );
+            rc = qeth_select( fd+1, &readset, &tv );
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
@@ -3487,7 +3553,9 @@ int num;                                /* Number of bytes to move   */
         if (sig == QDSIG_HALT)
         {
             BYTE sig = QDSIG_HALT;
-            write_pipe(grp->ppfd[1],&sig,1);
+            DBGTRC( dev, "Activate Queues: sending halt ack 0x%02X\n", sig );
+            PTT_QETH_TRACE( "actq halted", 0,0,0 );
+            rc = qeth_write_pipe( grp->ppfd[1], &sig );
         }
 
         PTT_QETH_TRACE( "actq exit", 0,0,0 );
@@ -3562,8 +3630,9 @@ int noselrd, rc = 0;
         /* Send signal to ACTIVATE QUEUES device thread loop */
         if(noselrd && dev->qdio.i_qmask)
         {
-            BYTE b = QDSIG_READ;
-            write_pipe(grp->ppfd[1],&b,1);
+            BYTE sig = QDSIG_READ;
+            DBGTRC( dev, "SIGA-r: sending signal 0x%02X\n", sig );
+            rc = qeth_write_pipe( grp->ppfd[1], &sig );
         }
     }
 
@@ -3602,7 +3671,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
-        write_pipe(grp->ppfd[1],&sig,1);
+    {
+        DBGTRC( dev, "SIGA-o: sending signal 0x%02X\n", sig );
+        qeth_write_pipe( grp->ppfd[1], &sig );
+    }
 
     return 0;
 }
