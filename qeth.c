@@ -1715,7 +1715,7 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
             if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
             {
                 SET_DSCI(dev,DSCI_IOCOMP);
-                grp->reqpci = TRUE;
+                grp->oqPCI = TRUE;
             }
 
             /* Retrieve the next storage block entry */
@@ -2117,7 +2117,7 @@ int did_read = 0;                       /* Indicates some data read  */
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                             SET_DSCI(dev,DSCI_IOCOMP);
-                            grp->reqpci = TRUE;
+                            grp->iqPCI = TRUE;
                             PTT_QETH_TRACE( "prinq OK", qn,bn,qrc );
                             return;
                         }
@@ -2138,7 +2138,7 @@ int did_read = 0;                       /* Indicates some data read  */
                         slsb->slsbe[bn] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         SET_ALSI(dev,ALSI_ERROR);
-                        grp->reqpci = TRUE;
+                        grp->iqPCI = TRUE;
                         PTT_QETH_TRACE( "*prcinq ERR", qn,bn,qrc );
                         return;
                     }
@@ -2172,13 +2172,12 @@ int did_read = 0;                       /* Indicates some data read  */
     if (!did_read && more_packets( dev ))
     {
     char buff[4096];
-    int n;
         DBGTRC(dev, "Input dropped (No available buffers)\n");
-        PTT_QETH_TRACE( "b4 tt read2", -1, sizeof(buff), 0 );
-        n = TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
-        PTT_QETH_TRACE( "af tt read2", -1, sizeof(buff), n );
-        if(n > 0)
-            grp->reqpci = TRUE;
+        PTT_QETH_TRACE( "*prcinq drop", dev->qdio.i_qmask, 0, 0 );
+        TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
+        /* No available/empty Input Queues were to be found */
+        /* Wake up the program so it can process its queues */
+        grp->iqPCI = TRUE;
     }
     PTT_QETH_TRACE( "prinq exit", 0,0,0 );
 }
@@ -2246,7 +2245,7 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                     {
                         slsb->slsbe[bn] = SLSBE_ERROR;
                         SET_ALSI(dev,ALSI_ERROR);
-                        grp->reqpci = TRUE;
+                        grp->oqPCI = TRUE;
                         PTT_QETH_TRACE( "*proutq ERR", qn,bn,qrc );
                         return;
                     }
@@ -2266,6 +2265,9 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
             qn = 0;
     }
     while ((dev->qdio.o_qpos = qn) != sqn);
+
+    if (!found_buff)
+        PTT_QETH_TRACE( "*proutq EOF", dev->qdio.o_qmask,0,0 );
 
     PTT_QETH_TRACE( "proutq exit", 0,0,0 );
 }
@@ -2348,7 +2350,8 @@ int i;
             create_pipe(grp->ppfd);
 
             /* Set Non-Blocking mode */
-            socket_set_blocking_mode(grp->ppfd[0],0);
+            VERIFY( socket_set_blocking_mode(grp->ppfd[0],0) == 0);
+            VERIFY( socket_set_blocking_mode(grp->ppfd[1],0) == 0);
 
             /* Set defaults */
 #if defined( OPTION_W32_CTCI )
@@ -3492,6 +3495,9 @@ int num;                                /* Number of bytes to move   */
 
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
+        /* Notify guest the queues have been successfully activated  */
+        raise_adapter_interrupt( dev );
+
         /* Loop until halt signal is received via notification pipe */
         while (1)
         {
@@ -3514,9 +3520,37 @@ int num;                                /* Number of bytes to move   */
                 if (QDSIG_WRMULT == sig) grp->wrpack = 1;
             }
 
-            /* Process the Input Queue if any packets have arrived */
-            if(rc != 0 && dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
-                process_input_queues(dev);
+            /* Check if any new packets have arrived */
+            if (rc && FD_ISSET( grp->ttfd, &readset ))
+            {
+                /* Process packets if Queue is available */
+                if (dev->qdio.i_qmask)
+                {
+                    grp->noiq = FALSE; /* (reset flag) */
+                    process_input_queues(dev);
+                }
+                else /* (no input queue available) */
+                {
+                    /* Drop the packet... */
+                    PTT_QETH_TRACE( "actq drop", 0,0,0 );
+                    read_packet( dev, grp );
+
+                    /* Notify guest that an Input Queue is needed */
+                    if (!grp->noiq)
+                    {
+                        grp->noiq = TRUE;
+                        grp->iqPCI = TRUE;
+                    }
+                }
+            }
+
+            /* Present "input available" adapter interrupt if needed */
+            if (grp->iqPCI)
+            {
+                PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
+                grp->iqPCI = FALSE;
+                raise_adapter_interrupt( dev );
+            }
 
             /* ALWAYS process all Output Queues each time regardless of
                whether the guest has recently executed a SIGA-w or not
@@ -3526,23 +3560,19 @@ int num;                                /* Number of bytes to move   */
             if(dev->qdio.o_qmask)
                 process_output_queues(dev);
 
-            /* Present adapter interrupt if needed */
-            if(grp->reqpci)
+            /* Present "output processed" adapter interrupt if needed */
+            if (grp->oqPCI)
             {
-                grp->reqpci = FALSE;
-                raise_adapter_interrupt(dev);
+                PTT_QETH_TRACE( "actq oqPCI", 0,0,0 );
+                grp->oqPCI = FALSE;
+                raise_adapter_interrupt( dev );
             }
 
             /* Prepare to wait for additional packets or pipe signal */
-            fd = grp->ppfd[0];
             FD_ZERO( &readset );
             FD_SET( grp->ppfd[0], &readset );
-            if(dev->qdio.i_qmask)
-            {
-                FD_SET( grp->ttfd, &readset );
-                if (fd < grp->ttfd)
-                    fd = grp->ttfd;
-            }
+            FD_SET( grp->ttfd,    &readset );
+            fd = max( grp->ppfd[0], grp->ttfd );
 
             /* Wait (but only very briefly) for more work to arrive */
             rc = qeth_select( fd+1, &readset, &tv );

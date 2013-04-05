@@ -169,7 +169,9 @@ typedef struct _OSA_GRP {
     int   l3;                   /* Adapter in layer 3 mode           */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
-    int   reqpci;               /* PCI has been requested            */
+    int   iqPCI;                /* Input Queue PCI has requested     */
+    int   oqPCI;                /* Output Queue PCI has requested    */
+    int   noiq;                 /* No Input Queue PCI notification   */
     int   setip;                /* Process IPA_CMD_SETIP (temporary) */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
