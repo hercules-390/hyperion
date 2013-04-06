@@ -406,18 +406,14 @@ static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
     {
         /* Do the select */
         rc = select( nfds, rdset, NULL, NULL, tv );
-
+        /* Get error code */
+        errnum = HSO_errno;
         /* Return if successful */
         if (rc >= 0)
             break;
-
-        /* Get error code */
-        errnum = HSO_errno;
-
         /* Return if non-temporary error */
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
-
         /* Otherwise pause before retrying */
         sched_yield();
     }
@@ -432,7 +428,7 @@ static int qeth_read_pipe (int fd, BYTE *sig)
     PTT_QETH_TRACE( "b4 rdpipe", 0,0,*sig );
     for (;;) {
         rc = read_pipe( fd, sig, 1 );
-        if (rc >= 0)
+        if (rc > 0)
             break;
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
@@ -450,7 +446,7 @@ static int qeth_write_pipe (int fd, BYTE *sig)
     PTT_QETH_TRACE( "b4 wrpipe", 0,0,*sig );
     for (;;) {
         rc = write_pipe( fd, sig, 1 );
-        if (rc >= 0)
+        if (rc > 0)
             break;
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
