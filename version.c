@@ -94,6 +94,8 @@ static const char *build_info[] = {
 
 #if defined( OPTION_FISHIO)
     "Using   FishIO",
+#else
+    "Using   HercIO",
 #endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
