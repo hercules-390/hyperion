@@ -93,7 +93,7 @@ CPB cap =
 #endif /* defined(NFILE) */
         ,
                    /*  Indicate if large files supported */
-#if ( _MSVC_ )
+#if defined( _MSVC_ )
              0x80
 #elif defined(_LFS_LARGEFILE) || ( defined(SIZEOF_OFF_T) && SIZEOF_OFF_T > 4 )
              0x80
