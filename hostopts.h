@@ -175,29 +175,34 @@
   #define  DLL_EXPORT
 #endif
 
-#if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < _WIN32_WINNT_VISTA )
-  WARNING( "OPTION_WTHREADS specified on unsupported version of Windows; Using FTHREADS" )
-  #undef OPTION_WTHREADS
-  #define OPTION_FTHREADS
+#if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
+  #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
+#endif
+
+#if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
+  #define OPTION_FTHREADS               // (default)
+#endif
+
+#if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < 0x0600 ) // _WIN32_WINNT_VISTA
+  #error OPTION_WTHREADS requires Windows Vista or greater (_WIN32_WINNT >= 0x0600)
+#endif
+
+#if defined( OPTION_FISHIO ) && defined( OPTION_HERCIO )
+  #error Either OPTION_FISHIO or OPTION_HERCIO must be specified, not both
+#endif
+
+#if !defined( OPTION_FISHIO ) && !defined( OPTION_HERCIO )
+  #if defined ( OPTION_FTHREADS )
+    #define OPTION_FISHIO               // (implied)
+    #undef  OPTION_HERCIO               // (implied)
+  #else // defined( OPTION_WTHREADS )
+    #define OPTION_HERCIO               // (implied)
+    #undef  OPTION_FISHIO               // (implied)
+  #endif
 #endif
 
 #if defined( OPTION_WTHREADS )
-  #undef OPTION_FTHREADS
-  #undef OPTION_FISHIO                  /* User Herc's I/O Scheduler */
-  #undef OPTION_PTTRACE
-#endif // defined( OPTION_WTHREADS ) 
-
-/*  Note:  OPTION_FISHIO  only possible with  OPTION_FTHREADS        */
-#if defined(OPTION_FTHREADS)
-  #define OPTION_FISHIO                 /* Use Fish's I/O scheduler  */
-#else
-  #undef  OPTION_FISHIO                 /* Use Herc's I/O scheduler  */
-#endif
-#if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
-    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
-#endif
-#if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
-    #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not neither
+  #undef  OPTION_PTTRACE                /* (Cannot use PTT?!)        */
 #endif
 
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */

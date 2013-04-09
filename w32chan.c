@@ -276,7 +276,7 @@ DEVTHREADPARMS*  SelectDeviceThread()
 DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 {
     DEVTHREADPARMS*  pThreadParms;      // ptr to returned device_thread parameters
-    DWORD            dwThreadID;        // (work)
+    TID              dummy_tid;         // (needed, but not actually used)
 
     pThreadParms = malloc(sizeof(DEVTHREADPARMS));      // (allocate structure)
 
@@ -313,9 +313,10 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     pThreadParms->bThreadIsDead = FALSE;
     pThreadParms->dwThreadID = 0;
 
-    if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,"DeviceThread") != 0)
+    if (create_thread( &dummy_tid, DETACHED, DeviceThread, pThreadParms, "DeviceThread" ) != 0)
     {
-        WRMSG ( HHC04111, "E", 0, wDevNum, "fthread_create(DeviceThread)", errno, strerror(errno) );
+        // HHC04111 "%1d:%04X Function %s failed: [%02d] %s"
+        WRMSG ( HHC04111, "E", 0, wDevNum, "create_thread(DeviceThread)", errno, strerror(errno) );
         MyCloseHandle(pThreadParms->hShutdownEvent);
         MyCloseHandle(pThreadParms->hRequestQueuedEvent);
         MyDeleteCriticalSection(&pThreadParms->IORequestListLock);
