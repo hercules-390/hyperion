@@ -349,6 +349,66 @@ AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
     fi
 ])
 
+#-----------------------------------------------------------------------------
+#
+# Macro:  HC_CHECK_HQA_DIR()     Auto-detect HQA directory/header
+#
+#  Checks whether or not the 'HQA_DIR' environment variable is defined
+#  and whether or not the optional "hqa.h" header exists within it and
+#  defines $hc_cv_have_hqa_h and $hc_cv_hqa_inc variables appropriately.
+#
+# Parms:   none
+# Input:   HQA_DIR shell environment variable
+# Output:  $hc_cv_have_hqa_dir = yes/no whether the variable is defined
+#          and the directory exists, $hc_cv_have_hqa_h = yes/no whether
+#          the "hqa.h" header file was found within HQA_DIR directory,
+#          and if so, sets $hc_cv_hqa_inc to $HQA_DIR. If either the
+#          the directory is not found or "hqa.h" is not found within it
+#          then $hc_cv_have_hqa_h = no and $hc_cv_hqa_inc=.  (dot)
+#
+#  NOTE:   It is responsibility of the caller to perform the AC_DEFINE()
+#          of HAVE_HQA_H if $hc_cv_have_hqa_h = yes as well as performing
+#          AC_SUBST() for HQA_INC using the defined $hc_cv_hqa_inc value.
+#
+#-----------------------------------------------------------------------------
+
+AC_DEFUN([HC_CHECK_HQA_DIR],
+[
+    AC_ARG_VAR( [HQA_DIR], [directory of optional "hqa.h" header] )
+
+    AC_MSG_CHECKING( [whether HQA_DIR is defined] )
+
+      if test -d "$HQA_DIR"; then
+        hc_cv_have_hqa_dir=yes
+      else
+        hc_cv_have_hqa_dir=no
+      fi
+
+    AC_MSG_RESULT( [$hc_cv_have_hqa_dir] )
+
+    if test "$hc_cv_have_hqa_dir" = "yes"; then
+
+      AC_MSG_CHECKING( [whether hqa.h exists in HQA_DIR] )
+
+        if test -e "$HQA_DIR/hqa.h"; then
+          hc_cv_have_hqa_h=yes
+        else
+          hc_cv_have_hqa_h=no
+        fi
+
+      AC_MSG_RESULT( [$hc_cv_have_hqa_h] )
+
+    else
+      hc_cv_have_hqa_h=no
+    fi
+
+    if test "$hc_cv_have_hqa_h" = "yes"; then
+      hc_cv_hqa_inc=$HQA_DIR
+    else
+      hc_cv_hqa_inc=.
+    fi
+])
+
 ###############################################################################
 #   (end-of-file)
 ###############################################################################

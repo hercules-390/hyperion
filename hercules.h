@@ -8,9 +8,7 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
-#ifdef HAVE_CONFIG_H
-  #include <config.h> // Hercules build configuration options/settings
-#endif
+#include "hstdinc.h"        /* Standard header file includes         */
 
 /*-------------------------------------------------------------------*/
 /* Performance attribute: use registers to pass function parameters  */

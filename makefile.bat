@@ -1,18 +1,10 @@
 @if defined TRACEON (@echo on) else (@echo off)
 
-
-  ::  Uncomment the below to set a custom build description, or
-  ::  define it via 'set' command before invoking this batch file.
-
-  :: set CUSTOM_BUILD_STRING="(whatever you want it to be)"
-
-
-  ::  Uncomment the below to ALWAYS generate assembly (.cod) listings, or
-  ::  define it yourself via 'set' command before invoking this batch file.
-
-  :: set "ASSEMBLY_LISTINGS=1"
-
-
+  setlocal
+  set "TRACE=if defined DEBUG echo"
+  set "return=goto :EOF"
+  set "rc=0"
+  goto :parse_args
 
 ::*****************************************************************************
 ::*****************************************************************************
@@ -52,31 +44,7 @@
 ::*                                                                           *
 ::*****************************************************************************
 
-  set "rc=0"
-  set "TRACE=if defined TRACEON echo"
 
-  if "%~1" == ""        goto :help
-  if "%~1" == "?"       goto :help
-  if "%~1" == "/?"      goto :help
-  if "%~1" == "-?"      goto :help
-  if "%~1" == "--help"  goto :help
-
-  set "build_type=%~1"
-  set "makefile_name=%~2"
-  set "num_cpus=%~3"
-  set "extra_nmake_arg=%~4"
-  set "SolutionDir=%~5"
-
-:extra_args
-
-  if "%~5" == "" goto :begin
-  set "extra_nmake_arg=%extra_nmake_arg% %~5"
-  shift /1
-  goto :extra_args
-
-::-----------------------------------------------------------------------------
-::                                HELP
-::-----------------------------------------------------------------------------
 :help
 
   echo.
@@ -94,7 +62,12 @@
   echo  Format:
   echo.
   echo.
-  echo    %~nx0 {build-type} {makefile-name} {num-cpu-engines} [-a^|clean]
+  echo    %~nx0  {build-type}  {makefile-name}  {num-cpu-engines}  \
+  echo                  [-asm]                                            \
+  echo                  [-title "custom build title"]                     \
+  echo                  [-hqa {directory}]                                \
+  echo                  [-a^|clean]                                        \
+  echo                  [{nmake-option}]
   echo.
   echo.
   echo  Where:
@@ -102,14 +75,27 @@
   echo    {build-type}        The desired build configuration. Valid values are
   echo                        DEBUG / RETAIL for building a 32-bit Hercules, or
   echo                        DEBUG-X64 / RETAIL-X64 to build a 64-bit version
-  echo                        of Hercules targeting (favoring) AMD64 processors,
-  echo                        or DEBUG-IA64 / RETAIL-IA64 for a 64-bit version
-  echo                        of Hercules favoring Intel Itanium-64 processors.
+  echo                        of Hercules targeting (favoring) AMD64 processors.
   echo.
-  echo    {makefile-name}     The name of our makefile:  'makefile.msvc'
+  echo                        DEBUG builds activate/enable UNOPTIMIZED debugging
+  echo                        logic and are thus VERY slow and not recommended
+  echo                        for normal use. RETAIL builds on the other hand
+  echo                        are highly optimized and thus the recommended type
+  echo                        for normal every day ("production") use.
+  echo.
+  echo    {makefile-name}     The name of our makefile: 'makefile.msvc' (or some
+  echo                        other makefile name if you have a customized one)
   echo.
   echo    {num-cpu-engines}   The maximum number of emulated CPUs (NUMCPU=) you
   echo                        want this build of Hercules to support: 1 to 64.
+  echo.
+  echo    -asm                To generate assembly (.cod) listings.
+  echo.
+  echo    -title "xxx..."     To define a custom title for this build.
+  echo.
+  echo    -hqa "directory"    To define the Hercules Quality Assurance directory
+  echo                        containing your optional "hqa.h" and/or "HQA.msvc"
+  echo                        build settings override files.
   echo.
   echo    [-a^|clean]          Use '-a' to perform a full rebuild of all Hercules
   echo                        binaries, or 'clean' to delete all temporary work
@@ -121,38 +107,151 @@
   echo                        HIGHLY RECOMMENDED that you always specify the '-a'
   echo                        option to ensure that a complete rebuild is done.
   echo.
+  echo    [{nmake-option}]    Extra nmake option(s).   (e.g. -k, -g, etc...)
+  echo.
 
-  exit /b 1
+  set "rc=1"
+  goto :exit
+
+
+::-----------------------------------------------------------------------------
+::                                PARSE ARGUMENTS
+::-----------------------------------------------------------------------------
+:parse_args
+
+  if "%~1" == ""        goto :help
+  if "%~1" == "?"       goto :help
+  if "%~1" == "/?"      goto :help
+  if "%~1" == "-?"      goto :help
+  if "%~1" == "--help"  goto :help
+
+  call :parse_args_loop %*
+  if not "%rc%" == "0" goto :exit
+  goto :begin
+
+:parse_args_loop
+
+  if "%~1" == "" %return%
+  set "2shifts="
+  call :parse_this_arg "%~1" "%~2"
+  shift /1
+  if defined 2shifts shift /1
+  goto :parse_args_loop
+
+:parse_this_arg
+
+  set "opt=%~1"
+  set "optval=%~2"
+
+  if "%opt:~0,1%" == "-" goto :parse_opt
+  if "%opt:~0,1%" == "/" goto :parse_opt
+
+  ::  Positional argument...
+
+  if not defined build_type (
+    set         "build_type=%opt%"
+    %return%
+  )
+
+  if not defined makefile_name (
+    set         "makefile_name=%opt%"
+    %return%
+  )
+
+  if not defined num_cpus (
+    set         "num_cpus=%opt%"
+    %return%
+  )
+
+  if not defined extra_nmake_args (
+    set         "extra_nmake_args=%opt%"
+    %return%
+  )
+
+  if not defined SolutionDir (
+    set         "SolutionDir=%opt%"
+    %return%
+  )
+
+  ::  Remaining arguments treated as extra nmake arguments...
+
+  set "2shifts="
+  set "extra_nmake_args=%extra_nmake_args% %opt%"
+  %return%
+
+:parse_opt
+
+  set "2shifts=yes"
+
+  if /i "%opt:~1%" == "hqa"   goto :hqa
+  if /i "%opt:~1%" == "asm"   goto :asm
+  if /i "%opt:~1%" == "title" goto :title
+
+  ::  Unrecognized options treated as extra nmake arguments...
+
+  set "2shifts="
+  set "extra_nmake_args=%extra_nmake_args% %opt%"
+  %return%
+
+:hqa
+
+  set "HQA_DIR="
+
+  if not exist "%optval%" goto :hqa_dir_notfound
+  if not exist "%optval%\hqa.h" %return%
+
+  set "HQA_DIR=%optval%"
+  set "rc=0"
+  %return%
+
+:hqa_dir_notfound
+
+  echo.
+  echo %~nx0^(1^) : error C9999 : HQA directory not found: "%optval%"
+  set "rc=1"
+  %return%
+
+:asm
+
+  set "2shifts="
+  set "ASSEMBLY_LISTINGS=1"
+  %return%
+
+:title
+
+  set CUSTOM_BUILD_STRING="%optval%"
+  %return%
+
 
 ::-----------------------------------------------------------------------------
 ::                                BEGIN
 ::-----------------------------------------------------------------------------
 :begin
 
-
   call :set_build_env
-  if %rc% NEQ 0 exit /b 1
-
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   call :validate_makefile
-  if %rc% NEQ 0 exit /b 1
-
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   call :validate_num_cpus
-  if %rc% NEQ 0 exit /b 1
-
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   call :set_cfg
-  if %rc% NEQ 0 exit /b 1
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
 
   call :set_targ_arch
-  if %rc% NEQ 0 exit /b 1
-
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   call :set_VERSION
-  if %rc% NEQ 0 exit /b 1
-
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   goto :%build_env%
 
@@ -201,7 +300,8 @@
   if /i "%targ_arch%" == "all" goto :multi_build
 
   call :set_host_arch
-  if %rc% NEQ 0 exit /b 1
+  if %rc% NEQ 0 (set "rc=1"
+                 goto :exit)
 
   :: (see PROGRAMMING NOTE further above!)
   setlocal
@@ -679,16 +779,10 @@
   ::   -g        display !INCLUDEd files (VS2005 or greater only)
 
 
-  nmake -nologo -f "%makefile_name%" -s %extra_nmake_arg%
+
+  nmake -nologo -f "%makefile_name%" -s %extra_nmake_args%
   set "rc=%errorlevel%"
-
-
-
-  :: (see the PROGRAMMING NOTE at the beginning of this batch file!)
-  endlocal  &  set "rc=%rc%"
-
-
-  exit /b %rc%
+  goto :exit
 
 
 ::-----------------------------------------------------------------------------
@@ -732,7 +826,7 @@
   call :re_set SolutionPath "%SolutionDir%notused.sln"
   call "%VSTOOLSDIR%vsvars32.bat"
 
-  call :ifallorclean %extra_nmake_arg%
+  call :ifallorclean %extra_nmake_args%
   if defined # (
     set "VCBUILDOPT=/clean"
   ) else if defined @ (
@@ -743,8 +837,7 @@
 
   "%runjobs_cmd%" %CFG%-%targ_arch%.jobs
   set "rc=%errorlevel%"
-
-  exit /b %rc%
+  goto :exit
 
 
 :no_runjobs
@@ -752,8 +845,12 @@
   echo.
   echo %~nx0^(1^) : error C9999 : Could not find "%runjobs_cmd%" anywhere on your system
   set "rc=1"
-  exit /b %rc%
+  goto :exit
+
 
 ::-----------------------------------------------------------------------------
-::                            ((( EOF )))
+::                               EXIT
 ::-----------------------------------------------------------------------------
+:exit
+
+  endlocal & exit /b %rc%

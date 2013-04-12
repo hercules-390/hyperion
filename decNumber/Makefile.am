@@ -21,7 +21,7 @@ lns=@LN_S@
 
 LDADD = @LIBS@ 
 
-AM_CPPFLAGS = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir) -I@HQA_INC@
 
 decNumber_SRC = decContext.c \
 		decimal128.c \

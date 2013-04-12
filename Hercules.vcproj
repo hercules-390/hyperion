@@ -1559,6 +1559,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hqadefs.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hqainc.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hRexx.h"
 							>
 						</File>
@@ -1676,6 +1684,10 @@
 						</File>
 						<File
 							RelativePath=".\sr.h"
+							>
+						</File>
+						<File
+							RelativePath=".\targetver.h"
 							>
 						</File>
 						<File
@@ -2190,6 +2202,14 @@
 						</File>
 						<File
 							RelativePath=".\msvc.makefile.includes\HERC_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\HQA_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\HQA_FLAGS.msvc"
 							>
 						</File>
 						<File

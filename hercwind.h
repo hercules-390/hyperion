@@ -10,6 +10,8 @@
 /* prototypes required by Hercules in the MSVC environment           */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"        /* Standard header file includes         */
+
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
 
