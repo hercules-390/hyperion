@@ -54,7 +54,7 @@
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
+#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
@@ -512,16 +512,16 @@ static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
 /*-------------------------------------------------------------------*/
 /* Report what values we are using                                   */
 /*-------------------------------------------------------------------*/
-static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
+static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 {
     char not[8];
-    strlcpy( not, enabled ? "" : "not ", sizeof( not ));
+    strlcpy( not, grp->enabled ? "" : "not ", sizeof( not ));
 
     // HHC03997 "%1d:%04X %s: %s: %susing %s %s"
     WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
         grp->ttifname, not, "MAC", grp->tthwaddr );
 
-    if (grp->ttipaddr)
+    if (grp->l3 && grp->ttipaddr)
     {
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "IPv4", grp->ttipaddr );
@@ -529,7 +529,7 @@ static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
             grp->ttifname, not, "MASK", grp->ttnetmask );
     }
 
-    if (grp->ttipaddr6)
+    if (grp->l3 && grp->ttipaddr6)
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "IPv6", grp->ttipaddr6 );
 
@@ -562,7 +562,11 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
-    grp->enabled = 1;
+    else
+    {
+        grp->enabled = 1;
+        qeth_report_using( dev, grp );
+    }
     return rc;
 }
 
@@ -590,8 +594,11 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_disable_interface() failed" );
-
-    grp->enabled = 0;
+    else
+    {
+        grp->enabled = 0;
+        qeth_report_using( dev, grp );
+    }
     return rc;
 }
 
@@ -603,14 +610,12 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 {
     int i, rc;
 
-    /* Discard the old interface by closing the TUNTAP device */
+    /* We should only ever be called ONCE */
     if (grp->ttfd >= 0)
     {
-        int ttfd = grp->ttfd;
-        grp->ttfd = -1;
-        for (i=0; i < dev->group->acount; i++)
-            dev->group->memdev[i]->fd = -1;
-        TUNTAP_Close( ttfd );
+        DBGTRC( dev, "ERROR: TUNTAP Interface already exists!\n" );
+        ASSERT(0);              /* (Oops!) */
+        return -1;              /* Return failure */
     }
 
     /* Create the new interface by opening the TUNTAP device */
@@ -657,7 +662,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     }
 
     /* If possible, assign an IPv4 address to the interface */
-    if(grp->ttipaddr)
+    if(grp->l3 && grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
         if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
@@ -670,7 +675,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Same thing with the IPv4 subnet mask */
 #if defined( OPTION_TUNTAP_SETNETMASK )
-    if(grp->ttnetmask)
+    if(grp->l3 && grp->ttnetmask)
         if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetNetMask() failed" );
@@ -678,7 +683,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Assign it an IPv6 address too, if possible */
 #if defined(ENABLE_IPV6)
-    if(grp->ttipaddr6)
+    if(grp->l3 && grp->ttipaddr6)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetIPAddr6() failed" );
@@ -694,22 +699,6 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     } else {
         InitMTU( dev, grp );
     }
-
-    /* Enable the interface */
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_UP
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
-#if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
-        return qeth_errnum_msg( dev, grp, rc,
-            "E", "TUNTAP_SetFlags failed" );
 
     return 0;
 }
@@ -795,10 +784,11 @@ U16 offph;
                     rsp_bhr = NULL;
                     break;
                 }
-                if (qeth_create_interface( dev, grp ) != 0)
-                    qeth_errnum_msg( dev, grp, -1,
-                        "E", "qeth_create_interface() failed" );
                 rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
+                if (grp->ttfd < 0)
+                    if (qeth_create_interface( dev, grp ) != 0)
+                        qeth_errnum_msg( dev, grp, -1,
+                            "E", "qeth_create_interface() failed" );
                 break;
 
             case PUK_TYPE_SETUP:
@@ -895,14 +885,12 @@ U16 offph;
                         STORE_F3( rsp_ph->lendata, uLength3 );
                     }
 
-                    if (!qeth_enable_interface( dev, grp ))
-                    {
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                        grp->ipae |= IPA_SETADAPTERPARMS;
-                        qeth_report_using( dev, grp, 1 );
-                    }
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    grp->ipae |= IPA_SETADAPTERPARMS;
+
+                    /* Enable the TAP interface */
+                    if (!grp->l3)
+                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
@@ -910,14 +898,12 @@ U16 offph;
                 {
                     DBGTRC(dev, "  IPA_CMD_STOPLAN\n");
 
-                    if (!qeth_disable_interface( dev, grp ))
-                    {
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                        grp->ipae &= ~IPA_SETADAPTERPARMS;
-                        qeth_report_using( dev, grp, 0 );
-                    }
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    grp->ipae &= ~IPA_SETADAPTERPARMS;
+
+                    /* Disable the TAP interface */
+                    if (!grp->l3)
+                        VERIFY( qeth_disable_interface( dev, grp ) == 0);
                 }
                 break;
 
@@ -1009,9 +995,7 @@ U16 offph;
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 int rc = 0;
-                int was_enabled;
 #endif
-
                     MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
@@ -1022,25 +1006,12 @@ U16 offph;
                     );
 
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
-                    /* PROGRAMMING NOTE: cannot change the interface
-                       once it has been enabled. Thus we temporarily
-                       disable it, make our changes, and then enable
-                       it again.
-                    */
-                    if ((was_enabled = grp->enabled))
-                        qeth_disable_interface( dev, grp );
-
                     if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
                     {
                         qeth_errnum_msg( dev, grp, rc,
                             "E", "IPA_CMD_SETVMAC failed" );
-                    }
-
-                    if (was_enabled)
-                        qeth_enable_interface( dev, grp );
-
-                    if (rc != 0)
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    }
                     else
                     {
                         if (grp->tthwaddr)
@@ -1051,8 +1022,6 @@ U16 offph;
 #else
                     {
 #endif
-                        qeth_report_using( dev, grp, 1 );
-
                         if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         else
@@ -1111,22 +1080,19 @@ U16 offph;
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
                         int rc = 0;
-//!                         int was_enabled;
 
                         if (grp->setip)
                         {
                             MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
                             MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
 
-#if !defined( OPTION_W32_CTCI )
                             if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
                             {
-                                qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
+                                qeth_errnum_msg( dev, grp, rc,
+                                    "E", "IPA_CMD_SETIP failed" );
                                 retcode = IPA_RC_FFFF;
                             }
-#endif /*!defined( OPTION_W32_CTCI )*/
-                        }
-
+//!
 //!                         if (grp->ttipaddr)
 //!                             free( grp->ttipaddr );
 //!                         grp->ttipaddr = strdup( ipaddr );
@@ -1134,24 +1100,7 @@ U16 offph;
 //!                         if (grp->ttnetmask)
 //!                             free( grp->ttnetmask );
 //!                         grp->ttnetmask = strdup( ipmask );
-//!
-//!                         /* PROGRAMMING NOTE: cannot change the interface
-//!                            once it has been enabled. Thus we temporarily
-//!                            disable it, make our changes, and then enable
-//!                            it again.
-//!                         */
-//!                         if ((was_enabled = grp->enabled))
-//!                             qeth_disable_interface( dev, grp );
-//!
-//!                         if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
-//!                         {
-//!                             qeth_errnum_msg( dev, grp, rc,
-//!                                 "E", "IPA_CMD_SETIP failed" );
-//!                             retcode = IPA_RC_FFFF;
-//!                         }
-//!
-//!                         if (was_enabled)
-//!                             qeth_enable_interface( dev, grp );
+                        }
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
@@ -1162,6 +1111,10 @@ U16 offph;
 #endif /*defined(ENABLE_IPV6)*/
 
                     STORE_HW(ipa->rc,retcode);
+
+                    /* Enable the TUN interface */
+                    if (grp->l3 && IPA_RC_OK == retcode)
+                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
@@ -3596,12 +3549,18 @@ int num;                                /* Number of bytes to move   */
         DBGTRC( dev, "Activate Queues: Entry\n");
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
-        /* Notify guest the queues have been successfully activated  */
-        raise_adapter_interrupt( dev );
-
         /* Loop until halt signal is received via notification pipe */
         while (1)
         {
+            /* Prepare to wait for additional packets or pipe signal */
+            FD_ZERO( &readset );
+            FD_SET( grp->ppfd[0], &readset );
+            FD_SET( grp->ttfd,    &readset );
+            fd = max( grp->ppfd[0], grp->ttfd );
+
+            /* Wait (but only very briefly) for more work to arrive */
+            rc = qeth_select( fd+1, &readset, &tv );
+
             /* Read pipe signal if one was sent */
             if (rc && FD_ISSET( grp->ppfd[0], &readset ))
             {
@@ -3679,15 +3638,6 @@ int num;                                /* Number of bytes to move   */
                 grp->oqPCI = FALSE;
                 raise_adapter_interrupt( dev );
             }
-
-            /* Prepare to wait for additional packets or pipe signal */
-            FD_ZERO( &readset );
-            FD_SET( grp->ppfd[0], &readset );
-            FD_SET( grp->ttfd,    &readset );
-            fd = max( grp->ppfd[0], grp->ttfd );
-
-            /* Wait (but only very briefly) for more work to arrive */
-            rc = qeth_select( fd+1, &readset, &tv );
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
@@ -4543,7 +4493,6 @@ OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    UNREFERENCED(grp);
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
@@ -4551,6 +4500,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     /* There will be a single MPC_PUS_03 containing the grp->gtcmfilt token */
 
     /* There will be no response. */
+
+    /* Disable the TUN interface */
+    if (grp->l3)
+        VERIFY( qeth_disable_interface( dev, grp ) == 0);
 
     return NULL;
 }
