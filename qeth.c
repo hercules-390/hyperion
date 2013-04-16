@@ -113,30 +113,20 @@
 
 /* (activate DBGTRC statements if needed) */
 #if defined(QETH_DEBUG)
-  #define DBGTRC(_dev, ...)                 \
-    do {                                    \
-      DEVGRP *devgrp = (_dev)->group;       \
-      if (devgrp) {                         \
-        OSA_GRP* grp = devgrp->grp_data;    \
-        if(grp && grp->debug)               \
-          TRACE("QETH: " __VA_ARGS__);      \
-      }                                     \
-    } while(0)
-  #define DBGTRC2(_dev, _msg, ...)          \
-    do {                                    \
-      DEVGRP *devgrp = (_dev)->group;       \
-      if (devgrp) {                         \
-        OSA_GRP* grp = devgrp->grp_data;    \
-        if(grp && grp->debug) {             \
-          char buf[256];                    \
-          MSGBUF(buf,_msg,__VA_ARGS__);     \
-          TRACE("QETH: %s", buf);           \
-        }                                   \
-      }                                     \
+  #define DBGTRC(_dev, _msg, ...)                           \
+    do {                                                    \
+      DEVGRP *devgrp = (_dev)->group;                       \
+      if (devgrp) {                                         \
+        OSA_GRP* grp = devgrp->grp_data;                    \
+        if(grp && grp->debug) {                             \
+          char buf[256];                                    \
+          MSGBUF(buf,_msg,__VA_ARGS__);                     \
+          TRACE("QETH dev %04X: %s", (_dev)->devnum, buf);  \
+        }                                                   \
+      }                                                     \
     } while(0)
 #else
   #define DBGTRC(...)           __noop()
-  #define DBGTRC2(...)          __noop()
 #endif
 
 /* (activate tracing of I/O data buffers) */
@@ -718,6 +708,7 @@ U16 offph;
     switch(req_rrh->type) {
 
     case RRH_TYPE_CM:
+        DBGTRC(dev, "RRH_TYPE_CM\n");
         {
             MPC_PUK *req_puk;
 
@@ -726,22 +717,27 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
+                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
                 rsp_bhr = process_cm_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
+                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
                 rsp_bhr = process_cm_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
                 rsp_bhr = process_cm_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
+                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
                 rsp_bhr = process_cm_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
+                DBGTRC(dev, "  Unknown RRH_TYPE_CM type 0x%02X\n", req_puk->type);
                 rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
 
             }
@@ -753,6 +749,7 @@ U16 offph;
         break;
 
     case RRH_TYPE_ULP:
+        DBGTRC(dev, "RRH_TYPE_ULP\n");
         {
             MPC_PUK *req_puk;
 
@@ -761,6 +758,7 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
+                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
                 if (process_ulp_enable_extract( dev, req_th, req_rrh, req_puk ) != 0)
                 {
                     rsp_bhr = NULL;
@@ -773,22 +771,27 @@ U16 offph;
                 break;
 
             case PUK_TYPE_SETUP:
+                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
                 rsp_bhr = process_ulp_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_ACTIVE:
+                DBGTRC(dev, "  PUK_TYPE_ACTIVE\n");
                 rsp_bhr = process_dm_act( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
                 rsp_bhr = process_ulp_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
+                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
                 rsp_bhr = process_ulp_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
+                DBGTRC(dev, "  Unknown RRH_TYPE_ULP type 0x%02X\n", req_puk->type);
                 rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
             }
 
@@ -798,6 +801,7 @@ U16 offph;
         break;
 
     case RRH_TYPE_IPA:
+        DBGTRC(dev, "RRH_TYPE_IPA\n");
         {
             MPC_TH  *rsp_th;
             MPC_RRH *rsp_rrh;
@@ -847,7 +851,7 @@ U16 offph;
                 U32  uLength1;
                 U32  uLength3;
 
-                    DBGTRC(dev, "STARTLAN\n");
+                    DBGTRC(dev, "  IPA_CMD_STARTLAN\n");
 
                     if (lendata > SIZE_IPA_SHORT) {
                         uLoselen = lendata - SIZE_IPA_SHORT;
@@ -873,7 +877,7 @@ U16 offph;
 
             case IPA_CMD_STOPLAN:  /* 0x02 */
                 {
-                    DBGTRC(dev, "STOPLAN\n");
+                    DBGTRC(dev, "  IPA_CMD_STOPLAN\n");
 
                     if (!qeth_disable_interface( dev, grp ))
                     {
@@ -892,14 +896,14 @@ U16 offph;
                 U32 cmd;
 
                     FETCH_FW(cmd,sap->cmd);
-                    DBGTRC(dev, "SETADPPARMS (Set Adapter Parameters: %8.8x)\n",cmd);
+                    DBGTRC(dev, "  IPA_CMD_SETADPPARMS\n");
 
                     switch(cmd) {
 
                     case IPA_SAP_QUERY:  /*0x00000001 */
+                        DBGTRC(dev, "    IPA_SAP_QUERY\n");
                         {
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
-                            DBGTRC(dev, "Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
 // STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                             STORE_HW(sap->rc,IPA_RC_OK);
@@ -908,6 +912,7 @@ U16 offph;
                         break;
 
                     case IPA_SAP_SETMAC:     /* 0x00000002 */
+                        DBGTRC(dev, "    IPA_SAP_SETMAC\n");
                         {
                         SAP_SMA *sma = (SAP_SMA*)(sap+1);
                         U32 cmd;
@@ -916,7 +921,7 @@ U16 offph;
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                DBGTRC(dev, "SETMAC Read MAC address\n");
+                                DBGTRC(dev, "      IPA_SAP_SMA_CMD_READ\n");
                                 STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
                                 STORE_FW(sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
@@ -932,7 +937,7 @@ U16 offph;
 //                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
 
                             default:
-                                DBGTRC(dev, "SETMAC unsupported command (%08x)\n",cmd);
+                                DBGTRC(dev, "      Unknown IPA_SAP_SETMAC cmd 0x%08x)\n",cmd);
                                 STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                                 STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                             }
@@ -945,30 +950,29 @@ U16 offph;
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
                             grp->promisc = promisc ? MAC_PROMISC : 0;
-                            DBGTRC(dev, "Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
+                            DBGTRC(dev, "    IPA_SAP_PROMISC %s\n",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        DBGTRC(dev, "Set Access\n");
+                        DBGTRC(dev, "    IPA_SAP_SETACCESS\n");
                         STORE_HW(sap->rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "Invalid SetAdapter SubCmd(%08x)\n",cmd);
+                        DBGTRC(dev, "    Unknown IPA_CMD_SETADPPARMS command 0x%08x\n",cmd);
                         STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-
                     }
-
                 }
                 /* end case IPA_CMD_SETADPPARMS: */
                 break;
 
             case IPA_CMD_SETVMAC:  /* 0x25 */
+                DBGTRC(dev, "  IPA_CMD_SETVMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
@@ -976,8 +980,6 @@ U16 offph;
                 int rc = 0;
                 int was_enabled;
 #endif
-
-                    DBGTRC(dev, "Set VMAC\n");
 
                     MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
                         ,ipa_mac->macaddr[0]
@@ -1029,10 +1031,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELVMAC:  /* 0x26 */
+                DBGTRC(dev, "  IPA_CMD_DELVMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Del VMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -1041,10 +1043,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETGMAC:  /* 0x23 */
+                DBGTRC(dev, "  IPA_CMD_SETGMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Set GMAC\n");
                     if(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -1053,10 +1055,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELGMAC:  /* 0x24 */
+                DBGTRC(dev, "  IPA_CMD_DELGMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Del GMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -1065,11 +1067,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
+                DBGTRC(dev, "  IPA_CMD_SETIP\n");
                 {
                 BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto, retcode;
-
-                    DBGTRC(dev, "SETIP (L3 Set IP)\n");
 
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
@@ -1134,7 +1135,7 @@ U16 offph;
                 break;
 
             case IPA_CMD_QIPASSIST:  /* 0xB2 */
-                DBGTRC(dev, "QIPASSIST (L3 Query IP Assist)\n");
+                DBGTRC(dev, "  IPA_CMD_QIPASSIST\n");
                 grp->ipae |= IPA_SETADAPTERPARMS;
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
@@ -1147,7 +1148,7 @@ U16 offph;
 
                     FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
-                    DBGTRC(dev, "SETASSPARMS (L3 Set IP Assist parameters: %8.8x, %4.4x)\n",ano,cmd);
+                    DBGTRC(dev, "  IPA_CMD_SETASSPARMS: %8.8x, %4.4x)\n",ano,cmd);
 
                     if (!(ano & grp->ipas)) {
                         STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
@@ -1157,12 +1158,14 @@ U16 offph;
                     switch(cmd) {
 
                     case IPA_SAS_CMD_START:      /* 0x0001 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_START\n");
                         grp->ipae |= ano;
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_STOP\n");
                         grp->ipae &= (0xFFFFFFFF - ano);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
@@ -1172,12 +1175,13 @@ U16 offph;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_xxxxxxx\n");
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "SETASSPARMS unsupported command\n");
+                        DBGTRC(dev, "    Unknown IPA_CMD_SETASSPARMS command 0x%04X\n", cmd);
                     /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
@@ -1187,30 +1191,30 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIPM:  /* 0xB4 */
-                DBGTRC(dev, "L3 Set IPM\n");
+                DBGTRC(dev, "  IPA_CMD_SETIPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIPM:  /* 0xB5 */
-                DBGTRC(dev, "L3 Del IPM\n");
+                DBGTRC(dev, "  IPA_CMD_DELIPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETRTG:  /* 0xB6 */
-                DBGTRC(dev, "L3 Set Routing\n");
+                DBGTRC(dev, "  IPA_CMD_SETRTG\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIP:  /* 0xB7 */
-                DBGTRC(dev, "L3 Del IP\n");
+                DBGTRC(dev, "  IPA_CMD_DELIP\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
+                DBGTRC(dev, "  IPA_CMD_CREATEADDR\n");
                 {
                 BYTE *sip = (BYTE*)(ipa+1);
 
-                    DBGTRC(dev, "L3 Create IPv6 addr from MAC\n");
                     memcpy( sip+0, &grp->iMAC[0], IFHWADDRLEN/2 );
                     sip[3] = 0xFF;
                     sip[4] = 0xFE;
@@ -1220,12 +1224,12 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETDIAGASS:  /* 0xB9 */
-                DBGTRC(dev, "L3 Set Diag parms\n");
+                DBGTRC(dev, "  IPA_CMD_SETDIAGASS\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             default:
-                DBGTRC(dev, "Invalid IPA Cmd(%02x)\n",ipa->cmd);
+                DBGTRC(dev, "  Unknown RRH_TYPE_IPA command 0x%02x\n",ipa->cmd);
                 STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
             /* end switch(ipa->cmd) */
@@ -1244,7 +1248,7 @@ U16 offph;
         break;
 
     default:
-        DBGTRC(dev, "Invalid Type=%2.2x\n",req_rrh->type);
+        DBGTRC(dev, "RRH_TYPE_??: Unknown osa_adapter_cmd: req_rrh->type = 0x%02x\n",req_rrh->type);
     }
     /* end switch(req_rrh->type) */
 }
@@ -1279,10 +1283,11 @@ U16 reqtype;
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
+        DBGTRC(dev, "IDX_ACT_TYPE_READ\n");
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX Activate Read: Invalid OSA Port %d for %s Device %4.4x\n",
-                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, "IDX_ACT_TYPE_READ: Invalid OSA Port %d\n",
+                (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -1299,6 +1304,7 @@ U16 reqtype;
         break;
 
     case IDX_ACT_TYPE_WRITE:
+        DBGTRC(dev, "IDX_ACT_TYPE_WRITE\n");
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
         grp->ipas = IPA_SUPP;
@@ -1306,8 +1312,8 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX Activate Write: Invalid OSA Port %d for device %4.4x\n",
-                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, "IDX_ACT_TYPE_WRITE: Invalid OSA Port %d\n",
+                (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -1324,8 +1330,7 @@ U16 reqtype;
         break;
 
     default:
-        DBGTRC(dev, "IDX Activate: Invalid Request %4.4x for device %4.4x\n",
-            reqtype,dev->devnum);
+        DBGTRC(dev, "Unknown IDX_ACT_TYPE_xxx %04.4x\n",reqtype);
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
         // Free the buffer.
@@ -1345,7 +1350,7 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
-    DBGTRC(dev, "Adapter Interrupt dev(%4.4X)\n",dev->devnum);
+    DBGTRC(dev, "Adapter Interrupt\n");
 
     obtain_lock(&dev->lock);
     dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
@@ -2289,13 +2294,11 @@ static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
 
 static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
 {
-fd_set readset;
-BYTE sig = QDSIG_HALT;
-
     UNREFERENCED(dev);  /* (unreferenced for non-DEBUG builds) */
 
     if (dev->scsw.flag2 & SCSW2_Q)
     {
+    fd_set readset;
     BYTE sig = QDSIG_HALT;
 
         DBGTRC( dev, "Halting data device\n" );
@@ -3539,6 +3542,7 @@ int num;                                /* Number of bytes to move   */
         dev->qdio.o_qmask = 0;              /* No output queues yet  */
         FD_ZERO( &readset );                /* Init empty read set   */
 
+        DBGTRC( dev, "Activate Queues: Entry\n");
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Notify guest the queues have been successfully activated  */
@@ -3645,6 +3649,7 @@ int num;                                /* Number of bytes to move   */
             rc = qeth_write_pipe( grp->ppfd[1], &sig );
         }
 
+        DBGTRC( dev, "Activate Queues: Exit\n");
         PTT_QETH_TRACE( "actq exit", 0,0,0 );
 
         /* Return unit status */
@@ -3657,7 +3662,7 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, "Unknown CCW dev(%4.4x) code(%2.2x)\n",dev->devnum,code);
+        DBGTRC(dev, "Unknown CCW opcode 0x%02x)\n",code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3683,13 +3688,13 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd, rc = 0;
 
-    DBGTRC( dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    DBGTRC( dev, "SIGA-r qmask(%8.8x)\n", qmask );
     PTT_QETH_TRACE( "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-r dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-r: ERROR: QDIO not active\n" );
         rc = 1;
     }
     else
@@ -3773,11 +3778,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    DBGTRC( dev, "SIGA-w qmask(%8.8x)\n", qmask );
     PTT_QETH_TRACE( "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
-        DBGTRC( dev, "SIGA-w dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-w: ERROR: QDIO not active\n");
 
     PTT_QETH_TRACE( "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
@@ -3790,11 +3795,11 @@ static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
+    DBGTRC( dev, "SIGA-m qmask(%8.8x)\n", qmask );
     PTT_QETH_TRACE( "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
-        DBGTRC( dev, "SIGA-m dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-m: ERROR: QDIO not active\n");
 
     PTT_QETH_TRACE( "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
@@ -3823,7 +3828,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-s dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-s: ERROR: QDIO not active\n");
         rc = 1;
     }
     else
