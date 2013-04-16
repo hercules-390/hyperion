@@ -113,18 +113,27 @@
 
 /* (activate DBGTRC statements if needed) */
 #if defined(QETH_DEBUG)
-  #define DBGTRC(_dev, _msg, ...)                           \
-    do {                                                    \
-      DEVGRP *devgrp = (_dev)->group;                       \
-      if (devgrp) {                                         \
-        OSA_GRP* grp = devgrp->grp_data;                    \
-        if(grp && grp->debug) {                             \
-          char buf[256];                                    \
-          MSGBUF(buf,_msg,__VA_ARGS__);                     \
-          TRACE("QETH dev %04X: %s", (_dev)->devnum, buf);  \
-        }                                                   \
-      }                                                     \
-    } while(0)
+  static void DBGTRC( DEVBLK* dev, char* fmt, ... )
+  {
+    DEVGRP *devgrp = dev->group;
+    if (devgrp)
+    {
+      OSA_GRP* grp = devgrp->grp_data;
+      if(grp && grp->debug)
+      {
+        char buf[256];
+        va_list   vargs;
+        va_start( vargs, fmt );
+  #if defined( _MSVC_ )
+        _vsnprintf_s( buf, sizeof(buf), _TRUNCATE, fmt, vargs );
+  #else
+        vsnprintf( buf, sizeof(buf), fmt, vargs );
+  #endif
+        TRACE( "QETH dev %04X: %s", dev->devnum, buf );
+        va_end( vargs );
+      }
+    }
+  }
 #else
   #define DBGTRC(...)           __noop()
 #endif
