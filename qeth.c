@@ -170,7 +170,10 @@ OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
 void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
 void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
 void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
-
+int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
+int      prefix2netmask( char* ttpfxlen,  char** ttnetmask );
+U32      makepfxmask4( char* ttpfxlen );
+void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -2470,33 +2473,25 @@ int i;
         else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-
-            if(grp->ttipaddr)                  /* Free existing ipaddr     */
-                free(grp->ttipaddr);
-            if(grp->ttpfxlen) {                /* Free existing prefix siz */
-                free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
-            }
+            if(grp->ottipaddr)                 /* Save orig. ipaddr option */
+                free(grp->ottipaddr);
+            grp->ottipaddr = strdup(argv[i+1]);
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
-                if (grp->ttnetmask) {          /* Free existing netmask    */
-                    free(grp->ttnetmask);
-                    grp->ttnetmask = NULL;
-                }
-                prfx = slash + 1;              /* Point to prefix size     */
-                grp->ttpfxlen = strdup(prfx);
                 slash[0] = 0;                  /* Replace slash with null  */
+                prfx = slash + 1;              /* Point to prefix size     */
+                if(grp->ttpfxlen)
+                    free(grp->ttpfxlen);
+                grp->ttpfxlen = strdup(prfx);
             }
+            if(grp->ttipaddr)
+                free(grp->ttipaddr);
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttpfxlen) {                /* Free existing prefix siz */
-                free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
-            }
-            if(grp->ttnetmask)                 /* Free existing netmask    */
+            if(grp->ttnetmask)
                 free(grp->ttnetmask);
             grp->ttnetmask = strdup(argv[++i]);
             continue;
@@ -2567,16 +2562,13 @@ int i;
     {
         /* Validate the arguments now that the group is complete. */
 
-        DEVBLK         *cua;
-        U16             destlink;
-        int             i, rc, pfxsz, pfxlen, chpid;
-        MAC             mac;
-        HRB             hrb;
-        uint32_t        mask;
-        struct in_addr  addr4;
-        char            netmask[24];
-        char            c;
-        char           *p;
+        DEVBLK  *cua;
+        U16      destlink;
+        int      i, rc, pfxlen, chpid;
+        MAC      mac;
+        HRB      hrb;
+        char     c;
+        char    *p;
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
@@ -2612,54 +2604,89 @@ int i;
                     free(grp->ttpfxlen);
                     grp->ttpfxlen = NULL;
                 }
+                if(grp->ttnetmask)
+                {
+                    free(grp->ttnetmask);
+                    grp->ttnetmask = NULL;
+                }
+            }
+        }
+
+        if (!grp->ttnetmask && !grp->ttpfxlen)
+        {
+            grp->ttnetmask = strdup("255.255.255.255");
+            grp->ttpfxlen = strdup("32");
+        }
+        if (grp->ttnetmask)
+        {
+            char *new_ttpfxlen = NULL;
+            /* Build new prefix length based on netmask */
+            if (netmask2prefix( grp->ttnetmask, &new_ttpfxlen ) != 0)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "netmask", grp->ttnetmask );
+                free(grp->ttnetmask);
+                if(grp->ttipaddr)
+                    free(grp->ttipaddr);
+                if(grp->ttpfxlen)
+                    free(grp->ttpfxlen);
+                grp->ttnetmask = NULL;
+                grp->ttipaddr = NULL;
+                grp->ttpfxlen = NULL;
+            }
+            else /* (valid netmask) */
+            {
+                /* Check netmask value (via newly built prefix)
+                   for consistency with existing prefix length */
+                if (grp->ttpfxlen &&
+                    strcmp( new_ttpfxlen, grp->ttpfxlen ) != 0)
+                {
+                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
+                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                        "prefix length", "netmask" );
+                }
+                /* Use consistent prefix length */
+                if (grp->ttpfxlen)
+                    free( grp->ttpfxlen );
+                grp->ttpfxlen = new_ttpfxlen;
             }
         }
         if (grp->ttpfxlen)
         {
-            rc = 0;
-            for (p = grp->ttpfxlen; isdigit(*p); p++) { }
-            if (*p != '\0' || !strlen(grp->ttpfxlen))
-                rc = -1;
-            pfxsz = atoi(grp->ttpfxlen);
-            if (rc != 0 || pfxsz > 32 )
+            char *new_ttnetmask = NULL;
+            /* Build new netmask based on prefix length */
+            if (prefix2netmask( grp->ttpfxlen, &new_ttnetmask ) != 0)
             {
                 // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                     "ipaddr", grp->ttpfxlen );
+                                     "ipaddr", grp->ottipaddr );
                 free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
                 if(grp->ttipaddr)
-                {
                     free(grp->ttipaddr);
-                    grp->ttipaddr = NULL;
-                }
-            }
-            else
-            {
-                switch( pfxsz )
-                {
-                case 0:
-                    mask = 0x00000000;
-                    break;
-                case 32:
-                    mask = 0xFFFFFFFF;
-                    break;
-                default:
-                    mask = 0xFFFFFFFF ^ ( 0xFFFFFFFF >> pfxsz );
-                    break;
-                }
-                addr4.s_addr = htonl(mask);
-                hinet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
                 if(grp->ttnetmask)
                     free(grp->ttnetmask);
-                grp->ttnetmask = strdup(netmask);
+                grp->ttpfxlen = NULL;
+                grp->ttipaddr = NULL;
+                grp->ttnetmask = NULL;
+            }
+            else /* (valid prefix) */
+            {
+                /* Check prefix length (via newly built netmask)
+                   for consistency with existing netmask value */
+                if (grp->ttnetmask &&
+                    strcmp( new_ttnetmask, grp->ttnetmask ) != 0)
+                {
+                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
+                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                        "netmask", "prefix length" );
+                }
+                /* Use consistent netmask */
+                if (grp->ttnetmask)
+                    free( grp->ttnetmask );
+                grp->ttnetmask = new_ttnetmask;
             }
         }
-
-
-        // warn if ttnetmask/ttpfxlen discrepency
-        // build default ttnetmask/ttpfxlen if undefined
-
 
 #if defined(ENABLE_IPV6)
         /* Check the grp->ttipaddr6 and grp->ttpfxlen6 values */
@@ -2691,8 +2718,8 @@ int i;
             for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
             if (*p != '\0' || !strlen(grp->ttpfxlen6))
                 rc = -1;
-            pfxsz = atoi(grp->ttpfxlen6);
-            if (rc != 0 || pfxsz > 128 )
+            pfxlen = atoi(grp->ttpfxlen6);
+            if (rc != 0 || pfxlen > 128 )
             {
                 // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -2736,23 +2763,9 @@ int i;
                 (destlink << 8) | (cua->devnum & 0x00FF);
         }
 
-        /* Initialize IPv4 mask field */
-        if (grp->ttpfxlen)
-            grp->pfxmask4 = (0xFFFFFFFF >> atoi(grp->ttpfxlen));
-        else
-            grp->pfxmask4 = 0xFFFFFFFF;
-
-        /* Initialize IPv6 mask field */
-        if (grp->ttpfxlen6 && (pfxlen = atoi(grp->ttpfxlen6)) >= 1 && pfxlen <= 128 )
-        {
-            int quo = pfxlen / 8;
-            int rem = pfxlen % 8;
-            memset( &grp->pfxmask6[0],   0x00,    quo );
-            memset( &grp->pfxmask6[quo], 0xFF, 16-quo );
-            grp->pfxmask6[quo] = (0xFF >> rem);
-        }
-        else
-            memset( &grp->pfxmask6[0], 0xFF, 16 );
+        /* Initialize mask fields */
+        grp->pfxmask4 = makepfxmask4( grp->ttpfxlen );
+        makepfxmask6( grp->ttpfxlen6, grp->pfxmask6 );
     }
 
     return 0;
@@ -4774,6 +4787,94 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     grp->uMTU  = uMTU;
 
     free( ttmtu );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Validate then convert IPv4 ttnetmask value to ttpfxlen value.     */
+/* Returns 0 (zero) if valid and conversion successful, else -1.     */
+/*-------------------------------------------------------------------*/
+int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
+{
+    U32 netmask, mask;
+    int pfxlen;
+    char cbuf[8];
+    netmask = ntohl( inet_addr( ttnetmask ));
+    if (netmask == ntohl( INADDR_NONE ) &&
+        strcmp( ttnetmask, "255.255.255.255" ) != 0)
+        return -1;
+    for (pfxlen=0, mask=netmask; mask & 0x80000000; mask <<= 1)
+        pfxlen++;
+    /* we don't support discontiguous subnets */
+    if (netmask != (0xFFFFFFFF << (32-pfxlen)))
+        return -1;
+    MSGBUF( cbuf, "%u", pfxlen );
+    if (*ttpfxlen)
+        free( *ttpfxlen );
+    *ttpfxlen = strdup( cbuf );
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Validate then convert IPv4 ttpfxlen value to ttnetmask value.     */
+/* Returns 0 (zero) if valid and conversion successful, else -1.     */
+/*-------------------------------------------------------------------*/
+int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
+{
+    struct in_addr addr4;
+    char* p;
+    int pfxlen;
+    /* make sure it's a number from 0 to 32 */
+    for (p = ttpfxlen; isdigit(*p); p++) { }
+    if (*p || !ttpfxlen[0] || (pfxlen = atoi(ttpfxlen)) > 32)
+        return -1;
+    addr4.s_addr = ~makepfxmask4( ttpfxlen );
+    if (!(p = inet_ntoa( addr4 )))
+        return -1;
+    if (*ttnetmask)
+        free( *ttnetmask );
+    *ttnetmask = strdup(p);
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Convert IPv4 ttpfxlen to a pfxmask4 mask value.  The passed       */
+/* ttpfxlen value is presumed to have been previously validated.     */
+/*-------------------------------------------------------------------*/
+U32 makepfxmask4( char* ttpfxlen )
+{
+    U32 pfxmask4;
+    if (ttpfxlen)
+        pfxmask4 = (0xFFFFFFFF >> atoi( ttpfxlen ));
+    else
+        pfxmask4 = 0xFFFFFFFF;
+    return htonl( pfxmask4 );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Convert IPv6 ttpfxlen6 to a pfxmask6 mask value.  The passed      */
+/* ttpfxlen6 value is presumed to have been previously validated.    */
+/*-------------------------------------------------------------------*/
+void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
+{
+    if (ttpfxlen6)
+    {
+        int pfxlen = atoi( ttpfxlen6 );
+        int quo = pfxlen / 8;
+        int rem = pfxlen % 8;
+        if (quo)
+            memset( &pfxmask6[0], 0x00, quo );
+        if (quo < 16)
+        {
+            memset( &pfxmask6[quo], 0xFF, 16-quo );
+            pfxmask6[quo] = (0xFF >> rem);
+        }
+    }
+    else
+        memset( &pfxmask6[0], 0xFF, 16 );
 }
 
 

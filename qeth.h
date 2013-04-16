@@ -138,6 +138,7 @@ typedef struct _OSA_GRP {
     char *tthwaddr;             /* MAC address of the interface      */
     char *ttmtu;                /* MTU of the interface              */
 
+    char *ottipaddr;            /* Original 'ipaddr' option value    */
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
     char *ttnetmask;            /* IPv4 Netmask of the interface     */
