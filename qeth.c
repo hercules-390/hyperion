@@ -160,7 +160,7 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Functions, entirely internal to qeth.c                            */
+/* Helper functions, entirely internal to qeth.c                     */
 /*-------------------------------------------------------------------*/
 OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
@@ -173,18 +173,14 @@ OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_unknown_puk( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-
 OSA_BHR* alloc_buffer( DEVBLK*, int );
 void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
 void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
 OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
 void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
+void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
+void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 
-/*-------------------------------------------------------------------*/
-/* Internal helper functions                                         */
-/*-------------------------------------------------------------------*/
-void InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
-void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -1251,7 +1247,6 @@ U16 offph;
         DBGTRC(dev, "Invalid Type=%2.2x\n",req_rrh->type);
     }
     /* end switch(req_rrh->type) */
-
 }
 /* end osa_adapter_cmd */
 
@@ -1405,7 +1400,7 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
     // HHC03985 "%1d:%04X %s: %s"
     WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QDIO", errmsg );
+        "QETH", errmsg );
 
     return qrc;
 }
@@ -2301,6 +2296,8 @@ BYTE sig = QDSIG_HALT;
 
     if (dev->scsw.flag2 & SCSW2_Q)
     {
+    BYTE sig = QDSIG_HALT;
+
         DBGTRC( dev, "Halting data device\n" );
 
         /* Indicate QDIO no longer active, write halt request to
@@ -2364,8 +2361,8 @@ int i;
             register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
             initialize_condition(&grp->qcond);
-            initialize_lock(&grp->qlock);
-            initialize_lock(&grp->qblock);
+            initialize_lock( &grp->qlock );
+            initialize_lock( &grp->qblock );
 
             /* Creat ACTIVATE QUEUES signalling pipe */
             create_pipe(grp->ppfd);
@@ -2390,17 +2387,31 @@ int i;
         /* This code is not executed. ??? */
         grp = dev->group->grp_data;
 
-    /* Process all command line options here.                    */
-    /* This code is executed for each device in the group.       */
-    /* The following configuration statement:-                   */
+    /*-----------------------------------------------------------*/
+    /* PROCESS ALL COMMAND LINE OPTIONS HERE.                    */
+    /* Each device in the group will execute this loop.          */
+    /*-----------------------------------------------------------*/
+    /*                                                           */
+    /* NOTE: The following configuration statement:              */
+    /*                                                           */
     /*    0800-0802 QETH mtu 1492 ipaddr 192.168.2.1 debug       */
+    /*                                                           */
     /* results in exactly the same QETH group as the following   */
-    /* configuration statements:-                                */
+    /* configuration statements:                                 */
+    /*                                                           */
     /*    0802 QETH mtu 1492"                                    */
     /*    0800 QETH ipaddr 192.168.2.1                           */
     /*    0801 QETH debug                                        */
+    /*                                                           */
     /* This is either a bug or a design feature, depending       */
     /* on your point of view.                                    */
+    /*                                                           */
+    /*-----------------------------------------------------------*/
+
+    /* PROGRAMMING NOTE: argument validation is deferred until the
+       group is complete. Thus the below argument processing loop
+       just saves the argument values but doesn't validate them. */
+
     for(i = 0; i < argc; i++)
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
@@ -2460,7 +2471,6 @@ int i;
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-
             if(grp->ttipaddr6)
                 free(grp->ttipaddr6);
             if(grp->ttpfxlen6)
@@ -2521,7 +2531,7 @@ int i;
 
     if (grouped)
     {
-        /* This code is executed for the last device in the group. */
+        /* Validate the arguments now that the group is complete. */
 
         DEVBLK         *cua;
         U16             destlink;
@@ -2772,15 +2782,16 @@ OSA_GRP *grp;
 /*-------------------------------------------------------------------*/
 static int qeth_close_device ( DEVBLK *dev )
 {
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+DEVGRP *group = (DEVGRP*)dev->group;
+OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
 
-    if (!dev->member && dev->group->grp_data)
+    if (!dev->member && dev->group && dev->group->grp_data)
     {
         int ttfd = grp->ttfd;
 
         PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
-        qeth_halt_read_device( dev->group->memdev[0], grp );
-        qeth_halt_data_device( dev->group->memdev[2], grp );
+        qeth_halt_read_device( group->memdev[0], grp );
+        qeth_halt_data_device( group->memdev[2], grp );
         PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
@@ -2823,12 +2834,12 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
         PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
         destroy_condition(&grp->qcond);
-        destroy_lock(&grp->qlock);
-        destroy_lock(&grp->qblock);
+        destroy_lock( &grp->qlock );
+        destroy_lock( &grp->qblock );
 
         PTT_QETH_TRACE( "b4 clos fgrp", 0,0,0 );
-        free( dev->group->grp_data );
-        dev->group->grp_data = NULL;
+        free( group->grp_data );
+        group->grp_data = NULL;
         PTT_QETH_TRACE( "af clos fgrp", 0,0,0 );
     }
     else
@@ -3537,22 +3548,33 @@ int num;                                /* Number of bytes to move   */
         while (1)
         {
             /* Read pipe signal if one was sent */
-            sig = QDSIG_RESET;
-            if(FD_ISSET(grp->ppfd[0],&readset))
+            if (rc && FD_ISSET( grp->ppfd[0], &readset ))
             {
-                qeth_read_pipe( grp->ppfd[0], &sig );
-
+                sig = QDSIG_RESET;
+                VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
                 DBGTRC( dev, "Activate Queues: signal 0x%02X received\n", sig );
 
-                /* Exit immediately if requested to do so */
+                /* Exit immediately when requested to do so */
                 if (QDSIG_HALT == sig)
                     break;
 
-                /* Update packing mode flags if requested */
-                if (QDSIG_READ   == sig) grp->rdpack = 0;
-                if (QDSIG_RDMULT == sig) grp->rdpack = 1;
-                if (QDSIG_WRIT   == sig) grp->wrpack = 0;
-                if (QDSIG_WRMULT == sig) grp->wrpack = 1;
+                switch (sig)
+                {
+                case QDSIG_READ:
+                    grp->rdpack = 0;
+                    break;
+                case QDSIG_RDMULT:
+                    grp->rdpack = 1;
+                    break;
+                case QDSIG_WRIT:
+                    grp->wrpack = 0;
+                    break;
+                case QDSIG_WRMULT:
+                    grp->wrpack = 1;
+                    break;
+                default:
+                    ASSERT(0);
+                }
             }
 
             /* Check if any new packets have arrived */
@@ -3592,7 +3614,7 @@ int num;                                /* Number of bytes to move   */
                since most guests expect OSA devices to behave that way.
                (SIGA-w are NOT required to cause processing o/p queues)
             */
-            if(dev->qdio.o_qmask)
+            if (dev->qdio.o_qmask)
                 process_output_queues(dev);
 
             /* Present "output processed" adapter interrupt if needed */
@@ -3697,7 +3719,7 @@ int noselrd, rc = 0;
         {
             BYTE sig = QDSIG_READ;
             DBGTRC( dev, "SIGA-r: sending signal 0x%02X\n", sig );
-            rc = qeth_write_pipe( grp->ppfd[1], &sig );
+            VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
 
@@ -3738,7 +3760,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if(dev->qdio.o_qmask)
     {
         DBGTRC( dev, "SIGA-o: sending signal 0x%02X\n", sig );
-        qeth_write_pipe( grp->ppfd[1], &sig );
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
     }
 
     return 0;
@@ -4100,7 +4122,7 @@ MPC_PUS *req_pus_0A;
     if( !req_pus_01 || !req_pus_0A )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_ulp_enable: Expected pus not present\n");
+        DBGTRC(dev, "process_ulp_enable_extract: Expected pus not present\n");
         return -1;
     }
 
@@ -4660,7 +4682,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     )
     {
         char szMAC[3*IFHWADDRLEN] = {0};
-        UNREFERENCED(dev); /*(referenced in non-debug build)*/
+        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
         if (tthwaddr)
             free( tthwaddr );
@@ -4698,7 +4720,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
         || uMTU > (65535 - 14)
     )
     {
-        UNREFERENCED(dev); /*(referenced in non-debug build)*/
+        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
         if (ttmtu)
             free( ttmtu );
