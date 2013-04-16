@@ -123,8 +123,9 @@ typedef struct _OSA_MAC {
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
-    COND    qcond;              /* Condition for IDX read thread     */
-    LOCK    qlock;              /* Lock for IDX read thread          */
+    COND    qrcond;             /* Condition for IDX read thread     */
+    COND    qdcond;             /* Condition for halt data device    */
+    LOCK    qlock;              /* Lock for above conditions         */
 
     LOCK      qblock;           /* Lock for IDX read buffer chain    */
     OSA_BHR*  firstbhr;         /* First OSA_BHR in chain            */

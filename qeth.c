@@ -1327,6 +1327,7 @@ U16 reqtype;
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+            dev->qreaddev = 1;
         }
         break;
 
@@ -1352,6 +1353,7 @@ U16 reqtype;
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+            dev->qwritdev = 1;
         }
         break;
 
@@ -2309,8 +2311,8 @@ static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
         obtain_lock( &grp->qlock );
         PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
         dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
-        signal_condition( &grp->qcond );
-        wait_condition( &grp->qcond, &grp->qlock );
+        signal_condition( &grp->qrcond );
+        wait_condition( &grp->qrcond, &grp->qlock );
         PTT_QETH_TRACE( "af halt read", 0,0,0 );
         release_lock( &grp->qlock );
 
@@ -2324,20 +2326,22 @@ static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
 
     if (dev->scsw.flag2 & SCSW2_Q)
     {
-    fd_set readset;
     BYTE sig = QDSIG_HALT;
 
         DBGTRC( dev, "Halting data device\n" );
 
-        /* Indicate QDIO no longer active, write halt request to
-           signalling pipe, then wait for and read the halt reply. */
+        /* Send halt signal */
+        obtain_lock( &grp->qlock );
         dev->scsw.flag2 &= ~SCSW2_Q;
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-        FD_ZERO( &readset );
-        FD_SET( grp->ppfd[0], &readset );
-        qeth_select( grp->ppfd[0]+1, &readset, NULL );
-        VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
 
+        /* Wait for acknowledgement */
+        wait_condition( &grp->qdcond, &grp->qlock );
+        release_lock (&grp->qlock );
+
+#if 1 // (probably not needed?)
+        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
+#endif
         DBGTRC( dev, "Data device halted\n" );
     }
 }
@@ -2346,10 +2350,10 @@ static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    if (dev == dev->group->memdev[2])
+    if (dev->qdatadev)
         qeth_halt_data_device( dev, grp );
     else
-        if (dev == dev->group->memdev[0])
+        if (dev->qreaddev)
             qeth_halt_read_device( dev, grp );
         else
         {
@@ -2389,7 +2393,8 @@ int i;
 
             register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
-            initialize_condition(&grp->qcond);
+            initialize_condition( &grp->qrcond );
+            initialize_condition( &grp->qdcond );
             initialize_lock( &grp->qlock );
             initialize_lock( &grp->qblock );
 
@@ -2816,11 +2821,17 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
 
     if (!dev->member && dev->group && dev->group->grp_data)
     {
-        int ttfd = grp->ttfd;
+        int i, ttfd = grp->ttfd;
 
         PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
-        qeth_halt_read_device( group->memdev[0], grp );
-        qeth_halt_data_device( group->memdev[2], grp );
+        for (i=0; i < OSA_GROUP_SIZE; i++)
+        {
+            if (group->memdev[i]->qreaddev)
+                qeth_halt_read_device( group->memdev[i], grp );
+            else if (group->memdev[i]->qdatadev)
+                qeth_halt_data_device( group->memdev[i], grp );
+        }
+        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
         PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
@@ -2862,7 +2873,8 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         remove_and_free_any_buffers_on_chain( grp );
         PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
-        destroy_condition(&grp->qcond);
+        destroy_condition( &grp->qrcond );
+        destroy_condition( &grp->qdcond );
         destroy_lock( &grp->qlock );
         destroy_lock( &grp->qblock );
 
@@ -3202,7 +3214,7 @@ int num;                                /* Number of bytes to move   */
             /* Wait for an IDX response buffer to be chained. */
             obtain_lock(&grp->qlock);
             PTT_QETH_TRACE( "read wait", 0,0,0 );
-            wait_condition(&grp->qcond, &grp->qlock);
+            wait_condition( &grp->qrcond, &grp->qlock );
             release_lock(&grp->qlock);
 
         } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
@@ -3212,7 +3224,7 @@ int num;                                /* Number of bytes to move   */
             obtain_lock( &grp->qlock );
             PTT_QETH_TRACE( "read hlt ack", 0,0,0 );
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
-            signal_condition( &grp->qcond );
+            signal_condition( &grp->qrcond );
             release_lock( &grp->qlock );
         }
 
@@ -3566,6 +3578,7 @@ int num;                                /* Number of bytes to move   */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
         dev->qdio.i_qmask = 0;              /* No input queues yet   */
         dev->qdio.o_qmask = 0;              /* No output queues yet  */
+        dev->qdatadev = 1;                  /* Identify ourselves    */
 
         DBGTRC( dev, "Activate Queues: Entry\n");
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
@@ -3665,13 +3678,12 @@ int num;                                /* Number of bytes to move   */
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
-        /* Reply to halt signal */
+        /* Acknowledge the halt signal */
         if (sig == QDSIG_HALT)
         {
-            BYTE sig = QDSIG_HALT;
-            DBGTRC( dev, "Activate Queues: sending halt ack %s\n", sig2str( sig ));
-            PTT_QETH_TRACE( "actq halted", 0,0,0 );
-            VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+            obtain_lock( &grp->qlock );
+            signal_condition( &grp->qdcond );
+            release_lock( &grp->qlock );
         }
 
         DBGTRC( dev, "Activate Queues: Exit\n");
@@ -4588,7 +4600,7 @@ void*    add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
     add_buffer_to_chain( grp, bhr );
 
     obtain_lock( &grp->qlock );
-    signal_condition( &grp->qcond );
+    signal_condition( &grp->qrcond );
     release_lock( &grp->qlock );
 
     return NULL;
