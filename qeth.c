@@ -226,6 +226,33 @@ static BYTE qeth_immed_commands [256] =
 
 
 /*-------------------------------------------------------------------*/
+/* Internal socket pipe signals used to request something            */
+/*-------------------------------------------------------------------*/
+#define QDSIG_RESET     0       /* Used to reset signal flag         */
+#define QDSIG_HALT      1       /* Halt Device signalling            */
+#define QDSIG_SYNC      2       /* SIGA Synchronize                  */
+#define QDSIG_READ      3       /* SIGA Initiate Input               */
+#define QDSIG_RDMULT    4       /* SIGA Initiate Input Multiple      */
+#define QDSIG_WRIT      5       /* SIGA Initiate Output              */
+#define QDSIG_WRMULT    6       /* SIGA Initiate Output Multiple     */
+
+const char* sig2str( BYTE sig ) {
+    static const char* sigstr[] = {
+    /*0*/ "QDSIG_RESET",
+    /*1*/ "QDSIG_HALT",
+    /*2*/ "QDSIG_SYNC",
+    /*3*/ "QDSIG_READ",
+    /*4*/ "QDSIG_RDMULT",
+    /*5*/ "QDSIG_WRIT",
+    /*6*/ "QDSIG_WRMULT",
+    }; static char buf[16];
+    if (sig < _countof( sigstr ))
+        return sigstr[ sig ];
+    MSGBUF(buf,"QDSIG_0x%02X",sig);
+    return buf;
+}
+
+/*-------------------------------------------------------------------*/
 /* STORCHK macro: check storage access & update ref & change bits.   */
 /* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
 /* Storage key ref & change bits are only updated if successful.     */
@@ -487,6 +514,7 @@ static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
     char not[8];
     strlcpy( not, enabled ? "" : "not ", sizeof( not ));
 
+    // HHC03997 "%1d:%04X %s: %s: %susing %s %s"
     WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
         grp->ttifname, not, "MAC", grp->tthwaddr );
 
@@ -949,7 +977,7 @@ U16 offph;
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
-                            grp->promisc = promisc ? MAC_PROMISC : 0;
+                            grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
                             DBGTRC(dev, "    IPA_SAP_PROMISC %s\n",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
@@ -1297,8 +1325,7 @@ U16 reqtype;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, UCLEVEL);
-
+            STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
         break;
@@ -1323,8 +1350,7 @@ U16 reqtype;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, UCLEVEL);
-
+            STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
         }
         break;
@@ -2306,11 +2332,11 @@ static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
         /* Indicate QDIO no longer active, write halt request to
            signalling pipe, then wait for and read the halt reply. */
         dev->scsw.flag2 &= ~SCSW2_Q;
-        qeth_write_pipe( grp->ppfd[1], &sig );
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         FD_ZERO( &readset );
         FD_SET( grp->ppfd[0], &readset );
         qeth_select( grp->ppfd[0]+1, &readset, NULL );
-        qeth_read_pipe( grp->ppfd[0], &sig );
+        VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
 
         DBGTRC( dev, "Data device halted\n" );
     }
@@ -3536,11 +3562,10 @@ int num;                                /* Number of bytes to move   */
         ** existing Output Queue(s) because a SIGA-w is not required.
         */
         tv.tv_sec  = 0;
-        tv.tv_usec = 50000;                 /* 50 milliseconds       */
+        tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
         dev->qdio.i_qmask = 0;              /* No input queues yet   */
         dev->qdio.o_qmask = 0;              /* No output queues yet  */
-        FD_ZERO( &readset );                /* Init empty read set   */
 
         DBGTRC( dev, "Activate Queues: Entry\n");
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
@@ -3556,7 +3581,7 @@ int num;                                /* Number of bytes to move   */
             {
                 sig = QDSIG_RESET;
                 VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
-                DBGTRC( dev, "Activate Queues: signal 0x%02X received\n", sig );
+                DBGTRC( dev, "Activate Queues: %s received\n", sig2str( sig ));
 
                 /* Exit immediately when requested to do so */
                 if (QDSIG_HALT == sig)
@@ -3644,9 +3669,9 @@ int num;                                /* Number of bytes to move   */
         if (sig == QDSIG_HALT)
         {
             BYTE sig = QDSIG_HALT;
-            DBGTRC( dev, "Activate Queues: sending halt ack 0x%02X\n", sig );
+            DBGTRC( dev, "Activate Queues: sending halt ack %s\n", sig2str( sig ));
             PTT_QETH_TRACE( "actq halted", 0,0,0 );
-            rc = qeth_write_pipe( grp->ppfd[1], &sig );
+            VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
 
         DBGTRC( dev, "Activate Queues: Exit\n");
@@ -3723,7 +3748,7 @@ int noselrd, rc = 0;
         if(noselrd && dev->qdio.i_qmask)
         {
             BYTE sig = QDSIG_READ;
-            DBGTRC( dev, "SIGA-r: sending signal 0x%02X\n", sig );
+            DBGTRC( dev, "SIGA-r: sending %s\n", sig2str( sig ));
             VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
@@ -3764,7 +3789,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
     {
-        DBGTRC( dev, "SIGA-o: sending signal 0x%02X\n", sig );
+        DBGTRC( dev, "SIGA-o: sending %s\n", sig2str( sig ));
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
     }
 
