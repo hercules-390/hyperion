@@ -1341,17 +1341,19 @@ static void raise_adapter_interrupt(DEVBLK *dev)
 {
     DBGTRC(dev, "Adapter Interrupt\n");
 
-    obtain_lock(&dev->lock);
-    dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
-    dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
-    dev->pciscsw.chanstat = CSW_PCI;
-    QUEUE_IO_INTERRUPT(&dev->pciioint);
-    release_lock (&dev->lock);
-
-    /* Update interrupt status */
-    OBTAIN_INTLOCK(devregs(dev));
-    UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(devregs(dev));
+    OBTAIN_INTLOCK(NULL);
+    {
+        obtain_lock( &dev->lock );
+        {
+            dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
+            dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
+            dev->pciscsw.chanstat = CSW_PCI;
+            QUEUE_IO_INTERRUPT( &dev->pciioint );
+            UPDATE_IC_IOPENDING();
+        }
+        release_lock (&dev->lock);
+    }
+    RELEASE_INTLOCK(NULL);
 }
 
 
