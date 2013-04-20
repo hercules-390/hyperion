@@ -3603,8 +3603,6 @@ int num;                                /* Number of bytes to move   */
         tv.tv_sec  = 0;
         tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
-        dev->qdio.i_qmask = 0;              /* No input queues yet   */
-        dev->qdio.o_qmask = 0;              /* No output queues yet  */
         dev->qdatadev = 1;                  /* Identify ourselves    */
 
         DBGTRC( dev, "Activate Queues: Entry\n");
@@ -3648,7 +3646,7 @@ int num;                                /* Number of bytes to move   */
                     grp->wrpack = 1;
                     break;
                 default:
-                    ASSERT(0);
+                    ASSERT(0);  /* (should NEVER occur) */
                 }
             }
 
@@ -3657,31 +3655,15 @@ int num;                                /* Number of bytes to move   */
             {
                 /* Process packets if Queue is available */
                 if (dev->qdio.i_qmask)
-                {
-                    grp->noiq = FALSE; /* (reset flag) */
                     process_input_queues(dev);
-                }
-                else /* (no input queue available) */
+
+                /* Present "input available" interrupt if needed */
+                if (grp->iqPCI)
                 {
-                    /* Drop the packet... */
-                    PTT_QETH_TRACE( "actq drop", 0,0,0 );
-                    read_packet( dev, grp );
-
-                    /* Notify guest that an Input Queue is needed */
-                    if (!grp->noiq)
-                    {
-                        grp->noiq = TRUE;
-                        grp->iqPCI = TRUE;
-                    }
+                    PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
+                    grp->iqPCI = FALSE;
+                    raise_adapter_interrupt( dev );
                 }
-            }
-
-            /* Present "input available" adapter interrupt if needed */
-            if (grp->iqPCI)
-            {
-                PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
-                grp->iqPCI = FALSE;
-                raise_adapter_interrupt( dev );
             }
 
             /* ALWAYS process all Output Queues each time regardless of
@@ -3690,14 +3672,16 @@ int num;                                /* Number of bytes to move   */
                (SIGA-w are NOT required to cause processing o/p queues)
             */
             if (dev->qdio.o_qmask)
+            {
                 process_output_queues(dev);
 
-            /* Present "output processed" adapter interrupt if needed */
-            if (grp->oqPCI)
-            {
-                PTT_QETH_TRACE( "actq oqPCI", 0,0,0 );
-                grp->oqPCI = FALSE;
-                raise_adapter_interrupt( dev );
+                /* Present "output processed" interrupt if needed */
+                if (grp->oqPCI)
+                {
+                    PTT_QETH_TRACE( "actq oqPCI", 0,0,0 );
+                    grp->oqPCI = FALSE;
+                    raise_adapter_interrupt( dev );
+                }
             }
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
