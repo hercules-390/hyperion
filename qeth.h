@@ -200,16 +200,6 @@ typedef struct _OSA_GRP {
 
 
 /*-------------------------------------------------------------------*/
-/* OSA Layer 3 IPv4/IPv6 cast types                                  */
-/*-------------------------------------------------------------------*/
-#define L3_CAST_NOCAST      0       /* No cast                       */
-#define L3_CAST_MULTICAST   4       /* Multicast                     */
-#define L3_CAST_BROADCAST   5       /* Broadcast                     */
-#define L3_CAST_UNICAST     6       /* Unicast                       */
-#define L3_CAST_ANYCAST     7       /* Anycast                       */
-
-
-/*-------------------------------------------------------------------*/
 /* Pack below OSA Layer headers to byte boundary...                  */
 /*-------------------------------------------------------------------*/
 
@@ -262,6 +252,12 @@ struct OSA_HDR3 {
 #define HDR3_FLAGS_IPV6       0x80  /* 1=IPv6, 0=IPv4                */
 #define HDR3_FLAGS_PASSTHRU   0x10  /* Pass through packet (IPv6)    */
 #define HDR3_FLAGS_CASTMASK   0x07  /* Cast type                     */
+#define HDR3_FLAGS_NOTFORUS   0xFF  /* Not meant for us (internal)   */
+#define HDR3_FLAGS_NOCAST     0x00  /* No cast                       */
+#define HDR3_FLAGS_MULTICAST  0x04  /* Multicast                     */
+#define HDR3_FLAGS_BROADCAST  0x05  /* Broadcast                     */
+#define HDR3_FLAGS_UNICAST    0x06  /* Unicast                       */
+#define HDR3_FLAGS_ANYCAST    0x07  /* Anycast                       */
 #define HDR3_FLAGS_UNUSED     0x68  /* Unused bits; must be zero     */
 
 /*002*/ HWORD   in_cksum;       /* Inbound checksum (TSO: sequence#) */

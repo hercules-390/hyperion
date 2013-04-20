@@ -1487,12 +1487,14 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 static inline int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
 {
     if (!dstaddr)
-        return L3_CAST_NOCAST;
+        return HDR3_FLAGS_NOCAST;
     if ((dstaddr & 0xE0000000) == 0xE0000000)
-        return L3_CAST_MULTICAST;
+        return HDR3_FLAGS_MULTICAST;
     if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
-        return L3_CAST_BROADCAST;
-    return L3_CAST_UNICAST;
+        return HDR3_FLAGS_BROADCAST;
+    if ((dstaddr & ~grp->pfxmask4) != (grp->hipaddr4 & ~grp->pfxmask4))
+        return HDR3_FLAGS_NOTFORUS;
+    return HDR3_FLAGS_UNICAST;
 }
 
 
@@ -1506,22 +1508,28 @@ static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
     int i;
 
     if (dest_addr[0] == 0xFF)
-        return L3_CAST_MULTICAST;
+        return HDR3_FLAGS_MULTICAST;
 
     if (memcmp( dest_addr, dest_zero, 16 ) == 0)
-        return L3_CAST_NOCAST;
+        return HDR3_FLAGS_NOCAST;
 
     memcpy( dest_work, dest_addr, 16 );
 
-    /* Ignore prefix bits */
     for (i=0; i < 16 && grp->pfxmask6[i] != 0xFF; i++)
+    {
+        /* Test prefix bits */
+        if ((dest_work[i] & ~grp->pfxmask6[i]) !=
+            (grp->ipaddr6[i] & ~grp->pfxmask6[i]))
+            return HDR3_FLAGS_NOTFORUS;
+        /* Ignore prefix bits */
         dest_work[i] &= grp->pfxmask6[i];
+    }
 
     /* If non-prefix bits are all zero then anycast */
     if (memcmp( dest_work, dest_zero, 16 ) == 0)
-        return L3_CAST_ANYCAST;
+        return HDR3_FLAGS_ANYCAST;
 
-    return L3_CAST_UNICAST;
+    return HDR3_FLAGS_UNICAST;
 }
 
 
@@ -1905,7 +1913,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     {
         /* Read another packet into the device buffer */
         if ((qrc = read_packet( dev, grp )) != 0)
-            return qrc;
+            return qrc; /*(probably EOF)*/
 
         /* Build the Layer 3 OSA header */
         memset( &o3hdr, 0, sizeof( OSA_HDR3 ));
@@ -1918,11 +1926,13 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         {
             IP6FRM* ip6 = (IP6FRM*)dev->buf;
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
-            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6 |
-                (l3_cast_type_ipv6( o3hdr.dest_addr, grp ) & HDR3_FLAGS_CASTMASK);
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
+            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
             o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
         }
-        else
+        else /* IPv4 */
         {
             U32 dstaddr;
             U16 checksum;
@@ -1931,7 +1941,9 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             STORE_FW( &o3hdr.dest_addr[12], dstaddr );
             FETCH_HW( checksum, ip4->hwChecksum );
             STORE_HW( o3hdr.in_cksum, checksum );
-            o3hdr.flags = l3_cast_type_ipv4( dstaddr, grp );
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv4( dstaddr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
         }
 
