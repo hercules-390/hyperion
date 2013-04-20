@@ -538,8 +538,9 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "IPv6", grp->ttipaddr6 );
 
-    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-        grp->ttifname, not, "MTU", grp->ttmtu );
+    if (grp->ttmtu)
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, not, "MTU", grp->ttmtu );
 }
 
 
@@ -789,11 +790,11 @@ U16 offph;
                     rsp_bhr = NULL;
                     break;
                 }
-                rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 if (grp->ttfd < 0)
                     if (qeth_create_interface( dev, grp ) != 0)
                         qeth_errnum_msg( dev, grp, -1,
                             "E", "qeth_create_interface() failed" );
+                rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
@@ -4806,10 +4807,13 @@ int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
 U32 makepfxmask4( char* ttpfxlen )
 {
     U32 pfxmask4;
-    if (ttpfxlen)
-        pfxmask4 = (0xFFFFFFFF >> atoi( ttpfxlen ));
-    else
+    int pfxlen = atoi( ttpfxlen );
+    if (pfxlen >= 32)
+        pfxmask4 = 0x00000000;
+    else if (pfxlen <= 0)
         pfxmask4 = 0xFFFFFFFF;
+    else
+        pfxmask4 = (0xFFFFFFFF >> pfxlen);
     return htonl( pfxmask4 );
 }
 
