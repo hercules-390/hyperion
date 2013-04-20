@@ -1085,34 +1085,65 @@ U16 offph;
                     {
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
-                        int rc = 0;
+
+                        /* Save guest IPv4 address and netmask*/
+                        FETCH_FW( grp->hipaddr4, ip );
+
+                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+
+                        if (grp->ttipaddr)
+                            free( grp->ttipaddr );
+                        grp->ttipaddr = strdup( ipaddr );
+
+                        if (grp->ttnetmask)
+                            free( grp->ttnetmask );
+                        grp->ttnetmask = strdup( ipmask );
 
                         if (grp->setip)
                         {
-                            MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                            MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-
-                            if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
+#if defined(OPTION_W32_CTCI)
+                            char* what = "TUNTAP_SetDestAddr() failed";
+                            int rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+#else // !defined(OPTION_W32_CTCI)
+                            char* what = "TUNTAP_SetIPAddr() failed";
+                            int rc = TUNTAP_SetIPAddr(grp->ttifname,ipaddr);
+#endif // defined(OPTION_W32_CTCI)
+                            if (rc != 0)
                             {
-                                qeth_errnum_msg( dev, grp, rc,
-                                    "E", "IPA_CMD_SETIP failed" );
+                                qeth_errnum_msg( dev, grp, rc, "E", what );
                                 retcode = IPA_RC_FFFF;
                             }
-//!
-//!                         if (grp->ttipaddr)
-//!                             free( grp->ttipaddr );
-//!                         grp->ttipaddr = strdup( ipaddr );
-//!
-//!                         if (grp->ttnetmask)
-//!                             free( grp->ttnetmask );
-//!                         grp->ttnetmask = strdup( ipmask );
                         }
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
+                        memcpy( grp->ipaddr6, ip, 16 );
+
+                        if(grp->ttipaddr6)
+                            free(grp->ttipaddr6);
+                        hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
+
+#if 0 // FIXME: How do we do this for IPv6?
                         /* Hmm... What does one do with an IPv6 address? */
-                        /* SetDestAddr isn't valid for IPv6.             */
+                        /* TUNTAP_SetDestAddr isn't valid for IPv6.      */
+                        if (grp->setip)
+                        {
+#if defined(OPTION_W32_CTCI)
+                            const char* what = "TUNTAP_SetDestAddr6() failed";
+                            int rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+#else // !defined(OPTION_W32_CTCI)
+                            const char* what = "TUNTAP_SetIPAddr6() failed";
+                            int rc = TUNTAP_SetIPAddr6(grp->ttifname,grp->ttipaddr6)
+#endif // defined(OPTION_W32_CTCI)
+                            if (rc != 0)
+                            {
+                                qeth_errnum_msg( dev, grp, rc, "E", what );
+                                retcode = IPA_RC_FFFF;
+                            }
+                        }
+#endif // (how do we do this for IPv6?)
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
@@ -2577,6 +2608,8 @@ int i;
                     grp->ttnetmask = NULL;
                 }
             }
+            else
+                grp->hipaddr4 = ntohl( inet_addr( grp->ttipaddr ));
         }
 
         if (!grp->ttnetmask && !grp->ttpfxlen)
@@ -2678,6 +2711,8 @@ int i;
                     grp->ttpfxlen6 = NULL;
                 }
             }
+            else
+                hinet_pton( AF_INET6, grp->ttipaddr6, grp->ipaddr6 );
         }
         if (grp->ttpfxlen6)
         {

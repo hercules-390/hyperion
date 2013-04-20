@@ -149,7 +149,9 @@ typedef struct _OSA_GRP {
     char *ttchpid;              /* chpid                             */
 
     BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */
+    BYTE  ipaddr6[16];          /* Network format IPv6 address       */
     U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */
+    U32   hipaddr4;             /* Host format IPv4 address          */
 
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
     int   promisc;              /* Adapter is in promiscuous mode    */
@@ -162,7 +164,7 @@ typedef struct _OSA_GRP {
     int   iqPCI;                /* Input Queue PCI has requested     */
     int   oqPCI;                /* Output Queue PCI has requested    */
     int   noiq;                 /* No Input Queue PCI notification   */
-    int   setip;                /* Process IPA_CMD_SETIP (temporary) */
+    int   setip;                /* Process IPA_CMD_SETIP             */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
