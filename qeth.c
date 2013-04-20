@@ -111,34 +111,30 @@
   #define PTT_QETH_TRACE(...)       __noop()
 #endif
 
-/* (activate DBGTRC statements if needed) */
-#if defined(QETH_DEBUG)
-  static void DBGTRC( DEVBLK* dev, char* fmt, ... )
+/* (always activate DBGTRC statements) */
+static void DBGTRC( DEVBLK* dev, char* fmt, ... )
+{
+  DEVGRP *devgrp = dev->group;
+  if (devgrp)
   {
-    DEVGRP *devgrp = dev->group;
-    if (devgrp)
+    OSA_GRP* grp = devgrp->grp_data;
+    if(grp && grp->debug)
     {
-      OSA_GRP* grp = devgrp->grp_data;
-      if(grp && grp->debug)
-      {
-        char buf[256];
-        va_list   vargs;
-        va_start( vargs, fmt );
-  #if defined( _MSVC_ )
-        _vsnprintf_s( buf, sizeof(buf), _TRUNCATE, fmt, vargs );
-  #else
-        vsnprintf( buf, sizeof(buf), fmt, vargs );
-  #endif
-        TRACE( "QETH dev %04X: %s", dev->devnum, buf );
-        va_end( vargs );
-      }
+      char buf[256];
+      va_list   vargs;
+      va_start( vargs, fmt );
+#if defined( _MSVC_ )
+      _vsnprintf_s( buf, sizeof(buf), _TRUNCATE, fmt, vargs );
+#else
+      vsnprintf( buf, sizeof(buf), fmt, vargs );
+#endif
+      logmsg( "QETH dev %04X: %s", dev->devnum, buf );
+      va_end( vargs );
     }
   }
-#else
-  #define DBGTRC(...)           __noop()
-#endif
+}
 
-/* (activate tracing of I/O data buffers) */
+/* (trace I/O data buffers if debugging) */
 #if defined( QETH_DUMP_DATA )
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
