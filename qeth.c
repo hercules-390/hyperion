@@ -2502,16 +2502,18 @@ int i;
             grp->debug = 0;
             continue;
         }
-        else if (!strcasecmp("setip",argv[i]))   /* This option is temporary */
+#if !defined(OPTION_W32_CTCI) /* (option is temporary on non-Windows) */
+        else if (!strcasecmp("setip",argv[i]))
         {
             grp->setip = 1;
             continue;
         }
-        else if(!strcasecmp("nosetip",argv[i]))  /* This option is temporary */
+        else if(!strcasecmp("nosetip",argv[i]))
         {
             grp->setip = 0;
             continue;
         }
+#endif // !defined(OPTION_W32_CTCI)
         else
         {
             // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
@@ -2530,6 +2532,10 @@ int i;
         HRB      hrb;
         char     c;
         char    *p;
+
+#if defined(OPTION_W32_CTCI)
+        grp->setip = 1;   /* (forced for CTCI-WIN) */
+#endif
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
