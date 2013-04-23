@@ -4770,48 +4770,32 @@ DEF_INST(cipher_message_with_output_feedback)
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation)
 {
-  int msa;
-  BYTE query_bits[][16] =
+  int msa = get_msa(regs);
+  static const BYTE query_bits[][16] =
   {
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
-  int r1;
-  int r2;
 
-  RRE(inst, regs, r1, r2);
+  INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
 
-  msa = get_msa(regs);
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
+  else if (msa > 4) msa = 4;
 
 #ifdef OPTION_PCC_DEBUG
   WRGMSG_ON;
   WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
   WRGMSG(HHC90104, "D", 0, regs->GR(0));
   WRGMSG(HHC90106, "D", GR0_fc(regs));
   WRGMSG(HHC90104, "D", 1, regs->GR(1));
   WRGMSG_OFF;
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
-  /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
   switch(GR0_fc(regs))
   {
     case 0: /* Query */
-    {
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+      ARCH_DEP(vstorec)(query_bits[msa - 4], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
       LOGBYTE("output:", query_bits[msa], 16);
@@ -4820,51 +4804,32 @@ DEF_INST(perform_cryptographic_computation)
       /* Set condition code 0 */
       regs->psw.cc = 0;
       return;
-    }
     case  1: /* dea */
     case  2: /* tdea-128 */
     case  3: /* tdea-192 */
     case  9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
-    {
-      if(msa >= 4)
-        ARCH_DEP(pcc_cmac_dea)(regs);
-      else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      ARCH_DEP(pcc_cmac_dea)(regs);
       break;
-    }
     case 18: /* aes-128 */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
     case 26: /* encrypted aes-128 */
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
-    {
-      if(msa >= 4)
-        ARCH_DEP(pcc_cmac_aes)(regs);
-      else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      ARCH_DEP(pcc_cmac_aes)(regs);
       break;
-    }
     case 50: /* aes-128 */
     case 52: /* aes-256 */
     case 58: /* encrypted aes-128 */
     case 60: /* encrypted aes-256 */
-    {
-      if(msa >= 4)
-        ARCH_DEP(pcc_xts_aes)(regs);
-      else
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      ARCH_DEP(pcc_xts_aes)(regs);
       break;
-    }
     default:
-    {
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
-    }
   }
-
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
