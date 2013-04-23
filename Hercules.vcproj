@@ -1287,6 +1287,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\resolve.c"
+							>
+						</File>
+						<File
 							RelativePath=".\rexx.c"
 							>
 						</File>
@@ -1555,6 +1559,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hqadefs.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hqainc.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hRexx.h"
 							>
 						</File>
@@ -1643,6 +1655,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\resolve.h"
+							>
+						</File>
+						<File
 							RelativePath=".\service.h"
 							>
 						</File>
@@ -1671,7 +1687,15 @@
 							>
 						</File>
 						<File
+							RelativePath=".\targetver.h"
+							>
+						</File>
+						<File
 							RelativePath=".\version.h"
+							>
+						</File>
+						<File
+							RelativePath=".\vmd250.h"
 							>
 						</File>
 						<File
@@ -2178,6 +2202,14 @@
 						</File>
 						<File
 							RelativePath=".\msvc.makefile.includes\HERC_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\HQA_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\HQA_FLAGS.msvc"
 							>
 						</File>
 						<File

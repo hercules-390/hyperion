@@ -116,6 +116,7 @@ typedef struct hifr hifr;
 #endif
   #define  hifr_addr       ifreq.ifr_ifru.ifru_addr
   #define  hifr_netmask    ifreq.ifr_ifru.ifru_netmask
+  #define  hifr_broadaddr  ifreq.ifr_ifru.ifru_broadaddr
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr
   #define  hifr_flags      ifreq.ifr_ifru.ifru_flags
   #define  hifr_mtu        ifreq.ifr_ifru.ifru_mtu

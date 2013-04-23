@@ -15,7 +15,7 @@ SUBDIRS = decNumber m4 po util html man . crypto
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I@HQA_INC@
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
@@ -671,6 +671,8 @@ EXTRA_DIST = autoconf/config.rpath \
              msvc.makefile.includes/CONFIG.msvc       \
              msvc.makefile.includes/DEBUG_RETAIL.msvc \
              msvc.makefile.includes/HERC_FLAGS.msvc   \
+             msvc.makefile.includes/HQA_DIR.msvc      \
+             msvc.makefile.includes/HQA_FLAGS.msvc    \
              msvc.makefile.includes/MOD_RULES1.msvc   \
              msvc.makefile.includes/MOD_RULES2.msvc   \
              msvc.makefile.includes/MODULES.msvc      \
@@ -681,7 +683,7 @@ EXTRA_DIST = autoconf/config.rpath \
              msvc.makefile.includes/PCRE_FLAGS.msvc   \
              msvc.makefile.includes/PCRE_RULES.msvc   \
              msvc.makefile.includes/PRIM_RULES.msvc   \
-             msvc.makefile.includes/REXX_DIRS.msvc     \
+             msvc.makefile.includes/REXX_DIRS.msvc    \
              msvc.makefile.includes/REXX_FLAGS.msvc   \
              msvc.makefile.includes/REXX_RULES.msvc   \
              msvc.makefile.includes/VERSION.msvc      \
@@ -702,7 +704,8 @@ EXTRA_DIST = autoconf/config.rpath \
              herclogo.txt          \
              hercules.ico          \
              cmpsctst.cmd          \
-             cmpsctst.rexx
+             cmpsctst.rexx         \
+             targetver.h
 
 #
 # Source Header files. No 'build' for those
@@ -812,6 +815,8 @@ noinst_HEADERS = hostinfo.h     \
                  cmpscput.h     \
                  cmpsctst.h         \
                  cmpsctst_stdinc.h  \
+                 hqainc.h       \
+                 hqadefs.h      \
                  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \

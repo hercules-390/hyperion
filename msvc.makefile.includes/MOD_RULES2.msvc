@@ -75,7 +75,7 @@ $(X)hdt3270.dll: $(O)console.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)
 $(X)hdt1052c.dll: $(O)con1052c.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)hdtqeth.dll: $(O)qeth.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdtqeth.dll: $(O)qeth.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)resolve.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res

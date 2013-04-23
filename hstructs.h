@@ -1023,9 +1023,9 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     devtype;                /* Device type               */
         U16     chanset;                /* Channel Set to which this
                                            device is connected S/370 */
-        char    *typname;               /* Device type name          */
+        char   *typname;                /* Device type name          */
 
-        int    member;                  /* Group member number       */
+        int     member;                 /* Group member number       */
         DEVGRP *group;                  /* Device Group              */
 
         int     argc;                   /* Init number arguments     */
@@ -1268,7 +1268,11 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctcrem;                 /* bytes remaining in buffer */
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
-        u_int   ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
+        u_int   ctcxmode:1,             /* 1=Extended, 0=Basic mode  */
+                qreaddev:1,             /* 1=QDIO Read  device       */
+                qwritdev:1,             /* 1=QDIO Write device       */
+                qdatadev:1;             /* 1=QDIO Data  device       */
+
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 

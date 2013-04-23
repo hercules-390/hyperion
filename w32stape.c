@@ -105,6 +105,26 @@ ifd_t  w32_alloc_ifd()
 // Release an internal fd number...
 
 static
+int w32_free_ifd_nolock( ifd_t  ifd )
+{
+    int rc = 0;
+    errno = 0;
+
+    if ( ifd >= 0  &&  ifd < W32STAPE_MAX_FDNUMS )
+        g_ifds [ ifd ] = 0;
+    else
+    {
+        rc = -1;
+        errno = EBADF;
+    }
+
+    return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Release an internal fd number...
+
+static
 int w32_free_ifd( ifd_t  ifd )
 {
     int rc = 0;
@@ -112,13 +132,7 @@ int w32_free_ifd( ifd_t  ifd )
 
     lock();
     {
-        if ( ifd >= 0  &&  ifd < W32STAPE_MAX_FDNUMS )
-            g_ifds [ ifd ] = 0;
-        else
-        {
-            rc = -1;
-            errno = EBADF;
-        }
+        rc = w32_free_ifd_nolock( ifd );
     }
     unlock();
 
@@ -406,6 +420,7 @@ int w32_internal_rc ( U32* pStat )
     {
         default:                          break;  // (leave errno set to whatever it already is)
         case NO_ERROR:    errno = 0;      break;  // (normal expected i/o result)
+        case ERROR_CRC:   errno = EIO;    break;  // (dirty drive or bad media)
 
         case ERROR_BEGINNING_OF_MEDIA: *pStat |= GMT_BOT     (0xFFFFFFFF); errno = EIO;       break;
         case ERROR_END_OF_MEDIA:       *pStat |= GMT_EOT     (0xFFFFFFFF); errno = ENOSPC;    break;
@@ -552,7 +567,7 @@ int w32_close_tape ( ufd_t  ufd )
         g_BOTmsk [ ifd ] = 0xFFFFFFFF;
         g_BOTbot [ ifd ] = 0x00000000;
 
-        VERIFY( w32_free_ifd( ifd ) == 0 );
+        VERIFY( w32_free_ifd_nolock( ifd ) == 0 );
 
         // Close the file...
 

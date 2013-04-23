@@ -15,10 +15,14 @@
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings
 #endif
+  #include "hqainc.h" // User override of build configuration/settings
+#ifdef WIN32
+  #include "targetver.h" // Earliest/Oldest Windows platform supported
+#endif
 
-///////////////////////////////////////////////////////////////////////
-// Required and optional SYSTEM headers...
-//////////////////////////////////////////////////////////////////////
+/*-------------------------------------------------------------------*/
+/* Required and optional SYSTEM headers...                           */
+/*-------------------------------------------------------------------*/
 
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
@@ -32,23 +36,18 @@
 #include "ccnowarn.h"           /* suppress compiler warning support */
 
 #ifdef _MSVC_
-  // The following ensures certain functions get defined...
-  // (such as TryEnterCriticalSection and InitializeCriticalSectionAndSpinCount)
-  #ifndef _WIN32_WINNT
-    #define _WIN32_WINNT 0x0403 // Windows 98 or WinNT SP4 or greater
-  #endif
   #include <winsock2.h>         // Windows Sockets 2
   #include <mstcpip.h>          // (need struct tcp_keepalive)
-
-#if defined(ENABLE_IPV6)
-  #include <ws2tcpip.h>         /* For IPV6                          */
-#endif /* defined(ENABLE_IPV6) */
-
-  #include <netioapi.h>         /* For if_nametoindex                */
+  #if defined(ENABLE_IPV6)
+    #include <ws2tcpip.h>       // For IPV6
+  #endif
+  #include <netioapi.h>         // For if_nametoindex
 #endif
+
 #ifdef WIN32
   #include <windows.h>
 #endif
+
 #ifdef _MSVC_
   #include <xmmintrin.h>
   #include <tchar.h>

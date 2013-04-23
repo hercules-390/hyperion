@@ -1,0 +1,39 @@
+# ***************************************************************************
+#     HQA_DIR.msvc        (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (C) Software Development Laboratories, 2013
+# --------------------------------------------------------------------------
+#
+#  QA Build Configuration Testing support
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------------
+# To perform QA (Quality Assurance) testing of various build configurations,
+# define an environment variable called "HQA_DIR" that specifies the path of
+# the directory where your "hqa.h" build settings override include header is
+# (via the "Advanced" tab of the Control Panel 'System' applet).
+#
+# Your "hqa.h" include header should then either define the "HQA_SCENARIO"
+# macro to one of the pre-defined values in the Hercules "hqadefs.h" header
+# or else #define your own custom build scenario.
+#
+# Note: if the HQA_DIR path contains blanks do NOT surround it with quotes!
+# The makefile will do that if it needs to. Just define the variable with
+# the path as-is, WITHOUT any quotes:
+#
+#   HQA_DIR  =  C:\My Projects\Hercules\My HQA Directory
+#
+# ---------------------------------------------------------------------------
+
+!IFDEF HQA_DIR
+!IF "$(HQA_DIR)" == "NONE"
+!UNDEF HQA_DIR
+!ELSEIF !EXIST($(HQA_DIR))
+!ERROR Directory "$(HQA_DIR)" does not exist. Check HQA_DIR.
+!ELSEIF !EXIST($(HQA_DIR)\hqa.h)
+!ERROR Header "$(HQA_DIR)\hqa.h" not found.  Check HQA_DIR.
+!ELSE
+!MESSAGE    ** QA BUILD **    "hqa.h" will be included from "$(HQA_DIR)"
+!ENDIF
+!ENDIF

@@ -947,6 +947,12 @@
     <None Include="msvc.makefile.includes\HERC_FLAGS.msvc">
       <Filter>Other Files\Build\msvc\makefile includes</Filter>
     </None>
+    <None Include="msvc.makefile.includes\HQA_DIR.msvc">
+      <Filter>Other Files\Build\msvc\makefile includes</Filter>
+    </None>
+    <None Include="msvc.makefile.includes\HQA_FLAGS.msvc">
+      <Filter>Other Files\Build\msvc\makefile includes</Filter>
+    </None>
     <None Include="msvc.makefile.includes\MOD_RULES1.msvc">
       <Filter>Other Files\Build\msvc\makefile includes</Filter>
     </None>
@@ -1513,6 +1519,12 @@
     <ClInclude Include="hostopts.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hqadefs.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hqainc.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="hscutl.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -1583,6 +1595,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sr.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="version.h">

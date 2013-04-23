@@ -54,8 +54,8 @@
 /* QETH Debugging                                                    */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_QETH_DEBUG   0   // 1:enable, 0:disable, #undef:default
-#define QETH_TIMING_DEBUG       // #define to debug speed/performance
+#define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
+#define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
@@ -95,7 +95,7 @@
   #define  ENABLE_TRACING_STMTS   1     // (Fish: DEBUGGING)
   #include "dbgtrace.h"                 // (Fish: DEBUGGING)
   #define  NO_QETH_OPTIMIZE             // (Fish: DEBUGGING) (MSVC only)
-  #define  QETH_TIMING_DEBUG            // (Fish: DEBUG speed/timing)
+  #define  QETH_PTT_TRACING             // (Fish: DEBUG speed/debugging)
 #endif
 
 /* (disable optimizations if debugging) */
@@ -103,48 +103,43 @@
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-/* (debug QETH speed/performance issues) */
-#if defined( QETH_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
-  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3) \
-                            PTT( _class, _string, _tr1, _tr2, _tr3)
+/* (QETH speed/performance/debugging) */
+#if defined( QETH_PTT_TRACING ) || defined( OPTION_WTHREADS )
+  #define PTT_QETH_TRACE( _string, _tr1, _tr2, _tr3) \
+          PTT(PTT_CL_INF, _string, _tr1, _tr2, _tr3)
 #else
-  #define PTT_QETH_TIMING_DEBUG( _class, _string, _tr1, _tr2, _tr3)
+  #define PTT_QETH_TRACE(...)       __noop()
 #endif
 
-/* (activate DBGTRC statements if needed) */
-#if defined(QETH_DEBUG)
-  #define DBGTRC(_dev, ...)                 \
-    do {                                    \
-      DEVGRP *devgrp = (_dev)->group;       \
-      if (devgrp) {                         \
-        OSA_GRP* grp = devgrp->grp_data;    \
-        if(grp && grp->debug)               \
-          TRACE("QETH: " __VA_ARGS__);      \
-      }                                     \
-    } while(0)
-  #define DBGTRC2(_dev, _msg, ...)          \
-    do {                                    \
-      DEVGRP *devgrp = (_dev)->group;       \
-      if (devgrp) {                         \
-        OSA_GRP* grp = devgrp->grp_data;    \
-        if(grp && grp->debug) {             \
-          char buf[256];                    \
-          MSGBUF(buf,_msg,__VA_ARGS__);     \
-          TRACE("QETH: %s", buf);           \
-        }                                   \
-      }                                     \
-    } while(0)
+/* (always activate DBGTRC statements) */
+static void DBGTRC( DEVBLK* dev, char* fmt, ... )
+{
+  DEVGRP *devgrp = dev->group;
+  if (devgrp)
+  {
+    OSA_GRP* grp = devgrp->grp_data;
+    if(grp && grp->debug)
+    {
+      char buf[256];
+      va_list   vargs;
+      va_start( vargs, fmt );
+#if defined( _MSVC_ )
+      _vsnprintf_s( buf, sizeof(buf), _TRUNCATE, fmt, vargs );
 #else
-  #define DBGTRC(_dev, ...)         do{;}while(0)
-  #define DBGTRC2(_dev, _msg, ...)  do{;}while(0)
+      vsnprintf( buf, sizeof(buf), fmt, vargs );
 #endif
+      logmsg( "QETH dev %04X: %s", dev->devnum, buf );
+      va_end( vargs );
+    }
+  }
+}
 
-/* (activate tracing of I/O data buffers) */
+/* (trace I/O data buffers if debugging) */
 #if defined( QETH_DUMP_DATA )
   #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _msg, _adr, _len, _dir )
 #else
-  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)    do{;}while(0)
+  #define MPC_DUMP_DATA(...)    __noop()
 #endif // QETH_DUMP_DATA
 
 
@@ -160,7 +155,7 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Functions, entirely internal to qeth.c                            */
+/* Helper functions, entirely internal to qeth.c                     */
 /*-------------------------------------------------------------------*/
 OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
@@ -173,18 +168,17 @@ OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 OSA_BHR* process_unknown_puk( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-
 OSA_BHR* alloc_buffer( DEVBLK*, int );
 void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
 void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
 OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
 void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
-
-/*-------------------------------------------------------------------*/
-/* Internal helper functions                                         */
-/*-------------------------------------------------------------------*/
-void InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
-void InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
+void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
+void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
+int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
+int      prefix2netmask( char* ttpfxlen,  char** ttnetmask );
+U32      makepfxmask4( char* ttpfxlen );
+void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -238,6 +232,33 @@ static BYTE qeth_immed_commands [256] =
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
+
+/*-------------------------------------------------------------------*/
+/* Internal socket pipe signals used to request something            */
+/*-------------------------------------------------------------------*/
+#define QDSIG_RESET     0       /* Used to reset signal flag         */
+#define QDSIG_HALT      1       /* Halt Device signalling            */
+#define QDSIG_SYNC      2       /* SIGA Synchronize                  */
+#define QDSIG_READ      3       /* SIGA Initiate Input               */
+#define QDSIG_RDMULT    4       /* SIGA Initiate Input Multiple      */
+#define QDSIG_WRIT      5       /* SIGA Initiate Output              */
+#define QDSIG_WRMULT    6       /* SIGA Initiate Output Multiple     */
+
+const char* sig2str( BYTE sig ) {
+    static const char* sigstr[] = {
+    /*0*/ "QDSIG_RESET",
+    /*1*/ "QDSIG_HALT",
+    /*2*/ "QDSIG_SYNC",
+    /*3*/ "QDSIG_READ",
+    /*4*/ "QDSIG_RDMULT",
+    /*5*/ "QDSIG_WRIT",
+    /*6*/ "QDSIG_WRMULT",
+    }; static char buf[16];
+    if (sig < _countof( sigstr ))
+        return sigstr[ sig ];
+    MSGBUF(buf,"QDSIG_0x%02X",sig);
+    return buf;
+}
 
 /*-------------------------------------------------------------------*/
 /* STORCHK macro: check storage access & update ref & change bits.   */
@@ -391,6 +412,76 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 
 
 /*-------------------------------------------------------------------*/
+/* QETH pipe read/write/select...                                    */
+/*-------------------------------------------------------------------*/
+#define  QETH_TEMP_PIPE_ERROR( errnum )  ( errnum == HSO_EINTR    ||  \
+                                           errnum == HSO_EAGAIN   ||  \
+                                           errnum == HSO_EALREADY ||  \
+                                           errnum == HSO_EWOULDBLOCK )
+
+static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 select", 0,0,0 );
+    for (;;)
+    {
+        /* Do the select */
+        rc = select( nfds, rdset, NULL, NULL, tv );
+        /* Get error code */
+        errnum = HSO_errno;
+        /* Return if successful */
+        if (rc >= 0)
+            break;
+        /* Return if non-temporary error */
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+        /* Otherwise pause before retrying */
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af select", 0,0,0 );
+    return rc;
+}
+static int qeth_read_pipe (int fd, BYTE *sig)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 rdpipe", 0,0,*sig );
+    for (;;) {
+        rc = read_pipe( fd, sig, 1 );
+        if (rc > 0)
+            break;
+        errnum = HSO_errno;
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af rdpipe", 0,0,*sig );
+    return rc;
+}
+static int qeth_write_pipe (int fd, BYTE *sig)
+{
+    int rc, errnum;
+    PTT_QETH_TRACE( "b4 wrpipe", 0,0,*sig );
+    for (;;) {
+        rc = write_pipe( fd, sig, 1 );
+        if (rc > 0)
+            break;
+        errnum = HSO_errno;
+        if (!QETH_TEMP_PIPE_ERROR( errnum ))
+            break;
+        sched_yield();
+    }
+    if (rc <= 0)
+        errno = errnum;
+    PTT_QETH_TRACE( "af wrpipe", 0,0,*sig );
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Issue generic error message with return code and strerror msg.    */
 /* Returns the same errnum value that was passed.                    */
 /*-------------------------------------------------------------------*/
@@ -426,15 +517,16 @@ static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
 /*-------------------------------------------------------------------*/
 /* Report what values we are using                                   */
 /*-------------------------------------------------------------------*/
-static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
+static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 {
     char not[8];
-    strlcpy( not, enabled ? "" : "not ", sizeof( not ));
+    strlcpy( not, grp->enabled ? "" : "not ", sizeof( not ));
 
+    // HHC03997 "%1d:%04X %s: %s: %susing %s %s"
     WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
         grp->ttifname, not, "MAC", grp->tthwaddr );
 
-    if (grp->ttipaddr)
+    if (grp->l3 && grp->ttipaddr)
     {
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "IPv4", grp->ttipaddr );
@@ -442,12 +534,13 @@ static void qeth_report_using (DEVBLK *dev, OSA_GRP *grp, int enabled)
             grp->ttifname, not, "MASK", grp->ttnetmask );
     }
 
-    if (grp->ttipaddr6)
+    if (grp->l3 && grp->ttipaddr6)
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "IPv6", grp->ttipaddr6 );
 
-    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-        grp->ttifname, not, "MTU", grp->ttmtu );
+    if (grp->ttmtu)
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, not, "MTU", grp->ttmtu );
 }
 
 
@@ -475,7 +568,11 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
-    grp->enabled = 1;
+    else
+    {
+        grp->enabled = 1;
+        qeth_report_using( dev, grp );
+    }
     return rc;
 }
 
@@ -503,8 +600,11 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
     )) != 0)
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_disable_interface() failed" );
-
-    grp->enabled = 0;
+    else
+    {
+        grp->enabled = 0;
+        qeth_report_using( dev, grp );
+    }
     return rc;
 }
 
@@ -516,14 +616,12 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 {
     int i, rc;
 
-    /* Discard the old interface by closing the TUNTAP device */
+    /* We should only ever be called ONCE */
     if (grp->ttfd >= 0)
     {
-        int ttfd = grp->ttfd;
-        grp->ttfd = -1;
-        for (i=0; i < dev->group->acount; i++)
-            dev->group->memdev[i]->fd = -1;
-        TUNTAP_Close( ttfd );
+        DBGTRC( dev, "ERROR: TUNTAP Interface already exists!\n" );
+        ASSERT(0);              /* (Oops!) */
+        return -1;              /* Return failure */
     }
 
     /* Create the new interface by opening the TUNTAP device */
@@ -570,7 +668,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     }
 
     /* If possible, assign an IPv4 address to the interface */
-    if(grp->ttipaddr)
+    if(grp->l3 && grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
         if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
@@ -583,7 +681,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Same thing with the IPv4 subnet mask */
 #if defined( OPTION_TUNTAP_SETNETMASK )
-    if(grp->ttnetmask)
+    if(grp->l3 && grp->ttnetmask)
         if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetNetMask() failed" );
@@ -591,7 +689,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Assign it an IPv6 address too, if possible */
 #if defined(ENABLE_IPV6)
-    if(grp->ttipaddr6)
+    if(grp->l3 && grp->ttipaddr6)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetIPAddr6() failed" );
@@ -607,22 +705,6 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     } else {
         InitMTU( dev, grp );
     }
-
-    /* Enable the interface */
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_UP
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
-#if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
-        return qeth_errnum_msg( dev, grp, rc,
-            "E", "TUNTAP_SetFlags failed" );
 
     return 0;
 }
@@ -652,6 +734,7 @@ U16 offph;
     switch(req_rrh->type) {
 
     case RRH_TYPE_CM:
+        DBGTRC(dev, "RRH_TYPE_CM\n");
         {
             MPC_PUK *req_puk;
 
@@ -660,22 +743,27 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
+                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
                 rsp_bhr = process_cm_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
+                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
                 rsp_bhr = process_cm_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
                 rsp_bhr = process_cm_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
+                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
                 rsp_bhr = process_cm_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
+                DBGTRC(dev, "  Unknown RRH_TYPE_CM type 0x%02X\n", req_puk->type);
                 rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
 
             }
@@ -687,6 +775,7 @@ U16 offph;
         break;
 
     case RRH_TYPE_ULP:
+        DBGTRC(dev, "RRH_TYPE_ULP\n");
         {
             MPC_PUK *req_puk;
 
@@ -695,34 +784,41 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
+                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
                 if (process_ulp_enable_extract( dev, req_th, req_rrh, req_puk ) != 0)
                 {
                     rsp_bhr = NULL;
                     break;
                 }
-                if (qeth_create_interface( dev, grp ) != 0)
-                    qeth_errnum_msg( dev, grp, -1,
-                        "E", "qeth_create_interface() failed" );
+                if (grp->ttfd < 0)
+                    if (qeth_create_interface( dev, grp ) != 0)
+                        qeth_errnum_msg( dev, grp, -1,
+                            "E", "qeth_create_interface() failed" );
                 rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
+                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
                 rsp_bhr = process_ulp_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_ACTIVE:
+                DBGTRC(dev, "  PUK_TYPE_ACTIVE\n");
                 rsp_bhr = process_dm_act( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
                 rsp_bhr = process_ulp_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
+                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
                 rsp_bhr = process_ulp_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
+                DBGTRC(dev, "  Unknown RRH_TYPE_ULP type 0x%02X\n", req_puk->type);
                 rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
             }
 
@@ -732,6 +828,7 @@ U16 offph;
         break;
 
     case RRH_TYPE_IPA:
+        DBGTRC(dev, "RRH_TYPE_IPA\n");
         {
             MPC_TH  *rsp_th;
             MPC_RRH *rsp_rrh;
@@ -781,7 +878,7 @@ U16 offph;
                 U32  uLength1;
                 U32  uLength3;
 
-                    DBGTRC(dev, "STARTLAN\n");
+                    DBGTRC(dev, "  IPA_CMD_STARTLAN\n");
 
                     if (lendata > SIZE_IPA_SHORT) {
                         uLoselen = lendata - SIZE_IPA_SHORT;
@@ -794,29 +891,25 @@ U16 offph;
                         STORE_F3( rsp_ph->lendata, uLength3 );
                     }
 
-                    if (!qeth_enable_interface( dev, grp ))
-                    {
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                        grp->ipae |= IPA_SETADAPTERPARMS;
-                        qeth_report_using( dev, grp, 1 );
-                    }
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    grp->ipae |= IPA_SETADAPTERPARMS;
+
+                    /* Enable the TAP interface */
+                    if (!grp->l3)
+                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
             case IPA_CMD_STOPLAN:  /* 0x02 */
                 {
-                    DBGTRC(dev, "STOPLAN\n");
+                    DBGTRC(dev, "  IPA_CMD_STOPLAN\n");
 
-                    if (!qeth_disable_interface( dev, grp ))
-                    {
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                        grp->ipae &= ~IPA_SETADAPTERPARMS;
-                        qeth_report_using( dev, grp, 0 );
-                    }
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    grp->ipae &= ~IPA_SETADAPTERPARMS;
+
+                    /* Disable the TAP interface */
+                    if (!grp->l3)
+                        VERIFY( qeth_disable_interface( dev, grp ) == 0);
                 }
                 break;
 
@@ -826,14 +919,14 @@ U16 offph;
                 U32 cmd;
 
                     FETCH_FW(cmd,sap->cmd);
-                    DBGTRC(dev, "SETADPPARMS (Set Adapter Parameters: %8.8x)\n",cmd);
+                    DBGTRC(dev, "  IPA_CMD_SETADPPARMS\n");
 
                     switch(cmd) {
 
                     case IPA_SAP_QUERY:  /*0x00000001 */
+                        DBGTRC(dev, "    IPA_SAP_QUERY\n");
                         {
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
-                            DBGTRC(dev, "Query SubCommands\n");
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
 // STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
                             STORE_HW(sap->rc,IPA_RC_OK);
@@ -842,6 +935,7 @@ U16 offph;
                         break;
 
                     case IPA_SAP_SETMAC:     /* 0x00000002 */
+                        DBGTRC(dev, "    IPA_SAP_SETMAC\n");
                         {
                         SAP_SMA *sma = (SAP_SMA*)(sap+1);
                         U32 cmd;
@@ -850,7 +944,7 @@ U16 offph;
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                DBGTRC(dev, "SETMAC Read MAC address\n");
+                                DBGTRC(dev, "      IPA_SAP_SMA_CMD_READ\n");
                                 STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
                                 STORE_FW(sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
@@ -866,7 +960,7 @@ U16 offph;
 //                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
 
                             default:
-                                DBGTRC(dev, "SETMAC unsupported command (%08x)\n",cmd);
+                                DBGTRC(dev, "      Unknown IPA_SAP_SETMAC cmd 0x%08x)\n",cmd);
                                 STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                                 STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                             }
@@ -878,41 +972,36 @@ U16 offph;
                         SAP_SPM *spm = (SAP_SPM*)(sap+1);
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
-                            grp->promisc = promisc ? MAC_PROMISC : 0;
-                            DBGTRC(dev, "Set Promiscous Mode %s\n",grp->promisc ? "On" : "Off");
+                            grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
+                            DBGTRC(dev, "    IPA_SAP_PROMISC %s\n",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        DBGTRC(dev, "Set Access\n");
+                        DBGTRC(dev, "    IPA_SAP_SETACCESS\n");
                         STORE_HW(sap->rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "Invalid SetAdapter SubCmd(%08x)\n",cmd);
+                        DBGTRC(dev, "    Unknown IPA_CMD_SETADPPARMS command 0x%08x\n",cmd);
                         STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-
                     }
-
                 }
                 /* end case IPA_CMD_SETADPPARMS: */
                 break;
 
             case IPA_CMD_SETVMAC:  /* 0x25 */
+                DBGTRC(dev, "  IPA_CMD_SETVMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 int rc = 0;
-                int was_enabled;
 #endif
-
-                    DBGTRC(dev, "Set VMAC\n");
-
                     MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
@@ -923,25 +1012,12 @@ U16 offph;
                     );
 
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
-                    /* PROGRAMMING NOTE: cannot change the interface
-                       once it has been enabled. Thus we temporarily
-                       disable it, make our changes, and then enable
-                       it again.
-                    */
-                    if ((was_enabled = grp->enabled))
-                        qeth_disable_interface( dev, grp );
-
                     if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
                     {
                         qeth_errnum_msg( dev, grp, rc,
                             "E", "IPA_CMD_SETVMAC failed" );
-                    }
-
-                    if (was_enabled)
-                        qeth_enable_interface( dev, grp );
-
-                    if (rc != 0)
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    }
                     else
                     {
                         if (grp->tthwaddr)
@@ -952,8 +1028,6 @@ U16 offph;
 #else
                     {
 #endif
-                        qeth_report_using( dev, grp, 1 );
-
                         if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         else
@@ -963,10 +1037,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELVMAC:  /* 0x26 */
+                DBGTRC(dev, "  IPA_CMD_DELVMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Del VMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -975,10 +1049,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETGMAC:  /* 0x23 */
+                DBGTRC(dev, "  IPA_CMD_SETGMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Set GMAC\n");
                     if(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -987,10 +1061,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELGMAC:  /* 0x24 */
+                DBGTRC(dev, "  IPA_CMD_DELGMAC\n");
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    DBGTRC(dev, "Del GMAC\n");
                     if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
@@ -999,11 +1073,10 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
+                DBGTRC(dev, "  IPA_CMD_SETIP\n");
                 {
                 BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto, retcode;
-
-                    DBGTRC(dev, "SETIP (L3 Set IP)\n");
 
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
@@ -1012,63 +1085,78 @@ U16 offph;
                     {
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
-                        int rc = 0;
-//!                         int was_enabled;
+
+                        /* Save guest IPv4 address and netmask*/
+                        FETCH_FW( grp->hipaddr4, ip );
+
+                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
+                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+
+                        if (grp->ttipaddr)
+                            free( grp->ttipaddr );
+                        grp->ttipaddr = strdup( ipaddr );
+
+                        if (grp->ttnetmask)
+                            free( grp->ttnetmask );
+                        grp->ttnetmask = strdup( ipmask );
 
                         if (grp->setip)
                         {
-                            MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                            MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
-
-#if !defined( OPTION_W32_CTCI )
-                            if ((rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr)) != 0)
+#if defined(OPTION_W32_CTCI)
+                            char* what = "TUNTAP_SetDestAddr() failed";
+                            int rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+#else // !defined(OPTION_W32_CTCI)
+                            char* what = "TUNTAP_SetIPAddr() failed";
+                            int rc = TUNTAP_SetIPAddr(grp->ttifname,ipaddr);
+#endif // defined(OPTION_W32_CTCI)
+                            if (rc != 0)
                             {
-                                qeth_errnum_msg( dev, grp, rc, "E", "IPA_CMD_SETIP failed" );
+                                qeth_errnum_msg( dev, grp, rc, "E", what );
                                 retcode = IPA_RC_FFFF;
                             }
-#endif /*!defined( OPTION_W32_CTCI )*/
                         }
-
-//!                         if (grp->ttipaddr)
-//!                             free( grp->ttipaddr );
-//!                         grp->ttipaddr = strdup( ipaddr );
-//!
-//!                         if (grp->ttnetmask)
-//!                             free( grp->ttnetmask );
-//!                         grp->ttnetmask = strdup( ipmask );
-//!
-//!                         /* PROGRAMMING NOTE: cannot change the interface
-//!                            once it has been enabled. Thus we temporarily
-//!                            disable it, make our changes, and then enable
-//!                            it again.
-//!                         */
-//!                         if ((was_enabled = grp->enabled))
-//!                             qeth_disable_interface( dev, grp );
-//!
-//!                         if ((rc = qeth_set_addr_parms( dev, grp )) != 0)
-//!                         {
-//!                             qeth_errnum_msg( dev, grp, rc,
-//!                                 "E", "IPA_CMD_SETIP failed" );
-//!                             retcode = IPA_RC_FFFF;
-//!                         }
-//!
-//!                         if (was_enabled)
-//!                             qeth_enable_interface( dev, grp );
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
+                        memcpy( grp->ipaddr6, ip, 16 );
+
+                        if(grp->ttipaddr6)
+                            free(grp->ttipaddr6);
+                        hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
+
+#if 0 // FIXME: How do we do this for IPv6?
                         /* Hmm... What does one do with an IPv6 address? */
-                        /* SetDestAddr isn't valid for IPv6.             */
+                        /* TUNTAP_SetDestAddr isn't valid for IPv6.      */
+                        if (grp->setip)
+                        {
+#if defined(OPTION_W32_CTCI)
+                            const char* what = "TUNTAP_SetDestAddr6() failed";
+                            int rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+#else // !defined(OPTION_W32_CTCI)
+                            const char* what = "TUNTAP_SetIPAddr6() failed";
+                            int rc = TUNTAP_SetIPAddr6(grp->ttifname,grp->ttipaddr6)
+#endif // defined(OPTION_W32_CTCI)
+                            if (rc != 0)
+                            {
+                                qeth_errnum_msg( dev, grp, rc, "E", what );
+                                retcode = IPA_RC_FFFF;
+                            }
+                        }
+#endif // (how do we do this for IPv6?)
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
                     STORE_HW(ipa->rc,retcode);
+
+                    /* Enable the TUN interface */
+                    if (grp->l3 && IPA_RC_OK == retcode)
+                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
             case IPA_CMD_QIPASSIST:  /* 0xB2 */
-                DBGTRC(dev, "QIPASSIST (L3 Query IP Assist)\n");
+                DBGTRC(dev, "  IPA_CMD_QIPASSIST\n");
                 grp->ipae |= IPA_SETADAPTERPARMS;
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
@@ -1081,7 +1169,7 @@ U16 offph;
 
                     FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
-                    DBGTRC(dev, "SETASSPARMS (L3 Set IP Assist parameters: %8.8x, %4.4x)\n",ano,cmd);
+                    DBGTRC(dev, "  IPA_CMD_SETASSPARMS: %8.8x, %4.4x)\n",ano,cmd);
 
                     if (!(ano & grp->ipas)) {
                         STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
@@ -1091,12 +1179,14 @@ U16 offph;
                     switch(cmd) {
 
                     case IPA_SAS_CMD_START:      /* 0x0001 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_START\n");
                         grp->ipae |= ano;
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_STOP\n");
                         grp->ipae &= (0xFFFFFFFF - ano);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
@@ -1106,12 +1196,13 @@ U16 offph;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
+                        DBGTRC(dev, "    IPA_SAS_CMD_xxxxxxx\n");
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "SETASSPARMS unsupported command\n");
+                        DBGTRC(dev, "    Unknown IPA_CMD_SETASSPARMS command 0x%04X\n", cmd);
                     /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
@@ -1121,30 +1212,30 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIPM:  /* 0xB4 */
-                DBGTRC(dev, "L3 Set IPM\n");
+                DBGTRC(dev, "  IPA_CMD_SETIPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIPM:  /* 0xB5 */
-                DBGTRC(dev, "L3 Del IPM\n");
+                DBGTRC(dev, "  IPA_CMD_DELIPM\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETRTG:  /* 0xB6 */
-                DBGTRC(dev, "L3 Set Routing\n");
+                DBGTRC(dev, "  IPA_CMD_SETRTG\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIP:  /* 0xB7 */
-                DBGTRC(dev, "L3 Del IP\n");
+                DBGTRC(dev, "  IPA_CMD_DELIP\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
+                DBGTRC(dev, "  IPA_CMD_CREATEADDR\n");
                 {
                 BYTE *sip = (BYTE*)(ipa+1);
 
-                    DBGTRC(dev, "L3 Create IPv6 addr from MAC\n");
                     memcpy( sip+0, &grp->iMAC[0], IFHWADDRLEN/2 );
                     sip[3] = 0xFF;
                     sip[4] = 0xFE;
@@ -1154,12 +1245,12 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETDIAGASS:  /* 0xB9 */
-                DBGTRC(dev, "L3 Set Diag parms\n");
+                DBGTRC(dev, "  IPA_CMD_SETDIAGASS\n");
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             default:
-                DBGTRC(dev, "Invalid IPA Cmd(%02x)\n",ipa->cmd);
+                DBGTRC(dev, "  Unknown RRH_TYPE_IPA command 0x%02x\n",ipa->cmd);
                 STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
             /* end switch(ipa->cmd) */
@@ -1178,10 +1269,9 @@ U16 offph;
         break;
 
     default:
-        DBGTRC(dev, "Invalid Type=%2.2x\n",req_rrh->type);
+        DBGTRC(dev, "RRH_TYPE_??: Unknown osa_adapter_cmd: req_rrh->type = 0x%02x\n",req_rrh->type);
     }
     /* end switch(req_rrh->type) */
-
 }
 /* end osa_adapter_cmd */
 
@@ -1214,10 +1304,11 @@ U16 reqtype;
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
+        DBGTRC(dev, "IDX_ACT_TYPE_READ\n");
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX Activate Read: Invalid OSA Port %d for %s Device %4.4x\n",
-                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, "IDX_ACT_TYPE_READ: Invalid OSA Port %d\n",
+                (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -1227,13 +1318,14 @@ U16 reqtype;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, UCLEVEL);
-
+            STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+            dev->qreaddev = 1;
         }
         break;
 
     case IDX_ACT_TYPE_WRITE:
+        DBGTRC(dev, "IDX_ACT_TYPE_WRITE\n");
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
         grp->ipas = IPA_SUPP;
@@ -1241,8 +1333,8 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX Activate Write: Invalid OSA Port %d for device %4.4x\n",
-                (iea->port & IDX_ACT_PORT_MASK),dev->devnum);
+            DBGTRC(dev, "IDX_ACT_TYPE_WRITE: Invalid OSA Port %d\n",
+                (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
         }
         else
@@ -1252,15 +1344,14 @@ U16 reqtype;
             iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
             STORE_FW(iear->token, QTOKEN1);
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, UCLEVEL);
-
+            STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+            dev->qwritdev = 1;
         }
         break;
 
     default:
-        DBGTRC(dev, "IDX Activate: Invalid Request %4.4x for device %4.4x\n",
-            reqtype,dev->devnum);
+        DBGTRC(dev, "Unknown IDX_ACT_TYPE_xxx %04.4x\n",reqtype);
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
         // Free the buffer.
@@ -1280,19 +1371,21 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
-    DBGTRC(dev, "Adapter Interrupt dev(%4.4X)\n",dev->devnum);
+    DBGTRC(dev, "Adapter Interrupt\n");
 
-    obtain_lock(&dev->lock);
-    dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
-    dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
-    dev->pciscsw.chanstat = CSW_PCI;
-    QUEUE_IO_INTERRUPT(&dev->pciioint);
-    release_lock (&dev->lock);
-
-    /* Update interrupt status */
-    OBTAIN_INTLOCK(devregs(dev));
-    UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(devregs(dev));
+    OBTAIN_INTLOCK(NULL);
+    {
+        obtain_lock( &dev->lock );
+        {
+            dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
+            dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
+            dev->pciscsw.chanstat = CSW_PCI;
+            QUEUE_IO_INTERRUPT( &dev->pciioint );
+            UPDATE_IC_IOPENDING();
+        }
+        release_lock (&dev->lock);
+    }
+    RELEASE_INTLOCK(NULL);
 }
 
 
@@ -1335,7 +1428,7 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
     // HHC03985 "%1d:%04X %s: %s"
     WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QDIO", errmsg );
+        "QETH", errmsg );
 
     return qrc;
 }
@@ -1394,12 +1487,14 @@ QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 static inline int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
 {
     if (!dstaddr)
-        return L3_CAST_NOCAST;
+        return HDR3_FLAGS_NOCAST;
     if ((dstaddr & 0xE0000000) == 0xE0000000)
-        return L3_CAST_MULTICAST;
+        return HDR3_FLAGS_MULTICAST;
     if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
-        return L3_CAST_BROADCAST;
-    return L3_CAST_UNICAST;
+        return HDR3_FLAGS_BROADCAST;
+    if ((dstaddr & ~grp->pfxmask4) != (grp->hipaddr4 & ~grp->pfxmask4))
+        return HDR3_FLAGS_NOTFORUS;
+    return HDR3_FLAGS_UNICAST;
 }
 
 
@@ -1413,22 +1508,28 @@ static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
     int i;
 
     if (dest_addr[0] == 0xFF)
-        return L3_CAST_MULTICAST;
+        return HDR3_FLAGS_MULTICAST;
 
     if (memcmp( dest_addr, dest_zero, 16 ) == 0)
-        return L3_CAST_NOCAST;
+        return HDR3_FLAGS_NOCAST;
 
     memcpy( dest_work, dest_addr, 16 );
 
-    /* Ignore prefix bits */
     for (i=0; i < 16 && grp->pfxmask6[i] != 0xFF; i++)
+    {
+        /* Test prefix bits */
+        if ((dest_work[i] & ~grp->pfxmask6[i]) !=
+            (grp->ipaddr6[i] & ~grp->pfxmask6[i]))
+            return HDR3_FLAGS_NOTFORUS;
+        /* Ignore prefix bits */
         dest_work[i] &= grp->pfxmask6[i];
+    }
 
     /* If non-prefix bits are all zero then anycast */
     if (memcmp( dest_work, dest_zero, 16 ) == 0)
-        return L3_CAST_ANYCAST;
+        return HDR3_FLAGS_ANYCAST;
 
-    return L3_CAST_UNICAST;
+    return HDR3_FLAGS_UNICAST;
 }
 
 
@@ -1445,7 +1546,7 @@ static BYTE more_packets( DEVBLK* dev )
     struct timeval tv = {0,0};
     FD_ZERO( &readset );
     FD_SET( dev->fd, &readset );
-    return (select( dev->fd+1, &readset, NULL, NULL, &tv ) > 0);
+    return (qeth_select( dev->fd+1, &readset, &tv ) > 0);
 }
 
 
@@ -1456,16 +1557,17 @@ static BYTE more_packets( DEVBLK* dev )
 static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
 {
     int errnum;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", 0, dev->bufsize, 0 );
+
+    PTT_QETH_TRACE( "rdpack entr", dev->bufsize, 0, 0 );
     dev->buflen = TUNTAP_Read( dev->fd, dev->buf, dev->bufsize );
     errnum = errno;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read", 0, dev->bufsize, dev->buflen );
 
     if (unlikely(dev->buflen < 0))
     {
         if (errnum == EAGAIN)
         {
             errno = EAGAIN;
+            PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EPKEOF );
             return QRC_EPKEOF;
         }
         else
@@ -1474,6 +1576,7 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
             WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 "QETH", grp->ttifname, errnum, strerror( errnum ));
             errno = errnum;
+            PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EIOERR );
             return QRC_EIOERR;
         }
     }
@@ -1481,9 +1584,11 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
     if (unlikely(dev->buflen == 0))
     {
         errno = EAGAIN;
+        PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EPKEOF );
         return QRC_EPKEOF;
     }
 
+    PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_SUCCESS );
     return QRC_SUCCESS;
 }
 
@@ -1496,14 +1601,14 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 {
     int wrote, errnum;
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt write", 0, pktlen, 0 );
+    PTT_QETH_TRACE( "wrpack entr", 0, pktlen, 0 );
     wrote = TUNTAP_Write( dev->fd, pkt, pktlen );
     errnum = errno;
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt write", 0, pktlen, 0 );
 
     if (likely(wrote == pktlen))
     {
         dev->qdio.txcnt++;
+        PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_SUCCESS );
         return QRC_SUCCESS;
     }
 
@@ -1511,6 +1616,7 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
     WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
         "QETH", grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
+    PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_EIOERR );
     return QRC_EIOERR;
 }
 
@@ -1636,7 +1742,7 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
             if (sbal->sbale[*sb].flags[3] & SBALE_FLAG3_PCI_REQ)
             {
                 SET_DSCI(dev,DSCI_IOCOMP);
-                grp->reqpci = TRUE;
+                grp->oqPCI = TRUE;
             }
 
             /* Retrieve the next storage block entry */
@@ -1807,7 +1913,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     {
         /* Read another packet into the device buffer */
         if ((qrc = read_packet( dev, grp )) != 0)
-            return qrc;
+            return qrc; /*(probably EOF)*/
 
         /* Build the Layer 3 OSA header */
         memset( &o3hdr, 0, sizeof( OSA_HDR3 ));
@@ -1820,11 +1926,13 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         {
             IP6FRM* ip6 = (IP6FRM*)dev->buf;
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
-            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6 |
-                (l3_cast_type_ipv6( o3hdr.dest_addr, grp ) & HDR3_FLAGS_CASTMASK);
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
+            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
             o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
         }
-        else
+        else /* IPv4 */
         {
             U32 dstaddr;
             U16 checksum;
@@ -1833,7 +1941,9 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             STORE_FW( &o3hdr.dest_addr[12], dstaddr );
             FETCH_HW( checksum, ip4->hwChecksum );
             STORE_HW( o3hdr.in_cksum, checksum );
-            o3hdr.flags = l3_cast_type_ipv4( dstaddr, grp );
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv4( dstaddr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
         }
 
@@ -1898,12 +2008,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         hdr = (BYTE*)(dev->mainstor + sba);
 
         /* Verify Block is long enough to hold the full OSA header.
-           FIX ME: there is nothing in the specs that requires the
+           FIXME: there is nothing in the specs that requires the
            header to not span multiple Storage Blocks so we should
            should probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                "QETH", "** FIX ME ** OSA_HDR spans multiple storage blocks." );
+                "QETH", "** FIXME ** OSA_HDR spans multiple storage blocks." );
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
         hdr_id = hdr[0];
@@ -1990,6 +2100,7 @@ int mq = dev->qdio.i_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int did_read = 0;                       /* Indicates some data read  */
 
+    PTT_QETH_TRACE( "prinq entr", 0,0,0 );
     do
     {
         if(dev->qdio.i_qmask & (0x80000000 >> qn))
@@ -2037,7 +2148,8 @@ int did_read = 0;                       /* Indicates some data read  */
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                             SET_DSCI(dev,DSCI_IOCOMP);
-                            grp->reqpci = TRUE;
+                            grp->iqPCI = TRUE;
+                            PTT_QETH_TRACE( "prinq OK", qn,bn,qrc );
                             return;
                         }
                         else if (qrc == QRC_EPKEOF)
@@ -2045,6 +2157,7 @@ int did_read = 0;                       /* Indicates some data read  */
                             /* We didn't find any packets/frames meant
                             for us (perhaps the destination MAC or IP
                             addresses didn't match) so just return. */
+                            PTT_QETH_TRACE( "*prcinq EOF", qn,bn,qrc );
                             return;   /* (nothing for us to do) */
                         }
                     }
@@ -2056,7 +2169,8 @@ int did_read = 0;                       /* Indicates some data read  */
                         slsb->slsbe[bn] = SLSBE_ERROR;
                         STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                         SET_ALSI(dev,ALSI_ERROR);
-                        grp->reqpci = TRUE;
+                        grp->iqPCI = TRUE;
+                        PTT_QETH_TRACE( "*prcinq ERR", qn,bn,qrc );
                         return;
                     }
 
@@ -2089,14 +2203,14 @@ int did_read = 0;                       /* Indicates some data read  */
     if (!did_read && more_packets( dev ))
     {
     char buff[4096];
-    int n;
         DBGTRC(dev, "Input dropped (No available buffers)\n");
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 tt read2", -1, sizeof(buff), 0 );
-        n = TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af tt read2", -1, sizeof(buff), n );
-        if(n > 0)
-            grp->reqpci = TRUE;
+        PTT_QETH_TRACE( "*prcinq drop", dev->qdio.i_qmask, 0, 0 );
+        TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
+        /* No available/empty Input Queues were to be found */
+        /* Wake up the program so it can process its queues */
+        grp->iqPCI = TRUE;
     }
+    PTT_QETH_TRACE( "prinq exit", 0,0,0 );
 }
 /* end process_input_queues */
 
@@ -2112,6 +2226,7 @@ int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int found_buff = 0;                     /* Found primed o/p buffer   */
 
+    PTT_QETH_TRACE( "proutq entr", 0,0,0 );
     do
     {
         if(dev->qdio.o_qmask & (0x80000000 >> qn))
@@ -2161,7 +2276,8 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                     {
                         slsb->slsbe[bn] = SLSBE_ERROR;
                         SET_ALSI(dev,ALSI_ERROR);
-                        grp->reqpci = TRUE;
+                        grp->oqPCI = TRUE;
+                        PTT_QETH_TRACE( "*proutq ERR", qn,bn,qrc );
                         return;
                     }
 
@@ -2180,6 +2296,11 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
             qn = 0;
     }
     while ((dev->qdio.o_qpos = qn) != sqn);
+
+    if (!found_buff)
+        PTT_QETH_TRACE( "*proutq EOF", dev->qdio.o_qmask,0,0 );
+
+    PTT_QETH_TRACE( "proutq exit", 0,0,0 );
 }
 /* end process_output_queues */
 
@@ -2187,37 +2308,64 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
 /*-------------------------------------------------------------------*/
 /* Halt device related functions...                                  */
 /*-------------------------------------------------------------------*/
-static void qeth_signal_halt (OSA_GRP *grp)
+static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
 {
-fd_set readset;
-BYTE sig = QDSIG_HALT;
+    if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+    {
+        DBGTRC( dev, "Halting read device\n" );
 
-    /* Send signal */
-    write_pipe( grp->ppfd[1], &sig, 1 );
+        /* Ask, then wait for, the READ CCW loop to exit */
+        obtain_lock( &grp->qlock );
+        PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
+        dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
+        signal_condition( &grp->qrcond );
+        wait_condition( &grp->qrcond, &grp->qlock );
+        PTT_QETH_TRACE( "af halt read", 0,0,0 );
+        release_lock( &grp->qlock );
 
-    /* Wait for reply */
-    FD_ZERO( &readset );
-    FD_SET( grp->ppfd[0], &readset );
-    select( grp->ppfd[0]+1, &readset, NULL, NULL, NULL );
-    read_pipe( grp->ppfd[0], &sig, 1 );
+        DBGTRC( dev, "Read device halted\n" );
+    }
+}
+
+static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
+{
+    UNREFERENCED(dev);  /* (unreferenced for non-DEBUG builds) */
+
+    if (dev->scsw.flag2 & SCSW2_Q)
+    {
+    BYTE sig = QDSIG_HALT;
+
+        DBGTRC( dev, "Halting data device\n" );
+
+        /* Send halt signal */
+        obtain_lock( &grp->qlock );
+        dev->scsw.flag2 &= ~SCSW2_Q;
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+
+        /* Wait for acknowledgement */
+        wait_condition( &grp->qdcond, &grp->qlock );
+        release_lock (&grp->qlock );
+
+#if 1 // (probably not needed?)
+        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
+#endif
+        DBGTRC( dev, "Data device halted\n" );
+    }
 }
 
 static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    /* Signal ACTIVATE QUEUES loop to exit if QDIO is active */
-    if(dev->scsw.flag2 & SCSW2_Q)
-    {
-        dev->scsw.flag2 &= ~SCSW2_Q;
-        qeth_signal_halt(grp);
-    }
+    if (dev->qdatadev)
+        qeth_halt_data_device( dev, grp );
     else
-        if(dev->group->acount == OSA_GROUP_SIZE)
+        if (dev->qreaddev)
+            qeth_halt_read_device( dev, grp );
+        else
         {
-            /* Tell READ loop to not wait for IDX response */
-            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
-            signal_condition(&grp->qcond);
+            DBGTRC( dev, "qeth_halt_device: noop!\n" );
+            PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
         }
 }
 
@@ -2252,15 +2400,17 @@ int i;
 
             register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
-            initialize_condition(&grp->qcond);
-            initialize_lock(&grp->qlock);
-            initialize_lock(&grp->qblock);
+            initialize_condition( &grp->qrcond );
+            initialize_condition( &grp->qdcond );
+            initialize_lock( &grp->qlock );
+            initialize_lock( &grp->qblock );
 
             /* Creat ACTIVATE QUEUES signalling pipe */
             create_pipe(grp->ppfd);
 
             /* Set Non-Blocking mode */
-            socket_set_blocking_mode(grp->ppfd[0],0);
+            VERIFY( socket_set_blocking_mode(grp->ppfd[0],0) == 0);
+            VERIFY( socket_set_blocking_mode(grp->ppfd[1],0) == 0);
 
             /* Set defaults */
 #if defined( OPTION_W32_CTCI )
@@ -2278,17 +2428,31 @@ int i;
         /* This code is not executed. ??? */
         grp = dev->group->grp_data;
 
-    /* Process all command line options here.                    */
-    /* This code is executed for each device in the group.       */
-    /* The following configuration statement:-                   */
+    /*-----------------------------------------------------------*/
+    /* PROCESS ALL COMMAND LINE OPTIONS HERE.                    */
+    /* Each device in the group will execute this loop.          */
+    /*-----------------------------------------------------------*/
+    /*                                                           */
+    /* NOTE: The following configuration statement:              */
+    /*                                                           */
     /*    0800-0802 QETH mtu 1492 ipaddr 192.168.2.1 debug       */
+    /*                                                           */
     /* results in exactly the same QETH group as the following   */
-    /* configuration statements:-                                */
+    /* configuration statements:                                 */
+    /*                                                           */
     /*    0802 QETH mtu 1492"                                    */
     /*    0800 QETH ipaddr 192.168.2.1                           */
     /*    0801 QETH debug                                        */
+    /*                                                           */
     /* This is either a bug or a design feature, depending       */
     /* on your point of view.                                    */
+    /*                                                           */
+    /*-----------------------------------------------------------*/
+
+    /* PROGRAMMING NOTE: argument validation is deferred until the
+       group is complete. Thus the below argument processing loop
+       just saves the argument values but doesn't validate them. */
+
     for(i = 0; i < argc; i++)
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
@@ -2313,33 +2477,25 @@ int i;
         else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-
-            if(grp->ttipaddr)                  /* Free existing ipaddr     */
-                free(grp->ttipaddr);
-            if(grp->ttpfxlen) {                /* Free existing prefix siz */
-                free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
-            }
+            if(grp->ottipaddr)                 /* Save orig. ipaddr option */
+                free(grp->ottipaddr);
+            grp->ottipaddr = strdup(argv[i+1]);
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
-                if (grp->ttnetmask) {          /* Free existing netmask    */
-                    free(grp->ttnetmask);
-                    grp->ttnetmask = NULL;
-                }
-                prfx = slash + 1;              /* Point to prefix size     */
-                grp->ttpfxlen = strdup(prfx);
                 slash[0] = 0;                  /* Replace slash with null  */
+                prfx = slash + 1;              /* Point to prefix size     */
+                if(grp->ttpfxlen)
+                    free(grp->ttpfxlen);
+                grp->ttpfxlen = strdup(prfx);
             }
+            if(grp->ttipaddr)
+                free(grp->ttipaddr);
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttpfxlen) {                /* Free existing prefix siz */
-                free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
-            }
-            if(grp->ttnetmask)                 /* Free existing netmask    */
+            if(grp->ttnetmask)
                 free(grp->ttnetmask);
             grp->ttnetmask = strdup(argv[++i]);
             continue;
@@ -2348,7 +2504,6 @@ int i;
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-
             if(grp->ttipaddr6)
                 free(grp->ttipaddr6);
             if(grp->ttpfxlen6)
@@ -2390,16 +2545,18 @@ int i;
             grp->debug = 0;
             continue;
         }
-        else if (!strcasecmp("setip",argv[i]))   /* This option is temporary */
+#if !defined(OPTION_W32_CTCI) /* (option is temporary on non-Windows) */
+        else if (!strcasecmp("setip",argv[i]))
         {
             grp->setip = 1;
             continue;
         }
-        else if(!strcasecmp("nosetip",argv[i]))  /* This option is temporary */
+        else if(!strcasecmp("nosetip",argv[i]))
         {
             grp->setip = 0;
             continue;
         }
+#endif // !defined(OPTION_W32_CTCI)
         else
         {
             // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
@@ -2409,18 +2566,19 @@ int i;
 
     if (grouped)
     {
-        /* This code is executed for the last device in the group. */
+        /* Validate the arguments now that the group is complete. */
 
-        DEVBLK         *cua;
-        U16             destlink;
-        int             i, rc, pfxsz, pfxlen, chpid;
-        MAC             mac;
-        HRB             hrb;
-        uint32_t        mask;
-        struct in_addr  addr4;
-        char            netmask[24];
-        char            c;
-        char           *p;
+        DEVBLK  *cua;
+        U16      destlink;
+        int      i, rc, pfxlen, chpid;
+        MAC      mac;
+        HRB      hrb;
+        char     c;
+        char    *p;
+
+#if defined(OPTION_W32_CTCI)
+        grp->setip = 1;   /* (forced for CTCI-WIN) */
+#endif
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
@@ -2456,47 +2614,89 @@ int i;
                     free(grp->ttpfxlen);
                     grp->ttpfxlen = NULL;
                 }
+                if(grp->ttnetmask)
+                {
+                    free(grp->ttnetmask);
+                    grp->ttnetmask = NULL;
+                }
+            }
+            else
+                grp->hipaddr4 = ntohl( inet_addr( grp->ttipaddr ));
+        }
+
+        if (!grp->ttnetmask && !grp->ttpfxlen)
+        {
+            grp->ttnetmask = strdup("255.255.255.255");
+            grp->ttpfxlen = strdup("32");
+        }
+        if (grp->ttnetmask)
+        {
+            char *new_ttpfxlen = NULL;
+            /* Build new prefix length based on netmask */
+            if (netmask2prefix( grp->ttnetmask, &new_ttpfxlen ) != 0)
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     "netmask", grp->ttnetmask );
+                free(grp->ttnetmask);
+                if(grp->ttipaddr)
+                    free(grp->ttipaddr);
+                if(grp->ttpfxlen)
+                    free(grp->ttpfxlen);
+                grp->ttnetmask = NULL;
+                grp->ttipaddr = NULL;
+                grp->ttpfxlen = NULL;
+            }
+            else /* (valid netmask) */
+            {
+                /* Check netmask value (via newly built prefix)
+                   for consistency with existing prefix length */
+                if (grp->ttpfxlen &&
+                    strcmp( new_ttpfxlen, grp->ttpfxlen ) != 0)
+                {
+                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
+                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                        "prefix length", "netmask" );
+                }
+                /* Use consistent prefix length */
+                if (grp->ttpfxlen)
+                    free( grp->ttpfxlen );
+                grp->ttpfxlen = new_ttpfxlen;
             }
         }
         if (grp->ttpfxlen)
         {
-            rc = 0;
-            for (p = grp->ttpfxlen; isdigit(*p); p++) { }
-            if (*p != '\0' || !strlen(grp->ttpfxlen))
-                rc = -1;
-            pfxsz = atoi(grp->ttpfxlen);
-            if (rc != 0 || pfxsz > 32 )
+            char *new_ttnetmask = NULL;
+            /* Build new netmask based on prefix length */
+            if (prefix2netmask( grp->ttpfxlen, &new_ttnetmask ) != 0)
             {
                 // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                     "ipaddr", grp->ttpfxlen );
+                                     "ipaddr", grp->ottipaddr );
                 free(grp->ttpfxlen);
-                grp->ttpfxlen = NULL;
                 if(grp->ttipaddr)
-                {
                     free(grp->ttipaddr);
-                    grp->ttipaddr = NULL;
-                }
-            }
-            else
-            {
-                switch( pfxsz )
-                {
-                case 0:
-                    mask = 0x00000000;
-                    break;
-                case 32:
-                    mask = 0xFFFFFFFF;
-                    break;
-                default:
-                    mask = 0xFFFFFFFF ^ ( 0xFFFFFFFF >> pfxsz );
-                    break;
-                }
-                addr4.s_addr = htonl(mask);
-                hinet_ntop( AF_INET, &addr4, netmask, sizeof(netmask) );
                 if(grp->ttnetmask)
                     free(grp->ttnetmask);
-                grp->ttnetmask = strdup(netmask);
+                grp->ttpfxlen = NULL;
+                grp->ttipaddr = NULL;
+                grp->ttnetmask = NULL;
+            }
+            else /* (valid prefix) */
+            {
+                /* Check prefix length (via newly built netmask)
+                   for consistency with existing netmask value */
+                if (grp->ttnetmask &&
+                    strcmp( new_ttnetmask, grp->ttnetmask ) != 0)
+                {
+                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
+                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                        "netmask", "prefix length" );
+                }
+                /* Use consistent netmask */
+                if (grp->ttnetmask)
+                    free( grp->ttnetmask );
+                grp->ttnetmask = new_ttnetmask;
             }
         }
 
@@ -2523,6 +2723,8 @@ int i;
                     grp->ttpfxlen6 = NULL;
                 }
             }
+            else
+                hinet_pton( AF_INET6, grp->ttipaddr6, grp->ipaddr6 );
         }
         if (grp->ttpfxlen6)
         {
@@ -2530,8 +2732,8 @@ int i;
             for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
             if (*p != '\0' || !strlen(grp->ttpfxlen6))
                 rc = -1;
-            pfxsz = atoi(grp->ttpfxlen6);
-            if (rc != 0 || pfxsz > 128 )
+            pfxlen = atoi(grp->ttpfxlen6);
+            if (rc != 0 || pfxlen > 128 )
             {
                 // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -2575,23 +2777,9 @@ int i;
                 (destlink << 8) | (cua->devnum & 0x00FF);
         }
 
-        /* Initialize IPv4 mask field */
-        if (grp->ttpfxlen)
-            grp->pfxmask4 = (0xFFFFFFFF >> atoi(grp->ttpfxlen));
-        else
-            grp->pfxmask4 = 0xFFFFFFFF;
-
-        /* Initialize IPv6 mask field */
-        if (grp->ttpfxlen6 && (pfxlen = atoi(grp->ttpfxlen6)) >= 1 && pfxlen <= 128 )
-        {
-            int quo = pfxlen / 8;
-            int rem = pfxlen % 8;
-            memset( &grp->pfxmask6[0],   0x00,    quo );
-            memset( &grp->pfxmask6[quo], 0xFF, 16-quo );
-            grp->pfxmask6[quo] = (0xFF >> rem);
-        }
-        else
-            memset( &grp->pfxmask6[0], 0xFF, 16 );
+        /* Initialize mask fields */
+        grp->pfxmask4 = makepfxmask4( grp->ttpfxlen );
+        makepfxmask6( grp->ttpfxlen6, grp->pfxmask6 );
     }
 
     return 0;
@@ -2655,25 +2843,39 @@ OSA_GRP *grp;
 /*-------------------------------------------------------------------*/
 static int qeth_close_device ( DEVBLK *dev )
 {
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+DEVGRP *group = (DEVGRP*)dev->group;
+OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
 
-    if(!dev->member && dev->group->grp_data)
+    if (!dev->member && dev->group && dev->group->grp_data)
     {
-        int ttfd = grp->ttfd;
+        int i, ttfd = grp->ttfd;
 
-        qeth_halt_device(dev);
+        PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
+        for (i=0; i < OSA_GROUP_SIZE; i++)
+        {
+            if (group->memdev[i]->qreaddev)
+                qeth_halt_read_device( group->memdev[i], grp );
+            else if (group->memdev[i]->qdatadev)
+                qeth_halt_data_device( group->memdev[i], grp );
+        }
+        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
+        PTT_QETH_TRACE( "af clos halt", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos ttfd", 0,0,0 );
         grp->ttfd = -1;
         dev->fd = -1;
-
-        if(ttfd)
+        if(ttfd > 0)
             TUNTAP_Close(ttfd);
+        PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos pipe", 0,0,0 );
         if(grp->ppfd[0])
             close_pipe(grp->ppfd[0]);
         if(grp->ppfd[1])
             close_pipe(grp->ppfd[1]);
+        PTT_QETH_TRACE( "af clos pipe", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos othr", 0,0,0 );
         if(grp->tuntap)
             free(grp->tuntap);
         if(grp->tthwaddr)
@@ -2692,18 +2894,25 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
             free(grp->ttmtu);
         if(grp->ttchpid)
             free(grp->ttchpid);
+        PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
+        PTT_QETH_TRACE( "b4 clos fbuf", 0,0,0 );
         remove_and_free_any_buffers_on_chain( grp );
+        PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
-        destroy_condition(&grp->qcond);
-        destroy_lock(&grp->qlock);
-        destroy_lock(&grp->qblock);
+        destroy_condition( &grp->qrcond );
+        destroy_condition( &grp->qdcond );
+        destroy_lock( &grp->qlock );
+        destroy_lock( &grp->qblock );
 
-        free(dev->group->grp_data);
-        dev->group->grp_data = NULL;
+        PTT_QETH_TRACE( "b4 clos fgrp", 0,0,0 );
+        free( group->grp_data );
+        group->grp_data = NULL;
+        PTT_QETH_TRACE( "af clos fgrp", 0,0,0 );
     }
     else
         dev->fd = -1;
+
     return 0;
 } /* end function qeth_close_device */
 
@@ -2883,6 +3092,7 @@ int num;                                /* Number of bytes to move   */
             /* Only ever seen during z/OS shutdown */
             if( grp->debug )
             {
+                PTT_QETH_TRACE( "shut notify", dev->devnum,0,0 );
                 mpc_display_description( dev, "Shutdown Notify" );
                 MPC_DUMP_DATA( "END", iobuf, length, FROM_GUEST );
             }
@@ -2937,10 +3147,15 @@ int num;                                /* Number of bytes to move   */
         ** as long as IDX is still active (we only exit when there
         ** is a response to give them or IDX is no longer active).
         */
+        PTT_QETH_TRACE( "read entr", 0,0,0 );
+
         while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
             /* Remove IDX response buffer from chain. */
+            PTT_QETH_TRACE( "b4 rd rmbuf", 0,0,0 );
             bhr = remove_buffer_from_chain( grp );
+            PTT_QETH_TRACE( "af rd rmbuf", bhr,0,0 );
+
             if (bhr)
             {
                 /* Point to response data and get its length. */
@@ -2992,6 +3207,7 @@ int num;                                /* Number of bytes to move   */
                     /* Only ever seen during z/OS shutdown */
                     if( grp->debug )
                     {
+                        PTT_QETH_TRACE( "shut ack", 0,0,0 );
                         mpc_display_description( dev, "Shutdown Acknowledge" );
                         MPC_DUMP_DATA( "END", iobuf, length, TO_GUEST );
                     }
@@ -3024,10 +3240,22 @@ int num;                                /* Number of bytes to move   */
 
             /* Wait for an IDX response buffer to be chained. */
             obtain_lock(&grp->qlock);
-            wait_condition(&grp->qcond, &grp->qlock);
+            PTT_QETH_TRACE( "read wait", 0,0,0 );
+            wait_condition( &grp->qrcond, &grp->qlock );
             release_lock(&grp->qlock);
 
         } /* end while (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE) */
+
+        if (dev->qdio.idxstate == MPC_IDX_STATE_HALTING)
+        {
+            obtain_lock( &grp->qlock );
+            PTT_QETH_TRACE( "read hlt ack", 0,0,0 );
+            dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
+            signal_condition( &grp->qrcond );
+            release_lock( &grp->qlock );
+        }
+
+        PTT_QETH_TRACE( "read exit", 0,0,0 );
 
         break; /*switch*/
 
@@ -3373,41 +3601,69 @@ int num;                                /* Number of bytes to move   */
         ** existing Output Queue(s) because a SIGA-w is not required.
         */
         tv.tv_sec  = 0;
-        tv.tv_usec = 50000;                 /* 50 milliseconds       */
+        tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
-        dev->qdio.i_qmask = 0;              /* No input queues yet   */
-        dev->qdio.o_qmask = 0;              /* No output queues yet  */
-        FD_ZERO( &readset );                /* Init empty read set   */
+        dev->qdatadev = 1;                  /* Identify ourselves    */
 
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "beg act que", 0,0,0 );
+        DBGTRC( dev, "Activate Queues: Entry\n");
+        PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Loop until halt signal is received via notification pipe */
         while (1)
         {
-            /* Read pipe signal if one was sent */
-            sig = QDSIG_RESET;
-            if(FD_ISSET(grp->ppfd[0],&readset))
-            {
-                read_pipe(grp->ppfd[0],&sig,1);
-                DBGTRC(dev, "Activate Queues: signal %d received\n",sig);
+            /* Prepare to wait for additional packets or pipe signal */
+            FD_ZERO( &readset );
+            FD_SET( grp->ppfd[0], &readset );
+            FD_SET( grp->ttfd,    &readset );
+            fd = max( grp->ppfd[0], grp->ttfd );
 
-                /* Exit immediately if requested to do so */
-                if (sig == QDSIG_HALT)
+            /* Wait (but only very briefly) for more work to arrive */
+            rc = qeth_select( fd+1, &readset, &tv );
+
+            /* Read pipe signal if one was sent */
+            if (rc && FD_ISSET( grp->ppfd[0], &readset ))
+            {
+                sig = QDSIG_RESET;
+                VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
+                DBGTRC( dev, "Activate Queues: %s received\n", sig2str( sig ));
+
+                /* Exit immediately when requested to do so */
+                if (QDSIG_HALT == sig)
                     break;
 
-                /* Update packing mode flags if requested */
-                if (QDSIG_READ   == sig) grp->rdpack = 0;
-                if (QDSIG_RDMULT == sig) grp->rdpack = 1;
-                if (QDSIG_WRIT   == sig) grp->wrpack = 0;
-                if (QDSIG_WRMULT == sig) grp->wrpack = 1;
+                switch (sig)
+                {
+                case QDSIG_READ:
+                    grp->rdpack = 0;
+                    break;
+                case QDSIG_RDMULT:
+                    grp->rdpack = 1;
+                    break;
+                case QDSIG_WRIT:
+                    grp->wrpack = 0;
+                    break;
+                case QDSIG_WRMULT:
+                    grp->wrpack = 1;
+                    break;
+                default:
+                    ASSERT(0);  /* (should NEVER occur) */
+                }
             }
 
-            /* Process the Input Queue if any packets have arrived */
-            if(rc != 0 && dev->qdio.i_qmask && FD_ISSET(grp->ttfd,&readset))
+            /* Check if any new packets have arrived */
+            if (rc && FD_ISSET( grp->ttfd, &readset ))
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procinpq", 0,0,0 );
-                process_input_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procinpq", 0,0,0 );
+                /* Process packets if Queue is available */
+                if (dev->qdio.i_qmask)
+                    process_input_queues(dev);
+
+                /* Present "input available" interrupt if needed */
+                if (grp->iqPCI)
+                {
+                    PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
+                    grp->iqPCI = FALSE;
+                    raise_adapter_interrupt( dev );
+                }
             }
 
             /* ALWAYS process all Output Queues each time regardless of
@@ -3415,44 +3671,31 @@ int num;                                /* Number of bytes to move   */
                since most guests expect OSA devices to behave that way.
                (SIGA-w are NOT required to cause processing o/p queues)
             */
-            if(dev->qdio.o_qmask)
+            if (dev->qdio.o_qmask)
             {
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 procoutq", 0,0,0 );
                 process_output_queues(dev);
-                PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af procoutq", 0,0,0 );
-            }
 
-            /* Present adapter interrupt if needed */
-            if(grp->reqpci)
-            {
-                grp->reqpci = FALSE;
-                raise_adapter_interrupt(dev);
+                /* Present "output processed" interrupt if needed */
+                if (grp->oqPCI)
+                {
+                    PTT_QETH_TRACE( "actq oqPCI", 0,0,0 );
+                    grp->oqPCI = FALSE;
+                    raise_adapter_interrupt( dev );
+                }
             }
-
-            /* Prepare to wait for additional packets or pipe signal */
-            fd = grp->ppfd[0];
-            FD_ZERO( &readset );
-            FD_SET( grp->ppfd[0], &readset );
-            if(dev->qdio.i_qmask)
-            {
-                FD_SET( grp->ttfd, &readset );
-                if (fd < grp->ttfd)
-                    fd = grp->ttfd;
-            }
-
-            /* Wait (but only very briefly) for more work to arrive */
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 select", 0,0,0 );
-            rc = select( fd+1, &readset, NULL, NULL, &tv );
-            PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af select", 0,0,rc );
         }
-        PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "end act que", 0,0,rc );
+        PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
-        /* Reply to halt signal */
+        /* Acknowledge the halt signal */
         if (sig == QDSIG_HALT)
         {
-            BYTE sig = QDSIG_HALT;
-            write_pipe(grp->ppfd[1],&sig,1);
+            obtain_lock( &grp->qlock );
+            signal_condition( &grp->qdcond );
+            release_lock( &grp->qlock );
         }
+
+        DBGTRC( dev, "Activate Queues: Exit\n");
+        PTT_QETH_TRACE( "actq exit", 0,0,0 );
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3464,7 +3707,7 @@ int num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, "Unknown CCW dev(%4.4x) code(%2.2x)\n",dev->devnum,code);
+        DBGTRC(dev, "Unknown CCW opcode 0x%02x)\n",code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3490,13 +3733,13 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd, rc = 0;
 
-    DBGTRC( dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+    DBGTRC( dev, "SIGA-r qmask(%8.8x)\n", qmask );
+    PTT_QETH_TRACE( "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-r dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-r: ERROR: QDIO not active\n" );
         rc = 1;
     }
     else
@@ -3524,12 +3767,13 @@ int noselrd, rc = 0;
         /* Send signal to ACTIVATE QUEUES device thread loop */
         if(noselrd && dev->qdio.i_qmask)
         {
-            BYTE b = QDSIG_READ;
-            write_pipe(grp->ppfd[1],&b,1);
+            BYTE sig = QDSIG_READ;
+            DBGTRC( dev, "SIGA-r: sending %s\n", sig2str( sig ));
+            VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
     return rc;
 }
 
@@ -3564,7 +3808,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
-        write_pipe(grp->ppfd[1],&sig,1);
+    {
+        DBGTRC( dev, "SIGA-o: sending %s\n", sig2str( sig ));
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+    }
 
     return 0;
 }
@@ -3576,13 +3823,13 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+    DBGTRC( dev, "SIGA-w qmask(%8.8x)\n", qmask );
+    PTT_QETH_TRACE( "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
-        DBGTRC( dev, "SIGA-w dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-w: ERROR: QDIO not active\n");
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
 }
 
@@ -3593,13 +3840,13 @@ static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+    DBGTRC( dev, "SIGA-m qmask(%8.8x)\n", qmask );
+    PTT_QETH_TRACE( "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
-        DBGTRC( dev, "SIGA-m dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-m: ERROR: QDIO not active\n");
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
 }
 
@@ -3621,12 +3868,12 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 
     DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)\n",
         dev->devnum, oqmask, iqmask );
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "b4 SIGA-s", oqmask, iqmask, dev->devnum );
+    PTT_QETH_TRACE( "b4 SIGA-s", oqmask, iqmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-s dev(%4.4x): ERROR: QDIO not active\n", dev->devnum );
+        DBGTRC( dev, "SIGA-s: ERROR: QDIO not active\n");
         rc = 1;
     }
     else
@@ -3644,7 +3891,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 //      FIXME("Code missing SIGA-Sync functionality");
     }
 
-    PTT_QETH_TIMING_DEBUG( PTT_CL_INF, "af SIGA-s", oqmask, iqmask, dev->devnum );
+    PTT_QETH_TRACE( "af SIGA-s", oqmask, iqmask, dev->devnum );
     return rc;
 }
 
@@ -3925,7 +4172,7 @@ MPC_PUS *req_pus_0A;
     if( !req_pus_01 || !req_pus_0A )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_ulp_enable: Expected pus not present\n");
+        DBGTRC(dev, "process_ulp_enable_extract: Expected pus not present\n");
         return -1;
     }
 
@@ -4291,7 +4538,6 @@ OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    UNREFERENCED(grp);
     UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
@@ -4299,6 +4545,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     /* There will be a single MPC_PUS_03 containing the grp->gtcmfilt token */
 
     /* There will be no response. */
+
+    /* Disable the TUN interface */
+    if (grp->l3)
+        VERIFY( qeth_disable_interface( dev, grp ) == 0);
 
     return NULL;
 }
@@ -4361,7 +4611,7 @@ void*    add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
     add_buffer_to_chain( grp, bhr );
 
     obtain_lock( &grp->qlock );
-    signal_condition( &grp->qcond );
+    signal_condition( &grp->qrcond );
     release_lock( &grp->qlock );
 
     return NULL;
@@ -4485,7 +4735,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     )
     {
         char szMAC[3*IFHWADDRLEN] = {0};
-        UNREFERENCED(dev); /*(referenced in non-debug build)*/
+        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
         if (tthwaddr)
             free( tthwaddr );
@@ -4523,7 +4773,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
         || uMTU > (65535 - 14)
     )
     {
-        UNREFERENCED(dev); /*(referenced in non-debug build)*/
+        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
         if (ttmtu)
             free( ttmtu );
@@ -4535,6 +4785,97 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     grp->uMTU  = uMTU;
 
     free( ttmtu );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Validate then convert IPv4 ttnetmask value to ttpfxlen value.     */
+/* Returns 0 (zero) if valid and conversion successful, else -1.     */
+/*-------------------------------------------------------------------*/
+int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
+{
+    U32 netmask, mask;
+    int pfxlen;
+    char cbuf[8];
+    netmask = ntohl( inet_addr( ttnetmask ));
+    if (netmask == ntohl( INADDR_NONE ) &&
+        strcmp( ttnetmask, "255.255.255.255" ) != 0)
+        return -1;
+    for (pfxlen=0, mask=netmask; mask & 0x80000000; mask <<= 1)
+        pfxlen++;
+    /* we don't support discontiguous subnets */
+    if (netmask != (0xFFFFFFFF << (32-pfxlen)))
+        return -1;
+    MSGBUF( cbuf, "%u", pfxlen );
+    if (*ttpfxlen)
+        free( *ttpfxlen );
+    *ttpfxlen = strdup( cbuf );
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Validate then convert IPv4 ttpfxlen value to ttnetmask value.     */
+/* Returns 0 (zero) if valid and conversion successful, else -1.     */
+/*-------------------------------------------------------------------*/
+int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
+{
+    struct in_addr addr4;
+    char* p;
+    int pfxlen;
+    /* make sure it's a number from 0 to 32 */
+    for (p = ttpfxlen; isdigit(*p); p++) { }
+    if (*p || !ttpfxlen[0] || (pfxlen = atoi(ttpfxlen)) > 32)
+        return -1;
+    addr4.s_addr = ~makepfxmask4( ttpfxlen );
+    if (!(p = inet_ntoa( addr4 )))
+        return -1;
+    if (*ttnetmask)
+        free( *ttnetmask );
+    *ttnetmask = strdup(p);
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Convert IPv4 ttpfxlen to a pfxmask4 mask value.  The passed       */
+/* ttpfxlen value is presumed to have been previously validated.     */
+/*-------------------------------------------------------------------*/
+U32 makepfxmask4( char* ttpfxlen )
+{
+    U32 pfxmask4;
+    int pfxlen = atoi( ttpfxlen );
+    if (pfxlen >= 32)
+        pfxmask4 = 0x00000000;
+    else if (pfxlen <= 0)
+        pfxmask4 = 0xFFFFFFFF;
+    else
+        pfxmask4 = (0xFFFFFFFF >> pfxlen);
+    return htonl( pfxmask4 );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Convert IPv6 ttpfxlen6 to a pfxmask6 mask value.  The passed      */
+/* ttpfxlen6 value is presumed to have been previously validated.    */
+/*-------------------------------------------------------------------*/
+void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
+{
+    if (ttpfxlen6)
+    {
+        int pfxlen = atoi( ttpfxlen6 );
+        int quo = pfxlen / 8;
+        int rem = pfxlen % 8;
+        if (quo)
+            memset( &pfxmask6[0], 0x00, quo );
+        if (quo < 16)
+        {
+            memset( &pfxmask6[quo], 0xFF, 16-quo );
+            pfxmask6[quo] = (0xFF >> rem);
+        }
+    }
+    else
+        memset( &pfxmask6[0], 0xFF, 16 );
 }
 
 

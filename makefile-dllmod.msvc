@@ -17,6 +17,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\BZIP2_DIR.msvc
 !INCLUDE $(INCDIR)\PCRE_DIR.msvc
 !INCLUDE $(INCDIR)\REXX_DIRS.msvc
+!INCLUDE $(INCDIR)\HQA_DIR.msvc
 # ---------------------------------------------------------------------
 
 ###################################################
@@ -40,6 +41,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\PCRE_FLAGS.msvc
 !INCLUDE $(INCDIR)\REXX_FLAGS.msvc
 !INCLUDE $(INCDIR)\IPV6_FLAGS.msvc
+!INCLUDE $(INCDIR)\HQA_FLAGS.msvc
 !INCLUDE $(INCDIR)\HERC_FLAGS.msvc
 # ---------------------------------------------------------------------
 
@@ -47,6 +49,10 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(DYNDIR)$(DYNMOD).msvc
 MODULES = $(MODULES) $(X)$(DYNMOD).dll
 rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=\"$(MAX_CPU_ENGINES)\"
+!ENDIF
+
+!IF EXIST($(HQA_DIR)\HQA.msvc)
+!INCLUDE  $(HQA_DIR)\HQA.msvc
 !ENDIF
 
 # ---------------------------------------------------------------------

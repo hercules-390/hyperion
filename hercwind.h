@@ -10,6 +10,8 @@
 /* prototypes required by Hercules in the MSVC environment           */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"        /* Standard header file includes         */
+
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
 
@@ -167,14 +169,15 @@ typedef u_int32_t           in_addr_t;
 #define HAVE_FMODL
 #define HAVE_FREXPL
 
-// The following are needed by hostopts.h...
+// The following are needed by 'hostopts.h'...
 
-#define HAVE_DECL_SIOCSIFNETMASK  1     // (manually defined in tuntap.h)
-#define HAVE_DECL_SIOCGIFHWADDR   1     // (manually defined in tuntap.h)
-#define HAVE_DECL_SIOCSIFHWADDR   1     // (manually defined in tuntap.h)
-#define HAVE_DECL_SIOCADDRT       0     // (unsupported by CTCI-W32)
-#define HAVE_DECL_SIOCDELRT       0     // (unsupported by CTCI-W32)
-#define HAVE_DECL_SIOCDIFADDR     0     // (unsupported by CTCI-W32)
+#define HAVE_DECL_SIOCSIFNETMASK  1     // (  supported by CTCI-W32)
+#define HAVE_DECL_SIOCSIFBRDADDR  1     // (  supported by CTCI-W32)
+#define HAVE_DECL_SIOCGIFHWADDR   1     // (  supported by CTCI-W32)
+#define HAVE_DECL_SIOCSIFHWADDR   1     // (  supported by CTCI-W32)
+#define HAVE_DECL_SIOCADDRT       0     // (UNsupported by CTCI-W32)
+#define HAVE_DECL_SIOCDELRT       0     // (UNsupported by CTCI-W32)
+#define HAVE_DECL_SIOCDIFADDR     0     // (UNsupported by CTCI-W32)
 
 // SCSI tape handling transparency/portability
 

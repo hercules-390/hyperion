@@ -11,38 +11,39 @@
 
 
 /*-------------------------------------------------------------------*/
-/* OSA Port Number                                                   */
+/* Maximum number of supported Read or Write Queues and the          */
+/* actual default number of supported Queues (Read and Write)        */
 /*-------------------------------------------------------------------*/
-#define OSA_PORTNO 0
-
-
-/*-------------------------------------------------------------------*/
-/* Number of Devices per OSA Adapter                                 */
-/*-------------------------------------------------------------------*/
-#define OSA_GROUP_SIZE          3
-
-
-/*-------------------------------------------------------------------*/
-/* Maximum number of supported Queues (Read or Write), and           */
-/* the actual number of supported Queues (Read and Write)            */
-/*-------------------------------------------------------------------*/
-#define QDIO_MAXQ               32
+#define QDIO_MAXQ               32    /* Maximum number of queues    */
 #define QETH_QDIO_READQ          1    /* Number of read queues       */
 #define QETH_QDIO_WRITEQ         4    /* Number of write queues      */
 
 
 /*-------------------------------------------------------------------*/
-/* Miscellaneous                                                     */
+/* Other miscellanous constants                                      */
 /*-------------------------------------------------------------------*/
-#define OSA_MAXMAC              32
+#define OSA_GROUP_SIZE          3     /* Devices per OSA Adapter     */
+#define OSA_PORTNO              0     /* OSA Port Number             */
+#define OSA_MAXMAC             32     /* Max supported MAC addresses */
+#define OSA_TIMEOUTUS       50000     /* Read select timeout (usecs) */
 
-#define QTOKEN1 0xD8C5E3F1      /* QETH token 1 (QET1 ebcdic)        */
-#define QTOKEN2 0xD8C5E3F2      /* QETH token 2 (QET2 ebcdic)        */
-#define QTOKEN3 0xD8C5E3F3      /* QETH token 3 (QET3 ebcdic)        */
-#define QTOKEN4 0xD8C5E3F4      /* QETH token 4 (QET4 ebcdic)        */
-#define QTOKEN5 0xD8C5E3F5      /* QETH token 5 (QET5 ebcdic)        */
+#define QTOKEN1        0xD8C5E3F1     /* QETH token 1 (QET1 ebcdic)  */
+#define QTOKEN2        0xD8C5E3F2     /* QETH token 2 (QET2 ebcdic)  */
+#define QTOKEN3        0xD8C5E3F3     /* QETH token 3 (QET3 ebcdic)  */
+#define QTOKEN4        0xD8C5E3F4     /* QETH token 4 (QET4 ebcdic)  */
+#define QTOKEN5        0xD8C5E3F5     /* QETH token 5 (QET5 ebcdic)  */
+#define QUCLEVEL       0xC8D9C3F1     /* Microcode level ("HRC1")    */
 
-#define UCLEVEL 0xC8D9C3F1      /* Microcode level (HRC1 ebcdic)     */
+
+/*-------------------------------------------------------------------*/
+/* OSA CCW Assignments                                               */
+/*-------------------------------------------------------------------*/
+#define OSA_RCD              0xFA     /* Read Configuration Data     */
+#define OSA_SII              0x81     /* Set Interface ID            */
+#define OSA_RNI              0x82     /* Read Node Identifier        */
+#define OSA_EQ               0x1B     /* Establish Queues            */
+#define OSA_AQ               0x1F     /* Activate Queues             */
+
 
 /*-------------------------------------------------------------------*/
 /* Convert Subchannel Token to IO ID (LCSS & SSID)                   */
@@ -54,29 +55,6 @@
 #define TKN2IOID(_token)  (_token)
 #define IOID2TKN(_ioid)   (_ioid)
 #endif
-
-
-/*-------------------------------------------------------------------*/
-/* OSA Buffer Header                                                 */
-/*-------------------------------------------------------------------*/
-struct _OSA_BHR;                        /* OSA Buffer Header         */
-typedef struct _OSA_BHR OSA_BHR, *POSA_BHR;
-struct _OSA_BHR {                       /* OSA Buffer Header         */
-    OSA_BHR*  next;                     /* Pointer to next OSA_BHR   */
-    int       arealen;                  /* Data area length          */
-    int       datalen;                  /* Data length               */
-};                                      /*                           */
-#define SizeBHR  sizeof(OSA_BHR)        /* Size of OSA_BHR           */
-
-
-/*-------------------------------------------------------------------*/
-/* OSA CCW Assignments                                               */
-/*-------------------------------------------------------------------*/
-#define OSA_RCD         0xFA            /* Read Configuration Data   */
-#define OSA_SII         0x81            /* Set Interface ID          */
-#define OSA_RNI         0x82            /* Read Node Identifier      */
-#define OSA_EQ          0x1B            /* Establish Queues          */
-#define OSA_AQ          0x1F            /* Activate Queues           */
 
 
 /*-------------------------------------------------------------------*/
@@ -110,32 +88,44 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 #define  OSA_NQ                 NULL_MODEP_NQ
 
 
-// Mac OSX has no IFHWADDRLEN
-#if !defined(IFHWADDRLEN)
- #define IFHWADDRLEN 6
-#endif
+/*-------------------------------------------------------------------*/
+/* OSA Buffer Header                                                 */
+/*-------------------------------------------------------------------*/
+struct _OSA_BHR;                        /* OSA Buffer Header         */
+typedef struct _OSA_BHR OSA_BHR, *POSA_BHR;
+struct _OSA_BHR {                       /* OSA Buffer Header         */
+    OSA_BHR*  next;                     /* Pointer to next OSA_BHR   */
+    int       arealen;                  /* Data area length          */
+    int       datalen;                  /* Data length               */
+};                                      /*                           */
+#define SizeBHR  sizeof(OSA_BHR)        /* Size of OSA_BHR           */
 
 
 /*-------------------------------------------------------------------*/
 /* OSA MAC structure                                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_MAC {
+#ifndef              IFHWADDRLEN
+  #define            IFHWADDRLEN    6   /* (Mac OSX is missing this) */
+#endif
         BYTE    addr[IFHWADDRLEN];
         int     type;
-#define MAC_TYPE_NONE   0x00
-#define MAC_TYPE_BRDCST 0x01
-#define MAC_TYPE_UNICST 0x02
-#define MAC_TYPE_MLTCST 0x04
-#define MAC_TYPE_ANY    0x0F
-    } OSA_MAC;
+#define MAC_TYPE_NONE     0x00
+#define MAC_TYPE_BRDCST   0x01
+#define MAC_TYPE_UNICST   0x02
+#define MAC_TYPE_MLTCST   0x04
+#define MAC_TYPE_ANY      0x0F
+#define MAC_TYPE_PROMISC  0x80  /* Adapter is in promiscuous mode    */
+} OSA_MAC;
 
 
 /*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
-    COND    qcond;              /* Condition for IDX read thread     */
-    LOCK    qlock;              /* Lock for IDX read thread          */
+    COND    qrcond;             /* Condition for IDX read thread     */
+    COND    qdcond;             /* Condition for halt data device    */
+    LOCK    qlock;              /* Lock for above conditions         */
 
     LOCK      qblock;           /* Lock for IDX read buffer chain    */
     OSA_BHR*  firstbhr;         /* First OSA_BHR in chain            */
@@ -148,6 +138,7 @@ typedef struct _OSA_GRP {
     char *tthwaddr;             /* MAC address of the interface      */
     char *ttmtu;                /* MTU of the interface              */
 
+    char *ottipaddr;            /* Original 'ipaddr' option value    */
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
     char *ttnetmask;            /* IPv4 Netmask of the interface     */
@@ -158,32 +149,24 @@ typedef struct _OSA_GRP {
     char *ttchpid;              /* chpid                             */
 
     BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */
+    BYTE  ipaddr6[16];          /* Network format IPv6 address       */
     U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */
+    U32   hipaddr4;             /* Host format IPv4 address          */
 
     OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
-    int   promisc;              /* Adapter in promiscuous mode       */
-#define MAC_PROMISC     0x80
+    int   promisc;              /* Adapter is in promiscuous mode    */
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
     int   debug;                /* Adapter in IFF_DEBUG mode         */
     int   l3;                   /* Adapter in layer 3 mode           */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
-    int   reqpci;               /* PCI has been requested            */
-    int   setip;                /* Process IPA_CMD_SETIP (temporary) */
+    int   iqPCI;                /* Input Queue PCI has requested     */
+    int   oqPCI;                /* Output Queue PCI has requested    */
+    int   setip;                /* Process IPA_CMD_SETIP             */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
-
-    /* Socket pipe signals written to pipe to request something      */
-
-#define QDSIG_WRIT      0       /* SIGA Initiate Output              */
-#define QDSIG_READ      1       /* SIGA Initiate Input               */
-#define QDSIG_SYNC      2       /* SIGA Synchronize                  */
-#define QDSIG_WRMULT    3       /* SIGA Output Multiple              */
-#define QDSIG_RDMULT    88      /* SIGA Input Multiple               */
-#define QDSIG_HALT      99      /* Halt Device signalling            */
-#define QDSIG_RESET     255     /* Used to reset signal flag         */
 
     U32   seqnumth;             /* MPC_TH sequence number            */
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
@@ -209,20 +192,10 @@ typedef struct _OSA_GRP {
 /*-------------------------------------------------------------------*/
 /* OSA Header Id Types                                               */
 /*-------------------------------------------------------------------*/
-#define HDR_ID_LAYER3  0x01     /* Standard IPv4/IPv6 Packet         */
-#define HDR_ID_LAYER2  0x02     /* Ethernet Layer 2 Frame            */
-#define HDR_ID_TSO     0x03     /* Layer 3 TCP Segmentation Offload  */
-#define HDR_ID_OSN     0x04     /* Channel Data Link Control (CDLC)  */
-
-
-/*-------------------------------------------------------------------*/
-/* OSA Layer 3 IPv4/IPv6 cast types                                  */
-/*-------------------------------------------------------------------*/
-#define L3_CAST_NOCAST      0       /* No cast                       */
-#define L3_CAST_MULTICAST   4       /* Multicast                     */
-#define L3_CAST_BROADCAST   5       /* Broadcast                     */
-#define L3_CAST_UNICAST     6       /* Unicast                       */
-#define L3_CAST_ANYCAST     7       /* Anycast                       */
+#define HDR_ID_LAYER3    0x01   /* Standard IPv4/IPv6 Packet         */
+#define HDR_ID_LAYER2    0x02   /* Ethernet Layer 2 Frame            */
+#define HDR_ID_TSO       0x03   /* Layer 3 TCP Segmentation Offload  */
+#define HDR_ID_OSN       0x04   /* Channel Data Link Control (CDLC)  */
 
 
 /*-------------------------------------------------------------------*/
@@ -278,6 +251,12 @@ struct OSA_HDR3 {
 #define HDR3_FLAGS_IPV6       0x80  /* 1=IPv6, 0=IPv4                */
 #define HDR3_FLAGS_PASSTHRU   0x10  /* Pass through packet (IPv6)    */
 #define HDR3_FLAGS_CASTMASK   0x07  /* Cast type                     */
+#define HDR3_FLAGS_NOTFORUS   0xFF  /* Not meant for us (internal)   */
+#define HDR3_FLAGS_NOCAST     0x00  /* No cast                       */
+#define HDR3_FLAGS_MULTICAST  0x04  /* Multicast                     */
+#define HDR3_FLAGS_BROADCAST  0x05  /* Broadcast                     */
+#define HDR3_FLAGS_UNICAST    0x06  /* Unicast                       */
+#define HDR3_FLAGS_ANYCAST    0x07  /* Anycast                       */
 #define HDR3_FLAGS_UNUSED     0x68  /* Unused bits; must be zero     */
 
 /*002*/ HWORD   in_cksum;       /* Inbound checksum (TSO: sequence#) */

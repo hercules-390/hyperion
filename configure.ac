@@ -415,6 +415,7 @@ AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e ca
 AH_TEMPLATE( [ENABLE_OBJECT_REXX],      [Define to enable open object rexx support] )
 AH_TEMPLATE( [ENABLE_REGINA_REXX],      [Define to enable Regina Rexx support] )
 AH_TEMPLATE( [ENABLE_IPV6],             [Define to enable IPV6 support] )
+AH_TEMPLATE( [HAVE_HQA_H],              [Define to if header "hqa.h" exists in HQA dir] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -485,6 +486,8 @@ AC_CACHE_SAVE()
 #  in case other parts of configure.ac need to  know whether the header exists
 #  or not without having to do their own AC_CHECK_HEADERS (since we've already
 #  done it).
+
+HC_CHECK_HQA_DIR()                # (Hercules Build Configuration QA Testing)
 
 #------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: on Darwin sys/socket.h must be included before
@@ -630,6 +633,7 @@ AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
 
 AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCSIFBRDADDR,       [hc_cv_have_siocsifbrdaddr=yes],      [hc_cv_have_siocsifbrdaddr=no],      [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCGIFHWADDR,        [hc_cv_have_siocgifhwaddr=yes],       [hc_cv_have_siocgifhwaddr=no],       [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )
@@ -1350,6 +1354,38 @@ AC_CACHE_SAVE()
 #  later on), but that approach was rejected since it would tend to make our
 #  configure.ac script less clean (simple and straightforward).
 
+AC_ARG_ENABLE( hqa,
+
+    AC_HELP_STRING( [--enable-hqa=DIR],
+
+        [define HQA_DIR override directory]
+    ),
+    [
+        hc_cv_hqa_opt=${enableval}
+
+        if test -d "$hc_cv_hqa_opt"; then
+          if test -e "$hc_cv_hqa_opt/hqa.h"; then
+            hc_cv_have_hqa_h=yes
+          else
+            hc_cv_have_hqa_h=no
+          fi
+        else
+          AC_MSG_RESULT( [ERROR: --enable-hqa directory not found: $hc_cv_hqa_opt] )
+          hc_error=yes
+          hc_cv_have_hqa_h=no
+        fi
+
+        if test "$hc_cv_have_hqa_h" = "yes"; then
+          if test "$hc_cv_hqa_inc" != "."; then
+            AC_MSG_RESULT( [WARNING: --enable-hqa value overrides existing HAQ_DIR value] )
+          fi
+          hc_cv_hqa_inc=$hc_cv_hqa_opt
+        else
+          hc_cv_hqa_inc=.
+        fi
+    ]
+)
+
 AC_ARG_ENABLE( dynamic-load,
 
     AC_HELP_STRING([--disable-dynamic-load],
@@ -2039,6 +2075,7 @@ CPPFLAGS="$CPPFLAGS"' -DPKGDATADIR=\"$(pkgdatadir)\" -DMODULESDIR=\"$(modexecdir
 #  (place only AC_DEFINE here; place AC_DEFINE_UNQUOTED above)  #
 #---------------------------------------------------------------#
 
+test "$hc_cv_have_hqa_h"                  = "yes"  &&  AC_DEFINE(HAVE_HQA_H)
 test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
 test "$hc_cv_have_inttypes_h"             = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
 test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
@@ -2154,6 +2191,10 @@ AC_CACHE_SAVE()
 #  Pass certain values/settings as makefile variables to automake (makefile.am)  #
 #--------------------------------------------------------------------------------#
 
+# Note: Building of shared libraries is forced, and we force use of libtool too.
+
+AM_CONDITIONAL( BUILD_SHARED,        [ test "$hc_cv_hdl_build_shared" = "yes" ] )
+AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
 AM_CONDITIONAL( OPTION_DYNAMIC_LOAD, [ test "$hc_cv_opt_dynamic_load" = "yes" ] )
 AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
@@ -2165,10 +2206,7 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
     AC_SUBST(HERCIFC_GROUPNAME)
 fi
 
-#  Building of shared libraries is forced, and we force use of libtool too.
-
-AM_CONDITIONAL( BUILD_SHARED,        [ test "$hc_cv_hdl_build_shared" = "yes" ] )
-AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
+AC_SUBST(HQA_INC,$hc_cv_hqa_inc)
 
 AC_CACHE_SAVE()
 

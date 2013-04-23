@@ -30,11 +30,10 @@ static const char *build_info[] = {
     "** DEBUG ** "
   #endif
     "build for " QSTR(HOST_ARCH)
-  #if defined(CUSTOM_BUILD_STRING)
-    ": \"" CUSTOM_BUILD_STRING "\""
-  #endif
     ,
-#elif defined(CUSTOM_BUILD_STRING)
+#endif
+
+#if defined(CUSTOM_BUILD_STRING)
     CUSTOM_BUILD_STRING,
 #endif
 
@@ -94,6 +93,8 @@ static const char *build_info[] = {
 
 #if defined( OPTION_FISHIO)
     "Using   FishIO",
+#else
+    "Using   HercIO",
 #endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
