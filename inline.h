@@ -54,7 +54,7 @@ _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
         int acctype);
 #endif /*defined(_FEATURE_ZSIE)*/
 
-_VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
+_VSTORE_C_STATIC void ARCH_DEP(vstorec) (const void *src, BYTE len,
         VADR addr, int arn, REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vstoreb) (BYTE value, VADR addr,
         int arn, REGS *regs);

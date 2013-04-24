@@ -154,7 +154,7 @@
 /*      exception, and in this case no real storage locations are    */
 /*      updated, and the function does not return.                   */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
+_VSTORE_C_STATIC void ARCH_DEP(vstorec) (const void *src, BYTE len,
                                         VADR addr, int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
