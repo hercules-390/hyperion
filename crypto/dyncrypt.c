@@ -4770,7 +4770,7 @@ DEF_INST(cipher_message_with_output_feedback)
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation)
 {
-  /* inst is not used as this operation has no operands              */
+  UNREFERENCED(inst);              /* This operation has no operands */
   int msa = get_msa(regs);
   static const BYTE query_bits[][16] =
   {
@@ -4831,9 +4831,6 @@ DEF_INST(perform_cryptographic_computation)
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
   }
-  return;
-
-  if (inst) {} ;                      /* Shut up GCC's warning       */
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
 
