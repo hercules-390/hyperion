@@ -179,6 +179,8 @@ int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
 int      prefix2netmask( char* ttpfxlen,  char** ttnetmask );
 U32      makepfxmask4( char* ttpfxlen );
 void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
+void     qeth_init_queues(DEVBLK *dev);
+void     qeth_init_queue(DEVBLK *dev, int output);
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -3521,6 +3523,9 @@ int num;                                /* Number of bytes to move   */
         dev->qdio.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
         dev->qdio.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
 
+        DBGTRC( dev, "Establish Queues: Entry\n");
+        PTT_QETH_TRACE( "eq entry", dev->qdio.i_qcnt, dev->qdio.o_qcnt, 0 );
+
         FETCH_DW(dev->qdio.qiba,qdr->qiba);
         dev->qdio.qibk = qdr->qkey & 0xF0;
 
@@ -3568,6 +3573,9 @@ int num;                                /* Number of bytes to move   */
             qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
         }
 
+        /* Initialize All Queues */
+        qeth_init_queues(dev);
+
         /* Calculate residual byte count */
         num = (count < sizeof(QDIO_QDR)) ? count : sizeof(QDIO_QDR);
         *residual = count - num;
@@ -3577,14 +3585,17 @@ int num;                                /* Number of bytes to move   */
         {
             /* Return unit status */
             *unitstat = CSW_CE | CSW_DE;
+            PTT_QETH_TRACE( "eq exit", *unitstat, 0, 0 );
         }
         else
         {
             /* Command reject on invalid or inaccessible storage addresses */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            PTT_QETH_TRACE( "*eq exit", *unitstat, dev->sense[0], accerr );
         }
 
+        DBGTRC( dev, "Establish Queues: Exit\n");
         break;
     }
 
@@ -3741,6 +3752,46 @@ int num;                                /* Number of bytes to move   */
 //! }
 
 } /* end function qeth_execute_ccw */
+
+
+/*-------------------------------------------------------------------*/
+/* Initialize all Input -AND- Output Queue variables                 */
+/*-------------------------------------------------------------------*/
+static void qeth_init_queues(DEVBLK *dev)
+{
+    qeth_init_queue(dev,0);     /* Initialize ALL Input  Queues      */
+    qeth_init_queue(dev,1);     /* Initialize ALL Output Queues      */
+}
+/*-------------------------------------------------------------------*/
+/* Initialize all Input -OR- Output Queue variables                  */
+/*-------------------------------------------------------------------*/
+static void qeth_init_queue(DEVBLK *dev, int output)
+{
+int i;
+U32 qmask;
+
+    PTT_QETH_TRACE( "initq entry", dev->qdio.i_qcnt, dev->qdio.o_qcnt, output );
+
+    if (output)
+    {
+        dev->qdio.o_qpos = 0;
+        for (i=0; i < QDIO_MAXQ; i++)
+            dev->qdio.o_bpos[i] = 0;
+        qmask = dev->qdio.o_qmask = ~(0xffffffff >> dev->qdio.o_qcnt);
+    }
+    else /* input */
+    {
+        dev->qdio.i_qpos = 0;
+        for (i=0; i < QDIO_MAXQ; i++)
+            dev->qdio.i_bpos[i] = 0;
+        qmask = dev->qdio.i_qmask = ~(0xffffffff >> dev->qdio.i_qcnt);
+    }
+
+    DBGTRC(dev, "Initialize %s Queue: qmask(0x%08X)\n",
+        output ? "Output" : "Input", qmask );
+
+    PTT_QETH_TRACE( "initq exit", dev->qdio.i_qcnt, dev->qdio.o_qcnt, qmask );
+}
 
 
 /*-------------------------------------------------------------------*/
