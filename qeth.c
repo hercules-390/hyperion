@@ -1233,14 +1233,20 @@ U16 offph;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
                 DBGTRC(dev, "  IPA_CMD_CREATEADDR\n");
+                // FIXME: IPA_CMD_CREATEADDR: is this correct?
                 {
-                BYTE *sip = (BYTE*)(ipa+1);
+                BYTE *ip6 = (BYTE*)(ipa+1);
+                static const BYTE llnet6[2] = { 0xfe, 0x80 };
 
-                    memcpy( sip+0, &grp->iMAC[0], IFHWADDRLEN/2 );
-                    sip[3] = 0xFF;
-                    sip[4] = 0xFE;
-                    memcpy( sip+5, &grp->iMAC[3], IFHWADDRLEN/2 );
-                    STORE_HW(ipa->rc,IPA_RC_OK);
+                    memcpy( ip6+0, llnet6, 2 );
+                    memcpy( ip6+8, &grp->iMAC[0], IFHWADDRLEN/2 );
+                    ip6[11] = 0xFF;
+                    ip6[12] = 0xFE;
+                    memcpy( ip6+13, &grp->iMAC[3], IFHWADDRLEN/2 );
+                    ip6[8] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
+
+                    STORE_HW( ipa->rc,
+                        IPA_RC_OK );
                 }
                 break;
 
@@ -2119,8 +2125,6 @@ int did_read = 0;                       /* Indicates some data read  */
                 U64 sbala;              /* Storage Block Address List*/
                 BYTE sk;                /* Storage Key               */
 
-                    DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
-
                     sk = dev->qdio.i_slk[qn];
                     FETCH_DW( sbala, sl->sbala[bn] );
 
@@ -2145,6 +2149,8 @@ int did_read = 0;                       /* Indicates some data read  */
                         /* Mark the buffer as having been completed */
                         if (qrc >= 0)
                         {
+                            DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
+
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
                             SET_DSCI(dev,DSCI_IOCOMP);
@@ -3621,7 +3627,7 @@ int num;                                /* Number of bytes to move   */
             rc = qeth_select( fd+1, &readset, &tv );
 
             /* Read pipe signal if one was sent */
-            if (rc && FD_ISSET( grp->ppfd[0], &readset ))
+            if (unlikely( rc && FD_ISSET( grp->ppfd[0], &readset )))
             {
                 sig = QDSIG_RESET;
                 VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
@@ -3654,15 +3660,26 @@ int num;                                /* Number of bytes to move   */
             if (rc && FD_ISSET( grp->ttfd, &readset ))
             {
                 /* Process packets if Queue is available */
-                if (dev->qdio.i_qmask)
-                    process_input_queues(dev);
-
-                /* Present "input available" interrupt if needed */
-                if (grp->iqPCI)
+                if (likely( dev->qdio.i_qmask ))
                 {
-                    PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
-                    grp->iqPCI = FALSE;
-                    raise_adapter_interrupt( dev );
+                    process_input_queues( dev );
+
+                    /* Present "input available" interrupt if needed */
+                    if (grp->iqPCI)
+                    {
+                        PTT_QETH_TRACE( "actq iqPCI", 0,0,0 );
+                        grp->iqPCI = FALSE;
+                        raise_adapter_interrupt( dev );
+                    }
+                }
+                else /* (no i/p queues? VERY unlikely!) */
+                {
+                    /* Drop the packet */
+                    if (QRC_SUCCESS == read_packet( dev, grp ))
+                    {
+                        DBGTRC(dev, "Input dropped (No available queues)\n");
+                        PTT_QETH_TRACE( "*actq drop", dev->qdio.i_qmask, 0, 0 );
+                    }
                 }
             }
 
@@ -3671,7 +3688,7 @@ int num;                                /* Number of bytes to move   */
                since most guests expect OSA devices to behave that way.
                (SIGA-w are NOT required to cause processing o/p queues)
             */
-            if (dev->qdio.o_qmask)
+            if (likely( dev->qdio.o_qmask ))
             {
                 process_output_queues(dev);
 
