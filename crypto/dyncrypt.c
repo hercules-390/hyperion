@@ -4770,12 +4770,13 @@ DEF_INST(cipher_message_with_output_feedback)
 /*----------------------------------------------------------------------------*/
 DEF_INST(perform_cryptographic_computation)
 {
-  UNREFERENCED(inst);              /* This operation has no operands */
   int msa = get_msa(regs);
   static const BYTE query_bits[][16] =
   {
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
+
+  UNREFERENCED(inst);              /* This operation has no operands */
 
   INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
 
