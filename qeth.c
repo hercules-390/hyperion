@@ -1326,7 +1326,7 @@ U16 reqtype;
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
-            dev->qreaddev = 1;
+            dev->qtype = QTYPE_READ;
         }
         break;
 
@@ -1352,7 +1352,7 @@ U16 reqtype;
             STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
             STORE_FW(iear->uclevel, QUCLEVEL);
             dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
-            dev->qwritdev = 1;
+            dev->qtype = QTYPE_WRITE;
         }
         break;
 
@@ -2316,63 +2316,63 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
 /*-------------------------------------------------------------------*/
 static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
 {
-    if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+    obtain_lock( &grp->qlock );
+
+    /* Is read device still active? */
+    if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
     {
         DBGTRC( dev, "Halting read device\n" );
 
         /* Ask, then wait for, the READ CCW loop to exit */
-        obtain_lock( &grp->qlock );
         PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
         dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
         signal_condition( &grp->qrcond );
         wait_condition( &grp->qrcond, &grp->qlock );
         PTT_QETH_TRACE( "af halt read", 0,0,0 );
-        release_lock( &grp->qlock );
 
         DBGTRC( dev, "Read device halted\n" );
     }
+
+    release_lock( &grp->qlock );
 }
 
 static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
 {
-    UNREFERENCED(dev);  /* (unreferenced for non-DEBUG builds) */
+    obtain_lock( &grp->qlock );
 
-    if (dev->scsw.flag2 & SCSW2_Q)
+    /* Is data device still active? */
+    if (dev->busy && dev->scsw.flag2 & SCSW2_Q)
     {
     BYTE sig = QDSIG_HALT;
 
         DBGTRC( dev, "Halting data device\n" );
 
-        /* Send halt signal */
-        obtain_lock( &grp->qlock );
-        dev->scsw.flag2 &= ~SCSW2_Q;
+        /* Ask, then wait for, the Activate Queues loop to exit */
+        PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-
-        /* Wait for acknowledgement */
         wait_condition( &grp->qdcond, &grp->qlock );
-        release_lock (&grp->qlock );
+        dev->scsw.flag2 &= ~SCSW2_Q;
+        PTT_QETH_TRACE( "af halt data", 0,0,0 );
 
-#if 1 // (probably not needed?)
-        usleep( OSA_TIMEOUTUS ); /* give it time to exit */
-#endif
         DBGTRC( dev, "Data device halted\n" );
     }
+
+    release_lock (&grp->qlock );
 }
 
 static void qeth_halt_device (DEVBLK *dev)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    if (dev->qdatadev)
+    if (QTYPE_READ == dev->qtype)
+        qeth_halt_read_device( dev, grp );
+    else if (QTYPE_DATA == dev->qtype)
         qeth_halt_data_device( dev, grp );
     else
-        if (dev->qreaddev)
-            qeth_halt_read_device( dev, grp );
-        else
-        {
-            DBGTRC( dev, "qeth_halt_device: noop!\n" );
-            PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
-        }
+    {
+        DBGTRC( dev, "qeth_halt_device: noop!\n" );
+        PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
+    }
 }
 
 
@@ -2859,9 +2859,9 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
         for (i=0; i < OSA_GROUP_SIZE; i++)
         {
-            if (group->memdev[i]->qreaddev)
+            if (QTYPE_READ == group->memdev[i]->qtype)
                 qeth_halt_read_device( group->memdev[i], grp );
-            else if (group->memdev[i]->qdatadev)
+            else if (QTYPE_DATA == group->memdev[i]->qtype)
                 qeth_halt_data_device( group->memdev[i], grp );
         }
         usleep( OSA_TIMEOUTUS ); /* give it time to exit */
@@ -3609,7 +3609,7 @@ int num;                                /* Number of bytes to move   */
         tv.tv_sec  = 0;
         tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
-        dev->qdatadev = 1;                  /* Identify ourselves    */
+        dev->qtype = QTYPE_DATA;            /* Identify ourselves    */
 
         DBGTRC( dev, "Activate Queues: Entry\n");
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
@@ -3703,10 +3703,11 @@ int num;                                /* Number of bytes to move   */
         }
         PTT_QETH_TRACE( "actq break", dev->devnum, 0,0 );
 
-        /* Acknowledge the halt signal */
+        /* Acknowledge halt signal (how else could we reach here?) */
         if (sig == QDSIG_HALT)
         {
             obtain_lock( &grp->qlock );
+            dev->scsw.flag2 &= ~SCSW2_Q;
             signal_condition( &grp->qdcond );
             release_lock( &grp->qlock );
         }

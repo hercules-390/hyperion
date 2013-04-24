@@ -1268,11 +1268,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctcrem;                 /* bytes remaining in buffer */
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
-        u_int   ctcxmode:1,             /* 1=Extended, 0=Basic mode  */
-                qreaddev:1,             /* 1=QDIO Read  device       */
-                qwritdev:1,             /* 1=QDIO Write device       */
-                qdatadev:1;             /* 1=QDIO Data  device       */
-
+        u_int   ctcxmode:1;             /* 1=Extended, 0=Basic mode  */
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 
@@ -1557,6 +1553,11 @@ struct DEVBLK {                         /* Device configuration block*/
 
         /*  Device dependent fields for QDIO devices                 */
         QDIO_DEV qdio;
+        BYTE     qtype;                 /* QDIO device type          */
+
+#define QTYPE_READ   1
+#define QTYPE_WRITE  2
+#define QTYPE_DATA   3
 
         BLOCK_TRAILER;                  /* eye-end                   */
 };
