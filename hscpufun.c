@@ -386,6 +386,8 @@ int  rest_loadparm = FALSE;
     save_loadparm[0] = '\0';
 #endif
 
+    UNREFERENCED( cmdline );
+
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)

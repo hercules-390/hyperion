@@ -483,7 +483,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   struct cc cc;                        /* Compression context                 */
   BYTE ch1;                            /* Character read                      */
-  BYTE ch2;
+  BYTE ch2 = 0;
   int i;                               /* Index                               */
   U16 is;                              /* Last matched index symbol           */
   GREG srclen;                         /* Source length                       */

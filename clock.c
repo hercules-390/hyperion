@@ -465,7 +465,7 @@ set_cpu_timer_mode(REGS *regs)
     int newmode = cpu_timer_mode(regs);
 
     /* Update CPU timer epoch if changing mode */
-    if (newmode != regs->cpu_timer_mode)
+    if ((U32)newmode != regs->cpu_timer_mode)
     {
         cpu_timer(regs);
         regs->cpu_timer_mode = newmode;
@@ -630,6 +630,9 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
                     if (low == 0)
                         low = (amask + 1) << 16;
                     low |= regs->todpr;
+                    break;
+                default:
+                    ASSERT(0); /* unexpected */
                     break;
             }
         }

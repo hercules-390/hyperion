@@ -887,6 +887,6 @@ void *panel_command (void *cmdline)
     }
 #endif /* defined( OPTION_CMDTGT ) */
 
-    return (void*)rc;
+    return (void*)((uintptr_t)rc);
 }
 /* end panel_command / panel_command_r */

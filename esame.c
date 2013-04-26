@@ -5267,7 +5267,7 @@ static inline int ARCH_DEP(conditional_key_procedure) (int rck, BYTE skey, BYTE 
 DEF_INST(perform_frame_management_function)
 {
 int     r1, r2;                         /* Register values           */
-int     fc;                             /* Frame count               */
+int     fc = 1;                         /* Frame count               */
 RADR    addr, aaddr;
 int     page_offset;                    /* Low order bits of R2      */
 
@@ -5294,6 +5294,7 @@ int     page_offset;                    /* Low order bits of R2      */
         break;
     /* Code for 2G pages goes here */
     default:
+        ASSERT(0); /* unexpected */
         break;
     case PFMF_FMFI_FSC_4K:
         /* Prefixing is applied in single frame operation */
