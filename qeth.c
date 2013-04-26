@@ -157,30 +157,30 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
 /*-------------------------------------------------------------------*/
 /* Helper functions, entirely internal to qeth.c                     */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_cm_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_cm_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-int      process_ulp_enable_extract( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_ulp_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_ulp_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* process_unknown_puk( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-OSA_BHR* alloc_buffer( DEVBLK*, int );
-void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
-void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
-OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
-void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
-void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
-void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
-int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
-int      prefix2netmask( char* ttpfxlen,  char** ttnetmask );
-U32      makepfxmask4( char* ttpfxlen );
-void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
-void     qeth_init_queues(DEVBLK *dev);
-void     qeth_init_queue(DEVBLK *dev, int output);
+static OSA_BHR* process_cm_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_cm_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_cm_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_cm_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static int      process_ulp_enable_extract( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_ulp_enable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_ulp_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* process_unknown_puk( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
+static OSA_BHR* alloc_buffer( DEVBLK*, int );
+static void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
+static void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
+static OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
+static void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
+static void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
+static void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
+static int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
+static int      prefix2netmask( char* ttpfxlen,  char** ttnetmask );
+static U32      makepfxmask4( char* ttpfxlen );
+static void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
+static void     qeth_init_queues(DEVBLK *dev);
+static void     qeth_init_queue(DEVBLK *dev, int output);
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -246,7 +246,7 @@ static BYTE qeth_immed_commands [256] =
 #define QDSIG_WRIT      5       /* SIGA Initiate Output              */
 #define QDSIG_WRMULT    6       /* SIGA Initiate Output Multiple     */
 
-const char* sig2str( BYTE sig ) {
+static const char* sig2str( BYTE sig ) {
     static const char* sigstr[] = {
     /*0*/ "QDSIG_RESET",
     /*1*/ "QDSIG_HALT",
@@ -1419,8 +1419,8 @@ typedef short QRC;              /* Internal function return code     */
 /*-------------------------------------------------------------------*/
 /* Helper function to report errors associated with an SBALE.        */
 /*-------------------------------------------------------------------*/
-QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
-                 QDIO_SBAL *sbal, BYTE sbalk, int sb )
+static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
+                        QDIO_SBAL *sbal, BYTE sbalk, int sb )
 {
     char errmsg[256] = {0};
     U64 sbala = (U64)((BYTE*)sbal - dev->mainstor);
@@ -2799,7 +2799,7 @@ int i;
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
 static void qeth_query_device (DEVBLK *dev, char **devclass,
-                int buflen, char *buffer)
+                               int buflen, char *buffer)
 {
 char qdiostat[80] = {0};
 char incomplete[16] = {0};
@@ -3968,7 +3968,7 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
 /*-------------------------------------------------------------------*/
 /* Process the CM_ENABLE request from the guest.                     */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_cm_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_cm_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4074,7 +4074,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the CM_SETUP request from the guest.                      */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_cm_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_cm_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4191,7 +4191,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the CM_TAKEDOWN request from the guest.                   */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_cm_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_cm_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4208,7 +4208,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process the CM_DISABLE request from the guest.                    */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_cm_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_cm_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4225,7 +4225,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest to extract values.  */
 /*-------------------------------------------------------------------*/
-int process_ulp_enable_extract( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static int process_ulp_enable_extract( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4254,7 +4254,7 @@ MPC_PUS *req_pus_0A;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest.                    */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4372,7 +4372,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_SETUP request from the guest.                     */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4501,7 +4501,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the DM_ACT request from the guest.                        */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4586,7 +4586,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_TAKEDOWN request from the guest.                  */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4603,7 +4603,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_DISABLE request from the guest.                   */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4625,7 +4625,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process unknown from the guest.                                   */
 /*-------------------------------------------------------------------*/
-OSA_BHR* process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
+static OSA_BHR* process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -4646,7 +4646,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*--------------------------------------------------------------------*/
 /* alloc_buffer(): Allocate storage for a OSA_BHR and data            */
 /*--------------------------------------------------------------------*/
-OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
+static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
 {
     OSA_BHR*   bhr;                        // OSA_BHR
     int        buflen;                     // Buffer length
@@ -4675,7 +4675,7 @@ OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
 /*--------------------------------------------------------------------*/
 /* add_buffer_to_chain_and_signal_event(): Add OSA_BHR to end of chn. */
 /*--------------------------------------------------------------------*/
-void*    add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
+static void*  add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
 {
     add_buffer_to_chain( grp, bhr );
 
@@ -4689,7 +4689,7 @@ void*    add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
 /*--------------------------------------------------------------------*/
 /* add_buffer_to_chain(): Add OSA_BHR to end of chain.                */
 /*--------------------------------------------------------------------*/
-void*    add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
+static void*  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
 {
     // Prepare OSA_BHR for adding to chain.
     if (!bhr)                              // Any OSA_BHR been passed?
@@ -4722,7 +4722,7 @@ void*    add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
 /*--------------------------------------------------------------------*/
 /* remove_buffer_from_chain(): Remove OSA_BHR from start of chain.    */
 /*--------------------------------------------------------------------*/
-OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
+static OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
 {
     OSA_BHR*    bhr;                       // OSA_BHR
 
@@ -4755,7 +4755,7 @@ OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
 /*--------------------------------------------------------------------*/
 /* remove_and_free_any_buffers_on_chain(): Remove and free OSA_BHRs.  */
 /*--------------------------------------------------------------------*/
-void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
+static void*  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 {
     OSA_BHR*    bhr;                       // OSA_BHR
 
@@ -4786,7 +4786,7 @@ void*    remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 /* Initialize MAC address                                            */
 /*-------------------------------------------------------------------*/
-void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
+static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
     static const BYTE zeromac[IFHWADDRLEN] = {0};
     char* tthwaddr;
@@ -4825,7 +4825,7 @@ void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 /* Initialize MTU value                                              */
 /*-------------------------------------------------------------------*/
-void InitMTU( DEVBLK* dev, OSA_GRP* grp )
+static void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 {
     char* ttmtu;
     U16 uMTU;
@@ -4861,7 +4861,7 @@ void InitMTU( DEVBLK* dev, OSA_GRP* grp )
 /* Validate then convert IPv4 ttnetmask value to ttpfxlen value.     */
 /* Returns 0 (zero) if valid and conversion successful, else -1.     */
 /*-------------------------------------------------------------------*/
-int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
+static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
 {
     U32 netmask, mask;
     int pfxlen;
@@ -4887,7 +4887,7 @@ int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
 /* Validate then convert IPv4 ttpfxlen value to ttnetmask value.     */
 /* Returns 0 (zero) if valid and conversion successful, else -1.     */
 /*-------------------------------------------------------------------*/
-int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
+static int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
 {
     struct in_addr addr4;
     char* p;
@@ -4910,7 +4910,7 @@ int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
 /* Convert IPv4 ttpfxlen to a pfxmask4 mask value.  The passed       */
 /* ttpfxlen value is presumed to have been previously validated.     */
 /*-------------------------------------------------------------------*/
-U32 makepfxmask4( char* ttpfxlen )
+static U32 makepfxmask4( char* ttpfxlen )
 {
     U32 pfxmask4;
     int pfxlen = atoi( ttpfxlen );
@@ -4928,7 +4928,7 @@ U32 makepfxmask4( char* ttpfxlen )
 /* Convert IPv6 ttpfxlen6 to a pfxmask6 mask value.  The passed      */
 /* ttpfxlen6 value is presumed to have been previously validated.    */
 /*-------------------------------------------------------------------*/
-void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
+static void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
 {
     if (ttpfxlen6)
     {
