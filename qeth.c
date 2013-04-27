@@ -56,7 +56,7 @@
 
 #define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
-#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
+//#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
 
 
 /*-------------------------------------------------------------------*/
@@ -1889,8 +1889,7 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
         if( grp->debug )
         {
             MPC_DUMP_DATA( "INPUT L2 HDR", (BYTE*)&o2hdr,   (int)sizeof(o2hdr), '<' );
-//          MPC_DUMP_DATA( "INPUT L2 FRM", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
-            MPC_DUMP_DATA( "IN L2 FRM(p)", (BYTE*)dev->buf, (int)(sizeof(ETHFRM)+sizeof(IP4FRM)), '<' );
+            MPC_DUMP_DATA( "INPUT L2 FRM", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
         }
 
         /* Copy header and frame to buffer storage block(s) */
@@ -1960,8 +1959,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         if( grp->debug )
         {
             MPC_DUMP_DATA( "INPUT L3 HDR", (BYTE*)&o3hdr,   (int)sizeof(o3hdr), '<' );
-//          MPC_DUMP_DATA( "INPUT L3 PKT", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
-            MPC_DUMP_DATA( "IN L3 PKT(p)", (BYTE*)dev->buf, (int)(sizeof(IP4FRM)), '<' );
+            MPC_DUMP_DATA( "INPUT L3 PKT", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
         }
 
         /* Copy header and packet to buffer storage block(s) */
@@ -2075,13 +2073,9 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Trace the pack/frame if debugging is enabled */
         if (grp->debug)
         {
-            int dumplen = (int)sizeof(IP4FRM);
-            if (HDR_ID_LAYER2 == hdr_id)
-                dumplen += (int)sizeof(ETHFRM);
             DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
                 ssb, sb, dev->buflen, dev->buflen );
-//          MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
-            MPC_DUMP_DATA( "OUT BUFF (p)", dev->buf, dumplen, '>' );
+            MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
         }
 
         qrc = write_packet( dev, grp, dev->buf, dev->buflen );
