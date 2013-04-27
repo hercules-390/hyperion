@@ -125,6 +125,12 @@
   if "%~1" == "-?"      goto :help
   if "%~1" == "--help"  goto :help
 
+  set "build_type="
+  set "makefile_name="
+  set "num_cpus="
+  set "extra_nmake_args="
+  set "SolutionDir="
+
   call :parse_args_loop %*
   if not "%rc%" == "0" goto :exit
   goto :begin
@@ -169,7 +175,7 @@
   )
 
   if not defined SolutionDir (
-    set         "SolutionDir=%opt%"
+    call :re_set SolutionDir "%opt%"
     %return%
   )
 
@@ -183,6 +189,7 @@
 
   set "2shifts=yes"
 
+  if /i "%opt:~1%" == "a"     goto :makeall
   if /i "%opt:~1%" == "hqa"   goto :hqa
   if /i "%opt:~1%" == "asm"   goto :asm
   if /i "%opt:~1%" == "title" goto :title
@@ -191,6 +198,12 @@
 
   set "2shifts="
   set "extra_nmake_args=%extra_nmake_args% %opt%"
+  %return%
+
+:makeall
+
+  set "2shifts="
+  set "extra_nmake_args=%extra_nmake_args% -a"
   %return%
 
 :hqa
