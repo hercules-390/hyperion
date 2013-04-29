@@ -1235,17 +1235,15 @@ U16 offph;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
                 DBGTRC(dev, "  IPA_CMD_CREATEADDR\n");
-                // FIXME: IPA_CMD_CREATEADDR: is this correct?
                 {
                 BYTE *ip6 = (BYTE*)(ipa+1);
-                static const BYTE llnet6[2] = { 0xfe, 0x80 };
 
-                    memcpy( ip6+0, llnet6, 2 );
-                    memcpy( ip6+8, &grp->iMAC[0], IFHWADDRLEN/2 );
-                    ip6[11] = 0xFF;
-                    ip6[12] = 0xFE;
-                    memcpy( ip6+13, &grp->iMAC[3], IFHWADDRLEN/2 );
-                    ip6[8] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
+                    /* Return the values that the guest wiil use to create   */
+                    /* the low-order 64-bits of the IPv6 link local address. */
+                    memcpy( ip6+0, &grp->iMAC, 6 );
+                    ip6[6] = 0xFF;
+                    ip6[7] = 0xFE;
+                    ip6[0] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
 
                     STORE_HW( ipa->rc,
                         IPA_RC_OK );
