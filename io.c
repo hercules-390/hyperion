@@ -327,8 +327,10 @@ BYTE    chpid;
     chpid = regs->GR_L(1) & 0xFF;
 
     if((regs->psw.cc = chp_reset(chpid, 1)) != 0)
+    {
         PTIO(ERR,"*RCHP");
         RETURN_INTCHECK(regs);
+    }
 }
 
 
