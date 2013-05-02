@@ -505,7 +505,7 @@ do { \
     if( PROBSTATE(&(_regs)->psw) ) \
         (_regs)->program_interrupt( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
 
-    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
+    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating
        the lower-numbered register of a floating-point register pair) */
 #define BFPREGPAIR_CHECK(_r, _regs) \
     if( ((_r) & 2) ) \
@@ -517,7 +517,7 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
-    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
+    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating
        the lower-numbered register of a floating-point register pair) */
 #define DFPREGPAIR_CHECK(_r, _regs) \
     if( ((_r) & 2) ) \
@@ -578,7 +578,7 @@ do { \
     do { \
         if(!FACILITY_ENABLED( _faci, _regs ) ) \
           (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
-    } while (0) 
+    } while (0)
 
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
@@ -926,7 +926,7 @@ do { \
  * (like most general instructions when no storage access is needed)
  * therefore needing simpler prologue code.
  * The "_B" versions for some of the decoders are intended for
- * "branch" type operations where updating the PSW IA to IA+ILC 
+ * "branch" type operations where updating the PSW IA to IA+ILC
  * should only be done after the branch is deemed impossible.
  */
 
@@ -1374,7 +1374,7 @@ do { \
             if(likely((_b2))) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
     }
-    
+
 /* RXE register and indexed storage with extended op code */
 #undef RXE
 
@@ -2499,7 +2499,7 @@ do { \
             (_l) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
-   
+
 #ifdef OPTION_OPTINST
 #define SS_LXL(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2) \
         SS_LXL_DECODER(_inst, _regs, _b1, _effective_addr1, _b2, _effective_addr2, 6, 6)
@@ -2852,7 +2852,7 @@ int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                               U32 *iointid, BYTE zone);
 void io_reset (void);
-int  chp_reset(REGS *, BYTE chpid);
+int  chp_reset(BYTE chpid, int solicited);
 void channelset_reset(REGS *regs);
 
 
@@ -2981,10 +2981,14 @@ int lddev_cmd (int, char **, char *);
 /* Functions in module machchk.c */
 int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
     RADR *fsta);
-U32  channel_report (REGS *);
+U32  get_next_channel_report_word( REGS * );
 void machine_check_crwpend (void);
 void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);
+void build_attach_chrpt( DEVBLK *dev );
+void build_detach_chrpt( DEVBLK *dev );
+void build_chp_reset_chrpt( BYTE chpid, int solicited, int found );
+int  queue_channel_report( U32* crwarray, U32 crwcount );
 
 
 /* Functions in module opcode.c */
@@ -3581,7 +3585,7 @@ DEF_INST(store_character);
   LRdefgen(r1, C); \
   LRdefgen(r1, D); \
   LRdefgen(r1, E); \
-  LRdefgen(r1, F) 
+  LRdefgen(r1, F)
 LRdefgenr2(0);
 LRdefgenr2(1);
 LRdefgenr2(2);
@@ -3615,7 +3619,7 @@ LRdefgenr2(F);
   ALRdefgen(r1, C); \
   ALRdefgen(r1, D); \
   ALRdefgen(r1, E); \
-  ALRdefgen(r1, F) 
+  ALRdefgen(r1, F)
 ALRdefgenr2(0);
 ALRdefgenr2(1);
 ALRdefgenr2(2);
@@ -3649,7 +3653,7 @@ ALRdefgenr2(F);
   CLRdefgen(r1, C); \
   CLRdefgen(r1, D); \
   CLRdefgen(r1, E); \
-  CLRdefgen(r1, F) 
+  CLRdefgen(r1, F)
 CLRdefgenr2(0);
 CLRdefgenr2(1);
 CLRdefgenr2(2);
@@ -3857,7 +3861,7 @@ DEF_INST(9101);
   SLRdefgen(r1, C); \
   SLRdefgen(r1, D); \
   SLRdefgen(r1, E); \
-  SLRdefgen(r1, F) 
+  SLRdefgen(r1, F)
 SLRdefgenr2(0);
 SLRdefgenr2(1);
 SLRdefgenr2(2);

@@ -5901,7 +5901,7 @@ DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
 int rc;
-char buf[1024];
+char buf[4096];
 
     UNREFERENCED(cmdline);
 
@@ -5936,6 +5936,7 @@ char buf[1024];
 }
 
 
+#ifdef OPTION_SYNCIO
 /*-------------------------------------------------------------------*/
 /* syncio command - list syncio devices statistics                   */
 /*-------------------------------------------------------------------*/
@@ -5980,6 +5981,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+#endif // OPTION_SYNCIO
 
 
 #if !defined(OPTION_FISHIO)

@@ -959,10 +959,11 @@ do { \
 #define HHC01313 "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
 #define HHC01314 "%1d:%04X CHAN: sense %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 #define HHC01315 "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
-#define HHC01316 "%1d:%04X CHAN: stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
+#define HHC01316 "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
 #define HHC01317 "%1d:%04X CHAN: scsw %2.2X%2.2X%2.2X%2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X%2.2X"
-#define HHC01318 "%1d:%04X CHAN: test I/O"
-#define HHC01319 "%1d:%04X CHAN: TIO modification executed: cc=1"
+#define HHC01318 "%1d:%04X CHAN: test I/O: cc=%d"
+#define HHC01320 "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
+#define HHC01321 "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
 #define HHC01329 "%1d:%04X CHAN: halt I/O"
 #define HHC01330 "%1d:%04X CHAN: HIO modification executed: cc=1"
 #define HHC01331 "%1d:%04X CHAN: clear subchannel"
@@ -1262,6 +1263,7 @@ do { \
 #define HHC02019 "SR: CPU key %8.8X found but no active CPU"
 #define HHC02020 "SR: value error, incorrect length"
 #define HHC02021 "SR: string error, incorrect length"
+#define HHC02022 "SR: error loading CRW queue: not enough memory for %d CRWs"
 
 // reserve 021xx for logger.c
 #define HHC02100 "Logger: log not active"

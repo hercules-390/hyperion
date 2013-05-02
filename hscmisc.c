@@ -484,115 +484,168 @@ char cpustr[32] = "";
 /*-------------------------------------------------------------------*/
 int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 {
+    static const char*  status_type[3] = {"Device Status    ",
+                                          "Unit Status      ",
+                                          "Subchannel Status"};
+
     char devstr[128] = {0};      /* "0:0000 D/T0000" */
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
 
-    MSGBUF(devstr, "%s%1d:%04X D/T%04X", hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s%1d:%04X D/T%04X\n",
+        hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
     {
         len+=snprintf(buf+len,buflen-len-1,
-                "%s CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X "
-                "US:%2.2X CS:%2.2X Count:%2.2X%2.2X\n",
-                devstr,
-                dev->csw[0], dev->csw[1], dev->csw[2], dev->csw[3],
-                dev->csw[4], dev->csw[5], dev->csw[6], dev->csw[7]);
-
-        u.status = (U8)dev->csw[4];
-        len+=snprintf(buf+len,buflen-len-1,"%s    Unit Status    %s%s%s%s%s%s%s%s%s\n",
-            hdr,
-            u.status == 0 ? "is Normal" : "",
-            u.b.b0 ? "Attention " : "",
-            u.b.b1 ? "SM " : "",
-            u.b.b2 ? "CUE " : "",
-            u.b.b3 ? "Busy " : "",
-            u.b.b4 ? "CE " : "",
-            u.b.b5 ? "DE " : "",
-            u.b.b6 ? "UC " : "",
-            u.b.b7 ? "UE " : "");
-
-        u.status = (U8)dev->csw[5];
-        len+=snprintf(buf+len,buflen-len-1,"%s    Channel Status %s%s%s%s%s%s%s%s%s\n",
-            hdr,
-            u.status == 0 ? "is Normal" : "",
-            u.b.b0 ? "PCI " : "",
-            u.b.b1 ? "IL " : "",
-            u.b.b2 ? "PC " : "",
-            u.b.b3 ? "ProtC " : "",
-            u.b.b4 ? "CDC " : "",
-            u.b.b5 ? "CCC " : "",
-            u.b.b6 ? "ICC " : "",
-            u.b.b7 ? "CC " : "");
-
+            "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
+            "%s         US:%2.2X  CS:%2.2X Count:%2.2X%2.2X       (Key) Subchannel key          %1.1X\n"
+            "%s                                       (S)   Suspend control         %1.1X\n"
+            "%s                                       (L)   Extended format         %1.1X\n"
+            "%s  Subchannel Internal Management       (CC)  Deferred condition code %1.1X\n",
+            hdr, dev->scsw.flag0,
+                 dev->scsw.ccwaddr[1], dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
+            hdr, dev->scsw.unitstat, dev->scsw.chanstat,
+                 dev->scsw.count[0], dev->scsw.count[1],
+                 (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
+            hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
+            hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
+            hdr, (dev->scsw.flag0 & SCSW0_CC));
     }
-    else
-    {
-        len+=snprintf(buf+len,buflen-len-1,
-                "%s Subchannel Number[%04X]\n"
-                "%s    Path Management Control Word (PMCW)\n"
-                "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
-                "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
-                "%s      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
-                "%s      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
-                "%s   CHPID0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
-                "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
-                "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
-                devstr, dev->subchan,
-                hdr,
-                hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
-                dev->pmcw.intparm[2], dev->pmcw.intparm[3],
-                hdr, dev->pmcw.flag4, dev->pmcw.flag5,
-                dev->pmcw.devnum[0], dev->pmcw.devnum[1],
-                hdr, dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
-                hdr, dev->pmcw.mbi[0], dev->pmcw.mbi[1],
-                dev->pmcw.pom, dev->pmcw.pam,
-                hdr, dev->pmcw.chpid[0], dev->pmcw.chpid[1],
-                dev->pmcw.chpid[2], dev->pmcw.chpid[3],
-                hdr, dev->pmcw.chpid[4], dev->pmcw.chpid[5],
-                dev->pmcw.chpid[6], dev->pmcw.chpid[7],
-                hdr,dev->pmcw.zone, dev->pmcw.flag25,
-                dev->pmcw.flag26, dev->pmcw.flag27);
 
-        len+=snprintf(buf+len,buflen-len-1,
-                "%s    Subchannel Status Word (SCSW)\n"
-                "%s    Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
-                    "DS:%2.2X SS:%2.2X Count:%2.2X%2.2X "
-                    "CCW:%2.2X%2.2X%2.2X%2.2X\n",
-                hdr, hdr, dev->scsw.flag0, dev->scsw.flag1,
-                dev->scsw.flag2, dev->scsw.flag3,
-                dev->scsw.unitstat, dev->scsw.chanstat,
-                dev->scsw.count[0], dev->scsw.count[1],
-                dev->scsw.ccwaddr[0], dev->scsw.ccwaddr[1],
-                dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3]);
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s  Subchannel Number[%04X]\n"
+        "%s    Path Management Control Word (PMCW)\n"
+        "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
+        "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
+        "%s      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
+        "%s      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
+        "%s  CHPID 0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
+        "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
+        "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
+        hdr, dev->subchan,
+        hdr,
+        hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+        dev->pmcw.intparm[2], dev->pmcw.intparm[3],
+        hdr, dev->pmcw.flag4, dev->pmcw.flag5,
+        dev->pmcw.devnum[0], dev->pmcw.devnum[1],
+        hdr, dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
+        hdr, dev->pmcw.mbi[0], dev->pmcw.mbi[1],
+        dev->pmcw.pom, dev->pmcw.pam,
+        hdr, dev->pmcw.chpid[0], dev->pmcw.chpid[1],
+        dev->pmcw.chpid[2], dev->pmcw.chpid[3],
+        hdr, dev->pmcw.chpid[4], dev->pmcw.chpid[5],
+        dev->pmcw.chpid[6], dev->pmcw.chpid[7],
+        hdr,dev->pmcw.zone, dev->pmcw.flag25,
+        dev->pmcw.flag26, dev->pmcw.flag27);
 
-        u.status = (U8)dev->scsw.unitstat;
-        len+=snprintf(buf+len,buflen-len-1,
-            "%s    Device Status     %s%s%s%s%s%s%s%s%s\n",
-            hdr, u.status == 0 ? "is Normal" : "",
-            u.b.b0 ? "Attention " : "",
-            u.b.b1 ? "SM " : "",
-            u.b.b2 ? "CUE " : "",
-            u.b.b3 ? "Busy " : "",
-            u.b.b4 ? "CE " : "",
-            u.b.b5 ? "DE " : "",
-            u.b.b6 ? "UC " : "",
-            u.b.b7 ? "UE " : "");
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s  Subchannel Status Word (SCSW)\n"
+        "%s    Flags: %2.2X%2.2X  Subchan Ctl: %2.2X%2.2X     (FC)  Function Control\n"
+        "%s      CCW: %2.2X%2.2X%2.2X%2.2X                          Start                   %1.1X\n"
+        "%s       DS: %2.2X  SS: %2.2X  Count: %2.2X%2.2X           Halt                    %1.1X\n"
+        "%s                                             Clear                   %1.1X\n"
+        "%s    Flags                              (AC)  Activity Control\n"
+        "%s      (Key) Subchannel key          %1.1X        Resume pending          %1.1X\n"
+        "%s      (S)   Suspend control         %1.1X        Start pending           %1.1X\n"
+        "%s      (L)   Extended format         %1.1X        Halt pending            %1.1X\n"
+        "%s      (CC)  Deferred condition code %1.1X        Clear pending           %1.1X\n"
+        "%s      (F)   CCW-format control      %1.1X        Subchannel active       %1.1X\n"
+        "%s      (P)   Prefetch control        %1.1X        Device active           %1.1X\n"
+        "%s      (I)   Initial-status control  %1.1X        Suspended               %1.1X\n"
+        "%s      (A)   Address-limit control   %1.1X  (SC)  Status Control\n"
+        "%s      (U)   Suppress-suspend int.   %1.1X        Alert                   %1.1X\n"
+        "%s    Subchannel Control                       Intermediate            %1.1X\n"
+        "%s      (Z)   Zero condition code     %1.1X        Primary                 %1.1X\n"
+        "%s      (E)   Extended control (ECW)  %1.1X        Secondary               %1.1X\n"
+        "%s      (N)   Path not operational    %1.1X        Status pending          %1.1X\n"
+        "%s      (Q)   QDIO active             %1.1X\n",
+        hdr,
+        hdr, dev->scsw.flag0, dev->scsw.flag1, dev->scsw.flag2, dev->scsw.flag3,
+        hdr, dev->scsw.ccwaddr[0], dev->scsw.ccwaddr[1],
+             dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
+             (dev->scsw.flag2 & SCSW2_FC_START) >> 6,
+        hdr, dev->scsw.unitstat, dev->scsw.chanstat,
+             dev->scsw.count[0], dev->scsw.count[1],
+             (dev->scsw.flag2 & SCSW2_FC_HALT)  >> 5,
+        hdr, (dev->scsw.flag2 & SCSW2_FC_CLEAR) >> 4,
+        hdr,
+        hdr, (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
+             (dev->scsw.flag2 & SCSW2_AC_RESUM) >> 3,
+        hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
+             (dev->scsw.flag2 & SCSW2_AC_START) >> 2,
+        hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
+             (dev->scsw.flag2 & SCSW2_AC_HALT)  >> 1,
+        hdr, (dev->scsw.flag0 & SCSW0_CC),
+             (dev->scsw.flag2 & SCSW2_AC_CLEAR),
+        hdr, (dev->scsw.flag1 & SCSW1_F)        >> 7,
+             (dev->scsw.flag3 & SCSW3_AC_SCHAC) >> 7,
+        hdr, (dev->scsw.flag1 & SCSW1_P)        >> 6,
+             (dev->scsw.flag3 & SCSW3_AC_DEVAC) >> 6,
+        hdr, (dev->scsw.flag1 & SCSW1_I)        >> 5,
+             (dev->scsw.flag3 & SCSW3_AC_SUSP)  >> 5,
+        hdr, (dev->scsw.flag1 & SCSW1_A)        >> 4,
+        hdr, (dev->scsw.flag1 & SCSW1_U)        >> 3,
+             (dev->scsw.flag3 & SCSW3_SC_ALERT) >> 4,
+        hdr, (dev->scsw.flag3 & SCSW3_SC_INTER) >> 3,
+        hdr, (dev->scsw.flag1 & SCSW1_Z)        >> 2,
+             (dev->scsw.flag3 & SCSW3_SC_PRI)   >> 2,
+        hdr, (dev->scsw.flag1 & SCSW1_E)        >> 1,
+             (dev->scsw.flag3 & SCSW3_SC_SEC)   >> 1,
+        hdr, (dev->scsw.flag1 & SCSW1_N),
+             (dev->scsw.flag3 & SCSW3_SC_PEND),
+        hdr, (dev->scsw.flag2 & SCSW2_Q)        >> 7);
 
-        u.status = (U8)dev->scsw.chanstat;
-        len+=snprintf(buf+len,buflen-len-1,
-            "%s    Subchannel Status %s%s%s%s%s%s%s%s%s\n",
-            hdr, u.status == 0 ? "is Normal" : "",
-            u.b.b0 ? "PCI " : "",
-            u.b.b1 ? "IL " : "",
-            u.b.b2 ? "PC " : "",
-            u.b.b3 ? "ProtC " : "",
-            u.b.b4 ? "CDC " : "",
-            u.b.b5 ? "CCC " : "",
-            u.b.b6 ? "ICC " : "",
-            u.b.b7 ? "CC " : "");
-    }
+    u.status = (U8)dev->scsw.unitstat;
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s    %s %s%s%s%s%s%s%s%s%s\n",
+        hdr, status_type[(sysblk.arch_mode == ARCH_370)],
+        u.status == 0 ? "is Normal" : "",
+        u.b.b0 ? "Attention " : "",
+        u.b.b1 ? "SM " : "",
+        u.b.b2 ? "CUE " : "",
+        u.b.b3 ? "Busy " : "",
+        u.b.b4 ? "CE " : "",
+        u.b.b5 ? "DE " : "",
+        u.b.b6 ? "UC " : "",
+        u.b.b7 ? "UE " : "");
+
+    u.status = (U8)dev->scsw.chanstat;
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s    %s %s%s%s%s%s%s%s%s%s\n",
+        hdr, status_type[2],
+        u.status == 0 ? "is Normal" : "",
+        u.b.b0 ? "PCI " : "",
+        u.b.b1 ? "IL " : "",
+        u.b.b2 ? "PC " : "",
+        u.b.b3 ? "ProtC " : "",
+        u.b.b4 ? "CDC " : "",
+        u.b.b5 ? "CCC " : "",
+        u.b.b6 ? "ICC " : "",
+        u.b.b7 ? "CC " : "");
+
+    len+=snprintf(buf+len,buflen-len-1,
+        "%s  DEVBLK Status\n"
+        "%s    busy             %1.1X    shared        %1.1X\n"
+        "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"
+        "%s    pending          %1.1X    connected     %1.1X\n"
+        "%s    pcipending       %1.1X    readpending   %1.1X\n"
+        "%s    attnpending      %1.1X    connecting    %1.1X\n"
+        "%s    startpending     %1.1X    localhost     %1.1X\n"
+        "%s    resumesuspended  %1.1X    reserved      %1.1X\n"
+        "%s    tschpending      %1.1X    locked        %1.1X\n",
+        hdr,
+        hdr, dev->busy,               dev->shared,
+        hdr, dev->suspended,          dev->console,     dev->rlen3270,
+        hdr, dev->pending,            dev->connected,
+        hdr, dev->pcipending,         dev->readpending,
+        hdr, dev->attnpending,        dev->connecting,
+        hdr, dev->startpending,       dev->localhost,
+        hdr, dev->resumesuspended,    dev->reserved,
+        hdr, dev->tschpending,        test_lock(&dev->lock) ? 1 : 0);
+
     return(len);
 
 } /* end function display_subchannel */

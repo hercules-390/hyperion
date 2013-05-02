@@ -36,60 +36,158 @@
 #define _MACHCHK_C
 
 /*-------------------------------------------------------------------*/
-/* Return pending channel report                                     */
-/*                                                                   */
-/* Returns zero if no device has CRW pending.  Otherwise returns     */
-/* the channel report word for the first channel path or device      */
-/* which has a CRW pending, and resets the CRW for that device.      */
+/* Build a Channel Path Reset Channel Report                         */
 /*-------------------------------------------------------------------*/
-U32 channel_report(REGS *regs)
+void build_chp_reset_chrpt( BYTE chpid, int solicited, int found )
 {
-DEVBLK *dev;
-U32 i,j;
+U32 crw_erc, crwarray[8], crwcount=0;
 
-    /* Scan for channel path reset CRW's */
-    for(i = 0; i < 8; i++)
-    {
-        if(sysblk.chp_reset[i])
-        {
-            OBTAIN_INTLOCK(regs);
-            for(j = 0; j < 32; j++)
-            {
-                if(sysblk.chp_reset[i] & (0x80000000 >> j))
-                {
-                    sysblk.chp_reset[i] &= ~(0x80000000 >> j);
-                    RELEASE_INTLOCK(regs);
-                    return CRW_SOL | CRW_RSC_CHPID | CRW_AR | CRW_ERC_INIT | ((i*32)+j);
-                }
-            }
-            RELEASE_INTLOCK(regs);
-        }
-    }
+    chpid = ((U32)chpid) & CRW_RSID_MASK;
 
-    /* Scan for subchannel alert CRW's */
-    for(dev = sysblk.firstdev; dev!= NULL; dev = dev->nextdev)
-    {
-        if(dev->crwpending)
-        {
-            obtain_lock(&dev->lock);
-            if(dev->crwpending)
-            {
-                dev->crwpending = 0;
-                release_lock(&dev->lock);
-                return CRW_RSC_SUBCH | CRW_AR | CRW_ERC_ALERT | dev->subchan;
-            }
-            release_lock(&dev->lock);
-        }
-    }
-    return 0;
-} /* end function channel_report */
+    /* If a subchannel was found on this path and was reset. Ref:
+       SA22-7832 "Channel-Path-Reset-Function-Completion Signaling   */
+    if (found)
+        crw_erc = CRW_ERC_INIT;         /* Init'ed, parms unchanged  */
+    else
+        crw_erc = CRW_ERC_RESET;        /* Error, parms initialized  */
+
+    /* Build the Channel Path Reset Channel Report */
+    crwarray[crwcount++] = (solicited ? CRW_SOL : 0) |
+        CRW_RSC_CHPID | CRW_AR | crw_erc | chpid;
+
+    /* Queue the Channel Report */
+    VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );
+}
+
 
 /*-------------------------------------------------------------------*/
-/* Indicate crw pending                                              */
+/* Build a device attach Channel Report                              */
+/*-------------------------------------------------------------------*/
+void build_attach_chrpt( DEVBLK *dev )
+{
+U32 ssid, subchan, crwarray[8], crwcount=0;
+
+    /* Retrieve Source IDs */
+    obtain_lock( &dev->lock );
+    {
+        ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
+        subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
+    }
+    release_lock( &dev->lock );
+
+    /* Build Subchannel Alert Channel Report */
+    crwarray[crwcount++] =
+        0
+        | (sysblk.mss ? CRW_CHAIN : 0)
+        | CRW_RSC_SUBCH
+        | CRW_AR
+        | CRW_ERC_ALERT
+        | subchan
+        ;
+    if (sysblk.mss)
+        crwarray[crwcount++] =
+            0
+            | CRW_RSC_SUBCH
+            | CRW_AR
+            | CRW_ERC_ALERT
+            | (ssid << 8)
+            ;
+
+    /* Queue the Channel Report(s) */
+    VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Build a device detach Channel Report                              */
+/*-------------------------------------------------------------------*/
+void build_detach_chrpt( DEVBLK *dev )
+{
+U32 ssid, subchan, crwarray[8], crwcount=0;
+
+    /* Retrieve Source IDs */
+    obtain_lock( &dev->lock );
+    {
+        ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
+        subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
+    }
+    release_lock( &dev->lock );
+
+    /* Build Subchannel Alert Channel Report */
+    crwarray[crwcount++] =
+        0
+        | (sysblk.mss ? CRW_CHAIN : 0)
+        | CRW_RSC_SUBCH
+        | CRW_AR
+        | CRW_ERC_ALERT
+        | subchan
+        ;
+    if (sysblk.mss)
+        crwarray[crwcount++] =
+            0
+            | CRW_RSC_SUBCH
+            | CRW_AR
+            | CRW_ERC_ALERT
+            | (ssid << 8)
+            ;
+
+    /* Queue the Channel Report */
+    VERIFY( queue_channel_report( crwarray, crwcount ) == 0 );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Add a Channel Report to the queue                                 */
+/*-------------------------------------------------------------------*/
+int queue_channel_report( U32* crwarray, U32 crwcount )
+{
+    OBTAIN_CRWLOCK();
+
+    if ((sysblk.crwcount + crwcount) > sysblk.crwalloc)
+    {
+        /* Allocate larger queue */
+        U32   newalloc  = sysblk.crwalloc + crwcount;
+        U32*  newarray  = malloc( newalloc * sizeof(U32));
+
+        if (!newarray)
+        {
+            /* Set overflow in last CRW */
+            if (sysblk.crwarray)
+                *(sysblk.crwarray + sysblk.crwcount - 1) |= CRW_OFLOW;
+            RELEASE_CRWLOCK();
+            return -1;
+        }
+
+        /* Copy existing queue to new queue */
+        if (sysblk.crwarray)
+        {
+            memcpy( newarray, sysblk.crwarray, sysblk.crwcount * sizeof(U32));
+            free( sysblk.crwarray );
+        }
+
+        /* Start using new queue */
+        sysblk.crwarray = newarray;
+        sysblk.crwalloc = newalloc;
+    }
+
+    /* Add the new CRWs to the queue */
+    memcpy( sysblk.crwarray + sysblk.crwcount, crwarray, crwcount * sizeof(U32));
+    sysblk.crwcount += crwcount;
+    RELEASE_CRWLOCK();
+
+    /* Signal waiting CPUs that a Channel Report is pending */
+    machine_check_crwpend();
+    return 0;
+
+} /* end function queue_channel_report */
+
+
+/*-------------------------------------------------------------------*/
+/* Indicate CRW pending                                              */
 /*-------------------------------------------------------------------*/
 void machine_check_crwpend()
 {
-    /* Signal waiting CPUs that an interrupt may be pending */
+    /* Signal waiting CPUs that a Channel Report is pending */
     OBTAIN_INTLOCK(NULL);
     ON_IC_CHANRPT;
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
@@ -97,6 +195,35 @@ void machine_check_crwpend()
 
 } /* end function machine_check_crwpend */
 
+
+/*-------------------------------------------------------------------*/
+/* Return next Channel Report Word (CRW)                             */
+/*-------------------------------------------------------------------*/
+U32 get_next_channel_report_word( REGS* regs )
+{
+U32 crw = 0;
+
+    UNREFERENCED(regs);
+    OBTAIN_CRWLOCK();
+    ASSERT( sysblk.crwindex <= sysblk.crwcount );
+    ASSERT( sysblk.crwcount <= sysblk.crwalloc );
+    if (sysblk.crwcount)
+    {
+        if (sysblk.crwindex < sysblk.crwcount)
+        {
+            VERIFY((crw = *(sysblk.crwarray + sysblk.crwindex)) != 0);
+            sysblk.crwindex++; // (for next time)
+        }
+        else // (sysblk.crwindex >= sysblk.crwcount)
+        {
+            sysblk.crwindex = 0;
+            sysblk.crwcount = 0;
+        }
+    }
+    RELEASE_CRWLOCK();
+    return crw;
+
+} /* end function get_next_channel_report_word */
 
 #endif /*!defined(_MACHCHK_C)*/
 
@@ -234,8 +361,8 @@ RADR    fsta = 0;
 
     /* Trace the machine check interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-#if defined(_FEATURE_SIE)      
-        WRMSG (HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+#if defined(_FEATURE_SIE)
+        WRMSG (HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, mcic);
 #else
         WRMSG (HHC00824, "I", PTYPSTR(regs->cpuad), regs->cpuad, mcic);
@@ -327,7 +454,7 @@ int i;
     if(MACHMASK(&regs->psw))
     {
 #if defined(_FEATURE_SIE)
-        WRMSG(HHC00822, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRMSG(HHC00822, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo) );
 #else /*!defined(_FEATURE_SIE)*/
@@ -365,7 +492,7 @@ int i;
     else
     {
 #if defined(_FEATURE_SIE)
-        WRMSG(HHC00823, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad), 
+        WRMSG(HHC00823, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
             strsignal(signo));
 #else /*!defined(_FEATURE_SIE)*/

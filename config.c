@@ -12,6 +12,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#include "chsc.h"
 
 #if !defined(_GEN_ARCH)
 
@@ -627,8 +628,11 @@ DEVBLK**dvpp;
     dev->hnd = NULL;
     dev->devnum = devnum;
     dev->chanset = lcss;
+    dev->chptype[0] = CHP_TYPE_EIO; /* Interim - default to emulated */
     dev->fd = -1;
+#ifdef OPTION_SYNCIO
     dev->syncio = 0;
+#endif // OPTION_SYNCIO
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
     dev->pciioint.dev = dev;
@@ -1612,6 +1616,7 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     return dev;
 } /* end function find_device_by_subchan */
 
+#ifdef OPTION_SYNCIO
 /*-------------------------------------------------------------------*/
 /* Returns a CPU register context for the device, or else NULL       */
 /*-------------------------------------------------------------------*/
@@ -1631,6 +1636,7 @@ DLL_EXPORT REGS *devregs(DEVBLK *dev)
     }
     return NULL;    /* Not CPU thread. Return NULL register context  */
 }
+#endif // OPTION_SYNCIO
 
 
 /*-------------------------------------------------------------------*/

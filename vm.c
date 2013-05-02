@@ -849,7 +849,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     release_lock (&dev->lock);
 
     /* Build the operation request block */                    /*@IWZ*/
-    memset (&dev->orb, 0, sizeof(ORB));                            /*@IWZ*/
+    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
     STORE_FW(dev->orb.ccwaddr, ccwaddr);                       /*@IWZ*/
     dev->orb.flag4 = ioparm.akey & ORB4_KEY;                   /*@IWZ*/
     if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)                    /*@IWZ*/
@@ -859,15 +859,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     ARCH_DEP(execute_ccw_chain) (dev);
 
     /* Obtain status, CCW address, and residual byte count */
-#ifdef FEATURE_S370_CHANNEL
-    lastccw = (dev->csw[1] << 16) || (dev->csw[2] << 8)
-                || dev->csw[3];
-    unitstat = dev->csw[4];
-    chanstat = dev->csw[5];
-    residual = (dev->csw[6] << 8) || dev->csw[7];
-#endif /*FEATURE_S370_CHANNEL*/
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
     lastccw = (dev->scsw.ccwaddr[0] << 24)
                 || (dev->scsw.ccwaddr[1] << 16)
                 || (dev->scsw.ccwaddr[2] << 8)
@@ -875,7 +866,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     unitstat = dev->scsw.unitstat;
     chanstat = dev->scsw.chanstat;
     residual = (dev->scsw.count[0] << 8) || dev->scsw.count[1];
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Clear the interrupt pending and device busy conditions */
     obtain_lock (&dev->lock);

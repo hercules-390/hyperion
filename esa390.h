@@ -988,6 +988,14 @@ typedef struct _ORB {
         BYTE    lpm;                    /* Logical path mask         */
         BYTE    flag7;                  /* Flag byte 7               */
         FWORD   ccwaddr;                /* CCW address               */
+        BYTE    csspriority;            /* CSS Priority              */
+        BYTE    reserved_byte_13;       /* Reserved for future use   */
+        BYTE    cupriority;             /* CU Priority               */
+        BYTE    reserved_byte_15;       /* Reserved for future use   */
+        FWORD   reserved_word_4;        /* Reserved for future use   */
+        FWORD   reserved_word_5;        /* Reserved for future use   */
+        FWORD   reserved_word_6;        /* Reserved for future use   */
+        FWORD   reserved_word_7;        /* Reserved for future use   */
     } ORB;
 
 /* Bit definitions for ORB flag byte 4 */

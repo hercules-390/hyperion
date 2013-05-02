@@ -1042,22 +1042,30 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     }
 
 #ifdef FEATURE_S370_CHANNEL
-    /* Store the channel status word at PSA+X'40' */
-    memcpy (psa->csw, csw, 8);
+    /* CSW has already been stored at PSA+X'40' */
 
-    /* Set the interrupt code to the I/O device address */
-    regs->psw.intcode = ioid;
-
-    /* For ECMODE, store the I/O device address at PSA+X'B8' */
-    if (ECMODE(&regs->psw))
+    if (sysblk.arch_mode == ARCH_370 &&
+        ECMODE(&regs->psw))
+    {
+        /* For ECMODE, store the I/O device address at PSA+X'B8' */
         STORE_FW(psa->ioid, ioid);
+    }
+    else
+    {
+        /* Set the interrupt code to the I/O device address */
+        regs->psw.intcode = ioid;
+    }
 
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
+    {
+        BYTE*   csw = psa->csw;
+
         WRMSG (HHC00804, "I", PTYPSTR(regs->cpuad), regs->cpuad,
                 regs->psw.intcode,
                 csw[0], csw[1], csw[2], csw[3],
                 csw[4], csw[5], csw[6], csw[7]);
+    }
 #endif /*FEATURE_S370_CHANNEL*/
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM

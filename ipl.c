@@ -258,15 +258,8 @@ int rc;
     dev->scsw.flag3 = 0;
 
     /* Check that load completed normally */
-#ifdef FEATURE_S370_CHANNEL
-    unitstat = dev->csw[4];
-    chanstat = dev->csw[5];
-#endif /*FEATURE_S370_CHANNEL*/
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
     unitstat = dev->scsw.unitstat;
     chanstat = dev->scsw.chanstat;
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0)
     {

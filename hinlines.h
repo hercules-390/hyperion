@@ -377,11 +377,54 @@ setCpuId(const unsigned int cpu,
     /* Set new CPU ID */
     setCpuIdregs(regs, cpu, arg_model, arg_version, arg_serial, arg_MCEL);
 
-    /* Set CPU timer source (a "strange" place, but here as the CPU ID 
+    /* Set CPU timer source (a "strange" place, but here as the CPU ID
      * must be updated when the LPAR mode or number is update).
      */
     set_cpu_timer_mode(regs);
 
+}
+
+
+/*********************************************************************/
+/*                                                                   */
+/* Convert an SCSW to a CSW for S/360 and S/370 channel support      */
+/*                                                                   */
+/*********************************************************************/
+
+static INLINE void
+scsw2csw(const SCSW* scsw, BYTE* csw)
+{
+    memcpy(csw, scsw->ccwaddr, 8);
+    csw[0] = scsw->flag0;
+}
+
+
+/*********************************************************************/
+/*                                                                   */
+/* Store an SCSW as a CSW for S/360 and S/370 channel support        */
+/*                                                                   */
+/*********************************************************************/
+
+static INLINE void
+store_scsw_as_csw(const REGS* regs, const SCSW* scsw)
+{
+    register PSA_3XX*   psa;            /* -> Prefixed storage area  */
+    register RADR       pfx;            /* Current prefix            */
+
+    /* Establish prefixing */
+    pfx =
+#if defined(_FEATURE_SIE)
+          SIE_MODE(regs) ? regs->sie_px :
+#endif
+          regs->PX;
+
+    /* Establish current PSA with prefixing applied */
+    psa = (PSA_3XX*)(regs->mainstor + pfx);
+
+    /* Store the channel status word at PSA+X'40' (64)*/
+    scsw2csw(scsw, psa->csw);
+
+    /* Update storage key for reference and change done by caller */
 }
 
 

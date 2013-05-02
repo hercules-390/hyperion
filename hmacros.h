@@ -407,6 +407,14 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
  } while (0)
 
 /*-------------------------------------------------------------------*/
+/* Obtain/Release crwlock.                                           */
+/* crwlock can be obtained by any thread.                            */
+/*-------------------------------------------------------------------*/
+
+#define OBTAIN_CRWLOCK()    obtain_lock( &sysblk.crwlock )
+#define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
+
+/*-------------------------------------------------------------------*/
 /* Obtain/Release intlock.                                           */
 /* intlock can be obtained by any thread                             */
 /* if obtained by a cpu thread, check to see if synchronize_cpus     */
@@ -441,6 +449,11 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 /*-------------------------------------------------------------------*/
 /* Returns when all other CPU threads are blocked on intlock         */
 /*-------------------------------------------------------------------*/
+#ifdef OPTION_SYNCIO
+  #define AT_SYNCPOINT(_regs)    ((_regs)->intwait || (_regs)->syncio)
+#else // OPTION_NOSYNCIO
+  #define AT_SYNCPOINT(_regs)    ((_regs)->intwait)
+#endif // OPTION_SYNCIO
 
 #define SYNCHRONIZE_CPUS(_regs) \
  do { \
@@ -449,7 +462,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
              ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
    for (_i = 0; _mask && _i < sysblk.hicpu; _i++) { \
      if ((_mask & CPU_BIT(_i))) { \
-       if (sysblk.regs[_i]->intwait || sysblk.regs[_i]->syncio) \
+       if (AT_SYNCPOINT(sysblk.regs[_i])) \
          _mask ^= CPU_BIT(_i); \
        else { \
          ON_IC_INTERRUPT(sysblk.regs[_i]); \
@@ -591,10 +604,10 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 /* Handy utility macro for channel.c                                 */
 /*-------------------------------------------------------------------*/
 
-#define IS_CCW_IMMEDIATE(_dev) \
+#define IS_CCW_IMMEDIATE(_dev,_code) \
   ( \
-    ( (_dev)->hnd->immed && (_dev)->hnd->immed[(_dev)->code]) \
-    || ( (_dev)->immed      && (_dev)->immed[(_dev)->code]) \
+    ( (_dev)->hnd->immed && (_dev)->hnd->immed[(_code)]) \
+    || ( (_dev)->immed      && (_dev)->immed[(_code)]) \
     || IS_CCW_NOP((_dev)->code) \
   )
 

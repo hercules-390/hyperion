@@ -167,15 +167,11 @@
 #define SR_SYS_IOPENDING        0xace10021
 #define SR_SYS_PCIPENDING       0xace10022
 #define SR_SYS_ATTNPENDING      0xace10023
-#define SR_SYS_CHP_RESET        0xace10030
-#define SR_SYS_CHP_RESET_0      0xace10030
-#define SR_SYS_CHP_RESET_1      0xace10031
-#define SR_SYS_CHP_RESET_2      0xace10032
-#define SR_SYS_CHP_RESET_3      0xace10033
-#define SR_SYS_CHP_RESET_4      0xace10034
-#define SR_SYS_CHP_RESET_5      0xace10035
-#define SR_SYS_CHP_RESET_6      0xace10036
-#define SR_SYS_CHP_RESET_7      0xace10037
+#define SR_SYS_IPLED            0xace10030
+#define SR_SYS_CRWCOUNT         0xace10031
+#define SR_SYS_CRWARRAY         0xace10032
+#define SR_SYS_CRWINDEX         0xace10033
+#define SR_SYS_CRWENDIAN        0xace10034
 #define SR_SYS_SERVPARM         0xace10040
 #define SR_SYS_SIGINTREQ        0xace10041
 #define SR_SYS_VMACTIVE         0xace10042
@@ -397,9 +393,9 @@
 #define SR_DEV_SCSW             0xace30012
 #define SR_DEV_PCISCSW          0xace30013
 #define SR_DEV_ATTNSCSW         0xace30014
-#define SR_DEV_CSW              0xace30015
-#define SR_DEV_PCICSW           0xace30016
-#define SR_DEV_ATTNCSW          0xace30017
+/*      available               0xace30015 */
+/*      available               0xace30016 */
+/*      available               0xace30017 */
 #define SR_DEV_ESW              0xace30018
 #define SR_DEV_ECW              0xace30019
 #define SR_DEV_SENSE            0xace3001a
@@ -415,7 +411,7 @@
 #define SR_DEV_PCIPENDING       0xace30024
 #define SR_DEV_ATTNPENDING      0xace30025
 #define SR_DEV_STARTPENDING     0xace30026
-#define SR_DEV_CRWPENDING       0xace30027
+//      (available)             0xace30027
 #define SR_DEV_CCWADDR          0xace30028
 #define SR_DEV_IDAPMASK         0xace30029
 #define SR_DEV_IDAWFMT          0xace3002a

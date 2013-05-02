@@ -1531,7 +1531,6 @@ COMMAND( "sh",                      sh_cmd,                 SYSCMDNOPER,        
 COMMAND( "shrd",                    EXTCMD(shared_cmd),     SYSCMDNOPER,        shrd_cmd_desc,          NULL                )
 COMMAND( "suspend",                 suspend_cmd,            SYSCMDNOPER,        suspend_cmd_desc,       NULL                )
 COMMAND( "symptom",                 traceopt_cmd,           SYSCMDNOPER,        symptom_cmd_desc,       NULL                )
-COMMAND( "syncio",                  syncio_cmd,             SYSCMDNOPER,        syncio_cmd_desc,        NULL                )
 COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        tminus_cmd_desc,        NULL                )
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )
@@ -1739,5 +1738,8 @@ COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        
 #if defined( OPTION_SHOWDVOL1 )
 COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
 #endif /* defined( OPTION_SHOWDVOL1 ) */
+#ifdef OPTION_SYNCIO
+COMMAND( "syncio",                  syncio_cmd,             SYSCMDNOPER,        syncio_cmd_desc,        NULL                )
+#endif // OPTION_SYNCIO
 
 /*------------------------------(EOF)--------------------------------*/

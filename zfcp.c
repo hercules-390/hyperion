@@ -253,9 +253,9 @@ static void raise_adapter_interrupt(DEVBLK *dev)
     release_lock (&dev->lock);
 
     /* Update interrupt status */
-    OBTAIN_INTLOCK(devregs(dev));
+    OBTAIN_INTLOCK( DEVREGS(dev) );
     UPDATE_IC_IOPENDING();
-    RELEASE_INTLOCK(devregs(dev));
+    RELEASE_INTLOCK( DEVREGS(dev) );
 }
 
 

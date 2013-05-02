@@ -300,7 +300,9 @@ struct REGS {                           /* Processor registers       */
       */
         ALIGN_8
         int     intwait;                /* 1=Waiting on intlock      */
+#ifdef OPTION_SYNCIO
         int     syncio;                 /* 1=Synchronous i/o active  */
+#endif // OPTION_SYNCIO
 
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
@@ -673,7 +675,13 @@ struct SYSBLK {
         /*      I/O Management                                       */
         /*-----------------------------------------------------------*/
 
-        U32     chp_reset[8];           /* Channel path reset masks  */
+        int     mss;                    /* Multiple CSS enabled      */
+        int     lcssmax;                /* Maximum Subchannel-Set Id */
+        LOCK    crwlock;                /* CRW queue lock            */
+        U32    *crwarray;               /* CRW queue                 */
+        U32     crwalloc;               /* #of entries allocated     */
+        U32     crwcount;               /* #of entries queued        */
+        U32     crwindex;               /* CRW queue index           */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
         DEVBLK *ioq;                    /* I/O queue                 */
@@ -703,6 +711,7 @@ struct SYSBLK {
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
+                ipled:1,                /* 1 = guest has been IPL'ed */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
                 npquiet:1,              /* New Panel quiet indicator */
@@ -1010,7 +1019,9 @@ struct DEVBLK {                         /* Device configuration block*/
         BLOCK_HEADER;                   /* Name of block - DEVBLK    */
 
         DEVBLK *nextdev;                /* -> next device block      */
+#ifdef OPTION_SYNCIO
         REGS   *regs;                   /* -> REGS if syncio         */
+#endif // OPTION_SYNCIO
         LOCK    lock;                   /* Device block lock         */
         int     allocated;              /* Device block free/in use  */
 
@@ -1111,6 +1122,10 @@ struct DEVBLK {                         /* Device configuration block*/
         DEVIM   *immed;                 /* Model Specific IM codes   */
                                         /* (overrides devhnd immed)  */
         int     is_immed;               /* Last command is Immediate */
+        struct {                        /* iobuf validation          */
+            int length;
+            BYTE *data;
+        }       iobuf;
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -1120,9 +1135,6 @@ struct DEVBLK {                         /* Device configuration block*/
         SCSW    scsw;                   /* Subchannel status word(XA)*/
         SCSW    pciscsw;                /* PCI subchannel status word*/
         SCSW    attnscsw;               /* ATTNsubchannel status word*/
-        BYTE    csw[8];                 /* Channel status word(S/370)*/
-        BYTE    pcicsw[8];              /* PCI channel status word   */
-        BYTE    attncsw[8];             /* ATTN channel status word  */
         ESW     esw;                    /* Extended status word      */
         BYTE    ecw[32];                /* Extended control word     */
         U32     numsense;               /* Number of sense bytes     */
@@ -1147,10 +1159,13 @@ struct DEVBLK {                         /* Device configuration block*/
 
         /*  control flags...                                         */
         unsigned int                    /* Flags                     */
+                s370start:1,            /* 1=S/370 non-BMX behavior  */
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
+#ifdef OPTION_SYNCIO
                 syncio:2,               /* 1=Synchronous I/Os allowed*/
+#endif // OPTION_SYNCIO
                 shared:1,               /* 1=Device is shareable     */
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
@@ -1176,11 +1191,18 @@ struct DEVBLK {                         /* Device configuration block*/
                 pcipending:1,           /* 1=PCI interrupt pending   */
                 attnpending:1,          /* 1=ATTN interrupt pending  */
                 startpending:1,         /* 1=startio pending         */
-                resumesuspended:1;      /* 1=Hresuming suspended dev */
-#define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
+                resumesuspended:1,      /* 1=Hresuming suspended dev */
+                tschpending:1;          /* 1=TSCH required to clear  */
+                                        /*   pending interrupt       */
+#define IOPENDING(_dev)         \
+        ((_dev)->pending     || \
+         (_dev)->pcipending  || \
+         (_dev)->attnpending || \
+         (_dev)->tschpending)
 #define INITIAL_POWERON_370() \
     ( dev->crwpending && ARCH_370 == sysblk.arch_mode )
         int     crwpending;             /* 1=CRW pending             */
+#ifdef OPTION_SYNCIO
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
 
@@ -1189,6 +1211,7 @@ struct DEVBLK {                         /* Device configuration block*/
         U32     syncio_addr;            /* Synchronous i/o ccw addr  */
         U64     syncios;                /* Number synchronous I/Os   */
         U64     asyncios;               /* Number asynchronous I/Os  */
+#endif // OPTION_SYNCIO
 
         /*  Execute Channel Pgm Counts */
         U64     excps;                  /* Number of channel pgms Ex */
@@ -1811,8 +1834,10 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_cachemisses;    /* Cache misses       */
         U64              stats_readaheads;     /* Readaheads         */
         U64              stats_readaheadmisses;/* Readahead misses   */
+#ifdef OPTION_SYNCIO
         U64              stats_syncios;        /* Synchronous i/os   */
         U64              stats_synciomisses;   /* Missed syncios     */
+#endif // OPTION_SYNCIO
         U64              stats_iowaits;        /* Waits for i/o      */
         U64              stats_cachewaits;     /* Waits for cache    */
         U64              stats_stresswrites;   /* Writes under stress*/

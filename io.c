@@ -50,17 +50,19 @@
 #include "opcode.h"
 
 #include "inline.h"
+#include "chsc.h"
 
 #undef PTIO
 #undef PTIO_CH
+
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
- #define PTIO(_class, _name) \
-  PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)
+ #define PTIO(    _class, _name      ) \
+  PTT( PTT_CL_ ## _class, _name, regs->GR_L(1), (U32)(effective_addr2 & 0xffffffff), regs->psw.IA_L )
  #define PTIO_CH( _class, _name, _op ) \
   PTT( PTT_CL_ ## _class, _name, _op, (U32)(effective_addr2 & 0xffffffff), regs->psw.IA_L )
 #else
- #define PTIO(_class, _name) \
-  PTT(PTT_CL_ ## _class,_name,(U32)(effective_addr2 & 0xffffffff),0,regs->psw.IA_L)
+ #define PTIO(    _class, _name      ) \
+  PTT( PTT_CL_ ## _class, _name, (U32)(effective_addr2 & 0xffffffff), 0, regs->psw.IA_L )
  #define PTIO_CH( _class, _name, _op ) \
   PTT( PTT_CL_ ## _class, _name, _op, 0, regs->psw.IA_L )
 #endif
@@ -156,8 +158,8 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     /* Perform halt subchannel and set condition code */
-    regs->psw.cc = halt_subchan (regs, dev);
-
+    if ((regs->psw.cc = halt_subchan (regs, dev)) != 0)
+        PTIO(ERR,"*HSCH");
 }
 
 
@@ -324,9 +326,9 @@ BYTE    chpid;
 
     chpid = regs->GR_L(1) & 0xFF;
 
-    if( !(regs->psw.cc = chp_reset(regs, chpid)) )
+    if((regs->psw.cc = chp_reset(chpid, 1)) != 0)
+        PTIO(ERR,"*RCHP");
         RETURN_INTCHECK(regs);
-
 }
 
 
@@ -371,7 +373,8 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     /* Perform resume subchannel and set condition code */
-    regs->psw.cc = resume_subchan (regs, dev);
+    if ((regs->psw.cc = resume_subchan (regs, dev)) != 0)
+        PTIO(ERR,"*RSCH");
 
     regs->siocount++;
 }
@@ -520,7 +523,7 @@ ORB     orb;                            /* Operation request block   */
 
 #if !defined(FEATURE_MIDAW)                                     /*@MW*/
     /* Program check if modified indirect data addressing requested */
-    if (orb.flag7 & ORB7_D)                                     
+    if (orb.flag7 & ORB7_D)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 #endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
 
@@ -561,8 +564,10 @@ ORB     orb;                            /* Operation request block   */
     regs->siocount++;
 
     /* Set the last path used mask */
-    if (regs->psw.cc == 0) dev->pmcw.lpum = 0x80;
-
+    if (regs->psw.cc == 0)
+        dev->pmcw.lpum = 0x80;
+    else
+        PTIO(ERR,"*SSCH");
 }
 
 
@@ -576,7 +581,25 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 BYTE    chpid;                          /* CHPID associated w/lpum   */
 BYTE    work[32];                       /* Work area                 */
-int     i;
+static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
+/*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  */
+    8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, /* 0x00 */
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* 0x10 */
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x20 */
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0x30 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x40 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x50 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x60 */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x70 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x80 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x90 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xA0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xB0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xC0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xD0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xE0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xF0 */
+};
 
     S(inst, regs, b2, effective_addr2);
 
@@ -604,19 +627,13 @@ int     i;
             && (dev->pmcw.flag5 & PMCW5_E)         /* Device enabled */
             && (dev->scsw.flag3 & SCSW3_AC_SCHAC)  /* Subchan active */
             && (dev->scsw.flag3 & SCSW3_AC_DEVAC)  /* Device active  */
-        )
+           )
         {
-            for (i = 0; i < 8; i++)
-            {
-                if((0x80 >> i) & dev->pmcw.lpum)
-                {
-                    /* Retrieve active CHPID */
-                    chpid = dev->pmcw.chpid[i];
+            /* Retrieve active CHPID */
+            chpid = dev->pmcw.chpid[msbn[dev->pmcw.lpum]];
 
-                    /* Update channel path status work area */
-                    work[chpid / 8] |= 0x80 >> (chpid % 8);
-                }
-            }
+            /* Update channel path status work area */
+            work[chpid/8] |= 0x80 >> (chpid % 8);
         }
 
         /* Release the device lock */
@@ -635,7 +652,7 @@ DEF_INST(store_channel_report_word)
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* Integer work area         */
+U32     crw;                            /* Channel Report Word       */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -652,14 +669,18 @@ U32     n;                              /* Integer work area         */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
 
     /* Obtain any pending channel report */
-    n = channel_report(regs);
+    crw = get_next_channel_report_word(regs);
+
+    PTIO_CH( IO, "STCRW crw", crw );
 
     /* Store channel report word at operand address */
-    ARCH_DEP(vstore4) ( n, effective_addr2, b2, regs );
+    ARCH_DEP(vstore4) ( crw, effective_addr2, b2, regs );
 
     /* Indicate if channel report or zeros were stored */
-    regs->psw.cc = (n == 0) ? 1 : 0;
+    regs->psw.cc = (crw == 0) ? 1 : 0;
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*STCRW");
 }
 
 
@@ -829,6 +850,9 @@ RADR    pfx;                            /* Prefix                    */
     }
 
     regs->psw.cc = (icode == 0) ? 0 : 1;
+
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*TPI");
 }
 
 
@@ -892,6 +916,8 @@ int     cc;                             /* Condition Code            */
 
     regs->psw.cc = cc;
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*TSCH");
 }
 
 
@@ -939,6 +965,8 @@ DEVBLK *dev;                            /* -> device block           */
     /* Perform cancel subchannel and set condition code */
     regs->psw.cc = cancel_subchan (regs, dev);
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*XSCH");
 }
 #endif /*defined(FEATURE_CANCEL_IO_FACILITY)*/
 #endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
@@ -949,17 +977,18 @@ DEVBLK *dev;                            /* -> device block           */
 /*-------------------------------------------------------------------*/
 /* 9C00 SIO   - Start I/O                                        [S] */
 /* 9C01 SIOF  - Start I/O Fast Release                           [S] */
-/* 9C02 RIO   - Resume I/O   -   ZZ INCOMPLETE                   [S] */
+/* 9C02 RIO   - Resume I/O                                       [S] */
 /*-------------------------------------------------------------------*/
 DEF_INST(start_io)
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-PSA    *psa;                            /* -> prefixed storage area  */
 DEVBLK *dev;                            /* -> device block for SIO   */
+PSA    *psa;                            /* -> prefixed storage area  */
 ORB     orb;                            /* Operation request blk @IZW*/
 VADR    ccwaddr;                        /* CCW address for start I/O */
-BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
+BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
+                                        /*      5-7=zero             */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -980,30 +1009,56 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     PTIO(IO,"SIO");
 
     /* Locate the device block */
-    if(regs->chanset == 0xFFFF
-      || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
+    if(regs->chanset == 0xFFFF ||
+       !(dev = find_device_by_devnum (regs->chanset,effective_addr2)))
     {
         PTIO(ERR,"*SIO");
         regs->psw.cc = 3;
         return;
     }
 
-    /* Fetch key and CCW address from the CAW at PSA+X'48' */
-    psa = (PSA*)(regs->mainstor + regs->PX);
-    ccwkey = psa->caw[0] & 0xF0;
-    ccwaddr = (psa->caw[1] << 16) | (psa->caw[2] << 8)
-                    | psa->caw[3];
+    /* If CSW pending, drain interrupt and present the CSW */
+    if (IOPENDING(dev) &&
+        testio(regs, dev, inst[1]) == 1)
+        regs->psw.cc = 1;
 
-    /* Build the I/O operation request block */                /*@IZW*/
-    memset (&orb, 0, sizeof(ORB));                                 /*@IZW*/
-    orb.flag4 = ccwkey & ORB4_KEY;                             /*@IZW*/
-    STORE_FW(orb.ccwaddr,ccwaddr);                             /*@IZW*/
+    /* Else, if RIO, resume the subchannel operation */
+    else if (inst[1] == 0x02)
+        regs->psw.cc = resume_subchan (regs, dev);
 
-    /* Start the channel program and set the condition code */
-    regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);        /*@IZW*/
+    /* Otherwise, start the channel program and set the condition code
+     */
+    else
+    {
+        /* Fetch key and CCW address from the CAW at PSA+X'48' */
+        psa = (PSA*)(regs->mainstor + regs->PX);
+        ccwkey = psa->caw[0] & 0xF0;
+        ccwaddr = (psa->caw[1] << 16) |
+                  (psa->caw[2] <<  8) |
+                   psa->caw[3];
+
+        /* Build the I/O operation request block */
+        memset (&orb, 0, sizeof(ORB));
+        orb.flag4 = ccwkey & (ORB4_KEY | ORB4_S);
+        STORE_FW(orb.ccwaddr,ccwaddr);
+
+        /* Indicate if CPU is to begin execution in S/360 or S/370 SIO
+         * mode, not releasing the CPU until the first CCW has been
+         * validated
+         */
+        dev->s370start = (inst[1] == 0x00 ||
+                          (inst[1] == 0x01 &&
+                           (dev->chptype[0] == CHP_TYPE_UNDEF ||
+                            dev->chptype[0] == CHP_TYPE_BYTE)));
+
+        /* Go start the I/O operation */
+        regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);
+    }
+
+    if (regs->psw.cc > 1)
+        PTIO(ERR,"*SIO");
 
     regs->siocount++;
-
 }
 
 
@@ -1036,13 +1091,16 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     /* Test the device and set the condition code */
     regs->psw.cc = testio (regs, dev, inst[1]);
+
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*TIO");
+
     /* Yield time slice so that device handler may get some time */
     /* to possibly complete an I/O - to prevent a TIO Busy Loop  */
     if(regs->psw.cc == 2)
     {
         sched_yield();
     }
-
 }
 
 
@@ -1076,6 +1134,8 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     /* Test the device and set the condition code */
     regs->psw.cc = haltio (regs, dev, inst[1]);
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*HIO");
 }
 
 
@@ -1117,6 +1177,8 @@ U16     tch_ctl;
     }
 #endif /*defined(_FEATURE_SIE)*/
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*TCH");
 }
 
 
@@ -1140,6 +1202,8 @@ VADR    effective_addr2;                /* Effective address         */
     regs->psw.cc =
         stchan_id (regs, effective_addr2 & 0xFF00);
 
+    if (regs->psw.cc != 0)
+        PTIO(ERR,"*STIDC");
 }
 
 
@@ -1259,7 +1323,10 @@ int     i;
                 regs->psw.cc = 0;
             }
             else
+            {
                 regs->psw.cc = 1;
+                PTIO(ERR,"*DISCS");
+            }
             RELEASE_INTLOCK(regs);
             return;
         }
@@ -1270,7 +1337,6 @@ int     i;
     /* The channel set is not connected, no operation
        is performed */
     regs->psw.cc = 0;
-
 }
 #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 

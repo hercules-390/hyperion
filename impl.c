@@ -649,6 +649,11 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.sigplock);
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
+    initialize_lock (&sysblk.crwlock);
+#if !defined(OPTION_FISHIO)
+    initialize_lock (&sysblk.ioqlock);
+    initialize_condition (&sysblk.ioqcond);
+#endif /*defined(OPTION_FISHIO)*/
 #if defined(OPTION_CMDSER)
     initialize_lock      (&sysblk.cmdlock);
     initialize_condition (&sysblk.cmdcond);
@@ -673,12 +678,6 @@ int     dll_count;                      /* index into array          */
     }
     initialize_condition (&sysblk.sync_cond);
     initialize_condition (&sysblk.sync_bc_cond);
-
-#if !defined(OPTION_FISHIO)
-    initialize_lock (&sysblk.ioqlock);
-    initialize_condition (&sysblk.ioqcond);
-#endif
-
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end

@@ -1081,19 +1081,19 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             MSGBUF(buf, "reserved %s", sysid);
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }
-        if (dev->suspended)
+        if (dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "suspended" );
         }
-        if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
+        if ((dev->scsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "I/O pending" );
         }
-        if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
+        if ((dev->pciscsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "PCI pending" );
         }
-        if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
+        if ((dev->attnscsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
         }
@@ -1117,7 +1117,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 ,io->pending      ? " normal"  : ""
                 ,io->pcipending   ? " PCI"     : ""
                 ,io->attnpending  ? " ATTN"    : ""
-                ,!IOPENDING(io)   ? " unknown" : ""
+                ,!(io->pending || io->pcipending || io->attnpending) ?
+                                    " unknown" : ""
                 ,io->priority );
     }
 

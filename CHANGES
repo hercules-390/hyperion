@@ -1,3 +1,56 @@
+02 May 2013 Channel Cleanup - Mark L. Gaubatz
+            * Terminate chain after 256 backward TIC operations.
+            * Reset immediate CCW flag at end of CCW processing
+            * Correctly issue HHC01331I for Clear Subchannel rather than
+              HHC01330I
+            * Correct prefetch termination
+            * Prefetch now handles > 64K I/O buffer requests
+            * Corrected numerous prefetch issues for chain data
+            * Read backwards data not copied to memory properly as
+              observed by the CPU
+            * Fix numerous incorrect length errors
+            * Correct ordering of channel CCW checking and presentation
+              order of errors and status
+            * Generate channel data check on channel buffer overflow
+              rather than segfault or stack smash
+            * Handle end-of-real-storage properly
+            * Fixed several segfaults on boundary and overloaded
+              conditions
+            * Free CPU threads from I/O tasks sooner
+            * Updated I/O thread creation and management
+            * For standard I/O management (non-FISHIO):
+              - DEVTWAIT 0 now keeps waiting threads for two seconds
+                past wait conditions; also, if the number of device
+                threads created exceeds three, a minimum of four device
+                threads will be maintained to prevent excessive device
+                thread deletion and near-immediate creation of new
+                device threads in a "yo-yo" effect, unless the thread
+                has been waiting for two seconds past waiting for new
+                work.
+              - Subsequent I/O threads past the first I/O thread are now
+                created by the device thread on dispatch when queued I/O
+                exceeds waiting device threads.
+              - Total I/Os queued in message HHC02242I now means the
+                current number of queued but not dispatched I/O
+                requests, rather than the cumulative total of I/O queue
+                misses (no available device thread)
+              - Device thread waiting now set on thread creation
+            * Fixed segfault and hangs when changing to DEVTWAIT -1
+              under heavy I/O load
+            * I/O priority changes now done while not locked due to
+              various host system management errors, including stack
+              management deadlocks
+            * Default subchannels to emulated I/O type rather than
+              undefined for architecture modes XA and above
+            * Fixed subchannel hang due to a prior Cancel Subchannel
+              returning the wrong internal status
+            * Derive S/370 channel types for STIDC from device channel
+              path type
+            * Set SCSW deferred condition code on entering CCW execution
+            * Expand and reformat DS (Display Subchannel) command
+02 May 2013 Make syncio support a compilation option via OPTION_SYNCIO;
+            syncio on DASD statement ignored when syncio support not
+            present - Fish
 05 Jan 2013 Fix 3270 binary xfer IAC bug - Dr. Hans-Walter Latz [hans.latz@yahoo.com] by Fish
 04 Jan 2013 Enable TCP_NODELAY for 3270s - Dr. Hans-Walter Latz [hans.latz@yahoo.com] by Fish
 12 Dec 2012 Enhanced CPU timer accuracy; CPU timer now based on CPU
