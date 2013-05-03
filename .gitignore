@@ -4,7 +4,6 @@
 /.DS_Store
 /.deps
 /.libs
-/Hercules_VS2010.sdf
 /Makefile
 /Makefile.in
 /aclocal.m4
@@ -341,3 +340,18 @@ cmpsctst
 # /util/
 /util/Makefile.in
 /util/Makefile
+
+# Visual Studio
+/*.aps
+/*.idc
+/*.pdb
+/*.psess
+/* BuildLog.htm
+/Hercules_VS*.opensdf
+/Hercules_VS*.sdf
+/Hercules_VS*.suo
+/msvc.*
+
+# Editors
+/*.aus
+/*.bak
