@@ -57,8 +57,12 @@
 /* Internal function definitions                                     */
 /*-------------------------------------------------------------------*/
 
-              int   test_subchan_locked (REGS*, DEVBLK*, IRB*, IOINT**, SCSW**);
-static INLINE void  subchannel_interrupt_queue_cleanup(DEVBLK*);
+void                call_execute_ccw_chain (int arch_mode, void* pDevBlk);
+DLL_EXPORT  void*   device_thread (void *arg);
+static int          schedule_ioq (REGS* regs, DEVBLK* dev);
+static INLINE void  subchannel_interrupt_queue_cleanup (DEVBLK*);
+int                 test_subchan_locked (REGS*, DEVBLK*, IRB*, IOINT**, SCSW**);
+
 
 #if !defined(CHANNEL_INLINES)
 #define CHANNEL_INLINES
@@ -227,10 +231,6 @@ typedef struct                          /* Prefetch data structure   */
 } PREFETCH;
 
 #endif
-
-            void    call_execute_ccw_chain ( int arch_mode, void* pDevBlk );
-DLL_EXPORT  void *  device_thread ( void *arg );
-            int     schedule_ioq ( REGS* regs, DEVBLK* dev );
 
 #ifdef OPTION_IODELAY_KLUDGE
 #define IODELAY(_dev) \
