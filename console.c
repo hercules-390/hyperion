@@ -863,7 +863,7 @@ int     eor = 0;                        /* 1=End of record received  */
         FD_ZERO( &readset );
         FD_SET( dev->fd, &readset );
 
-        while ( (rc = select ( dev->fd+1, &readset, NULL, NULL, &nbpoll )) < 0
+        while ( (rc = select ( dev->fd+1, &readset, NULL, NULL, (void*)&nbpoll )) < 0
             && HSO_EINTR == HSO_errno )
             ;   /* NOP (keep retrying if EINTR) */
 
@@ -2064,7 +2064,7 @@ BYTE                   unitstat;        /* Status after receive data */
          * operations of "hardware" controllers providing telnet
          * services).
          */
-        rc = select ( maxfd+1, &readset, NULL, NULL, &tv100ms );
+        rc = select ( maxfd+1, &readset, NULL, NULL, (void*)&tv100ms );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
@@ -3768,26 +3768,24 @@ BYTE    stat;                           /* Unit status               */
 /*-------------------------------------------------------------------*/
 /* Redrive console select                                            */
 /*-------------------------------------------------------------------*/
-static int
+static void
 redrive_console_select ( DEVBLK *dev )
 {
     UNREFERENCED(dev);
 
     SIGNAL_CONSOLE_THREAD();
-    return (0);
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Redrive clear 3270 read buffer                                    */
 /*-------------------------------------------------------------------*/
-static int
+static void
 redrive_clear3270_read ( DEVBLK *dev )
 {
     dev->readpending = 0;
     dev->rlen3270 = 0;
     SIGNAL_CONSOLE_THREAD();
-    return (0);
 }
 
 
