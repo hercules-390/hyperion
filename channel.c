@@ -364,11 +364,22 @@ AIPSX (const SCSW* scsw)
 static INLINE void
 queue_io_interrupt_and_update_status_locked(DEVBLK* dev)
 {
-    /* Queue interrupt and update status */
+    /* Get the I/O interrupt queue lock */
     obtain_lock(&sysblk.iointqlk);
-    QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+
+    /* Ensure the interrupt is queued/dequeued per pending flag */
+    if (dev->scsw.flag3 & SCSW3_SC_PEND)
+        QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+    else
+        DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+
+    /* Perform cleanup for DEVBLK flags being deprecated */
     subchannel_interrupt_queue_cleanup(dev);
+
+    /* Update interrupts */
     UPDATE_IC_IOPENDING_QLOCKED();
+
+    /* Release the I/O interrupt queue lock */
     release_lock(&sysblk.iointqlk);
 
     /* Wake up any waiters if the device isn't active or reserved */
@@ -1627,15 +1638,8 @@ perform_halt_and_release_lock (DEVBLK *dev)
             signal_thread(dev->tid, SIGUSR2);
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-//      dev->scsw.flag3 &= ~(SCSW3_AC_SCHAC | SCSW3_AC_DEVAC);
-
-        /* Set ending status
-         *
-         * FIXME: Incomplete cleanup if suspended.
-         */
+        /* Mark pending interrupt */
         dev->scsw.flag3 |= SCSW3_SC_PEND;
-//      dev->scsw.unitstat |= CSW_CE | CSW_DE;
-
     }
 
     /* Trace HALT */
@@ -2345,10 +2349,11 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 static int
 schedule_ioq (REGS *regs, DEVBLK *dev)
 {
-    int result;
+    int result = 2;                     /* 0=Thread scheduled        */
+                                        /* 2=Unable to schedule      */
 
 #ifdef OPTION_SYNCIO
-int     syncio;                         /* 1=Do synchronous I/O      */
+    int syncio;                         /* 1=Do synchronous I/O      */
 
     /* Schedule the I/O.  The various methods are a direct
      * correlation to the interest in the subject:
@@ -2968,7 +2973,7 @@ do {                                                                   \
         ps = prefetch->seq - 1;
 
     /* Channel Data Check if invalid I/O buffer */
-    if ((u_int)iobufend < 131072    ||  /* Low host OS storage reference */
+    if ((size_t)iobufend < 131072   ||  /* Low host OS storage reference */
         iobuf < iobufstart          ||
         iobuf > iobufend)
     {
@@ -4578,28 +4583,28 @@ execute_halt:
         /*  p. 15-24, Data Address                                   */
         /*  p. 15-25, Count                                          */
         /*  pp. 15-25 -- 15-27, Designation of Storage Area          */
-        if (count &&
-            (!(flags & CCW_FLAGS_SKIP)) &&
-            (((flags & CCW_FLAGS_IDA)   &&
-              ((addr & 0x03) ||
-               CHADDRCHK(addr, dev)))                       ||
+        if ((count &&
+             (!(flags & CCW_FLAGS_SKIP)) &&
+             (((flags & CCW_FLAGS_IDA)   &&
+               ((addr & 0x03) ||
+                CHADDRCHK(addr, dev)))                      ||
 #if defined(FEATURE_MIDAW)
-             ((flags & CCW_FLAGS_MIDAW) &&
-              ((addr & 0x0F) ||
-               CHADDRCHK(addr, dev)))                       ||
+              ((flags & CCW_FLAGS_MIDAW) &&
+               ((addr & 0x0F) ||
+                CHADDRCHK(addr, dev)))                      ||
 #endif /*defined(FEATURE_MIDAW)*/
-             (!(flags & (CCW_FLAGS_IDA | CCW_FLAGS_MIDAW)) &&
-              ((ccwfmt == 0 &&
-                ((addr & ~0x00FFFFFF)                       ||
-                 ((addr + (count - 1)) & ~0x00FFFFFF)       ||
-                 CHADDRCHK((addr + (count - 1)), dev)))     ||
+              (!(flags & (CCW_FLAGS_IDA | CCW_FLAGS_MIDAW))     &&
+               ((ccwfmt == 0 &&
+                 ((addr & ~0x00FFFFFF)                      ||
+                  ((addr + (count - 1)) & ~0x00FFFFFF)      ||
+                  CHADDRCHK((addr + (count - 1)), dev)))    ||
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
-               (ccwfmt == 1 &&
-                ((addr & ~0x7FFFFFFF)                       ||
-                 ((addr + count - 1) & ~0x7FFFFFFF)         ||
-                 CHADDRCHK((addr + (count - 1)), dev)))     ||
+                (ccwfmt == 1 &&
+                 ((addr & ~0x7FFFFFFF)                      ||
+                  ((addr + count - 1) & ~0x7FFFFFFF)        ||
+                  CHADDRCHK((addr + (count - 1)), dev)))        ||
 #endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
-                CHADDRCHK(addr, dev))))
+                 CHADDRCHK(addr, dev)))))
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
          || (!count &&
              (ccwfmt == 1 && (flags & CCW_FLAGS_CD)))
