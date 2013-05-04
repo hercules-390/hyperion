@@ -499,8 +499,8 @@ void set_cpu_timers(REGS *hostregs, const TOD host_timer, REGS *regs, const TOD 
 void save_cpu_timers(REGS *hostregs, TOD *host_timer, REGS *regs, TOD *timer)
 {
     *host_timer = cpu_timer(hostregs);
-    *timer = ((size_t)regs == (size_t)hostregs) ?
-              *host_timer : cpu_timer_SIE(regs);
+    *timer = (regs == hostregs) ?
+              *host_timer : (TOD)cpu_timer_SIE(regs);
 }
 
 
