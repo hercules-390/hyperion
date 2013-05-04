@@ -341,6 +341,9 @@ cmpsctst
 /util/Makefile.in
 /util/Makefile
 
+# Eclipse
+/.metadata
+
 # Visual Studio
 /*.aps
 /*.idc
@@ -355,3 +358,4 @@ cmpsctst
 # Editors
 /*.aus
 /*.bak
+/*~
