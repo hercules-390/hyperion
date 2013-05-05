@@ -488,7 +488,6 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
                                           "Unit Status      ",
                                           "Subchannel Status"};
 
-    char devstr[128] = {0};      /* "0:0000 D/T0000" */
     struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
