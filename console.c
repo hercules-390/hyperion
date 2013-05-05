@@ -265,6 +265,40 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 
 #undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
 
+#if defined(_MSVC_)
+/* FIXME: pselect is required to eliminate a documented timing hole with
+ *        select that can yield a deadlock. This version somewhat
+ *        emulates pselect locally for Windows, but does not use
+ *        sigmask.
+ */
+
+typedef unsigned long sigset_t;
+
+static INLINE
+int pselect(int nfds, fd_set *readfds, fd_set *writefds,
+            fd_set *exceptfds, const struct timespec *timeout,
+            const sigset_t *sigmask)
+{
+    struct timeval  select_timeout;
+    int             result;
+
+    UNREFERENCED(sigmask);
+
+    /* Convert timeout value, if specified */
+    if (timeout != NULL)
+    {
+        select_timeout.tv_sec  = timeout->tv_sec;
+        select_timeout.tv_usec = timeout->tv_nsec / 1000;
+        result = select (nfds, readfds, writefds, exceptfds,
+                         &select_timeout);
+    }
+    else
+        result = select (nfds, readfds, writefds, exceptfds, NULL);
+
+    return (result);
+}
+#endif /*defined(_MSVC_)*/
+
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO TRACE THE CONTENTS OF AN ASCII MESSAGE PACKET       */
 /*-------------------------------------------------------------------*/
@@ -840,6 +874,7 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
 static BYTE
 recv_3270_data (DEVBLK *dev)
 {
+static const struct timespec nbpoll = {0, 0};   /* Non-blocking poll */
 int     rc;                             /* Return code               */
 int     eor = 0;                        /* 1=End of record received  */
 
@@ -857,13 +892,27 @@ int     eor = 0;                        /* 1=End of record received  */
     */
     TNSDEBUG1("console: DBG031: verifying data is available...\n");
     {
-        static const struct timeval nbpoll = {0,0}; /* (non-blocking poll) */
         fd_set readset;
 
         FD_ZERO( &readset );
         FD_SET( dev->fd, &readset );
 
-        while ( (rc = select ( dev->fd+1, &readset, NULL, NULL, (void*)&nbpoll )) < 0
+        /* Note: This select statement was updated to use the posix
+         *       pselect call to address several issues, including:
+         *       1) Time values, as used in the console.c select
+         *          statements are constants.
+         *       2) While debugging with posix, the need arose to manage
+         *          interrupts for temporary debug code, and to avoid
+         *          both real and induced deadlocks with other tasks
+         *          (including the debuggers).
+         *       For clarity, and rather than making additional botched
+         *       attempts to debug with pselect and release the final
+         *       code using just select, pselect now remains with a
+         *       NULL interrupt mask, and is functionally equivalent
+         *       to select.
+         */
+        while ( (rc = pselect ( dev->fd+1, &readset, NULL, NULL,
+                                &nbpoll, NULL )) < 0
             && HSO_EINTR == HSO_errno )
             ;   /* NOP (keep retrying if EINTR) */
 
@@ -1860,7 +1909,7 @@ static int     console_cnslcnt  = 0;    /* count of connected terms  */
 static void *
 console_connection_handler (void *arg)
 {
-static const struct timeval tv100ms = {0, 100000};  /* Slow poll     */
+static const struct timespec tv_100ms = {0, 100000000}; /* Slow poll */
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
 int                    csock;           /* Socket for conversation   */
@@ -2063,8 +2112,22 @@ BYTE                   unitstat;        /* Status after receive data */
          * to ensure no hang occurs (this is consistent with the
          * operations of "hardware" controllers providing telnet
          * services).
+         *
+         * Note: This select statement was updated to use the posix
+         *       pselect call to address several issues, including:
+         *       1) Time values, as used in the console.c select
+         *          statements are constants.
+         *       2) While debugging with posix, the need arose to manage
+         *          interrupts for temporary debug code, and to avoid
+         *          both real and induced deadlocks with other tasks
+         *          (including the debuggers).
+         *       For clarity, and rather than making additional botched
+         *       attempts to debug with pselect and release the final
+         *       code using just select, pselect now remains with a
+         *       NULL interrupt mask, and is functionally equivalent
+         *       to select.
          */
-        rc = select ( maxfd+1, &readset, NULL, NULL, (void*)&tv100ms );
+        rc = pselect ( maxfd+1, &readset, NULL, NULL, &tv_100ms, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
