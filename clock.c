@@ -599,7 +599,7 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
         /* Place CPU stamp into clock value for Standard and Extended
          * formats (raw or fast requests fall through)
          */
-        if (regs)
+        if (regs && format >= ETOD_standard)
         {
             register U64    cpuad;
             register U64    amask;
