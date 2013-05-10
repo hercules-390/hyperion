@@ -932,7 +932,9 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
         /* Issue TEST SUBCHANNEL */
         cc = test_subchan_locked (regs, dev, &irb, &ioint, &scsw);
 
-        if (cc == 0)    /* Status pending */
+        if (cc)         /* Status incomplete */
+            cc = 2;
+        else            /* Status pending */
         {
             /* Obtain I/O interrupt queue lock */
             obtain_lock(&sysblk.iointqlk);
@@ -953,8 +955,6 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
             /* Release I/O interrupt queue lock */
             release_lock(&sysblk.iointqlk);
         }
-        else if (cc == 1)
-            cc = 0;
     }
     else
         cc = 0;
@@ -1277,6 +1277,10 @@ test_subchan_clear(DEVBLK* dev, SCSW* scsw)
 /*      The return value is the condition code for the TSCH          */
 /*      instruction:  0=status was pending and is now cleared,       */
 /*      1=no status was pending.  The IRB is updated in both cases.  */
+/* Locks held on entry                                               */
+/*      INTLOCK         Held by caller                               */
+/*      dev->lock       Held by caller                               */
+/*      iointqlk        Held by caller                               */
 /*-------------------------------------------------------------------*/
 int
 test_subchan_locked (REGS* regs, DEVBLK* dev,
@@ -1311,22 +1315,7 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
         *scsw  = &dev->attnscsw;
     }
 
-#if defined(_FEATURE_IO_ASSIST)
-    /* For I/O assisted devices we must intercept if type B
-       status is present on the subchannel */
-    if (SIE_MODE(regs)  &&
-        (regs->siebk->tschds & (*scsw)->unitstat  ||
-         regs->siebk->tschsc & (*scsw)->chanstat))
-    {
-        dev->pmcw.flag27 &= ~PMCW27_I;
-        release_lock (&dev->lock);
-        RELEASE_INTLOCK(regs);
-        longjmp(regs->progjmp,SIE_INTERCEPT_IOINST);
-    }
-#endif
-
     /* Ensure status removed from interrupt queue */
-    obtain_lock(&sysblk.iointqlk);
     DEQUEUE_IO_INTERRUPT_QLOCKED(*ioint);
 
     /* Copy the PCI SCSW to the IRB */
@@ -1357,7 +1346,6 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
 
     /* Update pending interrupts */
     UPDATE_IC_IOPENDING_QLOCKED();
-    release_lock(&sysblk.iointqlk);
 
     /* Display the subchannel status word */
     if (dev->ccwtrace || dev->ccwstep)
@@ -1395,20 +1383,38 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_MODE(regs)
-      && (regs->siebk->zone != dev->pmcw.zone
-        || !(dev->pmcw.flag27 & PMCW27_I)))
+    if(SIE_MODE(regs))
     {
-        release_lock (&dev->lock);
-        RELEASE_INTLOCK(regs);
-        longjmp(regs->progjmp,SIE_INTERCEPT_INST);
+        if (regs->siebk->zone != dev->pmcw.zone
+            || !(dev->pmcw.flag27 & PMCW27_I))
+        {
+            release_lock (&dev->lock);
+            RELEASE_INTLOCK(regs);
+            longjmp(regs->progjmp,SIE_INTERCEPT_INST);
+        }
+
+        /* For I/O assisted devices we must intercept if type B
+           status is present on the subchannel */
+        if (dev->pciscsw.flag3 & SCSW3_SC_PEND &&
+            (regs->siebk->tschds & dev->pciscsw.unitstat  ||
+             regs->siebk->tschsc & dev->pciscsw.chanstat))
+        {
+            dev->pmcw.flag27 &= ~PMCW27_I;
+            release_lock (&dev->lock);
+            RELEASE_INTLOCK(regs);
+            longjmp(regs->progjmp,SIE_INTERCEPT_IOINST);
+        }
     }
 #endif
+
+
+    obtain_lock(&sysblk.iointqlk);
 
     /* Perform core of TEST SUBCHANNEL work */
     cc = test_subchan_locked (regs, dev, irb, &ioint, &scsw);
 
     /* Release remaining locks */
+    release_lock(&sysblk.iointqlk);
     release_lock(&dev->lock);
     RELEASE_INTLOCK(regs);
 
