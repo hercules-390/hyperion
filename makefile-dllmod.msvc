@@ -52,6 +52,7 @@ rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=
 !ENDIF
 
 !IF EXIST($(HQA_DIR)\HQA.msvc)
+!MESSAGE NOTE: "HQA.msvc" will !INCLUDED from "$(HQA_DIR)"
 !INCLUDE  $(HQA_DIR)\HQA.msvc
 !ENDIF
 

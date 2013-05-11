@@ -27,13 +27,17 @@
 # ---------------------------------------------------------------------------
 
 !IFDEF HQA_DIR
-!IF "$(HQA_DIR)" == "NONE"
-!UNDEF HQA_DIR
-!ELSEIF !EXIST($(HQA_DIR))
-!ERROR Directory "$(HQA_DIR)" does not exist. Check HQA_DIR.
-!ELSEIF !EXIST($(HQA_DIR)\hqa.h)
-!ERROR Header "$(HQA_DIR)\hqa.h" not found.  Check HQA_DIR.
-!ELSE
-!MESSAGE    ** QA BUILD **    "hqa.h" will be included from "$(HQA_DIR)"
-!ENDIF
+!  IF "$(HQA_DIR)" == "NONE"
+!    UNDEF HQA_DIR
+!  ELSEIF !EXIST($(HQA_DIR))
+!    ERROR Directory "$(HQA_DIR)" does not exist. Check HQA_DIR.
+!  ELSE
+!    IF !EXIST($(HQA_DIR)\hqa.h)
+!      MESSAGE WARNING: HQA_DIR defined but "hqa.h" not found in "$(HQA_DIR)"
+!    ELSE
+HASH=^#
+!      MESSAGE NOTE: "hqa.h" will be $(HASH)included from "$(HQA_DIR)"
+!      UNDEF HASH
+!    ENDIF
+!  ENDIF
 !ENDIF
