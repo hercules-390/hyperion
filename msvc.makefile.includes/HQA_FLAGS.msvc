@@ -8,7 +8,6 @@
 #
 # ***************************************************************************
 
-!IFDEF HQA_DIR
-HQA_INC = $(HQA_DIR)
+!IFDEF HQA_INC
 cflags  = $(cflags) /D HAVE_HQA_H /I"$(HQA_INC)"
 !ENDIF

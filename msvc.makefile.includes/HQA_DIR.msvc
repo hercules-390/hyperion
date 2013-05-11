@@ -26,6 +26,8 @@
 #
 # ---------------------------------------------------------------------------
 
+!UNDEF HQA_INC
+
 !IFDEF HQA_DIR
 !  IF "$(HQA_DIR)" == "NONE"
 !    UNDEF HQA_DIR
@@ -35,9 +37,9 @@
 !    IF !EXIST($(HQA_DIR)\hqa.h)
 !      MESSAGE WARNING: HQA_DIR defined but "hqa.h" not found in "$(HQA_DIR)"
 !    ELSE
+HQA_INC = $(HQA_DIR)
 HASH=^#
 !      MESSAGE NOTE: "hqa.h" will be $(HASH)included from "$(HQA_DIR)"
-!      UNDEF HASH
 !    ENDIF
 !  ENDIF
 !ENDIF
