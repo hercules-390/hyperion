@@ -428,4 +428,58 @@ store_scsw_as_csw(const REGS* regs, const SCSW* scsw)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* Synchronize CPUS                                                  */
+/*                                                                   */
+/* Locks                                                             */
+/*      INTLOCK(regs)                                                */
+/*-------------------------------------------------------------------*/
+static INLINE void
+synchronize_cpus(REGS* regs)
+{
+    int i, n = 0;
+
+    CPU_BITMAP mask = sysblk.started_mask;
+
+    /* Deselect current processor and waiting processors from mask */
+    mask &= ~(sysblk.waiting_mask | (regs)->hostregs->cpubit);
+
+    /* Deselect processors at a syncpoint and count processors with a
+     * guest interrupt pending
+     */
+    for (i = 0; mask && i < sysblk.hicpu; ++i)
+    {
+        REGS*   i_regs = sysblk.regs[i];
+
+        if (mask & CPU_BIT(i))
+        {
+            if (AT_SYNCPOINT(i_regs))
+                mask &= ~CPU_BIT(i);
+            else
+            {
+                ON_IC_INTERRUPT(i_regs);
+                if (SIE_MODE(i_regs))
+                    ON_IC_INTERRUPT(i_regs->guestregs);
+                    ++n;
+            }
+        }
+    }
+
+    /* If any guest interrupts are pending with active processors,
+     * other than self, open an interrupt window for those processors
+     * prior to considering self as synchronized.
+     */
+    if (n && mask)
+    {
+        sysblk.sync_mask = mask;
+        sysblk.syncing = 1;
+        sysblk.intowner = LOCK_OWNER_NONE;
+        wait_condition(&sysblk.sync_cond, &sysblk.intlock);
+        sysblk.intowner = (regs)->hostregs->cpuad;
+        sysblk.syncing = 0;
+        broadcast_condition(&sysblk.sync_bc_cond);
+    }
+}
+
+
 #endif // _HINLINES_H

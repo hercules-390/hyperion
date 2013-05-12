@@ -455,46 +455,16 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   #define AT_SYNCPOINT(_regs)    ((_regs)->intwait)
 #endif // OPTION_SYNCIO
 
+
+/*-------------------------------------------------------------------*/
+/* Synchronize CPUS                                                  */
+/*                                                                   */
+/* Locks                                                             */
+/*      INTLOCK(regs)                                                */
+/*-------------------------------------------------------------------*/
 #define SYNCHRONIZE_CPUS(_regs) \
- do { \
-   int _i, _n = 0; \
-   CPU_BITMAP _mask = sysblk.started_mask \
-             ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
-   for (_i = 0; _mask && _i < sysblk.hicpu; _i++) { \
-     if ((_mask & CPU_BIT(_i))) { \
-       if (AT_SYNCPOINT(sysblk.regs[_i])) \
-         _mask ^= CPU_BIT(_i); \
-       else { \
-         ON_IC_INTERRUPT(sysblk.regs[_i]); \
-         if (SIE_MODE(sysblk.regs[_i])) \
-           ON_IC_INTERRUPT(sysblk.regs[_i]->guestregs); \
-         _n++; \
-       } \
-     } \
-   } \
-   if (_n) { \
-     if (_n < hostinfo.num_procs) { \
-       for (_n = 1; _mask; _n++) { \
-         if (_n & 0xff) \
-           sched_yield(); \
-         else \
-           usleep(1); \
-         for (_i = 0; _i < sysblk.hicpu; _i++) \
-           if ((_mask & CPU_BIT(_i)) && sysblk.regs[_i]->intwait) \
-             _mask ^= CPU_BIT(_i); \
-       } \
-     } else { \
-       sysblk.sync_mask = sysblk.started_mask \
-                        ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
-       sysblk.syncing = 1; \
-       sysblk.intowner = LOCK_OWNER_NONE; \
-       wait_condition(&sysblk.sync_cond, &sysblk.intlock); \
-       sysblk.intowner = (_regs)->hostregs->cpuad; \
-       sysblk.syncing = 0; \
-       broadcast_condition(&sysblk.sync_bc_cond); \
-     } \
-   } \
- } while (0)
+        synchronize_cpus(_regs)
+
 
 /*-------------------------------------------------------------------*/
 /* Macros to signal interrupt condition to a CPU[s]...               */
