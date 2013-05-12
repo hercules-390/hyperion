@@ -458,9 +458,9 @@ synchronize_cpus(REGS* regs)
             else
             {
                 ON_IC_INTERRUPT(i_regs);
+                ++n;
                 if (SIE_MODE(i_regs))
                     ON_IC_INTERRUPT(i_regs->guestregs);
-                    ++n;
             }
         }
     }
@@ -479,6 +479,10 @@ synchronize_cpus(REGS* regs)
         sysblk.syncing = 0;
         broadcast_condition(&sysblk.sync_bc_cond);
     }
+    /* All active processors other than self, are now waiting at their
+     * respective sync point. We may now safely proceed doing whatever
+     * it is we need to do.
+     */
 }
 
 
