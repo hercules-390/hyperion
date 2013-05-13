@@ -1538,29 +1538,32 @@ clear_subchan (REGS *regs, DEVBLK *dev)
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             schedule_ioq(NULL, dev);
         }
-        else
+
+        /* Invoke the provided halt device routine if it has been
+         * provided by the handler code at init
+         */
+        else if(dev->hnd->halt!=NULL)
         {
+            /* Revert to just holding dev->lock */
             release_lock(&dev->lock);
             RELEASE_INTLOCK(NULL);
             obtain_lock(&dev->lock);
 
-            /* Invoke the provided halt device routine @ISW */
-            /* if it has been provided by the handler  @ISW */
-            /* code at init                            @ISW */
-            if(dev->hnd->halt!=NULL)                /* @ISW */
-            {                                       /* @ISW */
-                dev->hnd->halt(dev);                /* @ISW */
-            }                                       /* @ISW */
-#if !defined(NO_SIGABEND_HANDLER)
-            else
-            {
-                if( dev->ctctype )
-                    signal_thread(dev->tid, SIGUSR2);
-            }
+            /* Call the device's halt routine */
+            dev->hnd->halt(dev);
+
+            /* Release dev->lock and return */
             release_lock(&dev->lock);
             return;
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
         }
+
+#if !defined(NO_SIGABEND_HANDLER)
+        else if( dev->ctctype )
+        {
+            signal_thread(dev->tid, SIGUSR2);
+        }
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
+
     }
     else
         perform_clear_subchan(dev);
