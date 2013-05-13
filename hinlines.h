@@ -1,5 +1,5 @@
-/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2012                */
-/*              Hercules Header Files                                */
+/* HINLINES.H   (c) Copyright Roger Bowler, 1999-2012                */
+/*              Hercules-wide inline functions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -106,7 +106,7 @@ static INLINE void __clear_page( void* addr, size_t pgszmod64 )
     return;
 }
 #else /* (all others) */
-  #define  __clear_page(_addr, _pgszmod64 )    memset((void*)(_addr), 0, (size_t)(_pgszmod64))
+  #define  __clear_page(_addr, _pgszmod64 )    memset((void*)(_addr), 0, ((size_t)(_pgszmod64)) << 6)
 #endif
 
 #if defined(_GCC_SSE2_)
@@ -121,7 +121,7 @@ static INLINE void __optimize_clear(void *addr, size_t n)
     return;
 }
 #else /* (all others, including _MSVC_) */
-  #define __optimize_clear(p,n)     memset((p),0,(n))
+  #define __optimize_clear(p,n)     memset((void*)(p),0,(size_t)(n))
 #endif
 
 #if defined(_GCC_SSE2_) || defined (_MSVC_)
