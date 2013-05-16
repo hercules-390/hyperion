@@ -614,7 +614,7 @@ void* FindSCRCTL( TID tid )
     for (pLink = scrlist.Flink; pLink != &scrlist; pLink = pLink->Flink)
     {
         pCtl = CONTAINING_RECORD( pLink, SCRCTL, link );
-        if (pCtl->scr_tid && pCtl->scr_tid == tid)
+        if (pCtl->scr_tid && equal_threads( pCtl->scr_tid, tid ))
         {
             release_lock( &sysblk.scrlock );
             return pCtl; /* (found) */

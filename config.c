@@ -1048,6 +1048,7 @@ int configure_cpu(int cpu)
 int   i;
 int   rc;
 char  thread_name[32];
+TID   tid;
 
     if(IS_CPU_ONLINE(cpu))
         return -1;
@@ -1063,8 +1064,9 @@ char  thread_name[32];
     }
 
     /* Find out if we are a cpu thread */
+    tid = thread_id();
     for (i = 0; i < sysblk.maxcpu; i++)
-        if (sysblk.cputid[i] == thread_id())
+        if (equal_threads( sysblk.cputid[i], tid ))
             break;
 
     if (i < sysblk.maxcpu)
@@ -1092,11 +1094,12 @@ char  thread_name[32];
 /*-------------------------------------------------------------------*/
 int deconfigure_cpu(int cpu)
 {
-int   i;
+int i;
+TID tid = thread_id();
 
     /* Find out if we are a cpu thread */
     for (i = 0; i < sysblk.maxcpu; i++)
-        if (sysblk.cputid[i] == thread_id())
+        if (equal_threads( sysblk.cputid[i], tid ))
             break;
 
     /* If we're NOT trying to deconfigure ourselves */
@@ -1629,10 +1632,10 @@ DLL_EXPORT REGS *devregs(DEVBLK *dev)
     /* Otherwise attempt to determine what it should be */
     {
         int i;
-        TID tid = thread_id();              /* Our own thread id     */
+        TID tid = thread_id();                        /* Our own thread id     */
         for (i=0; i < sysblk.maxcpu; i++)
-            if (tid == sysblk.cputid[i])    /* Are we a cpu thread?  */
-                return sysblk.regs[i];      /* yes, use its context  */
+            if (equal_threads(tid,sysblk.cputid[i]))  /* Are we a cpu thread?  */
+                return sysblk.regs[i];                /* yes, use its context  */
     }
     return NULL;    /* Not CPU thread. Return NULL register context  */
 }

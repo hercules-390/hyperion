@@ -235,7 +235,7 @@ char*  argv[MAX_ARGS];
      obtain_lock( &sysblk.cmdlock );                                 \
      {                                                               \
          TID tid = thread_id();                                      \
-         while (sysblk.cmdtid && tid != sysblk.cmdtid)               \
+         while (sysblk.cmdtid && !equal_threads(tid,sysblk.cmdtid))  \
              wait_condition( &sysblk.cmdcond, &sysblk.cmdlock );     \
          sysblk.cmdtid = tid;                                        \
          sysblk.cmdcnt++;                                            \
