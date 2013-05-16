@@ -10,6 +10,10 @@
 
 -------------------------------------------------------------------------------
 
+  Add 'const' to as many functions' arguments as possible.
+
+-------------------------------------------------------------------------------
+
   modify fthread to maintain the thread's name in its FTHREAD list of
   threads and provide a function to return a copy of that information
   (linked list of thread ids and thread names), and then modify the
