@@ -4079,7 +4079,7 @@ typedef struct tagTHREADNAME_INFO
 }
 THREADNAME_INFO;
 
-DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
+DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
 {
     THREADNAME_INFO info;
 

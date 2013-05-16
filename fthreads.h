@@ -198,7 +198,7 @@ int  fthread_create
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
     void*            pvThreadArgs,
-    char*            pszThreadName
+    const char*      pszThreadName
 );
 
 ////////////////////////////////////////////////////////////////////////////////////

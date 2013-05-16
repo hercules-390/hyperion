@@ -779,7 +779,7 @@ typedef struct _ftCallThreadParms
 {
     PFT_THREAD_FUNC  pfnTheirThreadFunc;
     void*            pvTheirThreadArgs;
-    char*            pszTheirThreadName;
+    const char*      pszTheirThreadName;
     FTHREAD*         pFTHREAD;
 }
 FT_CALL_THREAD_PARMS;
@@ -875,7 +875,7 @@ int  fthread_create
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
     void*            pvThreadArgs,
-    char*            pszThreadName
+    const char*      pszThreadName
 )
 {
     static BOOL            bDidInit = FALSE;
