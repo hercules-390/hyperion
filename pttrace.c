@@ -31,6 +31,63 @@ LOCK       ptttolock;                   /* timeout thread lock       */
 COND       ptttocond;                   /* timeout thread condition  */
 int        pttmadethread;               /* pthreads is active        */
 
+static INLINE void
+loglock (const int rc, const char* lockname, const char* loc)
+{
+    char*   text;
+    char    result[133];
+
+    /* Don't log a normal return */
+    if (rc == 0)
+        return;
+
+    switch (rc)
+    {
+        case EPERM:
+            text = (char*)"not owned";
+            break;
+
+        case EBUSY:
+            text = (char*)"busy";
+            break;
+
+        case EINVAL:
+            text = (char*)"uninitialized";
+            break;
+
+        case EDEADLK:
+            text = (char*)"deadlock";
+            break;
+
+#if !defined(OPTION_FTHREADS)
+        case ENOTRECOVERABLE:
+            text = (char*)"not recoverable";
+            break;
+
+        case EOWNERDEAD:
+            text = (char*)"owner dead without unlock";
+            break;
+#endif
+
+        case ETIMEDOUT:
+            text = (char*)"timed out";
+            break;
+
+        default:
+            text = NULL;
+            break;
+    }
+
+    if (text == NULL)
+        MSGBUF(result, "          ++++++++ %s (rc=%d) %s\n",
+                       lockname, rc, loc);
+    else
+        MSGBUF(result, "          ++++++++ %s (rc=%d, %s) %s\n",
+                       lockname, rc, text, loc);
+
+    logmsg(result, loc);
+}
+
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
     if (n > 0)
@@ -332,13 +389,12 @@ int result;
 U64 s;
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = pthread_mutex_trylock(mutex);
-    if(result)
+    if (result == EBUSY)
     {
         s = host_tod();
         result = pthread_mutex_lock(mutex);
         s = host_tod() - s;
-        if (result == EDEADLK)
-            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+        loglock(result, "mutex_lock", loc);
     }
     else
         s = 0;
@@ -351,6 +407,8 @@ DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
 int result;
     PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
     result = pthread_mutex_trylock(mutex);
+    if (result && result != EBUSY)
+        loglock(result, "mutex_trylock", loc);
     PTTRACE ("try after", mutex, NULL, loc, result);
     return result;
 }
@@ -359,14 +417,19 @@ DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
 {
 int result;
     result = pthread_mutex_unlock(mutex);
+    loglock(result, "mutex_unlock", loc);
     PTTRACE ("unlock", mutex, NULL, loc, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *rwlock, pthread_rwlockattr_t *attr, char *loc)
 {
+    int result;
+
     PTTRACE ("rwlock init", rwlock, attr, loc, PTT_MAGIC);
-    return pthread_rwlock_init(rwlock, attr);
+    result = pthread_rwlock_init(rwlock, attr);
+    loglock(result, "rwlock_init", loc);
+    return result;
 }
 
 DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *rwlock, char *loc)
@@ -380,8 +443,7 @@ U64 s;
         s = host_tod();
         result = pthread_rwlock_rdlock(rwlock);
         s = host_tod() - s;
-        if (result == EDEADLK)
-            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+        loglock(rc, "rwlock_rdlock", loc);
     }
     else
         s = 0;
@@ -395,13 +457,12 @@ int result;
 U64 s;
     PTTRACE ("wrlock before", rwlock, NULL, loc, PTT_MAGIC);
     result = pthread_rwlock_trywrlock(rwlock);
-    if(result)
+    if (result == EBUSY)
     {
         s = host_tod();
         result = pthread_rwlock_wrlock(rwlock);
         s = host_tod() - s;
-        if (result == EDEADLK)
-            logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+        loglock(result, "rwlock_wrlock", loc);
     }
     else
         s = 0;
@@ -414,6 +475,8 @@ DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
 int result;
     PTTRACE ("tryrd before", rwlock, NULL, loc, PTT_MAGIC);
     result = pthread_rwlock_tryrdlock(rwlock);
+    if (result && result != EBUSY)
+        loglock(result, "rwlock_tryrdlock", loc);
     PTTRACE ("tryrd after", rwlock, NULL, loc, result);
     return result;
 }
@@ -423,6 +486,8 @@ DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *rwlock, char *loc)
 int result;
     PTTRACE ("trywr before", rwlock, NULL, loc, PTT_MAGIC);
     result = pthread_rwlock_trywrlock(rwlock);
+    if (result && result != EBUSY)
+        loglock(result, "rwlock_trywrlock", loc);
     PTTRACE ("trywr after", rwlock, NULL, loc, result);
     return result;
 }
@@ -431,6 +496,7 @@ DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *rwlock, char *loc)
 {
 int result;
     result = pthread_rwlock_unlock(rwlock);
+    loglock(result, "rwlock_unlock", loc);
     PTTRACE ("rwunlock", rwlock, NULL, loc, result);
     return result;
 }
@@ -541,8 +607,7 @@ int result;
 
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
-    if (result == EDEADLK)
-        logmsg("\n          ++++++++++++++++ DEADLOCK! %s ++++++++++++++++\n\n",loc);
+    loglock(result, "mutex_lock", loc);
     PTTRACE ("lock after", mutex, NULL, loc, result);
     return result;
 }
@@ -563,6 +628,8 @@ DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
 int result;
     PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
     result = fthread_mutex_trylock(mutex);
+    if (result && result != EBUSY)
+        loglock(result, "mutex_trylock", loc);
     PTTRACE ("try after", mutex, NULL, loc, result);
     return result;
 }
@@ -577,6 +644,7 @@ DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
 {
 int result;
     result = fthread_mutex_unlock(mutex);
+    loglock(result, "mutex_unlock", loc);
     PTTRACE ("unlock", mutex, NULL, loc, result);
     return result;
 }

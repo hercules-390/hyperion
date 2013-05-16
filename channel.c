@@ -921,9 +921,6 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
     if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
      || dev->startpending)
     {
-        release_lock(&dev->lock);
-        RELEASE_INTLOCK(regs);
-
         /* Set condition code 2 for device busy */
         cc = 2;
     }
@@ -1318,6 +1315,12 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
     /* Ensure status removed from interrupt queue */
     DEQUEUE_IO_INTERRUPT_QLOCKED(*ioint);
 
+    /* Display the subchannel status word */
+    if (dev->ccwtrace || dev->ccwstep)
+    {
+        display_scsw (dev, **scsw);
+    }
+
     /* Copy the PCI SCSW to the IRB */
     irb->scsw = **scsw;
 
@@ -1346,13 +1349,6 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
 
     /* Update pending interrupts */
     UPDATE_IC_IOPENDING_QLOCKED();
-
-    /* Display the subchannel status word */
-    if (dev->ccwtrace || dev->ccwstep)
-    {
-        display_scsw (dev, **scsw);
-        WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
-    }
 
     /* Return condition code */
     return (cc);
@@ -1407,14 +1403,22 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     }
 #endif
 
-
+    /* Obtain the I/O interrupt queue lock */
     obtain_lock(&sysblk.iointqlk);
 
     /* Perform core of TEST SUBCHANNEL work */
     cc = test_subchan_locked (regs, dev, irb, &ioint, &scsw);
 
-    /* Release remaining locks */
+    /* Release the I/O interrupt queue lock */
     release_lock(&sysblk.iointqlk);
+
+    /* Display the condition code */
+    if (dev->ccwtrace || dev->ccwstep)
+    {
+        WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
+    }
+
+    /* Release remaining locks */
     release_lock(&dev->lock);
     RELEASE_INTLOCK(regs);
 
@@ -4093,7 +4097,6 @@ resume_suspend:
 
 execute_clear:
             /* Get necessary locks */
-            release_lock(&dev->lock);
             OBTAIN_INTLOCK(NULL);
             obtain_lock(&dev->lock);
 
@@ -4635,6 +4638,9 @@ execute_halt:
              *       dev->suspended is NOT set as it is not the intent
              *       to permit another system to update the device.
              */
+
+            /* Acquire device lock */
+            obtain_lock(&dev->lock);
 
             /* State converting from SIO synchronous to asynchronous */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
