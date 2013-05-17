@@ -336,9 +336,9 @@ int  fthread_cond_wait
 FT_DLL_IMPORT
 int  fthread_cond_timedwait
 (
-    fthread_cond_t*   pFT_COND_VAR,
-    fthread_mutex_t*  pFT_MUTEX,
-    struct timespec*  pTimeTimeout
+    fthread_cond_t*         pFT_COND_VAR,
+    fthread_mutex_t*        pFT_MUTEX,
+    const struct timespec*  pTimeTimeout
 );
 
 ////////////////////////////////////////////////////////////////////////////////////

@@ -57,7 +57,7 @@ PTT_DLL_IMPORT int ptt_pthread_cond_init(COND *, void *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_cond_signal(COND *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_cond_broadcast(COND *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_cond_wait(COND *, LOCK *, const char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, struct timespec *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, const struct timespec *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, PFT_THREAD_FUNC, void *, const char *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, const char *);
 PTT_DLL_IMPORT int ptt_pthread_detach(TID, const char *);

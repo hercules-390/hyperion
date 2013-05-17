@@ -53,10 +53,6 @@ loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
 {
     const char* err_desc;
 
-    /* Don't log normal/expected return codes */
-    if (rc == 0 || rc == EBUSY || rc == ETIMEDOUT)
-        return;
-
     switch (rc)
     {
         case EAGAIN:          err_desc = "max recursion";   break;
@@ -65,6 +61,8 @@ loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
         case EDEADLK:         err_desc = "deadlock";        break;
         case ENOTRECOVERABLE: err_desc = "not recoverable"; break;
         case EOWNERDEAD:      err_desc = "owner dead";      break;
+        case EBUSY:           err_desc = "busy";            break; /* (should not occur) */
+        case ETIMEDOUT:       err_desc = "timeout";         break; /* (should not occur) */
         default:              err_desc = "(unknown)";       break;
     }
 
@@ -550,7 +548,7 @@ int result;
     PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
     result = pthread_cond_timedwait(cond, &mutex->lock, time);
     PTTRACE ("tw after", mutex, cond, loc, result);
-    if (result)
+    if (result && result != ETIMEDOUT)
         loglock(mutex, result, "cond_timedwait", loc);
     return result;
 }
@@ -701,13 +699,13 @@ int result;
 }
 
 DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
-                                struct timespec *time, const char *loc)
+                          const struct timespec *time, const char *loc)
 {
 int result;
     PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
     result = fthread_cond_timedwait(cond, &mutex->lock, time);
     PTTRACE ("tw after", mutex, cond, loc, result);
-    if (result)
+    if (result && result != ETIMEDOUT)
         loglock(mutex, result, "cond_timedwait", loc);
     return result;
 }

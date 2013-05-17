@@ -442,8 +442,8 @@ static int  BeginWait
 
 static int  WaitForTransmission
 (
-    FT_COND_VAR*      pFT_COND_VAR,
-    struct timespec*  pTimeTimeout     // (NULL == INFINITE wait)
+    FT_COND_VAR*            pFT_COND_VAR,
+    const struct timespec*  pTimeTimeout     // (NULL == INFINITE wait)
 )
 {
     DWORD  dwWaitRetCode, dwWaitMilliSecs;
@@ -1733,9 +1733,9 @@ int  fthread_cond_wait
 DLL_EXPORT
 int  fthread_cond_timedwait
 (
-    fthread_cond_t*   pFT_COND_VAR,
-    fthread_mutex_t*  pFTUSER_MUTEX,
-    struct timespec*  pTimeTimeout
+    fthread_cond_t*         pFT_COND_VAR,
+    fthread_mutex_t*        pFTUSER_MUTEX,
+    const struct timespec*  pTimeTimeout
 )
 {
     int rc;
