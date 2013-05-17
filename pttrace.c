@@ -31,61 +31,50 @@ LOCK       ptttolock;                   /* timeout thread lock       */
 COND       ptttocond;                   /* timeout thread condition  */
 int        pttmadethread;               /* pthreads is active        */
 
-static INLINE void
-loglock (const int rc, const char* lockname, const char* loc)
+static INLINE const char* trimloc( const char* loc )
 {
-    char*   text;
-    char    result[133];
+#if defined( _MSVC_ )
+    /*
+    ** Under certain unknown circumstances MSVC sometimes
+    ** sets the __FILE__ macro to a full path filename
+    ** rather than just the filename only. The following
+    ** compensates for this condition.
+    */
+    char* p = strrchr( loc, '\\' );
+    if (!p) p = strrchr( loc, '/' );
+    if (p)
+        loc = p+1;
+#endif
+    return loc;
+}
 
-    /* Don't log a normal return */
-    if (rc == 0)
+static INLINE void
+loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
+{
+    const char* err_desc;
+
+    /* Don't log normal/expected return codes */
+    if (rc == 0 || rc == EBUSY || rc == ETIMEDOUT)
         return;
 
     switch (rc)
     {
-        case EPERM:
-            text = (char*)"not owned";
-            break;
-
-        case EBUSY:
-            text = (char*)"busy";
-            break;
-
-        case EINVAL:
-            text = (char*)"uninitialized";
-            break;
-
-        case EDEADLK:
-            text = (char*)"deadlock";
-            break;
-
-#if !defined(OPTION_FTHREADS)
-        case ENOTRECOVERABLE:
-            text = (char*)"not recoverable";
-            break;
-
-        case EOWNERDEAD:
-            text = (char*)"owner dead without unlock";
-            break;
-#endif
-
-        case ETIMEDOUT:
-            text = (char*)"timed out";
-            break;
-
-        default:
-            text = NULL;
-            break;
+        case EAGAIN:          err_desc = "max recursion";   break;
+        case EPERM:           err_desc = "not owned";       break;
+        case EINVAL:          err_desc = "not initialized"; break;
+        case EDEADLK:         err_desc = "deadlock";        break;
+#if !defined( OPTION_FTHREADS )
+        case ENOTRECOVERABLE: err_desc = "not recoverable"; break;
+        case EOWNERDEAD:      err_desc = "owner dead";      break;
+#endif // !defined( _MSVC_ )
+        default:              err_desc = "(unknown)";       break;
     }
 
-    if (text == NULL)
-        MSGBUF(result, "          ++++++++ %s (rc=%d) %s\n",
-                       lockname, rc, loc);
-    else
-        MSGBUF(result, "          ++++++++ %s (rc=%d, %s) %s\n",
-                       lockname, rc, text, loc);
+    // "Pttrace: '%s' failed: rc=%d (%s), tid="TIDPAT", loc=%s"
+    WRMSG( HHC90013, "E", calltype, rc, err_desc, thread_id(), trimloc( err_loc ));
 
-    logmsg(result, loc);
+    // "Pttrace: lock was obtained by thread "TIDPAT" at %s"
+    WRMSG( HHC90014, "I", mutex->tid, trimloc( mutex->loc ));
 }
 
 DLL_EXPORT void ptt_trace_init (int n, int init)
@@ -105,9 +94,9 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
     if (init)
     {
 #if defined(OPTION_FTHREADS)
-        fthread_mutex_init (&pttlock, NULL);
+        fthread_mutex_init (&pttlock.lock, NULL);
 #else
-        pthread_mutex_init (&pttlock, NULL);
+        pthread_mutex_init (&pttlock.lock, NULL);
 #endif
         pttnolock = 0;
         pttnotod = 0;
@@ -115,10 +104,10 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
         pttto = 0;
         ptttotid = 0;
 #if defined(OPTION_FTHREADS)
-        fthread_mutex_init (&ptttolock, NULL);
+        fthread_mutex_init (&ptttolock.lock, NULL);
         fthread_cond_init (&ptttocond);
 #else
-        pthread_mutex_init (&ptttolock, NULL);
+        pthread_mutex_init (&ptttolock.lock, NULL);
         pthread_cond_init (&ptttocond, NULL);
 #endif
     }
@@ -377,137 +366,159 @@ void *ptt_timeout()
 }
 
 #ifndef OPTION_FTHREADS
-DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, const char *loc)
 {
     PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
-    return pthread_mutex_init(mutex, attr);
+    return pthread_mutex_init(&mutex->lock, attr);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, const char *loc)
 {
 int result;
 U64 s;
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
-    result = pthread_mutex_trylock(mutex);
+    result = pthread_mutex_trylock(&mutex->lock);
     if (result == EBUSY)
     {
         s = host_tod();
-        result = pthread_mutex_lock(mutex);
+        result = pthread_mutex_lock(&mutex->lock);
         s = host_tod() - s;
-        loglock(result, "mutex_lock", loc);
     }
     else
         s = 0;
     PTTRACE ("lock after", mutex, (void *) s, loc, result);
+    if (result)
+        loglock(mutex, result, "mutex_lock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, const char *loc)
 {
 int result;
     PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
-    result = pthread_mutex_trylock(mutex);
-    if (result && result != EBUSY)
-        loglock(result, "mutex_trylock", loc);
+    result = pthread_mutex_trylock(&mutex->lock);
     PTTRACE ("try after", mutex, NULL, loc, result);
+    if (result && result != EBUSY)
+        loglock(mutex, result, "mutex_trylock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, const char *loc)
 {
 int result;
-    result = pthread_mutex_unlock(mutex);
-    loglock(result, "mutex_unlock", loc);
+    result = pthread_mutex_unlock(&mutex->lock);
     PTTRACE ("unlock", mutex, NULL, loc, result);
+    loglock(mutex, result, "mutex_unlock", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *rwlock, pthread_rwlockattr_t *attr, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *mutex, pthread_rwlockattr_t *attr, const char *loc)
 {
-    int result;
-
-    PTTRACE ("rwlock init", rwlock, attr, loc, PTT_MAGIC);
-    result = pthread_rwlock_init(rwlock, attr);
-    loglock(result, "rwlock_init", loc);
+int result;
+    PTTRACE ("rwlock init", mutex, attr, loc, PTT_MAGIC);
+    result = pthread_rwlock_init(&mutex->lock, attr);
+    loglock((LOCK*)mutex, result, "rwlock_init", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *mutex, const char *loc)
 {
 int result;
 U64 s;
-    PTTRACE ("rdlock before", rwlock, NULL, loc, PTT_MAGIC);
-    result = pthread_rwlock_tryrdlock(rwlock);
-    if(result)
+    PTTRACE ("rdlock before", mutex, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_tryrdlock(&mutex->lock);
+    if(result == EBUSY)
     {
         s = host_tod();
-        result = pthread_rwlock_rdlock(rwlock);
+        result = pthread_rwlock_rdlock(&mutex->lock);
         s = host_tod() - s;
-        loglock(rc, "rwlock_rdlock", loc);
     }
     else
         s = 0;
-    PTTRACE ("rdlock after", rwlock, (void *) s, loc, result);
+    PTTRACE ("rdlock after", mutex, (void *) s, loc, result);
+    if (result)
+        loglock((LOCK*)mutex, result, "rwlock_rdlock", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *mutex, const char *loc)
 {
 int result;
 U64 s;
-    PTTRACE ("wrlock before", rwlock, NULL, loc, PTT_MAGIC);
-    result = pthread_rwlock_trywrlock(rwlock);
+    PTTRACE ("wrlock before", mutex, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_trywrlock(&mutex->lock);
     if (result == EBUSY)
     {
         s = host_tod();
-        result = pthread_rwlock_wrlock(rwlock);
+        result = pthread_rwlock_wrlock(&mutex->lock);
         s = host_tod() - s;
-        loglock(result, "rwlock_wrlock", loc);
     }
     else
         s = 0;
-    PTTRACE ("wrlock after", rwlock, (void *) s, loc, result);
+    PTTRACE ("wrlock after", mutex, (void *) s, loc, result);
+    if (result)
+        loglock((LOCK*)mutex, result, "rwlock_wrlock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *mutex, const char *loc)
 {
 int result;
-    PTTRACE ("tryrd before", rwlock, NULL, loc, PTT_MAGIC);
-    result = pthread_rwlock_tryrdlock(rwlock);
+    PTTRACE ("tryrd before", mutex, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_tryrdlock(&mutex->lock);
+    PTTRACE ("tryrd after", mutex, NULL, loc, result);
     if (result && result != EBUSY)
-        loglock(result, "rwlock_tryrdlock", loc);
-    PTTRACE ("tryrd after", rwlock, NULL, loc, result);
+        loglock((LOCK*)mutex, result, "rwlock_tryrdlock", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *mutex, const char *loc)
 {
 int result;
-    PTTRACE ("trywr before", rwlock, NULL, loc, PTT_MAGIC);
-    result = pthread_rwlock_trywrlock(rwlock);
+    PTTRACE ("trywr before", mutex, NULL, loc, PTT_MAGIC);
+    result = pthread_rwlock_trywrlock(&mutex->lock);
+    PTTRACE ("trywr after", mutex, NULL, loc, result);
     if (result && result != EBUSY)
-        loglock(result, "rwlock_trywrlock", loc);
-    PTTRACE ("trywr after", rwlock, NULL, loc, result);
+        loglock((LOCK*)mutex, result, "rwlock_trywrlock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *mutex, const char *loc)
 {
 int result;
-    result = pthread_rwlock_unlock(rwlock);
-    loglock(result, "rwlock_unlock", loc);
-    PTTRACE ("rwunlock", rwlock, NULL, loc, result);
+    result = pthread_rwlock_unlock(&mutex->lock);
+    PTTRACE ("rwunlock", mutex, NULL, loc, result);
+    loglock((LOCK*)mutex, result, "rwlock_unlock", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *loc)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, const char *loc)
 {
     PTTRACE ("cond init", NULL, cond, loc, PTT_MAGIC);
     return pthread_cond_init(cond, attr);
 }
 
-DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *loc)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, const char *loc)
 {
 int result;
     result = pthread_cond_signal(cond);
@@ -515,7 +526,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *loc)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, const char *loc)
 {
 int result;
     result = pthread_cond_broadcast(cond);
@@ -523,27 +534,31 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, const char *loc)
 {
 int result;
     PTTRACE ("wait before", mutex, cond, loc, PTT_MAGIC);
-    result = pthread_cond_wait(cond, mutex);
+    result = pthread_cond_wait(cond, &mutex->lock);
     PTTRACE ("wait after", mutex, cond, loc, result);
+    if (result)
+        loglock(mutex, result, "cond_wait", loc);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
-                          const struct timespec *time, char *loc)
+                          const struct timespec *time, const char *loc)
 {
 int result;
     PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
-    result = pthread_cond_timedwait(cond, mutex, time);
+    result = pthread_cond_timedwait(cond, &mutex->lock, time);
     PTTRACE ("tw after", mutex, cond, loc, result);
+    if (result)
+        loglock(mutex, result, "cond_timedwait", loc);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_create(pthread_t *tid, ATTR *attr,
-                       void *(*start)(), void *arg, char *nm, char *loc)
+                       void *(*start)(), void *arg, const char *nm, const char *loc)
 {
 int result;
     UNREFERENCED(nm);
@@ -553,7 +568,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_join(pthread_t tid, void **value, char *loc)
+DLL_EXPORT int ptt_pthread_join(pthread_t tid, void **value, const char *loc)
 {
 int result;
     PTTRACE ("join before", (void *)tid, value ? *value : NULL, loc, PTT_MAGIC);
@@ -562,7 +577,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_detach(pthread_t tid, char *loc)
+DLL_EXPORT int ptt_pthread_detach(pthread_t tid, const char *loc)
 {
 int result;
     PTTRACE ("dtch before", (void *)tid, NULL, loc, PTT_MAGIC);
@@ -571,92 +586,96 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, char *loc)
+DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, const char *loc)
 {
     PTTRACE ("kill", (void *)tid, (void *)(long)sig, loc, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
-DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *rwlock, void *attr, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *mutex, void *attr, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_init(mutex, attr, loc);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, const char *loc)
 {
     PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
-    return fthread_mutex_init(mutex,attr);
+    return fthread_mutex_init(&mutex->lock,attr);
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_rdlock(RWLOCK *mutex, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_lock(mutex, loc);
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_wrlock(RWLOCK *mutex, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_lock(mutex, loc);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, const char *loc)
 {
 int result;
-
     PTTRACE ("lock before", mutex, NULL, loc, PTT_MAGIC);
-    result = fthread_mutex_lock(mutex);
-    loglock(result, "mutex_lock", loc);
+    result = fthread_mutex_lock(&mutex->lock);
     PTTRACE ("lock after", mutex, NULL, loc, result);
+    if (result)
+        loglock(mutex, result, "mutex_lock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
-DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *mutex, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_trylock(mutex, loc);
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *mutex, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_trylock(mutex, loc);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, const char *loc)
 {
 int result;
     PTTRACE ("try before", mutex, NULL, loc, PTT_MAGIC);
-    result = fthread_mutex_trylock(mutex);
-    if (result && result != EBUSY)
-        loglock(result, "mutex_trylock", loc);
+    result = fthread_mutex_trylock(&mutex->lock);
     PTTRACE ("try after", mutex, NULL, loc, result);
+    if (result && result != EBUSY)
+        loglock(mutex, result, "mutex_trylock", loc);
+    if (!result || EOWNERDEAD == result)
+    {
+        mutex->loc = loc;
+        mutex->tid = thread_id();
+    }
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *rwlock, char *loc)
+DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *mutex, const char *loc)
 {
-    LOCK *mutex = (LOCK*)rwlock;
     return ptt_pthread_mutex_unlock(mutex, loc);
 }
 
-DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, const char *loc)
 {
 int result;
-    result = fthread_mutex_unlock(mutex);
-    loglock(result, "mutex_unlock", loc);
+    result = fthread_mutex_unlock(&mutex->lock);
     PTTRACE ("unlock", mutex, NULL, loc, result);
+    loglock(mutex, result, "mutex_unlock", loc);
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_init(COND *cond, void *attr, char *loc)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, void *attr, const char *loc)
 {
     UNREFERENCED(attr);
     PTTRACE ("cond init", NULL, cond, loc, PTT_MAGIC);
     return fthread_cond_init(cond);
 }
 
-DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *loc)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, const char *loc)
 {
 int result;
     result = fthread_cond_signal(cond);
@@ -664,7 +683,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *loc)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, const char *loc)
 {
 int result;
     result = fthread_cond_broadcast(cond);
@@ -672,27 +691,31 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *loc)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, const char *loc)
 {
 int result;
     PTTRACE ("wait before", mutex, cond, loc, PTT_MAGIC);
-    result = fthread_cond_wait(cond, mutex);
+    result = fthread_cond_wait(cond, &mutex->lock);
     PTTRACE ("wait after", mutex, cond, loc, result);
+    if (result)
+        loglock(mutex, result, "cond_wait", loc);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
-                                struct timespec *time, char *loc)
+                                struct timespec *time, const char *loc)
 {
 int result;
     PTTRACE ("tw before", mutex, cond, loc, PTT_MAGIC);
-    result = fthread_cond_timedwait(cond, mutex, time);
+    result = fthread_cond_timedwait(cond, &mutex->lock, time);
     PTTRACE ("tw after", mutex, cond, loc, result);
+    if (result)
+        loglock(mutex, result, "cond_timedwait", loc);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_create(fthread_t *tid, ATTR *attr,
-                       PFT_THREAD_FUNC start, void *arg, char *nm, char *loc)
+                       PFT_THREAD_FUNC start, void *arg, const char *nm, const char *loc)
 {
 int result;
     result = fthread_create(tid, attr, start, arg, nm);
@@ -700,7 +723,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, char *loc)
+DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, const char *loc)
 {
 int result;
     PTTRACE ("join before", (void *)(uintptr_t)tid, value ? *value : NULL, loc, PTT_MAGIC);
@@ -709,7 +732,7 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_detach(fthread_t tid, char *loc)
+DLL_EXPORT int ptt_pthread_detach(fthread_t tid, const char *loc)
 {
 int result;
     PTTRACE ("dtch before", (void *)(uintptr_t)tid, NULL, loc, PTT_MAGIC);
@@ -718,44 +741,27 @@ int result;
     return result;
 }
 
-DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *loc)
+DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, const char *loc)
 {
     PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, loc, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
 #endif
 
-DLL_EXPORT void ptt_pthread_trace (int trclass, char * type, void *data1, void *data2,
-                        char *loc, int result)
+DLL_EXPORT void ptt_pthread_trace (int trclass, const char *type, void *data1, void *data2,
+                        const char *loc, int result)
 {
 int i, n;
 
     if (pttrace == NULL || pttracen == 0 || !(pttclass & trclass) ) return;
-
-    /*
-    ** Fish debug: it appears MSVC sometimes sets the __FILE__ macro
-    ** to a full path filename (rather than just the filename only)
-    ** under certain circumstances. (I think maybe it's only for .h
-    ** files since vstore.h is the one that's messing up). Therefore
-    ** for MSVC we need to convert it to just the filename. ((sigh))
-    */
-#if defined( _MSVC_ )   // fish debug; appears to be vstore.h
-                        // maybe all *.h files are this way??
-    {
-        char* p = strrchr( loc, '\\' );
-        if (!p) p = strrchr( loc, '/' );
-        if (p)
-            loc = p+1;
-    }
-#endif
     /*
      * Messages from timer.c, clock.c and/or logger.c are not usually
      * that interesting and take up table space.  Check the flags to
      * see if we want to trace them.
      */
-    if (!strncasecmp(loc, "timer.c:", 8)  && !(pttclass & PTT_CL_TMR)) return;
-    if (!strncasecmp(loc, "clock.c:", 8)  && !(pttclass & PTT_CL_TMR)) return;
-    if (!strncasecmp(loc, "logger.c:", 9) && !(pttclass & PTT_CL_LOG)) return;
+    if (!(pttclass & PTT_CL_TMR) && !strncasecmp(trimloc(loc), "timer.c:",  8)) return;
+    if (!(pttclass & PTT_CL_TMR) && !strncasecmp(trimloc(loc), "clock.c:",  8)) return;
+    if (!(pttclass & PTT_CL_LOG) && !strncasecmp(trimloc(loc), "logger.c:", 9)) return;
 
     /* check for `nowrap' */
     if (pttnowrap && pttracex + 1 >= pttracen) return;
@@ -774,7 +780,7 @@ int i, n;
     pttrace[i].type  = type;
     pttrace[i].data1 = data1;
     pttrace[i].data2 = data2;
-    pttrace[i].loc  = loc;
+    pttrace[i].loc  = trimloc(loc);
     if (pttnotod == 0)
         gettimeofday(&pttrace[i].tv,NULL);
     pttrace[i].result = result;

@@ -79,7 +79,7 @@ static WINTHREAD*  FindWinTHREAD ( DWORD dwWinThreadID )
 
 // Lock the thread list so we can search undisturbed
 
-    obtain_lock ( &WinThreadListLock );
+    EnterCriticalSection ( &WinThreadListLock );
 
 // Start at the beginning of the list
 
@@ -101,7 +101,7 @@ static WINTHREAD*  FindWinTHREAD ( DWORD dwWinThreadID )
 
 // We didn't find the threadID in the list, return with a NULL.
 
-    release_lock ( &WinThreadListLock );
+    LeaveCriticalSection ( &WinThreadListLock );
 
     return NULL;            // (not found)
 }
@@ -128,7 +128,7 @@ HANDLE winthread_get_handle
     if ( pWINTHREAD != NULL )
     {
         // We found it.  release the lock and return with the pointer
-        release_lock ( &WinThreadListLock );
+        LeaveCriticalSection ( &WinThreadListLock );
         return pWINTHREAD->hWinThreadHandle;
     }
 
@@ -165,7 +165,7 @@ int  winthread_create
     {
         bThreadListInitizalized = TRUE;
         InitializeListHead ( &WinThreadListHead );
-        initialize_lock ( &WinThreadListLock );
+        InitializeCriticalSection ( &WinThreadListLock );
 
     }
 
@@ -199,7 +199,7 @@ int  winthread_create
 
 // Lock the list
 
-    obtain_lock ( &WinThreadListLock );
+    EnterCriticalSection ( &WinThreadListLock );
 
 // Create the thread with the Windows call
 
@@ -218,7 +218,7 @@ int  winthread_create
 
 // We won't need the list, unlock the list, send log message and free up resources
 
-        release_lock ( &WinThreadListLock );
+        LeaveCriticalSection ( &WinThreadListLock );
         logmsg("fthread_create: MyCreateThread failed\n");
         if ( pWINTHREAD->pszWinThreadName != NULL )
             free( pWINTHREAD->pszWinThreadName );
@@ -239,7 +239,7 @@ int  winthread_create
 
     InsertListHead ( &WinThreadListHead, &pWINTHREAD->WinThreadListLink );
 
-    release_lock ( &WinThreadListLock );
+    LeaveCriticalSection ( &WinThreadListLock );
 
     return RC(0);
 }
@@ -287,7 +287,7 @@ int  winthread_join
 
 // Second unlock the thread list so others can access it.
 
-    release_lock ( &WinThreadListLock );
+    LeaveCriticalSection ( &WinThreadListLock );
 
 // Now that we have the handle to the thread object we can wait on it.  This is
 // an untimed wait so the only value that should be returned is a zero.
@@ -310,10 +310,10 @@ int  winthread_join
 // 4. Unlock the thread list
 // 5. Free up the memory the thread block occupied.
 
-    obtain_lock ( &WinThreadListLock );
+    EnterCriticalSection ( &WinThreadListLock );
     CloseHandle ( pWINTHREAD->hWinThreadHandle );
     RemoveListEntry ( &pWINTHREAD->WinThreadListLink );
-    release_lock ( &WinThreadListLock );
+    LeaveCriticalSection ( &WinThreadListLock );
     if ( pWINTHREAD->pszWinThreadName != NULL )
         free( pWINTHREAD->pszWinThreadName );
     free ( pWINTHREAD );

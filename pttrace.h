@@ -25,64 +25,88 @@
 #if defined(OPTION_FTHREADS)
 #define OBTAIN_PTTLOCK \
  do { \
-   if (!pttnolock) fthread_mutex_lock(&pttlock); \
+   if (!pttnolock) { \
+     int result = fthread_mutex_lock(&pttlock.lock); \
+     if (result) \
+       loglock(&pttlock, result, "mutex_lock", PTT_LOC); \
+     else { \
+       pttlock.loc = PTT_LOC; \
+       pttlock.tid = thread_id(); \
+     } \
+   } \
  } while (0)
 #define RELEASE_PTTLOCK \
  do { \
-   if (!pttnolock) fthread_mutex_unlock(&pttlock); \
+   if (!pttnolock) { \
+     int result = fthread_mutex_unlock(&pttlock.lock); \
+     if (result) \
+       loglock(&pttlock, result, "mutex_unlock", PTT_LOC); \
+   } \
  } while (0)
-PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, void *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_unlock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_init(RWLOCK *, void *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_rdlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_wrlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_unlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_init(COND *, void *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_signal(COND *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_broadcast(COND *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_wait(COND *, LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, struct timespec *, char *);
-PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, PFT_THREAD_FUNC, void *, char *, char *);
-PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, char *);
-PTT_DLL_IMPORT int ptt_pthread_detach(TID, char *);
-PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, void *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_unlock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_init(RWLOCK *, void *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_rdlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_wrlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_unlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_init(COND *, void *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_signal(COND *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_broadcast(COND *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_wait(COND *, LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, struct timespec *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, PFT_THREAD_FUNC, void *, const char *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, const char *);
+PTT_DLL_IMPORT int ptt_pthread_detach(TID, const char *);
+PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
 #else
 #define OBTAIN_PTTLOCK \
  do { \
-   if (!pttnolock) pthread_mutex_lock(&pttlock); \
+   if (!pttnolock) { \
+     int result = pthread_mutex_lock(&pttlock.lock); \
+     if (result) \
+       loglock(&pttlock, result, "mutex_lock", PTT_LOC); \
+     else { \
+       pttlock.loc = PTT_LOC; \
+       pttlock.tid = thread_id(); \
+     } \
+   } \
  } while (0)
 #define RELEASE_PTTLOCK \
  do { \
-   if (!pttnolock) pthread_mutex_unlock(&pttlock); \
+   if (!pttnolock) { \
+     int result = pthread_mutex_unlock(&pttlock.lock); \
+     if (result) \
+       loglock(&pttlock, result, "mutex_unlock", PTT_LOC); \
+   } \
  } while (0)
-PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, pthread_mutexattr_t *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_mutex_unlock(LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_init(RWLOCK *, pthread_rwlockattr_t *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_rdlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_wrlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_rwlock_unlock(RWLOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_init(COND *, pthread_condattr_t *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_signal(COND *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_broadcast(COND *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_wait(COND *, LOCK *, char *);
-PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, const struct timespec *, char *);
-PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, void *(*)(), void *, char *, char *);
-PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, char *);
-PTT_DLL_IMPORT int ptt_pthread_detach(TID, char *);
-PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, pthread_mutexattr_t *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_mutex_unlock(LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_init(RWLOCK *, pthread_rwlockattr_t *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_rdlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_wrlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_tryrdlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_trywrlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_rwlock_unlock(RWLOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_init(COND *, pthread_condattr_t *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_signal(COND *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_broadcast(COND *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_wait(COND *, LOCK *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_cond_timedwait(COND *, LOCK *, const struct timespec *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, void *(*)(), void *, const char *, const char *);
+PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, const char *);
+PTT_DLL_IMPORT int ptt_pthread_detach(TID, const char *);
+PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
 #endif
 
 PTT_DLL_IMPORT void ptt_trace_init (int n, int init);
 PTT_DLL_IMPORT int  ptt_cmd(int argc, char *argv[], char*cmdline);
-PTT_DLL_IMPORT void ptt_pthread_trace (int, char *, void *, void *, char *, int);
+PTT_DLL_IMPORT void ptt_pthread_trace (int, const char *, void *, void *, const char *, int);
 PTT_DLL_IMPORT int  ptt_pthread_print ();
 PTT_DLL_IMPORT int  pttclass;
 void *ptt_timeout();
@@ -100,10 +124,10 @@ typedef struct _PTT_TRACE {
 #define PTT_CL_SIE  0x1000              /* Interpretive Execution     */
 #define PTT_CL_SIG  0x2000              /* SIGP signalling            */
 #define PTT_CL_IO   0x4000              /* IO                         */
-        char        *type;              /* Trace type                 */
+        const char  *type;              /* Trace type                 */
         void        *data1;             /* Data 1                     */
         void        *data2;             /* Data 2                     */
-        char        *loc;               /* File name:line number      */
+        const char  *loc;               /* File name:line number      */
         struct timeval tv;              /* Time of day                */
         int          result;            /* Result                     */
       } PTT_TRACE;

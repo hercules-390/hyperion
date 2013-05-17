@@ -1999,6 +1999,8 @@ do { \
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument %s"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
+#define HHC90013 "'%s' failed: rc=%d (%s), tid="TIDPAT", loc=%s"
+#define HHC90014 "lock was obtained by thread "TIDPAT" at %s"
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
