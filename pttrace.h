@@ -30,7 +30,7 @@
      if (result) \
        loglock(&pttlock, result, "mutex_lock", PTT_LOC); \
      else { \
-       pttlock.loc = PTT_LOC; \
+       pttlock.loc = trimloc( PTT_LOC ); \
        pttlock.tid = thread_id(); \
      } \
    } \
@@ -70,7 +70,7 @@ PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
      if (result) \
        loglock(&pttlock, result, "mutex_lock", PTT_LOC); \
      else { \
-       pttlock.loc = PTT_LOC; \
+       pttlock.loc = trimloc( PTT_LOC ); \
        pttlock.tid = thread_id(); \
      } \
    } \

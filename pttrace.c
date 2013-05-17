@@ -63,10 +63,8 @@ loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
         case EPERM:           err_desc = "not owned";       break;
         case EINVAL:          err_desc = "not initialized"; break;
         case EDEADLK:         err_desc = "deadlock";        break;
-#if !defined( OPTION_FTHREADS )
         case ENOTRECOVERABLE: err_desc = "not recoverable"; break;
         case EOWNERDEAD:      err_desc = "owner dead";      break;
-#endif // !defined( _MSVC_ )
         default:              err_desc = "(unknown)";       break;
     }
 

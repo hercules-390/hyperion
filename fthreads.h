@@ -423,4 +423,7 @@ int fthread_mutexattr_settype
 
 ////////////////////////////////////////////////////////////////////////////////////
 
+#define  EOWNERDEAD         130     // (TODO: Robust Mutexes support)
+#define  ENOTRECOVERABLE    131     // (TODO: Robust Mutexes support)
+
 #endif // _FTHREADS_H_
