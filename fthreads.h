@@ -423,7 +423,19 @@ int fthread_mutexattr_settype
 
 ////////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////////
+// Define EOWNERDEAD and ENOTRECOVERABLE if not defined
+// (usually MSVC prior to VS 2010)
+
+#if !defined(EOWNERDEAD)
 #define  EOWNERDEAD         130     // (TODO: Robust Mutexes support)
+#endif
+
+#if !defined(ENOTRECOVERABLE)
 #define  ENOTRECOVERABLE    131     // (TODO: Robust Mutexes support)
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////
 
 #endif // _FTHREADS_H_
