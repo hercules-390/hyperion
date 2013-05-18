@@ -24,6 +24,9 @@
     TID          tid;       /* The thread-Id of who obtained lock */  \
     const char*  loc;       /* The location where it was obtained */
 
+/*-------------------------------------------------------------------*/
+/*                      Windows Threads                              */
+/*-------------------------------------------------------------------*/
 #if defined( OPTION_WTHREADS )
     #if defined( OPTION_FTHREADS )
         #undef OPTION_FTHREADS
@@ -55,11 +58,12 @@ struct LOCK {
 };
 typedef struct LOCK LOCK;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The thread object of Hercules threading is translated into a Windows thread
-// Would like to make this a macro expansion, but we have to maintain both the thread ID, the handle and
-// a thread name (for debugging).  This information is retained in a linked list of structures that is
-// created and added to by win_create_thread.  The other functions use the information as necessary.
+/*-------------------------------------------------------------------
+** The thread object of Hercules threading is translated into a Windows thread
+** Would like to make this a macro expansion, but we have to maintain both the thread ID, the handle and
+** a thread name (for debugging).  This information is retained in a linked list of structures that is
+** created and added to by win_create_thread.  The other functions use the information as necessary.
+*/
 #define create_thread(ptid,pat,fn,arg,nm)      winthread_create((ptid),(pat),(PWIN_THREAD_FUNC)&(fn),(arg),nm)
 #define join_thread(tid,pcode)                 winthread_join((tid),(pcode))
 #define detach_thread(tid)                     winthread_detach((tid))
@@ -70,10 +74,10 @@ typedef struct LOCK LOCK;
 #define initialize_detach_attr(pat)            winthread_attr_init((pat)) 
 #define initialize_join_attr(pat)              winthread_attr_init((pat))
 #define win_thread_handle(tid)                 winthread_get_handle(tid)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The lock object of Hercules threading is translated into a Windows critical section
+/*-------------------------------------------------------------------
+** The lock object of Hercules threading is translated into a Windows critical section
+*/
 #define hthread_mutexattr_init(pla)            ((*(pla)=HTHREAD_MUTEX_DEFAULT),0)
 #define hthread_mutexattr_destroy(pla)         ((*(pla)=0),0)
 #define hthread_mutexattr_settype(pla,typ)     ((*(pla)=(typ)),0)
@@ -84,8 +88,10 @@ typedef struct LOCK LOCK;
 #define try_obtain_lock(plk)                   ((TryEnterCriticalSection((CRITICAL_SECTION*)&(plk)->lock)) ? (0) : (EBUSY))
 #define test_lock(plk) \
     ((TryEnterCriticalSection((CRITICAL_SECTION*)&(plk)->lock)) ? (LeaveCriticalSection((CRITICAL_SECTION*)&(plk)->lock),0) : (EBUSY)) 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
+
+/*-------------------------------------------------------------------
+** The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
+*/
 #define RWLOCK                                 LOCK
 #define initialize_rwlock(plk)                 initialize_lock((plk))
 #define destroy_rwlock(plk)                    destroy_lock((plk))
@@ -96,8 +102,10 @@ typedef struct LOCK LOCK;
 #define try_obtain_wrlock(plk)                 try_obtain_lock((plk))
 #define test_rdlock(plk)                       test_lock((plk))
 #define test_wrlock(plk)                       test_lock((plk))
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The condition object of Hercules threading is translated into a Windows condition variable
+
+/*-------------------------------------------------------------------
+** The condition object of Hercules threading is translated into a Windows condition variable
+*/
 #if defined(DEBUG)
 #define initialize_condition(pcond)            DBGInitializeConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
 #define destroy_condition(pcond)               DBGwinthread_cond_destroy( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond)) // Dummy function
@@ -106,6 +114,7 @@ typedef struct LOCK LOCK;
 #define wait_condition(pcond,plk)              DBGSleepConditionVariableCS( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),&(plk)->lock,INFINITE)
 #define timed_wait_condition(pcond,plk,waitdelta) \
     ((DBGSleepConditionVariableCS(__FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),&(plk)->lock,(waitdelta))) ? (0) : (ETIMEDOUT))
+
 #else
 #define initialize_condition(pcond)            InitializeConditionVariable((CONDITION_VARIABLE*)(pcond))
 #define destroy_condition(pcond)               winthread_cond_destroy((CONDITION_VARIABLE*)(pcond)) // Dummy function
@@ -114,16 +123,15 @@ typedef struct LOCK LOCK;
 #define wait_condition(pcond,plk)              SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),&(plk)->lock,INFINITE)
 #define timed_wait_condition(pcond,plk,waitdelta) \
     ((SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),&(plk)->lock,(waitdelta))) ? (0) : (ETIMEDOUT))
-#endif
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#endif // defined( OPTION_WTHREADS )
+#endif
+#endif /* defined( OPTION_WTHREADS ) */
 
 #if defined( OPTION_FTHREADS )
 
-///////////////////////////////////////////////////////////////////////
-// FTHREADS
-///////////////////////////////////////////////////////////////////////
+/*-------------------------------------------------------------------*/
+/*                      Fish Threads                                 */
+/*-------------------------------------------------------------------*/
 
 #include "fthreads.h"
 
@@ -205,10 +213,10 @@ typedef struct LOCK LOCK;
 
 #endif // defined(OPTION_FTHREADS)
 
+/*-------------------------------------------------------------------*/
+/*                      Posix Threads                                */
+/*-------------------------------------------------------------------*/
 #if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) ) 
-///////////////////////////////////////////////////////////////////////
-// PTHREADS
-///////////////////////////////////////////////////////////////////////
 
 #include <pthread.h>
 
@@ -293,6 +301,9 @@ typedef void*THREAD_FUNC(void*);
 
 #endif // !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
 
+/*-------------------------------------------------------------------*/
+/*                      initialize_lock                              */
+/*-------------------------------------------------------------------*/
 #define initialize_lock(plk) \
     do { \
         MATTR attr; \
@@ -311,10 +322,9 @@ typedef void*THREAD_FUNC(void*);
         (plk)->tid = 0; \
     } while (0)
 
-///////////////////////////////////////////////////////////////////////
-// 'Thread' tracing...
-///////////////////////////////////////////////////////////////////////
-
+/*-------------------------------------------------------------------*/
+/* PTT thread tracing support                                        */
+/*-------------------------------------------------------------------*/
 #ifdef OPTION_PTTRACE
 
 #include "pttrace.h"
@@ -387,21 +397,20 @@ typedef void*THREAD_FUNC(void*);
 #undef  signal_thread
 #define signal_thread(tid,signo)                ptt_pthread_kill((tid),(signo),PTT_LOC)
 
-#else  // OPTION_PTTRACE
+#else  // !OPTION_PTTRACE
 #define PTT(...)
 #endif // OPTION_PTTRACE
 
-///////////////////////////////////////////////////////////////////////
-// (Misc)
-///////////////////////////////////////////////////////////////////////
+/*-------------------------------------------------------------------*/
+/* Misc                                                              */
+/*-------------------------------------------------------------------*/
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 
 /*-------------------------------------------------------------------*/
-/* Pipe signaling support...                                         */
+/* Pipe signaling support...  (i.e. thread signaling via pipe)       */
 /*-------------------------------------------------------------------*/
-
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
 
   #define RECV_PIPE_SIGNAL( rfd, lock, flag ) \

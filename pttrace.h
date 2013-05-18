@@ -9,20 +9,24 @@
 /* Pthread tracing structures and prototypes                         */
 /*-------------------------------------------------------------------*/
 
-#if !defined( _PTTHREAD_H_ )
+#ifndef _PTTHREAD_H_
 #define _PTTHREAD_H_
 
 #ifndef _PTTRACE_C_
-#ifndef _HUTIL_DLL_
-#define PTT_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define PTT_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else   /* _PTTRACE_C_ */
-#define PTT_DLL_IMPORT DLL_EXPORT
-#endif /* _PTTRACE_C_ */
+  #ifndef _HUTIL_DLL_
+    #define PTT_DLL_IMPORT      DLL_IMPORT
+  #else
+    #define PTT_DLL_IMPORT      extern
+  #endif
+#else
+  #define PTT_DLL_IMPORT        DLL_EXPORT
+#endif
 
+/*-------------------------------------------------------------------*/
+/*                  fthreads = Fish Threads                          */
+/*-------------------------------------------------------------------*/
 #if defined(OPTION_FTHREADS)
+
 #define OBTAIN_PTTLOCK \
  do { \
    if (!pttnolock) { \
@@ -35,6 +39,7 @@
      } \
    } \
  } while (0)
+
 #define RELEASE_PTTLOCK \
  do { \
    if (!pttnolock) { \
@@ -43,6 +48,7 @@
        loglock(&pttlock, result, "mutex_unlock", PTT_LOC); \
    } \
  } while (0)
+
 PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, void *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, const char *);
@@ -62,7 +68,12 @@ PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, PFT_THREAD_FUNC, void *, co
 PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, const char *);
 PTT_DLL_IMPORT int ptt_pthread_detach(TID, const char *);
 PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
-#else
+
+#else /* !defined(OPTION_FTHREADS) */
+/*-------------------------------------------------------------------*/
+/*                  pthreads = Posix threads                         */
+/*-------------------------------------------------------------------*/
+
 #define OBTAIN_PTTLOCK \
  do { \
    if (!pttnolock) { \
@@ -75,6 +86,7 @@ PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
      } \
    } \
  } while (0)
+
 #define RELEASE_PTTLOCK \
  do { \
    if (!pttnolock) { \
@@ -83,6 +95,7 @@ PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
        loglock(&pttlock, result, "mutex_unlock", PTT_LOC); \
    } \
  } while (0)
+
 PTT_DLL_IMPORT int ptt_pthread_mutex_init(LOCK *, pthread_mutexattr_t *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_mutex_lock(LOCK *, const char *);
 PTT_DLL_IMPORT int ptt_pthread_mutex_trylock(LOCK *, const char *);
@@ -102,36 +115,44 @@ PTT_DLL_IMPORT int ptt_pthread_create(TID *, ATTR *, void *(*)(), void *, const 
 PTT_DLL_IMPORT int ptt_pthread_join(TID, void **, const char *);
 PTT_DLL_IMPORT int ptt_pthread_detach(TID, const char *);
 PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, const char *);
-#endif
+
+#endif /* fthreads or !fthreads */
 
 PTT_DLL_IMPORT void ptt_trace_init (int n, int init);
 PTT_DLL_IMPORT int  ptt_cmd(int argc, char *argv[], char*cmdline);
 PTT_DLL_IMPORT void ptt_pthread_trace (int, const char *, void *, void *, const char *, int);
 PTT_DLL_IMPORT int  ptt_pthread_print ();
 PTT_DLL_IMPORT int  pttclass;
+
 void *ptt_timeout();
 
+/*-------------------------------------------------------------------*/
+/*                  PTT  Trace Table Entry                           */
+/*-------------------------------------------------------------------*/
 typedef struct _PTT_TRACE {
-        TID          tid;               /* Thread id                  */
-        int          trclass;           /* Trace record class         */
-#define PTT_CL_LOG  0x0001              /* Logger records             */
-#define PTT_CL_TMR  0x0002              /* Timer/Clock records        */
-#define PTT_CL_THR  0x0004              /* Thread records             */
-#define PTT_CL_INF  0x0100              /* Instruction info           */
-#define PTT_CL_ERR  0x0200              /* Instruction error/unsup    */
-#define PTT_CL_PGM  0x0400              /* Program interrupt          */
-#define PTT_CL_CSF  0x0800              /* Compare&Swap failure       */
-#define PTT_CL_SIE  0x1000              /* Interpretive Execution     */
-#define PTT_CL_SIG  0x2000              /* SIGP signalling            */
-#define PTT_CL_IO   0x4000              /* IO                         */
-        const char  *type;              /* Trace type                 */
-        void        *data1;             /* Data 1                     */
-        void        *data2;             /* Data 2                     */
-        const char  *loc;               /* File name:line number      */
-        struct timeval tv;              /* Time of day                */
-        int          result;            /* Result                     */
-      } PTT_TRACE;
+        TID          tid;               /* Thread id                 */
+        int          trclass;           /* Trace record class        */
+#define PTT_CL_LOG  0x0001              /* Logger records            */
+#define PTT_CL_TMR  0x0002              /* Timer/Clock records       */
+#define PTT_CL_THR  0x0004              /* Thread records            */
+#define PTT_CL_INF  0x0100              /* Instruction info          */
+#define PTT_CL_ERR  0x0200              /* Instruction error/unsup   */
+#define PTT_CL_PGM  0x0400              /* Program interrupt         */
+#define PTT_CL_CSF  0x0800              /* Compare&Swap failure      */
+#define PTT_CL_SIE  0x1000              /* Interpretive Execution    */
+#define PTT_CL_SIG  0x2000              /* SIGP signalling           */
+#define PTT_CL_IO   0x4000              /* IO                        */
+        const char  *type;              /* Trace type                */
+        void        *data1;             /* Data 1                    */
+        void        *data2;             /* Data 2                    */
+        const char  *loc;               /* File name:line number     */
+        struct timeval tv;              /* Time of day               */
+        int          result;            /* Result                    */
+} PTT_TRACE;
 
+/*-------------------------------------------------------------------*/
+/*                      Helper Macros                                */
+/*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 #define PTT_TRACE_SIZE      sizeof(PTT_TRACE)
 #define PTT_MAGIC           -99
@@ -148,4 +169,4 @@ do { \
     ptt_pthread_trace(PTT_CL_THR,_type,_data1,_data2,_loc,_result); \
 } while(0)
 
-#endif /* defined( _PTTHREAD_H_ ) */
+#endif /* _PTTHREAD_H_ */

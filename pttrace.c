@@ -16,8 +16,11 @@
 
 #include "hercules.h"
 
-#ifdef OPTION_PTTRACE
+#if defined( OPTION_PTTRACE )
 
+/*-------------------------------------------------------------------*/
+/* Global variables                                                  */
+/*-------------------------------------------------------------------*/
 PTT_TRACE *pttrace;                     /* Pthreads trace table      */
 int        pttracex;                    /* Pthreads trace index      */
 int        pttracen;                    /* Pthreads trace entries    */
@@ -31,6 +34,9 @@ LOCK       ptttolock;                   /* timeout thread lock       */
 COND       ptttocond;                   /* timeout thread condition  */
 int        pttmadethread;               /* pthreads is active        */
 
+/*-------------------------------------------------------------------*/
+/* Trim path information from __FILE__ macro value                   */
+/*-------------------------------------------------------------------*/
 static INLINE const char* trimloc( const char* loc )
 {
 #if defined( _MSVC_ )
@@ -48,6 +54,9 @@ static INLINE const char* trimloc( const char* loc )
     return loc;
 }
 
+/*-------------------------------------------------------------------*/
+/* Issue locking call error message                                  */
+/*-------------------------------------------------------------------*/
 static INLINE void
 loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
 {
@@ -73,6 +82,9 @@ loglock (LOCK* mutex, const int rc, const char* calltype, const char* err_loc)
     WRMSG( HHC90014, "I", mutex->tid, trimloc( mutex->loc ));
 }
 
+/*-------------------------------------------------------------------*/
+/* Initialize PTT tracing                                            */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
     if (n > 0)
@@ -109,6 +121,9 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
     }
 }
 
+/*-------------------------------------------------------------------*/
+/* Process 'ptt' tracing command                                     */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 {
     int  rc = 0;
@@ -338,7 +353,9 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
     return rc;
 }
 
-/* thread to print trace after timeout */
+/*-------------------------------------------------------------------*/
+/* Thread to print trace after timeout                               */
+/*-------------------------------------------------------------------*/
 void *ptt_timeout()
 {
     struct timeval  now;
@@ -361,7 +378,11 @@ void *ptt_timeout()
     return NULL;
 }
 
-#ifndef OPTION_FTHREADS
+/*-------------------------------------------------------------------*/
+/* Pthreads (Posix) locking call shim functions                      */
+/*-------------------------------------------------------------------*/
+
+#if !defined( OPTION_FTHREADS )
 DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, const char *loc)
 {
     PTTRACE ("lock init", mutex, attr, loc, PTT_MAGIC);
@@ -587,7 +608,13 @@ DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, const char *loc)
     PTTRACE ("kill", (void *)tid, (void *)(long)sig, loc, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
-#else /* OPTION_FTHREADS */
+
+#else /* defined( OPTION_FTHREADS ) */
+
+/*-------------------------------------------------------------------*/
+/* Fthreads (Fish) locking call shim functions                       */
+/*-------------------------------------------------------------------*/
+
 DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *mutex, void *attr, const char *loc)
 {
     return ptt_pthread_mutex_init(mutex, attr, loc);
@@ -742,10 +769,14 @@ DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, const char *loc)
     PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, loc, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
-#endif
+#endif /* defined or !defined( OPTION_FTHREADS )
 
-DLL_EXPORT void ptt_pthread_trace (int trclass, const char *type, void *data1, void *data2,
-                        const char *loc, int result)
+/*-------------------------------------------------------------------*/
+/* Primary PTT tracing function to fill in a PTT_TRACE entry.        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void ptt_pthread_trace (int trclass, const char *type,
+                                   void *data1, void *data2,
+                                   const char *loc, int result)
 {
 int i, n;
 
@@ -782,6 +813,9 @@ int i, n;
     pttrace[i].result = result;
 }
 
+/*-------------------------------------------------------------------*/
+/* Function to print all PTT_TRACE entries                           */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int ptt_pthread_print ()
 {
 int   i, n, count = 0;
@@ -838,4 +872,4 @@ time_t tt;
     return count;
 }
 
-#endif
+#endif /* defined( OPTION_PTTRACE ) */
