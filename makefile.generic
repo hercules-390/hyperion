@@ -40,7 +40,7 @@ LFLAGS  += -lbz2
 
 // CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
 
-EXEFILES = cmpsctst hercules hercifc \
+EXEFILES = hercules hercifc \
            dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
            tapecopy tapemap tapesplt \
            cckdcdsk cckdcomp cckddiag cckdswap \
@@ -170,15 +170,6 @@ hetupd_OBJ   = hetupd.o hetlib.o ftlib.o sllib.o codepage.o hostinfo.o version.o
 
 dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
-cmpsctst_OBJ = cmpsctst.o             \
-               cmpsctst_cmpsc.o       \
-               cmpsctst_cmpsc_2012.o  \
-               cmpsctst_cmpscdbg.o    \
-               cmpsctst_cmpscdct.o    \
-               cmpsctst_cmpscget.o    \
-               cmpsctst_cmpscmem.o    \
-               cmpsctst_cmpscput.o
-
 dyninst_OBJ = dyninst.o
 
 HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
@@ -287,9 +278,6 @@ hetupd:   $(hetupd_OBJ)
 
 dmap2hrc: $(dmap2hrc_OBJ)
 	$(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
-
-cmpsctst: $(cmpsctst_OBJ)
-	$(CC) -o cmpsctst $(cmpsctst_OBJ) $(LFLAGS)
 
 dyninst:  $(dyninst_OBJ)
 	$(CC) -o dyninst $(dyninst_OBJ) $(LFLAGS) -shared

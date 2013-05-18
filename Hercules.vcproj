@@ -454,70 +454,6 @@
 						RelativePath=".\herclin.c"
 						>
 					</File>
-					<Filter
-						Name="cmpsctst"
-						>
-						<File
-							RelativePath=".\cmpsctst.cmd"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpsctst.make"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpsctst.rexx"
-							>
-						</File>
-						<Filter
-							Name="Source Files"
-							>
-							<File
-								RelativePath=".\cmpsctst.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpsc.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpsc_2012.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpscdbg.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpscdct.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpscget.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpscmem.c"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_cmpscput.c"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="Header Files"
-							>
-							<File
-								RelativePath=".\cmpsctst.h"
-								>
-							</File>
-							<File
-								RelativePath=".\cmpsctst_stdinc.h"
-								>
-							</File>
-						</Filter>
-					</Filter>
 				</Filter>
 			</Filter>
 			<Filter
@@ -1835,10 +1771,6 @@
 					>
 					<File
 						RelativePath=".\README.AIX"
-						>
-					</File>
-					<File
-						RelativePath=".\README.CMPSCTST"
 						>
 					</File>
 					<File

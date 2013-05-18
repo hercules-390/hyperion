@@ -126,11 +126,6 @@ $(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)conspawn.exe: $(O)$(@B).obj                                          $(O)hercver.res
 
-$(X)cmpsctst.exe: $(cmpsctst_OBJ)                                        $(O)hercver.res
-    $(linkexe)
-    XCOPY  cmpsctst.cmd     $(X)    /V /C /F /H /R /K /Y
-    XCOPY  cmpsctst.rexx    $(X)    /V /C /F /H /R /K /Y
-
 # -------------------------------------------------------------
 # Dasd utilities
 

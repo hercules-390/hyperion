@@ -125,8 +125,6 @@ if OPTION_DYNAMIC_LOAD
                    $(XSTATIC)        \
                    -no-undefined     \
                    -avoid-version
-
-  CMPSCTST = cmpsctst
 else
   DYNSRC         = $(dyndev_SRC)
   LTDL           =
@@ -135,7 +133,6 @@ else
   LIB_LD_FLAGS    = $(XSTATIC)    \
                    -no-undefined  \
                    -avoid-version
-  CMPSCTST =
 endif
 
 #
@@ -188,8 +185,7 @@ bin_PROGRAMS = hercules \
                dmap2hrc \
                vmfplc2 \
                $(HERCIFC) \
-               $(HERCLIN) \
-               $(CMPSCTST)
+               $(HERCLIN)
 
 EXTRA_PROGRAMS = hercifc
 
@@ -615,18 +611,6 @@ vmfplc2_SOURCES       = vmfplc2.c
 vmfplc2_LDADD         = $(tools_ADDLIBS)
 vmfplc2_LDFLAGS       = $(tools_LD_FLAGS)
 
-if OPTION_DYNAMIC_LOAD
-cmpsctst_SOURCES      = cmpsctst.c             \
-                        cmpsctst_cmpsc.c       \
-                        cmpsctst_cmpsc_2012.c  \
-                        cmpsctst_cmpscdbg.c    \
-                        cmpsctst_cmpscdct.c    \
-                        cmpsctst_cmpscget.c    \
-                        cmpsctst_cmpscmem.c    \
-                        cmpsctst_cmpscput.c
-cmpsctst_LDADD        = $(tools_ADDLIBS)
-cmpsctst_LDFLAGS      = $(tools_LD_FLAGS)
-endif
 #
 # files that are not 'built' per-se
 #
@@ -644,7 +628,6 @@ EXTRA_DIST = autoconf/config.rpath \
              cckdfix.c             \
              license_dyn76.txt     \
              README.COMMADPT       \
-             README.CMPSCTST       \
              README.SVN            \
              README.DYNMOD         \
              README.ECPSVM         \
@@ -703,8 +686,6 @@ EXTRA_DIST = autoconf/config.rpath \
              wthreads.c            \
              herclogo.txt          \
              hercules.ico          \
-             cmpsctst.cmd          \
-             cmpsctst.rexx         \
              targetver.h
 
 #
@@ -813,8 +794,6 @@ noinst_HEADERS = hostinfo.h     \
                  cmpscget.h     \
                  cmpscmem.h     \
                  cmpscput.h     \
-                 cmpsctst.h         \
-                 cmpsctst_stdinc.h  \
                  hqainc.h       \
                  hqadefs.h      \
                  $(extra_dynamic_SRC)

@@ -44,30 +44,6 @@ $(O)herclin.obj: herclin.c
 $(O)SoftFloat.obj: SoftFloat.c
     $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" SoftFloat.c
 
-$(O)cmpsctst.obj: cmpsctst.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst.c
-
-$(O)cmpsctst_cmpsc.obj: cmpsctst_cmpsc.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpsc.c
-
-$(O)cmpsctst_cmpsc_2012.obj: cmpsctst_cmpsc_2012.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpsc_2012.c
-
-$(O)cmpsctst_cmpscdbg.obj: cmpsctst_cmpscdbg.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpscdbg.c
-
-$(O)cmpsctst_cmpscdct.obj: cmpsctst_cmpscdct.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpscdct.c
-
-$(O)cmpsctst_cmpscget.obj: cmpsctst_cmpscget.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpscget.c
-
-$(O)cmpsctst_cmpscmem.obj: cmpsctst_cmpscmem.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpscmem.c
-
-$(O)cmpsctst_cmpscput.obj: cmpsctst_cmpscput.c
-    $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" cmpsctst_cmpscput.c
-
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule
 # in the member so that nmake doesn't complain or otherwise treat the

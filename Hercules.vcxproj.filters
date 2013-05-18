@@ -8,9 +8,6 @@
     <Filter Include="Source Files\Utilities">
       <UniqueIdentifier>{5e506d73-848f-472b-b316-248621986b67}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Utilities\cmpsctst">
-      <UniqueIdentifier>{CB697219-81FE-4ecd-8BF1-FE9DBFBE85FE}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Hercules">
       <UniqueIdentifier>{00b04ad3-7bbc-4c0f-b3b9-42351a5a8e4c}</UniqueIdentifier>
     </Filter>
@@ -158,42 +155,6 @@
     </ClCompile>
     <ClCompile Include="cckdswap.c">
       <Filter>Source Files\Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst.h">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst.cmd">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst.rexx">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_stdinc.h">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpsc.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpsc_2012.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpscdbg.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpscdct.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpscget.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpscmem.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsctst_cmpscput.c">
-      <Filter>Source Files\Utilities\cmpsctst</Filter>
     </ClCompile>
     <ClCompile Include="conspawn.c">
       <Filter>Source Files\Utilities</Filter>
