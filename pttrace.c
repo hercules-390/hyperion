@@ -435,7 +435,8 @@ DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, const char *loc)
 int result;
     result = pthread_mutex_unlock(&mutex->lock);
     PTTRACE ("unlock", mutex, NULL, loc, result);
-    loglock(mutex, result, "mutex_unlock", loc);
+    if (result)
+        loglock(mutex, result, "mutex_unlock", loc);
     return result;
 }
 
@@ -444,7 +445,8 @@ DLL_EXPORT int ptt_pthread_rwlock_init(RWLOCK *mutex, pthread_rwlockattr_t *attr
 int result;
     PTTRACE ("rwlock init", mutex, attr, loc, PTT_MAGIC);
     result = pthread_rwlock_init(&mutex->lock, attr);
-    loglock((LOCK*)mutex, result, "rwlock_init", loc);
+    if (result)
+        loglock((LOCK*)mutex, result, "rwlock_init", loc);
     return result;
 }
 
@@ -525,7 +527,8 @@ DLL_EXPORT int ptt_pthread_rwlock_unlock(RWLOCK *mutex, const char *loc)
 int result;
     result = pthread_rwlock_unlock(&mutex->lock);
     PTTRACE ("rwunlock", mutex, NULL, loc, result);
-    loglock((LOCK*)mutex, result, "rwlock_unlock", loc);
+    if (result)
+        loglock((LOCK*)mutex, result, "rwlock_unlock", loc);
     return result;
 }
 
@@ -687,7 +690,8 @@ DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, const char *loc)
 int result;
     result = fthread_mutex_unlock(&mutex->lock);
     PTTRACE ("unlock", mutex, NULL, loc, result);
-    loglock(mutex, result, "mutex_unlock", loc);
+    if (result)
+        loglock(mutex, result, "mutex_unlock", loc);
     return result;
 }
 
