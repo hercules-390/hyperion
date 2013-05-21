@@ -1284,6 +1284,8 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
 
     int cc = 1;                         /* No status pending         */
 
+    UNREFERENCED( regs );
+
     if (unlikely((dev->pciscsw.flag3 & SCSW3_SC_PEND)))
     {
         status = pci;
