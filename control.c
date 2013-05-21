@@ -47,10 +47,6 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
-
 /* Temporary debug */
 extern  int     ipending_cmd(int,void *,void *);
 
@@ -6177,9 +6173,6 @@ static char *ordername[] = {
             } /* end if(!status) */
 
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-#if defined(OPTION_FISHIO)
-            ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FISHIO)
 
             /* Invalidate the ALB and TLB */
             ARCH_DEP(purge_tlb) (regs);

@@ -650,10 +650,8 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
     initialize_lock (&sysblk.crwlock);
-#if !defined(OPTION_FISHIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
-#endif /*defined(OPTION_FISHIO)*/
 #if defined(OPTION_CMDSER)
     initialize_lock      (&sysblk.cmdlock);
     initialize_condition (&sysblk.cmdcond);

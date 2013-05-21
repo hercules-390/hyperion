@@ -683,7 +683,6 @@ struct SYSBLK {
         U32     crwcount;               /* #of entries queued        */
         U32     crwindex;               /* CRW queue index           */
         IOINT  *iointq;                 /* I/O interrupt queue       */
-#if !defined(OPTION_FISHIO)
         DEVBLK *ioq;                    /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
         COND    ioqcond;                /* I/O queue condition       */
@@ -692,7 +691,6 @@ struct SYSBLK {
         int     devtmax;                /* Max device threads        */
         int     devthwm;                /* High water mark           */
         int     devtunavail;            /* Count thread unavailable  */
-#endif // !defined(OPTION_FISHIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
 #if defined(_FEATURE_VM_BLOCKIO)
         U16     servcode;               /* External interrupt code   */

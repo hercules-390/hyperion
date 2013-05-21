@@ -28,11 +28,6 @@
  #undef   _GEN_ARCH
 #endif
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
-
-
 #if defined(HAVE_MLOCKALL)
 int configure_memlock(int flags)
 {
@@ -822,13 +817,11 @@ int     cpu;
                 detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan, dev->devnum);
         }
 
-#if !defined(OPTION_FISHIO)
     /* Terminate device threads */
     obtain_lock (&sysblk.ioqlock);
     sysblk.devtwait=0;
     broadcast_condition (&sysblk.ioqcond);
     release_lock (&sysblk.ioqlock);
-#endif
 
     /* release storage          */
     sysblk.lock_mainstor = 0;

@@ -91,12 +91,6 @@ static const char *build_info[] = {
     "Using   (undefined) Mutex Locking Model",
 #endif
 
-#if defined(OPTION_FISHIO)
-    "Using   FishIO",
-#else
-    "Using   HercIO",
-#endif
-
 #if defined(OPTION_SYNCIO)
     "With    Syncio support",
 #else

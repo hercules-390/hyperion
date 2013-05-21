@@ -525,7 +525,6 @@
     <ClCompile Include="vm.c" />
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vstore.c" />
-    <ClCompile Include="w32chan.c" />
     <ClCompile Include="w32util.c" />
     <ClCompile Include="wthreads.c" />
     <ClCompile Include="xstore.c" />
@@ -847,7 +846,6 @@
     <ClInclude Include="sr.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="vstore.h" />
-    <ClInclude Include="w32chan.h" />
     <ClInclude Include="w32dl.h" />
     <ClInclude Include="w32util.h" />
     <ClInclude Include="wthreads.h" />

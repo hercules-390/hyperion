@@ -26,9 +26,6 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
 #include "hexterns.h"
 #endif
@@ -145,9 +142,6 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
 
     /* Save the original architecture mode for later */
     orig_arch_mode = sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-#if defined(OPTION_FISHIO)
-    ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FISHIO)
 
     capture = (!clear) && IS_CPU_ONLINE(cpu) && sysblk.arch_mode == ARCH_900;
 

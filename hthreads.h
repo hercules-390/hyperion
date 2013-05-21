@@ -30,7 +30,6 @@
 #if defined( OPTION_WTHREADS )
     #if defined( OPTION_FTHREADS )
         #undef OPTION_FTHREADS
-        #undef OPTION_FISHIO
         #undef OPTION_PTTRACE
     #endif
 

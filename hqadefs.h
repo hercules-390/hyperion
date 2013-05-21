@@ -9,7 +9,7 @@
 #define _HQADEFS_H_
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 0:              Reserved for normal builds            */
+/* QA Scenario 0:          Reserved for normal builds                */
 /*-------------------------------------------------------------------*/
 
 #if !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
@@ -22,7 +22,7 @@
 /* QA Scenario 1:          System/370 support only                   */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 1
+#if HQA_SCENARIO == 1   // System/370 support only
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 1\n"
@@ -34,10 +34,10 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 2:           ESA/390 support only                     */
+/* QA Scenario 2:          ESA/390 support only                      */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 2
+#if HQA_SCENARIO == 2   // ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 2\n"
@@ -49,10 +49,10 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 3:           System/370 and ESA/390 support only      */
+/* QA Scenario 3:          System/370 and ESA/390 support only       */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 3
+#if HQA_SCENARIO == 3   // System/370 and ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 3\n"
@@ -64,10 +64,10 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 4:        zArchitecure and ESA/390 support only       */
+/* QA Scenario 4:          zArchitecure and ESA/390 support only     */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 4
+#if HQA_SCENARIO == 4   // zArchitecure and ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 4\n"
@@ -79,73 +79,58 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 5:              fthreads, Herc I/O                    */
+/* QA Scenario 5:          Windows, fthreads                        */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 5
-
-  #if !defined(WIN32) && !defined(_WIN32)
-    #error Selected HQA scenario is for Windows only
-  #endif
+#if HQA_SCENARIO == 5   // Windows, fthreads
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 5\n"
 
+  #if !defined(_MSVC_)
+    #error Selected HQA scenario is for MSVC only
+  #endif
+
   #define OPTION_FTHREADS
   #undef  OPTION_WTHREADS
-
-  #define OPTION_HERCIO
-  #undef  OPTION_FISHIO
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 6:                Vista, Win-threads, FishIO          */
+/* QA Scenario 6:          Windows, Posix threads                    */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 6
-
-  #if !defined(WIN32) && !defined(_WIN32)
-    #error Selected HQA scenario is for Windows only
-  #endif
+#if HQA_SCENARIO == 6   // Windows, Posix threads
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 6\n"
 
-  // Vista or later required for WTHREADS...
-
-  #undef  _WIN32_WINNT
-  #undef  WINVER
-  #undef  NTDDI_VERSION
-  #undef  _WIN32_IE
-
-  #define _WIN32_WINNT      0x0600          // Vista
-  #define WINVER            0x0600          // Vista
-  #define NTDDI_VERSION     0x06000100      // Vista SP1
-  #define _WIN32_IE         0x0700          // IE 7.0
-
-  #define OPTION_WTHREADS
-  #undef  OPTION_FTHREADS
-
-  #define OPTION_FISHIO
-  #undef  OPTION_HERCIO
-
-#endif
-
-/*-------------------------------------------------------------------*/
-/* QA Scenario 7:                Vista, Win-threads, Herc I/O        */
-/*-------------------------------------------------------------------*/
-
-#if HQA_SCENARIO == 7
-
+  #if defined(_MSVC_)
+    #error Selected HQA scenario is not supported for MSVC builds
+  #endif
   #if !defined(WIN32) && !defined(_WIN32)
     #error Selected HQA scenario is for Windows only
   #endif
 
+  #undef  OPTION_FTHREADS
+  #undef  OPTION_WTHREADS
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 7:          Vista, fthreads                           */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 7   // Vista, fthreads
+
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 7\n"
 
-  // Vista or later required for WTHREADS...
+  #if !defined(_MSVC_)
+    #error Selected HQA scenario is for MSVC only
+  #endif
+
+  // Vista or later...
 
   #undef  _WIN32_WINNT
   #undef  WINVER
@@ -157,11 +142,71 @@
   #define NTDDI_VERSION     0x06000100      // Vista SP1
   #define _WIN32_IE         0x0700          // IE 7.0
 
-  #define OPTION_WTHREADS
-  #undef  OPTION_FTHREADS
+  #define OPTION_FTHREADS
+  #undef  OPTION_WTHREADS
 
-  #define OPTION_HERCIO
-  #undef  OPTION_FISHIO
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 8:          Vista, Win-threads                        */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 8   // Vista, Win-threads
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 8\n"
+
+  #if !defined(_MSVC_)
+    #error Selected HQA scenario is for MSVC only
+  #endif
+
+  // Vista or later...
+
+  #undef  _WIN32_WINNT
+  #undef  WINVER
+  #undef  NTDDI_VERSION
+  #undef  _WIN32_IE
+
+  #define _WIN32_WINNT      0x0600          // Vista
+  #define WINVER            0x0600          // Vista
+  #define NTDDI_VERSION     0x06000100      // Vista SP1
+  #define _WIN32_IE         0x0700          // IE 7.0
+
+  #undef  OPTION_FTHREADS
+  #define OPTION_WTHREADS
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 9:          Vista, Posix threads                      */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 9   // Vista, Posix threads
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 9\n"
+
+  #if defined(_MSVC_)
+    #error Selected HQA scenario is not supported for MSVC builds
+  #endif
+  #if !defined(WIN32) && !defined(_WIN32)
+    #error Selected HQA scenario is for Windows only
+  #endif
+
+  // Vista or later...
+
+  #undef  _WIN32_WINNT
+  #undef  WINVER
+  #undef  NTDDI_VERSION
+  #undef  _WIN32_IE
+
+  #define _WIN32_WINNT      0x0600          // Vista
+  #define WINVER            0x0600          // Vista
+  #define NTDDI_VERSION     0x06000100      // Vista SP1
+  #define _WIN32_IE         0x0700          // IE 7.0
+
+  #undef  OPTION_FTHREADS
+  #undef  OPTION_WTHREADS
 
 #endif
 

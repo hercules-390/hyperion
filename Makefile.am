@@ -30,14 +30,11 @@ else
 endif
 
 fthreads_SRC  = fthreads.c
-fishio_SRC    = w32chan.c
 
 if BUILD_FTHREADS
   FTHREADS    = $(fthreads_SRC)
-  FISHIO      = $(fishio_SRC)
 else
   FTHREADS    =
-  FISHIO      =
 endif
 
 # We need to still include the source for the dynamic modules
@@ -405,7 +402,6 @@ endif
                        hao.c        \
                        hscmisc.c    \
                        sr.c         \
-                       $(FISHIO)    \
                        $(DYNSRC)    \
                        ecpsvm.c     \
                        hRexx.c      \
@@ -413,7 +409,6 @@ endif
                        hRexx_r.c
 
   EXTRA_libherc_la_SOURCES = $(fthreads_SRC)  \
-                             $(fishio_SRC)    \
                              memrchr.c        \
                              $(dynamic_SRC)   \
                              $(extra_SRC)     \
@@ -717,7 +712,6 @@ noinst_HEADERS = hostinfo.h     \
                  sllib.h        \
                  htypes.h       \
                  fthreads.h     \
-                 w32chan.h      \
                  w32ctca.h      \
                  hifr.h         \
                  tt32if.h       \

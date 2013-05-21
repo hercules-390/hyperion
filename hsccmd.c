@@ -63,10 +63,6 @@
 #include "history.h"
 #include "httpmisc.h"
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif /* defined(OPTION_FISHIO) */
-
 #include "tapedev.h"
 #include "dasdtab.h"
 #include "ctcadpt.h"
@@ -5984,9 +5980,7 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 #endif // OPTION_SYNCIO
 
 
-#if !defined(OPTION_FISHIO)
 void *device_thread(void *arg);
-#endif /* !defined(OPTION_FISHIO) */
 
 /*-------------------------------------------------------------------*/
 /* devtmax command - display or set max device threads               */
@@ -5994,38 +5988,6 @@ void *device_thread(void *arg);
 int devtmax_cmd(int argc, char *argv[], char *cmdline)
 {
     int devtmax = -2;
-
-#if defined(OPTION_FISHIO)
-
-    UNREFERENCED(cmdline);
-
-    /* Note: no need to lock scheduler vars since WE are
-     * the only one that updates "ios_devtmax" (the scheduler
-     * just references it) and we only display (but not update)
-     * all the other variables.
-     */
-
-    if (argc > 1)
-    {
-        sscanf(argv[1], "%d", &devtmax);
-
-        if (devtmax >= -1)
-            ios_devtmax = devtmax;
-        else
-        {
-            WRMSG(HHC02205, "E", argv[1], ": must be -1 to n");
-            return -1;
-        }
-
-        TrimDeviceThreads();    /* (enforce newly defined threshold) */
-    }
-    else
-        WRMSG(HHC02241, "I",
-            ios_devtmax, ios_devtnbr, ios_devthwm,
-            (int)ios_devtwait, ios_devtunavail
-        );
-
-#else /* !defined(OPTION_FISHIO) */
 
     TID tid;
 
@@ -6070,8 +6032,6 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02242, "I",
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail );
-
-#endif /* defined(OPTION_FISHIO) */
 
     return 0;
 }

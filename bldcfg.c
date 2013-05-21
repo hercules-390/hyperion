@@ -50,10 +50,6 @@
 #include "hostinfo.h"
 #include "hdl.h"
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
-
 #if defined( OPTION_TAPE_AUTOMOUNT )
 #include "tapedev.h"
 #endif
@@ -106,27 +102,14 @@ int     devtmax;                        /* Max number device threads */
 #endif
     devtmax  = MAX_DEVICE_THREADS;
 
-
-
 #ifdef OPTION_PTTRACE
     ptt_trace_init (0, 1);
 #endif
 
-
-#if defined(OPTION_FISHIO)
-    InitIOScheduler                     // initialize i/o scheduler...
-    (
-        sysblk.arch_mode,               // (for calling execute_ccw_chain)
-        &sysblk.devprio,                // (ptr to device thread priority)
-        MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
-        devtmax                         // (maximum #of device threads allowed)
-    );
-#else // !defined(OPTION_FISHIO)
     /* Set max number device threads */
     sysblk.devtmax = devtmax;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
-#endif // defined(OPTION_FISHIO)
 
 #if defined(OPTION_LPP_RESTRICT)
     /* Default the licence setting */

@@ -187,20 +187,6 @@
   #error OPTION_WTHREADS requires Windows Vista or greater (_WIN32_WINNT >= 0x0600)
 #endif
 
-#if defined( OPTION_FISHIO ) && defined( OPTION_HERCIO )
-  #error Either OPTION_FISHIO or OPTION_HERCIO must be specified, not both
-#endif
-
-#if !defined( OPTION_FISHIO ) && !defined( OPTION_HERCIO )
-  #if defined ( OPTION_FTHREADS )
-    #define OPTION_FISHIO               // (implied)
-    #undef  OPTION_HERCIO               // (implied)
-  #else // defined( OPTION_WTHREADS )
-    #define OPTION_HERCIO               // (implied)
-    #undef  OPTION_FISHIO               // (implied)
-  #endif
-#endif
-
 #if defined( OPTION_WTHREADS )
   #undef  OPTION_PTTRACE                /* (Cannot use PTT?!)        */
 #endif

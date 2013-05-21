@@ -12,9 +12,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#ifdef OPTION_FISHIO
-#include "w32chan.h"
-#endif
 
 //#define SR_DEBUG    // #define to enable TRACE stmts
 
@@ -125,9 +122,6 @@ BYTE     psw[16];
 
     /* Wait for I/O queue to clear out */
     TRACE("SR: Waiting for I/O Queue to clear...\n");
-#ifdef OPTION_FISHIO
-    SLEEP (2);
-#else
     obtain_lock (&sysblk.ioqlock);
     while (sysblk.ioq)
     {
@@ -136,7 +130,6 @@ BYTE     psw[16];
         obtain_lock (&sysblk.ioqlock);
     }
     release_lock (&sysblk.ioqlock);
-#endif
 
     /* Wait for active I/Os to complete */
     TRACE("SR: Waiting for Active I/Os to Complete...\n");
@@ -502,9 +495,6 @@ S64      dreg;
             sysblk.arch_mode = i;
             sysblk.pcpu = 0;
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-#if defined(OPTION_FISHIO)
-            ios_arch_mode = sysblk.arch_mode;
-#endif
             break;
 
         case SR_SYS_MAINSIZE:

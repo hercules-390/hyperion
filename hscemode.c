@@ -1059,9 +1059,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     WRMSG( HHC00873, "I", test_lock(&sysblk.todlock) ? "" : "not ");
     WRMSG( HHC00874, "I", test_lock(&sysblk.mainlock) ? "" : "not ", sysblk.mainowner);
     WRMSG( HHC00875, "I", test_lock(&sysblk.intlock) ? "" : "not ", sysblk.intowner);
-#if !defined(OPTION_FISHIO)
     WRMSG( HHC00876, "I", test_lock(&sysblk.ioqlock) ? "" : "not ");
-#endif
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {

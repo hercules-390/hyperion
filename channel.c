@@ -36,10 +36,6 @@
 #include "opcode.h"
 #include "chsc.h"
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
-
 
 /* Debug Switches ---------------------------------------------------*/
 
@@ -1102,9 +1098,6 @@ int     cc;                             /* Condition code            */
      || (dev->attnscsw.flag3    & SCSW3_SC_PEND))
         cc = 1;
     else
-#if defined(OPTION_FISHIO)
-        cc = 2;
-#else
     {
         cc = 1;
         obtain_lock(&sysblk.ioqlock);
@@ -1161,7 +1154,6 @@ int     cc;                             /* Condition code            */
             }
         }
     }
-#endif /*defined(OPTION_FISHIO)*/
 
     release_lock (&dev->lock);
 
@@ -1825,7 +1817,6 @@ halt_subchan (REGS *regs, DEVBLK *dev)
     }
     else    /* Device not started */
     {
-#if !defined(OPTION_FISHIO)
         /* Remove the device from the ioq if startpending and queued;
          * lock required before test to keep from entering queue and
          * becoming active prior to queue manipulation.
@@ -1850,8 +1841,6 @@ halt_subchan (REGS *regs, DEVBLK *dev)
             dev->startpending = 0;
         }
         release_lock(&sysblk.ioqlock);
-#endif /*!defined(OPTION_FISHIO)*/
-
 
         /* Halt the device */
         perform_halt_and_release_lock(dev);
@@ -2059,7 +2048,6 @@ int i;
 } /* end function io_reset */
 
 
-#if !defined(OPTION_FISHIO)
 /*-------------------------------------------------------------------*/
 /* Set a thread's priority to its proper value                       */
 /*-------------------------------------------------------------------*/
@@ -2327,7 +2315,6 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     /* Return condition code */
     return rc;
 }
-#endif // !defined(OPTION_FISHIO)
 
 
 /*-------------------------------------------------------------------*/
@@ -2372,11 +2359,9 @@ schedule_ioq (REGS *regs, DEVBLK *dev)
      * correlation to the interest in the subject:
      * [1] Synchronous I/O.  Attempts to complete the channel program
      *     in the cpu thread to avoid any threads overhead.
-     * [2] FishIO.  Use native win32 APIs to coordinate I/O
-     *     thread scheduling.
-     * [3] Device threads.  Queue the I/O and signal a device thread.
+     * [2] Device threads.  Queue the I/O and signal a device thread.
      *     Eliminates the overhead of thead creation/termination.
-     * [4] Original.  Create a thread to execute this I/O
+     * [3] Original.  Create a thread to execute this I/O
      */
 
     /* Determine if we can do synchronous I/O */

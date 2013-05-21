@@ -16,10 +16,6 @@
 #include "opcode.h"
 #include "hostinfo.h"
 
-#ifdef OPTION_FISHIO
-#include "w32chan.h"
-#endif
-
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE3)
@@ -736,9 +732,6 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
-#if defined(OPTION_FISHIO)
-    ios_arch_mode =
-#endif /* defined(OPTION_FISHIO) */
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     if ( argc == 2 )
