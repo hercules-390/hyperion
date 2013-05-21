@@ -773,7 +773,7 @@ DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, const char *loc)
     PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, loc, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
-#endif /* defined or !defined( OPTION_FTHREADS )
+#endif /* defined or !defined( OPTION_FTHREADS ) */
 
 /*-------------------------------------------------------------------*/
 /* Primary PTT tracing function to fill in a PTT_TRACE entry.        */
