@@ -847,6 +847,9 @@ BYTE            unitstat;
     close (dev->fd);
     dev->fd = -1;
 
+    dev->buf = NULL;
+    dev->bufsize = 0;
+
     return 0;
 } /* end function fbadasd_close_device */
 
