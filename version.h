@@ -63,5 +63,5 @@ VER_DLL_IMPORT void display_version_2(FILE *f, char *prog, const char verbose,in
 VER_DLL_IMPORT int get_buildinfo_strings(const char*** pppszBldInfoStr);
 
 #define HERCULES_COPYRIGHT \
-       "(c) Copyright 1999-2012 by Roger Bowler, Jan Jaeger, and others"
+       "(c) Copyright 1999-2013 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_
