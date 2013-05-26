@@ -488,7 +488,7 @@ static void *http_request(void* arg)
     char *strtok_str = NULL;
     CGITAB *cgient;
     int content_length = 0;
-    int sock = (int) arg;
+    int sock = (int) (uintptr_t) arg;
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
