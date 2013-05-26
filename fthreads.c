@@ -21,7 +21,6 @@
 typedef struct _tagFT_MUTEX             // fthread "mutex" structure
 {
     CRITICAL_SECTION  MutexLock;        // (lock for accessing this data)
-    DWORD             dwMutexMagic;     // (magic number)
     HANDLE            hUnlockedEvent;   // (signalled while NOT locked)
     DWORD             dwMutexType;      // (type of mutex (normal, etc))
     DWORD             dwLockOwner;      // (thread-id of who owns it)
@@ -32,7 +31,6 @@ FT_MUTEX, *PFT_MUTEX;
 typedef struct _tagFT_COND_VAR          // fthread "condition variable" structure
 {
     CRITICAL_SECTION  CondVarLock;      // (lock for accessing this data)
-    DWORD             dwCondMagic;      // (magic number)
     HANDLE            hSigXmitEvent;    // set during signal transmission
     HANDLE            hSigRecvdEvent;   // set once signal received by every-
                                         // one that's supposed to receive it.
@@ -40,13 +38,6 @@ typedef struct _tagFT_COND_VAR          // fthread "condition variable" structur
     int               nNumWaiting;      // #of threads waiting to receive signal
 }
 FT_COND_VAR, *PFT_COND_VAR;
-
-////////////////////////////////////////////////////////////////////////////////////
-// So we can tell whether our structures have been properly initialized or not...
-
-#define  FT_MUTEX_MAGIC   0x4D767478    // "Mutx" in ASCII
-#define  FT_COND_MAGIC    0x436F6E64    // "Cond" in ASCII
-#define  FT_ATTR_MAGIC    0x41747472    // "Attr" in ASCII
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +82,6 @@ static BOOL  InitializeFT_MUTEX
 
     MyInitializeCriticalSection ( &pFT_MUTEX->MutexLock );
 
-    pFT_MUTEX->dwMutexMagic   = FT_MUTEX_MAGIC;
     pFT_MUTEX->dwMutexType    = dwMutexType;
     pFT_MUTEX->dwLockOwner    = 0;
     pFT_MUTEX->nLockedCount   = 0;
@@ -144,7 +134,6 @@ static BOOL  InitializeFT_COND_VAR
         {
             MyInitializeCriticalSection ( &pFT_COND_VAR->CondVarLock );
 
-            pFT_COND_VAR->dwCondMagic   = FT_COND_MAGIC;
             pFT_COND_VAR->bBroadcastSig = FALSE;
             pFT_COND_VAR->nNumWaiting   = 0;
 
@@ -316,12 +305,8 @@ static int  BeginWait
 
     if (0
         || !pFT_COND_VAR                                          // (invalid ptr)
-        ||  pFT_COND_VAR -> dwCondMagic  != FT_COND_MAGIC         // (not initialized)
         || !pFTUSER_MUTEX                                         // (invalid ptr)
-        ||  pFTUSER_MUTEX-> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
         || !(pFT_MUTEX = pFTUSER_MUTEX->hMutex)                   // (invalid ptr)
-//      || !pFT_MUTEX                                             // (invalid ptr)
-        ||  pFT_MUTEX    -> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
     )
         return RC(EINVAL);
 
@@ -563,13 +548,8 @@ static int  QueueTransmission
     BOOL          bXmitType
 )
 {
-    if (0
-        || !pFT_COND_VAR                                // (invalid ptr)
-        ||  pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC  // (not initialized)
-    )
-    {
+    if (!pFT_COND_VAR)
         return RC(EINVAL);    // (invalid parameters were passed)
-    }
 
     // Wait for the condition variable to become free so we can begin transmitting
     // our signal... If the condition variable is still "busy" (in use), then that
@@ -671,12 +651,8 @@ static int  ReturnFromWait
 
     if (0
         || !pFT_COND_VAR                                          // (invalid ptr)
-        ||  pFT_COND_VAR -> dwCondMagic  != FT_COND_MAGIC         // (not initialized)
         || !pFTUSER_MUTEX                                         // (invalid ptr)
-        ||  pFTUSER_MUTEX-> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
         || !(pFT_MUTEX = pFTUSER_MUTEX->hMutex)                   // (invalid ptr)
-//      || !pFT_MUTEX                                             // (invalid ptr)
-        ||  pFT_MUTEX    -> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
     )
         return RC(EINVAL);
 
@@ -901,9 +877,8 @@ int  fthread_create
 
     if ( pThreadAttr )
     {
-        if (  pThreadAttr->dwAttrMagic  != FT_ATTR_MAGIC ||
-            ( pThreadAttr->nDetachState != FTHREAD_CREATE_DETACHED &&
-              pThreadAttr->nDetachState != FTHREAD_CREATE_JOINABLE ) )
+        if (pThreadAttr->nDetachState != FTHREAD_CREATE_DETACHED &&
+            pThreadAttr->nDetachState != FTHREAD_CREATE_JOINABLE)
             return RC(EINVAL);
 
         nStackSize   = pThreadAttr->nStackSize;
@@ -1135,10 +1110,6 @@ int  fthread_attr_init
     if ( !pThreadAttr )
         return RC(EINVAL);          // (invalid ptr)
 
-    if ( FT_ATTR_MAGIC == pThreadAttr->dwAttrMagic )
-        return RC(EBUSY);           // (already initialized)
-
-    pThreadAttr->dwAttrMagic  = FT_ATTR_MAGIC;
     pThreadAttr->nDetachState = FTHREAD_CREATE_DEFAULT;
     pThreadAttr->nStackSize   = 0;
 
@@ -1157,10 +1128,6 @@ int  fthread_attr_destroy
     if ( !pThreadAttr )
         return RC(EINVAL);      // (invalid ptr)
 
-    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
-        return RC(EINVAL);      // (not initialized)
-
-    pThreadAttr->dwAttrMagic  = 0;
     pThreadAttr->nDetachState = 0;
     pThreadAttr->nStackSize   = 0;
 
@@ -1179,9 +1146,6 @@ int  fthread_attr_setdetachstate
 {
     if ( !pThreadAttr )
         return RC(EINVAL);          // (invalid ptr)
-
-    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
-        return RC(EINVAL);          // (not initialized)
 
     if ( FTHREAD_CREATE_DETACHED != nDetachState &&
          FTHREAD_CREATE_JOINABLE != nDetachState )
@@ -1205,9 +1169,6 @@ int  fthread_attr_getdetachstate
     if ( !pThreadAttr || !pnDetachState )
         return RC(EINVAL);          // (invalid ptr)
 
-    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
-        return RC(EINVAL);          // (not initialized)
-
     if ( FTHREAD_CREATE_DETACHED != pThreadAttr->nDetachState &&
          FTHREAD_CREATE_JOINABLE != pThreadAttr->nDetachState )
         return RC(EINVAL);          // (invalid detach state)
@@ -1230,9 +1191,6 @@ int  fthread_attr_setstacksize
     if ( !pThreadAttr )
         return RC(EINVAL);          // (invalid ptr)
 
-    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
-        return RC(EINVAL);          // (not initialized)
-
     pThreadAttr->nStackSize = nStackSize;
 
     return RC(0);
@@ -1250,9 +1208,6 @@ int  fthread_attr_getstacksize
 {
     if ( !pThreadAttr || !pnStackSize )
         return RC(EINVAL);          // (invalid ptr)
-
-    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
-        return RC(EINVAL);          // (not initialized)
 
     *pnStackSize = pThreadAttr->nStackSize;
 
@@ -1313,9 +1268,6 @@ int  fthread_mutex_init
     if ( !pFTUSER_MUTEX )
         return RC(EINVAL);      // (invalid mutex ptr)
 
-    if ( FT_MUTEX_MAGIC == pFTUSER_MUTEX->dwMutexMagic )
-        return RC(EBUSY);       // (mutex already initialized)
-
     if ( pFT_MUTEX_ATTR && !IsValidMutexType ( dwMutexType = *pFT_MUTEX_ATTR ) )
         return RC(EINVAL);      // (invalid mutex attr ptr or mutex attr type)
 
@@ -1329,14 +1281,10 @@ int  fthread_mutex_init
     ))
     {
         free ( pFTUSER_MUTEX->hMutex );
-
-        pFTUSER_MUTEX->dwMutexMagic = 0;
         pFTUSER_MUTEX->hMutex       = NULL;
 
         return RC(EAGAIN);      // (unable to obtain required resources)
     }
-
-    pFTUSER_MUTEX->dwMutexMagic = FT_MUTEX_MAGIC;
 
     return RC(0);
 }
@@ -1353,9 +1301,6 @@ int  fthread_mutex_destroy
     if ( !pFTUSER_MUTEX )
         return RC(EINVAL);      // (invalid ptr)
 
-    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
-        return RC(EINVAL);      // (not initialized)
-
     if ( !UninitializeFT_MUTEX
     (
         pFTUSER_MUTEX->hMutex
@@ -1364,8 +1309,7 @@ int  fthread_mutex_destroy
 
     free ( pFTUSER_MUTEX->hMutex );
 
-    pFTUSER_MUTEX->dwMutexMagic = 0;
-    pFTUSER_MUTEX->hMutex       = NULL;
+    pFTUSER_MUTEX->hMutex = NULL;
 
     return RC(0);
 }
@@ -1381,9 +1325,6 @@ int  fthread_mutex_trylock
 {
     if ( !pFTUSER_MUTEX )
         return RC(EINVAL);      // (invalid ptr)
-
-    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
-        return RC(EINVAL);      // (not initialized)
 
     // Try to acquire the requested mutex...
 
@@ -1435,9 +1376,6 @@ int  fthread_mutex_lock
 {
     if ( !pFTUSER_MUTEX )
         return RC(EINVAL);      // (invalid ptr)
-
-    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
-        return RC(EINVAL);      // (not initialized)
 
     // Try to acquire the requested mutex...
 
@@ -1496,11 +1434,8 @@ int  fthread_mutex_unlock
     fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
-    if (0
-        || !pFTUSER_MUTEX                                   // (invalid ptr)
-        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic  // (not initialized)
-    )
-        return RC(EINVAL);
+    if (!pFTUSER_MUTEX)
+        return RC(EINVAL); // (invalid ptr)
 
     if (0
         || GetCurrentThreadId() != ((PFT_MUTEX)pFTUSER_MUTEX->hMutex)->dwLockOwner  // (not owned)
@@ -1531,9 +1466,6 @@ int  fthread_cond_init
     if ( !pFT_COND_VAR )
         return RC(EINVAL);      // (invalid ptr)
 
-    if ( FT_COND_MAGIC == pFT_COND_VAR->dwCondMagic )
-        return RC(EBUSY);       // (already initialized)
-
     if ( !(pFT_COND_VAR->hCondVar = MallocFT_COND_VAR()) )
         return RC(ENOMEM);      // (out of memory)
 
@@ -1543,14 +1475,9 @@ int  fthread_cond_init
     ))
     {
         free ( pFT_COND_VAR->hCondVar );
-
-        pFT_COND_VAR->dwCondMagic = 0;
-        pFT_COND_VAR->hCondVar    = NULL;
-
+        pFT_COND_VAR->hCondVar = NULL;
         return RC(EAGAIN);      // (unable to obtain required resources)
     }
-
-    pFT_COND_VAR->dwCondMagic = FT_COND_MAGIC;
 
     return RC(0);
 }
@@ -1567,9 +1494,6 @@ int  fthread_cond_destroy
     if ( !pFT_COND_VAR )
         return RC(EINVAL);      // (invalid ptr)
 
-    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
-        return RC(EINVAL);      // (not initialized)
-
     if ( !UninitializeFT_COND_VAR
     (
         pFT_COND_VAR->hCondVar
@@ -1577,10 +1501,7 @@ int  fthread_cond_destroy
         return RC(EBUSY);       // (still in use)
 
     free ( pFT_COND_VAR->hCondVar );
-
-    pFT_COND_VAR->dwCondMagic = 0;
-    pFT_COND_VAR->hCondVar    = NULL;
-
+    pFT_COND_VAR->hCondVar = NULL;
     return RC(0);
 }
 
@@ -1595,9 +1516,6 @@ int  fthread_cond_signal
 {
     if ( !pFT_COND_VAR )
         return RC(EINVAL);      // (invalid ptr)
-
-    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
-        return RC(EINVAL);      // (not initialized)
 
     return QueueTransmission
     (
@@ -1617,9 +1535,6 @@ int  fthread_cond_broadcast
 {
     if ( !pFT_COND_VAR )
         return RC(EINVAL);      // (invalid ptr)
-
-    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
-        return RC(EINVAL);      // (not initialized)
 
     return QueueTransmission
     (
@@ -1641,10 +1556,8 @@ int  fthread_cond_wait
     int rc;
 
     if (0
-        || !pFT_COND_VAR                                        // (invalid ptr)
-        ||   FT_COND_MAGIC  != pFT_COND_VAR  -> dwCondMagic     // (not initialized)
-        || !pFTUSER_MUTEX                                       // (invalid ptr)
-        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX -> dwMutexMagic    // (not initialized)
+        || !pFT_COND_VAR        // (invalid ptr)
+        || !pFTUSER_MUTEX       // (invalid ptr)
     )
         return RC(EINVAL);
 
@@ -1742,9 +1655,7 @@ int  fthread_cond_timedwait
 
     if (0
         || !pFT_COND_VAR
-        ||   FT_COND_MAGIC  != pFT_COND_VAR -> dwCondMagic
         || !pFTUSER_MUTEX
-        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX    -> dwMutexMagic
         || !pTimeTimeout
     )
         return RC(EINVAL);
