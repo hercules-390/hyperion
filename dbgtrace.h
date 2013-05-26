@@ -26,6 +26,14 @@
 /* can be overridden by simply #defining 'ENABLE_TRACING_STMTS' and  */
 /* then #including this header again to activate the new settings.   */
 
+#undef BREAK_INTO_DEBUGGER
+
+#if defined( _MSVC_ )
+  #define BREAK_INTO_DEBUGGER()     __debugbreak()
+#else
+  #define BREAK_INTO_DEBUGGER()     raise( SIGTRAP )
+#endif
+
 #undef _ENABLE_TRACING_STMTS_IMPL
 
 #if defined( ENABLE_TRACING_STMTS )
@@ -65,7 +73,7 @@
         if (!(a)) { \
           /* Programming Note: message formatted specifically for Visual Studio F4-key "next message" compatibility */  \
           TRACE("%s(%d) : warning HHC90999W : *** Assertion Failed! *** function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
-          if (IsDebuggerPresent()) DebugBreak(); /* break into debugger */ \
+          if (IsDebuggerPresent()) BREAK_INTO_DEBUGGER(); \
         } \
       } while(0)
   #else /* !defined( _MSVC_ ) */
@@ -94,7 +102,7 @@
           if (buffer) free( buffer );
           buffsize += chunksize;
           buffer = malloc( buffsize + 1 );
-          if (!buffer) __debugbreak();
+          if (!buffer) BREAK_INTO_DEBUGGER();
           rc = _vsnprintf_s( buffer, buffsize+1, buffsize, fmt, args);
       } while (rc < 0 || rc >= buffsize);
       OutputDebugStringA( buffer ); /* send to debugger pane */
