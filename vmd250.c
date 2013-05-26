@@ -1754,7 +1754,7 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
 /*-------------------------------------------------------------------*/
 /*  Asynchronous Input/Output 64-bit Driver Thread                   */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(d250_async64)(void *ctl)
+static void* ARCH_DEP(d250_async64)(void *ctl)
 {
 IOCTL64 *ioctl;    /* 64-bit IO request controls  */
 BYTE     psc;      /* List processing status code */
@@ -1768,6 +1768,7 @@ BYTE     psc;      /* List processing status code */
    d250_bio_interrupt(ioctl->dev, ioctl->intrparm, psc, 0x07);
 
    free(ioctl);
+   return NULL;
 
 } /* end function ARCH_DEP(d250_async64) */
 

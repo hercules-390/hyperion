@@ -187,11 +187,13 @@ static void do_shutdown_now()
    the above do_shutdown_now function to perform the actual shutdown
    (which releases the device configuration, etc)
 */
-static void do_shutdown_wait()
+static void* do_shutdown_wait(void* arg)
 {
+    UNREFERENCED( arg );
     WRMSG(HHC01426, "I");
     wait_sigq_resp();
     do_shutdown_now();
+    return NULL;
 }
 
 /*                 *****  do_shutdown  *****

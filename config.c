@@ -878,6 +878,13 @@ int configure_capping(U32 value)
 #endif // OPTION_CAPPING
 
 #ifdef OPTION_SHARED_DEVICES
+static void* shrdport_connecting_thread(void* arg)
+{
+    DEVBLK* dev = (DEVBLK*) arg;
+    dev->hnd->init( dev, 0, NULL );
+    return NULL;
+}
+
 int configure_shrdport(U16 shrdport)
 {
 int rc;
@@ -918,7 +925,7 @@ int rc;
             if (dev->connecting)
             {
                 rc = create_thread (&tid, DETACHED,
-                           *dev->hnd->init, dev, "device connecting thread");
+                           shrdport_connecting_thread, dev, "device connecting thread");
                 if (rc)
                 {
                     WRMSG(HHC00102, "E", strerror(rc));

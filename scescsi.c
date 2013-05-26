@@ -250,8 +250,10 @@ int fd;
 /*-------------------------------------------------------------------*/
 /* Async thread to process service processor file load               */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(hwl_thread)(SCCB_HWL_BK *hwl_bk)
+static void* ARCH_DEP(hwl_thread)(void* arg)
 {
+SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
+
     if(hwl_bk->file < HWL_MAXFILETYPE && hwl_fn[hwl_bk->file])
     {
         switch(hwl_bk->type) {
@@ -301,6 +303,7 @@ static void ARCH_DEP(hwl_thread)(SCCB_HWL_BK *hwl_bk)
     OBTAIN_INTLOCK(NULL);
     sclp_attention(SCCB_EVD_TYPE_HWL);
     RELEASE_INTLOCK(NULL);
+    return NULL;
 }
 
 

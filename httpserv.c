@@ -478,7 +478,7 @@ static void http_download(WEBBLK *webblk, char *filename)
 }
 
 
-static void *http_request(int sock)
+static void *http_request(void* arg)
 {
     WEBBLK *webblk;
     int authok = !http_serv.httpauth;
@@ -488,6 +488,7 @@ static void *http_request(int sock)
     char *strtok_str = NULL;
     CGITAB *cgient;
     int content_length = 0;
+    int sock = (int) arg;
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
