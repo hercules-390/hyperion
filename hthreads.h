@@ -10,12 +10,6 @@
 
 #include "hercules.h"
 
-#if defined(HAVE_SYS_SYSCALL_H) && !defined(HAVE_GETTID)
- #include <sys/syscall.h>
- #define gettid() ((pid_t)(syscall(SYS_gettid)))
- #define USE_GETTID
-#endif
-
 #if !defined(THREAD_STACK_SIZE)
  #define THREAD_STACK_SIZE 0x100000
 #endif
@@ -406,62 +400,5 @@ typedef void*THREAD_FUNC(void*);
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
-
-/*-------------------------------------------------------------------*/
-/* Pipe signaling support...  (i.e. thread signaling via pipe)       */
-/*-------------------------------------------------------------------*/
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-
-  #define RECV_PIPE_SIGNAL( rfd, lock, flag ) \
-    do { \
-      int f; int saved_errno=get_HSO_errno(); BYTE c=0; \
-      obtain_lock(&(lock)); \
-      if ((f=(flag))>=1) (flag)=0; \
-      release_lock(&(lock)); \
-      if (f>=1) \
-        VERIFY(read_pipe((rfd),&c,1)==1); \
-      set_HSO_errno(saved_errno); \
-    } while (0)
-
-  #define SEND_PIPE_SIGNAL( wfd, lock, flag ) \
-    do { \
-      int f; int saved_errno=get_HSO_errno(); BYTE c=0; \
-      obtain_lock(&(lock)); \
-      if ((f=(flag))<=0) (flag)=1; \
-      release_lock(&(lock)); \
-      if (f<=0) \
-        VERIFY(write_pipe((wfd),&c,1)==1); \
-      set_HSO_errno(saved_errno); \
-    } while (0)
-
-  #define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset ) \
-    FD_SET((pipe_rfd),(prset)); \
-    (maxfd)=(maxfd)>(pipe_rfd)?(maxfd):(pipe_rfd)
-
-  #define SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.cnslrpipe, (maxfd), (prset) )
-  #define SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.sockrpipe, (maxfd), (prset) )
-
-  #define RECV_CONSOLE_THREAD_PIPE_SIGNAL()  RECV_PIPE_SIGNAL( sysblk.cnslrpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
-  #define RECV_SOCKDEV_THREAD_PIPE_SIGNAL()  RECV_PIPE_SIGNAL( sysblk.sockrpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
-  #define SIGNAL_CONSOLE_THREAD()            SEND_PIPE_SIGNAL( sysblk.cnslwpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
-  #define SIGNAL_SOCKDEV_THREAD()            SEND_PIPE_SIGNAL( sysblk.sockwpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
-
-#else // !defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-
-  #define RECV_PIPE_SIGNAL( rfd, lock, flag )
-  #define SEND_PIPE_SIGNAL( wfd, lock, flag )
-
-  #define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset )
-
-  #define SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, prset )
-  #define SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, prset )
-
-  #define RECV_CONSOLE_THREAD_PIPE_SIGNAL()
-  #define RECV_SOCKDEV_THREAD_PIPE_SIGNAL()
-
-  #define SIGNAL_CONSOLE_THREAD()     signal_thread( sysblk.cnsltid, SIGUSR2 )
-  #define SIGNAL_SOCKDEV_THREAD()     signal_thread( sysblk.socktid, SIGUSR2 )
-
-#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
 
 #endif // _HTHREADS_H
