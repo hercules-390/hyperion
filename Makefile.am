@@ -678,7 +678,6 @@ EXTRA_DIST = autoconf/config.rpath \
              build_pch.c           \
              conspawn.c            \
              getopt.c              \
-             wthreads.c            \
              herclogo.txt          \
              hercules.ico          \
              targetver.h
@@ -774,7 +773,6 @@ noinst_HEADERS = hostinfo.h     \
                  w32mtio.h      \
                  vmd250.h       \
                  msgenu.h       \
-                 wthreads.h     \
                  hdiagf18.h     \
                  dbgtrace.h     \
                  chain.h        \
