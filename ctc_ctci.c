@@ -691,15 +691,6 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
         {
             release_lock( &pCTCBLK->Lock );
 
-#if defined( OPTION_WTHREADS )
-// Use a straight relative wait rather than the calculated wait of the POSIX
-// based threading.
-            obtain_lock( &pCTCBLK->EventLock );
-            rc = timed_wait_condition( &pCTCBLK->Event,
-                                       &pCTCBLK->EventLock,
-                                       CTC_READ_TIMEOUT_SECS * 1000 );
-
-#else //!defined( OPTION_WTHREADS )
             {
                 struct timespec waittime;
                 struct timeval  now;
@@ -714,7 +705,6 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
                                            &pCTCBLK->EventLock,
                                            &waittime );
             }
-#endif // defined( OPTION_WTHREADS)
 
             release_lock( &pCTCBLK->EventLock );
 

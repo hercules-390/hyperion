@@ -183,9 +183,6 @@ int cache_wait(int ix)
 
 #if FALSE 
     {
-#if defined( OPTION_WTHREADS )
-        timed_wait_condition( &cacheblk[ix].waitcond, &cacheblk[ix].lock, CACHE_WAITTIME );
-#else
     struct timeval  now;
     struct timespec tm;
         gettimeofday (&now, NULL);
@@ -194,7 +191,6 @@ int cache_wait(int ix)
         tm.tv_sec += tm.tv_nsec / 1000000000;
         tm.tv_nsec = tm.tv_nsec % 1000000000;
         timed_wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock, &tm);
-#endif
     }
 #else
     wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock);

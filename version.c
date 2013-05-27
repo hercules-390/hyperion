@@ -72,13 +72,9 @@ static const char *build_info[] = {
 #endif
 
 #if defined( OPTION_FTHREADS )
-    "Using   fthreads Threading Model",
+    "Using   Fish threads Threading Model",
 #else
-    #if defined( OPTION_WTHREADS )
-        "Using   Windows Native Threading Model",
-    #else
-        "Using   POSIX threads Threading Model",
-    #endif
+    "Using   POSIX threads Threading Model",
 #endif
 
 #if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL

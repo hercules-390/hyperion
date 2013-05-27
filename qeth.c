@@ -104,7 +104,7 @@
 #endif
 
 /* (QETH speed/performance/debugging) */
-#if defined( QETH_PTT_TRACING ) || defined( OPTION_WTHREADS )
+#if defined( QETH_PTT_TRACING )
   #define PTT_QETH_TRACE( _string, _tr1, _tr2, _tr3) \
           PTT(PTT_CL_INF, _string, _tr1, _tr2, _tr3)
 #else

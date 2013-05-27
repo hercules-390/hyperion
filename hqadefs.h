@@ -92,7 +92,6 @@
   #endif
 
   #define OPTION_FTHREADS
-  #undef  OPTION_WTHREADS
 
 #endif
 
@@ -113,7 +112,6 @@
   #endif
 
   #undef  OPTION_FTHREADS
-  #undef  OPTION_WTHREADS
 
 #endif
 
@@ -143,48 +141,17 @@
   #define _WIN32_IE         0x0700          // IE 7.0
 
   #define OPTION_FTHREADS
-  #undef  OPTION_WTHREADS
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 8:          Vista, Win-threads                        */
+/* QA Scenario 8:          Vista, Posix threads                      */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 8   // Vista, Win-threads
+#if HQA_SCENARIO == 8   // Vista, Posix threads
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 8\n"
-
-  #if !defined(_MSVC_)
-    #error Selected HQA scenario is for MSVC only
-  #endif
-
-  // Vista or later...
-
-  #undef  _WIN32_WINNT
-  #undef  WINVER
-  #undef  NTDDI_VERSION
-  #undef  _WIN32_IE
-
-  #define _WIN32_WINNT      0x0600          // Vista
-  #define WINVER            0x0600          // Vista
-  #define NTDDI_VERSION     0x06000100      // Vista SP1
-  #define _WIN32_IE         0x0700          // IE 7.0
-
-  #undef  OPTION_FTHREADS
-  #define OPTION_WTHREADS
-
-#endif
-
-/*-------------------------------------------------------------------*/
-/* QA Scenario 9:          Vista, Posix threads                      */
-/*-------------------------------------------------------------------*/
-
-#if HQA_SCENARIO == 9   // Vista, Posix threads
-
-  #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 9\n"
 
   #if defined(_MSVC_)
     #error Selected HQA scenario is not supported for MSVC builds
@@ -206,7 +173,6 @@
   #define _WIN32_IE         0x0700          // IE 7.0
 
   #undef  OPTION_FTHREADS
-  #undef  OPTION_WTHREADS
 
 #endif
 

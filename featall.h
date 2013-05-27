@@ -88,11 +88,7 @@
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
 #define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
-
-#ifndef OPTION_WTHREADS
-  #define OPTION_PTTRACE                /* Pthreads tracing          */
-#endif
-
+#define OPTION_PTTRACE                  /* Pthreads tracing          */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 

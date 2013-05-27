@@ -138,10 +138,7 @@ typedef u_int32_t           in_addr_t;
 #define OPTION_ENHANCED_CONFIG_INCLUDE
 #endif
 
-#if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
 #define OPTION_FTHREADS
-#endif
-
 #define HAVE_STRSIGNAL
 
 #if !defined(OPTION_NO_EXTERNAL_GUI)

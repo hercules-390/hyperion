@@ -26,7 +26,7 @@
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-#if defined( LCS_TIMING_DEBUG ) || defined( OPTION_WTHREADS )
+#if defined( LCS_TIMING_DEBUG )
   #define PTT_LCS_TIMING_DEBUG      PTT
 #else
   #define PTT_LCS_TIMING_DEBUG      __noop
@@ -786,17 +786,6 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
             release_lock( &pLCSDEV->Lock );
 
             // Wait 5 seconds then check for channel conditions
-#if defined( OPTION_WTHREADS )
-// Use a straight relative wait rather than the calculated wait of the POSIX
-// based threading.
-
-            obtain_lock( &pLCSDEV->EventLock );
-
-            rc = timed_wait_condition( &pLCSDEV->Event,
-                                       &pLCSDEV->EventLock,
-                                       CTC_READ_TIMEOUT_SECS * 1000 );
-
-#else //!defined( OPTION_WTHREADS )
             {
                 struct timespec waittime;
                 struct timeval  now;
@@ -812,7 +801,6 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
                                            &pLCSDEV->EventLock,
                                            &waittime );
             }
-#endif // defined( OPTION_WTHREADS)
 
             release_lock( &pLCSDEV->EventLock );
 
@@ -1652,14 +1640,6 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                 && !pLCSPORT->fStarted
             )
             {
-#if defined( OPTION_WTHREADS )
-                timed_wait_condition
-                (
-                    &pLCSPORT->Event,       // ptr to condition to wait on
-                    &pLCSPORT->EventLock,   // ptr to controlling lock (must be held!)
-                    250                     // max #of milliseconds to wait
-                );
-#else
                 timed_wait_condition_relative_usecs
                 (
                     &pLCSPORT->Event,       // ptr to condition to wait on
@@ -1667,7 +1647,6 @@ static void*  LCS_PortThread( PLCSPORT pLCSPORT )
                     250*1000,               // max #of microseconds to wait
                     NULL                    // [OPTIONAL] ptr to tod value (may be NULL)
                 );
-#endif
             }
         }
         release_lock( &pLCSPORT->EventLock );

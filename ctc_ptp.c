@@ -1533,18 +1533,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
             release_lock( &pPTPBLK->ReadBufferLock );
 
             // There is no data waiting to be read.
-#if defined( OPTION_WTHREADS )
-            // Obtain the event lock
-            obtain_lock( &pPTPBLK->ReadEventLock );
-
-            // Use a relative wait
-            rc = timed_wait_condition( &pPTPBLK->ReadEvent,
-                                       &pPTPBLK->ReadEventLock,
-                                       PTP_READ_TIMEOUT_SECS * 1000 );
-
-            // Release the event lock
-            release_lock( &pPTPBLK->ReadEventLock );
-#else /* defined( OPTION_WTHREADS ) */
             // Calculate when to end the wait.
             gettimeofday( &now, NULL );
 
@@ -1561,7 +1549,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 
             // Release the event lock
             release_lock( &pPTPBLK->ReadEventLock );
-#endif /* defined( OPTION_WTHREADS ) */
 
             //
             if (rc == ETIMEDOUT || rc == EINTR)
@@ -3801,18 +3788,6 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
     if (pPTPINT->iDelay != 0)
     {
         // Wait for the number of milliseconds specified by the requestor.
-#if defined( OPTION_WTHREADS )
-        // Obtain the path unsolicited interrupt event lock
-        obtain_lock( &pPTPATH->UnsolEventLock );
-
-        // Use a relative wait
-        rc = timed_wait_condition( &pPTPATH->UnsolEvent,
-                                   &pPTPATH->UnsolEventLock,
-                                   pPTPINT->iDelay );
-
-        // Release the path unsolicited interrupt event lock
-        release_lock( &pPTPATH->UnsolEventLock );
-#else /* defined( OPTION_WTHREADS ) */
         // Calculate when to end the wait.
         delay_q = pPTPINT->iDelay / 1000;
         delay_r = pPTPINT->iDelay % 1000;
@@ -3837,7 +3812,6 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
         // Release the path unsolicited interrupt event lock
         release_lock( &pPTPATH->UnsolEventLock );
-#endif /* defined( OPTION_WTHREADS ) */
     }
 
     // Display various information, maybe
@@ -3862,18 +3836,6 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
         for( i = 0; i <= 8; i++ )
         {
             // Wait for 100 milliseconds
-#if defined( OPTION_WTHREADS )
-            // Obtain the path unsolicited interrupt event lock
-            obtain_lock( &pPTPATH->UnsolEventLock );
-
-            // Use a relative wait
-            rc = timed_wait_condition( &pPTPATH->UnsolEvent,
-                                       &pPTPATH->UnsolEventLock,
-                                       100 );
-
-            // Release the path unsolicited interrupt event lock
-            release_lock( &pPTPATH->UnsolEventLock );
-#else /* defined( OPTION_WTHREADS ) */
             // Calculate when to end the wait.
             gettimeofday( &now, NULL );
 
@@ -3895,7 +3857,6 @@ void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
 
             // Release the path unsolicited interrupt event lock
             release_lock( &pPTPATH->UnsolEventLock );
-#endif /* defined( OPTION_WTHREADS ) */
 
             // Attempt to raise the interrupt again.
             rc = device_attention( pDEVBLK, pPTPINT->bStatus );

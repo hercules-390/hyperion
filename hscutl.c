@@ -754,13 +754,7 @@ DLL_EXPORT int timed_wait_condition_relative_usecs
     }
 
     timeout_timespec.tv_nsec *= 1000;
-
-#if defined( OPTION_WTHREADS )
-    if ( usecs < 1000 ) return ( ETIMEDOUT );
-    else return timed_wait_condition( pCOND, pLOCK, usecs/1000 );
-#else
     return timed_wait_condition( pCOND, pLOCK, &timeout_timespec );
-#endif
 }
 
 /*********************************************************************

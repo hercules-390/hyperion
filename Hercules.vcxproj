@@ -526,7 +526,6 @@
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vstore.c" />
     <ClCompile Include="w32util.c" />
-    <ClCompile Include="wthreads.c" />
     <ClCompile Include="xstore.c" />
   </ItemGroup>
   <ItemGroup>
@@ -848,7 +847,6 @@
     <ClInclude Include="vstore.h" />
     <ClInclude Include="w32dl.h" />
     <ClInclude Include="w32util.h" />
-    <ClInclude Include="wthreads.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc" />

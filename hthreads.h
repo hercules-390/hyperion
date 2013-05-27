@@ -19,112 +19,9 @@
     const char*  loc;       /* The location where it was obtained */
 
 /*-------------------------------------------------------------------*/
-/*                      Windows Threads                              */
-/*-------------------------------------------------------------------*/
-#if defined( OPTION_WTHREADS )
-    #if defined( OPTION_FTHREADS )
-        #undef OPTION_FTHREADS
-        #undef OPTION_PTTRACE
-    #endif
-
-#include "wthreads.h"
-
-#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
-  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_NORMAL
-#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
-  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_ERRORCHECK
-#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
-  #define HTHREAD_MUTEX_DEFAULT   WTHREAD_MUTEX_RECURSIVE
-#else
-  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
-#endif
-
-typedef fthread_t              TID;
-typedef CONDITION_VARIABLE     COND;
-typedef fthread_attr_t         ATTR;
-typedef int                    MATTR;
-#define waitdelta              DWORD;
-
-struct LOCK {
-    LOCK_INFO
-    CRITICAL_SECTION  lock;
-};
-typedef struct LOCK LOCK;
-
-/*-------------------------------------------------------------------
-** The thread object of Hercules threading is translated into a Windows thread
-** Would like to make this a macro expansion, but we have to maintain both the thread ID, the handle and
-** a thread name (for debugging).  This information is retained in a linked list of structures that is
-** created and added to by win_create_thread.  The other functions use the information as necessary.
-*/
-#define create_thread(ptid,pat,fn,arg,nm)      winthread_create((ptid),(pat),(PWIN_THREAD_FUNC)&(fn),(arg),nm)
-#define join_thread(tid,pcode)                 winthread_join((tid),(pcode))
-#define detach_thread(tid)                     winthread_detach((tid))
-#define signal_thread(tid,signo)               winthread_kill((tid),(signo))
-#define thread_id()                            winthread_self()
-#define exit_thread(exitvar_ptr)               winthread_exit((exitvar_ptr))
-#define equal_threads(tid1,tid2)               winthread_equal((tid1),(tid2))
-#define initialize_detach_attr(pat)            winthread_attr_init((pat)) 
-#define initialize_join_attr(pat)              winthread_attr_init((pat))
-#define win_thread_handle(tid)                 winthread_get_handle(tid)
-
-/*-------------------------------------------------------------------
-** The lock object of Hercules threading is translated into a Windows critical section
-*/
-#define hthread_mutexattr_init(pla)            ((*(pla)=HTHREAD_MUTEX_DEFAULT),0)
-#define hthread_mutexattr_destroy(pla)         ((*(pla)=0),0)
-#define hthread_mutexattr_settype(pla,typ)     ((*(pla)=(typ)),0)
-#define hthread_mutex_init(plk,pla)            ((InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)&(plk)->lock,3000)),0)
-#define destroy_lock(plk)                      (DeleteCriticalSection((CRITICAL_SECTION*)&(plk)->lock))
-#define obtain_lock(plk)                       (EnterCriticalSection((CRITICAL_SECTION*)&(plk)->lock))
-#define release_lock(plk)                      (LeaveCriticalSection((CRITICAL_SECTION*)&(plk)->lock))
-#define try_obtain_lock(plk)                   ((TryEnterCriticalSection((CRITICAL_SECTION*)&(plk)->lock)) ? (0) : (EBUSY))
-#define test_lock(plk) \
-    ((TryEnterCriticalSection((CRITICAL_SECTION*)&(plk)->lock)) ? (LeaveCriticalSection((CRITICAL_SECTION*)&(plk)->lock),0) : (EBUSY)) 
-
-/*-------------------------------------------------------------------
-** The read/write lock object of Hercules. TODO: To be filled in, mutex locks for now
-*/
-#define RWLOCK                                 LOCK
-#define initialize_rwlock(plk)                 initialize_lock((plk))
-#define destroy_rwlock(plk)                    destroy_lock((plk))
-#define obtain_rdlock(plk)                     obtain_lock((plk))
-#define obtain_wrlock(plk)                     obtain_lock((plk))
-#define release_rwlock(plk)                    release_lock((plk))
-#define try_obtain_rdlock(plk)                 try_obtain_lock((plk))
-#define try_obtain_wrlock(plk)                 try_obtain_lock((plk))
-#define test_rdlock(plk)                       test_lock((plk))
-#define test_wrlock(plk)                       test_lock((plk))
-
-/*-------------------------------------------------------------------
-** The condition object of Hercules threading is translated into a Windows condition variable
-*/
-#if defined(DEBUG)
-#define initialize_condition(pcond)            DBGInitializeConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
-#define destroy_condition(pcond)               DBGwinthread_cond_destroy( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond)) // Dummy function
-#define signal_condition(pcond)                DBGWakeConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
-#define broadcast_condition(pcond)             DBGWakeAllConditionVariable( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond))
-#define wait_condition(pcond,plk)              DBGSleepConditionVariableCS( __FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),&(plk)->lock,INFINITE)
-#define timed_wait_condition(pcond,plk,waitdelta) \
-    ((DBGSleepConditionVariableCS(__FILE__, __LINE__, __FUNCTION__,(CONDITION_VARIABLE*)(pcond),&(plk)->lock,(waitdelta))) ? (0) : (ETIMEDOUT))
-
-#else
-#define initialize_condition(pcond)            InitializeConditionVariable((CONDITION_VARIABLE*)(pcond))
-#define destroy_condition(pcond)               winthread_cond_destroy((CONDITION_VARIABLE*)(pcond)) // Dummy function
-#define signal_condition(pcond)                WakeConditionVariable((CONDITION_VARIABLE*)(pcond))
-#define broadcast_condition(pcond)             WakeAllConditionVariable((CONDITION_VARIABLE*)(pcond))
-#define wait_condition(pcond,plk)              SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),&(plk)->lock,INFINITE)
-#define timed_wait_condition(pcond,plk,waitdelta) \
-    ((SleepConditionVariableCS((CONDITION_VARIABLE*)(pcond),&(plk)->lock,(waitdelta))) ? (0) : (ETIMEDOUT))
-
-#endif
-#endif /* defined( OPTION_WTHREADS ) */
-
-#if defined( OPTION_FTHREADS )
-
-/*-------------------------------------------------------------------*/
 /*                      Fish Threads                                 */
 /*-------------------------------------------------------------------*/
+#if defined( OPTION_FTHREADS )
 
 #include "fthreads.h"
 
@@ -209,7 +106,7 @@ typedef struct LOCK LOCK;
 /*-------------------------------------------------------------------*/
 /*                      Posix Threads                                */
 /*-------------------------------------------------------------------*/
-#if !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) ) 
+#if !defined( OPTION_FTHREADS )
 
 #include <pthread.h>
 
@@ -292,7 +189,7 @@ typedef void*THREAD_FUNC(void*);
 #define thread_id()                             pthread_self()
 #define equal_threads(tid1,tid2)                pthread_equal(tid1,tid2)
 
-#endif // !( defined( OPTION_FTHREADS ) || defined( OPTION_WTHREADS ) )
+#endif // !defined( OPTION_FTHREADS )
 
 /*-------------------------------------------------------------------*/
 /*                      initialize_lock                              */

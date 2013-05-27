@@ -1307,10 +1307,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\wthreads.c"
-							>
-						</File>
-						<File
 							RelativePath=".\xstore.c"
 							>
 						</File>
@@ -1640,10 +1636,6 @@
 						</File>
 						<File
 							RelativePath=".\w32util.h"
-							>
-						</File>
-						<File
-							RelativePath=".\wthreads.h"
 							>
 						</File>
 					</Filter>

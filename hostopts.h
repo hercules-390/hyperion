@@ -175,22 +175,6 @@
   #define  DLL_EXPORT
 #endif
 
-#if defined( OPTION_FTHREADS ) && defined( OPTION_WTHREADS )
-  #error Either OPTION_FTHREADS or OPTION_WTHREADS must be specified, not both
-#endif
-
-#if !defined( OPTION_FTHREADS ) && !defined( OPTION_WTHREADS )
-  #define OPTION_FTHREADS               // (default)
-#endif
-
-#if defined( OPTION_WTHREADS ) && ( _WIN32_WINNT < 0x0600 ) // _WIN32_WINNT_VISTA
-  #error OPTION_WTHREADS requires Windows Vista or greater (_WIN32_WINNT >= 0x0600)
-#endif
-
-#if defined( OPTION_WTHREADS )
-  #undef  OPTION_PTTRACE                /* (Cannot use PTT?!)        */
-#endif
-
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
