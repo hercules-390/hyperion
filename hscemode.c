@@ -887,6 +887,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
+    U32    *crwarray;                   /* -> Channel Report queue   */
+    unsigned crwcount;
     int     i;
     int first, last;
     char    sysid[12];
@@ -910,6 +912,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 last++;
             continue;
         }
+
+        /*---------------------*/
+        /* CPU state and flags */
+        /*---------------------*/
 
         if ( first > 0 )
         {
@@ -993,6 +999,11 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
         }
         WRMSG( HHC00869, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, buf );
+
+        /*--------------------------*/
+        /* (same thing but for SIE) */
+        /*--------------------------*/
+
         if (sysblk.regs[i]->sie_active)
         {
             WRMSG( HHC00850, "I", "IE", sysblk.regs[i]->cpuad,
@@ -1045,6 +1056,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
+    /*------------------------*/
+    /* System masks and locks */
+    /*------------------------*/
+
     if ( first > 0 )
     {
         if ( first == last )
@@ -1060,6 +1075,46 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     WRMSG( HHC00874, "I", test_lock(&sysblk.mainlock) ? "" : "not ", sysblk.mainowner);
     WRMSG( HHC00875, "I", test_lock(&sysblk.intlock) ? "" : "not ", sysblk.intowner);
     WRMSG( HHC00876, "I", test_lock(&sysblk.ioqlock) ? "" : "not ");
+
+    /*----------------------*/
+    /* Channel Report queue */
+    /*----------------------*/
+
+    OBTAIN_CRWLOCK();
+
+    if ((crwarray = sysblk.crwarray) != NULL)
+        if ((crwcount = sysblk.crwcount) != 0)
+            if ((crwarray = malloc( crwcount * sizeof(U32) )) != NULL)
+                memcpy( crwarray, sysblk.crwarray, crwcount * sizeof(U32));
+
+    RELEASE_CRWLOCK();
+
+    if (!crwarray)
+        //     HHC00883 "Channel Report queue: (NULL)"
+        WRMSG( HHC00883, "I");
+    else if (!crwcount)
+        //     HHC00884 "Channel Report queue: (empty)"
+        WRMSG( HHC00884, "I");
+    else
+    {
+        U32 crw;
+        char buf[256];
+
+        //     HHC00885 "Channel Report queue:"
+        WRMSG( HHC00885, "I");
+
+        for (i=0; i < (int) crwcount; i++)
+        {
+            crw = *(crwarray + i);
+            //     HHC00886 "CRW 0x%08.8X: %s"
+            WRMSG( HHC00886, "I", crw, FormatCRW( crw, buf, sizeof(buf) ));
+        }
+        free( crwarray );
+    }
+
+    /*-------------------------*/
+    /* Device interrupt status */
+    /*-------------------------*/
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
@@ -1095,15 +1150,16 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
         }
-        if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
-        {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "CRW pending" );
-        }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
         {
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "lock held" );
         }
     }
+
+    /*---------------------*/
+    /* I/O Interrupt Queue */
+    /*---------------------*/
+
     if (!sysblk.iointq)
         WRMSG( HHC00881, "I", " (NULL)");
     else

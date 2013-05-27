@@ -723,6 +723,10 @@ do { \
 #define HHC00880 "device %1d:%04X: status %s"
 #define HHC00881 "I/O interrupt queue:%s"
 #define HHC00882 "device %1d:%04X: %s%s%s%s, pri %d"
+#define HHC00883 "Channel Report queue: (NULL)"
+#define HHC00884 "Channel Report queue: (empty)"
+#define HHC00885 "Channel Report queue:"
+#define HHC00886 "CRW 0x%08.8X: %s"
 
 #define HHC00890 "Facility(%-20s) %sabled"
 #define HHC00891 "Facility name not found"

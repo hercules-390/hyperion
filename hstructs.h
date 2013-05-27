@@ -1198,8 +1198,7 @@ struct DEVBLK {                         /* Device configuration block*/
          (_dev)->attnpending || \
          (_dev)->tschpending)
 #define INITIAL_POWERON_370() \
-    ( dev->crwpending && ARCH_370 == sysblk.arch_mode )
-        int     crwpending;             /* 1=CRW pending             */
+    ( !sysblk.ipled && ARCH_370 == sysblk.arch_mode )
 #ifdef OPTION_SYNCIO
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
