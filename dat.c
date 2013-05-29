@@ -8,15 +8,20 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
 #include "hstdinc.h"
+
+#ifndef _HENGINE_DLL_
+#define _HENGINE_DLL_
+#endif
+#ifndef _DAT_C
+#define _DAT_C
+#endif
+
 #include "hercules.h"
 
 #if defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)
 
-#define _DAT_C
-
 #include "opcode.h"
-
-#include "inline.h"
+#include "inline.h"    /* automatically #includes dat.h and vstore.h */
 
 #if !defined(_GEN_ARCH)
 

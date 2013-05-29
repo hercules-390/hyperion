@@ -10,15 +10,19 @@
 
 #include "hstdinc.h"
 
+#ifndef _HENGINE_DLL_
+#define _HENGINE_DLL_
+#endif
+#ifndef _VSTORE_C
+#define _VSTORE_C
+#endif
+
 #include "hercules.h"
 
-#if defined(OPTION_NO_INLINE_VSTORE) | defined(OPTION_NO_INLINE_IFETCH)
-
-#define _VSTORE_C
+#if defined(OPTION_NO_INLINE_VSTORE) || defined(OPTION_NO_INLINE_IFETCH)
 
 #include "opcode.h"
-
-#include "inline.h"
+#include "inline.h"    /* automatically #includes dat.h and vstore.h */
 
 #if !defined(_GEN_ARCH)
 

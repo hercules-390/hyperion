@@ -740,15 +740,34 @@ following very specific header file #include sequence:
 
     #include "hercules.h"
 
-
     ...(other #includes go here)...
 
 
+    DLL_EXPORT  int myfunction1 (DEVBLK*, int myarg, int otherarg)
+    {
+      ... function body ...
+    }
 
-where 'XXXXX' is the name of your source member and 'ZZZZZ' is the name
-of the MODULE (.dll or .so) your code will be a part of. Refer to the
-"OBJ_CODE.msvc" and/or "makefile.am" members to see how all of hercules
-code is divided into separate modules.
+    
+    DLL_EXPORT  int myfunction2 (DEVBLK*, int myarg, int otherarg)
+    {
+      ... function body ...
+    }
+
+    
+    DLL_EXPORT  int myfunction3 (DEVBLK*, int myarg, int otherarg)
+    {
+      ... function body ...
+    }
+
+
+where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name
+of the MODULE (.dll or .so) your code will be a part of, and 'DLL_EXPORT'
+is added to the beginning of each function that needs to be exported.
+
+Refer to the "OBJ_CODE.msvc" and/or "makefile.am" members to see how
+all of hercules code is divided into separate loadable modules (DLLs)
+so you know which module (DLL) your function should be a part of.
 
 
                        --------------

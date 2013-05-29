@@ -177,6 +177,88 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* QA Scenario 9:          INLINE == forced inline                   */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 9   // INLINE == forced inline
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 9\n"
+
+  #undef    INLINE
+  #if defined(__GNUC__)
+    #define INLINE          __inline__ __attribute__((always_inline))
+  #elif defined(_MSVC_)
+    #define INLINE          __forceinline
+  #else
+    #define INLINE          __inline
+  #endif
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 10:         INLINE == inline (just a suggestion)      */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 10  // INLINE == inline (just a suggestion)
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 10\n"
+
+  #undef    INLINE
+  #if defined(__GNUC__)
+    #define INLINE          __inline__
+  #elif defined(_MSVC_)
+    #define INLINE          __inline
+  #else
+    #define INLINE          __inline
+  #endif
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 11:         INLINE == null (compiler decides on own)  */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 11  // INLINE == null (compiler decides on own)
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 11\n"
+
+  #undef  INLINE
+  #define INLINE            /* nothing */
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 12:         inline the vstore and dat functions       */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 12  // inline the vstore and dat functions
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 12\n"
+
+  #define     OPTION_INLINE
+  #undef   NO_OPTION_INLINE
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 13:         DON'T inline the vstore and dat functions */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 13  // DON'T inline the vstore and dat functions
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 13\n"
+
+  #define  NO_OPTION_INLINE
+  #undef      OPTION_INLINE
+
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
 

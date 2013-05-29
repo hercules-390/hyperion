@@ -55,12 +55,25 @@
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 
-#undef  OPTION_NO_INLINE_DAT            /* Performance option        */
-#undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
-#undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
-#undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
+#if defined( OPTION_INLINE ) && defined( NO_OPTION_INLINE )
+  #error Either OPTION_INLINE or NO_OPTION_INLINE must be specified, not both
+#elif !defined( OPTION_INLINE ) && !defined( NO_OPTION_INLINE )
+  #define       OPTION_INLINE           /* inline vstore & dat funcs */
+#endif /* !defined(  OPTION_INLINE ) && !defined( NO_OPTION_INLINE ) */
 
+#if defined(OPTION_INLINE)
+  #undef  OPTION_NO_INLINE_DAT          /* Performance option        */
+  #undef  OPTION_NO_INLINE_LOGICAL      /* Performance option        */
+  #undef  OPTION_NO_INLINE_VSTORE       /* Performance option        */
+  #undef  OPTION_NO_INLINE_IFETCH       /* Performance option        */
+#else /* defined(NO_OPTION_INLINE) */
+  #define OPTION_NO_INLINE_DAT          /* Performance option        */
+  #define OPTION_NO_INLINE_LOGICAL      /* Performance option        */
+  #define OPTION_NO_INLINE_VSTORE       /* Performance option        */
+  #define OPTION_NO_INLINE_IFETCH       /* Performance option        */
+#endif /* defined(OPTION_INLINE) */
+
+#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 

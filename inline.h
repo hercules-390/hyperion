@@ -39,7 +39,8 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
         U32 op2, REGS *regs);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey);
-
+_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
+        REGS *regs, int acctype, BYTE akey, size_t len);
 #if defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900
 _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
@@ -79,6 +80,12 @@ _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
 _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         int len, int acctype, REGS *regs);
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec);
+
+#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+_VSTORE_C_STATIC void ARCH_DEP(move_charx) (VADR addr1, int space1,
+       BYTE key1, VADR addr2, int space2, BYTE key2,
+       int len, REGS *regs);
+#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
 
 #if defined(_FEATURE_SIE) && defined(_370) && !defined(_IEEE_C_)
 _VFETCH_C_STATIC BYTE * s370_instfetch (REGS *regs, int exec);
@@ -732,7 +739,6 @@ BYTE    *p;                             /* Mainstor pointer          */
 
 
 #include "dat.h"
-
 #include "vstore.h"
 
 /* end of INLINE.H */
