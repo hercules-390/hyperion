@@ -28,9 +28,13 @@
     #define INLINE          __inline
   #endif
 #endif
+
+/*-------------------------------------------------------------------*/
+/*      Use '__noop()' to disable code generating macros             */
+/*-------------------------------------------------------------------*/
 #if !defined(_MSVC_)
   #if !defined(__noop)
-    #define __noop(...)     do{;}while(0)
+    #define __noop(...)     do{;}while(0)   /*  (i.e. do nothing)    */
   #endif
 #endif
 
