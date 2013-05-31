@@ -437,8 +437,6 @@ int  cpu;
     return 0;
 }
 
-#if defined(OPTION_FAST_DEVLOOKUP)
-
 /* 4 next functions used for fast device lookup cache management */
 
 static void AddDevnumFastLookup( DEVBLK *dev, U16 lcss, U16 devnum )
@@ -519,8 +517,6 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
     }
     sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
 }
-#endif
-
 
 static
 CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
@@ -701,11 +697,9 @@ int     i;                              /* Loop index                */
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
-#if defined(OPTION_FAST_DEVLOOKUP)
     DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
         DelDevnumFastLookup(SSID_TO_LCSS(dev->ssid),dev->devnum);
-#endif
 
     /* Close file or socket */
     if ((dev->fd > 2) || dev->console)
@@ -1398,10 +1392,8 @@ DEVBLK *dev;                            /* -> Device block           */
     dev->pmcw.devnum[0] = newdevn >> 8;
     dev->pmcw.devnum[1] = newdevn & 0xFF;
 
-#if defined(OPTION_FAST_DEVLOOKUP)
     DelDevnumFastLookup(lcss,olddevn);
     AddDevnumFastLookup(dev,lcss,newdevn);
-#endif
 
     /* Release device lock */
     release_lock(&dev->lock);
@@ -1533,7 +1525,6 @@ DEVBLK *tmp;
 DLL_EXPORT DEVBLK *find_device_by_devnum (U16 lcss,U16 devnum)
 {
 DEVBLK *dev;
-#if defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK **devtab;
 int Chan;
 
@@ -1555,15 +1546,12 @@ int Chan;
         }
     }
 
-#endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (IS_DEV( dev ) && dev->devnum == devnum && lcss==SSID_TO_LCSS(dev->ssid)) break;
-#if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
     {
         AddDevnumFastLookup(dev,lcss,devnum);
     }
-#endif
     return dev;
 } /* end function find_device_by_devnum */
 
@@ -1575,21 +1563,18 @@ DEVBLK *find_device_by_subchan (U32 ioid)
 {
     U16 subchan = ioid & 0xFFFF;
     DEVBLK *dev;
-#if defined(OPTION_FAST_DEVLOOKUP)
     unsigned int schw = ((subchan & 0xff00)>>8)|(IOID_TO_LCSS(ioid)<<8);
 #if 0
     logmsg(_("DEBUG : FDBS FL Looking for %d\n"),subchan);
 #endif
     if(sysblk.subchan_fl && sysblk.subchan_fl[schw] && sysblk.subchan_fl[schw][subchan & 0xff])
         return sysblk.subchan_fl[schw][subchan & 0xff];
-#endif
 #if 0
     logmsg(_("DEBUG : FDBS SL Looking for %8.8x\n"),ioid);
 #endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->ssid == IOID_TO_SSID(ioid) && dev->subchan == subchan) break;
 
-#if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
     {
         AddSubchanFastLookup(dev, IOID_TO_SSID(ioid), subchan);
@@ -1598,8 +1583,6 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     {
         DelSubchanFastLookup(IOID_TO_SSID(ioid), subchan);
     }
-#endif
-
     return dev;
 } /* end function find_device_by_subchan */
 

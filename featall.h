@@ -74,7 +74,6 @@
 #endif /* defined(OPTION_INLINE) */
 
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
-#define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 
 #if defined(OPTION_SYNCIO) && defined(OPTION_NOSYNCIO)

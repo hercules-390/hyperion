@@ -660,12 +660,10 @@ struct SYSBLK {
 
         DEVBLK *firstdev;               /* -> First device block     */
         DEVBLK *sysgdev;                /* -> devblk for SYSG console*/
-#if defined(OPTION_FAST_DEVLOOKUP)
         DEVBLK ***devnum_fl;            /* 1st level table for fast  */
                                         /* devnum lookup             */
         DEVBLK ***subchan_fl;           /* Subchannel table fast     */
                                         /* lookup table              */
-#endif  /* FAST_DEVICE_LOOKUP */
         int     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
         CHPBLK *firstchp;               /* -> First channel path     */
         u_int   dasdcache:1;            /* 0 = system cache off
