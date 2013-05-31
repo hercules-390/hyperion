@@ -213,7 +213,7 @@ dyngui_OBJ = dyngui.o
 HEADERS  = codepage.h commadpt.h cnsllogo.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h ftlib.h \
-           fthreads.h wthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
+           fthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
            hetlib.h hostinfo.h httpmisc.h htypes.h \
            inline.h linklist.h logger.h machdep.h opcode.h chsc.h \
            parser.h sllib.h tapedev.h tt32.h tt32if.h tt32api.h tuntap.h version.h \
