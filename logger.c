@@ -266,7 +266,6 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
         fflush ( logger_hrdcpy );
 }
 
-#ifdef OPTION_TIMESTAMP_LOGFILE
 /* ZZ FIXME:
  * This should really be part of logmsg, as the timestamps have currently
  * the time when the logger reads the message from the log pipe.  There can be
@@ -289,8 +288,6 @@ static void logger_logfile_timestamp()
         logger_logfile_write( hhmmss, strlen(hhmmss) );
     }
 }
-#endif
-
 
 static void* logger_thread(void *arg)
 {
@@ -391,33 +388,6 @@ int bytes_read;
 
         /* Write log data to hardcopy file */
         if (logger_hrdcpy)
-#if !defined( OPTION_TIMESTAMP_LOGFILE )
-        {
-            char* pLeft2 = logger_buffer + logger_currmsg;
-            int   nLeft2 = bytes_read;
-#if defined( OPTION_MSGCLR )
-            /* Remove "<pnl,..." color string if it exists */
-            if (1
-                && nLeft2 > 5
-                && strncasecmp( pLeft2, "<pnl", 4 ) == 0
-                && (pLeft2 = memchr( pLeft2+4, '>', nLeft2-4 )) != NULL
-            )
-            {
-                pLeft2++;
-                nLeft2 -= (pLeft2 - (logger_buffer + logger_currmsg));
-            }
-            else
-            {
-                pLeft2 = logger_buffer + logger_currmsg;
-                nLeft2 = bytes_read;
-            }
-#endif // defined( OPTION_MSGCLR )
-            if (nLeft2)
-            {
-                logger_logfile_write( pLeft2, nLeft2 );
-            }
-        }
-#else // defined( OPTION_TIMESTAMP_LOGFILE )
         {
             /* Need to prefix each line with a timestamp. */
 
@@ -485,7 +455,6 @@ int bytes_read;
             if (nLeft)
                 logger_logfile_write( pLeft, nLeft );
         }
-#endif // !defined( OPTION_TIMESTAMP_LOGFILE )
 
         release_lock(&logger_lock);
 
@@ -513,9 +482,8 @@ int bytes_read;
     {
         char* term_msg = MSG(HHC02103, "I");
         size_t term_msg_len = strlen(term_msg);
-#ifdef OPTION_TIMESTAMP_LOGFILE
-        if (!sysblk.logoptnotime) logger_logfile_timestamp();
-#endif
+        if (!sysblk.logoptnotime)
+            logger_logfile_timestamp();
         logger_logfile_write( term_msg, term_msg_len );
     }
 
