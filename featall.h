@@ -93,7 +93,6 @@
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 #define OPTION_CONFIG_SYMBOLS           /* $(defsym) support         */
 #define OPTION_BUILTIN_SYMBOLS          /* "LPARNAME", "DATE", etc.  */
 

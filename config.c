@@ -829,8 +829,6 @@ int     cpu;
 
 } /* end function release_config */
 
-
-#if defined(OPTION_CAPPING)
 int configure_capping(U32 value)
 {
     if(sysblk.capvalue)
@@ -869,7 +867,6 @@ int configure_capping(U32 value)
     }
     return HNOERROR;
 }
-#endif // OPTION_CAPPING
 
 #ifdef OPTION_SHARED_DEVICES
 static void* shrdport_connecting_thread(void* arg)

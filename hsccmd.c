@@ -8033,8 +8033,6 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                     sysblk.siosrate, "" );
 #endif
 
-#if defined(OPTION_CAPPING)
-
     if ( sysblk.capvalue > 0 )
     {
         cpupct = 0;
@@ -8058,7 +8056,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                                 ( mipsrate % 1000000 ) / 10000 );
         }
     }
-#endif
+
     for ( i = 0; i < sysblk.maxcpu; i++ )
     {
         if ( IS_CPU_ONLINE(i) )

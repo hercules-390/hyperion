@@ -315,7 +315,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
 } /* end function timer_update_thread */
 
-#ifdef OPTION_CAPPING
 LOCK caplock;
 COND capcond;
 
@@ -469,4 +468,3 @@ int numcap = 1;              /* Number of CPU's being capped         */
     WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
     return(NULL);
 }
-#endif // OPTION_CAPPING

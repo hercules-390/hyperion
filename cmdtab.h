@@ -1561,6 +1561,7 @@ COMMAND( "store",                   store_cmd,              SYSCMDNDIAG8,       
 COMMAND( "sysclear",                sysclear_cmd,           SYSCMDNDIAG8,       sysclear_cmd_desc,      sysclear_cmd_help   )
 COMMAND( "sysreset",                sysreset_cmd,           SYSCMDNDIAG8,       sysreset_cmd_desc,      sysreset_cmd_help   )
 
+COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )
 COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       cnslport_cmd_desc,      NULL                )
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )
@@ -1652,9 +1653,6 @@ COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       
 #else
 COMMAND( "ls",                      ls_cmd,                 SYSCMDNDIAG8,       ls_cmd_desc,            NULL                )
 #endif
-#endif
-#if defined( OPTION_CAPPING )
-COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )
 #endif
 #if defined( OPTION_CMDTGT )
 COMMAND( "cmdtgt",                  cmdtgt_cmd,             SYSCMD,             cmdtgt_cmd_desc,        cmdtgt_cmd_help     )

@@ -1641,11 +1641,8 @@ register REGS   *regs;
 BYTE   *ip;
 int     i;
 int     aswitch;
-
-#ifdef OPTION_CAPPING
 register int    *caplocked = &sysblk.caplocked[cpu];
          LOCK   *caplock = &sysblk.caplock[cpu];
-#endif
 
     /* Assign new regs if not already assigned */
     regs = sysblk.regs[cpu] ?
@@ -1737,14 +1734,11 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     do {
         if (INTERRUPT_PENDING(regs))
             ARCH_DEP(process_interrupt)(regs);
-
-#ifdef OPTION_CAPPING
         else if (caplocked[0])
         {
             obtain_lock(caplock);
             release_lock(caplock);
         }
-#endif /* #ifdef OPTION_CAPPING */
 
         ip = INSTRUCTION_FETCH(regs, 0);
 

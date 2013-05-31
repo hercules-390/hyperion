@@ -1740,7 +1740,6 @@ static void NP_update(REGS *regs)
                 NPcpugraphpct[i] = sysblk.regs[i]->cpupct;
             }
 
-#ifdef OPTION_CAPPING
             if(sysblk.capvalue)
             {
               if(sysblk.ptyp[i] == SCCB_PTYP_CP)
@@ -1754,7 +1753,6 @@ static void NP_update(REGS *regs)
                 draw_text(buf);
               }
             }
-#endif // OPTION_CAPPING
 
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
         }

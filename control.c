@@ -6538,18 +6538,15 @@ long double MIPSreal (const int stsicap_type)
     int             cpu;               /* CPU loop variable          */
     long double     result;
 
-#if defined(OPTION_CAPPING)
-    /* If capping, use MIPS per processor cap value as MIPS per real
-     * second and return.
+    /* If capping, use MIPS per processor cap value
+     * as MIPS per real second and return.
      */
     if (sysblk.capvalue)
     {
         if (stsicap_type == stsicap_current)
             return (sysblk.capvalue);
     }
-    else
-#endif /* defined(CAPPING) */
-    if (stsicap_type == stsicap_nominal)
+    else if (stsicap_type == stsicap_nominal)
         return (0);
 
     /* Gather real CPU time and instruction count for each processor.

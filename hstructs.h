@@ -512,12 +512,10 @@ struct SYSBLK {
         pid_t   todtidp;
 #endif /*defined(USE_GETTID)*/
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
-#ifdef OPTION_CAPPING
         LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
         int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
         TID     captid;                 /* TID capping manager       */
         U32     capvalue;               /* Capping value in mips     */
-#endif // OPTION_CAPPING
 
         /* Active Facility List */
         BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];

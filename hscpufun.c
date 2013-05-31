@@ -517,10 +517,8 @@ int iplc_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-
-#ifdef OPTION_CAPPING
 /*-------------------------------------------------------------------*/
-/* capping - cap mip rate                                            */
+/* capping - limit MIPS rate                                         */
 /*-------------------------------------------------------------------*/
 int capping_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -563,7 +561,6 @@ int     rc = HNOERROR;
 
     return rc;
 }
-#endif // OPTION_CAPPING
 
 
 /*-------------------------------------------------------------------*/
