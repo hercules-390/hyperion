@@ -652,9 +652,8 @@ int             attn = 0;
     dev->SIC_active          = 0;   // (always, initially)
     dev->SIC_supported       = 0;   // (until we're sure)
     dev->forced_logging      = 0;   // (always, initially)
-#if defined( OPTION_TAPE_AUTOMOUNT )
     dev->noautomount         = 0;   // (always, initially)
-#endif
+
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
     dev->sstat = GMT_DR_OPEN(-1);
@@ -1098,9 +1097,7 @@ PARSER  ptab  [] =
     { "rw",         NULL },
     { "ring",       NULL },
     { "deonirq",    "%d" },
-#if defined( OPTION_TAPE_AUTOMOUNT )
     { "noautomount",NULL },
-#endif
     { "--blkid-22", NULL },
     { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
     { "--blkid-32", NULL },
@@ -1133,9 +1130,7 @@ enum
     TDPARM_RW,
     TDPARM_RING,
     TDPARM_DEONIRQ,
-#if defined( OPTION_TAPE_AUTOMOUNT )
     TDPARM_NOAUTOMOUNT,
-#endif
     TDPARM_BLKID22,
     TDPARM_BLKID24,
     TDPARM_BLKID32,
@@ -1225,9 +1220,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->eotmargin         = 128*1024; // 128K EOT margin (default)
     dev->tdparms.logical_readonly = 0; // read/write      (default)
-#if defined( OPTION_TAPE_AUTOMOUNT )
     dev->noautomount       = 0;
-#endif
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's support Erase Gap and use 32-bit blockids.
@@ -1500,8 +1493,6 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
-
         case TDPARM_NOAUTOMOUNT:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
@@ -1510,8 +1501,6 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             }
             dev->noautomount = 1;
             break;
-
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined(OPTION_SCSI_TAPE)
         case TDPARM_BLKID22:
@@ -1620,12 +1609,8 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
                                    strlcat( devparms, dev->filename, sizeof(devparms));
     if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
-
     if (dev->noautomount)
         strlcat( devparms, " noautomount", sizeof(devparms));
-
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined(OPTION_SCSI_TAPE)
     if ( TAPEDEVT_SCSITAPE != dev->tapedevt )

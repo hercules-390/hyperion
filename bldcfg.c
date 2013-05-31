@@ -49,10 +49,7 @@
 #include "opcode.h"
 #include "hostinfo.h"
 #include "hdl.h"
-
-#if defined( OPTION_TAPE_AUTOMOUNT )
 #include "tapedev.h"
-#endif
 
 #if !defined(_GEN_ARCH)
 

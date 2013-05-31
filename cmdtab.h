@@ -1487,6 +1487,7 @@ COMMAND( "aea",                     aea_cmd,                SYSCMDNOPER,        
 COMMAND( "aia",                     aia_cmd,                SYSCMDNOPER,        aia_cmd_desc,           NULL                )
 COMMAND( "ar",                      ar_cmd,                 SYSCMDNOPER,        ar_cmd_desc,            NULL                )
 COMMAND( "autoinit",                autoinit_cmd,           SYSCMDNOPER,        autoinit_cmd_desc,      autoinit_cmd_help   )
+COMMAND( "automount",               automount_cmd,          SYSCMDNOPER,        automount_cmd_desc,     automount_cmd_help  )
 COMMAND( "b-",                      trace_cmd,              SYSCMDNOPER,        bminus_cm_desc,         bminus_cm_help      )
 COMMAND( "b",                       trace_cmd,              SYSCMDNOPER,        b_cmd_desc,             b_cmd_help          )
 COMMAND( "b+",                      trace_cmd,              SYSCMDNOPER,        bplus_cmd_desc,         NULL                )
@@ -1722,9 +1723,6 @@ COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       
 COMMAND( "quitmout",                quitmout_cmd,           SYSCMDNOPER,        quitmout_cmd_desc,      quitmout_cmd_help   )
 #else
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_ssd_cmd_desc,      quit_ssd_cmd_help   )
-#endif
-#if defined( OPTION_TAPE_AUTOMOUNT )
-COMMAND( "automount",               automount_cmd,          SYSCMDNOPER,        automount_cmd_desc,     automount_cmd_help  )
 #endif
 #if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )

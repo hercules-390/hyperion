@@ -103,7 +103,6 @@
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
-#define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 
 #define OPTION_CONFIG_SYMBOLS           /* $(defsym) support         */
 #define OPTION_BUILTIN_SYMBOLS          /* "LPARNAME", "DATE", etc.  */

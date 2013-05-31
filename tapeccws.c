@@ -420,9 +420,7 @@ int i, rc, tix = 0, devtfound = 0;
 /*********************************************************************/
 /*********************************************************************/
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
 static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir );
-#endif
 
 void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
@@ -1518,7 +1516,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
     }
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
     /*---------------------------------------------------------------*/
     /* SET DIAGNOSE      --  Special AUTOMOUNT support  --           */
     /*---------------------------------------------------------------*/
@@ -1714,7 +1711,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     } /* End case 0x4B: SET DIAGNOSE */
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
     /*---------------------------------------------------------------*/
     /* READ MESSAGE ID                                               */
@@ -3190,7 +3186,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0xE4:
     {
-#if defined( OPTION_TAPE_AUTOMOUNT )
         /* AUTOMOUNT QUERY - part 2 (if command-chained from prior 0x4B) */
         if (1
             && dev->tapedevt != TAPEDEVT_SCSITAPE
@@ -3210,7 +3205,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             break;
         }
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
         /* SENSE ID did not exist on the 3803 */
         /* If numdevid is 0, then 0xE4 not supported */
@@ -3380,7 +3374,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
 } /* end function tapedev_execute_ccw */
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
 /*-------------------------------------------------------------------*/
 /* Find next more-restrictive TAMDIR subdirectory entry...           */
 /*-------------------------------------------------------------------*/
@@ -3407,7 +3400,6 @@ static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir )
         while ((pTAMDIR = pTAMDIR->next) != NULL);
     return NULL;
 }
-#endif // defined( OPTION_TAPE_AUTOMOUNT )
 
 /*-------------------------------------------------------------------*/
 /* Load Display channel command processing...                        */

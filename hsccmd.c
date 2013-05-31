@@ -1457,7 +1457,6 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
     return 0;
 }
 
-#if defined( OPTION_TAPE_AUTOMOUNT )
 static char * check_define_default_automount_dir()
 {
     /* Define default AUTOMOUNT directory if needed */
@@ -1943,7 +1942,6 @@ int rc;
     return 0;
 }
 
-#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
 

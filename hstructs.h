@@ -700,12 +700,8 @@ struct SYSBLK {
         DEVBLK  *biodev;                /* Block I/O device          */
         /* Note: biodev is only used to detect BIO interrupt tracing */
 #endif /* defined(FEATURE_VM_BLOCKIO) */
-#if defined( OPTION_TAPE_AUTOMOUNT )
         TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
         char   *defdir;                 /* Default AUTOMOUNT dir     */
-#endif
-
-
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 sys_reset:1,            /* 1 = system in reset state */
@@ -1394,9 +1390,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
-#if defined( OPTION_TAPE_AUTOMOUNT )
         u_int   noautomount:1;          /* 1=AUTOMOUNT disabled      */
-#endif
         u_int   supvr_inhibit:1;        /* 1=Supvr-Inhibit mode      */
         u_int   write_immed:1;          /* 1=Write-Immediate mode    */
 #if defined( OPTION_SCSI_TAPE )
