@@ -5612,9 +5612,6 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
     int rc;
-#if !defined(OPTION_ENHANCED_DEVICE_ATTACH)
-    U16 lcss,devnum;
-#endif /*!defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
 
     UNREFERENCED(cmdline);
 
@@ -5623,14 +5620,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02202, "E", argv[0] );
         return -1;
     }
-#if defined(OPTION_ENHANCED_DEVICE_ATTACH)
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
-#else /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
-    if(!(rc = parse_single_devnum(argv[1],&lcss, &devnum)))
-        rc = attach_device(lcss, devnum,argv[2],argc-3,&argv[3]);
-    else
-        rc = -2;
-#endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
     if ( rc == 0 && MLVL(DEBUG) )
         WRMSG(HHC02198, "I");
 

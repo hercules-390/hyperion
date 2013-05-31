@@ -126,7 +126,6 @@
                                            locked during execution   */
 #endif
 
-#define OPTION_ENHANCED_DEVICE_ATTACH   /* Multiple device att feat  */
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #undef  OPTION_SHOWDVOL1                /* showdvol1 support         */
 

@@ -357,7 +357,6 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         /* Also, if addargv[0] contains ':' (added by Harold Grovesteen jan2008)  */
         /* Added because device statements may now contain channel set or LCSS id */
              strchr( addargv[0], ':' )
-#if defined(OPTION_ENHANCED_DEVICE_ATTACH)
         /* ISW */
         /* Also, if addargv[0] contains '-', ',' or '.' */
         /* Added because device statements may now be a compound device number specification */
@@ -367,7 +366,6 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
              strchr( addargv[0],'.' )
              ||
              strchr( addargv[0],',' )
-#endif /*defined(OPTION_ENHANCED_DEVICE_ATTACH)*/
            ) /* end if */
         {
 #define MAX_CMD_LEN 32768
