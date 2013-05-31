@@ -202,7 +202,6 @@ int rc;
         return -1;
     }
 
-#if defined(OPTION_IPLPARM)
     if(sysblk.haveiplparm)
     {
         for(i=0;i<16;i++)
@@ -211,7 +210,6 @@ int rc;
         }
         sysblk.haveiplparm=0;
     }
-#endif
 
     /* Set Main Storage Reference and Update bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);

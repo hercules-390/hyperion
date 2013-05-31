@@ -94,7 +94,6 @@
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 #define OPTION_CAPPING                  /* Enable capping cnf stmnt  */
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */

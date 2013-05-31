@@ -724,9 +724,7 @@ struct SYSBLK {
                 noautoinit:1,           /* 1=AUTOINIT disabled       */
                 legacysenseid:1,        /* ena/disa senseid on       */
                                         /*   legacy devices          */
-#if defined(OPTION_IPLPARM)
                 haveiplparm:1,          /* IPL PARM a la VM          */
-#endif
                 logoptnotime:1,         /* 1 = don't timestamp log   */
                 showdvol1:2;            /* Show dasd VOL1 in devlist */
 #define SHOWDVOL1_NO            0       /*   Do not show vol1 at all */
@@ -738,9 +736,7 @@ struct SYSBLK {
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
-#if defined(OPTION_IPLPARM)
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
-#endif
 #ifdef _FEATURE_ECPSVM
 //
         /* ECPS:VM */

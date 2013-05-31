@@ -371,20 +371,15 @@ BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
 int  i;
 int  clear = clr_prm;                   /* Called with Clear option  */
-#if defined(OPTION_IPLPARM)
 int j;
 size_t  maxb;
-#endif
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
-
-#if defined(OPTION_IPLPARM)
 char save_loadparm[16];
 int  rest_loadparm = FALSE;
 
     save_loadparm[0] = '\0';
-#endif
 
     UNREFERENCED( cmdline );
 
@@ -402,7 +397,6 @@ int  rest_loadparm = FALSE;
         missing_devnum();
         return -1;
     }
-#if defined(OPTION_IPLPARM)
 #define MAXPARMSTRING   sizeof(sysblk.iplparmstring)
     sysblk.haveiplparm=0;
     maxb=0;
@@ -441,7 +435,6 @@ int  rest_loadparm = FALSE;
             }
         }
     }
-#endif
 
     OBTAIN_INTLOCK(NULL);
 
