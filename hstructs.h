@@ -573,7 +573,6 @@ struct SYSBLK {
         int     kaidle;                 /* Keepalive idle seconds    */
         int     kaintv;                 /* Keepalive probe interval  */
         int     kacnt;                  /* Keepalive probe count     */
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
         LOCK    cnslpipe_lock;          /* signaled flag access lock */
         int     cnslpipe_flag;          /* 1 == already signaled     */
         int     cnslwpipe;              /* fd for sending signal     */
@@ -582,7 +581,6 @@ struct SYSBLK {
         int     sockpipe_flag;          /* 1 == already signaled     */
         int     sockwpipe;              /* Sockdev signaling pipe Wr */
         int     sockrpipe;              /* Sockdev signaling pipe Rd */
-#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */

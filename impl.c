@@ -983,7 +983,6 @@ int     dll_count;                      /* index into array          */
     }
 #endif
 
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
     {
         int fds[2];
         initialize_lock(&sysblk.cnslpipe_lock);
@@ -997,7 +996,6 @@ int     dll_count;                      /* index into array          */
         sysblk.sockwpipe=fds[1];
         sysblk.sockrpipe=fds[0];
     }
-#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
 
 #if !defined(NO_SIGABEND_HANDLER)
     {

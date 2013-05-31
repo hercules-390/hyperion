@@ -42,8 +42,8 @@
   #define   S_IWGRP           0
 #endif
 
-#ifndef     SIGUSR2                // (needs defined for OPTION_WAKEUP_SELECT_VIA_PIPE)
-  #define   SIGUSR2           31   // (the value's unimportant, but we'll be accurate)
+#ifndef     SIGUSR2
+  #define   SIGUSR2           31
 #endif
 
 #ifndef     IFNAMSIZ
