@@ -743,14 +743,12 @@ void ARCH_DEP(sie_exit) (REGS *regs, int code)
 {
 int     n;
 
-#if defined(OPTION_PTTRACE)
     if(pttclass & PTT_CL_SIE)
     {
     U32  nt1 = 0, nt2 = 0;
     BYTE *ip;
         if(!GUESTREGS->instinvalid)
         {
-
             if(GUESTREGS->ip[0] == 0x44
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
                || (GUESTREGS->ip[0] == 0xc6 && !(GUESTREGS->ip[1] & 0x0f))
@@ -771,7 +769,6 @@ int     n;
 
         PTT(PTT_CL_SIE,"*SIE", nt1, nt2, code);
     }
-#endif /*defined(OPTION_PTTRACE)*/
 
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: interception code %d\n"),code);

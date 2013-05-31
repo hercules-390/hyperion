@@ -99,9 +99,7 @@ int     devtmax;                        /* Max number device threads */
 #endif
     devtmax  = MAX_DEVICE_THREADS;
 
-#ifdef OPTION_PTTRACE
     ptt_trace_init (0, 1);
-#endif
 
     /* Set max number device threads */
     sysblk.devtmax = devtmax;

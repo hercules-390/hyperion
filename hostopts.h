@@ -236,7 +236,6 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
-/* #undef  OPTION_PTTRACE maybe not, after all */
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 #define DEFAULT_HERCPRIO    0

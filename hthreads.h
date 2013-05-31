@@ -215,7 +215,6 @@ typedef void*THREAD_FUNC(void*);
 /*-------------------------------------------------------------------*/
 /* PTT thread tracing support                                        */
 /*-------------------------------------------------------------------*/
-#ifdef OPTION_PTTRACE
 
 #include "pttrace.h"
 
@@ -286,10 +285,6 @@ typedef void*THREAD_FUNC(void*);
 #define detach_thread(tid)                      ptt_pthread_detach((tid),PTT_LOC)
 #undef  signal_thread
 #define signal_thread(tid,signo)                ptt_pthread_kill((tid),(signo),PTT_LOC)
-
-#else  // !OPTION_PTTRACE
-#define PTT(...)
-#endif // OPTION_PTTRACE
 
 /*-------------------------------------------------------------------*/
 /* Misc                                                              */

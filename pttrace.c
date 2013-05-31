@@ -16,8 +16,6 @@
 
 #include "hercules.h"
 
-#if defined( OPTION_PTTRACE )
-
 /*-------------------------------------------------------------------*/
 /* Global variables                                                  */
 /*-------------------------------------------------------------------*/
@@ -875,5 +873,3 @@ time_t tt;
     pttracen = n;
     return count;
 }
-
-#endif /* defined( OPTION_PTTRACE ) */

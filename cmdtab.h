@@ -1518,6 +1518,7 @@ COMMAND( "pgmtrace",                pgmtrace_cmd,           SYSCMDNOPER,        
 COMMAND( "pr",                      pr_cmd,                 SYSCMDNOPER,        pr_cmd_desc,            NULL                )
 COMMAND( "psw",                     psw_cmd,                SYSCMDNOPER,        psw_cmd_desc,           psw_cmd_help        )
 COMMAND( "ptp",                     ptp_cmd,                SYSCMDNOPER,        ptp_cmd_desc,           ptp_cmd_help        )
+COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
 COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            NULL                )
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
 COMMAND( "r",                       r_cmd,                  SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )
@@ -1705,9 +1706,6 @@ COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             
 #if defined( OPTION_MSGHLD )
 COMMAND( "kd",                      msghld_cmd,             SYSCMD,             kd_cmd_desc,            NULL                )
 COMMAND( "msghld",                  msghld_cmd,             SYSCMD,             msghld_cmd_desc,        msghld_cmd_help     )
-#endif
-#if defined( OPTION_PTTRACE )
-COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
 #endif
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )

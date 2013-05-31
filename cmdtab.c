@@ -118,9 +118,7 @@ static  CMDTAB   cmdtab[]  = {              /* (COMMAND table)       */
 
   CALL_EXTCMD ( cachestats_cmd )            /* (lives in cache.c)    */
   CALL_EXTCMD ( shared_cmd     )            /* (lives in shared.c)   */
-#if defined   ( OPTION_PTTRACE )            /* ( OPTION_PTTRACE )    */
   CALL_EXTCMD ( ptt_cmd        )            /* (lives in pttrace.c)  */
-#endif     /* ( OPTION_PTTRACE ) */         /* ( OPTION_PTTRACE )    */
 
 /*-------------------------------------------------------------------*/
 /* $zapcmd - internal debug - may cause havoc - use with caution     */
