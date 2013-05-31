@@ -1574,6 +1574,9 @@ COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
 COMMAND( "lparnum",                 lparnum_cmd,            SYSCFGNDIAG8,       lparnum_cmd_desc,       lparnum_cmd_help    )
 COMMAND( "mainsize",                mainsize_cmd,           SYSCFGNDIAG8,       mainsize_cmd_desc,      mainsize_cmd_help   )
+CMDABBR( "manufacturer",  8,        stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
+COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
+COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      NULL                )
 COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       srvprio_cmd_desc,       NULL                )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
@@ -1709,11 +1712,6 @@ COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )
-#endif
-#if defined( OPTION_SET_STSI_INFO )
-CMDABBR( "manufacturer",  8,        stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
-COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
-COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
 #endif
 #if defined( OPTION_SHARED_DEVICES )
 COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      NULL                )

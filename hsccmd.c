@@ -4548,7 +4548,6 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-#if defined(OPTION_SET_STSI_INFO)
 /*-------------------------------------------------------------------*/
 /* model config statement                                            */
 /* operands: hardware_model [capacity_model [perm_model temp_model]] */
@@ -4744,7 +4743,6 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-#endif /* defined(OPTION_SET_STSI_INFO) */
 
 
 #if defined(OPTION_SHARED_DEVICES)
