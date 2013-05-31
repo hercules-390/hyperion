@@ -334,7 +334,7 @@
 #endif
 
 #undef _VSTORE_C_STATIC
-#if !defined(OPTION_NO_INLINE_VSTORE)
+#if defined(OPTION_INLINE_VSTORE)
  #define _VSTORE_C_STATIC           static inline
  #define _VSTORE_FULL_C_STATIC      static
 #else
@@ -353,21 +353,21 @@
 #endif
 
 #undef _VFETCH_C_STATIC
-#if !defined(OPTION_NO_INLINE_IFETCH)
+#if defined(OPTION_INLINE_IFETCH)
  #define _VFETCH_C_STATIC           static inline
 #else
  #define _VFETCH_C_STATIC
 #endif
 
 #undef _DAT_C_STATIC
-#if !defined(OPTION_NO_INLINE_DAT)
+#if defined(OPTION_INLINE_DAT)
  #define _DAT_C_STATIC              static inline
 #else
  #define _DAT_C_STATIC
 #endif
 
 #undef _LOGICAL_C_STATIC
-#if !defined(OPTION_NO_INLINE_LOGICAL)
+#if defined(OPTION_INLINE_LOGICAL)
  #define _LOGICAL_C_STATIC          static inline
 #else
  #ifndef _DAT_C

@@ -18,7 +18,7 @@
 
 #include "hercules.h"
 
-#if defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)
+#if !defined(OPTION_INLINE_DAT) || !defined(OPTION_INLINE_LOGICAL)
 
 #include "opcode.h"
 #include "inline.h"    /* automatically #includes dat.h and vstore.h */
@@ -38,4 +38,4 @@
 
 #endif /*!defined(_GEN_ARCH)*/
 
-#endif /*!defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)*/
+#endif /* !defined(OPTION_INLINE_DAT) || !defined(OPTION_INLINE_LOGICAL) */

@@ -25,7 +25,7 @@
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
 
-#if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C)
+#if defined(OPTION_INLINE_DAT) || defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
@@ -2110,7 +2110,7 @@ RADR    pfra;
 
 } /* end function invalidate_pte */
 
-#endif /*!defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) */
+#endif /* defined(OPTION_INLINE_DAT) || defined(_DAT_C) */
 
 
 #if defined(FEATURE_PER2)
@@ -2132,7 +2132,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 #endif /*defined(FEATURE_PER2)*/
 
 
-#if !defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C)
+#if defined(OPTION_INLINE_LOGICAL) || defined(_DAT_C)
 /*-------------------------------------------------------------------*/
 /* Convert logical address to absolute address and check protection  */
 /*                                                                   */
@@ -2382,6 +2382,6 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
     return ARCH_DEP(logical_to_main_l)(addr,arn,regs,acctype,akey,1);
 }
 
-#endif /*!defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) */
+#endif /* defined(OPTION_INLINE_LOGICAL) || defined(_DAT_C) */
 
 /* end of DAT.H */

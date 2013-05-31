@@ -137,7 +137,7 @@
 #define NOCROSS2KL(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x800 - (_len) ) )
 #define CROSS2KL(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x800 - (_len) ) )
 
-#if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
+#if defined(OPTION_INLINE_VSTORE) || defined(_VSTORE_C)
 
 /*-------------------------------------------------------------------*/
 /* Store 1 to 256 characters into virtual storage operand            */
@@ -583,9 +583,9 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
     /* page crossing doubleword fetch */
     return ARCH_DEP(vfetch8_full)(addr,arn,regs);
 }
-#endif
+#endif /* defined(OPTION_INLINE_VSTORE) || defined(_VSTORE_C) */
 
-#if !defined(OPTION_NO_INLINE_IFETCH) || defined(_VSTORE_C)
+#if defined(OPTION_INLINE_IFETCH) || defined(_VSTORE_C)
 /*-------------------------------------------------------------------*/
 /* Fetch instruction from halfword-aligned virtual storage location  */
 /*                                                                   */
@@ -736,7 +736,8 @@ int     len;                            /* Length for page crossing  */
     return dest;
 
 } /* end function ARCH_DEP(instfetch) */
-#endif
+
+#endif /* defined(OPTION_INLINE_IFETCH) || defined(_VSTORE_C) */
 
 
 /*-------------------------------------------------------------------*/
@@ -795,7 +796,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
 }
 #endif /* !defined(_VSTORE_CONCPY) */
 
-#if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
+#if defined(OPTION_INLINE_VSTORE) || defined(_VSTORE_C)
 
 /*-------------------------------------------------------------------*/
 /* Move characters using specified keys and address spaces           */
@@ -1074,4 +1075,4 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
 #endif /*FEATURE_INTERVAL_TIMER*/
 } /* end function ARCH_DEP(validate_operand) */
 
-#endif /*!defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)*/
+#endif /* !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C) */

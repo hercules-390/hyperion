@@ -62,15 +62,15 @@
 #endif /* !defined(  OPTION_INLINE ) && !defined( NO_OPTION_INLINE ) */
 
 #if defined(OPTION_INLINE)
-  #undef  OPTION_NO_INLINE_DAT          /* Performance option        */
-  #undef  OPTION_NO_INLINE_LOGICAL      /* Performance option        */
-  #undef  OPTION_NO_INLINE_VSTORE       /* Performance option        */
-  #undef  OPTION_NO_INLINE_IFETCH       /* Performance option        */
+  #define OPTION_INLINE_DAT             /* Performance option        */
+  #define OPTION_INLINE_LOGICAL         /* Performance option        */
+  #define OPTION_INLINE_VSTORE          /* Performance option        */
+  #define OPTION_INLINE_IFETCH          /* Performance option        */
 #else /* defined(NO_OPTION_INLINE) */
-  #define OPTION_NO_INLINE_DAT          /* Performance option        */
-  #define OPTION_NO_INLINE_LOGICAL      /* Performance option        */
-  #define OPTION_NO_INLINE_VSTORE       /* Performance option        */
-  #define OPTION_NO_INLINE_IFETCH       /* Performance option        */
+  #undef  OPTION_INLINE_DAT             /* Performance option        */
+  #undef  OPTION_INLINE_LOGICAL         /* Performance option        */
+  #undef  OPTION_INLINE_VSTORE          /* Performance option        */
+  #undef  OPTION_INLINE_IFETCH          /* Performance option        */
 #endif /* defined(OPTION_INLINE) */
 
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
