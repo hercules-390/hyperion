@@ -110,7 +110,7 @@ static void* ptt_timeout( void* arg )
 /*-------------------------------------------------------------------*/
 /* Process 'ptt' tracing command                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int ptt_cmd(int argc, const char *argv[], const char* cmdline)
+DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 {
     int  rc = 0;
     int  n, to = -1;
@@ -380,7 +380,7 @@ DLL_EXPORT void ptt_trace_init( int n, int init )
 /* Primary PTT tracing function to fill in a PTT_TRACE table entry.  */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ptt_pthread_trace (int trclass, const char *msg,
-                                   void *data1, void *data2,
+                                   const void *data1, const void *data2,
                                    const char *loc, int rc)
 {
 int i, n;

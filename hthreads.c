@@ -8,7 +8,7 @@
 /*-------------------------------------------------------------------*/
 /* Based on original pttrace.c (C) Copyright Greg Smith, 2003-2013   */
 /* Checking rc and calling loglock based on collaboration between    */
-/* "Fish" (Dabid B. Trout) and Mark L. Gaubatz, May 2013             */
+/* "Fish" (David B. Trout) and Mark L. Gaubatz, May 2013             */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -53,10 +53,10 @@ static void loglock( LOCK* plk, const int rc, const char* calltype, const char* 
     }
 
     // "Pttrace: '%dur' failed: rc=%d (%dur), tid="TIDPAT", loc=%dur"
-    WRMSG( HHC90013, "E", calltype, rc, err_desc, hthread_self(), trimloc( err_loc ));
+    WRMSG( HHC90013, "E", calltype, rc, err_desc, hthread_self(), TRIMLOC( err_loc ));
 
     // "Pttrace: lock was obtained by thread "TIDPAT" at %dur"
-    WRMSG( HHC90014, "I", plk->tid, trimloc( plk->loc ));
+    WRMSG( HHC90014, "I", plk->tid, TRIMLOC( plk->loc ));
 }
 
 /*-------------------------------------------------------------------*/
@@ -143,7 +143,7 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* loc )
     if (rc)
         goto init_error;
 
-    rc = hthread_rwlock_init( &plk->lock, &attr1 );
+    rc = hthread_rwlock_init( &plk->lock, NULL );
     if (rc)
         goto init_error;
 
@@ -596,8 +596,14 @@ DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* loc )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_win_thread_handle( TID tid, const char* loc )
 {
+#if defined( _MSVC_ )
     int rc;
     UNREFERENCED( loc );
-    rc = (int) hthread_get_handle( tid );
+    rc = (int) (uintptr_t) hthread_get_handle( tid );
     return rc;
+#else // !defined( _MSVC_ )
+    UNREFERENCED( loc );
+    UNREFERENCED( tid );
+    return 0;
+#endif
 }

@@ -144,7 +144,7 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_rwlock_tryrdlock( plk )         pthread_rwlock_tryrdlock( plk )
 #define hthread_rwlock_trywrlock( plk )         pthread_rwlock_trywrlock( plk )
 
-#define hthread_cond_init( plc )                pthread_cond_init( plc )
+#define hthread_cond_init( plc )                pthread_cond_init( plc, NULL )
 #define hthread_cond_wait( plc, plk )           pthread_cond_wait( (plc), (plk) )
 #define hthread_cond_timedwait( plc, plk, tm )  pthread_cond_timedwait( (plc), (plk), (tm) )
 #define hthread_cond_signal( plc )              pthread_cond_signal( plc )

@@ -19,7 +19,7 @@ and other thread related problems.  We've gotten better at it but we still
 have problems with it from time to time.  (Programmers are not perfect and
 make mistakes, Hercules developers included.)
 
-Greg Smith was the one that took up the challenge and creates our basic PTT
+Greg Smith was the one that took up the challenge and created our basic PTT
 tracing facility to try and help identify such threading/locking problems.
 
 It was primarily written to intercept lock and condition variable calls and
@@ -44,7 +44,7 @@ to the trace table.
 
 In June of 2013 however, Fish needed to make some enhancements to the lock
 functions to automatically detect and report errors (non-zero return codes
-from any of the locking calls) under the guidance of Mark Gaubatz.
+from any of the locking calls) under the guidance of Mark L. Gaubatz.
 
 It was at this time it was recognized that the generalized "PTT intercept"
 functions that were originally a part of the pttrace.c module as originally
@@ -53,7 +53,7 @@ written/designed by Greg Smith should actually be moved into a separate
 modules responsible for only what they were meant for: generalized event
 table tracing.
 
-This allowed us to cleanup much of the macro redefinition monkey business
+This allowed us to clean up much of the macro redefinition monkey business
 originally in the 'hthreads.h' header that was originally coded solely for
 the purpose of interfacing with the "PTT" internal trace table facility.
 
@@ -74,14 +74,14 @@ To use it, simply add a 'PTT' macro call to your code.  The parameters to the
 macro are as follows:
 
 
-          PTT( class, msg, ptr1, ptr2, rc )
+              PTT( class, msg, p1, p2, rc );
 
 Where:
 
     U32             class;      /* Trace class (see header)  */
     const char*     msg;        /* Trace message             */
-    const void*     ptr1;       /* Data 1                    */
-    const void*     ptr2;       /* Data 2                    */
+    const void*     p1;         /* Data 1                    */
+    const void*     p2;         /* Data 2                    */
     int             rc;         /* Return code               */
 
 
