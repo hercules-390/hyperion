@@ -91,7 +91,7 @@ static void     read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
                                    BYTE*   pMore,     BYTE* pUnitStat,
                                    U16*    pResidual, PTPHDR* pPTPHDR );
 
-static void*    ptp_read_thread( PTPBLK* pPTPBLK );
+static void*    ptp_read_thread( void* arg /* PTPBLK* pPTPBLK */ );
 
 static void*    add_buffer_to_chain_and_signal_event( PTPATH* pPTPATH, PTPHDR* pPTPHDR );
 static void*    add_buffer_to_chain( PTPATH* pPTPATH, PTPHDR* pPTPHDR );
@@ -110,7 +110,7 @@ static int      check_specified_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK );
 
 static int      raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay );
 
-static void*    ptp_unsol_int_thread( PTPINT* pPTPINT );
+static void*    ptp_unsol_int_thread( void* arg /* PTPINT* pPTPINT */ );
 
 static void     get_tod_clock( BYTE* TodClock );
 
@@ -1980,8 +1980,9 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 // forwarding them, we may be forwarding them from something using a
 // larger MTU to something using a smaller MTU.
 
-void*  ptp_read_thread( PTPBLK* pPTPBLK )
+void*  ptp_read_thread( void* arg )
 {
+    PTPBLK*    pPTPBLK = (PTPBLK*) arg;
     PTPATH*    pPTPATH = pPTPBLK->pPTPATHRead; // PTPATH Read
     DEVBLK*    pDEVBLK = pPTPATH->pDEVBLK;     // DEVBLK
     BYTE*      pTunBuf;                        // TUN read buffer address
@@ -3770,8 +3771,9 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
 /* ptp_unsol_int_thread()                                             */
 /* ------------------------------------------------------------------ */
 
-void*  ptp_unsol_int_thread( PTPINT* pPTPINT )
+void*  ptp_unsol_int_thread( void* arg )
 {
+    PTPINT*    pPTPINT  = (PTPINT*) arg;
     DEVBLK*    pDEVBLK  = pPTPINT->pDEVBLK;    // DEVBLK
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK

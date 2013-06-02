@@ -3774,9 +3774,10 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 /* EXECUTE A CHANNEL PROGRAM                                         */
 /*-------------------------------------------------------------------*/
-void *
-ARCH_DEP(execute_ccw_chain) (DEVBLK *dev)
+void*
+ARCH_DEP(execute_ccw_chain) (void *arg)
 {
+DEVBLK *dev = (DEVBLK*) arg;            /* Device Block pointer      */
 IOBUF  *iobuf;                          /* Pointer to I/O buffer     */
 int     sysid = DEV_SYS_LOCAL;          /* System Identifier         */
 U32     ccwaddr = 0;                    /* Address of CCW        @IWZ*/
@@ -3825,7 +3826,7 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
 do {                                                                   \
     if (iobuf != &iobuf_initial)                                       \
         iobuf_destroy(iobuf);                                          \
-    return (_result);                                                  \
+    return (void*) (_result);                                          \
 } while(0)
 
 #define execute_ccw_chain_unlock_and_return(_result)                   \
@@ -5284,6 +5285,8 @@ breakchain:
     #undef execute_ccw_chain_return
     #undef execute_ccw_chain_fast_return
     #undef execute_ccw_chain_unlock_and_return
+
+    return NULL;
 } /* end function execute_ccw_chain */
 
 

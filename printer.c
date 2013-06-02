@@ -175,7 +175,7 @@ do { \
     } \
 } while (0)
 
-static void* spthread (DEVBLK* dev);        /*  (forward reference)  */
+static void* spthread ( void* dev );        /*  (forward reference)  */
 
 /*-------------------------------------------------------------------*/
 /* Dump the FCB info                                                 */
@@ -225,8 +225,9 @@ static int onconnect_callback (DEVBLK* dev)
 /*-------------------------------------------------------------------*/
 /* Thread to monitor the sockdev remote print spooler connection     */
 /*-------------------------------------------------------------------*/
-static void* spthread (DEVBLK* dev)
+static void* spthread (void* arg)
 {
+    DEVBLK* dev = (DEVBLK*) arg;
     BYTE byte;
     fd_set readset, errorset;
     struct timeval tv;

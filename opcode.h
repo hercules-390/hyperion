@@ -2835,9 +2835,9 @@ do { \
 
 /* Functions in module channel.c */
 int  ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb);
-void *s370_execute_ccw_chain (DEVBLK *dev);
-void *s390_execute_ccw_chain (DEVBLK *dev);
-void *z900_execute_ccw_chain (DEVBLK *dev);
+void *s370_execute_ccw_chain (void *dev);
+void *s390_execute_ccw_chain (void *dev);
+void *z900_execute_ccw_chain (void *dev);
 int  stchan_id (REGS *regs, U16 chan);
 int  testch (REGS *regs, U16 chan);
 int  testio (REGS *regs, DEVBLK *dev, BYTE ibyte);
@@ -2885,7 +2885,7 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int co
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
-void *cpu_thread (int *cpu);
+void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 int display_psw (REGS *regs, char *buf, int buflen);
 char *str_psw (REGS *regs, char *buf);

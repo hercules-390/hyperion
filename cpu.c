@@ -1201,10 +1201,10 @@ static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
 /*-------------------------------------------------------------------*/
 /* CPU instruction execution thread                                  */
 /*-------------------------------------------------------------------*/
-void *cpu_thread (int *ptr)
+void *cpu_thread (void *ptr)
 {
 REGS *regs = NULL;
-int   cpu  = *ptr;
+int   cpu  = *(int*)ptr;
 char  cpustr[40];
 int   rc;
 

@@ -1527,8 +1527,8 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
 /*-------------------------------------------------------------------*/
-static void *
-connect_client (int *csockp)
+static void*
+connect_client (void *csockp)
 {
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
@@ -1554,7 +1554,7 @@ char                    *logoout;
 
     logobfr=NULL;
     /* Load the socket address from the thread parameter */
-    csock = *csockp;
+    csock = *(int*)csockp;
 
     /* Obtain the client's IP address */
     namelen = sizeof(client);

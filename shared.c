@@ -2352,7 +2352,7 @@ DEVBLK      *dev;                       /* -> Device block           */
 /*-------------------------------------------------------------------
  * Connect a new client
  *-------------------------------------------------------------------*/
-static void *serverConnect (int *psock)
+static void *serverConnect (void *psock)
 {
 int             csock;                  /* Connection socket         */
 int             rc;                     /* Return code               */
@@ -2372,7 +2372,7 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 char           *ipaddr = NULL;          /* IP addr of connected peer */
 char            threadname[40];
 
-    csock = *psock;
+    csock = *(int*)psock;
     free (psock);
     ipaddr = clientip(csock);
 

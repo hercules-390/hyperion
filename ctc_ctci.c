@@ -95,7 +95,7 @@ static BYTE CTCI_Immed_Commands[256]=
 // Declarations
 // ====================================================================
 
-static void*    CTCI_ReadThread( PCTCBLK pCTCBLK );
+static void*    CTCI_ReadThread( void* arg /*PCTCBLK pCTCBLK */ );
 
 static int      CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
                                      BYTE*   pData, size_t iSize );
@@ -991,8 +991,9 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 // all of the queued CTCISEG's hwLength fields added together.
 //
 
-static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
+static void*  CTCI_ReadThread( void* arg )
 {
+    PCTCBLK  pCTCBLK = (PCTCBLK) arg;
     DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[0];
     int      iLength;
     BYTE     szBuff[2048];

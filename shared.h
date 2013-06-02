@@ -505,7 +505,7 @@ static int     serverDisconnectable (DEVBLK *dev, int ix);
 static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
-static void   *serverConnect (int *psock);
+static void   *serverConnect (void *psock);
 static void    shrdtrc (DEVBLK *dev, char *msg, ...);
 #endif /* _SHARED_C_ */
 

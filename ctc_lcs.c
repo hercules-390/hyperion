@@ -68,7 +68,7 @@ static void     LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame );
 static void     LCS_LanStats      ( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame );
 static void     LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame );
 
-static void*    LCS_PortThread( PLCSPORT pLCSPORT );
+static void*    LCS_PortThread( void* arg /*PLCSPORT pLCSPORT */ );
 
 static int      LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
                                      BYTE*   pData,   size_t iSize );
@@ -1609,8 +1609,9 @@ static void  LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 //                       LCS_PortThread
 // ====================================================================
 
-static void*  LCS_PortThread( PLCSPORT pLCSPORT )
+static void*  LCS_PortThread( void* arg)
 {
+    PLCSPORT    pLCSPORT = (PLCSPORT) arg;
     PLCSDEV     pLCSDev;
     PLCSDEV     pPrimaryLCSDEV;
     PLCSDEV     pSecondaryLCSDEV;
