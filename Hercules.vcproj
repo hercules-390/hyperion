@@ -1139,6 +1139,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hthreads.c"
+							>
+						</File>
+						<File
 							RelativePath=".\httpserv.c"
 							>
 						</File>
@@ -1807,6 +1811,10 @@
 					</File>
 					<File
 						RelativePath=".\README.OSX"
+						>
+					</File>
+					<File
+						RelativePath=".\README.PTT"
 						>
 					</File>
 					<File

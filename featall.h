@@ -154,11 +154,15 @@
 /*                  Hercules Mutex Locks Model                       */
 /*********************************************************************/
 
-#define  OPTION_MUTEX_NORMAL       1        /* re-obtain == deadlock */
-#define  OPTION_MUTEX_ERRORCHECK   2        /* re-obtain == error    */
-#define  OPTION_MUTEX_RECURSIVE    3        /* re-obtain == allowed  */
+#define  OPTION_MUTEX_NORMAL       1    /* re-obtain == deadlock     */
+#define  OPTION_MUTEX_ERRORCHECK   2    /* re-obtain == error        */
+#define  OPTION_MUTEX_RECURSIVE    3    /* re-obtain == allowed      */
+
+#define  OPTION_RWLOCK_SHARED      4    /* public to all processes   */
+#define  OPTION_RWLOCK_PRIVATE     5    /* private to this process   */
 
 #define  OPTION_MUTEX_DEFAULT      OPTION_MUTEX_ERRORCHECK
+#define  OPTION_RWLOCK_DEFAULT     OPTION_RWLOCK_PRIVATE
 
 /*********************************************************************\
  *********************************************************************

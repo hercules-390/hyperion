@@ -323,6 +323,7 @@ endif
                         hsocket.c    \
                         memrchr.c    \
                         parser.c     \
+                        hthreads.c   \
                         pttrace.c    \
                         $(FTHREADS)  \
                         $(LTDL)

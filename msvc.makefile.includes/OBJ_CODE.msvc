@@ -48,6 +48,7 @@ hutil_OBJ = \
     $(O)logmsg.obj   \
     $(O)memrchr.obj  \
     $(O)parser.obj   \
+    $(O)hthreads.obj \
     $(O)pttrace.obj  \
     $(O)version.obj  \
     $(O)hsocket.obj  \

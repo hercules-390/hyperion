@@ -351,16 +351,6 @@ char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
 int     dll_count;                      /* index into array          */
 #endif
 
-    /* Initialize/verify locking model (see
-      initialize_lock macro in hthreads.h) */
-    {
-        LOCK               dummy;
-        initialize_lock ( &dummy );
-        obtain_lock     ( &dummy );
-        release_lock    ( &dummy );
-        destroy_lock    ( &dummy );
-    }
-
     /* Seed the pseudo-random number generator */
     srand( time(NULL) );
 

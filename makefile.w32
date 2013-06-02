@@ -108,7 +108,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                cgibin.o codepage.o loadparm.o fillfnam.o \
                hsccmd.o hscmisc.o history.o logger.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
-               hscutl.o hscutl2.o hsys.o bootstrap.o pttrace.o \
+               hscutl.o hscutl2.o hsys.o bootstrap.o hthreads.o pttrace.o \
                strsignal.o hconsole.o w32util.o softfloat.o
 
 hercules_OBJ += memrchr.o
@@ -126,85 +126,85 @@ hdteq_OBJ    = hdteq.o
 
 dasdinit_OBJ = dasdinit.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdconv_OBJ = dasdconv.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdls_OBJ   = dasdls.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdcat_OBJ  = dasdcat.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdpdsu_OBJ = dasdpdsu.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o hsys.o pttrace.o
+               cache.o shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
-tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
-tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
-tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
-cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
-cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
                dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
-cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
+cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o hthreads.o pttrace.o hsys.o
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o hsys.o pttrace.o
+               shared.o logmsg.o hsys.o hthreads.o pttrace.o
 
 hetget_OBJ   = hetget.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
-               codepage.o hsys.o pttrace.o
+               codepage.o hsys.o hthreads.o pttrace.o
 
 hetinit_OBJ  = hetinit.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
-               codepage.o hsys.o pttrace.o
+               codepage.o hsys.o hthreads.o pttrace.o
 
 hetmap_OBJ   = hetmap.o hetlib.o ftlib.o sllib.o hostinfo.o version.o  logmsg.o \
-               codepage.o hsys.o pttrace.o
+               codepage.o hsys.o hthreads.o pttrace.o
 
 hetupd_OBJ   = hetupd.o hetlib.o ftlib.o sllib.o codepage.o hostinfo.o version.o \
-               logmsg.o hsys.o pttrace.o
+               logmsg.o hsys.o hthreads.o pttrace.o
 
-dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
+dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o hthreads.o pttrace.o hsys.o
 
 dyninst_OBJ = dyninst.o
 

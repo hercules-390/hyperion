@@ -100,7 +100,7 @@ getpriority_thread(id_t who)
 
     if ( who )
     {
-        thread = win_thread_handle( who );
+        thread = (HANDLE) win_thread_handle( who );
     }
     else
     {
@@ -192,7 +192,7 @@ setpriority_thread(id_t who , int prio )
 
     if ( who )
     {
-        thread = win_thread_handle( who );
+        thread = (HANDLE) win_thread_handle( who );
     }
     else
     {

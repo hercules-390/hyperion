@@ -435,6 +435,9 @@
     <ClCompile Include="fthreads.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hthreads.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="general1.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -690,6 +693,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.OSX">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="README.PTT">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.REXX">

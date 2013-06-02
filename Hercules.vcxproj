@@ -465,6 +465,7 @@
     <ClCompile Include="fillfnam.c" />
     <ClCompile Include="float.c" />
     <ClCompile Include="fthreads.c" />
+    <ClCompile Include="hthreads.c" />
     <ClCompile Include="general1.c" />
     <ClCompile Include="general2.c" />
     <ClCompile Include="general3.c" />
@@ -554,6 +555,7 @@
     <None Include="README.MSVC" />
     <None Include="README.NETWORKING" />
     <None Include="README.OSX" />
+    <None Include="README.PTT" />
     <None Include="README.REXX" />
     <None Include="README.SETUID" />
     <None Include="README.SUN" />

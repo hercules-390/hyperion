@@ -363,7 +363,6 @@ DLL_EXPORT void del_symbol(const char *sym)
 DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
-    extern int          pttmadethread;         /* pthreads is active */
 
     if ( sym == NULL || value == NULL || strlen(sym) == 0 )
         return;
@@ -414,7 +413,7 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     maximum atomic pipe buffer size PIPE_BUF.
 
     #endif
-    if (!pttmadethread)
+    if (!pttthread)
     {
        if ( setenv( sym, value, TRUE ) )
            WRMSG(HHC00136, "W", "setenv()", strerror(errno));
@@ -1095,4 +1094,24 @@ DLL_EXPORT int drop_all_caps(void)
 
     return failed;
 }
-#endif
+#endif /* defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES) */
+
+#if defined( _MSVC_ )
+/*-------------------------------------------------------------------*/
+/* Trim path information from __FILE__ macro value                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* trimloc( const char* loc )
+{
+    /*
+    ** Under certain unknown circumstances MSVC sometimes
+    ** sets the __FILE__ macro to a full path filename
+    ** rather than just the filename only. The following
+    ** compensates for this condition.
+    */
+    char* p = strrchr( loc, '\\' );
+    if (!p) p = strrchr( loc, '/' );
+    if (p)
+        loc = p+1;
+    return loc;
+}
+#endif /* defined( _MSVC_ ) */

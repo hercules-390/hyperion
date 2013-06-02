@@ -229,4 +229,12 @@ HUT_DLL_IMPORT  void   hpcfree  ( BYTE type, void*  ptr  );
 /* Hercules low-level file open */
 HUT_DLL_IMPORT  int hopen( const char* path, int oflag, ... );
 
+/* Trim path information from __FILE__ macro */
+#if defined( _MSVC_ )
+HUT_DLL_IMPORT const char* trimloc( const char* loc );
+#define  TRIMLOC(_loc)     trimloc( _loc )
+#else
+#define  TRIMLOC(_loc)            ( _loc )
+#endif
+
 #endif /* __HSCUTL_H__ */
