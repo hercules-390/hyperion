@@ -55,23 +55,32 @@
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 
-#if defined( OPTION_INLINE ) && defined( NO_OPTION_INLINE )
-  #error Either OPTION_INLINE or NO_OPTION_INLINE must be specified, not both
-#elif !defined( OPTION_INLINE ) && !defined( NO_OPTION_INLINE )
-  #define       OPTION_INLINE           /* inline vstore & dat funcs */
-#endif /* !defined(  OPTION_INLINE ) && !defined( NO_OPTION_INLINE ) */
-
-#if defined(OPTION_INLINE)
-  #define OPTION_INLINE_DAT             /* Performance option        */
-  #define OPTION_INLINE_LOGICAL         /* Performance option        */
-  #define OPTION_INLINE_VSTORE          /* Performance option        */
-  #define OPTION_INLINE_IFETCH          /* Performance option        */
-#else /* defined(NO_OPTION_INLINE) */
-  #undef  OPTION_INLINE_DAT             /* Performance option        */
-  #undef  OPTION_INLINE_LOGICAL         /* Performance option        */
-  #undef  OPTION_INLINE_VSTORE          /* Performance option        */
-  #undef  OPTION_INLINE_IFETCH          /* Performance option        */
-#endif /* defined(OPTION_INLINE) */
+/*-------------------------------------------------------------------*\
+ *   The following set of default "OPTION_INLINE" settings were      *
+ *   determined based on testing performed in late May of 2013:      *
+ *      vstore/ifetch: inline,  logical/dat: DON'T inline.           *
+\*-------------------------------------------------------------------*/
+#if defined(    OPTION_INLINE_VSTORE ) && defined(  NO_OPTION_INLINE_VSTORE )
+  #error Either OPTION_INLINE_VSTORE or NO_OPTION_INLINE_VSTORE must be specified, not both
+#elif !defined( OPTION_INLINE_VSTORE ) && !defined( NO_OPTION_INLINE_VSTORE )
+  #define       OPTION_INLINE_VSTORE
+#endif
+#if defined(    OPTION_INLINE_IFETCH ) && defined(  NO_OPTION_INLINE_IFETCH )
+  #error Either OPTION_INLINE_IFETCH or NO_OPTION_INLINE_IFETCH must be specified, not both
+#elif !defined( OPTION_INLINE_IFETCH ) && !defined( NO_OPTION_INLINE_IFETCH )
+  #define       OPTION_INLINE_IFETCH
+#endif
+#if defined(    OPTION_INLINE_LOGICAL ) && defined(  NO_OPTION_INLINE_LOGICAL )
+  #error Either OPTION_INLINE_LOGICAL or NO_OPTION_INLINE_LOGICAL must be specified, not both
+#elif !defined( OPTION_INLINE_LOGICAL ) && !defined( NO_OPTION_INLINE_LOGICAL )
+  #undef        OPTION_INLINE_LOGICAL
+#endif
+#if defined(    OPTION_INLINE_DAT ) && defined(  NO_OPTION_INLINE_DAT )
+  #error Either OPTION_INLINE_DAT or NO_OPTION_INLINE_DAT must be specified, not both
+#elif !defined( OPTION_INLINE_DAT ) && !defined( NO_OPTION_INLINE_DAT )
+  #undef        OPTION_INLINE_DAT
+#endif
+/*-------------------------------------------------------------------*/
 
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */

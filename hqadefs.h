@@ -231,34 +231,6 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 12:         inline the vstore and dat functions       */
-/*-------------------------------------------------------------------*/
-
-#if HQA_SCENARIO == 12  // inline the vstore and dat functions
-
-  #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 12\n"
-
-  #define     OPTION_INLINE
-  #undef   NO_OPTION_INLINE
-
-#endif
-
-/*-------------------------------------------------------------------*/
-/* QA Scenario 13:         DON'T inline the vstore and dat functions */
-/*-------------------------------------------------------------------*/
-
-#if HQA_SCENARIO == 13  // DON'T inline the vstore and dat functions
-
-  #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 13\n"
-
-  #define  NO_OPTION_INLINE
-  #undef      OPTION_INLINE
-
-#endif
-
-/*-------------------------------------------------------------------*/
 
 #endif // !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
 
