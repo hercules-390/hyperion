@@ -31,12 +31,11 @@
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 
 /*-------------------------------------------------------------------*/
-/*                      Fish Threads                                 */
+/*                 Locking/Threading Models                          */
 /*-------------------------------------------------------------------*/
+
 #if defined( OPTION_FTHREADS )
-
 #include "fthreads.h"
-
 #define HTHREAD_MUTEX_NORMAL            FTHREAD_MUTEX_NORMAL
 #define HTHREAD_MUTEX_ERRORCHECK        FTHREAD_MUTEX_ERRORCHECK
 #define HTHREAD_MUTEX_RECURSIVE         FTHREAD_MUTEX_RECURSIVE
@@ -44,25 +43,75 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HTHREAD_RWLOCK_PRIVATE          0  /* fthreads doesn't have r/w locks (yet) */
 #define HTHREAD_CREATE_DETACHED         FTHREAD_CREATE_DETACHED
 #define HTHREAD_CREATE_JOINABLE         FTHREAD_CREATE_JOINABLE
+#endif /* defined( OPTION_FTHREADS ) */
+
+#if !defined( OPTION_FTHREADS )
+#include <pthread.h>
+#define HTHREAD_MUTEX_NORMAL            PTHREAD_MUTEX_NORMAL
+#define HTHREAD_MUTEX_ERRORCHECK        PTHREAD_MUTEX_ERRORCHECK
+#define HTHREAD_MUTEX_RECURSIVE         PTHREAD_MUTEX_RECURSIVE
+#define HTHREAD_RWLOCK_SHARED           PTHREAD_PROCESS_SHARED
+#define HTHREAD_RWLOCK_PRIVATE          PTHREAD_PROCESS_PRIVATE
+#define HTHREAD_CREATE_DETACHED         PTHREAD_CREATE_DETACHED
+#define HTHREAD_CREATE_JOINABLE         PTHREAD_CREATE_JOINABLE
+#endif /* !defined( OPTION_FTHREADS ) */
+
+/*-------------------------------------------------------------------*/
+/*              Hercules default locking model                       */
+/*-------------------------------------------------------------------*/
+
+#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
+  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_NORMAL
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
+  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_ERRORCHECK
+#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
+  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_RECURSIVE
+#else
+  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
+#endif
+
+#if        OPTION_RWLOCK_DEFAULT == OPTION_RWLOCK_SHARED
+  #define HTHREAD_RWLOCK_DEFAULT   HTHREAD_RWLOCK_SHARED
+#elif      OPTION_RWLOCK_DEFAULT == OPTION_RWLOCK_PRIVATE
+  #define HTHREAD_RWLOCK_DEFAULT   HTHREAD_RWLOCK_PRIVATE
+#else
+  #error Invalid or Usupported 'OPTION_RWLOCK_DEFAULT' setting
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                      Fish Threads                                 */
+/*-------------------------------------------------------------------*/
+#if defined( OPTION_FTHREADS )
 
 typedef fthread_t               TID;
 typedef fthread_cond_t          COND;
 typedef fthread_attr_t          ATTR;
 typedef fthread_mutexattr_t     MATTR;
+//pedef fthread_rwlockattr_t    RWATTR;   /* fthreads doesn't have r/w locks (yet) */
+#define RWATTR MATTR                      /* fthreads doesn't have r/w locks (yet) */
 typedef fthread_mutex_t         HLOCK;
 //pedef fthread_rwlock_t        HRWLOCK;  /* fthreads doesn't have r/w locks (yet) */
 #define HRWLOCK HLOCK                     /* fthreads doesn't have r/w locks (yet) */
 
 #define hthread_mutexattr_init( pla )           fthread_mutexattr_init( pla )
 #define hthread_mutexattr_settype( pla, typ )   fthread_mutexattr_settype( (pla), (typ) )
-#define hthread_mutexattr_setpshared( pla, sh ) 0  /* fthreads doesn't have r/w locks (yet) */
 #define hthread_mutexattr_destroy( pla )        fthread_mutexattr_destroy( pla )
+
 #define hthread_mutex_init( plk, pla )          fthread_mutex_init( (plk), (pla) )
 #define hthread_mutex_lock( plk )               fthread_mutex_lock( plk )
 #define hthread_mutex_trylock( plk )            fthread_mutex_trylock( plk )
 #define hthread_mutex_unlock( plk )             fthread_mutex_unlock( plk )
 #define hthread_mutex_destroy( plk )            fthread_mutex_destroy( plk )
 
+#if 0           /* fthreads doesn't have r/w locks (yet) */
+#define hthread_rwlockattr_init( pla )          fthread_rwlockattr_init( pla )
+#define hthread_rwlockattr_setpshared( pla, s ) fthread_rwlockattr_setpshared( (pla), (s) )
+#define hthread_rwlockattr_destroy( pla )       fthread_rwlockattr_destroy( pla )
+#else           /* fthreads doesn't have r/w locks (yet) */
+#define hthread_rwlockattr_init( pla )          fthread_mutexattr_init( pla )
+#define hthread_rwlockattr_setpshared( pla, s ) fthread_mutexattr_settype( (pla), HTHREAD_MUTEX_DEFAULT )
+#define hthread_rwlockattr_destroy( pla )       fthread_mutexattr_destroy( pla )
+#endif
 #if 0           /* fthreads doesn't have r/w locks (yet) */
 #define hthread_rwlock_init( plk, pla )         fthread_rwlock_init( (plk), (pla) )
 #define hthread_rwlock_destroy( plk )           fthread_rwlock_destroy( plk )
@@ -109,32 +158,27 @@ typedef fthread_mutex_t         HLOCK;
 /*-------------------------------------------------------------------*/
 #if !defined( OPTION_FTHREADS )
 
-#include <pthread.h>
-
-#define HTHREAD_MUTEX_NORMAL            PTHREAD_MUTEX_NORMAL
-#define HTHREAD_MUTEX_ERRORCHECK        PTHREAD_MUTEX_ERRORCHECK
-#define HTHREAD_MUTEX_RECURSIVE         PTHREAD_MUTEX_RECURSIVE
-#define HTHREAD_RWLOCK_SHARED           PTHREAD_PROCESS_SHARED
-#define HTHREAD_RWLOCK_PRIVATE          PTHREAD_PROCESS_PRIVATE
-#define HTHREAD_CREATE_DETACHED         PTHREAD_CREATE_DETACHED
-#define HTHREAD_CREATE_JOINABLE         PTHREAD_CREATE_JOINABLE
-
 typedef pthread_t               TID;
 typedef pthread_cond_t          COND;
 typedef pthread_attr_t          ATTR;
 typedef pthread_mutexattr_t     MATTR;
+typedef pthread_rwlockattr_t    RWATTR;
 typedef pthread_mutex_t         HLOCK;
 typedef pthread_rwlock_t        HRWLOCK;
 
 #define hthread_mutexattr_init( pla )           pthread_mutexattr_init( pla )
 #define hthread_mutexattr_settype( pla, typ )   pthread_mutexattr_settype( (pla), (typ) )
-#define hthread_mutexattr_setpshared( pla, sh ) pthread_mutexattr_setpshared( (pla), (sh) )
 #define hthread_mutexattr_destroy( pla )        pthread_mutexattr_destroy( pla )
+
 #define hthread_mutex_init( plk, pla )          pthread_mutex_init( (plk), (pla) )
 #define hthread_mutex_lock( plk )               pthread_mutex_lock( plk )
 #define hthread_mutex_trylock( plk )            pthread_mutex_trylock( plk )
 #define hthread_mutex_unlock( plk )             pthread_mutex_unlock( plk )
 #define hthread_mutex_destroy( plk )            pthread_mutex_destroy( plk )
+
+#define hthread_rwlockattr_init( pla )          pthread_rwlockattr_init( pla )
+#define hthread_rwlockattr_setpshared( pla, s ) pthread_rwlockattr_setpshared( (pla), (s) )
+#define hthread_rwlockattr_destroy( pla )       pthread_rwlockattr_destroy( pla )
 
 #define hthread_rwlock_init( plk, pla )         pthread_rwlock_init( (plk), (pla) )
 #define hthread_rwlock_destroy( plk )           pthread_rwlock_destroy( plk )
@@ -166,27 +210,6 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_get_handle( tid )               NULL
 
 #endif /* !defined( OPTION_FTHREADS ) */
-
-/*-------------------------------------------------------------------*/
-/*              Default Hercules locking model                       */
-/*-------------------------------------------------------------------*/
-#if        OPTION_MUTEX_DEFAULT == OPTION_MUTEX_NORMAL
-  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_NORMAL
-#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_ERRORCHECK
-  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_ERRORCHECK
-#elif      OPTION_MUTEX_DEFAULT == OPTION_MUTEX_RECURSIVE
-  #define HTHREAD_MUTEX_DEFAULT   HTHREAD_MUTEX_RECURSIVE
-#else
-  #error Invalid or Usupported 'OPTION_MUTEX_DEFAULT' setting
-#endif
-
-#if        OPTION_RWLOCK_DEFAULT == OPTION_RWLOCK_SHARED
-  #define HTHREAD_RWLOCK_DEFAULT   HTHREAD_RWLOCK_SHARED
-#elif      OPTION_RWLOCK_DEFAULT == OPTION_RWLOCK_PRIVATE
-  #define HTHREAD_RWLOCK_DEFAULT   HTHREAD_RWLOCK_PRIVATE
-#else
-  #error Invalid or Usupported 'OPTION_RWLOCK_DEFAULT' setting
-#endif
 
 /*-------------------------------------------------------------------*/
 /*                  hthreads lock structures                         */

@@ -113,13 +113,13 @@ init_error:
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* loc )
 {
-    int rc;
-    MATTR attr1;    /* for primary lock */
-    MATTR attr2;    /* for internal locklock */
+    int     rc;
+    RWATTR  attr1;    /* for primary lock */
+    MATTR   attr2;    /* for internal locklock */
 
     PTTRACE( "rwlock init", plk, &attr1, loc, PTT_MAGIC );
 
-    rc = hthread_mutexattr_init( &attr1 );
+    rc = hthread_rwlockattr_init( &attr1 );
     if (rc)
         goto init_error;
 
@@ -127,15 +127,11 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* loc )
     if (rc)
         goto init_error;
 
-    rc = hthread_mutexattr_settype( &attr1, HTHREAD_MUTEX_DEFAULT );
-    if (rc)
-        goto init_error;
-
     rc = hthread_mutexattr_settype( &attr2, HTHREAD_MUTEX_DEFAULT );
     if (rc)
         goto init_error;
 
-    rc = hthread_mutexattr_setpshared( &attr1, HTHREAD_RWLOCK_DEFAULT );
+    rc = hthread_rwlockattr_setpshared( &attr1, HTHREAD_RWLOCK_DEFAULT );
     if (rc)
         goto init_error;
 
@@ -143,11 +139,11 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* loc )
     if (rc)
         goto init_error;
 
-    rc = hthread_rwlock_init( &plk->lock, NULL );
+    rc = hthread_rwlock_init( &plk->lock, &attr1 );
     if (rc)
         goto init_error;
 
-    rc = hthread_mutexattr_destroy( &attr1 );
+    rc = hthread_rwlockattr_destroy( &attr1 );
     if (rc)
         goto init_error;
 
