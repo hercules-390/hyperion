@@ -444,8 +444,7 @@ synchronize_cpus(REGS* regs)
     /* Deselect current processor and waiting processors from mask */
     mask &= ~(sysblk.waiting_mask | (regs)->hostregs->cpubit);
 
-    /* Deselect processors at a syncpoint and count processors with a
-     * guest interrupt pending
+    /* Deselect processors at a syncpoint and count active processors
      */
     for (i = 0; mask && i < sysblk.hicpu; ++i)
     {
@@ -454,20 +453,26 @@ synchronize_cpus(REGS* regs)
         if (mask & CPU_BIT(i))
         {
             if (AT_SYNCPOINT(i_regs))
-                mask &= ~CPU_BIT(i);
+            {
+                /* Remove CPU already at syncpoint */
+                mask ^= CPU_BIT(i);
+            }
             else
             {
-                ON_IC_INTERRUPT(i_regs);
+                /* Update count of active processors */
                 ++n;
+
+                /* Test and set interrupt pending conditions */
+                ON_IC_INTERRUPT(i_regs);
                 if (SIE_MODE(i_regs))
                     ON_IC_INTERRUPT(i_regs->guestregs);
             }
         }
     }
 
-    /* If any guest interrupts are pending with active processors,
-     * other than self, open an interrupt window for those processors
-     * prior to considering self as synchronized.
+    /* If any interrupts are pending with active processors, other than
+     * self, open an interrupt window for those processors prior to
+     * considering self as synchronized.
      */
     if (n && mask)
     {
@@ -485,5 +490,41 @@ synchronize_cpus(REGS* regs)
      */
 }
 
+static INLINE void
+wakeup_cpu(REGS* regs)
+{
+    signal_condition(&regs->intcond);
+}
+
+static INLINE void
+wakeup_cpu_mask(CPU_BITMAP mask)
+{
+    int i;
+
+    for (i = 0; mask; ++i)
+    {
+        if (mask & 1)
+        {
+            signal_condition(&sysblk.regs[i]->intcond);
+            break;
+        }
+
+        mask >>= 1;
+    }
+}
+
+static INLINE void
+wakeup_cpus_mask(CPU_BITMAP mask)
+{
+    int i;
+
+    for (i = 0; mask; i++)
+    {
+        if (mask & 1)
+            signal_condition(&sysblk.regs[i]->intcond);
+
+        mask >>= 1;
+    }
+}
 
 #endif // _HINLINES_H

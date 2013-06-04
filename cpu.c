@@ -56,6 +56,7 @@ void ARCH_DEP(checkstop_cpu)(REGS *regs)
     regs->checkstop=1;
     ON_IC_INTERRUPT(regs);
 }
+
 /*-------------------------------------------------------------------*/
 /* Put all the CPUs in the configuration in check-stop state         */
 /*-------------------------------------------------------------------*/
@@ -1246,6 +1247,7 @@ int   rc;
     /* Display thread started message on control panel */
     MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( cpu ), cpu );
     WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), cpustr);
+    SET_THREAD_NAME_ID(-1, cpustr);
 
     /* Execute the program in specified mode */
     do {
@@ -1609,8 +1611,15 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         while (sysblk.syncing)
             wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
 
-        /* Indicate we now own intlock */
-        sysblk.waiting_mask ^= regs->cpubit;
+        /* Turn off the waiting bit and indicate we now own intlock.
+         *
+         * Note: ANDing off of the CPU waiting bit, rather than using
+         * XOR, is required to handle the remote and rare case when the
+         * CPU is removed from the sysblk.waiting_mask while in
+         * wait_condition (intlock is NOT held; use of XOR incorrectly
+         * turns the CPU waiting bit back on).
+         */
+        sysblk.waiting_mask &= ~(regs->cpubit);
         sysblk.intowner = regs->cpuad;
 
 #ifdef OPTION_MIPS_COUNTING

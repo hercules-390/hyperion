@@ -1080,7 +1080,15 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                             while (sysblk.syncing)
                                  wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
                             sysblk.intowner = regs->cpuad;
-                            sysblk.waiting_mask ^= regs->cpubit;
+
+                            /* Remove CPU from the waiting mask; AND
+                             * must be used to handle the rare case
+                             * where the CPU was already removed from
+                             * sysblk.waiting_mask during
+                             * wait_condition.
+                             */
+                            sysblk.waiting_mask &= ~(regs->cpubit);
+
 #ifdef OPTION_MIPS_COUNTING
                             regs->waittime += host_tod() - regs->waittod;
                             regs->waittod = 0;
