@@ -634,15 +634,12 @@ DEVBLK**dvpp;
 #endif // OPTION_SYNCIO
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
-    dev->ioint.scsw = &dev->scsw;
     dev->ioint.priority = -1;
     dev->pciioint.dev = dev;
     dev->pciioint.pcipending = 1;
-    dev->pciioint.scsw = &dev->pciscsw;
     dev->pciioint.priority = -1;
     dev->attnioint.dev = dev;
     dev->attnioint.attnpending = 1;
-    dev->attnioint.scsw = &dev->attnscsw;
     dev->attnioint.priority = -1;
     dev->oslinux = sysblk.pgminttr == OS_LINUX;
 
