@@ -86,23 +86,13 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     {
         /* Reset all CPUs in the configuration */
         for (n = 0; n < sysblk.maxcpu; n++)
+        {
             if (IS_CPU_ONLINE(n))
             {
-                regs=sysblk.regs[n];
-
-                if(n == cpu)
-                {
-                    /* Perform initial reset on the IPL CPU */
-                    if ( (rc = ARCH_DEP(initial_cpu_reset) (regs)) )
-                        rc1 = rc;
-                }
-                else
-                {
-                    /* Perform reset on the other CPUs */
-                    if ( (rc = ARCH_DEP(cpu_reset) (regs)) )
-                        rc1 = rc;
-                }
+                if ( (rc = ARCH_DEP(cpu_reset) (sysblk.regs[n])) )
+                      rc1 = rc;
             }
+        }
     }
 
     /* Perform I/O subsystem reset */
