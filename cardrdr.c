@@ -53,7 +53,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 int     sockdev = 0;
 int     attn = 0;
 
-   
+
     /* Raise attention for re-init */
     if(dev->devtype)
         attn = 1;
@@ -859,17 +859,24 @@ int     num;                            /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
-        /* Calculate residual byte count */
-        num = (count < dev->numdevid) ? count : dev->numdevid;
-        *residual = count - num;
-        if (count < dev->numdevid) *more = 1;
 
-        /* Copy device identifier bytes to channel I/O buffer */
-        memcpy (iobuf, dev->devid, num);
+        /* SENSE ID is only supported if LEGACYSENSEID is ON;
+         * otherwise, fall through to invalid operation.
+         */
+        if (sysblk.legacysenseid)
+        {
+            /* Calculate residual byte count */
+            num = (count < dev->numdevid) ? count : dev->numdevid;
+            *residual = count - num;
+            if (count < dev->numdevid) *more = 1;
 
-        /* Return unit status */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
+            /* Copy device identifier bytes to channel I/O buffer */
+            memcpy (iobuf, dev->devid, num);
+
+            /* Return unit status */
+            *unitstat = CSW_CE | CSW_DE;
+            break;
+        }
 
     default:
     /*---------------------------------------------------------------*/
