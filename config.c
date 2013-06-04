@@ -575,14 +575,20 @@ DEVBLK**dvpp;
 
     if(!dev)
     {
-        if (!(dev = (DEVBLK*)malloc_aligned((sizeof(DEVBLK)+4095) & ~4095,4096)))
+        if (!(dev = (DEVBLK*)calloc_aligned((sizeof(DEVBLK)+4095) & ~4095,4096)))
         {
             char buf[64];
-            MSGBUF(buf, "malloc(%d)", (int)sizeof(DEVBLK));
+            MSGBUF(buf, "calloc(%d)", (int)sizeof(DEVBLK));
             WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
-        memset (dev, 0, sizeof(DEVBLK));
+
+        /* Clear device block and initialize header */
+        strncpy((char*)dev->blknam, HDL_NAME_DEVBLK, sizeof(dev->blknam));
+        strncpy((char*)dev->blkver, HDL_VERS_DEVBLK, sizeof(dev->blkver));
+        dev->blkloc = (U64)(size_t)dev;
+        dev->blksiz = HDL_SIZE_DEVBLK;
+        strncpy((char*)dev->blkend, HDL_NAME_DEVBLK, sizeof(dev->blknam));
 
         /* Initialize the device lock and conditions */
 
@@ -614,6 +620,8 @@ DEVBLK**dvpp;
     dev->group = NULL;
     dev->member = 0;
 
+    memset(dev->filename, 0, sizeof(dev->filename));
+
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
@@ -626,10 +634,16 @@ DEVBLK**dvpp;
 #endif // OPTION_SYNCIO
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
+    dev->ioint.scsw = &dev->scsw;
+    dev->ioint.priority = -1;
     dev->pciioint.dev = dev;
     dev->pciioint.pcipending = 1;
+    dev->pciioint.scsw = &dev->pciscsw;
+    dev->pciioint.priority = -1;
     dev->attnioint.dev = dev;
     dev->attnioint.attnpending = 1;
+    dev->attnioint.scsw = &dev->attnscsw;
+    dev->attnioint.priority = -1;
     dev->oslinux = sysblk.pgminttr == OS_LINUX;
 
     /* Initialize storage view */
