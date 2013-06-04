@@ -212,6 +212,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
+    SET_THREAD_NAME_ID(-1, "CPU Timer");
 
 #ifdef OPTION_MIPS_COUNTING
     then = host_tod();
