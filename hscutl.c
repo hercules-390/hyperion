@@ -1115,3 +1115,35 @@ DLL_EXPORT const char* trimloc( const char* loc )
     return loc;
 }
 #endif /* defined( _MSVC_ ) */
+
+/*********************************************************************/
+/* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
+/* being exactly 26 characters long (27 bytes with null terminator). */
+/* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
+/* the curent time of day as returned by a call to 'gettimeofday' is */
+/* used instead. buf must point to a char work buffer where the time */
+/* is formatted into and must not be NULL. bufsz is the size of buf  */
+/* and must be >= 2. If successful then the value of buf is returned */
+/* and is always zero terminated. If an error occurs or an invalid   */
+/* parameter is passed then NULL is returned instead.                */
+/*********************************************************************/
+DLL_EXPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz )
+{
+    struct timeval  tv;
+    struct tm*      pTM;
+    time_t          todsecs;
+    if (!buf || bufsz < 2)
+        return NULL;
+    if (!pTV)
+    {
+        gettimeofday( &tv, NULL );
+        pTV = &tv;
+    }
+    todsecs = pTV->tv_sec;
+    pTM = localtime( &todsecs );
+    strftime( buf, bufsz, "%Y-%m-%d %H:%M:%S", pTM );
+    if (bufsz > 20)
+        snprintf( &buf[19], bufsz-19, ".%06d", pTV->tv_usec );
+    buf[ bufsz-1 ] = 0;
+    return buf;
+}
