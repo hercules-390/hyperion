@@ -74,6 +74,13 @@ do {                                                                 \
 } while(0)
 
 /*-------------------------------------------------------------------*/
+/*           Shorter name than 'struct timeval'                      */
+/*-------------------------------------------------------------------*/
+#ifndef TIMEVAL
+#define TIMEVAL                 struct timeval
+#endif
+
+/*-------------------------------------------------------------------*/
 /*               Exported Function Definitions                       */
 /*-------------------------------------------------------------------*/
 PTT_DLL_IMPORT void ptt_trace_init    ( int n, int init );
