@@ -349,6 +349,9 @@ typedef void (ATTR_REGPARM(2) *pi_func) (REGS *regs, int pcode);
 typedef U32  (*s390_trace_br_func) (int amode,  U32 ia, REGS *regs);
 typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 
+/* qsort comparison function typedef */
+typedef int CMPFUNC(const void*, const void*);
+
 /*-------------------------------------------------------------------*/
 /* compiler optimization hints         (for performance)             */
 /*-------------------------------------------------------------------*/
