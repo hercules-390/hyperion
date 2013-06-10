@@ -377,10 +377,38 @@ etod2tod (const U64 etod)
     return (etod << 8);
 }
 
-static INLINE TOD
+static INLINE S64
+etod2ns (const S64 etod)
+{
+    return ((etod * 125) >> 1);
+}
+
+static INLINE S64
 etod2us (const S64 etod)
 {
     return (etod >> 4);
+}
+
+static INLINE S64
+etod2sec (const S64 etod)
+{
+    return (etod / ETOD_SEC);
+}
+
+static INLINE void
+etod2timespec (const S64 etod, struct timespec* ts)
+{
+    register S64 work = etod - ETOD_1970;
+    ts->tv_sec  = etod2sec(work);
+    ts->tv_nsec = etod2ns(work % ETOD_SEC);
+}
+
+static INLINE void
+etod2timeval (const S64 etod, struct timeval* tv)
+{
+    register S64 work = etod - ETOD_1970;
+    tv->tv_sec  = etod2sec(work);
+    tv->tv_usec = etod2us(work % ETOD_SEC);
 }
 
 
@@ -595,10 +623,38 @@ tod2ETOD (const TOD tod, ETOD *ETOD)
     return (ETOD->high);
 }
 
-static INLINE TOD
+static INLINE S64
+tod2ns (const TOD tod)
+{
+    return ((S64)((tod * 125) >> 9));
+}
+
+static INLINE S64
 tod2us (const TOD tod)
 {
-    return (tod >> 12);                 /* Adjust bit 51 to bit 63    */
+    return ((S64)(tod >> 12));          /* Adjust bit 51 to bit 63    */
+}
+
+static INLINE S64
+tod2sec (const TOD tod)
+{
+    return ((S64)(tod / TOD_SEC));
+}
+
+static INLINE void
+tod2timespec (const TOD tod, struct timespec* ts)
+{
+    register S64 work = (S64)(tod - TOD_1970);
+    ts->tv_sec  = tod2sec(work);
+    ts->tv_nsec = tod2ns(work % TOD_SEC);
+}
+
+static INLINE void
+tod2timeval (const TOD tod, struct timeval* tv)
+{
+    register S64 work = (S64)(tod - TOD_1970);
+    tv->tv_sec  = tod2sec(work);
+    tv->tv_usec = tod2us(work % TOD_SEC);
 }
 
 static INLINE TOD
@@ -722,6 +778,8 @@ _CLOCK_EXTERN ETOD  hw_tod;             /* Hardware clock               */
 //         position 23.
 //
 // S/370 - Decrementing at 1/300 second in bit position 23.
+//
+// Conversions:
 //
 //         ITIMER -> ETOD = (units * ETOD_SEC) / (300 << 8)
 //                        = (units * 16000000) /      76800
