@@ -92,6 +92,26 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
     #define    malloc_aligned(_size,_alignment) \
               _aligned_malloc(_size,_alignment)
 
+    static INLINE void*
+    calloc_aligned(size_t size, size_t alignment)
+    {
+        void* result;
+
+        if (!size)
+        {
+            return (NULL);
+        }
+
+        result = _aligned_malloc(size, alignment);
+
+        if (result != NULL)
+        {
+            memset(result, 0, size);
+        }
+
+        return (result);
+    }
+
     #define    free_aligned(_ptr) \
               _aligned_free(_ptr)
 
@@ -110,7 +130,20 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
             errno = rc;
         }
 
-        return result;
+        return (result);
+    }
+
+    static INLINE void*
+    calloc_aligned(size_t size, size_t alignment)
+    {
+        register void*  result = malloc_aligned(size, alignment);
+
+        if (result != NULL)
+        {
+            memset(result, 0, size);
+        }
+
+        return (result);
     }
 
     #define free_aligned(_ptr) \
@@ -119,26 +152,48 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
 #else /* !defined(HAVE_POSIX_MEMALIGN) */
 
     static INLINE void*
-    malloc_aligned(size_t size, size_t alignment)
+    __malloc_aligned_return (void* ptr, size_t alignment, size_t sizem1)
     {
-        register void*  ptr;
-        register char*  result;
-        register size_t sizem1 = alignment - 1;
+        register char* result = ptr;
 
-        if (!size)
-        {
-            return NULL;
-        }
-
-        result = ptr = malloc(size + sizem1 + sizeof(void*));
-        if (result)
+        if (result != NULL)
         {
             result += (size_t) sizeof(void*);
             result += alignment - ((size_t)result & sizem1);
             ((void**)result)[-1] = ptr;
         }
 
-        return result;
+        return (result);
+    }
+
+    static INLINE void*
+    malloc_aligned(size_t size, size_t alignment)
+    {
+        register void*  ptr;
+        register size_t sizem1 = alignment - 1;
+
+        if (!size)
+        {
+            return (NULL);
+        }
+
+        ptr = malloc(size + sizem1 + sizeof(void*));
+        return (__malloc_aligned_return(ptr, alignment, sizem1));
+    }
+
+    static INLINE void*
+    calloc_aligned(size_t size, size_t alignment)
+    {
+        register void*  ptr;
+        register size_t sizem1 = alignment - 1;
+
+        if (!size)
+        {
+            return (NULL);
+        }
+
+        ptr = calloc(1, size + sizem1 + sizeof(void*));
+        return (__malloc_aligned_return(ptr, alignment, sizem1));
     }
 
     static INLINE void
@@ -147,21 +202,8 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
         free(((void**)ptr)[-1]);
     }
 
-#endif /* malloc_aligned / free_aligned */
+#endif /* malloc_aligned / calloc_aligned / free_aligned */
 
-/*-------------------------------------------------------------------*/
-/*                     calloc_aligned                                */
-/*-------------------------------------------------------------------*/
-static INLINE void*
-calloc_aligned(size_t size, size_t alignment)
-{
-    register void*  result = malloc_aligned(size, alignment);
-
-    if (result != NULL)
-        memset(result, 0, size);
-
-    return result;
-}
 
 /*-------------------------------------------------------------------*/
 /*                  PVALLOC/VALLOC/VFREE                             */
