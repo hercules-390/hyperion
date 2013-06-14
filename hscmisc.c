@@ -1746,7 +1746,7 @@ BYTE    c;                              /* Character work area       */
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
-    if (aaddr > regs->mainlim)
+    if (regs->mainlim == 0 || aaddr > regs->mainlim)
     {
         n += snprintf (buf+n, bufl-n-1, "%s", " Real address is not valid");
         return n;
@@ -1856,6 +1856,12 @@ char    buf[512];
     len = parse_range (opnd, maxadr, &saddr, &eaddr, NULL);
     if (len < 0) return;
 
+    if (regs->mainlim == 0)
+    {
+        WRMSG(HHC02289, "I", "Real address is not valid");
+        return;
+    }
+
     /* Display real storage */
     for (i = 0; i < 999 && saddr <= eaddr; i++)
     {
@@ -1944,6 +1950,12 @@ char    buf[512];                       /* Message buffer            */
     if (len < 0) return;
     raddr = saddr;
 
+    if (regs->mainlim == 0)
+    {
+        WRMSG(HHC02290, "I", "Real address is not valid");
+        return;
+    }
+
     /* Alter real storage */
     if (len > 0)
     {
@@ -1951,6 +1963,14 @@ char    buf[512];                       /* Message buffer            */
         {
             aaddr = raddr + i;
             aaddr = APPLY_PREFIXING (aaddr, regs->PX);
+
+            /* Validate real address */
+            if (aaddr > regs->mainlim)
+            {
+                WRMSG(HHC02290, "I", "Addressing exception");
+                return;
+            }
+
             regs->mainstor[aaddr] = newval[i];
             STORAGE_KEY(aaddr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         } /* end for(i) */
@@ -2023,6 +2043,13 @@ char    type;
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, newval);
     if (len < 0) return;
+
+    if (regs->mainlim == 0)
+    {
+        WRMSG(HHC02291, "I", "Real address is not valid");
+        return;
+    }
+
     vaddr = saddr;
 
     /* Alter virtual storage */
@@ -2037,6 +2064,14 @@ char    type;
             ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr+i, arn,
                                     regs, ACCTYPE_LRA);
             aaddr = APPLY_PREFIXING (raddr, regs->PX);
+
+            /* Validate real address */
+            if (aaddr > regs->mainlim)
+            {
+                WRMSG(HHC02291, "I", "Addressing exception");
+                return;
+            }
+
             regs->mainstor[aaddr] = newval[i];
             STORAGE_KEY(aaddr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         } /* end for(i) */
@@ -2098,6 +2133,13 @@ char    buf[2048];                      /* Message buffer            */
 char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
+
+    /* Ensure storage exists to attempt the display */
+    if (iregs->mainlim == 0)
+    {
+        WRMSG(HHC02267, "I", "Real address is not valid");
+        return;
+    }
 
 #if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
     if ( !(sysblk.emsg & EMSG_TEXT) )
