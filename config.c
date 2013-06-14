@@ -72,7 +72,7 @@ int i;
     {
         dev->mainstor = sysblk.mainstor;
         dev->storkeys = sysblk.storkeys;
-        dev->mainlim = sysblk.mainsize - 1;
+        dev->mainlim = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
     }
 
     /* Relocate storage for all online cpus */
@@ -81,7 +81,7 @@ int i;
         {
             sysblk.regs[i]->storkeys = sysblk.storkeys;
             sysblk.regs[i]->mainstor = sysblk.mainstor;
-            sysblk.regs[i]->mainlim  = sysblk.mainsize - 1;
+            sysblk.regs[i]->mainlim  = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
         }
 
 }
@@ -276,7 +276,7 @@ int cpu;
     sysblk.dummyregs.mainstor = sysblk.mainstor;
     sysblk.dummyregs.psa = (PSA*)sysblk.mainstor;
     sysblk.dummyregs.storkeys = sysblk.storkeys;
-    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
+    sysblk.dummyregs.mainlim = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
     sysblk.dummyregs.dummy = 1;
     initial_cpu_reset (&sysblk.dummyregs);
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
