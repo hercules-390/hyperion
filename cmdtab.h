@@ -666,6 +666,11 @@
   "identical to the 'loadcore' command except that it loads a text deck\n"       \
   "file with \"TXT\" and \"END\" 80 byte records (i.e. an object deck).\n"
 
+#define locks_cmd_desc          "Display internal locks list"
+#define locks_cmd_help          \
+                                \
+  "Format: \"locks [HELD|tid|ALL] [SORT [TIME|TOD]|[OWNER|TID]|NAME|LOC]\"\n"
+
 #define log_cmd_desc            "Direct logger output"
 #define log_cmd_help            \
                                 \
@@ -1593,6 +1598,8 @@ COMMAND( "archmode",                archlvl_cmd,            SYSCMDNOPERNDIAG8,  
 COMMAND( "exit",                    quit_cmd,               SYSALLNDIAG8,       exit_cmd_desc,          NULL                )
 
 COMMAND( "sizeof",                  sizeof_cmd,             SYSCMDNOPERNPROG,   sizeof_cmd_desc,        NULL                )
+
+COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       locks_cmd_desc,         locks_cmd_help      )
 
 /*-------------------------------------------------------------------*/
 /*             Commands optional by build option                     */

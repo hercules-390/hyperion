@@ -70,7 +70,7 @@ do {                                                                 \
     ptt_pthread_trace( (_class), (_msg),(void*)(uintptr_t)(_data1),  \
                                          (void*)(uintptr_t)(_data2), \
                                          PTT_LOC,                    \
-                                         (int)(_rc));                \
+                                         (int)(_rc),NULL);           \
 } while(0)
 
 /*-------------------------------------------------------------------*/
@@ -85,7 +85,7 @@ do {                                                                 \
 /*-------------------------------------------------------------------*/
 PTT_DLL_IMPORT void ptt_trace_init    ( int n, int init );
 PTT_DLL_IMPORT int  ptt_cmd           ( int argc, char* argv[], char* cmdline );
-PTT_DLL_IMPORT void ptt_pthread_trace ( int, const char*, const void*, const void*, const char*, int );
+PTT_DLL_IMPORT void ptt_pthread_trace ( int, const char*, const void*, const void*, const char*, int, TIMEVAL* );
 PTT_DLL_IMPORT int  ptt_pthread_print ();
 PTT_DLL_IMPORT U32  pttclass;
 PTT_DLL_IMPORT int  pttthread;

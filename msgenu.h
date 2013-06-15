@@ -1999,12 +1999,17 @@ do { \
 #define HHC90000 "DBG: %s"
 #define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s()"
 
-/* pttrace.c */
+/* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument %s"
 #define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
-#define HHC90013 "'%s' failed: rc=%d (%s), tid="TIDPAT", loc=%s"
-#define HHC90014 "lock was obtained by thread "TIDPAT" at %s"
+#define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
+#define HHC90014 "lock %s was obtained by thread "TIDPAT" at %s"
+#define HHC90015 "Thread "TIDPAT" abandoned lock %s obtained on %s at %s"
+#define HHC90016 "Thread "TIDPAT" abandoned at %s lock %s obtained on %s at %s"
+#define HHC90017 "Lock=%s, tid="TIDPAT", tod=%s, loc=%s"
+#define HHC90018 "Total locks defined: %d"
+#define HHC90019 "No locks found for thread "TIDPAT"."
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"

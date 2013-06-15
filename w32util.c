@@ -443,8 +443,17 @@ static ULARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// (PUBLIC) Nanosecond resolution TOD clock (clock_gettime)
-
+// (PUBLIC) Nanosecond resolution (not quite but almost!) TOD clock (clock_gettime)
+//
+//                      **  CRITICAL PROGRAMMING NOTE!  **
+//
+// Because the new hthreads design calls gettimeofday to save the time when a lock is
+// initialized or obtained, etc, the below function nor any of the functions it calls
+// may call logmsg either directly or indirectly (such as using the 'TRACE' macro) or
+// else an infinite loop will occur since our logger design uses locks! hthreads will
+// call gettimeofday which issues a message which calls logger which uses a lock and
+// hthreads calls gettimeofday again, etc.
+//
 DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 {
     ULARGE_INTEGER          uliWork;                    // (current HPC tick count and work)
@@ -494,7 +503,6 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         if (!uliHPCTicksPerSec.QuadPart)  // (we only need to do this once)
         {
             VERIFY( QueryPerformanceFrequency( (LARGE_INTEGER*)&uliHPCTicksPerSec ));
-            TRACE("w32util: uliHPCTicksPerSec = 0x%16.16llX (%llu)\n", uliHPCTicksPerSec.QuadPart, uliHPCTicksPerSec.QuadPart );
 
             // Verify the length of time between host TOD clock resyncs isn't
             // so very long that the number of High Performance Counter ticks
@@ -503,11 +511,9 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
             while (uliHPCTicksPerSec.QuadPart > (_UI64_MAX / (uiResyncSecs + 1)))
                 uiResyncSecs--;
-            TRACE("w32util: uiResyncSecs = %lu\n", uiResyncSecs );
 
             uliMaxElapsedHPCTicks.QuadPart =
                 uliHPCTicksPerSec.QuadPart * uiResyncSecs;
-            TRACE("w32util: uliMaxElapsedHPCTicks = 0x%16.16llX (%llu)\n", uliMaxElapsedHPCTicks.QuadPart, uliMaxElapsedHPCTicks.QuadPart );
 
             // Calculate the maximum supported clock resolution such that we don't
             // resync with the host TOD clock more than once every resync interval.
@@ -517,7 +523,6 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
             {
                 u64ClockResolution /= 10;  // (decrease TOD clock resolution)
             }
-            TRACE("w32util: u64ClockResolution = %llu (%11.9f)\n", u64ClockResolution, 1.0 / (double)u64ClockResolution );
 
             // (check for error condition...)
 
@@ -529,7 +534,6 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
             }
 
             u64ClockNanoScale = (MAX_GTOD_RESOLUTION / u64ClockResolution);
-            TRACE("w32util: u64ClockNanoScale = %llu\n", u64ClockNanoScale );
         }
 
         uliStartingNanoTime = FileTimeTo1970Nanoseconds( &ftStartingSystemTime );
@@ -623,7 +627,16 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // (PUBLIC) Microsecond resolution GTOD (getimeofday)...
-
+//
+//                      **  CRITICAL PROGRAMMING NOTE!  **
+//
+// Because the new hthreads design calls gettimeofday to save the time when a lock is
+// initialized or obtained, etc, the below function nor any of the functions it calls
+// may call logmsg either directly or indirectly (such as using the 'TRACE' macro) or
+// else an infinite loop will occur since our logger design uses locks! hthreads will
+// call gettimeofday which issues a message which calls logger which uses a lock and
+// hthreads calls gettimeofday again, etc.
+//
 DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 {
     static struct timeval tvPrevRetVal = {0};

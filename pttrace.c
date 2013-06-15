@@ -381,7 +381,7 @@ DLL_EXPORT void ptt_trace_init( int n, int init )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ptt_pthread_trace (int trclass, const char *msg,
                                    const void *data1, const void *data2,
-                                   const char *loc, int rc)
+                                   const char *loc, int rc, TIMEVAL* pTV)
 {
 int i, n;
 
@@ -413,7 +413,12 @@ int i, n;
 
     /* Fill in the trace table entry */
     if (pttnotod == 0)
-        gettimeofday(&pttrace[i].tv,NULL);
+    {
+        if (pTV)
+            memcpy( &pttrace[i].tv, pTV, sizeof( TIMEVAL ));
+        else
+            gettimeofday( &pttrace[i].tv, NULL );
+    }
     pttrace[i].tid     = hthread_self();
     pttrace[i].trclass = trclass;
     pttrace[i].msg     = msg;
@@ -430,8 +435,7 @@ DLL_EXPORT int ptt_pthread_print ()
 {
 int   i, n, count = 0;
 char  retcode[32]; // (retcode is 'int'; if x64, 19 digits or more!)
-char  tbuf[256];
-time_t tt;
+char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
 
     if (pttrace && pttracen)
     {
@@ -447,7 +451,7 @@ time_t tt;
         {
             if (pttrace[i].tid)
             {
-                tt = pttrace[i].tv.tv_sec; strlcpy(tbuf, ctime(&tt),sizeof(tbuf)); tbuf[19] = '\0';
+                FormatTIMEVAL( &pttrace[i].tv, tod, sizeof( tod ));
 
                 if (pttrace[i].rc == PTT_MAGIC && (pttrace[i].trclass & PTT_CL_THR))
                     retcode[0] = '\0';
@@ -459,7 +463,7 @@ time_t tt;
                 logmsg
                 (
                     "%-18s "                           // File name
-                    "%s.%6.6ld "                       // Time of day (HH:MM:SS.usecs)
+                    "%s "                              // Time of day (HH:MM:SS.usecs)
                     I32_FMTX" "                        // Thread id (low 32 bits)
                     "%-12s "                           // Trace message (string; 12 chars)
                     PTR_FMTx" "                        // Data value 1
@@ -467,8 +471,7 @@ time_t tt;
                     "%s\n"                             // Return code (or empty string)
 
                     ,pttrace[i].loc                    // File name
-                    ,tbuf + 11                         // Time of day (HH:MM:SS)
-                    ,pttrace[i].tv.tv_usec             // Time of day (usecs)
+                    ,&tod[11]                          // Time of day (HH:MM:SS.usecs)
                     ,(U32)(uintptr_t)(pttrace[i].tid)  // Thread id (low 32 bits)
                     ,pttrace[i].msg                    // Trace message (string; 12 chars)
                     ,(uintptr_t)pttrace[i].data1       // Data value 1

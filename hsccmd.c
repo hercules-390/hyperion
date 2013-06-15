@@ -105,6 +105,15 @@ static void* test_thread( void* parg)
     return NULL;
 }
 
+/* $test command helper thread */
+static void* test_locks_thread( void* parg)
+{
+    // test thread exit with lock still held
+    static LOCK testlock;
+    initialize_lock( &testlock );
+    obtain_lock( &testlock );
+    return NULL;
+}
 
 #define  NUM_THREADS    10
 #define  MAX_WAIT_SECS  6
@@ -119,8 +128,18 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     UNREFERENCED(cmdline);
 
     if (argc > 1)
+    {
         if ( CMD(argv[1],crash,5) )
             cause_crash(); // (see hscutl.c)
+        else if (CMD( argv[1], locks, 5 ))
+        {
+            // test thread exit with lock still held
+            static TID tid;
+            VERIFY( create_thread( &tid, DETACHED,
+                test_locks_thread, 0, "test_locks_thread" ) == 0);
+            return 0;
+        }
+    }
 
     /*-------------------------------------------*/
     /*             test 'nanosleep'              */

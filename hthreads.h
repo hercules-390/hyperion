@@ -212,75 +212,71 @@ typedef pthread_rwlock_t        HRWLOCK;
 #endif /* !defined( OPTION_FTHREADS ) */
 
 /*-------------------------------------------------------------------*/
-/*                  hthreads lock structures                         */
+/*                   Hercules lock structures                        */
 /*-------------------------------------------------------------------*/
 struct LOCK
 {
-    TID          tid;           /* Thread-Id of who obtained lock    */
-    const char*  loc;           /* Location where it was obtained    */
-    HLOCK        locklock;      /* Internal LOCK structure lock      */
-    HLOCK        lock;          /* The actual locking model lock     */
+    void*   ilk;                /* ptr to internal ILOCK structure   */
 };
 typedef struct LOCK LOCK;
 
 struct RWLOCK
 {
-    TID          tid;           /* Thread-Id of who obtained lock    */
-    const char*  loc;           /* Location where it was obtained    */
-    HLOCK        locklock;      /* Internal LOCK structure lock      */
-    HRWLOCK      lock;          /* The actual locking model rwlock   */
+    void*   ilk;                /* ptr to internal ILOCK structure   */
 };
 typedef struct RWLOCK RWLOCK;
 
 /*-------------------------------------------------------------------*/
 /*                  hthreads exported functions                      */
 /*-------------------------------------------------------------------*/
-HT_DLL_IMPORT int  hthread_initialize_lock        ( LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_obtain_lock            ( LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_try_obtain_lock        ( LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_test_lock              ( LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_release_lock           ( LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_destroy_lock           ( LOCK* plk, const char* loc );
+HT_DLL_IMPORT int  locks_cmd( int argc, char* argv[], char* cmdline );
 
-HT_DLL_IMPORT int  hthread_initialize_rwlock      ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_destroy_rwlock         ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_obtain_rdlock          ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_obtain_wrlock          ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_release_rwlock         ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_try_obtain_rdlock      ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_try_obtain_wrlock      ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_test_rdlock            ( RWLOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_test_wrlock            ( RWLOCK* plk, const char* loc );
+HT_DLL_IMPORT int  hthread_initialize_lock        ( LOCK* plk, const char* name, const char* location );
+HT_DLL_IMPORT int  hthread_obtain_lock            ( LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_try_obtain_lock        ( LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_test_lock              ( LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_release_lock           ( LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_destroy_lock           ( LOCK* plk, const char* location );
 
-HT_DLL_IMPORT int  hthread_initialize_condition   ( COND* plc, const char* loc );
-HT_DLL_IMPORT int  hthread_destroy_condition      ( COND* plc, const char* loc );
-HT_DLL_IMPORT int  hthread_signal_condition       ( COND* plc, const char* loc );
-HT_DLL_IMPORT int  hthread_broadcast_condition    ( COND* plc, const char* loc );
-HT_DLL_IMPORT int  hthread_wait_condition         ( COND* plc, LOCK* plk, const char* loc );
-HT_DLL_IMPORT int  hthread_timed_wait_condition   ( COND* plc, LOCK* plk, const struct timespec* tm, const char* loc );
+HT_DLL_IMPORT int  hthread_initialize_rwlock      ( RWLOCK* plk, const char* name, const char* location );
+HT_DLL_IMPORT int  hthread_destroy_rwlock         ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_obtain_rdlock          ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_obtain_wrlock          ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_release_rwlock         ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_try_obtain_rdlock      ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_try_obtain_wrlock      ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_test_rdlock            ( RWLOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_test_wrlock            ( RWLOCK* plk, const char* location );
 
-HT_DLL_IMPORT int  hthread_initialize_join_attr   ( ATTR* pat, const char* loc );
-HT_DLL_IMPORT int  hthread_initialize_detach_attr ( ATTR* pat, const char* loc );
-HT_DLL_IMPORT int  hthread_create_thread          ( TID* ptid, ATTR* pat, THREAD_FUNC* pfn, void* arg, const char* name, const char* loc );
-HT_DLL_IMPORT int  hthread_join_thread            ( TID tid, void** prc, const char* loc );
-HT_DLL_IMPORT int  hthread_detach_thread          ( TID tid, const char* loc );
-HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char* loc );
-HT_DLL_IMPORT TID  hthread_thread_id              ( const char* loc );
-HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* loc );
-HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* loc );
-HT_DLL_IMPORT int  hthread_win_thread_handle      ( TID tid, const char* loc );
+HT_DLL_IMPORT int  hthread_initialize_condition   ( COND* plc, const char* location );
+HT_DLL_IMPORT int  hthread_destroy_condition      ( COND* plc, const char* location );
+HT_DLL_IMPORT int  hthread_signal_condition       ( COND* plc, const char* location );
+HT_DLL_IMPORT int  hthread_broadcast_condition    ( COND* plc, const char* location );
+HT_DLL_IMPORT int  hthread_wait_condition         ( COND* plc, LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_timed_wait_condition   ( COND* plc, LOCK* plk, const struct timespec* tm, const char* location );
+
+HT_DLL_IMPORT int  hthread_initialize_join_attr   ( ATTR* pat, const char* location );
+HT_DLL_IMPORT int  hthread_initialize_detach_attr ( ATTR* pat, const char* location );
+HT_DLL_IMPORT int  hthread_create_thread          ( TID* ptid, ATTR* pat, THREAD_FUNC* pfn, void* arg, const char* name, const char* location );
+HT_DLL_IMPORT int  hthread_join_thread            ( TID tid, void** prc, const char* location );
+HT_DLL_IMPORT int  hthread_detach_thread          ( TID tid, const char* location );
+HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char* location );
+HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
+HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
+HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
+HT_DLL_IMPORT int  hthread_win_thread_handle      ( TID tid, const char* location );
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
 /*-------------------------------------------------------------------*/
-#define initialize_lock( plk )                  hthread_initialize_lock( plk, PTT_LOC )
+#define initialize_lock( plk )                  hthread_initialize_lock( plk, #plk, PTT_LOC )
 #define obtain_lock( plk )                      hthread_obtain_lock( plk, PTT_LOC )
 #define try_obtain_lock( plk )                  hthread_try_obtain_lock( plk, PTT_LOC )
 #define test_lock( plk )                        hthread_test_lock( plk, PTT_LOC )
 #define release_lock(plk)                       hthread_release_lock( plk, PTT_LOC )
 #define destroy_lock(plk)                       hthread_destroy_lock( plk, PTT_LOC )
 
-#define initialize_rwlock( plk )                hthread_initialize_rwlock( plk, PTT_LOC )
+#define initialize_rwlock( plk )                hthread_initialize_rwlock( plk, #plk, PTT_LOC )
 #define destroy_rwlock( plk )                   hthread_destroy_rwlock( plk, PTT_LOC )   
 #define obtain_rdlock( plk )                    hthread_obtain_rdlock( plk, PTT_LOC )    
 #define obtain_wrlock( plk )                    hthread_obtain_wrlock( plk, PTT_LOC )    
