@@ -1055,6 +1055,12 @@ TID   tid;
     if(IS_CPU_ONLINE(cpu))
         return -1;
 
+    /* If no more CPUs are permitted, exit */
+    if (sysblk.cpus >= sysblk.maxcpu)
+    {
+        return (HERRCPUOFF); /* CPU offline */
+    }
+
     MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
 
     rc = create_thread (&sysblk.cputid[cpu], JOINABLE, cpu_thread,
