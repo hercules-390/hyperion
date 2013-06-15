@@ -22,6 +22,10 @@
 /*        used which is in line with most commodity processors as of  */
 /*        2013.                                                       */
 /*--------------------------------------------------------------------*/
+#if !defined(CACHE_LINE_SIZE)
+    #define  CACHE_LINE_SIZE    64
+#endif /* CACHE_LINE_SIZE */
+
 #if !defined(CACHE_ALIGN)
 
     #if defined(_MSVC_)
@@ -30,7 +34,7 @@
         #define __ALIGN(_n)     __attribute__ ((aligned(_n)))
     #endif
 
-    #define CACHE_ALIGN         __ALIGN(64)
+    #define CACHE_ALIGN         __ALIGN(CACHE_LINE_SIZE)
     #define ALIGN_2             __ALIGN(2)
     #define ALIGN_4             __ALIGN(4)
     #define ALIGN_8             __ALIGN(8)
