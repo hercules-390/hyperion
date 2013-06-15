@@ -8167,16 +8167,10 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
 
     if ( display_main )
     {
-        U64 mainsize = sysblk.mainsize;
-        if (!sysblk.maxcpu && mainsize <= _64_KILOBYTE )
-            mainsize = 0;
-        else if (mainsize)
-            mainsize >>= SHIFT_KIBIBYTE;
-        else /* 16E and quite unlikely */
-            mainsize = 16ULL << (SHIFT_EXBIBYTE - SHIFT_KIBIBYTE);
-        WRMSG( HHC17003, "I", "MAIN", fmt_memsize_KB((U64)mainsize),
+        WRMSG( HHC17003, "I", "MAIN", fmt_memsize_KB((U64)sysblk.mainsize >> SHIFT_KIBIBYTE),
                               "main", sysblk.mainstor_locked ? "":"not " );
     }
+
     if ( display_xpnd )
     {
         WRMSG( HHC17003, "I", "EXPANDED",
