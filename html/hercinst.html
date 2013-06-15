@@ -939,83 +939,101 @@ run-commands file can completely automate Hercules startup.
 <h4>The "Hercules Automatic Operator" (HAO) Facility</h4>
 </a>
 <p>
-The Hercules Automatic Operator (HAO) feature is a facility that allows one
-to automatically issue panel commands in response to certain messages being
-issued.
+The Hercules Automatic Operator (HAO) feature is a facility which can
+automatically issue panel commands in response to specific messages 
+appearing on the Hercules console.
 <p>
-To use the Hercules Automatic Operator facility, one first defines a "rule"
-consisting of a "target" and an associated "command". The "target" is just
+To use the Hercules Automatic Operator facility, you first define a "rule"
+consisting of a "target" and an associated "command". The "target" is 
 a regular expression pattern used to match against the text of the various
 messages that Hercules issues as it runs. Whenever a match is found, the
 rule "fires" and its associated command is automatically issued.
 <p>
-The Hercules Automatic Operator facility is <i>only</i> for those messages
-issued <i>by Hercules</i> to its HMC (hardware console). It <i>cannot</i>
-be used for whatever messages the guest operating system may issue to any
-of its terminals. It is only a <i>Hercules</i> automatic operator and
-<i>not</i> a "VSE", "MVS", "VM", etc, automatic operator.
+The Hercules Automatic Operator facility only operates on messages issued
+to the Hercules console. These messages may originate from Hercules itself,
+or from the guest operating system via the SCP SYSCONS interface or via the
+integrated console printer-keyboard (3215-C or 1052-C). HAO cannot intercept
+messages issued by the guest operating system to its own terminals.
 
 <h5>Defining a Rule</h5>
 <p>
 To define a HAO rule, enter the command:
 <pre>
-   hao <i>target</i>
+   hao tgt <i>target</i>
 </pre>
 <p>
-to define the rule's "target" match pattern (a simple regular expression),
+to define the rule's "target" match pattern 
 followed by the command:
 <pre>
-   hao <i>command</i>
+   hao cmd <i>command</i>
 </pre>
 <p>
 to define the rule's associated panel-command.
 <p>
-The target pattern is a simple regular expression value as defined by
-whatever regular expression facility your host build platform happens
-to support. For Windows it must be a Perl Compatible Regular Expression (PCRE).
-For other supported build platforms it might be some other supported regular
-expression syntax. Check your host platform's programming documentation for
-further details.
+The <i>target</i> is a regular expression as defined by your host platform.
+When running on Linux, Hercules uses POSIX Extended Regular Expression syntax.
+On a Windows platform, regular expression support is provided by
+Perl Compatible Regular Expression (PCRE).
+The HAO facility can only be used if regular expression support was included
+in Hercules at build time.
 <p>
 The associated <i>command</i> is whatever valid Hercules panel command you
 wish to issue in response to a message being issued that matches the given
-pattern <i>target</i>.
+<i>target</i> pattern.
+
+<h5>Substituting substrings in the command</h5>
+<p>
+The <i>command</i> may contain special variables $1, $2, etc, which will be
+replaced by the values of "capturing groups" in the match pattern.
+A capturing group is a part of the regular expression enclosed in parentheses
+which is matched with text in the target message. In this way, commands may be
+constructed which contain substrings extracted from the message which
+triggered the command.
+<p>
+The following special variables are recognized:
+<ul>
+<li><code>$1</code> to <code>$9</code> - 
+    the text which matched the 1st to 9th capturing
+    group in the target regular expression
+<li><code>$`</code> - the text preceding the regular expression match
+<li><code>$'</code> - the text following the regular expression match
+<li><code>$$</code> - replaced by a single dollar sign
+</ul>
+<p>
+Note that substitution of a $<i>n</i> variable does not occur if there are
+fewer than <i>n</i> capturing groups in the regular expression.
+<p>
+As an example, the rule below issues the command 'i 001F' in response to
+the message HHCTE014I 3270 device 001F client 127.0.0.1 connection reset:
+<pre>
+   hao tgt HHCTE014I 3270 device ([0-9A-F]{3,4})
+   hao cmd i $1
+</pre>
+<p>
+Another example, shown below, illustrates how the dot matrix display of a
+3480 tape unit might be used to implement an automatic tape library:
+<pre>
+   hao tgt HHCTA010I ([0-9A-F]{4}): Now Displays: (?:".{8}" / )?"M([A-Z0-9]{1,6})\s*S"
+   hao cmd devinit $1 /u/tapes/$2.awstape
+</pre>
 
 <h5>Other commands and limitations</h5>
 <p>
 To delete a fully or partially defined HAO rule, first use the 'hao list'
 command to list all of the defined (or partially defined) rules, and then use
-the 'hao del <i>nnn</i>' command to delete the specific rule identified by <i>nnn</i>.
-(All rules are assigned numbers as they are defined and are thus identified
-by their numeric value). Optionally, one may delete ALL defined or partially
-defined rules by issuing the command 'hao clear'.
+the 'hao del <i>nnn</i>' command to delete the specific rule identified by
+<i>nnn</i> (all rules are assigned numbers as they are defined and are thus
+identified by their numeric value). Optionally, you can delete all defined or
+partially defined rules by issuing the command 'hao clear'.
 <p>
-The current implementation limits the total number of defined rules to 64. If
-you need to define more than 64 rules you will either have to build Hercules
-for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or
-else beg one of the Hercules developers to please do it for you.
+The current implementation limits the total number of defined rules to 64.
+This limit may be raised by  increasing the value of the HAO_MAXRULE
+constant in hao.c and rebuilding Hercules.
 <p>
-Note that there is currently no way to define a command whose arguments vary
-based on actual message text. That is to say, there is currently no way to say
-<blockquote>
-<p>
-   "Reply with the command 'devinit <i>cuu</i> filename'
-   in response to message text 'HHCXXnnnI Device <i>cuu</i>
-   intervention required.' where <i>cuu</i> is whatever cuu
-    was identified in the message."
-</blockquote>
-<p>
-The HAO is <i><b>not</b></i> that sophisticated (yet). Only simple plain-text commands may
-be defined and issued. No automatic substitution is done based on message text
-(although normal 'DEFSYM' symbol substitution <i><b>is</b></i> supported however, as that
-is a normal panel-command feature supported separately from the HAO). This may
-possibly change in the future however, depending on user need/demand.
-<p>
-<i><b>All</b></i> defined rules are checked for a match each time Hercules issues a message.
+All defined rules are checked for a match each time Hercules issues a message.
 There is no way to specify "stop processing subsequent rules". If a message is
 issued that matches two or more rules, each associated command is then issued
-in sequence. Thus the advice to choose your rules' target patterns carefully
-very much applies here.
+in sequence.
 <p>
 
 <p><hr><a name="support"></a>

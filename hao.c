@@ -8,7 +8,7 @@
 /*---------------------------------------------------------------------------*/
 /* file: hao.c                                                               */
 /*                                                                           */
-/* Implementation of the automatic operator withing the Hercules emulator.   */
+/* Implementation of the automatic operator within the Hercules emulator.    */
 /*                                                                           */
 /*                            (c) Copyright Bernard van der Helm, 2002-2011  */
 /*                            Noordwijkerhout, The Netherlands.              */
@@ -30,6 +30,7 @@
 /*---------------------------------------------------------------------------*/
 #define HAO_WKLEN    256    /* (maximum message length able to tolerate) */
 #define HAO_MAXRULE  64     /* (purely arbitrary and easily increasable) */
+#define HAO_MAXCAPT  9      /* (maximum number of capturing groups)      */
 
 /*---------------------------------------------------------------------------*/
 /* local variables                                                           */
@@ -234,7 +235,7 @@ static void hao_tgt(char *arg)
   }
 
   /* compile the target string */
-  rc = regcomp(&ao_preg[i], arg, 0);
+  rc = regcomp(&ao_preg[i], arg, REG_EXTENDED);
 
   /* check for error */
   if(rc)
@@ -628,6 +629,31 @@ static int hao_ignoremsg(char *msg)
 }
 
 /*---------------------------------------------------------------------------*/
+/* size_t hao_subst(char *str, size_t soff, size_t eoff,                     */
+/*              char *cmd, size_t coff, size_t csize)                        */
+/*                                                                           */
+/* This function copies a substring of the original string into              */
+/* the command buffer. The input parameters are:                             */
+/*      str     the original string                                          */
+/*      soff    starting offset of the substring in the original string      */
+/*      eoff    offset of the first character following the substring        */
+/*      cmd     the destination command buffer                               */
+/*      coff    offset in the command buffer to copy the substring           */
+/*      csize   size of the command buffer (including terminating zero)      */
+/* The return value is the number of characters copied.                      */
+/*---------------------------------------------------------------------------*/
+static size_t hao_subst(char *str, size_t soff, size_t eoff,
+        char *cmd, size_t coff, size_t csize)
+{
+  size_t len = eoff - soff;
+
+  if (soff + len > strlen(str)) len = strlen(str) - soff;
+  if (coff + len > csize-1) len = csize-1 - coff;
+  memcpy(cmd + coff, str + soff, len);
+  return len;
+}
+
+/*---------------------------------------------------------------------------*/
 /* void hao_message(char *buf)                                               */
 /*                                                                           */
 /* This function is called by hao_thread whenever a message is about to be   */
@@ -637,8 +663,11 @@ static int hao_ignoremsg(char *msg)
 static void hao_message(char *buf)
 {
   char work[HAO_WKLEN];
-  regmatch_t rm;
-  int i;
+  char cmd[HAO_WKLEN];
+  regmatch_t rm[HAO_MAXCAPT+1];
+  int i, j, k, numcapt;
+  size_t n;
+  char *p;
 
   /* copy and strip spaces */
   hao_cpstrp(work, buf);
@@ -660,11 +689,55 @@ static void hao_message(char *buf)
     if(ao_tgt[i] && ao_cmd[i])  /* complete rule defined in this slot? */
     {
       /* does this rule match our message? */
-      if(!regexec(&ao_preg[i], work, 1, &rm, 0))
+      if (regexec(&ao_preg[i], work, HAO_MAXCAPT+1, rm, 0) == 0)
       {
+        /* count the capturing group matches */
+        for (j = 0; j <= HAO_MAXCAPT && rm[j].rm_so >= 0; j++);
+        numcapt = j - 1;
+
+        /* copy the command and process replacement patterns */
+        for (n=0, p=ao_cmd[i]; *p && n < sizeof(cmd)-1; ) {
+          /* replace $$ by $ */
+          if (*p == '$' && p[1] == '$') {
+            cmd[n++] = '$';
+            p += 2;
+            continue;
+          }
+          /* replace $` by characters to the left of the match */
+          if (*p == '$' && p[1] == '`') {
+            n += hao_subst(work, 0, rm[0].rm_so, cmd, n, sizeof(cmd));
+            p += 2;
+            continue;
+          }
+          /* replace $' by characters to the right of the match */
+          if (*p == '$' && p[1] == '\'') {
+            n += hao_subst(work, rm[0].rm_eo, strlen(work), cmd, n, sizeof(cmd));
+            p += 2;
+            continue;
+          }
+          /* replace $1..$99 by the corresponding capturing group */
+          if (*p == '$' && isdigit(p[1])) {
+            if (isdigit(p[2])) {
+              j = (p[1]-'0') * 10 + (p[2]-'0');
+              k = 3;
+            } else {
+              j = p[1]-'0';
+              k = 2;
+            }
+            if (j > 0 && j <= numcapt) {
+              n += hao_subst(work, rm[j].rm_so, rm[j].rm_eo, cmd, n, sizeof(cmd));
+              p += k;
+              continue;
+            }
+          }
+          /* otherwise copy one character */
+          cmd[n++] = *p++;
+        }
+        cmd[n] = '\0';
+
         /* issue command for this rule */
-        WRMSG(HHC00081, "I", i, ao_cmd[i]);
-        panel_command(ao_cmd[i]);
+        WRMSG(HHC00081, "I", i, cmd);
+        panel_command(cmd);
       }
     }
   }
