@@ -271,7 +271,6 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 {
-    int i;
     int rc;
 
     UNREFERENCED(ac);
@@ -279,17 +278,12 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
     UNREFERENCED(cmdline);
     OBTAIN_INTLOCK(NULL);
 
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
-        {
-            RELEASE_INTLOCK(NULL);
-            // "System reset/clear rejected: all CPU's must be stopped"
-            WRMSG(HHC02235, "E");
-            return -1;
-        }
-
-    rc = system_reset (sysblk.pcpu, clear);
+    /* CPU does not have to be stopped to issue reset                */
+    /* SA22-7201-05:                                                 */
+    /*  p. 12-5, System-Reset-Clear Key                              */
+    /*  p. 12-5, System-Reset-Normal Key                             */
+    /*  p. 4-36 -- 4-37, CPU Reset                                   */
+    rc = system_reset (sysblk.pcpu, clear, sysblk.arch_mode);
 
     RELEASE_INTLOCK(NULL);
 
@@ -383,6 +377,13 @@ int  rest_loadparm = FALSE;
 
     UNREFERENCED( cmdline );
 
+    /* Primary CPU must be online */
+    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    {
+        WRMSG(HHC00816, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+        return -1;
+    }
+
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
@@ -437,16 +438,6 @@ int  rest_loadparm = FALSE;
     }
 
     OBTAIN_INTLOCK(NULL);
-
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
-        {
-            RELEASE_INTLOCK(NULL);
-            WRMSG(HHC02236, "E");
-            if ( rest_loadparm ) set_loadparm( save_loadparm );
-            return -1;
-        }
 
     /* The ipl device number might be in format lcss:devnum */
     if ( (cdev = strchr(argv[1],':')) )

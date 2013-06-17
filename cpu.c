@@ -1433,6 +1433,35 @@ void *cpu_uninit (int cpu, REGS *regs)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* CPU Wait - Core wait routine for both CPU Wait and Stopped States */
+/*                                                                   */
+/* Locks Held                                                        */
+/*      sysblk.intlock                                               */
+/*-------------------------------------------------------------------*/
+void
+CPU_Wait (REGS* regs)
+{
+    /* Indicate we are giving up intlock */
+    sysblk.intowner = LOCK_OWNER_NONE;
+
+    /* Wait while SYNCHRONIZE_CPUS is in progress */
+    while (sysblk.syncing)
+    {
+        sysblk.sync_mask &= ~regs->hostregs->cpubit;
+        if (!sysblk.sync_mask)
+            signal_condition(&sysblk.sync_cond);
+        wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
+    }
+
+    /* Wait for interrupt */
+    wait_condition (&regs->intcond, &sysblk.intlock);
+
+    /* And we're the owner of intlock once again */
+    sysblk.intowner = regs->cpuad;
+}
+
+
 #endif /*!defined(_GEN_ARCH)*/
 
 
@@ -1494,6 +1523,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     if (unlikely(regs->cpustate == CPUSTATE_STOPPING))
     {
         /* Change CPU status to stopped */
+cpustate_stopping:
         regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
 
@@ -1552,16 +1582,9 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         TOD saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
-        sysblk.intowner = LOCK_OWNER_NONE;
 
-        /* Wait while we are STOPPED */
-        wait_condition (&regs->intcond, &sysblk.intlock);
+        CPU_Wait(regs);
 
-        /* Wait while SYNCHRONIZE_CPUS is in progress */
-        while (sysblk.syncing)
-            wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
-
-        sysblk.intowner = regs->cpuad;
         sysblk.started_mask |= regs->cpubit;
         regs->ints_state |= sysblk.ints_state;
         set_cpu_timer(regs,saved_timer);
@@ -1600,18 +1623,11 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
-        /* Indicate we are giving up intlock */
-        sysblk.intowner = LOCK_OWNER_NONE;
+        /* Indicate waiting and invoke CPU wait */
         sysblk.waiting_mask |= regs->cpubit;
+        CPU_Wait(regs);
 
-        /* Wait for interrupt */
-        wait_condition (&regs->intcond, &sysblk.intlock);
-
-        /* Wait while SYNCHRONIZE_CPUS is in progress */
-        while (sysblk.syncing)
-            wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
-
-        /* Turn off the waiting bit and indicate we now own intlock.
+        /* Turn off the waiting bit .
          *
          * Note: ANDing off of the CPU waiting bit, rather than using
          * XOR, is required to handle the remote and rare case when the
@@ -1620,7 +1636,6 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
          * turns the CPU waiting bit back on).
          */
         sysblk.waiting_mask &= ~(regs->cpubit);
-        sysblk.intowner = regs->cpuad;
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
@@ -1629,6 +1644,10 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 #endif
 
         set_cpu_timer_mode(regs);
+
+        /* If late state change to stopping, go reprocess */
+        if (unlikely(regs->cpustate == CPUSTATE_STOPPING))
+            goto cpustate_stopping;
 
         RELEASE_INTLOCK(regs);
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
