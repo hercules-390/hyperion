@@ -20,9 +20,22 @@
 /*  Note: For cache alignment (CACHE_ALIGN), while the real cache     */
 /*        alignment varies by processor, a value of 64-bytes will be  */
 /*        used which is in line with most commodity processors as of  */
-/*        2013.                                                       */
+/*        2013. The cache line size must be a power of 2; the         */
+/*        minimum recognized cache line size is 2, with a maximum of  */
+/*        4096.                                                       */
 /*--------------------------------------------------------------------*/
-#if !defined(CACHE_LINE_SIZE)
+#if defined(CACHE_LINE_SIZE)
+    #if !(CACHE_LINE_SIZE ==   32 || \
+          CACHE_LINE_SIZE ==   64 || \
+          CACHE_LINE_SIZE ==  128 || \
+          CACHE_LINE_SIZE ==  256 || \
+          CACHE_LINE_SIZE ==  512 || \
+          CACHE_LINE_SIZE == 1024 || \
+          CACHE_LINE_SIZE == 2048 || \
+          CACHE_LINE_SIZE == 4096)
+        #error Invalid cache line size specified
+    #endif
+#else
     #define  CACHE_LINE_SIZE    64
 #endif /* CACHE_LINE_SIZE */
 
