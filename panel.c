@@ -2041,6 +2041,7 @@ int     prvcpupct = 0;                  /* Previous cpu percentage    */
 U32     prvscount = 0;                  /* Previous shrdcount         */
 #endif // defined(OPTION_SHARED_DEVICES)
 int     prvpcpu = 0;                    /* Previous pcpu              */
+int     prvparch = 0;                   /* Previous primary arch.     */
 char    readbuf[MSG_SIZE];              /* Message read buffer        */
 int     readoff = 0;                    /* Number of bytes in readbuf */
 BYTE    c;                              /* Character work area        */
@@ -3491,10 +3492,12 @@ FinishShutdown:
                 cur_cons_col = saved_cons_col;
             } /* end if(redraw_cmd) */
 
-            if (sysblk.pcpu != prvpcpu)
+            if (sysblk.pcpu != prvpcpu ||
+                sysblk.regs[prvpcpu]->arch_mode != prvparch)
             {
                 redraw_status = 1;
                 prvpcpu = sysblk.pcpu;
+                prvparch = sysblk.regs[prvpcpu]->arch_mode;
             }
             if (redraw_status && !npquiet)
             {
