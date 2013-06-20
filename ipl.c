@@ -37,6 +37,17 @@
 #define _subsystem_reset_
 void subsystem_reset (void)
 {
+    /* Perform subsystem reset
+     *
+     * GA22-7000-10 IBM System/370 Principles of Operation, Chapter 4.
+     *              Control, Subsystem Reset, p. 4-34
+     * SA22-7085-00 IBM System/370 Extended Architecture Principles of
+     *              Operation, Chapter 4. Control, Subsystem Reset,
+     *              p. 4-28
+     * SA22-7832-09 z/Architecture Principles of Operation, Chapter 4.
+     *              Control, Subsystem Reset, p. 4-57
+     */
+
     /* Clear pending external interrupts */
     OFF_IC_SERVSIG;
     OFF_IC_INTKEY;
@@ -71,13 +82,13 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
     HDC1(debug_cpu_state, sysblk.regs[cpu]);
 
     /* Define the target mode for reset */
-    if (target_mode > ARCH_390 &&
-        (clear || sysblk.arch_mode != target_mode))
+    if (clear &&
+        target_mode > ARCH_390)
         regs_mode = ARCH_390;
     else
         regs_mode = target_mode;
 
-    architecture_switch = (target_mode != sysblk.arch_mode);
+    architecture_switch = (regs_mode != sysblk.arch_mode);
 
     /* Signal all CPUs in configuration to stop and reset */
     {
@@ -105,10 +116,8 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
                      * CLEAR or architecture change, signal initial CPU
                      * reset. Otherwise, signal a normal CPU reset.
                      */
-                    regs->arch_mode = regs_mode;
-
-                    if (n == cpu &&
-                        (clear || architecture_switch))
+                    if ((n == cpu && clear)             ||
+                        architecture_switch)
                         regs->sigpireset = 1;
                     else
                         regs->sigpreset = 1;
@@ -166,11 +175,24 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
         }
     }
 
-    /* Perform subsystem reset */
-    subsystem_reset();
+    /* If architecture switch, complete reset in requested mode */
+    if (architecture_switch)
+    {
+        sysblk.arch_mode = regs_mode;
+        return ARCH_DEP(system_reset)(cpu, clear, target_mode);
+    }
 
-    /* Switch modes to requested mode */
-    sysblk.arch_mode = regs_mode;
+    /* Perform subsystem reset
+     *
+     * GA22-7000-10 IBM System/370 Principles of Operation, Chapter 4.
+     *              Control, Subsystem Reset, p. 4-34
+     * SA22-7085-00 IBM System/370 Extended Architecture Principles of
+     *              Operation, Chapter 4. Control, Subsystem Reset,
+     *              p. 4-28
+     * SA22-7832-09 z/Architecture Principles of Operation, Chapter 4.
+     *              Control, Subsystem Reset, p. 4-57
+     */
+    subsystem_reset();
 
     /* Perform system-reset-clear additional functions */
     if (clear)
@@ -615,22 +637,32 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 
 int load_ipl (U16 lcss, U16 devnum, int cpu, int clear)
 {
-    switch(sysblk.arch_mode) {
+    int rc;
+
+    switch (sysblk.arch_mode)
+    {
 #if defined(_370)
         case ARCH_370:
-            return s370_load_ipl (lcss, devnum, cpu, clear);
+            rc = s370_load_ipl (lcss, devnum, cpu, clear);
+            break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            return s390_load_ipl (lcss, devnum, cpu, clear);
+            rc = s390_load_ipl (lcss, devnum, cpu, clear);
+            break;
 #endif
 #if defined(_900)
         case ARCH_900:
             /* z/Arch always starts out in ESA390 mode */
-            return s390_load_ipl (lcss, devnum, cpu, clear);
+            rc = s390_load_ipl (lcss, devnum, cpu, clear);
+            break;
 #endif
+        default:
+            rc = -1;
+            break;
     }
-    return -1;
+
+    return (rc);
 }
 
 /*-------------------------------------------------------------------*/
@@ -638,8 +670,10 @@ int load_ipl (U16 lcss, U16 devnum, int cpu, int clear)
 /*-------------------------------------------------------------------*/
 int initial_cpu_reset (REGS *regs)
 {
-int rc = -1;
-    switch(sysblk.arch_mode) {
+    int rc;
+
+    switch (regs->arch_mode)
+    {
 #if defined(_370)
         case ARCH_370:
             rc = s370_initial_cpu_reset (regs);
@@ -656,8 +690,12 @@ int rc = -1;
             rc = s390_initial_cpu_reset (regs);
             break;
 #endif
+        default:
+            rc = -1;
+            break;
     }
-    return rc;
+
+    return (rc);
 }
 
 /*-------------------------------------------------------------------*/
@@ -665,23 +703,31 @@ int rc = -1;
 /*-------------------------------------------------------------------*/
 int system_reset (const int cpu, const int clear, const int target_mode)
 {
-    switch(sysblk.arch_mode) {
+    int rc;
+
+    switch (sysblk.arch_mode)
+    {
 #if defined(_370)
         case ARCH_370:
-            return s370_system_reset (cpu, clear, target_mode);
+            rc = s370_system_reset (cpu, clear, target_mode);
+            break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            return s390_system_reset (cpu, clear, target_mode);
+            rc = s390_system_reset (cpu, clear, target_mode);
+            break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            /* z/Arch always starts out in ESA390 mode */
-            return s390_system_reset (cpu, clear, target_mode);
+            rc = z900_system_reset (cpu, clear, target_mode);
+            break;
 #endif
+        default:
+            rc = -1;
+            break;
     }
 
-    return -1;
+    return (rc);
 }
 
 /*-------------------------------------------------------------------*/
@@ -689,22 +735,31 @@ int system_reset (const int cpu, const int clear, const int target_mode)
 /*-------------------------------------------------------------------*/
 int cpu_reset (REGS *regs)
 {
-    switch(sysblk.arch_mode) {
+    int rc;
+
+    switch (regs->arch_mode)
+    {
 #if defined(_370)
         case ARCH_370:
-            return s370_cpu_reset (regs);
+            rc = s370_cpu_reset (regs);
+            break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            return s390_cpu_reset (regs);
+            rc = s390_cpu_reset (regs);
+            break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            /* z/Arch always starts out in ESA390 mode */
-            return s390_cpu_reset (regs);
+            rc = z900_cpu_reset (regs);
+            break;
 #endif
+        default:
+            rc = -1;
+            break;
     }
-    return -1;
+
+    return (rc);
 }
 
 /*-------------------------------------------------------------------*/
@@ -716,7 +771,7 @@ void storage_clear()
     {
         if (sysblk.mainstor) memset( sysblk.mainstor, 0x00, sysblk.mainsize );
         if (sysblk.storkeys) memset( sysblk.storkeys, 0x00, sysblk.mainsize / STORAGE_KEY_UNITSIZE );
-        sysblk.main_clear = 0;
+        sysblk.main_clear = 1;
     }
 }
 
