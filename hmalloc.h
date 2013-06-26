@@ -18,11 +18,11 @@
 /*                   Cache Alignment Macros                           */
 /*                                                                    */
 /*  Note: For cache alignment (CACHE_ALIGN), while the real cache     */
-/*        alignment varies by processor, a value of 64-bytes will be  */
-/*        used which is in line with most commodity processors as of  */
-/*        2013. The cache line size must be a power of 2; the         */
-/*        minimum recognized cache line size is 2, with a maximum of  */
-/*        4096.                                                       */
+/*        alignment varies by processor, a value of 64-bytes will     */
+/*        be used which is in line with most commodity processors     */
+/*        as of 2013. The cache line size must be a power of 2.       */
+/*        The minimum recognized cache line size is 32, and the       */
+/*        max imum recognized cache line size is 4096.                */
 /*--------------------------------------------------------------------*/
 #if defined(CACHE_LINE_SIZE)
     #if !(CACHE_LINE_SIZE ==   32 || \
