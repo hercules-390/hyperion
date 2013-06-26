@@ -1981,12 +1981,6 @@ void gui_fprintf( FILE* stream, const char* pszFormat, ... )
 
 void  Initialize ()
 {
-    initialize_lock( &gui_fprintf_lock );
-
-    // reject any unload attempt
-
-    gui_nounload = 1;
-
     // Disable the "quiet" command...
     {
         char* $zapcmd[] = { "$zapcmd", "quiet", "NoCmd" };
@@ -2090,12 +2084,12 @@ void gui_panel_display ()
 #define hdl_fini dyngui_LTX_hdl_fini
 #endif
 
-HDL_DEPENDENCY_SECTION;
+HDL_DEPENDENCY_SECTION          // (define module dependencies)
 
-HDL_DEPENDENCY ( HERCULES );        // hercules itself
-HDL_DEPENDENCY ( SYSBLK   );        // master control block
-HDL_DEPENDENCY ( REGS     );        // cpu regs and such
-HDL_DEPENDENCY ( DEVBLK   );        // device info block
+    HDL_DEPENDENCY ( HERCULES );        // Hercules itself
+    HDL_DEPENDENCY ( SYSBLK   );        // Master control block
+    HDL_DEPENDENCY ( REGS     );        // CPU regs and such
+    HDL_DEPENDENCY ( DEVBLK   );        // Device info block
 
 END_DEPENDENCY_SECTION
 
@@ -2109,48 +2103,54 @@ END_DEPENDENCY_SECTION
 // yet OTHER dlls may have further overridden whatever overrides we register
 // here, such as would likely be the case for panel command overrides).
 
-HDL_REGISTER_SECTION;       // ("Register" our entry-points)
+HDL_REGISTER_SECTION            // ("Register" our entry-points)
+{
+    // Perform static module initialization...
 
-//             Hercules's       Our
-//             registered       overriding
-//             entry-point      entry-point
-//             name             value
+    gui_nounload = 1;                       // (reject any unload attempt)
+    initialize_lock( &gui_fprintf_lock );   // (initialize GUI fprintf LOCK)
 
-HDL_REGISTER ( panel_display,   gui_panel_display   );// (Yep! We override EITHER!)
-HDL_REGISTER ( daemon_task,     gui_panel_display   );// (Yep! We override EITHER!)
-HDL_REGISTER ( debug_cpu_state, gui_debug_cpu_state );
-HDL_REGISTER ( debug_cd_cmd,    gui_debug_cd_cmd    );
-HDL_REGISTER ( panel_command,   gui_panel_command   );
+    // Register all of our override entry-points...
 
+    //             Hercules's       Our
+    //             registered       overriding
+    //             entry-point      entry-point
+    //             name             value
+    HDL_REGISTER ( panel_display,   gui_panel_display   );// (Yep! We override EITHER!)
+    HDL_REGISTER ( daemon_task,     gui_panel_display   );// (Yep! We override EITHER!)
+    HDL_REGISTER ( debug_cpu_state, gui_debug_cpu_state );
+    HDL_REGISTER ( debug_cd_cmd,    gui_debug_cd_cmd    );
+    HDL_REGISTER ( panel_command,   gui_panel_command   );
+}
 END_REGISTER_SECTION
 
 #if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL )
 #if !defined( _MSVC_ )
   #undef sysblk
 #endif
-  ///////////////////////////////////////////////////////////////////////////////
-  //                        HDL_RESOLVER_SECTION
-  // The following section "resolves" entry-points that this module needs. The
-  // below HDL_RESOLVE entries define the names of Hercules's registered entry-
-  // points that we need "imported" to us (so that we may call those functions
-  // directly ourselves). The HDL_RESOLVE_PTRVAR entries set the named pointer
-  // variable value (i.e. the name of OUR pointer variable) to the registered
-  // entry-point value that was registered by Hercules or some other DLL.
+///////////////////////////////////////////////////////////////////////////////
+//                        HDL_RESOLVER_SECTION
+// The following section "resolves" entry-points that this module needs. The
+// below HDL_RESOLVE entries define the names of Hercules's registered entry-
+// points that we need "imported" to us (so that we may call those functions
+// directly ourselves). The HDL_RESOLVE_PTRVAR entries set the named pointer
+// variable value (i.e. the name of OUR pointer variable) to the registered
+// entry-point value that was registered by Hercules or some other DLL.
 
-  HDL_RESOLVER_SECTION;       // ("Resolve" needed entry-points)
-
-  //            Registered
-  //            entry-points
-  //            that we call
-  HDL_RESOLVE ( panel_command );
+HDL_RESOLVER_SECTION            // ("Resolve" needed entry-points)
+{
+    //            Registered
+    //            entry-points
+    //            that we call
+    HDL_RESOLVE ( panel_command );
 
 #if !defined( _MSVC_ )
-  //                    Our pointer-     Registered entry-
-  //                    variable name    point value name
-  HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
+    //                    Our pointer-     Registered entry-
+    //                    variable name    point value name
+    HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
 #endif
-
-  END_RESOLVER_SECTION
+}
+END_RESOLVER_SECTION
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2161,7 +2161,7 @@ END_REGISTER_SECTION
 // but the normal thing to do is release any resources that were acquired when
 // your module was loaded (e.g. release memory that was malloc'ed, etc).
 
-HDL_FINAL_SECTION;
+HDL_FINAL_SECTION
 {
     bDoneProcessing = TRUE;     // (tell main loop to stop processing)
 
