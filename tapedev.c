@@ -455,7 +455,18 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 //
 // PROGRAMMING NOTE: the bit values of the 'sctlfeat' field are:
 //
+//     RDC Byte
+//     6.7.8.9.
+//     ..80....   RBL Format-30 media information available
+//     ..40....   (unknown)
+//     ..20....   (unknown)
+//     ....80..   Device or media emulation active; emulated media
+//                information available in RBL Format-30 data. Set to
+//                zero when normal 3490E or earlier, or real device.
 //     ....40..   (unknown)
+//     ....20..   Set when bits 0-9 of the Block ID are zero for Locate
+//                Block on select device types
+//     ....10..   (unknown)
 //     ....08..   Set Special Intercept Condition (SIC) supported
 //     ....04..   Channel Path No-Operation supported (always
 //                on if Library Attachment Facility installed)
@@ -464,12 +475,14 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 //     ....01..   Extended Buffered Log support enabled (if 64
 //                bytes of buffered log data, else 32 bytes)
 //     ......80   Automatic Cartridge Loader installed/enabled
-//     ......40   Improved Data Recording Capability (i.e.
-//                compression support) installed/enabled
+//     ......40   Improved Data Recording Capability (compression
+//                support) installed/enabled
 //     ......20   Suppress Volume Fencing
 //     ......10   Library Interface online/enabled
 //     ......08   Library Attachment Facility installed
 //     ......04   (unknown)
+//     ......02   (unknown)
+//     ......01   (unknown)
 //
 // PROGRAMMING NOTE: the below "0x00004EC4" value for the 'sctlfeat'
 // field for Model 3590 was determined empirically on a real machine.
@@ -1590,7 +1603,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
     char devparms[ MAX_PATH+1 + 128 ];
-    char dispmsg [ 256 ];    
+    char dispmsg [ 256 ];
     char fmt_mem [ 128 ];    // Max of 21 bytes used for U64
     char fmt_eot [ 128 ];    // Max of 21 bytes used for U64
 

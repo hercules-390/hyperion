@@ -1209,6 +1209,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         memcpy (iobuf, dev->sense,
                 dev->numsense < (U32)num ? dev->numsense : (U32)num);
 
+        /* FIXME: Update for Format-30 Data and others
+         *
+         * SG24-2594-02 Magstar and IBM 3590 High Performance Tape
+         *              Subsystem: Multiplatform Implementation, H.2
+         *              Read Buffered Log (RBL, X'24') Format-30 Data,
+         *              p. 290
+         */
+
         /* Return unit status */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
