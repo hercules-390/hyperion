@@ -30,6 +30,28 @@
 #include "hexterns.h"
 #endif
 
+
+/*-------------------------------------------------------------------*/
+/* Function to reset instruction count and CPU time                  */
+/*-------------------------------------------------------------------*/
+#if !defined(_reset_instcount_)
+#define _reset_instcount_
+INLINE void
+cpu_reset_instcount_and_cputime(REGS* regs)
+{
+    /* Reset instruction counts, I/O counts and real CPU time */
+    regs->prevcount = 0;
+    regs->instcount = 0;
+    regs->mipsrate  = 0;
+    regs->siocount  = 0;
+    regs->siosrate  = 0;
+    regs->siototal  = 0;
+    regs->cpupct    = 0;
+    regs->rcputime  = 0;
+    regs->bcputime  = thread_cputime_us(regs);
+}
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Function to perform Subystem Reset                                */
 /*-------------------------------------------------------------------*/
@@ -147,6 +169,9 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
 
             for (i = wait = 0; mask; mask >>= 1, ++i)
             {
+                if (!(mask & 1))
+                    continue;
+
                 regs = sysblk.regs[i];
 
                 if (regs->cpustate != CPUSTATE_STOPPED)
@@ -213,8 +238,16 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
                 #if defined(_FEATURE_VECTOR_FACILITY)
                     memset (regs->vf->vr, 0, sizeof(regs->vf->vr));
                 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+
+                /* Clear the instruction counter and CPU time used */
+                cpu_reset_instcount_and_cputime(regs);
             }
         }
+
+        /* Clear system instruction counter and CPU rates */
+        sysblk.instcount = 0;
+        sysblk.mipsrate  = 0;
+        sysblk.siosrate  = 0;
 
         sysblk.ipled = FALSE;
         sysblk.program_parameter = 0;
@@ -273,6 +306,26 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
                                      sysblk.arch_mode > ARCH_390 ?
                                      ARCH_390 : sysblk.arch_mode))) )
         return (rc);
+
+    /* If not clear, reset instruction counts and CPU time; otherwise,
+     * the instruction counts and CPU time were already cleared.
+     */
+    if (!clear)
+    {
+        CPU_BITMAP  mask = sysblk.config_mask;
+        int         i;
+
+        for (i = 0; mask; mask >>= 1, ++i)
+        {
+            if (mask & 1)
+                cpu_reset_instcount_and_cputime(sysblk.regs[i]);
+        }
+
+        /* Clear system instruction counter and CPU rates */
+        sysblk.instcount = 0;
+        sysblk.mipsrate  = 0;
+        sysblk.siosrate  = 0;
+    }
 
     /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
        since the initial_cpu_reset call cleared it to zero. */
@@ -489,7 +542,6 @@ int i, rc = 0;                          /* Array subscript           */
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
-    regs->instcount = regs->prevcount = 0;
 
     /* Clear interrupts */
     SET_IC_INITIAL_MASK(regs);
@@ -531,10 +583,6 @@ int i, rc = 0;                          /* Array subscript           */
 
     /* Initialize Architecture Level Set */
     init_als(regs);
-
-   /* Reset real CPU time used */
-   regs->rcputime = 0;
-   regs->bcputime = thread_cputime_us(regs);
 
    return rc;
 } /* end function cpu_reset */
