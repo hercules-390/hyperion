@@ -1052,7 +1052,7 @@ int      pending = 0;                   /* New interrupt pending     */
     {
         OBTAIN_INTLOCK(regs);
         subchannel_interrupt_queue_cleanup(dev);
-        UPDATE_IC_IOPENDING();
+        UPDATE_IC_IOPENDING_QLOCKED();
         RELEASE_INTLOCK(regs);
     }
 
