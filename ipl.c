@@ -55,6 +55,9 @@ cpu_reset_instcount_and_cputime(REGS* regs)
 /*-------------------------------------------------------------------*/
 /* Function to perform Subystem Reset                                */
 /*-------------------------------------------------------------------*/
+/* Locks held on entry/exit:                                         */
+/*  sysblk.intlock                                                   */
+/*-------------------------------------------------------------------*/
 #if !defined(_subsystem_reset_)
 #define _subsystem_reset_
 void subsystem_reset (void)
@@ -75,7 +78,9 @@ void subsystem_reset (void)
     OFF_IC_INTKEY;
 
     /* Reset the I/O subsystem */
+    RELEASE_INTLOCK(NULL);
     io_reset ();
+    OBTAIN_INTLOCK(NULL);
 }
 #endif
 
