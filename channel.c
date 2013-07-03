@@ -55,7 +55,7 @@
 
 void                call_execute_ccw_chain (int arch_mode, void* pDevBlk);
 DLL_EXPORT  void*   device_thread (void *arg);
-static int          schedule_ioq (REGS* regs, DEVBLK* dev);
+static int          schedule_ioq (const REGS* regs, DEVBLK* dev);
 static INLINE void  subchannel_interrupt_queue_cleanup (DEVBLK*);
 int                 test_subchan_locked (REGS*, DEVBLK*, IRB*, IOINT**, SCSW**);
 
@@ -2247,6 +2247,12 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /* Note: Queue is actually split with resume requests first, then    */
 /*       followed by start requests.                                 */
 /*                                                                   */
+/* Locks held:                                                       */
+/*   dev->lock                                                       */
+/*                                                                   */
+/* Locks used:                                                       */
+/*   sysblk.ioqlock                                                  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 static int
 ScheduleIORequest ( DEVBLK *dev, U16 devnum, int *devprio)
@@ -2313,7 +2319,6 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         }
     }
 
-
     /* Return condition code */
     return rc;
 }
@@ -2338,7 +2343,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 /*                                                                   */
 /*  Locks:                                                           */
 /*                                                                   */
-/*    sysblk.ioqlock                                                 */
+/*    sysblk.intlock                                                 */
 /*                                                                   */
 /*                                                                   */
 /*  Returns:                                                         */
@@ -2349,7 +2354,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 /*-------------------------------------------------------------------*/
 
 static int
-schedule_ioq (REGS *regs, DEVBLK *dev)
+schedule_ioq (const REGS *regs, DEVBLK *dev)
 {
     int result = 2;                     /* 0=Thread scheduled        */
                                         /* 2=Unable to schedule      */
@@ -2432,7 +2437,9 @@ schedule_ioq (REGS *regs, DEVBLK *dev)
 
     if (regs && sysblk.arch_mode == ARCH_370)
     {
+        release_lock(&dev->lock);
         call_execute_ccw_chain(sysblk.arch_mode, dev);
+        obtain_lock(&dev->lock);
         result = 0;
     }
     else
@@ -3759,14 +3766,13 @@ int     rc;                             /* Return code               */
         memset(&dev->orb.csspriority, 0, sizeof(ORB) - 12);
     }
 
-    release_lock (&dev->lock);
-
     /* Schedule the I/O for execution */
     rc = schedule_ioq((sysblk.arch_mode == ARCH_370) ? regs : NULL,
                       dev);
 
-    /* Done */
-    return rc;
+    /* Done; release locks and return */
+    release_lock (&dev->lock);
+    return (rc);
 
 } /* end function startio */
 
