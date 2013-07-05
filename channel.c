@@ -2229,13 +2229,26 @@ u_int   waitcount = 0;                  /* Wait counter              */
                                                   &sysblk.ioqlock,
                                                   100000 /* 100 ms */,
                                                   NULL);
+
+        /* Decrement thread waiting count */
         sysblk.devtwait = MAX(0, sysblk.devtwait - 1);
 
+        /* If shutdown requested, terminate the thread after signaling
+         * next I/O thread.
+         */
+        if (sysblk.shutdown)
+        {
+            signal_condition (&sysblk.ioqcond);
+            break;
+        }
     }
 
+    /* Decrement total number of device threads */
     sysblk.devtnbr = MAX(0, sysblk.devtnbr - 1);
+
+    /* Release queue lock and return */
     release_lock (&sysblk.ioqlock);
-    return NULL;
+    return (NULL);
 
 } /* end function device_thread */
 
@@ -2362,6 +2375,12 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
 #ifdef OPTION_SYNCIO
     int syncio;                         /* 1=Do synchronous I/O      */
 
+    /* If shutdown in progress, don't schedule or perform synchronous
+     * I/O operation.
+     */
+    if (sysblk.shutdown)
+        return (result);
+
     /* Schedule the I/O.  The various methods are a direct
      * correlation to the interest in the subject:
      * [1] Synchronous I/O.  Attempts to complete the channel program
@@ -2435,7 +2454,8 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
     else
 #endif // OPTION_SYNCIO
 
-    if (regs && sysblk.arch_mode == ARCH_370)
+    if (sysblk.shutdown);
+    else if (regs && sysblk.arch_mode == ARCH_370)
     {
         release_lock(&dev->lock);
         call_execute_ccw_chain(sysblk.arch_mode, dev);
@@ -4080,8 +4100,9 @@ resume_suspend:
     /* On entry : No locks held */
     while ( chain )
     {
-        /* Test for clear subchannel request */
-        if (dev->scsw.flag2 & SCSW2_AC_CLEAR)
+        /* Test for clear subchannel request or system shutdown */
+        if (dev->scsw.flag2 & SCSW2_AC_CLEAR ||
+            sysblk.shutdown)
         {
 
             /* No I/O delays are to be taken during clear operations */

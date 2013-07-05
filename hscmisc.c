@@ -126,6 +126,17 @@ static void do_shutdown_now()
 
     sysblk.shutdown = TRUE;  // (system shutdown initiated)
 
+    /* Wakeup I/O subsystem to start I/O subsystem shutdown */
+    {
+        int n;
+
+        for (n = 0; sysblk.devtnbr && n < 100; ++n)
+        {
+            signal_condition(&sysblk.ioqcond);
+            usleep(10000);
+        }
+    }
+
 //#if defined(_MSVC_)
     WRMSG(HHC01423, "I");
 
