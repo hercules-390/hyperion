@@ -87,7 +87,20 @@ void subsystem_reset (void)
 /*-------------------------------------------------------------------*/
 /* Function to perform System Reset   (either 'normal' or 'clear')   */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mode)
+int ARCH_DEP(system_reset)
+(
+    const int cpu,              /* CPU address                       */
+    const int flags,            /* Flags:
+                                 * 0x00 0000 0000 System reset normal
+                                 * 0x01 .... ...1 System reset clear
+                                 * 0x02 .... ..1. System reset normal
+                                 *                with initial CPU
+                                 *                reset on requesting
+                                 *                processor (used by
+                                 *                IPL)
+                                 */
+    const int target_mode       /* Target architecture mode          */
+)
 {
     int         rc;
     int         n;
@@ -109,7 +122,7 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
     HDC1(debug_cpu_state, sysblk.regs[cpu]);
 
     /* Define the target mode for reset */
-    if (clear &&
+    if (flags &&
         target_mode > ARCH_390)
         regs_mode = ARCH_390;
     else
@@ -143,7 +156,7 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
                      * CLEAR or architecture change, signal initial CPU
                      * reset. Otherwise, signal a normal CPU reset.
                      */
-                    if ((n == cpu && clear)             ||
+                    if ((n == cpu && (flags & 0x03))    ||
                         architecture_switch)
                         regs->sigpireset = 1;
                     else
@@ -209,7 +222,7 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
     if (architecture_switch)
     {
         sysblk.arch_mode = regs_mode;
-        return ARCH_DEP(system_reset)(cpu, clear, target_mode);
+        return ARCH_DEP(system_reset)(cpu, flags, target_mode);
     }
 
     /* Perform subsystem reset
@@ -225,7 +238,7 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
     subsystem_reset();
 
     /* Perform system-reset-clear additional functions */
-    if (clear)
+    if (flags & 0x01)
     {
         /* Finish reset-clear of all CPUs in the configuration */
         for (n = 0; n < sysblk.maxcpu; ++n)
@@ -249,18 +262,39 @@ int ARCH_DEP(system_reset) (const int cpu, const int clear, const int target_mod
             }
         }
 
+        /* Clear storage */
+        sysblk.main_clear = sysblk.xpnd_clear = 0;
+        storage_clear();
+        xstorage_clear();
+
+        /* Clear IPL program parameter */
+        sysblk.program_parameter = 0;
+    }
+
+    /* If IPL call, reset CPU instruction counts and times */
+    else if (flags & 0x02)
+    {
+        CPU_BITMAP  mask = sysblk.config_mask;
+        int         i;
+
+        for (i = 0; mask; mask >>= 1, ++i)
+        {
+            if (mask & 1)
+                cpu_reset_instcount_and_cputime(sysblk.regs[i]);
+        }
+    }
+
+    /* If IPL or system-reset-clear, clear system instruction counter,
+     * rates, and IPLed indicator.
+     */
+    if (flags & 0x03)
+    {
         /* Clear system instruction counter and CPU rates */
         sysblk.instcount = 0;
         sysblk.mipsrate  = 0;
         sysblk.siosrate  = 0;
 
         sysblk.ipled = FALSE;
-        sysblk.program_parameter = 0;
-
-        /* Clear storage */
-        sysblk.main_clear = sysblk.xpnd_clear = 0;
-        storage_clear();
-        xstorage_clear();
     }
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
@@ -305,32 +339,17 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
         captured_zpsw = sysblk.regs[cpu]->psw;
 
     /* Perform system-reset-normal or system-reset-clear function;
-     * architecture mode updated, if necessary.
+     * architecture mode updated, if necessary. The clear indicator is
+     * cleaned with an initial CPU reset added.
+     *
+     * SA22-7085-0 IBM System/370 Extended Architecture Principles of
+     *             Operation, Chapter 12, Operator Facilities, LOAD-
+     *             CLEAR KEY and LOAD-NORMAL KEY, p. 12-3.
      */
-    if ( (rc = ARCH_DEP(system_reset(cpu, clear,
+    if ( (rc = ARCH_DEP(system_reset(cpu, ((clear & 0x01) | 0x02),
                                      sysblk.arch_mode > ARCH_390 ?
                                      ARCH_390 : sysblk.arch_mode))) )
         return (rc);
-
-    /* If not clear, reset instruction counts and CPU time; otherwise,
-     * the instruction counts and CPU time were already cleared.
-     */
-    if (!clear)
-    {
-        CPU_BITMAP  mask = sysblk.config_mask;
-        int         i;
-
-        for (i = 0; mask; mask >>= 1, ++i)
-        {
-            if (mask & 1)
-                cpu_reset_instcount_and_cputime(sysblk.regs[i]);
-        }
-
-        /* Clear system instruction counter and CPU rates */
-        sysblk.instcount = 0;
-        sysblk.mipsrate  = 0;
-        sysblk.siosrate  = 0;
-    }
 
     /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
        since the initial_cpu_reset call cleared it to zero. */
@@ -754,7 +773,7 @@ int initial_cpu_reset (REGS *regs)
 /*-------------------------------------------------------------------*/
 /*  System Reset    ( Normal reset  or  Clear reset )                */
 /*-------------------------------------------------------------------*/
-int system_reset (const int cpu, const int clear, const int target_mode)
+int system_reset (const int cpu, const int flags, const int target_mode)
 {
     int rc;
 
@@ -762,17 +781,17 @@ int system_reset (const int cpu, const int clear, const int target_mode)
     {
 #if defined(_370)
         case ARCH_370:
-            rc = s370_system_reset (cpu, clear, target_mode);
+            rc = s370_system_reset (cpu, flags, target_mode);
             break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            rc = s390_system_reset (cpu, clear, target_mode);
+            rc = s390_system_reset (cpu, flags, target_mode);
             break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            rc = z900_system_reset (cpu, clear, target_mode);
+            rc = z900_system_reset (cpu, flags, target_mode);
             break;
 #endif
         default:
