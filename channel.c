@@ -2336,6 +2336,81 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     return rc;
 }
 
+#if defined(OPTION_SYNCIO)
+/*-------------------------------------------------------------------*/
+/*  EXECUTE SYNCIO                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  Execute I/O synchronously.                                       */
+/*                                                                   */
+/*                                                                   */
+/*  Format:                                                          */
+/*                                                                   */
+/*      execute_syncio (regs, dev)                                   */
+/*                                                                   */
+/*                                                                   */
+/*  Entry Conditions:                                                */
+/*                                                                   */
+/*      dev->lock       must be held                                 */
+/*                                                                   */
+/*                                                                   */
+/*  Locks Used:                                                      */
+/*                                                                   */
+/*    sysblk.intlock                                                 */
+/*                                                                   */
+/*                                                                   */
+/*  Returns:                                                         */
+/*                                                                   */
+/*  0 - Success                                                      */
+/*  2 - Unable to start I/O operation synchronously                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int
+execute_syncio (REGS* regs, DEVBLK* dev)
+{
+    int result = 2;
+
+    /* Initiate synchronous I/O */
+    dev->syncio_active = 1;
+    dev->ioactive = DEV_SYS_LOCAL;
+    dev->regs = regs;
+    release_lock (&dev->lock);
+
+    /* syncio is set with intlock held.  This allows SYNCHRONIZE_CPUS
+     * to consider this CPU waiting while performing synchronous I/O.
+     */
+    if (regs->cpubit != sysblk.started_mask)
+    {
+        OBTAIN_INTLOCK(regs);
+        regs->hostregs->syncio = 1;
+        RELEASE_INTLOCK(regs);
+    }
+
+    call_execute_ccw_chain(sysblk.arch_mode, dev);
+
+    if (regs->hostregs->syncio)
+    {
+        OBTAIN_INTLOCK(regs);
+        regs->hostregs->syncio = 0;
+        RELEASE_INTLOCK(regs);
+    }
+
+    /* Return if retry not required */
+    obtain_lock (&dev->lock);
+    dev->regs = NULL;
+    dev->syncio_active = 0;
+    if (!dev->syncio_retry)
+        result = 0;
+
+
+    /* syncio_retry gets turned off after the execute ccw device
+     * handler routine is called for the first time.
+     */
+
+    return (result);
+}
+#endif /*defined(OPTION_SYNCIO)*/
+
 
 /*-------------------------------------------------------------------*/
 /*  SCHEDULE IOQ                                                     */
@@ -2354,9 +2429,9 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 /*    dev->lock     must be held.                                    */
 /*                                                                   */
 /*                                                                   */
-/*  Locks:                                                           */
+/*  Locks Used:                                                      */
 /*                                                                   */
-/*    sysblk.intlock                                                 */
+/*    None                                                           */
 /*                                                                   */
 /*                                                                   */
 /*  Returns:                                                         */
@@ -2372,90 +2447,58 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
     int result = 2;                     /* 0=Thread scheduled        */
                                         /* 2=Unable to schedule      */
 
-#ifdef OPTION_SYNCIO
-    int syncio;                         /* 1=Do synchronous I/O      */
-
-    /* If shutdown in progress, don't schedule or perform synchronous
-     * I/O operation.
+    /* If shutdown in progress, don't schedule or perform I/O
+     * operation.
      */
     if (sysblk.shutdown)
         return (result);
 
-    /* Schedule the I/O.  The various methods are a direct
-     * correlation to the interest in the subject:
-     * [1] Synchronous I/O.  Attempts to complete the channel program
-     *     in the cpu thread to avoid any threads overhead.
-     * [2] Device threads.  Queue the I/O and signal a device thread.
-     *     Eliminates the overhead of thead creation/termination.
-     * [3] Original.  Create a thread to execute this I/O
-     */
-
-    /* Determine if we can do synchronous I/O */
-    if (!regs)
-        syncio = 0;
-    else if (dev->syncio == 1)
-        syncio = 1;
-    else if (dev->syncio == 2 &&
-             fetch_fw(dev->orb.ccwaddr) < dev->mainlim)
+#if defined(OPTION_SYNCIO)
     {
-        dev->code = dev->mainstor[fetch_fw(dev->orb.ccwaddr)];
-        syncio = IS_CCW_TIC(dev->code) || IS_CCW_SENSE(dev->code)
-              || IS_CCW_IMMEDIATE(dev, dev->code);
-    }
-    else
-        syncio = 0;
+        int syncio;                     /* 1=Do synchronous I/O      */
 
-    if (syncio && dev->ioactive == DEV_SYS_NONE
+        /* Schedule the I/O.  The various methods are a direct
+         * correlation to the interest in the subject:
+         * [1] Synchronous I/O.  Attempts to complete the channel
+         *     program in the cpu thread to avoid any threads overhead.
+         * [2] Device threads.  Queue the I/O and signal a device
+         *     thread. Eliminates the overhead of thead creation and
+         *     termination.
+         * [3] Original.  Create a thread to execute this I/O.
+         */
+
+        /* Determine if we can do synchronous I/O */
+        if (!regs)
+            syncio = 0;
+        else if (dev->syncio == 1)
+            syncio = 1;
+        else if (dev->syncio == 2 &&
+                 fetch_fw(dev->orb.ccwaddr) < dev->mainlim)
+        {
+            dev->code = dev->mainstor[fetch_fw(dev->orb.ccwaddr)];
+            syncio = IS_CCW_TIC(dev->code)      ||
+                     IS_CCW_SENSE(dev->code)    ||
+                     IS_CCW_IMMEDIATE(dev, dev->code);
+        }
+        else
+            syncio = 0;
+
+        if (syncio && dev->ioactive == DEV_SYS_NONE
 #ifdef OPTION_IODELAY_KLUDGE
-     && sysblk.iodelay < 1
+         && sysblk.iodelay < 1
 #endif /*OPTION_IODELAY_KLUDGE*/
-       )
-    {
-        /* Initiate synchronous I/O */
-        dev->syncio_active = 1;
-        dev->ioactive = DEV_SYS_LOCAL;
-        dev->regs = regs;
-        release_lock (&dev->lock);
-
-        /*
-         * `syncio' is set with intlock held.  This allows
-         * SYNCHRONIZE_CPUS to consider this CPU waiting while
-         * performing synchronous i/o.
-         */
-        if (regs->cpubit != sysblk.started_mask)
+           )
         {
-            OBTAIN_INTLOCK(regs);
-            regs->hostregs->syncio = 1;
-            RELEASE_INTLOCK(regs);
+            result = execute_syncio((REGS*)regs, dev);
+            if (result == 0)
+                return (result);
         }
-
-        call_execute_ccw_chain(sysblk.arch_mode, dev);
-
-        if (regs->hostregs->syncio)
-        {
-            OBTAIN_INTLOCK(regs);
-            regs->hostregs->syncio = 0;
-            RELEASE_INTLOCK(regs);
-        }
-
-        /* Return if retry not required */
-        obtain_lock (&dev->lock);
-        dev->regs = NULL;
-        dev->syncio_active = 0;
-        if (!dev->syncio_retry)
-            result = 0;
-
-
-        /*
-         * syncio_retry gets turned off after the execute ccw
-         * device handler routine is called for the first time
-         */
     }
-    else
-#endif // OPTION_SYNCIO
 
-    if (sysblk.shutdown);
-    else if (regs && sysblk.arch_mode == ARCH_370)
+    /* Otherwise, schedule normally */
+#endif /*defined(OPTION_SYNCIO)*/
+
+    if (regs && sysblk.arch_mode == ARCH_370)
     {
         release_lock(&dev->lock);
         call_execute_ccw_chain(sysblk.arch_mode, dev);
