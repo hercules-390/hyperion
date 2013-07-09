@@ -8090,7 +8090,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 U64     kdd, khh, kmm, kss, kms,
                         udd, uhh, umm, uss, ums;
 
-                if (unlikely(rusage.ru_stime.tv_usec > 1000000))
+                if (unlikely(rusage.ru_stime.tv_usec >= 1000000))
                 {
                     rusage.ru_stime.tv_sec += rusage.ru_stime.tv_usec / 1000000;
                     rusage.ru_stime.tv_usec %= 1000000;
@@ -8108,7 +8108,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 kmm = kss /    60, kss %=    60;
                 kms = (rusage.ru_stime.tv_usec + 500) / 1000;
 
-                if (unlikely(rusage.ru_utime.tv_usec > 1000000))
+                if (unlikely(rusage.ru_utime.tv_usec >= 1000000))
                 {
                     rusage.ru_utime.tv_sec += rusage.ru_utime.tv_usec / 1000000;
                     rusage.ru_utime.tv_usec %= 1000000;

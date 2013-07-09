@@ -711,7 +711,7 @@ DLL_EXPORT int timeval_add
     accum_timeval->tv_sec  += dif_timeval->tv_sec;
     accum_timeval->tv_usec += dif_timeval->tv_usec;
 
-    if (accum_timeval->tv_usec > 1000000)
+    if (accum_timeval->tv_usec >= 1000000)
     {
         int usec = accum_timeval->tv_usec / 1000000;
         accum_timeval->tv_sec  += usec;
@@ -746,7 +746,7 @@ DLL_EXPORT int timed_wait_condition_relative_usecs
     timeout_timespec.tv_sec  = pTV->tv_sec  + ( usecs / 1000000 );
     timeout_timespec.tv_nsec = pTV->tv_usec + ( usecs % 1000000 );
 
-    if ( timeout_timespec.tv_nsec > 1000000 )
+    if ( timeout_timespec.tv_nsec >= 1000000 )
     {
         timeout_timespec.tv_sec  += timeout_timespec.tv_nsec / 1000000;
         timeout_timespec.tv_nsec %=                            1000000;
