@@ -1,7 +1,6 @@
 /* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2012                */
 /*              (c) Copyright Jan Jaeger, 1999-2012                  */
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright TurboHercules, SAS 2011                */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -6697,10 +6696,13 @@ REGS *regs;
 
     char   *fname;                      /* -> File name (ASCIIZ)     */
     char   *loadaddr;                   /* loadcore memory address   */
-    U32     aaddr;                      /* Absolute storage address  */
-    U32     aaddr2;                     /* Absolute storage address  */
+    U64     work64;                     /* 64-bit work variable      */
+    RADR    aaddr;                      /* Absolute storage address  */
+    RADR    aaddr2;                     /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
-    int     len;                        /* Number of bytes read      */
+    U32     chunk;                      /* Bytes to write this time  */
+    U32     written;                    /* Bytes written this time   */
+    U64     total;                      /* Total bytes to be written */
     BYTE    c;                          /* (dummy sscanf work area)  */
     char    pathname[MAX_PATH];         /* fname in host path format */
 
@@ -6708,6 +6710,7 @@ REGS *regs;
 
     if (argc < 2)
     {
+        // "Missing argument(s). Type 'help %s' for assistance."
         WRMSG(HHC02202,"E", argv[0] );
         return -1;
     }
@@ -6719,6 +6722,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Processor %s%02X: processor is not %s"
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
@@ -6737,13 +6741,16 @@ REGS *regs;
         else
             aaddr &= ~0xFFF;
     }
-    else if (sscanf(loadaddr, "%x%c", &aaddr, &c) !=1 ||
-                                       aaddr >= sysblk.mainsize )
+    else if (sscanf(loadaddr, "%"I64_FMT"x%c", &work64, &c) !=1
+        || work64 >= (U64) sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Invalid argument %s%s"
         WRMSG(HHC02205, "E", loadaddr, ": invalid starting address" );
         return -1;
     }
+    else
+        aaddr = (RADR) work64;
 
     if (argc < 4 || '*' == *(loadaddr = argv[3]))
     {
@@ -6758,22 +6765,26 @@ REGS *regs;
         else
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            // "Savecore: no modified storage found"
             WRMSG(HHC02246, "E");
             return -1;
         }
     }
-    else if (sscanf(loadaddr, "%x%c", &aaddr2, &c) !=1 ||
-                                       aaddr2 >= sysblk.mainsize )
+    else if (sscanf(loadaddr, "%"I64_FMT"x%c", &work64, &c) !=1
+        || work64 >= (U64) sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Invalid argument %s%s"
         WRMSG(HHC02205, "E", loadaddr, ": invalid ending address" );
         return -1;
     }
+    else
+        aaddr2 = (RADR) work64;
 
-    /* Command is valid only when CPU is stopped */
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Operation rejected: CPU not stopped"
         WRMSG(HHC02247, "E");
         return -1;
     }
@@ -6782,13 +6793,20 @@ REGS *regs;
     {
         char buf[40];
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        MSGBUF( buf, "%08X-%08X", aaddr, aaddr2);
+        MSGBUF( buf, I64_FMTX"-"I64_FMTX, (U64) aaddr, (U64) aaddr2);
+        // "Invalid argument %s%s"
         WRMSG(HHC02205, "W", buf, ": invalid range" );
         return -1;
     }
 
-    /* Save the file from absolute storage */
-    WRMSG(HHC02248, "I", aaddr, aaddr2, fname );
+    // "Saving locations %016X-%016X to file %s"
+    {
+        char buf1[32];
+        char buf2[32];
+        MSGBUF( buf1, "%llX", (U64) aaddr );
+        MSGBUF( buf2, "%llX", (U64) aaddr2 );
+        WRMSG(HHC02248, "I", buf1, buf2, fname );
+    }
 
     hostpath(pathname, fname, sizeof(pathname));
 
@@ -6796,19 +6814,47 @@ REGS *regs;
     {
         int saved_errno = errno;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        // "Error in function %s: %s"
         WRMSG(HHC02219, "E", "open()", strerror(saved_errno) );
         return -1;
     }
 
-    if ((len = write(fd, regs->mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
-        WRMSG(HHC02219, "E", "write()", strerror(errno) );
-    else if ( (U32)len < (aaddr2 - aaddr) + 1 )
-        WRMSG(HHC02219, "E", "write()", "incomplete" );
+    /* Calculate total number of bytes to be written */
+    total = ((U64)aaddr2 - (U64)aaddr) + 1;
+
+    /* Write smaller more manageable chunks until all is written */
+    do
+    {
+        chunk = (256 * 1024 * 1024);    /* 256M */
+
+        if (chunk > total)
+            chunk = total;
+
+        written = write( fd, regs->mainstor + aaddr, chunk );
+
+        if (written < 0)
+        {
+            // "Error in function %s: %s"
+            WRMSG(HHC02219, "E", "write()", strerror(errno) );
+            return -1;
+        }
+
+        if (written < chunk)
+        {
+            // "Error in function %s: %s"
+            WRMSG(HHC02219, "E", "write()", "incomplete" );
+            return -1;
+        }
+
+        aaddr += chunk;
+    }
+    while ((total -= chunk) > 0);
 
     close(fd);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
+    // "Operation complete"
     WRMSG(HHC02249, "I");
 
     return 0;
@@ -6954,7 +7000,8 @@ int OnOffCommand(int argc, char *argv[], char *cmdline)
     char   *cmd = cmdline;              /* Copy of panel command     */
     int     oneorzero;                  /* 1=x+ command, 0=x-        */
     char   *onoroff;                    /* "on" or "off"             */
-    U32     aaddr;                      /* Absolute storage address  */
+    U64     work64;                     /* 64-bit work variable      */
+    RADR    aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
     U16     lcss;
@@ -6985,13 +7032,14 @@ BYTE c;                                 /* Character work area       */
 
     // f- and f+ commands - mark frames unusable/usable
 
-    if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
+    if ((cmd[0] == 'f') && sscanf(cmd+2, "%"I64_FMT"x%c", &work64, &c) == 1)
     {
-        char buf[20];
+        char buf[40];
+        aaddr = (RADR) work64;
         if (aaddr > regs->mainlim)
         {
             RELEASE_INTLOCK(NULL);
-            MSGBUF( buf, "%08X", aaddr);
+            MSGBUF( buf, F_RADR, aaddr);
             WRMSG(HHC02205, "E", buf, "" );
             return -1;
         }
@@ -6999,7 +7047,7 @@ BYTE c;                                 /* Character work area       */
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         RELEASE_INTLOCK(NULL);
-        MSGBUF( buf, "frame %08X", aaddr);
+        MSGBUF( buf, "frame "F_RADR, aaddr);
         WRMSG(HHC02204, "I", buf, oneorzero ? "usable" : "unusable");
         return 0;
     }
