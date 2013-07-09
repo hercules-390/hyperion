@@ -68,15 +68,15 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
 
     switch (rc)
     {
-        case EAGAIN:          err_desc = "max recursion";   break;
-        case EPERM:           err_desc = "not owned";       break;
-        case EINVAL:          err_desc = "not initialized"; break;
-        case EDEADLK:         err_desc = "deadlock";        break;
-        case ENOTRECOVERABLE: err_desc = "not recoverable"; break;
-        case EOWNERDEAD:      err_desc = "owner dead";      break;
-        case EBUSY:           err_desc = "busy";            break; /* (should not occur) */
-        case ETIMEDOUT:       err_desc = "timeout";         break; /* (should not occur) */
-        default:              err_desc = "(unknown)";       break;
+        case EAGAIN:          err_desc = "max recursion";    break;
+        case EPERM:           err_desc = "not owned";        break;
+        case EINVAL:          err_desc = "invalid argument"; break;
+        case EDEADLK:         err_desc = "deadlock";         break;
+        case ENOTRECOVERABLE: err_desc = "not recoverable";  break;
+        case EOWNERDEAD:      err_desc = "owner dead";       break;
+        case EBUSY:           err_desc = "busy";             break; /* (should not occur) */
+        case ETIMEDOUT:       err_desc = "timeout";          break; /* (should not occur) */
+        default:              err_desc = "(unknown)";        break;
     }
 
     // "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
