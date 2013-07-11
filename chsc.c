@@ -598,7 +598,9 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
 
         default:
+#if defined(_FEATURE_QDIO_THININT)
         chsc_error:
+#endif /*defined(_FEATURE_QDIO_THININT)*/
             PTT(PTT_CL_ERR,"*CHSC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
             if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
                 break;
