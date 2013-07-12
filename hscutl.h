@@ -250,4 +250,9 @@ HUT_DLL_IMPORT const char* trimloc( const char* loc );
 /*********************************************************************/
 HUT_DLL_IMPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz );
 
+/*-------------------------------------------------------------------*/
+/* fmt_memsize_rounded:   128K,  64M,  8G,  etc...                   */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT char *fmt_memsize_rounded( const U64 memsize, char* buf, const size_t bufsz );
+
 #endif /* __HSCUTL_H__ */

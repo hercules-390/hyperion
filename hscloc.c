@@ -1,4 +1,4 @@
-/* HSCLOC.C     (c) Copyright TurboHercules, SAS 2010-2011           */
+/* HSCLOC.C     (c) Copyright Hercules Project, 2010-2013            */
 /*              locate debugging functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -11,63 +11,6 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
-
-/*-------------------------------------------------------------------*/
-/* fmt_memsize_rounded                                               */
-/*-------------------------------------------------------------------*/
-static char *fmt_memsize_rounded( const U64 memsize )
-{
-    /* Mainframe memory and DASD amounts are reported in 2**(10*n)
-     * values, (x_iB international format, and shown as x_ or x_B, when
-     * x >= 1024; x when x < 1024). Open Systems and Windows report
-     * memory in the same format, but report DASD storage in 10**(3*n)
-     * values. (Thank you, various marketing groups and international
-     * standards committees...)
-     *
-     * For Hercules, mainframe oriented reporting characteristics will
-     * be formatted and shown as x_, when x >= 1024, and as x when x <
-     * 1024. Reporting of Open Systems and Windows specifics should
-     * follow the international format, shown as x_iB, when x >= 1024,
-     * and x or xB when x < 1024. Reporting is done at the highest
-     * integral boundary.
-     *
-     * Format storage in 2**(10*n) values at the highest rounded
-     * (truncated) integral integer boundary.
-     */
-
-    const  char     suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
-    static char     fmt_mem[128];   /* Max of 21 bytes used for U64 */
-    register U64    mem = memsize;
-    register u_int  i = 0;
-
-    if (mem)
-    {
-#if SIZEOF_SIZE_T > 8
-             if ( mem > ONE_YOBIBYTE )
-            mem &= 0xFFFFFFFFC0000000ULL;
-        else if ( mem > ONE_ZEBIBYTE )
-            mem &= 0xF000000000000000ULL;
-        else
-#endif
-             if ( mem > ONE_EXBIBYTE )
-            mem &= 0xFFFC000000000000ULL;
-        else if ( mem > ONE_PEBIBYTE )
-            mem &= 0xFFFFFF0000000000ULL;
-        else if ( mem > ONE_TEBIBYTE )
-            mem &= 0xFFFFFFFFC0000000ULL;
-        else if ( mem > ONE_GIBIBYTE )
-            mem &= 0xFFFFFFFFFFF00000ULL;
-        else if ( mem > ONE_MEBIBYTE )
-            mem &= 0xFFFFFFFFFFFFFC00ULL;
-
-        for (; i < sizeof(suffix) && !(mem & 0x03FF); mem >>= 10, ++i);
-    }
-
-    MSGBUF( fmt_mem, "%5"I64_FMT"u%c", mem, suffix[i]);
-
-    return fmt_mem;
-}
-
 
 static char *fmt_decimal( const U64 number )
 {
@@ -466,6 +409,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
     HOST_INFO  *pHostInfo = &hostinfo;
     int         ok = TRUE;
     U64         loc = swap_byte_U64(hostinfo.blkloc);
+    char        fmt_mem[8];
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -611,54 +555,54 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
 
         if ( pHostInfo->L1Dcachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize_rounded((U64)pHostInfo->L1Dcachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize_rounded((U64)pHostInfo->L1Dcachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Icachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize_rounded((U64)pHostInfo->L1Icachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize_rounded((U64)pHostInfo->L1Icachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Ucachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize_rounded((U64)pHostInfo->L1Ucachesz) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize_rounded((U64)pHostInfo->L1Ucachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize_rounded((U64)pHostInfo->L2cachesz) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize_rounded((U64)pHostInfo->L2cachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize_rounded((U64)pHostInfo->L3cachesz) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize_rounded((U64)pHostInfo->hostpagesz) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize_rounded((U64)pHostInfo->AllocationGranularity) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize_rounded((U64)pHostInfo->L3cachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
         WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize_rounded((U64)pHostInfo->TotalPhys) );
+        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize_rounded((U64)pHostInfo->hostpagesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize_rounded((U64)pHostInfo->AvailPhys) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize_rounded((U64)pHostInfo->AllocationGranularity,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize_rounded((U64)pHostInfo->TotalPageFile) );
+        WRMSG( HHC90000, "D", "" );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize_rounded((U64)pHostInfo->TotalPhys,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize_rounded((U64)pHostInfo->AvailPageFile) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize_rounded((U64)pHostInfo->AvailPhys,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize_rounded((U64)pHostInfo->TotalVirtual) );
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize_rounded((U64)pHostInfo->TotalPageFile,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize_rounded((U64)pHostInfo->AvailVirtual) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize_rounded((U64)pHostInfo->AvailPageFile,fmt_mem,sizeof(fmt_mem)) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize_rounded((U64)pHostInfo->TotalVirtual,fmt_mem,sizeof(fmt_mem)) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize_rounded((U64)pHostInfo->AvailVirtual,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
     return rc;
