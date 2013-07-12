@@ -2957,8 +2957,8 @@ void xstorage_clear(void);
 /* Functions in module scedasd.c */
 void         set_sce_dir        (char *path);
 char        *get_sce_dir        ();
-int          load_main          (char *fname, RADR startloc);
-int ARCH_DEP(load_main)         (char *fname, RADR startloc);
+int          load_main          (char *fname, RADR startloc, int noisy );
+int ARCH_DEP(load_main)         (char *fname, RADR startloc, int noisy );
 int          load_hmc           (char *fname, int cpu, int clear);
 int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
 void ARCH_DEP(sclp_scedio_request) (SCCB_HEADER *);

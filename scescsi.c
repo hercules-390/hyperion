@@ -651,7 +651,7 @@ int bootfile;
     if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
         return -1;
 
-    if( ARCH_DEP(load_main) (hwl_fn[bootfile], 0) < 0)
+    if( ARCH_DEP(load_main) (hwl_fn[bootfile], 0, 0) < 0)
     {
         logmsg(_("HHCSB010 Cannot load bootstrap loader %s: %s\n"),
           hwl_fn[bootfile],strerror(errno));

@@ -211,7 +211,7 @@ int     rc = 0;                         /* Return codes (work)       */
                 return -1;
             }
 
-            if( ARCH_DEP(load_main) (filename, fileaddr) < 0 )
+            if( ARCH_DEP(load_main) (filename, fileaddr, 0) < 0 )
             {
                 fclose(fp);
                 HDC1(debug_cpu_state, regs);
@@ -231,13 +231,16 @@ int     rc = 0;                         /* Return codes (work)       */
 /*-------------------------------------------------------------------*/
 /* Function to Load (read) specified file into absolute main storage */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(load_main) (char *fname, RADR startloc)
+int ARCH_DEP(load_main) (char *fname, RADR startloc, int noisy)
 {
-int fd;
-int len;
-int rc = 0;
+U64 loaded;
+RADR aaddr;
 RADR pageaddr;
-U32  pagesize;
+int fd;
+int chunk;
+int bytes;
+time_t begtime, curtime;
+char fmt_mem[8];
 
     fd = HOPEN (fname, O_RDONLY|O_BINARY);
     if (fd < 0)
@@ -247,34 +250,91 @@ U32  pagesize;
         return fd;
     }
 
-    pagesize = PAGEFRAME_PAGESIZE - (startloc & PAGEFRAME_BYTEMASK);
-    pageaddr = startloc;
+    /* Calculate size of first chunk to reach page boundary */
+    chunk = PAGEFRAME_PAGESIZE - (startloc & PAGEFRAME_BYTEMASK);
+    aaddr = startloc;
 
+    if (noisy)
+    {
+        loaded = 0;
+        time( &begtime );
+    }
+
+    /* Read file into storage until end of file or end of storage */
     for( ; ; ) {
-        if (pageaddr >= sysblk.mainsize)
+
+        bytes = read(fd, sysblk.mainstor + aaddr, chunk);
+
+        /* Check for I/O error */
+        if (bytes < 0)
         {
-            WRMSG(HHC00603, "W", fname);
+            // "SCE file %s: error in function %s: %s"
+            WRMSG(HHC00600, "E", fname, "read()",strerror(errno));
             close(fd);
-            return rc;
+            return -1;
         }
 
-        len = read(fd, sysblk.mainstor + pageaddr, pagesize);
-        if (len > 0)
+        /* Check for end-of-file */
+        if (bytes == 0)
+        {
+            close(fd);
+            return 0;
+        }
+
+        /* Update the storage keys for all of the pages we just read */
+        chunk = bytes;
+        pageaddr = aaddr;
+
+        for ( ; chunk > 0; chunk -= PAGEFRAME_PAGESIZE)
         {
             STORAGE_KEY(pageaddr, &sysblk) |= STORKEY_REF|STORKEY_CHANGE;
-            rc += len;
+            pageaddr += PAGEFRAME_PAGESIZE;
         }
 
-        if (len < (int)pagesize)
+        aaddr += bytes;
+        aaddr &= PAGEFRAME_PAGEMASK;
+
+        /* Check if end of storge reached */
+        if (aaddr >= sysblk.mainsize)
         {
+            int rc;
+            if (read(fd, &rc, 1) > 0)
+            {
+                rc = +1;
+                if (noisy)
+                {
+                    // "SCE file %s: load main terminated at end of mainstor"
+                    WRMSG(HHC00603, "W", fname);
+                }
+            }
+            else /* ignore any error; we're at end of storage anyway */
+                rc = 0;
             close(fd);
             return rc;
         }
 
-        pageaddr += PAGEFRAME_PAGESIZE;
-        pageaddr &= PAGEFRAME_PAGEMASK;
-        pagesize  = PAGEFRAME_PAGESIZE;
-    }
+        /* Issue periodic progress messages */
+        if (noisy)
+        {
+            loaded += bytes;
+            time( &curtime );
+
+            if (difftime( curtime, begtime ) > 2.0)
+            {
+                begtime = curtime;
+                // "%s bytes %s so far..."
+                WRMSG( HHC02317, "I",
+                    fmt_memsize_rounded( loaded, fmt_mem, sizeof( fmt_mem )),
+                        "loaded" );
+            }
+        }
+
+        chunk = (64 * 1024 * 1024);
+
+        if (chunk > (sysblk.mainsize - aaddr))
+            chunk = (sysblk.mainsize - aaddr);
+
+    } /* end for( ; ; ) */
 
 } /* end function load_main */
 
@@ -501,7 +561,7 @@ char filename[MAX_PATH];
         return FALSE;
     }
 
-    size = ARCH_DEP(load_main)(filename,origin);
+    size = ARCH_DEP(load_main)(filename,origin,0);
 
     return (size >= 0) ? TRUE : FALSE;
 }
@@ -862,20 +922,20 @@ int load_hmc (char *fname, int cpu, int clear)
 /*-------------------------------------------------------------------*/
 /* Load/Read specified file into absolute main storage               */
 /*-------------------------------------------------------------------*/
-int load_main (char *fname, RADR startloc)
+int load_main (char *fname, RADR startloc, int noisy)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            return s370_load_main (fname, startloc);
+            return s370_load_main (fname, startloc, noisy);
 #endif
 #if defined(_390)
         case ARCH_390:
-            return s390_load_main (fname, startloc);
+            return s390_load_main (fname, startloc, noisy);
 #endif
 #if defined(_900)
         case ARCH_900:
-            return z900_load_main (fname, startloc);
+            return z900_load_main (fname, startloc, noisy);
 #endif
     }
     return -1;

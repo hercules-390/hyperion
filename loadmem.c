@@ -80,10 +80,11 @@ REGS *regs;
         WRMSG(HHC02250, "I", fname, buf1 );
     }
 
-    (void)load_main(fname, aaddr);
+    (void)load_main(fname, aaddr, 1);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
+    // "Operation complete"
     WRMSG(HHC02249, "I");
 
     return 0;
@@ -617,6 +618,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     {
         if (rc > 0)
             WRMSG(HHC02308, "W", argv[0] );
+        // "Operation complete"
         WRMSG(HHC02249, "I");
     }
 

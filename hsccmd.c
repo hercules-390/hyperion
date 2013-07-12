@@ -6703,8 +6703,11 @@ REGS *regs;
     U32     chunk;                      /* Bytes to write this time  */
     U32     written;                    /* Bytes written this time   */
     U64     total;                      /* Total bytes to be written */
+    U64     saved;                      /* Total bytes saved so far  */
     BYTE    c;                          /* (dummy sscanf work area)  */
     char    pathname[MAX_PATH];         /* fname in host path format */
+    time_t  begtime, curtime;           /* progress messages times   */
+    char    fmt_mem[8];                 /* #of M/G/etc. saved so far */
 
     UNREFERENCED(cmdline);
 
@@ -6821,11 +6824,15 @@ REGS *regs;
 
     /* Calculate total number of bytes to be written */
     total = ((U64)aaddr2 - (U64)aaddr) + 1;
+    saved = 0;
+
+    /* Save start time */
+    time( &begtime );
 
     /* Write smaller more manageable chunks until all is written */
     do
     {
-        chunk = (256 * 1024 * 1024);    /* 256M */
+        chunk = (64 * 1024 * 1024);
 
         if (chunk > total)
             chunk = total;
@@ -6847,6 +6854,18 @@ REGS *regs;
         }
 
         aaddr += chunk;
+        saved += chunk;
+
+        /* Time for progress message? */
+        time( &curtime );
+        if (difftime( curtime, begtime ) > 2.0)
+        {
+            begtime = curtime;
+            // "%s bytes %s so far..."
+            WRMSG( HHC02317, "I",
+                fmt_memsize_rounded( saved, fmt_mem, sizeof( fmt_mem )),
+                    "saved" );
+        }
     }
     while ((total -= chunk) > 0);
 
