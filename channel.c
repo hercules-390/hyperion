@@ -973,13 +973,13 @@ haltio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 {
 int      cc;                            /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
-int      pending = 0;                   /* New interrupt pending     */
 
     UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
         WRMSG (HHC01329, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
+    OBTAIN_INTLOCK(regs);
     obtain_lock (&dev->lock);
 
     /* Test device status and set condition code */
@@ -999,10 +999,25 @@ int      pending = 0;                   /* New interrupt pending     */
             cc = 2;
 
             /* Tell channel and device to halt */
-            dev->scsw.flag2 |= SCSW2_FC_HALT;
+            dev->scsw.flag2 |= SCSW2_AC_HALT;
 
             /* Clear pending interrupts */
-            dev->pending = dev->pcipending = dev->attnpending = 0;
+            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
+            dev->pciscsw.flag3  &= ~(SCSW3_SC_ALERT |
+                                     SCSW3_SC_PRI   |
+                                     SCSW3_SC_SEC   |
+                                     SCSW3_SC_PEND);
+            dev->scsw.flag3     &= ~(SCSW3_SC_ALERT |
+                                     SCSW3_SC_PRI   |
+                                     SCSW3_SC_SEC   |
+                                     SCSW3_SC_PEND);
+            dev->attnscsw.flag3 &= ~(SCSW3_SC_ALERT |
+                                     SCSW3_SC_PRI   |
+                                     SCSW3_SC_SEC   |
+                                     SCSW3_SC_PEND);
+            subchannel_interrupt_queue_cleanup(dev);
         }
     }
     else if (!IOPENDING(dev) && dev->ctctype != CTC_LCS)
@@ -1013,48 +1028,40 @@ int      pending = 0;                   /* New interrupt pending     */
         /* Store the channel status word at PSA+X'40' */
         store_scsw_as_csw(regs, &dev->scsw);
 
-        /* Set pending interrupt */
-        dev->pending = pending = 1;
-
         if (dev->ccwtrace || dev->ccwstep)
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             display_csw (dev, psa->csw);
         }
     }
-    else
+    else if (dev->ctctype == CTC_LCS)
     {
         /* Set cc 1 if interrupt is not pending and LCS CTC */
-        if ( dev->ctctype == CTC_LCS )
+        cc = 1;
+
+        /* Store the channel status word at PSA+X'40' */
+        store_scsw_as_csw(regs, &dev->scsw);
+
+        if (dev->ccwtrace)
         {
-            cc = 1;
-            store_scsw_as_csw(regs, &dev->scsw);
-            if (dev->ccwtrace)
-            {
-                psa = (PSA_3XX*)(regs->mainstor + regs->PX);
-                WRMSG (HHC01330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
-                display_csw (dev, psa->csw);
-            }
+            psa = (PSA_3XX*)(regs->mainstor + regs->PX);
+            WRMSG (HHC01330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            display_csw (dev, psa->csw);
         }
-        else
-            /* Set condition code 0 if interrupt is pending */
-            cc = 0;
     }
-
-    /* Queue the interrupt */
-    if (pending)
-        QUEUE_IO_INTERRUPT (&dev->ioint);
-
-    release_lock (&dev->lock);
+    else
+    {
+        /* Set condition code 0 if interrupt is pending */
+        cc = 0;
+    }
 
     /* Update interrupt status */
-    if (pending)
-    {
-        OBTAIN_INTLOCK(regs);
-        subchannel_interrupt_queue_cleanup(dev);
-        UPDATE_IC_IOPENDING_QLOCKED();
-        RELEASE_INTLOCK(regs);
-    }
+    subchannel_interrupt_queue_cleanup(dev);
+    UPDATE_IC_IOPENDING_QLOCKED();
+
+    /* Release locks */
+    release_lock (&dev->lock);
+    RELEASE_INTLOCK(regs);
 
     /* Return the condition code */
     return cc;
@@ -2091,6 +2098,7 @@ TID     tid;                            /* Thread ID                 */
     {
         register int i;
         register DEVBLK  *ioq;
+
         for (ioq = sysblk.ioq, i = 0;
              ioq;
              ioq = ioq->nextioq, i++);
@@ -2104,8 +2112,9 @@ TID     tid;                            /* Thread ID                 */
 
     /* If work is waiting and permitted, schedule another device     */
     /* thread to handle                                              */
-    if (sysblk.devtunavail > sysblk.devtwait &&
-        (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax))
+    if ((sysblk.devtunavail > sysblk.devtwait &&
+         (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)) ||
+        sysblk.devtmax < 0)
     {
         rc = create_thread (&tid, DETACHED, device_thread, NULL,
                             "idle device thread");
@@ -2135,9 +2144,6 @@ TID     tid;                            /* Thread ID                 */
 DLL_EXPORT void *
 device_thread (void *arg)
 {
-#ifdef _MSVC_
-char    thread_name[32];
-#endif
 DEVBLK *dev;
 int     current_priority;               /* Current thread priority   */
 int     rc = 0;                         /* Return code               */
@@ -2174,14 +2180,20 @@ u_int   waitcount = 0;                  /* Wait counter              */
             /* Create another device thread if pending work */
             create_device_thread();
 
-            /* Set thread id and name */
+            /* Set thread id */
             dev->tid = thread_id();
-#ifdef _MSVC_
-            MSGBUF( thread_name,
-                "device %4.4X thread", dev->devnum );
-            thread_name[sizeof(thread_name)-1]=0;
+
+#if defined(_MSVC_)
+            /* Set thread name */
+            {
+                char    thread_name[32];
+
+                MSGBUF( thread_name,
+                        "device %4.4X thread", dev->devnum );
+                thread_name[sizeof(thread_name)-1]=0;
+                SET_THREAD_NAME(thread_name);
+            }
 #endif
-            SET_THREAD_NAME(thread_name);
 
             release_lock (&sysblk.ioqlock);
 
@@ -2222,7 +2234,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
         /* Show thread as idle */
         waitcount++;
         sysblk.devtwait++;
-        SET_THREAD_NAME("idle device thread");
+        SET_THREAD_NAME("idle device thread");  /* If _MSVC_ defined */
 
         /* Wait for work to arrive */
         rc = timed_wait_condition_relative_usecs (&sysblk.ioqcond,
@@ -2234,7 +2246,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
         sysblk.devtwait = MAX(0, sysblk.devtwait - 1);
 
         /* If shutdown requested, terminate the thread after signaling
-         * next I/O thread.
+         * next I/O thread to shutdown.
          */
         if (sysblk.shutdown)
         {
@@ -2258,7 +2270,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* Note: Queue is actually split with resume requests first, then    */
-/*       followed by start requests.                                 */
+/*       followed by start requests, sorted by priorities.           */
 /*                                                                   */
 /* Locks held:                                                       */
 /*   dev->lock                                                       */
@@ -2268,69 +2280,41 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static int
-ScheduleIORequest ( DEVBLK *dev, U16 devnum, int *devprio)
+ScheduleIORequest ( DEVBLK *dev )
 {
-int     rc = 0;                         /* Return Code               */
-int     resume = dev->scsw.flag3 & SCSW3_AC_SUSP;   /* Resume queue? */
-DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
+    int     rc = 0;                     /* Return Code               */
+    int     resume = dev->scsw.flag3 & SCSW3_AC_SUSP;   /* Resume?   */
+    DEVBLK *previoq, *ioq;              /* Device I/O queue pointers */
 
-    UNREFERENCED(devnum);
-    UNREFERENCED(devprio);
+    /* Queue the I/O request */
+    obtain_lock (&sysblk.ioqlock);
 
-    if (sysblk.devtmax >= 0)
-    {
-        /* Queue the I/O request */
-        obtain_lock (&sysblk.ioqlock);
-
-        /* Insert the device into the I/O queue; CSS and CU priorities
-         * in DEVBLK and IOQ DEVBLK ORBs are preset to zero if not an
-         * extended ORB
-         */
-        for (previoq = NULL, ioq = sysblk.ioq;
-             ioq &&
-                (ioq->scsw.flag3 & SCSW3_AC_SUSP) <= resume &&
-                dev->priority >= ioq->priority &&
-                dev->orb.csspriority >= ioq->orb.csspriority &&
-                dev->orb.cupriority >= ioq->orb.cupriority;
-             previoq = ioq, ioq = ioq->nextioq);
-        dev->nextioq = ioq;
-        if (previoq) previoq->nextioq = dev;
-        else sysblk.ioq = dev;
-        sysblk.devtunavail++;
-
-        /* Signal ioq available if threads exist */
-        if (sysblk.devtnbr)
-            signal_condition(&sysblk.ioqcond);
-
-        /* If threads don't exist, create first one */
-        else
-            rc = create_device_thread();
-
-        /* Release lock */
-        release_lock(&sysblk.ioqlock);
-
-    }
+    /* Insert the device into the I/O queue; CSS and CU priorities
+     * in DEVBLK and IOQ DEVBLK ORBs are preset to zero if not an
+     * extended ORB.
+     */
+    for (previoq = NULL, ioq = sysblk.ioq;
+         ioq &&
+            /* 1. Resume                                         */
+            resume >= (ioq->scsw.flag3 & SCSW3_AC_SUSP) &&
+            /* 2. Subchannel priority                            */
+            dev->priority >= ioq->priority &&
+            /* 3. CSS priority                                   */
+            dev->orb.csspriority >= ioq->orb.csspriority &&
+            /* 4. CU priority                                    */
+            dev->orb.cupriority >= ioq->orb.cupriority;
+         previoq = ioq, ioq = ioq->nextioq);
+    dev->nextioq = ioq;
+    if (previoq != NULL)
+        previoq->nextioq = dev;
     else
-    {
-        char thread_name[32];
-        // BHe: Do we want this for every ccw?
-        MSGBUF(thread_name,
-            "execute %4.4X ccw chain",dev->devnum);
-        thread_name[sizeof(thread_name)-1]=0;
+        sysblk.ioq = dev;
+    sysblk.devtunavail++;
 
-        /* Execute the CCW chain on a separate thread */
-        obtain_lock(&sysblk.ioqlock);
-        rc = create_thread (&dev->tid, DETACHED,
-                            ARCH_DEP(execute_ccw_chain), dev,
-                            thread_name);
-        release_lock(&sysblk.ioqlock);
-        /* If error creating thread, report and return with CC=2 */
-        if (rc)
-        {
-            WRMSG (HHC00102, "E", strerror(rc));
-            rc = 2;
-        }
-    }
+    rc = create_device_thread();
+
+    /* Release lock */
+    release_lock(&sysblk.ioqlock);
 
     /* Return condition code */
     return rc;
@@ -2371,6 +2355,7 @@ execute_syncio (REGS* regs, DEVBLK* dev)
     int result = 2;
 
     /* Initiate synchronous I/O */
+    dev->s370start = 0;
     dev->syncio_active = 1;
     dev->ioactive = DEV_SYS_LOCAL;
     dev->regs = regs;
@@ -2451,7 +2436,10 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
      * operation.
      */
     if (sysblk.shutdown)
+    {
+        signal_condition(&sysblk.ioqcond);
         return (result);
+    }
 
 #if defined(OPTION_SYNCIO)
     {
@@ -2498,7 +2486,7 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
     /* Otherwise, schedule normally */
 #endif /*defined(OPTION_SYNCIO)*/
 
-    if (regs && sysblk.arch_mode == ARCH_370)
+    if (dev->s370start && regs != NULL)
     {
         release_lock(&dev->lock);
         call_execute_ccw_chain(sysblk.arch_mode, dev);
@@ -2506,7 +2494,7 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
         result = 0;
     }
     else
-        result = ScheduleIORequest(dev, dev->devnum, &dev->devprio);
+        result = ScheduleIORequest(dev);
 
     return (result);
 }
@@ -3994,7 +3982,9 @@ do {                                                                   \
         {
             if (dev->s370start)
             {
-                /* State successful conversion from SIO to SIOF */
+                /* State successful conversion from synchronous to
+                 * asynchronous for 370 mode.
+                 */
                 WRMSG (HHC01321, "I", SSID_TO_LCSS(dev->ssid),
                                       dev->devnum);
             }
@@ -4715,7 +4705,10 @@ execute_halt:
             dev->ccwfmt = ccwfmt;
             dev->ccwkey = ccwkey;
 
-            /* Set the resume pending flag and signal the subchannel */
+            /* Set the resume pending flag and signal the subchannel;
+             * NULL is used for the requeue regs as the execution of
+             * the I/O is no longer attached to a specific processor.
+             */
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             schedule_ioq(NULL, dev);
 
