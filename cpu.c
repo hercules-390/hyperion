@@ -1049,7 +1049,10 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
         ECMODE(&regs->psw))
     {
         /* For ECMODE, store the I/O device address at PSA+X'B8' */
-        STORE_FW(psa->ioid, ioid);
+        STORE_FW(psa->ioid,
+                 ((((U32)psa->ioid[0] << 8) |
+                   ((U32)SSID_TO_LCSS(ioid >> 16) & 0x07)) << 16) |
+                 (ioid & 0x0000FFFFUL));
     }
     else
     {
@@ -1063,7 +1066,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
         BYTE*   csw = psa->csw;
 
         WRMSG (HHC00804, "I", PTYPSTR(regs->cpuad), regs->cpuad,
-                regs->psw.intcode,
+                SSID_TO_LCSS(ioid >> 16) & 0x07, ioid,
                 csw[0], csw[1], csw[2], csw[3],
                 csw[4], csw[5], csw[6], csw[7]);
     }
