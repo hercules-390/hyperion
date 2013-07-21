@@ -3492,13 +3492,19 @@ FinishShutdown:
                 cur_cons_col = saved_cons_col;
             } /* end if(redraw_cmd) */
 
-            if (sysblk.pcpu != prvpcpu ||
-                sysblk.regs[prvpcpu]->arch_mode != prvparch)
+            /* Determine if redraw required for CPU or architecture
+             * change.
+             */
+            if ((sysblk.pcpu != prvpcpu &&
+                 (regs = sysblk.regs[sysblk.pcpu]) != NULL) ||
+                ((regs = sysblk.regs[prvpcpu]) != NULL &&
+                 regs->arch_mode != prvparch))
             {
                 redraw_status = 1;
                 prvpcpu = sysblk.pcpu;
-                prvparch = sysblk.regs[prvpcpu]->arch_mode;
+                prvparch = regs->arch_mode;
             }
+
             if (redraw_status && !npquiet)
             {
                 char    ibuf[64];       /* Rate buffer                */
