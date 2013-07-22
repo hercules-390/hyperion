@@ -234,6 +234,7 @@ violate the software vendor's licensing terms.</em>
 To start Hercules enter this command at the host's command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]           |  [ --config=<em>filename</em> ]
+              [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
               [ -d ]                    |  [ --daemon ]
               [ -p <em>dyndir</em> ]             |  [ --modpath=<em>dyndir</em> ]
@@ -254,6 +255,11 @@ where:
             The default, if none is specified, is <b><em>hercules.cnf</em></b>.
             The default may be overridden via the <code>HERCULES_CNF</code>
             environment variable.
+        <p>
+        <dt><code><em>rcfile</em></code><p><dd>
+
+            is the name of the Hercules <a href="#RCFILE">.RC run commands file</a>.
+            The run commands file automatically executes panel commands upon startup.
         <p>
         <dt><code><em>logofile</em></code><p><dd>
 

@@ -282,10 +282,9 @@ DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
 /*-------------------------------------------------------------------*/
 /* Process .RC file thread                                           */
 /*-------------------------------------------------------------------*/
-
+static char *rcname = NULL;             /* hercules.rc name pointer  */
 static void* process_rc_file (void* dummy)
 {
-char   *rcname;                         /* hercules.rc name pointer  */
 int     is_default_rc  = 0;             /* 1 == default name used    */
 char    pathname[MAX_PATH];             /* (work)                    */
 
@@ -293,10 +292,13 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     /* Obtain the name of the hercules.rc file or default */
 
-    if (!(rcname = getenv("HERCULES_RC")))
+    if (!rcname)
     {
-        rcname = "hercules.rc";
-        is_default_rc = 1;
+        if (!(rcname = getenv("HERCULES_RC")))
+        {
+            rcname = "hercules.rc";
+            is_default_rc = 1;
+        }
     }
 
     if(!strcasecmp(rcname,"None"))
@@ -737,7 +739,7 @@ int     dll_count;                      /* index into array          */
 
     /* Process the command line options */
     {
-#define  HERCULES_BASE_OPTS     "hf:db:v"
+#define  HERCULES_BASE_OPTS     "hf:r:db:v"
 #define  HERCULES_SYM_OPTS      ""
 #define  HERCULES_HDL_OPTS      ""
 #if defined(OPTION_CONFIG_SYMBOLS)
@@ -755,6 +757,7 @@ int     dll_count;                      /* index into array          */
     {
         { "help",     no_argument,       NULL, 'h' },
         { "config",   required_argument, NULL, 'f' },
+        { "rcfile",   required_argument, NULL, 'r' },
         { "daemon",   no_argument,       NULL, 'd' },
         { "herclogo", required_argument, NULL, 'b' },
         { "verbose",  no_argument,       NULL, 'v' },
@@ -778,6 +781,9 @@ int     dll_count;                      /* index into array          */
             break;
         case 'f':
             cfgfile = optarg;
+            break;
+        case 'r':
+            rcname = optarg;
             break;
 #if defined(OPTION_CONFIG_SYMBOLS)
         case 's':
