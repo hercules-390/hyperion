@@ -349,11 +349,11 @@ AIPSX (const SCSW* scsw)
 /*  Queue I/O interrupt and update status (locked)                    */
 /*                                                                    */
 /*  Locks Held on Entry                                               */
-/*    INTLOCK                                                         */
 /*    dev->lock                                                       */
+/*    sysblk.intlock                                                  */
 /*  Locks Held on Return                                              */
-/*    INTLOCK                                                         */
 /*    dev->lock                                                       */
+/*    sysblk.intlock                                                  */
 /*  Locks Used                                                        */
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
@@ -397,8 +397,8 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev)
 /*  Locks Held on Return                                              */
 /*    None                                                            */
 /*  Locks Used                                                        */
-/*    INTLOCK                                                         */
 /*    dev->lock                                                       */
+/*    sysblk.intlock                                                  */
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
 static INLINE void
@@ -2289,20 +2289,13 @@ ScheduleIORequest ( DEVBLK *dev )
     /* Queue the I/O request */
     obtain_lock (&sysblk.ioqlock);
 
-    /* Insert the device into the I/O queue; CSS and CU priorities
-     * in DEVBLK and IOQ DEVBLK ORBs are preset to zero if not an
-     * extended ORB.
-     */
+    /* Insert the device into the I/O queue */
     for (previoq = NULL, ioq = sysblk.ioq;
          ioq &&
             /* 1. Resume                                         */
             resume >= (ioq->scsw.flag3 & SCSW3_AC_SUSP) &&
             /* 2. Subchannel priority                            */
-            dev->priority >= ioq->priority &&
-            /* 3. CSS priority                                   */
-            dev->orb.csspriority >= ioq->orb.csspriority &&
-            /* 4. CU priority                                    */
-            dev->orb.cupriority >= ioq->orb.cupriority;
+            dev->priority >= ioq->priority;
          previoq = ioq, ioq = ioq->nextioq);
     dev->nextioq = ioq;
     if (previoq != NULL)
@@ -3816,6 +3809,11 @@ int     rc;                             /* Return code               */
         memcpy(&dev->orb, orb, 12);
         memset(&dev->orb.csspriority, 0, sizeof(ORB) - 12);
     }
+
+    /* Set I/O priority */
+    dev->priority &= 0x00FF0000ULL;
+    dev->priority |= dev->orb.csspriority << 8;
+    dev->priority |= dev->orb.cupriority;
 
     /* Schedule the I/O for execution */
     rc = schedule_ioq((sysblk.arch_mode == ARCH_370) ? regs : NULL,
