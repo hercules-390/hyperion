@@ -1762,6 +1762,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.APL360"
+						>
+					</File>
+					<File
 						RelativePath=".\README.COMMADPT"
 						>
 					</File>
@@ -1819,6 +1823,10 @@
 					</File>
 					<File
 						RelativePath=".\README.REXX"
+						>
+					</File>
+					<File
+						RelativePath=".\README.RXVT4APL"
 						>
 					</File>
 					<File

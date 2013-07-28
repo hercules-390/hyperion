@@ -1,3 +1,4 @@
+28 Jul 2013 COMMADPT driver mods for APL\360 - Max Parke <ikj1234i@yahoo.com> by Fish
 21 May 2013 Removed all "FishIO" (OPTION_FISHIO) code - Fish
             NOTE: HQA scenarios in hqadefs.h adjusted appropriately.
 02 May 2013 Channel Cleanup - Mark L. Gaubatz
