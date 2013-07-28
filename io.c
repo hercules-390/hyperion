@@ -293,7 +293,8 @@ PMCW    pmcw;                           /* Path management ctl word  */
 #endif /*defined(_FEATURE_IO_ASSIST)*/
 
     /* Set device priority from the interruption subclass bits */
-    dev->priority = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;
+    dev->priority &= 0xFF00FFFFULL;
+    dev->priority |= (dev->pmcw.flag4 & PMCW4_ISC) << 13;   /* >> 3 << 16 */
 
     release_lock (&dev->lock);
 

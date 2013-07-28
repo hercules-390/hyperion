@@ -520,20 +520,21 @@ typedef int CMPFUNC(const void*, const void*);
    release_lock(&sysblk.iointqlk); \
  } while (0)
 
-#define QUEUE_IO_INTERRUPT_QLOCKED(_io) \
- do { \
-   IOINT *prev; \
-   for (prev = (IOINT *)&sysblk.iointq; prev->next != NULL; prev = prev->next) \
-     if (prev->next == (_io) || prev->next->priority > (_io)->dev->priority) \
-       break; \
-   if (prev->next != (_io)) { \
-     (_io)->next = prev->next; \
-     prev->next = (_io); \
-     (_io)->priority = (_io)->dev->priority; \
-   } \
-        if ((_io)->pending)     (_io)->dev->pending     = 1; \
-   else if ((_io)->pcipending)  (_io)->dev->pcipending  = 1; \
-   else if ((_io)->attnpending) (_io)->dev->attnpending = 1; \
+#define QUEUE_IO_INTERRUPT_QLOCKED(_io)                               \
+ do {                                                                 \
+   IOINT *prev;                                                       \
+   for (prev = (IOINT *)&sysblk.iointq;                               \
+        prev->next != NULL                                            \
+        && prev->next != (_io)                                        \
+        && prev->next->priority >= (_io)->dev->priority;              \
+        prev = prev->next);                                           \
+   if (prev->next != (_io))                                           \
+     (_io)->next     = prev->next,                                    \
+     prev->next      = (_io),                                         \
+     (_io)->priority = (_io)->dev->priority;                          \
+   (_io)->dev->pending     = (_io)->pending     ? 1 : 0;              \
+   (_io)->dev->pcipending  = (_io)->pcipending  ? 1 : 0;              \
+   (_io)->dev->attnpending = (_io)->attnpending ? 1 : 0;              \
  } while (0)
 
 #define DEQUEUE_IO_INTERRUPT(_io) \
