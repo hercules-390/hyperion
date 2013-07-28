@@ -624,6 +624,8 @@ EXTRA_DIST = autoconf/config.rpath \
              cckdfix.c             \
              license_dyn76.txt     \
              README.COMMADPT       \
+             README.APL360         \
+             README.RXVT4APL       \
              README.SVN            \
              README.DYNMOD         \
              README.ECPSVM         \
