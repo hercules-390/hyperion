@@ -200,6 +200,7 @@ static PARSER ptab[]={
     { "crlf",     PARSER_STR_TYPE },
     { "sendcr",   PARSER_STR_TYPE },
     { "binary",   PARSER_STR_TYPE },
+    { "ka",       PARSER_STR_TYPE },
     {NULL,NULL}  /* (end of table) */
 };
 
@@ -228,6 +229,7 @@ enum {
     COMMADPT_KW_CRLF,
     COMMADPT_KW_SENDCR,
     COMMADPT_KW_BINARY,
+    COMMADPT_KW_KA,
 } commadpt_kw;
 
 static BYTE byte_reverse_table[256] = {
@@ -1853,6 +1855,11 @@ static void *commadpt_thread(void *vca)
                         /* is connected and notify CCW exec   */
                         ca->curpending=COMMADPT_PEND_IDLE;
                         ca->connect=1;
+
+                        /* dhd - Try to detect dropped connections */
+                        if (COMM_KEEPALIVE(ca))
+                            socket_keepalive( tempfd, ca->kaidle, ca->kaintv, ca->kacnt );
+
                         ca->sfd=tempfd;
                         signal_condition(&ca->ipc);
                         if (IS_ASYNC_LNCTL(ca)) {
@@ -1865,6 +1872,11 @@ static void *commadpt_thread(void *vca)
                     if(ca->dialin==0)
                     {
                         ca->connect=1;
+
+                        /* dhd - Try to detect dropped connections */
+                        if (COMM_KEEPALIVE(ca))
+                            socket_keepalive( tempfd, ca->kaidle, ca->kaintv, ca->kacnt );
+
                         ca->sfd=tempfd;
                         if (IS_ASYNC_LNCTL(ca)) {
                             connect_message(ca->sfd, ca->devnum, ca->term, ca->binary_opt);
@@ -2007,6 +2019,9 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->rto=3000;        /* Read Time-Out in milis */
         dev->commadpt->pto=3000;        /* Poll Time-out in milis */
         dev->commadpt->eto=10000;       /* Enable Time-out in milis */
+        dev->commadpt->kaidle = sysblk.kaidle;
+        dev->commadpt->kaintv = sysblk.kaintv;
+        dev->commadpt->kacnt  = sysblk.kacnt;
         dev->commadpt->lnctl=COMMADPT_LNCTL_BSC;
         dev->commadpt->term=COMMADPT_TERM_TTY;
         dev->commadpt->uctrans=FALSE;
@@ -2316,6 +2331,30 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                     WRMSG(HHC01013, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,res.text);
                     dev->commadpt->dialin=0;
                     dev->commadpt->dialout=0;
+                    break;
+                case COMMADPT_KW_KA:
+                    if(strcasecmp(res.text,"no")==0)
+                    {
+                        dev->commadpt->kaidle=0;
+                        dev->commadpt->kaintv=0;
+                        dev->commadpt->kacnt=0;
+                    }
+                    else
+                    {
+                        int idle=-1,intv=-1,cnt=-1;
+                        if (parse_conkpalv(res.text,&idle,&intv,&cnt)==0
+                            || (idle==0 && intv==0 && cnt==0))
+                        {
+                            dev->commadpt->kaidle = idle;
+                            dev->commadpt->kaintv = intv;
+                            dev->commadpt->kacnt  = cnt;
+                        }
+                        else
+                        {
+                            msg013e(dev,"KA",res.text);
+                            errcnt++;
+                        }
+                    }
                     break;
                 default:
                     break;

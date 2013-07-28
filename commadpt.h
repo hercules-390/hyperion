@@ -32,6 +32,10 @@ struct COMMADPT
     int  rto;                   /* Read Time-Out                            */
     int  pto;                   /* Poll Time-Out                            */
     int  eto;                   /* Enable Time-Out                          */
+    int  kaidle;                /* Keepalive idle seconds                   */
+    int  kaintv;                /* Keepalive probe interval                 */
+    int  kacnt;                 /* Keepalive probe count                    */
+#define COMM_KEEPALIVE(ca)      ((ca)->kaidle && (ca)->kaintv && (ca)->kacnt)
     TID  cthread;               /* Thread used to control the socket        */
     BYTE curpending;            /* Current pending operation                */
     U16  lport;                 /* Local listening port                     */
