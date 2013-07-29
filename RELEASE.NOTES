@@ -1,5 +1,14 @@
 -------------------------------------------------------------------------------
 
+
+                     **  PROGRAMMING NOTE  **
+
+
+  Don't forget to update "hercnot.html" with the below information too!
+
+
+-------------------------------------------------------------------------------
+
                      Version 4.0 RELEASE NOTES
 
 
@@ -83,29 +92,23 @@
 
   If the first word following 'sh' is "startgui", then the "ShellExecute"
   API is used to start the requested program rather than the 'system()'
-  API as otherwise. This is to address an issue related to running Hercules
-  via the HercGUI graphical front end wherein programs started via the .RC
-  file would cause HercGUI to hang at PowerOff until all programs started
-  by Hercules (via the .RC file or panel command-line) were first closed.
+  API as otherwise.
 
-  If the program you wish to invoke via the 'sh' command is a command-line
-  program (that thus uses stdio to read from stdin and write to stdout)
-  then "startgui" should NOT be used. Instead, simply start the program
-  as before (e.g. "sh cmd /c myprog myargs...").
+  The "startgui" keyword must always be used to start any Windows program
+  that is not a command-line program. Hercules, itself being a command-line
+  program, monitors the 'stderr' and 'stdout' pipes so it can log messages
+  received from either pipe directly to the Hercules console log. Programs
+  such as notepad however, because they are not command-line programs, do
+  not use stdout/stderr thus causing Hercules to hang if "start" is used
+  instead.
 
-  If the application you wish to start is a normal Windows GUI application
-  however, then the "startgui" keyword should be used instead. For example,
-  to automatically start the Vista 3270 terminal emulator from your .RC file,
-  use: "sh  startgui  D:\Vista32\Vista32.exe  Hercules.ses".
-
-  Again, this is only for starting Windows GUI programs and thus does not
-  impact non-GUI (command-line) programs nor, obviously, non-MSVC builds
-  of Hercules nor when Hercules is run via the command-line (in non-GUI mode).
-  This is only for the Window MSVC build of Hercules and only when Hercules
-  is started via HercGUI and only when starting a Windows GUI program via
-  the 'sh' command either via the panel command-line or the .RC file. (Note:
-  the panel command-line also includes commands entered via the http server
-  interface as well)
+  This rule applies regardless of how Hercules itself is started (i.e. via
+  HercGUI or directly via the command-line) and regardless of whether the
+  "start" command is wrapped in a batch file or not. That is to say, using
+  the Hercules command "sh batchfile foobar" to start your batch file which
+  then does "start notepad %1" still causes Hercules to hang until notepad
+  first exits. Instead, you should ask Hercules to "sh startgui batchfile",
+  and let the batchfile start notepad however it wants.
 
 
 * Real SCSI tape drives used with Hercules must provide a certain minimum set

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 3: Release Notes and Known Issues</TITLE>
+Hercules Release Notes and Known Issues</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 <style type="text/css">
   dt {font-family: Arial; font-weight: bold; font-style: rounded;}
@@ -9,8 +9,243 @@ Hercules Version 3: Release Notes and Known Issues</TITLE>
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 3: Release Notes and Known Issues</h1>
+<h1>Hercules Release Notes and Known Issues</h1>
 <hr noshade>
+
+
+
+
+<h2>Release notes for release 4.00</h2>
+<p>
+<dl>
+  <dt>Minimum supported Windows platform is now Windows XP
+  <dd>
+  <p>
+    The new minimum supported Microsoft Windows platform is now Windows XP or
+    greater. Windows 98, Windows NT and Windows 2000 are no longer supported.
+  </p>
+
+  <dt>"MAXCPU" and "NUMCPU" statements
+  <dd>
+  <p>
+    The combination of NUMCPU and MAXCPU controls the behavior of how many
+    CPU engines will be configured online upon startup and how many can be
+    configured online later. In previous versions this was controlled via
+    the NUMCPU statement and the compile-time constant 'MAX_CPU_ENGINES'.
+    </p><p>
+    For compatibility with previous versions if MAXCPU is not specified its
+    value defaults to NUMCPU. If neither is specified it defaults to 1.
+  </p>
+
+  <dt>Configuration file statements and panel commands handled identically
+  <dd>
+  <p>
+    Most configuration file statements are now available as and processed as
+    panel commands. Most valid configuration file statements may now also be
+    entered as a panel command. Most panel commands are now also allowed as
+    configuration file statements. See the documentation for full details.
+  </p>
+</dl>
+
+
+<hr>
+<h2>Release notes for release 3.06</h2>
+<p>
+<dl>
+  <dt>Tape "AUTOMOUNT" support
+  <dd>
+  <p>
+    Starting with Hercules version 3.06 a new AUTOMOUNT option is available
+    that allows guest operating systems to directly mount, unmount and query
+    tape device filenames for themselves, without any intervention on the
+    part of the Hercules operator.
+    </p><p>
+    Automount support is enabled via the AUTOMOUNT configuration file statement.
+    </p><p>
+    An example guest automount program for VSE called "TMOUNT" is provided in
+    the util subdirectory of the Hercules source code distribution.
+    </p><p>
+    Briefly, the 0x4B (Set Diagnose) CCW is used to mount (or unmount) a file
+    onto a tape drive, and the 0xE4 (Sense Id) CCW opcode is used to query the
+    name of the currently mounted file.
+    </p><p>
+    For mounts, the 0x4B CCW specifies the filename of the file to be mounted
+    onto the drive. The file MUST reside in the specified AUTOMOUNT directory
+    or the automount request will be rejected. To unmount the currently mounted
+    file, simply do a mount of the special filename "OFFLINE".
+    </p><p>
+    To query the name of the currently mounted file, the 0xE4 CCW is used. Note
+    however that the 0xE4 (Sense Id) CCW opcode cannot be used by itself since
+    the drive may also already natively support the Sense Id CCW opcode. Instead,
+    it must be preceded by (command-chained from) a 0x4B CCW with a data transfer
+    length of one byte. The following 0xE4 command is the one that then specifies
+    the i/o buffer and buffer length of where the query function is to place the
+    device's currently mounted host filename.
+    </p><p>
+    In summary:
+    </p><pre>
+        MOUNT:      X'4B', filename, X'20', length
+
+        UNMOUNT:    (same thing but use filename "OFFLINE" instead)
+
+        QUERY:      X'4B', buffer, X'60', 1
+                    X'E4', buffer, X'20', buffersize</pre>
+    <p>
+    Again please refer to the provided TMOUNT program for a simple example
+    of how automount support might be implmented on a guest operating system.
+  </p>
+</dl>
+
+
+
+
+<hr>
+<h2>Release notes for release 3.05</h2>
+<p>
+<dl>
+  <dt>Use 'startgui' if starting GUI program via 'sh' command
+  <dd>
+  <p>
+    The 'conspawn' utility used to process 'sh' commands now recognizes a
+    specially designed keyword "startgui" to accomodate automatic starting
+    of Windows GUI applications via the .RC file or panel command-line.
+    </p><p>
+    If the first word following 'sh' is "startgui", then the "ShellExecute"
+    API is used to start the requested program rather than the 'system()'
+    API as otherwise.
+    </p><p>
+    The "startgui" keyword must always be used to start any Windows program
+    that is not a command-line program. Hercules, itself being a command-line
+    program, monitors the 'stderr' and 'stdout' pipes so it can log messages
+    received from either pipe directly to the Hercules console log. Programs
+    such as notepad however, because they are not command-line programs, do
+    not use stdout/stderr thus causing Hercules to hang if "start" is used
+    instead.
+    </p><p>
+    This rule applies regardless of how Hercules itself is started (i.e. via
+    HercGUI or directly via the command-line) and regardless of whether the
+    "start" command is wrapped in a batch file or not. That is to say, using
+    the Hercules command "sh batchfile foobar" to start your batch file which
+    then does "start notepad %1" still causes Hercules to hang until notepad
+    first exits. Instead, you should ask Hercules to "sh startgui batchfile",
+    and let the batchfile start notepad however it wants.
+  </p>
+
+  <dt>Real SCSI tape drive support
+  <dd>
+  <p>
+    Real SCSI tape drives used with Hercules must provide a certain minimum set
+    is "IBM compatible" support in their SCSI command set/behavior in order to
+    work properly with Hercules. Furthermore, the Hercules device-type used on
+    your device statement in your Hercules configuration file should match the
+    the level of support/behavior that they provide.
+    </p><p>
+    For example, all SCSI tape drives used with Hercules must provide the ability
+    to set variable-length blocks as well as long erase-gaps (long erase-gaps
+    allows new data to be appended to the end of existing data without having to
+    write a tape-mark to separate the new data from the old existing data first).
+    </p><p>
+    Another example would be using a model of SCSI tape drive that happens to
+    report physical block-id values in a format different from the way real IBM
+    mainframe tape drives report them. 3480/3490 tape drives for example report
+    their block-ids (used in Read Block Id and Locate CCWs) in a very specific
+    format wherein bits 1-7 of the high-order byte of the reported 4-byte block-
+    id indicates the tape's physical "segment" location of where the lower 22-
+    bit block number is physically located on the tape. (The block-id segment
+    is used to allow the tape drive to quickly position itself to the approximate
+    location where the desired block acually resides on the tape and thus allows
+    high-speed positioning for the Locate CCW).
+    </p><p>
+    If the model of SCSI tape drive you are actually using with Hercules does not
+    use this same block-id format however, then it cannot be used with Hercules
+    as a 3480 or 3490 model tape drive with specially defined options.
+    </p><p>
+    If the SCSI tape drive you are using reports its block-ids using a 32-bit
+    block-id value (the same way a 3590 model tape drive does), then similarly,
+    it should be defined to Hercules as a model 3590 device-type as well (since
+    that is how it is behaving with respect the format of the returned blockid
+    values). It you wish to define it in Hercules as a model 3480 or 3490, then
+    you will need to use specially defined options before it will work properly
+    as the model drive you wish it to emulate.
+    </p><p>
+    With all that being said, it should be noted that PARTIAL support for 3590
+    device emulation is possible with judicious use the aforementioned special
+    options, but full/complete 3590 support is unlikely due to lack of publicly
+    available documentation. Details regarding 3590 CCW handling is restricted 
+    (confidential) IBM proprietary information, and is not normally available
+    outside of IBM. Not long ago IBM was required by US law to publish such
+    information, but unfortunately for Hercules, such is no longer the case.
+    </p><p>
+    For further information regarding use of SCSI attached tape drives with
+    Hercules and their associated specially defined options, please refer to
+    the section on SCSI tape drives in the Hercules's Device Configuration
+    documentation.
+  </p>
+
+  <dt>Internal thread priorities changed on Windows for platform consistency
+  <dd>
+  <p>
+    In order to ensure proper functioning of the TOD clock with older versions
+    of guest operating systems, the default values of Hercules's internal thread
+    priorities for the Windows version of Hercules were changed to be identical
+    to those used by all other supported platforms. Originally, the default
+    thread priority values for the Windows version of Hercules were:
+    </p><pre>
+              ***  3.04 (and prior) Default Priorities  ***
+
+              Thread    Priority           Meaning
+              -------   --------   ------------------------
+              HERCPRIO     0        Normal Process priority
+
+              DEVPRIO     -8        Above Normal  Thread priority
+              TODPRIO      0        Normal        Thread priority
+              CPUPRIO      0        Normal        Thread priority</pre>
+    <p>
+    which caused acceptable performance/functioning on most, but not all, guest
+    operating systems. Beginning with version 3.05 however, the prioriries now
+    default to:
+    </p><pre>
+              ***  3.05 (and later) Default  Priorities  ***
+
+              Thread    Priority           Meaning
+              -------   --------   ------------------------
+              HERCPRIO     0        Normal Process priority
+
+              TODPRIO    -20        Time Critical  Thread priority
+              DEVPRIO      8        Below Normal   Thread priority
+              CPUPRIO     15        Lowest         Thread priority</pre>
+    <p>
+    which may on more modern guest operating systems (which handle the TOD clock
+    differently than do older less sophticated versions) cause a slight decrease
+    in overall performance. If such is the case, the original default priorities
+    (and thus the original behavior) can be obtained via addition of appropriate
+    HERCPRIO, TODPRIO, DEVPRIO and CPUPRIO control file statements with values
+    identical to the original version 3.04 default values.
+  </p>
+
+  <dt>Configuration file usability enhancements and Automatic Operator facility
+  <dd>
+  <p>
+    Additional configuration file usability enhancements have been implemented
+    in the form of a new 'INCLUDE' (and associated 'IGNORE') statement, allowing
+    configuration files to "include" statements from a different named file.
+    </p><p>
+    Additonally, a new "enhanced" symbolic substitution syntax is now also
+    supported. Refer to the Hercules "Configuration File" documentation for
+    further information and details.
+    </p><p>
+    A rather nifty "Automatic Operator" facility has also been implemented in
+    the current release as well. While not exactly a "configuration file
+    usability enhancement", it is nevertheless something we hope might prove
+    to be more useful/helpful to our many users. See the "README.HAO" document
+    for more information.
+  </p>
+</dl>
+
+
+
+
+<hr>
 <h2>Release notes for release 3.03</h2>
 <p>Release date: 20 December 2005
 <dl>
@@ -23,6 +258,11 @@ hercules console. Commands are sent to the console by means of a command charact
 <dd>
 <p>Starting from release 3.03 the glibcrypt library is no longer needed.</p>
 </dl>
+
+
+
+
+<hr>
 <h2>Release notes for release 3.02</h2>
 <p>Release date: 11 December 2004
 <dl>
@@ -33,6 +273,11 @@ certain versions of operating systems running in ARCHLVL=2 mode without
 the so-called "Driver 55" fixes. To avoid such problems, specify
 <code>ASN_AND_LX_REUSE DISABLE</code> in the configuration file. </p>
 </dl>
+
+
+
+
+<hr>
 <h2>Release notes for release 3.01</h2>
 <p>Release date: 30 November 2003
 <dl>
@@ -78,6 +323,11 @@ device for you. Starting with Hercules version 3.01 however, you now need
 to define BOTH devices, just like you did with versions prior to 3.00.
 Once again, starting with version 3.01, you **MUST** define BOTH DEVICES.</p>
 </dl>
+
+
+
+
+<hr>
 <h2>Release notes for release 3.00</h2>
 <p>Release date: 3 October 2003
 <dl>
@@ -168,6 +418,10 @@ the command</p>
 <p><code>export LD_ASSUME_KERNEL=2.4.1</code></p>
 <p>before starting Hercules.</p>
 </dl>
+
+
+
+
 <p><center><hr width=15% noshade></center>
 <p>
 If you have a question about Hercules, see the
