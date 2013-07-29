@@ -1252,11 +1252,32 @@
   "prepared to wait a long time.\n"
 
 #define sh_cmd_desc             "Shell command"
+#if defined( _MSVC_ )
+#define sh_cmd_help             \
+                                \
+  "Format: \"sh command [args...]\" where 'command' is any valid shell\n"        \
+  "command or the special command 'startgui'. The entered command and any\n"     \
+  "arguments are passed as-is to the shell for processing and the results\n"     \
+  "are displayed on the Hercules console.\n\n"                                   \
+                                                                                 \
+  "The special startgui command MUST be used if the command being started\n"     \
+  "either directly or indirectly starts a Windows graphical user interface\n"    \
+  "(i.e. non-command-line) program such as notepad. Failure to use startgui\n"   \
+  "in such cases will hang Hercules until you close/exit notepad. Note that\n"   \
+  "starting a batch file which starts notepad still requires using startgui.\n"  \
+  "If 'foo.bat' does: \"start notepad\", then doing \"sh foo.bat\" will hang\n"   \
+  "Hercules until notepad exits just as doing \"sh start foo.bat\" will too.\n"  \
+  "Use startgui to invoke foo.bat instead: \"sh startgui foo.bat\".\n"
+
+#else /* !defined( _MSVC ) */
+
 #define sh_cmd_help             \
                                 \
   "Format: \"sh command [args...]\" where 'command' is any valid shell\n"        \
   "command. The entered command and any arguments are passed as-is to the\n"     \
-  "shell for processing and the results are displayed on the console.\n"
+  "shell for processing and the results are displayed on the Hercules console.\n"
+
+#endif /* defined( _MSVC ) */
 
 #define showdvol1_cmd_desc      "Enable showing of dasd volsers in device list"
 #define showdvol1_cmd_help      \
