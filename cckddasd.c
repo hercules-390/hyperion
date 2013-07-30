@@ -5388,10 +5388,7 @@ void cckd_command_help()
     int i;
     char *help[] = {
                     "Command parameters for cckd:"
-                    ,"  help          Display help message"
-                    ,"  stats         Display cckd statistics"
-                    ,"  opts          Display cckd options"
-                    ,"  comp=<n>      Override compression                 (-1 ... 2)"
+                    ,"  comp=<n>      Override compression                 (-1,0,1,2)"
                     ,"  compparm=<n>  Override compression parm            (-1 ... 9)"
                     ,"  ra=<n>        Set number readahead threads         ( 1 ... 9)"
                     ,"  raq=<n>       Set readahead queue size             ( 0 .. 16)"
@@ -5399,12 +5396,15 @@ void cckd_command_help()
                     ,"  wr=<n>        Set number writer threads            ( 1 ... 9)"
                     ,"  gcint=<n>     Set garbage collector interval (sec) ( 1 .. 60)"
                     ,"  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
-                    ,"  gcstart       Start garbage collector"
-                    ,"  nostress=<n>  1=Disable stress writes"
                     ,"  freepend=<n>  Set free pending cycles              (-1 ... 4)"
-                    ,"  fsync=<n>     1=Enable fsync"
-                    ,"  linuxnull=<n> 1=Check for null linux tracks"
-                    ,"  trace=<n>     Set trace table size            ( 0 ... 200000)"
+                    ,"  trace=<n>     Set trace table size             (0 ... 200000)"
+                    ,"  gcstart=<n>   Start garbage collector                (0 or 1)"
+                    ,"  nostress=<n>  Disable stress writes                  (0 or 1)"
+                    ,"  fsync=<n>     Enable fsync                           (0 or 1)"
+                    ,"  linuxnull=<n> Check for null linux tracks            (0 or 1)"
+                    ,"  opts          Display cckd options"
+                    ,"  stats         Display cckd statistics"
+                    ,"  help          Display help message"
                     ,NULL };
 
     for( i = 0; help[i] != NULL; i++ )
@@ -5497,7 +5497,7 @@ void cckd_command_debug()
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_command(char *op, int cmd)
 {
-char  *kw, *p, c = '\0', buf[256];
+char  *kw, *p, c, buf[256];
 int   val, opts = 0;
 int   rc;
 
@@ -5527,9 +5527,9 @@ int   rc;
         if ((p = strchr (kw, '=')))
         {
             *p++ = '\0';
-            sscanf (p, "%d%c", &val, &c);
+            rc = sscanf (p, "%d%c", &val, &c);
         }
-        else val = -77;
+        else rc = 0;
 
         /* Parse the keyword */
         if ( CMD(kw,help,4 ) )
@@ -5552,9 +5552,14 @@ int   rc;
             if (!cmd) return 0;
             cckd_command_debug();
         }
+        else if (rc != 1)
+        {
+            WRMSG(HHC00348, "E", val, kw);
+            return -1;
+        }
         else if ( CMD(kw,comp,4) )
         {
-            if (val < -1 || ((val & CCKD_COMPRESS_MASK) & ~cckdblk.comps) || c != '\0')
+            if (val < -1 || (val > 0 && (val & ~cckdblk.comps)))
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5567,7 +5572,7 @@ int   rc;
         }
         else if ( CMD(kw,compparm,8) )
         {
-            if (val < -1 || val > 9 || c != '\0')
+            if (val < -1 || val > 9)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5580,7 +5585,7 @@ int   rc;
         }
         else if ( CMD(kw,ra,2) )
         {
-            if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
+            if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5593,7 +5598,7 @@ int   rc;
         }
         else if ( CMD(kw,raq,3) )
         {
-            if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
+            if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5606,7 +5611,7 @@ int   rc;
         }
         else if ( CMD(kw,rat,3) )
         {
-            if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
+            if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5619,7 +5624,7 @@ int   rc;
         }
         else if ( CMD(kw,wr,2) )
         {
-            if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
+            if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5632,7 +5637,7 @@ int   rc;
         }
         else if ( CMD(kw,gcint,5) )
         {
-            if (val < 1 || val > 60 || c != '\0')
+            if (val < 1 || val > 60)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5645,7 +5650,7 @@ int   rc;
         }
         else if ( CMD(kw,gcparm,6) )
         {
-            if (val < -8 || val > 8 || c != '\0')
+            if (val < -8 || val > 8)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5658,7 +5663,7 @@ int   rc;
         }
         else if ( CMD(kw,nostress,8) )
         {
-            if (val < 0 || val > 1 || c != '\0')
+            if (val < 0 || val > 1)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5671,7 +5676,7 @@ int   rc;
         }
         else if ( CMD(kw,freepend,8) )
         {
-            if (val < -1 || val > CCKD_MAX_FREEPEND || c != '\0')
+            if (val < -1 || val > CCKD_MAX_FREEPEND)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5684,7 +5689,7 @@ int   rc;
         }
         else if ( CMD(kw,fsync,5) )
         {
-            if (val < 0 || val > 1 || c != '\0')
+            if (val < 0 || val > 1)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5697,7 +5702,7 @@ int   rc;
         }
         else if ( CMD(kw,trace,5) )
         {
-            if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
+            if (val < 0 || val > CCKD_MAX_TRACE)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5738,7 +5743,7 @@ int   rc;
         }
         else if ( CMD(kw,linuxnull,5) )
         {
-            if (val < 0 || val > 1 || c != '\0')
+            if (val < 0 || val > 1)
             {
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
@@ -5751,30 +5756,38 @@ int   rc;
         }
         else if ( CMD(kw,gcstart,7) )
         {
-            DEVBLK *dev;
-            CCKDDASD_EXT *cckd;
-            TID tid;
-            int flag = 0;
-
-            cckd_lock_devchain(0);
-            for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
+            if (val < 0 || val > 1)
             {
-                cckd = dev->cckd_ext;
-                obtain_lock (&cckd->filelock);
-                if (cckd->cdevhdr[cckd->sfn].free_total)
-                {
-                    cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
-                    cckd_write_chdr (dev);
-                    flag = 1;
-                }
-                release_lock (&cckd->filelock);
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
             }
-            cckd_unlock_devchain();
-            if (flag && cckdblk.gcs < cckdblk.gcmax)
+            else if (val == 1)
             {
-                rc = create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
-                if (rc)
-                    WRMSG(HHC00102, "E", strerror(rc));
+                DEVBLK *dev;
+                CCKDDASD_EXT *cckd;
+                TID tid;
+                int flag = 0;
+
+                cckd_lock_devchain(0);
+                for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
+                {
+                    cckd = dev->cckd_ext;
+                    obtain_lock (&cckd->filelock);
+                    if (cckd->cdevhdr[cckd->sfn].free_total)
+                    {
+                        cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
+                        cckd_write_chdr (dev);
+                        flag = 1;
+                    }
+                    release_lock (&cckd->filelock);
+                }
+                cckd_unlock_devchain();
+                if (flag && cckdblk.gcs < cckdblk.gcmax)
+                {
+                    rc = create_thread (&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+                    if (rc)
+                        WRMSG(HHC00102, "E", strerror(rc));
+                }
             }
         }
         else
