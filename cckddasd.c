@@ -5564,10 +5564,18 @@ int   rc;
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
-            else
+            else switch (val)
             {
+            case -1:
+            case CCKD_COMPRESS_NONE:
+            case CCKD_COMPRESS_ZLIB:
+            case CCKD_COMPRESS_BZIP2:
                 cckdblk.comp = val < 0 ? 0xff : val;
                 opts = 1;
+                break;
+            default: /* unsupported algorithm */
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
             }
         }
         else if ( CMD(kw,compparm,8) )
