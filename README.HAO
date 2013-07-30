@@ -1,6 +1,6 @@
 
 
-                     Hercules Automatic Operator
+                     HERCULES AUTOMATIC OPERATOR
 
 
 The Hercules Automatic Operator (HAO) feature is a facility that allows one
@@ -20,17 +20,18 @@ is only a HERCULES automatic operator and NOT a "VSE", "MVS", "VM", etc,
 automatic operator!
 
 
-                           Defining a Rule
+
+                           DEFINING A RULE
 
 
 To define a HAO rule, enter the command:
 
-   hao <tgt>
+    hao  <tgt>
 
 to define the rule's "target" match pattern (a simple regular expression),
 followed by the command:
 
-   hao <cmd>
+    hao  <cmd>
 
 to define the rule's associated panel-command.
 
@@ -48,8 +49,54 @@ any text string one desires. It doesn't have to be a valid Hercules command,
 but it makes infinitely more sense if it is one).
 
 
-                     Other commands and limitations
 
+                SUBSTITUTING SUBSTRINGS IN THE COMMAND
+
+
+Substrings may be substituted into a rule's associated panel-command <cmd>
+by means of the special variables $1, $2, etc, which will be replaced by the
+values of "capturing groups" in the match pattern. A capturing group is a
+part of the regular expression enclosed in parentheses which is matched with
+text in the target message. In this way, commands may be constructed which
+contain substrings extracted from the message which triggered the command.
+
+The following special variables are recognized:
+
+    $1 to $9      the text which matched the 1st to 9th capturing group
+                  in the target regular expression.
+    $`            the text preceding the regular expression match.
+    $'            the text following the regular expression match.
+    $$            replaced by a single dollar sign.
+
+Note that substitution of a $n variable does not occur if there are fewer
+than n capturing groups in the regular expression.
+
+As an example, the rule below issues the command 'i 001F' in response to the
+message HHCTE014I 3270 device 001F client 127.0.0.1 connection reset:
+
+    hao tgt HHCTE014I 3270 device ([0-9A-F]{3,4})
+    hao cmd i $1
+
+Another example, shown below, illustrates how the dot matrix display of a
+3480 tape unit might be used to implement an automatic tape library:
+
+    hao tgt HHCTA010I ([0-9A-F]{4}): Now Displays: (?:".{8}" / )?"M([A-Z0-9]{1,6})\s*S"
+    hao cmd devinit $1 /u/tapes/$2.awstape
+
+
+
+                     OTHER COMMANDS AND LIMITATIONS
+
+
+ALL defined rules are checked for a match each time Hercules issues a message.
+There is no way to specify "stop processing subsequent rules". If a message is
+issued that matches two or more rules, each associated command is then issued
+in sequence.
+
+The current implementation limits the total number of defined rules to 64. If
+you need to define more than 64 rules you will either have to build Hercules
+for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or
+else beg one of the Hercules developers to please do it for you.
 
 To delete a fully or partially defined HAO rule, first use the 'hao list'
 command to list all of the defined (or partially defined) rules, and then use
@@ -58,33 +105,9 @@ the 'hao del <nnn>' command to delete the specific rule identified by 'nnn'.
 by their numeric value). Optionally, one may delete ALL defined or partially
 defined rules by issuing the command 'hao clear'.
 
-The current implementation limits the total number of defined rules to 10. If
-you need to define more than 10 rules you will either have to build Hercules
-for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or
-else beg one of the Hercules developers to please do it for you.
-
-Note that there is currently no way to define a command whose arguments varies
-based on actual message text. That is to say, there is currently no way to say
-
-   "Reply with the command 'devinit <cuu> filename'
-   in response to message text 'HHCXXnnnI Device 'cuu'
-   intervention required.' where 'cuu' is whatever cuu
-    was identified in the message."
-
-The HAO is *not* that sophisticated (yet). Only simple plain-text commands may
-be defined and issued. No automatic substitution is done based on message text
-(although normal 'DEFSYM' symbol substitution *is* supported however, as that
-is a normal panel-command feature supported separately from the HAO). This may
-possibly change in the future however, depending on user need/demand.
-
-ALL defined rules are checked for a match each time Hercules issues a message.
-There is no way to specify "stop processing subsequent rules". If a message is
-issued that matches two or more rules, each associated command is then issued
-in sequence. Thus the advice to choose your rules' target patterns carefully
-very much applies here.
 
 
-                      Giving credit where credit is due
+                      GIVING CREDIT WHERE CREDIT IS DUE
 
 
 The Hercules Automatic Operator facility was designed eons ago (or so it seems
@@ -94,4 +117,4 @@ in the current release of Hercules. If you like it and find it to be useful,
 I think it'd be real nice if you'd let Bernard know that. Thanks.
 
 -- Fish
-Sep 25, 2006
+July 2013
