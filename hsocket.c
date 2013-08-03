@@ -40,46 +40,42 @@ OUTPUTS:
 
 *************************************************************************/
 
-DLL_EXPORT int read_socket(int fd, void *_ptr, int nbytes)
+DLL_EXPORT
+int read_socket( int fd, void *_ptr, int nbytes )
 {
-int   nleft, nread;
 char  *ptr;
+int   nleft, nread;
 
-nleft = nbytes;
-ptr=_ptr;
-while (nleft > 0)
-{
+    ptr   = _ptr;               /* point to input buffer             */
+    nleft = nbytes;             /* number of bytes to be read        */
 
+    while (nleft > 0)           /* while room in i/p buffer remains  */
+    {
 #ifdef _MSVC_
-   nread = recv(fd, ptr, nleft, 0);
-   if ((nread == SOCKET_ERROR) || (nread < 0))
-      {
-         nread = -1;
-         break;  /* error, return < 0 */
-      }
-   if (nread == 0)
-         break;
+        nread = recv( fd, ptr, nleft, 0 );
 #else
-   nread  = read(fd, ptr, nleft);
-   if (nread < 0)
-      return(nread);  /* error, return < 0 */
-   else
-      if (nread == 0)  /* eof */
-         break;
+        nread = read( fd, ptr, nleft );
 #endif
+        if (nread < 0)
+            return nread;       /* error, return < 0 */
+        else
+        if (nread == 0)         /* EOF; we read all we could */
+            break;
 
-   nleft -= nread;
-   ptr   += nread;
+        ptr   += nread;         /* bump to next i/p buffer location  */
+        nleft -= nread;         /* adjust remaining bytes to be read */
 
-}  /* end of do while */
+    } /* end of do while */
 
- /*  if (nleft != 0)
-      logmsg (_("BOB123 read_socket:  Read of %d bytes requested, %d bytes actually read\n"),
-                    nbytes, nbytes - nleft);*/
+#if 0 // (who's "BOB"?)
+    if (nleft != 0)
+        logmsg (_("BOB123 read_socket: Read of %d bytes requested, %d bytes actually read\n"),
+            nbytes, nbytes - nleft);
+#endif // BOB?!
 
-return (nbytes - nleft);
+    return (nbytes - nleft);    /* return number of bytes read */
 
-}  /* end of read_socket */
+} /* end of read_socket */
 
 
 /************************************************************************
@@ -114,34 +110,31 @@ OUTPUTS:
  * Use in place of write() when fd is a stream socket.
  */
 
-DLL_EXPORT int write_socket(int fd, const void *_ptr, int nbytes)
+DLL_EXPORT
+int write_socket( int fd, const void *_ptr, int nbytes )
 {
-int  nleft, nwritten;
 const char *ptr;
+int  nleft, nwritten;
 
-nleft = nbytes;
-ptr=_ptr;
-while (nleft > 0)
-{
+    ptr   = _ptr;               /* point to data to be written       */
+    nleft = nbytes;             /* number of bytes to be written     */
 
+    while (nleft > 0)           /* while bytes remain to be written  */
+    {
 #ifdef _MSVC_
-   nwritten = send(fd, ptr, nleft, 0);
-   if (nwritten <= 0)
-      {
-         return(nwritten);      /* error */
-      }
+        nwritten = send( fd, ptr, nleft, 0 );
 #else
-   nwritten = write(fd, ptr, nleft);
-   if (nwritten <= 0)
-      return(nwritten);      /* error */
+        nwritten = write( fd, ptr, nleft );
 #endif
+        if (nwritten <= 0)
+            return nwritten;    /* error, return <= 0 */
 
+        ptr   += nwritten;      /* bump to next o/p buffer location  */
+        nleft -= nwritten;      /* fix remaining bytes to be written */
 
-   nleft -= nwritten;
-   ptr   += nwritten;
-}  /* end of do while */
+    } /* end of do while */
 
-return(nbytes - nleft);
+    return (nbytes - nleft);    /* return number of bytes written */
 
 } /* end of write_socket */
 
@@ -158,7 +151,7 @@ return(nbytes - nleft);
 
 *************************************************************************/
 
-DLL_EXPORT int disable_nagle(int fd)
+DLL_EXPORT int disable_nagle( int fd )
 {
 static const int nodelay = 1;
 

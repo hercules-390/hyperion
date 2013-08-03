@@ -526,12 +526,12 @@ main( int argc, char *argv[] )
             Print_Dataset( rc, fileno );
         }
 
-    if( opts & O_SLANAL_OUT )
+        if( opts & O_SLANAL_OUT )
         {
-        gLength = rc;
+            gLength = rc;
 
             if ( gLength == 80 )
-    {
+            {
                 if ( 0
                     || memcmp ( gStdLblBuffer, "HDR", 3 ) == 0
                     || memcmp ( gStdLblBuffer, "EOF", 3 ) == 0
@@ -569,9 +569,7 @@ main( int argc, char *argv[] )
                     lResidue -= Print_Block_Data ( gLenPrtd );
                 }
             }
-
         }
-
     }
 
     if( opts & O_FILES )

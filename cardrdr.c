@@ -17,11 +17,54 @@
 #include "devtype.h"
 #include "sockdev.h"
 
+
+/*-------------------------------------------------------------------*/
+/* Debugging                                                         */
+/*-------------------------------------------------------------------*/
+
+//#define ENABLE_RDR_DEBUG   1    // 1:enable, 0:disable, #undef:default
+//#define RDR_PTT_TRACING         // #define to enable PTT debug tracing
+
+
+
+/*-------------------------------------------------------------------*/
+/* Activate debugging when requested                                 */
+/*-------------------------------------------------------------------*/
+
+ /* (enable debugging if DEBUG build or specifically requested) */
+#if (!defined(ENABLE_RDR_DEBUG) && defined(DEBUG)) ||  \
+    ( defined(ENABLE_RDR_DEBUG) && ENABLE_RDR_DEBUG)
+  #define RDR_DEBUG
+#endif
+
+/* (activate TRACE/VERIFY statements if debugging is enabled) */
+#if defined(RDR_DEBUG)
+  #define  ENABLE_TRACING_STMTS   1
+  #include "dbgtrace.h"
+  #define  NO_RDR_OPTIMIZE
+  #define  RDR_PTT_TRACING
+#endif
+
+/* (disable optimizations if debugging) */
+#if defined( _MSVC_ ) && defined( NO_RDR_OPTIMIZE )
+  #pragma optimize( "", off )   // disable optimizations for reliable breakpoints
+#endif
+
+/* (enable PTT tracing if requested) */
+#if defined( RDR_PTT_TRACING )
+  #define PTT_RDR_TRACE(   _string, _tr1, _tr2, _tr3 )  \
+          PTT( PTT_CL_INF, _string, _tr1, _tr2, _tr3 )
+#else
+  #define PTT_RDR_TRACE(...)       __noop()
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Hercules Dynamic Loader                                           */
+/*-------------------------------------------------------------------*/
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
-
 
 /*-------------------------------------------------------------------*/
 /* ISW 2003/03/07                                                    */
@@ -292,7 +335,6 @@ int     attn = 0;
     }
 
     /* Set size of i/o buffer */
-
     dev->bufsize = CARD_SIZE;
 
     if (sockdev && dev->ascii)
@@ -623,21 +665,23 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 static int read_ascii ( DEVBLK *dev, BYTE *unitstat )
 {
-int     rc;                             /* Return code               */
-int     i;                              /* Array subscript           */
-BYTE    c = 0;                          /* Input character           */
+int   rc  = 0;                          /* Return code               */
+int   i   = 0;                          /* Array subscript           */
+BYTE  c   = 0;                          /* Input character           */
 
     /* Prefill the card image with EBCDIC blanks */
     memset (dev->buf, HEX40, CARD_SIZE);
 
     /* Read up to 80 bytes into device buffer */
-    for (i = 0; ; )
+    for (;;)
     {
         /* Read next byte of card image */
         if (dev->bs)
         {
+            /* Out of data? */
             if (dev->bufoff >= dev->buflen)
             {
+                // Read more data */
                 rc = read_socket( dev->fd, &dev->buf[ CARD_SIZE ],
                     TRAY_CARDS * CARD_SIZE );
                 if (rc <= 0)
@@ -649,10 +693,13 @@ BYTE    c = 0;                          /* Input character           */
                     c = dev->buf[ dev->bufoff++ ];
                 }
             }
-            else
+            else /* grab next byte of data */
+            {
+                rc = 0;
                 c = dev->buf[ dev->bufoff++ ];
+            }
         }
-        else
+        else /* grab next byte of data */
         {
             rc = getc(dev->fh);
             c = (BYTE)rc;
@@ -662,7 +709,8 @@ BYTE    c = 0;                          /* Input character           */
         if (rc == EOF || c == '\x1A')
         {
             /* End of record if there is any data in buffer */
-            if (i > 0) break;
+            if (i > 0)
+                break;
 
             /* Return unit exception or intervention required */
             if (dev->rdreof)
@@ -685,7 +733,7 @@ BYTE    c = 0;                          /* Input character           */
                 return -1;
             }
 
-            return -2;
+            return -2;  /* EOF */
         }
 
         /* Handle read error condition */
@@ -701,10 +749,12 @@ BYTE    c = 0;                          /* Input character           */
         }
 
         /* Ignore carriage return */
-        if (c == '\r') continue;
+        if (c == '\r')
+            continue;
 
         /* Line-feed indicates end of variable length record */
-        if (c == '\n') break;
+        if (c == '\n')
+            break;
 
         /* Expand tabs to spaces */
         if (c == '\t')
@@ -717,7 +767,8 @@ BYTE    c = 0;                          /* Input character           */
         if (i >= CARD_SIZE)
         {
             /* Ignore excess characters if trunc option specified */
-            if (dev->trunc) continue;
+            if (dev->trunc)
+                continue;
 
             WRMSG (HHC01207, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, CARD_SIZE);
 
@@ -730,7 +781,7 @@ BYTE    c = 0;                          /* Input character           */
         /* Convert character to EBCDIC and store in device buffer */
         dev->buf[i++] = host_to_guest(c);
 
-    } /* end for(i) */
+    } /* end for(;;) */
 
     return 0;
 } /* end function read_ascii */
@@ -779,16 +830,16 @@ int     num;                            /* Number of bytes to move   */
             {
                 /* Read ASCII or EBCDIC card image */
                 if (dev->ascii)
-                        rc = read_ascii (dev, unitstat);
+                    rc = read_ascii (dev, unitstat);
                 else
-                        rc = read_ebcdic (dev, unitstat);
+                    rc = read_ebcdic (dev, unitstat);
 
                 if (0
-                        || rc != -2
-                        || !dev->multifile
-                        || open_cardrdr (dev, unitstat) != 0
-                        )
-                break;
+                    || rc != -2
+                    || !dev->multifile
+                    || open_cardrdr (dev, unitstat) != 0
+                )
+                    break;
             }
 
             /* Return error status if read was unsuccessful */
@@ -960,4 +1011,8 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3505, cardrdr_device_hndinfo );
 }
 END_DEVICE_SECTION
+#endif
+
+#if defined( _MSVC_ ) && defined( NO_RDR_OPTIMIZE )
+  #pragma optimize( "", on )   // restore previous settings
 #endif

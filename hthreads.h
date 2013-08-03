@@ -27,7 +27,7 @@
 /*                         Misc.                                     */
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
-#define TIDPAT   "%8.8lX"   /* Pattern for displaying thread_id   */
+#define TIDPAT   "%8.8lX"      /* Pattern for displaying thread_id   */
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 
 /*-------------------------------------------------------------------*/
