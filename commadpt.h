@@ -99,6 +99,7 @@ struct COMMADPT
     u_int crlf_opt:1;           /* map 2741 NL to CRLF                      */
     u_int sendcr_opt:1;         /* send CR after input line received        */
     u_int binary_opt:1;         /* initiate telnet binary mode              */
+    u_int crlf2cr_opt:1;        /* Remove LF that immediately follow CR     */
     BYTE telnet_cmd;            /* telnet command received                  */
     BYTE byte_skip_table[256];  /* async: characters to suppress in output  */
     BYTE input_byte_skip_table[256];  /* async: characters to suppress in input  */
