@@ -699,6 +699,9 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
     ILOCK*       ilk;
     LIST_ENTRY*  ple;
 
+    if (sysblk.shutdown)
+        return;
+
     LockLocksList();
     for (ple = locklist.Flink; ple != &locklist; ple = ple->Flink)
     {
