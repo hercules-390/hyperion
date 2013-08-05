@@ -77,7 +77,8 @@ typedef struct _hethdr
 */
 typedef struct _hetb
 {
-    FILE           *fd;                 /* Tape file descriptor             */
+    FILE           *fh;                 /* Tape file handle                 */
+    int             fd;                 /* Tape file descriptor             */
     uint32_t        chksize;            /* Size of output chunks            */
     uint32_t        ublksize;           /* Current block compressed size    */
     uint32_t        cblksize;           /* Current block uncompressed size  */

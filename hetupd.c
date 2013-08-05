@@ -179,9 +179,9 @@ copytape( void )
             off_t curpos;
             /* Report progress every nnnK */
             if ( i_faketape )
-                curpos = ftell( s_fetb->fd );
+                curpos = ftell( s_fetb->fh );
             else
-                curpos = ftell( s_hetb->fd );
+                curpos = ftell( s_hetb->fh );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
