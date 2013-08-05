@@ -47,7 +47,7 @@ struct
     unsigned char flags;
     unsigned char recfm;
 }
-opts = 
+opts =
 {
     NULL,
     NULL,
@@ -216,7 +216,7 @@ bdw_length( const unsigned char *ptr  )
     unsigned int len;
 
     /*
-    || Extended format BDW? 
+    || Extended format BDW?
     */
     if( ptr[ 0 ] & 0x80 )
     {
@@ -293,7 +293,7 @@ int
 getrecord( )
 {
     int rc;
-    
+
     /*
     || Won't be null if we've been here before
     */
@@ -315,7 +315,7 @@ getrecord( )
         {
             return( rc );
         }
-    
+
         /*
         || For RECFM=V, bump index past BDW
         */
@@ -373,7 +373,7 @@ int
 get_sl( SLLABEL *lab )
 {
     int rc;
-    
+
     /*
     || Read a block
     */
@@ -413,7 +413,7 @@ getfile( FILE *outf )
     unsigned char *ptr;
     int fileno;
     int rc;
-    
+
     /*
     || Skip to the desired file
     */
@@ -439,9 +439,9 @@ getfile( FILE *outf )
             if( rc < 0 )
             {
                 char msgbuf[128];
-                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
+                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'",
                     opts.faketape ? "f" : "h",
-                    opts.fileno ); 
+                    opts.fileno );
                 WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
@@ -479,9 +479,9 @@ getfile( FILE *outf )
             if( rc < 0 )
             {
                 char msgbuf[128];
-                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'", 
+                MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'",
                     opts.faketape ? "f" : "h",
-                    opts.fileno ); 
+                    opts.fileno );
                 WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
@@ -501,8 +501,8 @@ getfile( FILE *outf )
         || Make the label more managable
         */
         sl_fmtlab( &fmt, &lab );
-        WRMSG( HHC02754, "E", fmt.slds1.dsid ); 
-    
+        WRMSG( HHC02754, "E", fmt.slds1.dsid );
+
         /*
         || Get the HDR2 label.
         */
@@ -512,7 +512,7 @@ getfile( FILE *outf )
             WRMSG( HHC02753, "E", "HDR2" );
             return( -1 );
         }
-    
+
         /*
         || Merge the DCB information
         */
@@ -551,9 +551,9 @@ getfile( FILE *outf )
                 off_t curpos;
                 /* Report progress every nnnK */
                 if ( opts.faketape )
-                    curpos = ftell( opts.fetb->fd ); 
+                    curpos = ftell( opts.fetb->fh );
                 else
-                    curpos = ftell( opts.hetb->fd );
+                    curpos = ftell( opts.hetb->fh );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
@@ -593,7 +593,7 @@ getfile( FILE *outf )
                     rc--;
                 }
             }
-            
+
             /*
             || Write the record out
             */
@@ -621,9 +621,9 @@ getfile( FILE *outf )
                 off_t curpos;
                 /* Report progress every nnnK */
                 if ( opts.faketape )
-                    curpos = ftell( opts.fetb->fd );
+                    curpos = ftell( opts.fetb->fh );
                 else
-                    curpos = ftell( opts.hetb->fd );
+                    curpos = ftell( opts.hetb->fh );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
@@ -758,7 +758,7 @@ main( int argc, char *argv[] )
 
     hostpath( pathname, argv[ optind ], sizeof(pathname) );
     opts.ifile = strdup( pathname );
-    if ( ( rc = (int)strlen( opts.ifile ) ) > 4 
+    if ( ( rc = (int)strlen( opts.ifile ) ) > 4
       && ( rc = strcasecmp( &opts.ifile[rc-4], ".fkt" ) ) == 0 )
     {
         opts.faketape = TRUE;
@@ -898,7 +898,7 @@ main( int argc, char *argv[] )
                 */
                 fclose( outf );
             }
-            
+
             /*
             || Free the buffer memory
             */

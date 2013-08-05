@@ -410,9 +410,9 @@ main( int argc, char *argv[] )
             off_t curpos;
             /* Report progress every nnnK */
             if ( i_faketape )
-                curpos = ftell( fetb->fd );
+                curpos = ftell( fetb->fh );
             else
-                curpos = ftell( hetb->fd );
+                curpos = ftell( hetb->fh );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;

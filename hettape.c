@@ -43,12 +43,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the HET file */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    rc = het_open (&dev->hetb, pathname, 
-                   dev->tdparms.logical_readonly ? HETOPEN_READONLY : 
+    rc = het_open (&dev->hetb, pathname,
+                   dev->tdparms.logical_readonly ? HETOPEN_READONLY :
                    sysblk.noautoinit ? 0 : HETOPEN_CREATE );
 
     if (rc >= 0)
     {
+        /* Keep file descriptor and handle synchronized */
+        dev->fd = dev->hetb->fd;
+        dev->fh = dev->hetb->fh;
+
         if(dev->hetb->writeprotect)
         {
             dev->readonly=1;
@@ -81,11 +85,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         int save_errno = errno;
         het_close (&dev->hetb);
+        dev->fd = -1;
+        dev->fh = NULL;
         errno = save_errno;
         {
             char msgbuf[128];
             MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-            WRMSG( HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, 
+            WRMSG( HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                     dev->filename, "het", "het_open()", msgbuf );
         }
 
@@ -96,12 +102,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     if ( !sysblk.noautoinit && dev->hetb->created )
     {
-        WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid), 
+        WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid),
                 dev->devnum, dev->filename, "het" );
     }
-
-    /* Indicate file opened */
-    dev->fd = 1;
 
     return 0;
 
@@ -126,6 +129,7 @@ void close_het (DEVBLK *dev)
 
     /* Reinitialize the DEV fields */
     dev->fd = -1;
+    dev->fh = NULL;
     strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
     dev->blockid = 0;
     dev->fenced = 0;
@@ -225,7 +229,7 @@ off_t           cursize;                /* Current size for size chk */
         build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
             return -1;
     }
-    
+
     /* Check if we have already violated the size limit */
     if(dev->tdparms.maxsize>0)
     {
@@ -262,7 +266,7 @@ off_t           cursize;                /* Current size for size chk */
                 WRMSG (HHC00209, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het");
                 het_bsb(dev->hetb);
                 cursize=het_tell(dev->hetb);
-                ftruncate( fileno(dev->hetb->fd),cursize);
+                ftruncate(dev->hetb->fd,cursize);
                 dev->hetb->truncated=TRUE; /* SHOULD BE IN HETLIB */
             }
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
@@ -286,7 +290,7 @@ off_t           cursize;                /* Current size for size chk */
 int write_hetmark( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 int             rc;                     /* Return code               */
-    
+
     if ( dev->hetb->writeprotect )
     {
         build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
@@ -425,7 +429,7 @@ int             rc;                     /* Return code               */
         {
             char msgbuf[128];
             MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, 
+            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                    "het", "het_bsb()", (off_t)dev->hetb->cblk, msgbuf);
         }
         /* Set unit check with equipment check */

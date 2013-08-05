@@ -64,7 +64,6 @@ DLL_EXPORT int
 fet_open ( FETB **fetb, char *filename, int flags )
 {
 int             rc = -1;                /* Return code               */
-int             fd = -1;
 char            pathname[MAX_PATH];     /* file path in host format  */
 FETB           *tfetb;
 char           *omode;
@@ -85,6 +84,9 @@ int             oflags;
         return( FETE_NOMEM );
     }
 
+    /* Initialize FETB */
+    tfetb->fd = -1;
+
     /*
     || clear FETOPEN_CREATE if FETOPEN_READONLY is specified
     */
@@ -100,21 +102,21 @@ int             oflags;
     omode = "r+b";
     if( !( flags & FETOPEN_READONLY ) )
     {
-        fd = HOPEN( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
+        tfetb->fd = HOPEN( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
     }
 
     /* If file is read-only, attempt to open again */
-    if ( ( flags & FETOPEN_READONLY ) || (fd < 0 && (EROFS == errno || EACCES == errno)))
+    if ( ( flags & FETOPEN_READONLY ) || (tfetb->fd < 0 && (EROFS == errno || EACCES == errno)))
     {
         omode = "rb";
         tfetb->writeprotect = TRUE;
-        fd = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        tfetb->fd = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
     /*
     || Error out if both opens failed
     */
-    if( fd == -1 )
+    if( tfetb->fd == -1 )
     {
         free( tfetb );
         return( FETE_ERROR );
@@ -123,12 +125,12 @@ int             oflags;
     /*
     || Associate stream with file descriptor
     */
-    tfetb->fd = fdopen( fd, omode );
+    tfetb->fh = fdopen( tfetb->fd, omode );
 
-    if( tfetb->fd == NULL )
+    if( tfetb->fh == NULL )
     {
         rc = errno;
-        close( fd );
+        close( tfetb->fd );
         errno = rc;
         free( tfetb );
         return( FETE_ERROR );
@@ -188,9 +190,9 @@ fet_close ( FETB **fetb )
 {
     if( *(fetb) != NULL )
     {
-        if( (*fetb)->fd != NULL )
+        if( (*fetb)->fh != NULL )
         {
-            fclose( (*fetb)->fd );
+            fclose( (*fetb)->fh );
         }
         free( *(fetb) );
     }
@@ -219,14 +221,14 @@ int             curblkl;                /* Current block length      */
 int             xorblkl;                /* XOR check of block lens   */
 
     /* Reposition file to the requested block header */
-    rc = fseek( fetb->fd, blkpos, SEEK_SET );
+    rc = fseek( fetb->fh, blkpos, SEEK_SET );
     if (rc < 0)
     {
         return FETE_ERROR;
     }
 
     /* Read the 12-ASCII-hex-character block header */
-    rc = (int)fread( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fd );
+    rc = (int)fread( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fh );
 
     /* Handle read error condition */
     if (rc < 0)
@@ -296,7 +298,7 @@ U16             curblkl;                /* Current block length      */
     /* If not a tapemark, read the data block */
     if (curblkl > 0)
     {
-        rc = (int)fread( buf, 1, curblkl, fetb->fd );
+        rc = (int)fread( buf, 1, curblkl, fetb->fh );
 
         /* Handle read error condition */
         if (rc < 0)
@@ -346,7 +348,7 @@ FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
 char            sblklen[5];             /* work buffer               */
 
     /* Position file to where block header is to go */
-    rc = fseek( fetb->fd, blkpos, SEEK_SET );
+    rc = fseek( fetb->fh, blkpos, SEEK_SET );
     if (rc < 0)
     {
         return FETE_BADLOC;
@@ -364,7 +366,7 @@ char            sblklen[5];             /* work buffer               */
     strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
     /* Write the block header */
-    rc = (int)fwrite( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fd );
+    rc = (int)fwrite( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fh );
     if (rc < (int)sizeof(FAKETAPE_BLKHDR))
     {
         if(errno==ENOSPC)
@@ -410,13 +412,13 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rc = fseek( fetb->fd, blkpos, SEEK_SET );
+    rc = fseek( fetb->fh, blkpos, SEEK_SET );
     if (rc < 0)
     {
         return FETE_BADLOC;
     }
     else
-        rcoff = ftell( fetb->fd );
+        rcoff = ftell( fetb->fh );
 
     if(fetb->maxsize>0)
     {
@@ -436,7 +438,7 @@ U16             prvblkl;                /* Length of previous block  */
     fetb->prvblkpos = blkpos;
 
     /* Write the data block */
-    rc = (int)fwrite( buf, 1, blklen, fetb->fd);
+    rc = (int)fwrite( buf, 1, blklen, fetb->fh);
     if (rc < blklen)
     {
         if(errno==ENOSPC)
@@ -454,7 +456,7 @@ U16             prvblkl;                /* Length of previous block  */
     /* Set new physical EOF */
 
 
-    do rc = ftruncate( fileno( fetb->fd ), fetb->nxtblkpos );
+    do rc = ftruncate( fetb->fd, fetb->nxtblkpos );
     while (EINTR == rc);
 
     if (rc != 0)
@@ -498,13 +500,13 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rc = fseek( fetb->fd, blkpos, SEEK_SET );
+    rc = fseek( fetb->fh, blkpos, SEEK_SET );
     if (rc < 0)
     {
         return FETE_BADLOC;
     }
     else
-        rcoff = ftell( fetb->fd );
+        rcoff = ftell( fetb->fh );
 
     if(fetb->maxsize>0)
     {
@@ -527,9 +529,9 @@ U16             prvblkl;                /* Length of previous block  */
     fetb->prvblkpos = blkpos;
 
     /* Set new physical EOF */
-    rc = ftell( fetb->fd );
+    rc = ftell( fetb->fh );
 
-    do rc = ftruncate( fileno( fetb->fd ), fetb->nxtblkpos );
+    do rc = ftruncate( fetb->fd, fetb->nxtblkpos );
     while (EINTR == rc);
 
     if (rc != 0)
@@ -558,7 +560,7 @@ fet_sync( FETB *fetb )
     }
 
     /* Perform sync. Return error on failure. */
-    if (fdatasync( fileno( fetb->fd ) ) < 0)
+    if (fdatasync( fetb->fd ) < 0)
     {
         return FETE_ERROR;
     }
@@ -738,7 +740,7 @@ fet_rewind ( FETB *fetb )
 {
 int         rc;
 
-    rc = fseek( fetb->fd, 0L, SEEK_SET );
+    rc = fseek( fetb->fh, 0L, SEEK_SET );
     if ( rc < 0 )
     {
         return FETE_ERROR;

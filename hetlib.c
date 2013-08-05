@@ -144,7 +144,6 @@ het_open( HETB **hetb, char *filename, int flags )
     HETB *thetb;
     char *omode;
     int   rc;
-    int   fd;
     int   oflags;
     char  pathname[MAX_PATH];
 
@@ -166,6 +165,7 @@ het_open( HETB **hetb, char *filename, int flags )
     /*
     || Set defaults
     */
+    thetb->fd         = -1;
     thetb->compress   = HETDFLT_COMPRESS;
     thetb->decompress = HETDFLT_DECOMPRESS;
     thetb->method     = HETDFLT_METHOD;
@@ -190,22 +190,22 @@ het_open( HETB **hetb, char *filename, int flags )
     omode = "r+b";
     if(!(flags & HETOPEN_READONLY))
     {
-        fd = HOPEN( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
+        thetb->fd = HOPEN( pathname, O_RDWR | O_BINARY | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
     }
-    if( (flags & HETOPEN_READONLY) || (fd == -1 && (errno == EROFS || errno == EACCES) ) )
+    if( (flags & HETOPEN_READONLY) || (thetb->fd == -1 && (errno == EROFS || errno == EACCES) ) )
     {
         /*
         || Retry open if file resides on readonly file system
         */
         omode = "rb";
         thetb->writeprotect = TRUE;
-        fd = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        thetb->fd = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
     /*
     || Error out if both opens failed
     */
-    if( fd == -1 )
+    if( thetb->fd == -1 )
     {
         free( thetb );
         return( HETE_ERROR );
@@ -214,11 +214,11 @@ het_open( HETB **hetb, char *filename, int flags )
     /*
     || Associate stream with file descriptor
     */
-    thetb->fd = fdopen( fd, omode );
-    if( thetb->fd == NULL )
+    thetb->fh = fdopen( thetb->fd, omode );
+    if( thetb->fh == NULL )
     {
         rc = errno;
-        close( fd );
+        close( thetb->fd );
         errno = rc;
         free( thetb );
         return( HETE_ERROR );
@@ -336,9 +336,9 @@ het_close( HETB **hetb )
         /*
         || Only close the file if opened
         */
-        if( (*hetb)->fd != NULL )
+        if( (*hetb)->fh != NULL )
         {
-            fclose( (*hetb)->fd );
+            fclose( (*hetb)->fh );
         }
         free( *(hetb) );
     }
@@ -633,13 +633,13 @@ het_read_header( HETB *hetb )
     /*
     || Read in a headers worth of data
     */
-    rc = (int)fread( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
+    rc = (int)fread( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fh );
     if( rc != 1 )
     {
         /*
         || Return EOT if at end of physical file
         */
-        if( feof( hetb->fd ) )
+        if( feof( hetb->fh ) )
         {
             return( HETE_EOT );
         }
@@ -867,10 +867,10 @@ het_read( HETB *hetb, void *sbuf )
         /*
         || Finally read in the chunk data
         */
-        rc = (int)fread( tptr, 1, slen, hetb->fd );
+        rc = (int)fread( tptr, 1, slen, hetb->fh );
         if( rc != (int)slen )
         {
-            if( feof( hetb->fd ) )
+            if( feof( hetb->fh ) )
             {
                 return( HETE_PREMEOF );
             }
@@ -1088,7 +1088,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     */
     if( !hetb->readlast )
     {
-        fseek( hetb->fd, 0, SEEK_CUR );
+        fseek( hetb->fh, 0, SEEK_CUR );
         hetb->readlast = FALSE;
     }
 
@@ -1097,13 +1097,13 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     */
     if( !hetb->truncated )
     {
-        rcoff = ftell( hetb->fd );
+        rcoff = ftell( hetb->fh );
         if( rcoff == -1 )
         {
             return( HETE_ERROR );
         }
 
-        rc = ftruncate( fileno( hetb->fd ), rcoff );
+        rc = ftruncate( hetb->fd, rcoff );
         if( rc == -1 )
         {
             return( HETE_ERROR );
@@ -1125,7 +1125,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     /*
     || Write it out
     */
-    rc = (int)fwrite( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fd );
+    rc = (int)fwrite( &hetb->chdr, sizeof( HETHDR ), 1, hetb->fh );
     if( rc != 1 )
     {
         return( HETE_ERROR );
@@ -1335,7 +1335,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         /*
         || Write the block
         */
-        rc = (int)fwrite( sbuf, 1, tlen, hetb->fd );
+        rc = (int)fwrite( sbuf, 1, tlen, hetb->fh );
         if( rc != (int)tlen )
         {
             return( HETE_ERROR );
@@ -1358,7 +1358,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     /*
     || Set new physical EOF
     */
-    do rc = ftruncate( fileno( hetb->fd ), ftell( hetb->fd ) );
+    do rc = ftruncate( hetb->fd, ftell( hetb->fh ) );
     while (EINTR == rc);
     if (rc != 0)
     {
@@ -1445,7 +1445,7 @@ het_tapemark( HETB *hetb )
     /*
     || Set new physical EOF
     */
-    do rc = ftruncate( fileno( hetb->fd ), ftell( hetb->fd ) );
+    do rc = ftruncate( hetb->fd, ftell( hetb->fh ) );
     while (EINTR == rc);
     if (rc != 0)
     {
@@ -1547,7 +1547,7 @@ het_sync( HETB *hetb )
     /*
     || Perform the sync
     */
-    do rc = fdatasync( fileno( hetb->fd ) );
+    do rc = fdatasync( hetb->fd );
     while (EINTR == rc);
     if (rc != 0)
     {
@@ -1769,7 +1769,7 @@ het_bsb( HETB *hetb )
         /*
         || Reposition to start of chunk
         */
-        rc = fseek( hetb->fd,
+        rc = fseek( hetb->fh,
                     offset,
                     SEEK_CUR );
         if( rc == -1 )
@@ -1802,7 +1802,7 @@ het_bsb( HETB *hetb )
     || Reposition to chunk header preceding this one so we can load keep the
     || chdr in the HET current.
     */
-    rc = fseek( hetb->fd,
+    rc = fseek( hetb->fh,
                 offset,
                 SEEK_CUR );
     if( rc == -1 )
@@ -1822,7 +1822,7 @@ het_bsb( HETB *hetb )
     /*
     || Finally reposition back to the where we should be
     */
-    rc = fseek( hetb->fd,
+    rc = fseek( hetb->fh,
                 HETHDR_CLEN( hetb ),
                 SEEK_CUR );
     if( rc == -1 )
@@ -1939,7 +1939,7 @@ het_fsb( HETB *hetb )
         /*
         || Seek to next chunk
         */
-        rc = fseek( hetb->fd,
+        rc = fseek( hetb->fh,
                     HETHDR_CLEN( hetb ),
                     SEEK_CUR );
         if( rc == -1 )
@@ -2206,7 +2206,7 @@ het_rewind( HETB *hetb )
     /*
     || Just seek to the beginning of the file
     */
-    rc = fseek( hetb->fd,
+    rc = fseek( hetb->fh,
                 0,
                 SEEK_SET );
     if( rc == -1 )
@@ -2362,7 +2362,7 @@ DLL_EXPORT
 off_t
 het_tell( HETB *hetb )
 {
-    off_t rwptr = ftell( hetb->fd );
+    off_t rwptr = ftell( hetb->fh );
     if ( rwptr < 0 )
     {
         return HETE_ERROR;

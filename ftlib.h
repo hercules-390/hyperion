@@ -32,7 +32,7 @@
  * The two block length fields are followed by an XOR "check" field
  * calculated as the XOR of the two preceding length fields and is
  * used to verify the integrity of the header.
- * 
+ *
  * The Flex FakeTape tape format does not support any flag fields
  * in its header and thus does not support any type of compression.
  */
@@ -56,7 +56,8 @@ FAKETAPE_BLKHDR;
 */
 typedef struct _fetb
 {
-    FILE           *fd;                 /* Tape file descriptor             */
+    FILE           *fh;                 /* Tape file handle                 */
+    int             fd;                 /* Tape file descriptor             */
     char            filename[MAX_PATH]; /* filename                         */
 
     off_t           nxtblkpos;          /* Offset from start of file
