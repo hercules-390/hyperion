@@ -4819,18 +4819,28 @@ prefetch:
             /* Otherwise, copy data into channel buffer */
             else
             {
+                U32 newsize = bufpos + count;
+
                 prefetch.datalen[ps] = count;
 
                 /* Extend buffer if overflow */
-                if ((bufpos + count) > iobuf->size)
+                if (newsize > iobuf->size)
                 {
-                    IOBUF *iobufnew = iobuf_reallocate(iobuf,
-                                      (iobuf->size + 1048576) &
-                                      ~0x00FFFFFF);
+                    IOBUF *iobufnew;
+
+                    /* Round the new buffer size up to the next
+                     * megabyte boundary.
+                     */
+                    newsize += 1048575;
+                    newsize &= 0xFFF00000UL;
+                    iobufnew = iobuf_reallocate(iobuf, newsize);
+
+                    /* If new I/O buffer allocation failed, force a
+                     * Channel Data Check (CDC). Otherwise, set the
+                     * iobuf pointer to the new I/O buffer space.
+                     */
                     if (iobufnew == NULL)
-                    {
                         prefetch.chanstat[ps] = CSW_CDC;
-                    }
                     else
                         iobuf = iobufnew;
                 }
