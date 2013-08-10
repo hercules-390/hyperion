@@ -155,13 +155,12 @@ iobuf_create (u_int size)
 static INLINE u_int
 iobuf_validate (IOBUF *iobuf)
 {
-    if (iobuf == NULL                                           ||
-        iobuf->size < 65536                                     ||
-        iobuf->start != (BYTE *)iobuf->data                     ||
-        iobuf->end != (BYTE *)iobuf->start + (iobuf->size - 1 ))
-        return 0;
-    free_aligned(iobuf);
-    return 1;
+    return
+    ((iobuf == NULL                         ||
+      iobuf->size < 65536                   ||
+      iobuf->start != (BYTE *)iobuf->data   ||
+      iobuf->end != (BYTE *)iobuf->start + (iobuf->size - 1 )) ?
+     0 : 1);
 }
 
 static INLINE void
