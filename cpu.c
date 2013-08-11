@@ -1611,9 +1611,7 @@ cpustate_stopping:
     /* Test for wait state */
     if (WAITSTATE(&regs->psw))
     {
-#ifdef OPTION_MIPS_COUNTING
         regs->waittod = host_tod();
-#endif
         set_cpu_timer_mode(regs);
 
         /* Test for disabled wait PSW and issue message */
@@ -1640,11 +1638,9 @@ cpustate_stopping:
          */
         sysblk.waiting_mask &= ~(regs->cpubit);
 
-#ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
         regs->waittime += host_tod() - regs->waittod;
         regs->waittod = 0;
-#endif
 
         set_cpu_timer_mode(regs);
 
