@@ -499,17 +499,49 @@ wakeup_cpu(REGS* regs)
 static INLINE void
 wakeup_cpu_mask(CPU_BITMAP mask)
 {
-    int i;
+    REGS   *current_regs;
+    REGS   *lru_regs = NULL;
+    TOD     current_waittod;
+    TOD     lru_waittod;
+    int     i;
 
-    for (i = 0; mask; ++i)
+    if (mask)
     {
-        if (mask & 1)
+        for (i = 0; mask; mask >>= 1, ++i)
         {
-            signal_condition(&sysblk.regs[i]->intcond);
-            break;
+            if (mask & 1)
+            {
+                current_regs = sysblk.regs[i];
+                current_waittod = current_regs->waittod;
+
+                /* Select least recently used CPU
+                 *
+                 * The LRU CPU is chosen to keep the CPU threads active
+                 * and to distribute the I/O load across the available
+                 * CPUs.
+                 *
+                 * The current_waittod should never be zero; however,
+                 * we check it in case the cache from another processor
+                 * has not yet been written back to memory, which can
+                 * happen once the lock structure is updated for
+                 * individual CPU locks. (OBTAIN/RELEASE_INTLOCK(regs)
+                 * at present locks ALL CPUs, despite the specification
+                 * of regs.)
+                 */
+                if (lru_regs == NULL ||
+                    (current_waittod > 0 &&
+                     (current_waittod < lru_waittod ||
+                      (current_waittod == lru_waittod &&
+                       current_regs->waittime >= lru_regs->waittime))))
+                {
+                    lru_regs = current_regs;
+                    lru_waittod = current_waittod;
+                }
+            }
         }
 
-        mask >>= 1;
+        /* Wake up the least recently used CPU */
+        wakeup_cpu(lru_regs);
     }
 }
 
@@ -518,12 +550,10 @@ wakeup_cpus_mask(CPU_BITMAP mask)
 {
     int i;
 
-    for (i = 0; mask; i++)
+    for (i = 0; mask; mask >>= 1, i++)
     {
         if (mask & 1)
-            signal_condition(&sysblk.regs[i]->intcond);
-
-        mask >>= 1;
+            wakeup_cpu(sysblk.regs[i]);
     }
 }
 
