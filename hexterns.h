@@ -484,8 +484,8 @@ int servc_hresume(void *file);
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
 int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
 int ckddasd_close_device ( DEVBLK *dev );
 void ckddasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);
@@ -494,17 +494,17 @@ int ckddasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module fbadasd.c */
 FBA_DLL_IMPORT void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
-        int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
+        int blksize, BYTE *iobuf, BYTE *unitstat, U32 *residual);
 FBA_DLL_IMPORT void fbadasd_read_block
       ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
-        BYTE *iobuf, BYTE *unitstat, U16 *residual );
+        BYTE *iobuf, BYTE *unitstat, U32 *residual );
 FBA_DLL_IMPORT void fbadasd_write_block
       ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
-        BYTE *iobuf, BYTE *unitstat, U16 *residual );
+        BYTE *iobuf, BYTE *unitstat, U32 *residual );
 int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
 int fbadasd_close_device ( DEVBLK *dev );
 void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);

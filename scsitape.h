@@ -29,7 +29,7 @@ extern int   open_scsitape            ( DEVBLK *dev,                     BYTE *u
 extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  close_scsitape           ( DEVBLK *dev );
 extern int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
-extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U16 len, BYTE *unitstat, BYTE code );
+extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U32 len, BYTE *unitstat, BYTE code );
 extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   bsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );

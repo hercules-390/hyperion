@@ -307,7 +307,7 @@ int  rc;
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_scsitape (DEVBLK *dev, BYTE *buf, U16 len,
+int write_scsitape (DEVBLK *dev, BYTE *buf, U32 len,
                     BYTE *unitstat, BYTE code)
 {
 int  rc;
@@ -322,7 +322,7 @@ int  save_errno;
         dev->eotwarning = 1;
 #endif
 
-    if (rc >= len)
+    if (rc >= (int)len)
     {
         dev->blockid++;
         return 0;
@@ -346,7 +346,7 @@ int  save_errno;
 
         rc = write_tape (dev->fd, buf, len);
 
-        if (rc >= len)
+        if (rc >= (int)len)
         {
             dev->eotwarning = 1;
             dev->blockid++;

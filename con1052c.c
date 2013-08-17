@@ -156,11 +156,11 @@ con1052_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 static void
 con1052_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
-int     len;                            /* Length of data            */
-int     num;                            /* Number of bytes to move   */
+U32     len;                            /* Length of data            */
+U32     num;                            /* Number of bytes to move   */
 BYTE    c;                              /* Print character           */
 
     UNREFERENCED(chained);

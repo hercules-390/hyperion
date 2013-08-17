@@ -778,11 +778,11 @@ rsp24->ocnt = 0x20;
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void zfcp_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
-int num;                                /* Number of bytes to move   */
+U32 num;                                /* Number of bytes to move   */
 
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
@@ -834,7 +834,7 @@ int num;                                /* Number of bytes to move   */
     /* READ                                                          */
     /*---------------------------------------------------------------*/
     {
-        int rd_size = 0;
+        U32 rd_size = 0;
 
         obtain_lock(&grp->qlock);
         if(grp->rspsz)
@@ -914,7 +914,7 @@ int num;                                /* Number of bytes to move   */
 #else
         /* The Sense Command Byte command returns a single byte
            being the CCW opcode from the other end of the CTCA */
-        static const int len = 1;               /* cmd length */
+        static const U32 len = 1;               /* cmd length */
         static const BYTE opcode = 0x03;        /* CCW opcode */
 
         /* Calculate residual byte count */
@@ -984,7 +984,7 @@ int num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        int len = sizeof(configuration_data);
+        U32 len = sizeof(configuration_data);
         NED *dev_ned = (NED*)iobuf;     /* Device NED is first       */
         NED *ctl_ned = dev_ned + 1;     /* Control Unit NED is next  */
         NED *tkn_ned = ctl_ned + 1;     /* Token NED is last NED     */
@@ -1075,7 +1075,7 @@ int num;                                /* Number of bytes to move   */
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
     {
-        int len = sizeof(node_data);
+        U32 len = sizeof(node_data);
         ND *nd = (ND*)iobuf;            /* Node Descriptor pointer   */
         DEVBLK *cua;                    /* Our Control Unit device   */
 

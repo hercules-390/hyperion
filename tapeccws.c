@@ -423,12 +423,12 @@ int i, rc, tix = 0, devtfound = 0;
 static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir );
 
 void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
 int             rc;                     /* Return code               */
-int             len;                    /* Length of data block      */
-long            num;                    /* Number of bytes to read   */
+U32             len;                    /* Length of data block      */
+U32             num;                    /* Number of bytes to read   */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 

@@ -2173,16 +2173,16 @@ int             rc;                     /* Return code               */
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 int             rc;                     /* Return code               */
 int             i, j;                   /* Loop index                */
 CKDDASD_TRKHDR  trkhdr;                 /* CKD track header (HA)     */
 CKDDASD_RECHDR  rechdr;                 /* CKD record header (count) */
-int             size;                   /* Number of bytes available */
-int             num;                    /* Number of bytes to move   */
-int             offset;                 /* Offset into buf for I/O   */
+U32             size;                   /* Number of bytes available */
+U32             num;                    /* Number of bytes to move   */
+U32             offset;                 /* Offset into buf for I/O   */
 int             bin;                    /* Bin number                */
 int             cyl;                    /* Cylinder number           */
 int             head;                   /* Head number               */
@@ -3709,7 +3709,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of compare bytes and set residual count */
-        num = (count < dev->ckdcurkl) ? count : dev->ckdcurkl;
+        num = (count < (U32)dev->ckdcurkl) ?
+               count : (U32)dev->ckdcurkl;
         *residual = count - num;
 
         /* Nothing to compare if key length is zero */

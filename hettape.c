@@ -218,7 +218,7 @@ int             rc;                     /* Return code               */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_het (DEVBLK *dev, BYTE *buf, U16 blklen,
+int write_het (DEVBLK *dev, BYTE *buf, U32 blklen,
                       BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */

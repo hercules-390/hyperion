@@ -2580,7 +2580,7 @@ int write_READONLY ( DEVBLK *dev, BYTE *unitstat, BYTE code )
 /*-------------------------------------------------------------------*/
 /* write_READONLY5                                                   */
 /*-------------------------------------------------------------------*/
-int write_READONLY5 ( DEVBLK *dev, BYTE *bfr, U16 blklen, BYTE *unitstat, BYTE code )
+int write_READONLY5 ( DEVBLK *dev, BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code )
 {
     UNREFERENCED(bfr);
     UNREFERENCED(blklen);
