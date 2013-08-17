@@ -186,7 +186,8 @@ iobuf_reallocate (IOBUF *iobuf, const u_int size)
     if (iobufnew == NULL)
         return NULL;
     memcpy(iobufnew->start, iobuf->start, MIN(iobuf->size, size));
-    free_aligned(iobuf);
+    if (iobuf->size > 65536)
+        free_aligned(iobuf);
     return iobufnew;
 }
 #endif
