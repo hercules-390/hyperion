@@ -852,7 +852,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     PCTCISEG    pSegment = NULL;       // -> Segment in buffer
     fd_set      rfds;                  // Read FD_SET
     int         iRetVal;               // Return code from 'select'
-    ssize_t     iLength  = 0;
+    int         iLength  = 0;
 
     static struct timeval tv;          // Timeout time for 'select'
 
@@ -904,8 +904,8 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Trace the packet received from the TUN device
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
     {
-        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)iLength, "TUN" );
-        packet_trace( pDEVBLK->buf, (int)iLength, '<' );
+        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength, "TUN" );
+        packet_trace( pDEVBLK->buf, iLength, '<' );
     }
 
     // Fix-up Frame pointer
@@ -938,7 +938,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Calculate #of bytes returned including two slack bytes
     iLength += sizeof( CTCIHDR ) + sizeof( CTCISEG ) + 2;
 
-    if( sCount < iLength )
+    if( sCount < (U32)iLength )
     {
         *pMore     = 1;
         *pResidual = 0;
