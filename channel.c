@@ -212,7 +212,7 @@ typedef struct                          /* Prefetch data structure   */
 {
     u_int   seq;                        /* Counter                   */
     u_int   pos;                        /* Highest valid position    */
-    u_int   reqcount;                   /* Requested count           */
+    U32     reqcount;                   /* Requested count           */
     U8      prevcode;                   /* Previous CCW opcode       */
     U8      opcode;                     /* CCW opcode                */
     U16     reserved;
@@ -720,22 +720,23 @@ display_scsw (const DEVBLK *dev, const SCSW scsw)
 #if DEBUG_PREFETCH
 static void
 display_prefetch (PREFETCH *prefetch, const u_int ps,
-                  const u_int count, const u_int residual,
+                  const U32 count, const U32 residual,
                   const u_int more)
 {
 u_int   limit = MIN(prefetch->seq, PF_SIZE);
 u_int   ts;
-u_int   used = count - residual;
+U32     used = count - residual;
 char    msgbuf[133];
 
-    MSGBUF(msgbuf, "Prefetch ps=%d count=%d (%4.4X) "
-                       "residual=%d (%4.4X) more=%d used=%d (%4.4X)",
+    MSGBUF(msgbuf, "Prefetch ps=%d count=%llu (%08.8LLX) "
+                       "residual=%llu (%08.8LLX) more=%d "
+                       "used=%llu (%08.8LLX)",
                    ps, count, count, residual, residual, more,
                    used, used);
     WRMSG(HHC90000, "I", msgbuf);
 
-    MSGBUF(msgbuf, "Prefetch seq=%d req=%d (%4.4X) pos=%d (%4.4X) "
-                            "prevcode=%2.2X code=%2.2X",
+    MSGBUF(msgbuf, "Prefetch seq=%d req=%d (%04.4X) pos=%d (%04.4X) "
+                            "prevcode=%02.2X code=%02.2X",
                    prefetch->seq, prefetch->reqcount,
                    prefetch->reqcount, prefetch->pos, prefetch->pos,
                    prefetch->prevcode, prefetch->opcode);
@@ -2649,7 +2650,7 @@ ARCH_DEP(fetch_ccw) (DEVBLK *dev,       /* -> Device block           */
                      BYTE *code,        /* Returned operation code   */
                      U32 *addr,         /* Returned data address     */
                      BYTE *flags,       /* Returned flags            */
-                     U16 *count,        /* Returned data count       */
+                     U32 *count,        /* Returned data count       */
                      BYTE *chanstat)    /* Returned channel status   */
 {
 BYTE    storkey;                        /* Storage key               */
@@ -2954,7 +2955,7 @@ ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
                       BYTE code,        /* CCW operation code        */
                       BYTE flags,       /* CCW flags                 */
                       U32 addr,         /* Data address              */
-                      U16 count,        /* Data count                */
+                      U32 count,        /* Data count                */
                       BYTE ccwkey,      /* Protection key            */
                       BYTE idawfmt,     /* IDAW format (1 or 2)  @IWZ*/
                       U16 idapmask,     /* IDA page size - 1     @IWZ*/
@@ -2962,7 +2963,7 @@ ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
                       BYTE *iobufstart, /* -> First byte of buffer   */
                       BYTE *iobufend,   /* -> Last byte of buffer    */
                       BYTE *chanstat,   /* Returned channel status   */
-                      U16 *residual,    /* Residual data count       */
+                      U32 *residual,    /* Residual data count       */
                       PREFETCH *prefetch)  /* Prefetch CCW buffer    */
 {
 BYTE    *iobufptr = 0;                  /* Working I/O buffer addr   */
@@ -3850,11 +3851,11 @@ U32     mbaddr;                         /* Measure block address     */
 MBK    *mbk;                            /* Measure block             */
 U16     mbcount;                        /* Measure block count       */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-U16     count;                          /* CCW byte count            */
+U32     count;                          /* CCW byte count            */
 BYTE   *ccw;                            /* CCW pointer               */
 BYTE    unitstat;                       /* Unit status               */
 BYTE    chanstat;                       /* Channel status            */
-U16     residual = 0;                   /* Residual byte count       */
+U32     residual = 0;                   /* Residual byte count       */
 BYTE    more;                           /* 1=Count exhausted         */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
 BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */

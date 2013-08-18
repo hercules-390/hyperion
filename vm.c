@@ -471,7 +471,7 @@ U32             iopaddr;                /* Address of HCPSBIOP       */
 HCPSBIOP        ioparm;                 /* I/O parameter list        */
 DEVBLK         *dev;                    /* -> Device block           */
 U16             devnum;                 /* Device number             */
-U16             residual;               /* Residual byte count       */
+U32             residual;               /* Residual byte count       */
 U32             blksize;                /* Fixed block size          */
 U32             sbiaddr;                /* Addr of SBILIST           */
 U32             sbicount;               /* Number of SBILIST entries */

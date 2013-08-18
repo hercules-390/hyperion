@@ -345,7 +345,7 @@ U16             seglen;                 /* Data length of segment    */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_awstape (DEVBLK *dev, BYTE *buf, U16 blklen,
+int write_awstape (DEVBLK *dev, BYTE *buf, U32 blklen,
                         BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
@@ -426,7 +426,7 @@ U16             prvblkl;                /* Length of previous block  */
 
     /* Write the data block */
     rc = write (dev->fd, buf, blklen);
-    if (rc < blklen)
+    if (rc < (int)blklen)
     {
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "write()", blkpos, strerror(errno));
         if(errno==ENOSPC)

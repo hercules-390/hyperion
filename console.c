@@ -3188,12 +3188,12 @@ int     woff = 0;                       /* Current offset in buffer  */
 /*-------------------------------------------------------------------*/
 static void
 loc3270_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 int             rc;                     /* Return code               */
-int             num;                    /* Number of bytes to copy   */
-int             len;                    /* Data length               */
+U32             num;                    /* Number of bytes to copy   */
+U32             len;                    /* Data length               */
 int             aid;                    /* First read: AID present   */
 U32             off;                    /* Offset in device buffer   */
 BYTE            cmd;                    /* tn3270 command code       */
@@ -3618,12 +3618,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
 /*-------------------------------------------------------------------*/
 static void
 constty_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 int     rc;                             /* Return code               */
-int     len;                            /* Length of data            */
-int     num;                            /* Number of bytes to move   */
+U32     len;                            /* Length of data            */
+U32     num;                            /* Number of bytes to move   */
 BYTE    c;                              /* Print character           */
 BYTE    stat;                           /* Unit status               */
 

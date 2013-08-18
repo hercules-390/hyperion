@@ -523,7 +523,7 @@ DEVBLK         *dev;                    /* -> SYSG console devblk    */
 BYTE           *sysg_data;              /* -> SYSG output data       */
 BYTE            unitstat;               /* Unit status               */
 BYTE            more = 0;               /* Flag for device handler   */
-U16             residual;               /* Residual data count       */
+U32             residual;               /* Residual data count       */
 BYTE            cmdcode;                /* 3270 read/write command   */
 
     /* Calculate the address and length of the 3270 datastream */
@@ -618,7 +618,7 @@ BYTE           *sysg_data;              /* -> SYSG input data        */
 BYTE           *sysg_cmd;               /* -> SYSG input data        */
 BYTE            unitstat;               /* Unit status               */
 BYTE            more = 0;               /* Flag for device handler   */
-U16             residual;               /* Residual data count       */
+U32             residual;               /* Residual data count       */
 
     dev = sysblk.sysgdev;
     if (dev != NULL)

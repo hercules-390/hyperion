@@ -42,23 +42,23 @@
 
 static int      CTCT_Init( DEVBLK *dev, int argc, char *argv[] );
 
-static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
+static void     CTCT_Read( DEVBLK* pDEVBLK,   U32   sCount,
                            BYTE*   pIOBuf,    BYTE* pUnitStat,
-                           U16*    pResidual, BYTE* pMore );
+                           U32*    pResidual, BYTE* pMore );
 
-static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
+static void     CTCT_Write( DEVBLK* pDEVBLK,   U32   sCount,
                             BYTE*   pIOBuf,    BYTE* pUnitStat,
-                            U16*    pResidual );
+                            U32*    pResidual );
 
 static void*    CTCT_ListenThread( void* argp );
 
 static int      VMNET_Init( DEVBLK *dev, int argc, char *argv[] );
 
 static int      VMNET_Write( DEVBLK *dev, BYTE *iobuf,
-                             U16 count, BYTE *unitstat );
+                             U32 count, BYTE *unitstat );
 
 static int      VMNET_Read( DEVBLK *dev, BYTE *iobuf,
-                            U16 count, BYTE *unitstat );
+                            U32 count, BYTE *unitstat );
 
 // --------------------------------------------------------------------
 // Definitions for CTC general data blocks
@@ -238,10 +238,10 @@ int  CTCX_Close( DEVBLK* pDEVBLK )
 
 void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                        BYTE    bFlags,  BYTE  bChained,
-                       U16     sCount,  BYTE  bPrevCode,
+                       U32     sCount,  BYTE  bPrevCode,
                        int     iCCWSeq, BYTE* pIOBuf,
                        BYTE*   pMore,   BYTE* pUnitStat,
-                       U16*    pResidual )
+                       U32*    pResidual )
 {
     int             iNum;               // Number of bytes to move
     BYTE            bOpCode;            // CCW opcode with modifier
@@ -682,9 +682,9 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 // CTCT_Write
 //
 
-static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
+static void  CTCT_Write( DEVBLK* pDEVBLK,   U32   sCount,
                          BYTE*   pIOBuf,    BYTE* pUnitStat,
-                         U16*    pResidual )
+                         U32*    pResidual )
 {
     PCTCIHDR   pFrame;                  // -> Frame header
     PCTCISEG   pSegment;                // -> Segment in buffer
@@ -789,8 +789,8 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         // Check that the segment length is valid
         if( ( sSegLen        < sizeof( CTCISEG ) ) ||
-            ( iPos + sSegLen > sOffset           ) ||
-            ( iPos + sSegLen > sCount            ) )
+            ( (U32)iPos + sSegLen > sOffset      ) ||
+            ( (U32)iPos + sSegLen > sCount       ) )
         {
             WRMSG(HHC00909, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );
 
@@ -844,9 +844,9 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 // CTCT_Read
 //
 
-static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
+static void  CTCT_Read( DEVBLK* pDEVBLK,   U32   sCount,
                         BYTE*   pIOBuf,    BYTE* pUnitStat,
-                        U16*    pResidual, BYTE* pMore )
+                        U32*    pResidual, BYTE* pMore )
 {
     PCTCIHDR    pFrame   = NULL;       // -> Frame header
     PCTCISEG    pSegment = NULL;       // -> Segment in buffer
@@ -1128,13 +1128,13 @@ U16 lcss;
     return 0;
 }
 
-static int VMNET_Write(DEVBLK *dev, BYTE *iobuf, U16 count, BYTE *unitstat)
+static int VMNET_Write(DEVBLK *dev, BYTE *iobuf, U32 count, BYTE *unitstat)
 {
-int blklen = (iobuf[0]<<8) | iobuf[1];
-int pktlen;
+U32 blklen = (iobuf[0]<<8) | iobuf[1];
+U32 pktlen;
 BYTE *p = iobuf + 2;
 BYTE *buffer = dev->buf;
-int len = 0, rem;
+U32 len = 0, rem;
 
     if (count < blklen) {
         WRMSG (HHC00975, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "block", count, blklen);
@@ -1241,11 +1241,11 @@ static void setpktheader(BYTE *iobuf, int packetpos, int packetlen)
  * - block has multiple packets: back up on last packet and return
  *   what we have.  Do this last packet in the next IO.
  */
-static int VMNET_Read(DEVBLK *dev, BYTE *iobuf, U16 count, BYTE *unitstat)
+static int VMNET_Read(DEVBLK *dev, BYTE *iobuf, U32 count, BYTE *unitstat)
 {
 int             c;                      /* next byte to process      */
-int             len = 8;                /* length of block           */
-int             lastlen = 2;            /* block length at last pckt */
+U32             len = 8;                /* length of block           */
+U32             lastlen = 2;            /* block length at last pckt */
 
     dev->ctclastpos = dev->ctcpos;
     dev->ctclastrem = dev->ctcrem;

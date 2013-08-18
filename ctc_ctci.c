@@ -360,10 +360,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 //
 void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                        BYTE    bFlags,  BYTE  bChained,
-                       U16     sCount,  BYTE  bPrevCode,
+                       U32     sCount,  BYTE  bPrevCode,
                        int     iCCWSeq, BYTE* pIOBuf,
                        BYTE*   pMore,   BYTE* pUnitStat,
-                       U16*    pResidual )
+                       U32*    pResidual )
 {
     int             iNum;               // Number of bytes to move
     BYTE            bOpCode;            // CCW opcode with modifier
@@ -674,9 +674,9 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
 //      pMore     Set to 1 if packet data exceeds CCW count
 //
 
-void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
+void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
                  BYTE*   pIOBuf,    BYTE* pUnitStat,
-                 U16*    pResidual, BYTE* pMore )
+                 U32*    pResidual, BYTE* pMore )
 {
     PCTCBLK     pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
     PCTCIHDR    pFrame   = NULL;
@@ -791,9 +791,9 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 // the comments preceding the CTCI_ReadThread function.
 //
 
-void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
+void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
                   BYTE*   pIOBuf,    BYTE* pUnitStat,
-                  U16*    pResidual )
+                  U32*    pResidual )
 {
     PCTCBLK    pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
     PCTCIHDR   pFrame;                  // -> Frame header
@@ -904,8 +904,8 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         // Check that the segment length is valid
         if( ( sSegLen        < sizeof( CTCISEG ) ) ||
-            ( iPos + sSegLen > sOffset           ) ||
-            ( iPos + sSegLen > sCount            ) )
+            ( (U32)iPos + sSegLen > sOffset      ) ||
+            ( (U32)iPos + sSegLen > sCount       ) )
         {
             // "%1d:%04X CTC: invalid write buffer segment length %u at offset %4.4X"
             WRMSG(HHC00909, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, sSegLen, iPos );

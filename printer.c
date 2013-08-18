@@ -85,7 +85,7 @@ do { \
     } /* end if(!data-chained) */ \
     if ( dev->index > 1 ) \
     { \
-        for (i = 1; i < dev->index; i++) \
+        for (i = 1; i < (U32)dev->index; i++) \
         { \
             dev->buf[dev->bufoff] = SPACE; \
             dev->bufoff++; \
@@ -93,7 +93,7 @@ do { \
         } /* end for(i) */ \
     } /* end if ( dev->index > 1 )  */ \
     /* Calculate number of bytes to write and set residual count */ \
-    num = (count < dev->bufres) ? count : dev->bufres; \
+    num = (count < (U32)dev->bufres) ? count : (U32)dev->bufres; \
     *residual = count - num; \
     /* Copy data from channel buffer to print buffer */ \
     for (i = 0; i < num; i++) \
@@ -129,7 +129,7 @@ do { \
 #define SKIP_TO_CHAN() \
 do { \
     havechan = 0; \
-    for ( i = 0; i < dev->lpp; i++ ) \
+    for ( i = 0; i < (U32)dev->lpp; i++ ) \
     { \
         line = LINENUM( dev->currline + i ); \
         if ( dev->fcb[line] != chan )  \
@@ -913,12 +913,12 @@ int fd = dev->fd;
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
 int             rc = 0;                 /* Return code               */
-int             i;                      /* Loop counter              */
-int             num;                    /* Number of bytes to move   */
+U32             i;                      /* Loop counter              */
+U32             num;                    /* Number of bytes to move   */
 char           *eor;                    /* -> end of record string   */
 char           *nls = "\n\n\n";         /* -> new lines              */
 BYTE            c;                      /* Print character           */
@@ -1131,7 +1131,7 @@ char            wbuf[150];
         }
         else
         {
-            int i = 0;
+            U32 i = 0;
             int j = 1;
             int more = 1;
             for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;

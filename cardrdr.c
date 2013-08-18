@@ -791,11 +791,11 @@ BYTE  c   = 0;                          /* Input character           */
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void cardrdr_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 int     rc;                             /* Return code               */
-int     num;                            /* Number of bytes to move   */
+U32     num;                            /* Number of bytes to move   */
 
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
@@ -852,9 +852,9 @@ int     num;                            /* Number of bytes to move   */
         } /* end if(!data-chained) */
 
         /* Calculate number of bytes to read and set residual count */
-        num = (count < dev->cardrem) ? count : dev->cardrem;
+        num = (count < (U32)dev->cardrem) ? count : (U32)dev->cardrem;
         *residual = count - num;
-        if (count < dev->cardrem) *more = 1;
+        if (count < (U32)dev->cardrem) *more = 1;
 
         /* Copy data from card image buffer into channel buffer */
         memcpy (iobuf, dev->buf + dev->cardpos, num);

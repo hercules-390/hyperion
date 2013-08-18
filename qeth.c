@@ -3024,11 +3024,11 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int num;                                /* Number of bytes to move   */
+U32 num;                                /* Number of bytes to move   */
 
     UNREFERENCED(flags);
     UNREFERENCED(ccwseq);
@@ -3130,7 +3130,7 @@ int num;                                /* Number of bytes to move   */
     {
     OSA_BHR *bhr;
     BYTE    *iodata;
-    int      datalen, length;
+    U32      datalen, length;
     U32      first4;
         /*
         ** Our purpose is to satisfy the program's request to read
@@ -3345,7 +3345,7 @@ int num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        int len = sizeof(configuration_data);
+        U32 len = sizeof(configuration_data);
         NED *dev_ned = (NED*)iobuf;     /* Device NED is first       */
         NED *ctl_ned = dev_ned + 1;     /* Control Unit NED is next  */
         NED *tkn_ned = ctl_ned + 1;     /* Token NED is last NED     */
@@ -3453,7 +3453,7 @@ int num;                                /* Number of bytes to move   */
     /* READ NODE IDENTIFIER                                          */
     /*---------------------------------------------------------------*/
     {
-        int len = sizeof(node_data);
+        U32 len = sizeof(node_data);
         ND *nd = (ND*)iobuf;            /* Node Descriptor pointer   */
         DEVBLK *cua;                    /* Our Control Unit device   */
 

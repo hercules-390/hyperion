@@ -56,10 +56,10 @@ extern void     CTCX_Query( DEVBLK* pDEVBLK, char** ppszClass,
                             int     iBufLen, char*  pBuffer );
 extern void     CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                                  BYTE    bFlags,  BYTE  bChained,
-                                 U16     sCount,  BYTE  bPrevCode,
+                                 U32     sCount,  BYTE  bPrevCode,
                                  int     iCCWSeq, BYTE* pIOBuf,
                                  BYTE*   pMore,   BYTE* pUnitStat,
-                                 U16*    pResidual );
+                                 U32*    pResidual );
 
 extern int      CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] );
 extern int      CTCI_Close( DEVBLK* pDEVBLK );
@@ -67,17 +67,17 @@ extern void     CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
                             int     iBufLen, char*  pBuffer );
 extern void     CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                                  BYTE    bFlags,  BYTE  bChained,
-                                 U16     sCount,  BYTE  bPrevCode,
+                                 U32     sCount,  BYTE  bPrevCode,
                                  int     iCCWSeq, BYTE* pIOBuf,
                                  BYTE*   pMore,   BYTE* pUnitStat,
-                                 U16*    pResidual );
+                                 U32*    pResidual );
 
-extern void     CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
+extern void     CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
                            BYTE*   pIOBuf,    BYTE* UnitStat,
-                           U16*    pResidual, BYTE* pMore );
-extern void     CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                           U32*    pResidual, BYTE* pMore );
+extern void     CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
                             BYTE*   pIOBuf,    BYTE* UnitStat,
-                            U16*    pResidual );
+                            U32*    pResidual );
 
 extern int      LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] );
 extern int      LCS_Close( DEVBLK* pDEVBLK );
@@ -85,20 +85,20 @@ extern void     LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
                            int     iBufLen, char*  pBuffer );
 extern void     LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                                 BYTE    bFlags,  BYTE  bChained,
-                                U16     sCount,  BYTE  bPrevCode,
+                                U32     sCount,  BYTE  bPrevCode,
                                 int     iCCWSeq, BYTE* pIOBuf,
                                 BYTE*   pMore,   BYTE* pUnitStat,
-                                U16*    pResidual );
+                                U32*    pResidual );
 
-extern void     LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
+extern void     LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
                           BYTE*   pIOBuf,    BYTE* UnitStat,
-                          U16*    pResidual, BYTE* pMore );
-extern void     LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                          U32*    pResidual, BYTE* pMore );
+extern void     LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                            BYTE*   pIOBuf,    BYTE* UnitStat,
-                           U16*    pResidual );
+                           U32*    pResidual );
 extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
-                         U16     sCount,    BYTE*  pIOBuf,
-                         BYTE*   UnitStat,  U16*   pResidual,
+                         U32     sCount,    BYTE*  pIOBuf,
+                         BYTE*   UnitStat,  U32*   pResidual,
                          BYTE*   pMore );
 
 extern void     packet_trace( BYTE *addr, int len, BYTE dir );

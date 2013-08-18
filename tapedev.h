@@ -278,7 +278,7 @@ OMATAPE_DESC;
  * The two block length fields are followed by an XOR "check" field
  * calculated as the XOR of the two preceding length fields and is
  * used to verify the integrity of the header.
- * 
+ *
  * The Flex FakeTape tape format does not support any flag fields
  * in its header and thus does not support any type of compression.
  */
@@ -348,7 +348,7 @@ struct TAPEMEDIA_HANDLER
     int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
     void (*close)      (DEVBLK*);
     int  (*read)       (DEVBLK*, BYTE *buf,             BYTE *unitstat, BYTE code);
-    int  (*write)      (DEVBLK*, BYTE *buf, U16 blklen, BYTE *unitstat, BYTE code);
+    int  (*write)      (DEVBLK*, BYTE *buf, U32 blklen, BYTE *unitstat, BYTE code);
     int  (*rewind)     (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*bsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*fsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
@@ -396,7 +396,7 @@ extern int   IsAtLoadPoint          (DEVBLK *dev);
 extern void  ReqAutoMount           (DEVBLK *dev);
 extern void  UpdateDisplay          (DEVBLK *dev);
 extern int   return_false1          (DEVBLK *dev);
-extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U16 blklen, BYTE *unitstat, BYTE code);
+extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
 extern int   is_tapeloaded_filename (DEVBLK *dev,             BYTE *unitstat, BYTE code);
 extern int   write_READONLY         (DEVBLK *dev,             BYTE *unitstat, BYTE code);
 extern int   no_operation           (DEVBLK *dev,             BYTE *unitstat, BYTE code);
@@ -419,8 +419,8 @@ extern BYTE            TapeImmedCommands[];
 
 extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
 extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
-                                     BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-                                     BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
+                                     BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+                                     BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual);
 extern void  load_display           (DEVBLK *dev, BYTE *buf, U16 count);
 
 extern void  build_senseX           (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
@@ -469,7 +469,7 @@ extern int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
                                             BYTE *unitstat, BYTE code);
 extern int  read_awstape      (DEVBLK *dev, BYTE *buf,
                                             BYTE *unitstat, BYTE code);
-extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U16 blklen,
+extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U32 blklen,
                                             BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
@@ -493,7 +493,7 @@ extern int  writehdr_faketape  (DEVBLK *dev, off_t blkpos,
                                              BYTE *unitstat, BYTE code);
 extern int  read_faketape      (DEVBLK *dev, BYTE *buf,
                                              BYTE *unitstat, BYTE code);
-extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U16 blklen,
+extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U32 blklen,
                                              BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
@@ -511,7 +511,7 @@ extern int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
 extern int  read_het      (DEVBLK *dev, BYTE *buf,
                                         BYTE *unitstat, BYTE code);
-extern int  write_het     (DEVBLK *dev, BYTE *buf, U16 blklen,
+extern int  write_het     (DEVBLK *dev, BYTE *buf, U32 blklen,
                                         BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
@@ -556,7 +556,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define TAPE_HRA_RETRY                       0x80
 #define TAPE_HRA_DDR                         0x00       // Same as error for VT
 #define TAPE_HRA_RESUME                      0x40
-#define TAPE_HRA_OPERATOR_INTERVENTION       0xC0   
+#define TAPE_HRA_OPERATOR_INTERVENTION       0xC0
 
 // Sense byte 0
 
@@ -582,7 +582,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 2
 /*
-||  NTP SENSE BYTE 2 
+||  NTP SENSE BYTE 2
 ||  Log code is in byte 2(3-4), BRAC is in byte 2(0-1)
 */
 #define  TAPE_SNS2_NTP_BRAC_00_PERM_ERR     0x00      // BRAC 00 - PERM ERR
@@ -594,7 +594,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS2_NTP_LOG_CD2_PERM_OBR     0x10
 #define  TAPE_SNS2_NTP_LOG_CD3_A3           0x18
 
-#define  TAPE_SNS2_REPORTING_CHAN_PATH      0xF0      // Interface in the first 4 bits 
+#define  TAPE_SNS2_REPORTING_CHAN_PATH      0xF0      // Interface in the first 4 bits
 #define  TAPE_SNS2_REPORTING_CHAN_A         0x20      // Channel A Interface
 #define  TAPE_SNS2_REPORTING_CHAN_B         0x40      // Channel B Interface
 #define  TAPE_SNS2_REPORTING_CU             0x00      // Always 0 (ZERO) Bit 4
@@ -737,12 +737,12 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 4
 /*
-||  SENSE BYTE 4 FOR TAPES 
+||  SENSE BYTE 4 FOR TAPES
 */
-#define  TAPE_SNS4_3420_TAPE_INDICATE         0x20      // EOT FOUND 
-#define  TAPE_SNS4_3480_FORMAT_MODE           0xC0       
-#define  TAPE_SNS4_3480_FORMAT_MODE_XF        0x80       
-#define  TAPE_SNS4_3490_FORMAT_MODE           0x00       
+#define  TAPE_SNS4_3420_TAPE_INDICATE         0x20      // EOT FOUND
+#define  TAPE_SNS4_3480_FORMAT_MODE           0xC0
+#define  TAPE_SNS4_3480_FORMAT_MODE_XF        0x80
+#define  TAPE_SNS4_3490_FORMAT_MODE           0x00
 #define  TAPE_SNS4_3490_FORMAT_MODE_RSVD      0x40
 #define  TAPE_SNS4_3490_FORMAT_MODE_IDRC      0x80
 #define  TAPE_SNS4_3490_FORMAT_MODE_SPECIAL   0xC0
@@ -751,13 +751,13 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 5
 /*
-||  SENSE BYTE 5 FOR TAPES 
+||  SENSE BYTE 5 FOR TAPES
 */
 #define  TAPE_SNS5_3480_MO_CHAN_LOG_BLK_ID    0xFF
 
 // Sense byte 6
 /*
-||  SENSE BYTE 6 FOR TAPES 
+||  SENSE BYTE 6 FOR TAPES
 */
 #define  TAPE_SNS6_3480_LO_CHAN_LOG_BLK_ID    0xFF
 
@@ -787,7 +787,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 // Sense byte 7
 /*
-||  SENSE BYTE 7 FOR TAPES 
+||  SENSE BYTE 7 FOR TAPES
 */
 #define  TAPE_SNS7_TAPE_SECURITY_ERASE_CMD    0x08
 #define  TAPE_SNS7_FMT_20_3480                0x20 // DRIVE AND CU ERROR INFORMATION

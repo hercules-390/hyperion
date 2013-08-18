@@ -246,7 +246,7 @@ typedef struct _BIOE32 {
         FWORD   bufalet;            /* Data buffer ALET              */
         FWORD   bufaddr;            /* Data buffer absolute address  */
     } BIOE32;
-    
+
 typedef struct _BIOE64 {
         BYTE    type;               /* Type of I/O request           */
         BYTE    status;             /* Status of I/O request         */
@@ -309,7 +309,7 @@ typedef struct _IOCTL32 {
         int     goodblks;            /* Number of successful I/O's   */
         int     badblks;             /* Number of unsuccessful I/O's */
     } IOCTL32;
-    
+
 /* Structure passed to the asynchronous thread */
 typedef struct _IOCTL64 {
         /* Hercules structures involved in the request */
@@ -326,7 +326,7 @@ typedef struct _IOCTL64 {
         int     goodblks;            /* Number of successful I/O's   */
         int     badblks;             /* Number of unsuccessful I/O's */
     } IOCTL64;
-    
+
 #endif /* !defined(_VMD250_H) */
 
 /*-------------------------------------------------------------------*/
@@ -366,7 +366,7 @@ static void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subco
        sched_yield();
        OBTAIN_INTLOCK(NULL);
    }
-   
+
    /* Can now safely store my interrupt information */
    sysblk.bioparm  = intparm;   /* Trigger with the interrupt parameter */
    sysblk.biostat  = status;    /* Trigger with the status */
@@ -379,12 +379,12 @@ static void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subco
    /* be interrupted when it has enabled service signals.  For this   */
    /* reason the Block I/O is being treated like a service signal and */
    /* handled by the service signal handling logic in external.c      */
-   
+
    /* Make the "service signal" interrupt pending                     */
    ON_IC_SERVSIG;
    /* Wake up any waiters */
    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
-   
+
    if (dev->ccwtrace)
    {
       WRMSG (HHC01905, "I",
@@ -403,7 +403,7 @@ static void d250_bio_interrupt(DEVBLK *dev, U64 intparm, BYTE status, BYTE subco
 /*-------------------------------------------------------------------*/
 /*  Initialize Environment - 32-bit Addressing                       */
 /*-------------------------------------------------------------------*/
-static int  d250_init32(DEVBLK *dev, int *diag_rc, BIOPL_INIT32 *biopl, 
+static int  d250_init32(DEVBLK *dev, int *diag_rc, BIOPL_INIT32 *biopl,
                  REGS *regs)
 {
 BIOPL_INIT32   bioplx00;             /* Use to check reserved fields */
@@ -435,7 +435,7 @@ int     cc;                         /* Condition code to return      */
 
    /* Call the addressing independent initialization function */
    bioenv=d250_init(dev, blksize, (S64)offset, &cc, &rc);
- 
+
    if (bioenv)
    {
       /* Save the values in the BIOPL for return to guest */
@@ -450,7 +450,7 @@ int     cc;                         /* Condition code to return      */
               bioenv->begblk,
               bioenv->endblk
              );
-      } 
+      }
    }
    *diag_rc = rc;
    return cc;
@@ -475,7 +475,7 @@ int     cc;                          /* condition code               */
 
    /* Clear the reserved BIOPL */
    memset(&bioplx00,0,sizeof(BIOPL_INIT64));
-   
+
    /* Make sure reserved fields are binary zeros  */
    if ((memcmp(&biopl->resv1,&bioplx00,INIT64R1_LEN)!=0) ||
        (memcmp(&biopl->resv2,&bioplx00,INIT64R2_LEN)!=0) ||
@@ -483,13 +483,13 @@ int     cc;                          /* condition code               */
    {
        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
    }
-   
+
    /* Fetch the block size from the BIOPL */
    FETCH_FW(blksize,&biopl->blksize);
 
    /* Fetch the offset from the BIOPL provided by the guest */
    FETCH_DW(offset,&biopl->offset);
-   
+
    bioenv=d250_init(dev, blksize, offset, &cc, &rc);
 
    if (bioenv)
@@ -557,10 +557,10 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
               blktab->phys4096
              );
    }
-   
+
    /* Save the device architecture */
    isCKD = blktab->darch;
-   
+
    /* Determine if the blocksize is valid and its physical/block value */
    switch(blksize)
    {
@@ -581,20 +581,20 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
          *cc = CC_FAILED;
          return NULL;
    }
-   
+
    isRO = 0;  /* Assume device is read-write */
    if (isCKD)
    {
       /* Number of standard blocks is based upon number of primary */
       /* cylinders                                                 */
-      numblks=(dev->ckdtab->cyls * dev->ckdtab->heads * seccyl); 
+      numblks=(dev->ckdtab->cyls * dev->ckdtab->heads * seccyl);
       if (dev->ckdrdonly)
       {
          isRO = 1;
       }
    }
    else
-   {  
+   {
       numblks=(dev->fbanumblk*dev->fbablksiz)/blksize;
       /* FBA devices are never read only */
    }
@@ -603,7 +603,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    /* Block numbers in the environment are relative to 1, not zero   */
    begblk=1-offset;
    endblk=numblks-offset;
-   
+
    if (!(bioenv=(struct VMBIOENV *)malloc(sizeof(struct VMBIOENV))))
    {
       char buf[40];
@@ -613,7 +613,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
       *cc = CC_FAILED;
       return NULL;
    }
-   
+
    /* Set the fields in the environment structure                */
    bioenv->dev     = dev     ; /* Set device block pointer       */
    bioenv->blksiz  = blksize ; /* Pass the block size            */
@@ -623,7 +623,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
    bioenv->isCKD   = isCKD   ; /* Save the device type           */
    bioenv->isRO    = isRO    ; /* Save the read/write status     */
    bioenv->blkphys = seccyl  ; /* Save the block-to-phys mapping */
-   
+
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another thread wants it */
    obtain_lock (&dev->lock);
@@ -633,7 +633,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        dev->vmd250env = bioenv ;
        /* No need to hold the device lock now, environment is set */
        release_lock (&dev->lock);
-       
+
        /* Set the appropriate successful return and condition codes */
        if (isRO)
        {
@@ -659,7 +659,7 @@ struct VMBIOENV *bioenv;  /* -->allocated environement               */
        *rc = RC_STATERR;
        *cc = CC_FAILED;
    }
-   
+
    /* Return the bioenv so that the start and end blocks can     */
    /* be returned to the guest in the addressing mode specific   */
    /* BIOPL format                                               */
@@ -720,7 +720,7 @@ static void d250_preserve(DEVBLK *dev)
        {  WRMSG(HHC01909, "I", dev->devnum);
        }
     }
-    
+
     /* Both fbadasd.c and ckddasd.c set the local reserved flag before  */
     /* calling the shared device client                                 */
     dev->reserved = 1;
@@ -775,8 +775,8 @@ int       cc;                        /* Condition code to return     */
 
    /* Clear the reserved BIOPL */
    memset(&bioplx00,0,sizeof(BIOPL_REMOVE));
-   
-      
+
+
    /* Make sure reserved fields are binary zeros  */
    if (memcmp(&biopl->resv1,&bioplx00,REMOVER1_LEN)!=0)
    {
@@ -789,7 +789,7 @@ int       cc;                        /* Condition code to return     */
       *rc = RC_NODEV;  /* Set the return code for no device */
       return CC_FAILED; /* Indicate the function failed     */
    }
-   
+
    /* Attach the environment to the DEVBLK */
    /* Lock the DEVBLK in case another CPU is trying something */
    obtain_lock (&dev->lock);
@@ -836,7 +836,7 @@ int       cc;                        /* Condition code to return     */
 static int d250_read(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 {
 BYTE unitstat;     /* Device unit status */
-U16  residual;     /* Residual byte count */
+U32  residual;     /* Residual byte count */
 
 /* Note: Not called with device lock held */
 
@@ -850,33 +850,33 @@ U16  residual;     /* Residual byte count */
     {
        release_lock(&dev->lock);
        /* Do CKD I/O */
-       
+
        /* CKD to be supplied */
-       
+
        return BIOE_IOERROR;
     }
     else
     {
        /* Do FBA I/O */
-       
+
        /* Call the I/O start exit */
        if (dev->hnd->start) (dev->hnd->start) (dev);
-       
+
        unitstat = 0;
-       
+
        /* Call the FBA driver's read standard block routine */
        fbadasd_read_block(dev, (int)pblknum, (int)blksize,
-                          dev->vmd250env->blkphys, 
+                          dev->vmd250env->blkphys,
                           buffer, &unitstat, &residual );
-       
+
        if (dev->ccwtrace)
        {
           WRMSG(HHC01923, "I", dev->devnum, unitstat, residual );
        }
-       
+
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
-       
+
        release_lock(&dev->lock);
     }
     /* If an I/O error occurred, return status of I/O Error */
@@ -884,7 +884,7 @@ U16  residual;     /* Residual byte count */
     {
        return BIOE_IOERROR;
     }
-    
+
     /* If there was a residual count, block size error, return status of 2 */
     /* Note: This can only happen for CKD devices                          */
     if ( residual != 0 )
@@ -902,7 +902,7 @@ U16  residual;     /* Residual byte count */
 static int d250_write(DEVBLK *dev, S64 pblknum, S32 blksize, void *buffer)
 {
 BYTE unitstat;     /* Device unit status */
-U16  residual;     /* Residual byte count */
+U32  residual;     /* Residual byte count */
 
     obtain_lock(&dev->lock);
     if (dev->ccwtrace)
@@ -919,9 +919,9 @@ U16  residual;     /* Residual byte count */
     {
         release_lock(&dev->lock);
         /* Do CKD I/O */
-       
+
         /* CKD to be supplied */
-        
+
         return BIOE_IOERROR;
     }
     else
@@ -935,7 +935,7 @@ U16  residual;     /* Residual byte count */
 
        /* Call the FBA driver's write standard block routine */
        fbadasd_write_block(dev, (int)pblknum, (int)blksize,
-                           dev->vmd250env->blkphys, 
+                           dev->vmd250env->blkphys,
                            buffer, &unitstat, &residual );
        if (dev->ccwtrace)
        {
@@ -944,16 +944,16 @@ U16  residual;     /* Residual byte count */
 
        /* Call the I/O end exit */
        if (dev->hnd->end) (dev->hnd->end) (dev);
-       
+
        release_lock(&dev->lock);
     }
-    
+
     /* If an I/O error occurred, return status of 1 */
     if ( unitstat != ( CSW_CE | CSW_DE ) )
     {
        return BIOE_IOERROR;
     }
-    
+
     /* If there was a residual count, block size error, return status of 2 */
     /* Note: This can only happen for CKD devices                          */
     if ( residual != 0 )
@@ -1008,7 +1008,7 @@ int     cc;                            /* condition code             */
 
     rc = RC_ERROR; /* Initialize the return code to error */
     cc = CC_FAILED; /* Failure assumed unless otherwise successful */
-    
+
 #if 0
     if (sizeof(BIOPL) != 64)
     {
@@ -1054,7 +1054,7 @@ int     cc;                            /* condition code             */
     }
 
     /* Fetch the BIOPL from guest storage */
-    ARCH_DEP(wfetchc) (&bioplin, sizeof(bioplin)-1, 
+    ARCH_DEP(wfetchc) (&bioplin, sizeof(bioplin)-1,
                        biopaddr, USE_REAL_ADDR, regs);
 
     /* Access the targeted device number from the BIOPL*/
@@ -1071,7 +1071,7 @@ int     cc;                            /* condition code             */
 /* Initialize the Block I/O Device Environment            */
 /*--------------------------------------------------------*/
     case INIT:
-            
+
 #if !defined(FEATURE_ESAME)
          /* 64-bit formats not supported for S/370 or ESA/390 */
          /* and bits 1-7 must be zero                         */
@@ -1079,7 +1079,7 @@ int     cc;                            /* condition code             */
          {
              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
          }
-         
+
          /* Call the 32-bit addressing function */
          cc = d250_init32(dev,&rc,&bioplin.init32,regs);
 #else
@@ -1094,7 +1094,7 @@ int     cc;                            /* condition code             */
             cc = d250_init64(dev,&rc,&bioplin.init64,regs);
          }
          else
-         {   
+         {
             cc = d250_init32(dev,&rc,&bioplin.init32,regs);
          }
 #endif /* !FEATURE_ESAME */
@@ -1119,7 +1119,7 @@ int     cc;                            /* condition code             */
          {
              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
          }
-         
+
          if (bioplin.biopl.flaga & BIOPL_FLAGAMSK)
          {
             cc = ARCH_DEP(d250_iorq64)(dev,&rc,&bioplin.iorq64,regs);
@@ -1142,15 +1142,15 @@ int     cc;                            /* condition code             */
     } /* end switch(regs->GR_L(r2)) */
 
     /* Update the BIOPL in main storage */
-    ARCH_DEP(wstorec) (&bioplin, sizeof(bioplin)-1, 
+    ARCH_DEP(wstorec) (&bioplin, sizeof(bioplin)-1,
                        biopaddr, USE_REAL_ADDR, regs);
-    
+
     /* Set the return code in Rx+1 */
     regs->GR_L((r1+1)&0xF) = rc;
-    
+
     /* Return the condition code */
-    return cc; 
-    
+    return cc;
+
 } /* end function vm_blockio */
 
 /*-------------------------------------------------------------------*/
@@ -1163,10 +1163,10 @@ BYTE    psc;       /* List processing status code   */
 
    /* Fetch the IO request control structure */
    ioctl=(IOCTL32 *)ctl;
-   
+
    /* Call the 32-bit BIOE request processor on this async thread*/
    psc=ARCH_DEP(d250_list32)(ioctl, ASYNC);
-   
+
    /* Trigger the external interrupt here */
 
    d250_bio_interrupt(ioctl->dev, ioctl->intrparm, psc, 0x03);
@@ -1178,7 +1178,7 @@ BYTE    psc;       /* List processing status code   */
 /*-------------------------------------------------------------------*/
 /*  Input/Output Request - 32-bit Addressing                         */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(d250_iorq32)(DEVBLK *dev, int *rc, BIOPL_IORQ32 *biopl, 
+static int ARCH_DEP(d250_iorq32)(DEVBLK *dev, int *rc, BIOPL_IORQ32 *biopl,
                 REGS *regs)
 {
 BIOPL_IORQ32   bioplx00;  /* Used to check reserved fields */
@@ -1193,7 +1193,7 @@ int     rc2;
 
    /* Clear the reserved BIOPL */
    memset(&bioplx00,0,sizeof(BIOPL_IORQ32));
-   
+
    /* Make sure reserved fields and bits are binary zeros  */
    if ((memcmp(&biopl->resv1,&bioplx00,IORQ32R1_LEN)!=0) ||
        (memcmp(&biopl->resv2,&bioplx00,IORQ32R2_LEN)!=0) ||
@@ -1211,7 +1211,7 @@ int     rc2;
       *rc = RC_NODEV;  /* Set the return code for no device */
       return CC_FAILED; /* Indicate the function failed     */
    }
-   
+
    /* If no environment, return with an error */
    if (!(dev->vmd250env))
    {
@@ -1234,17 +1234,17 @@ int     rc2;
 
    /* Extract the storage key from the BIOPL */
    ioctl.key=biopl->key;
-   
+
    /* Set the structures that are involved in this request */
    ioctl.dev = dev;
    ioctl.regs = regs;
-   
+
    /* Set I/O success/failure counts to zero */
    ioctl.goodblks = 0;
    ioctl.badblks = 0;
 
    if (biopl->flags & BIOPL_ASYNC)
-   {   
+   {
        /* Build the request structure */
 
        /* Extract the 32-bit interrupt parameter from the BIOPL */
@@ -1280,7 +1280,7 @@ int     rc2;
        /* Launch the asynchronous request on a separate thread */
        snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
-       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async32), 
+       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async32),
                asyncp, tname);
        if(rc2)
        {
@@ -1381,7 +1381,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
    xcode = 0;   /* Initialize the address check exception code */
    status = 0;
-   
+
    /* Preserve pending sense if any and establish my ownership */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
@@ -1393,11 +1393,11 @@ RADR   bufend;    /* Last byte read or written                 */
                ioctl->key
                );
    }
-   
+
    /* Take ownership of the device */
    d250_preserve(ioctl->dev);
    /* Note: the DEVBLK is now locked */
-   
+
    if (!ioctl->dev->vmd250env)
    {
        d250_restore(ioctl->dev);
@@ -1424,37 +1424,37 @@ RADR   bufend;    /* Last byte read or written                 */
       {
          break;
       }
-      
+
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE32));
       STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
       STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
-      
+
       /* Process a single BIOE */
       do
       {
-      
+
          /* Make sure reserved field is zeros */
          if ( bioe.resv1[0]!=0x00 || bioe.resv1[1]!=0x00 )
          {
             status=BIOE_NOTZERO;
             continue;
          }
-      
+
          /* Fetch and validate block number */
          FETCH_FW(blknum,&bioe.blknum);
-         if ( (blknum < ioctl->dev->vmd250env->begblk) || 
+         if ( (blknum < ioctl->dev->vmd250env->begblk) ||
               (blknum > ioctl->dev->vmd250env->endblk)
             )
          {
             status=BIOE_BADBLOCK;
             continue;
          }
-      
+
          /* Fetch the storage address used for I/O */
          FETCH_FW(bufbeg,&bioe.bufaddr);
          bufbeg &= AMASK31;
-      
+
          /* Ensure the environment still exists */
          if (!ioctl->dev->vmd250env)
          {
@@ -1467,10 +1467,10 @@ RADR   bufend;    /* Last byte read or written                 */
          /* The I/O handler routines are normally called without the  */
          /* device lock being held.  The device is reserved by the    */
          /* busy status.                                              */
-      
+
          /* Determine the last byte of the I/O buffer */
          bufend=( bufbeg + ioctl->dev->vmd250env->blksiz -1 ) & AMASK31 ;
-      
+
          if (ioctl->dev->ccwtrace)
          {
             WRMSG (HHC01930, "I",
@@ -1481,14 +1481,14 @@ RADR   bufend;    /* Last byte read or written                 */
                      bufbeg
                     );
          }
-      
+
          /* Determine the physical block on the device relative to zero */
          physblk=(S64)blknum+ioctl->dev->vmd250env->offset-1;
          /* The read/write routines will convert this to a physical disk */
          /* location for reading or writing                              */
 
          if (bioe.type == BIOE_READ)
-         {  
+         {
             xcode=ARCH_DEP(d250_addrck)
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
@@ -1511,7 +1511,7 @@ RADR   bufend;    /* Last byte read or written                 */
                                physblk,
                                ioctl->dev->vmd250env->blksiz,
                                ioctl->regs->mainstor+bufbeg);
-            
+
             /* Set I/O storage key references if successful */
             if (!status)
             {
@@ -1527,9 +1527,9 @@ RADR   bufend;    /* Last byte read or written                 */
 
             continue;
          }  /* end of BIOE_READ */
-         else 
+         else
          {  if (bioe.type == BIOE_WRITE)
-            {  
+            {
                xcode=ARCH_DEP(d250_addrck)
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
@@ -1540,7 +1540,7 @@ RADR   bufend;    /* Last byte read or written                 */
                            bufend,
                            ioctl->key);
                }
-               
+
                switch ( xcode )
                {
                   case PGM_ADDRESSING_EXCEPTION:
@@ -1550,7 +1550,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      status=BIOE_PROTEXC;
                      continue;
                }
-               
+
                if (ioctl->dev->vmd250env->isRO)
                {
                   status=BIOE_DASDRO;
@@ -1560,23 +1560,23 @@ RADR   bufend;    /* Last byte read or written                 */
                                    physblk,
                                    ioctl->dev->vmd250env->blksiz,
                                    ioctl->regs->mainstor+bufbeg);
-               
+
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs) 
+                  STORAGE_KEY(bufbeg, ioctl->regs)
                            |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs) 
+                  STORAGE_KEY(bufend, ioctl->regs)
                            |= (STORKEY_REF | STORKEY_CHANGE);
 #if defined(FEATURE_2K_STORAGE_KEYS)
                   if ( ioctl->dev->vmd250env->blksiz == 4096 )
                   {
-                  STORAGE_KEY(bufbeg+2048, ioctl->regs) 
+                  STORAGE_KEY(bufbeg+2048, ioctl->regs)
                              |= (STORKEY_REF | STORKEY_CHANGE);
                   }
 #endif
                }
-               
+
                continue;
             } /* end of if BIOE_WRITE */
             else
@@ -1586,7 +1586,7 @@ RADR   bufend;    /* Last byte read or written                 */
             } /* end of else BIOE_WRITE */
          } /* end of else BIOE_READ */
       }while(0); /* end of do */
-      
+
       /* Determine if we can store the status in the BIOE */
       xcode=ARCH_DEP(d250_addrck)
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
@@ -1605,14 +1605,14 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Store the status in the BIOE */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
-     
+
       /* Set the storage key change bit */
       STORAGE_KEY(bioebeg+1, ioctl->regs)
                  |= (STORKEY_REF | STORKEY_CHANGE);
-     
+
       if (ioctl->dev->ccwtrace)
       {
-         WRMSG (HHC01934, "I", ioctl->dev->devnum,bioebeg,status); 
+         WRMSG (HHC01934, "I", ioctl->dev->devnum,bioebeg,status);
       }
 
       /* Count if this BIOE was a success or failure */
@@ -1633,16 +1633,16 @@ RADR   bufend;    /* Last byte read or written                 */
       bioebeg += sizeof(BIOE32);
       bioebeg &= AMASK31;
    } /* end of for loop */
-   
+
 
 #if 0
    logmsg(_("(d250_list32) BIOE's processed: %d\n"),block);
 #endif
-   
+
    /* Restore device to guest ownership */
    d250_restore(ioctl->dev);
    /* Note: device lock not held */
-   
+
    /* If an access exception occurred:                                 */
    /*   If this is a synchronous request, generate a program exception */
    /*   or if this is asynchrnous, just return with a storage error    */
@@ -1653,12 +1653,12 @@ RADR   bufend;    /* Last byte read or written                 */
       else
           ARCH_DEP(program_interrupt)(ioctl->regs, xcode);
    }
-   
+
    if ( status == BIOE_ABORTED )
    {
       return PSC_REMOVED;
    }
-   
+
    /* Determine if we were completely successful or only partially     */
    /* successful.  'Partial' includes none successful.                 */
    /* Synchronous and asynchronous requests handle all failed          */
@@ -1697,16 +1697,16 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
     {
        return PGM_ADDRESSING_EXCEPTION;
     }
-    
+
     /* Note this logic is inspired by        */
     /* inline.h ARCH_DEP(is_fetch_protected) */
     /* inline.h ARCH_DEP(is_store_protected) */
-    
+
     if (key == 0)
     {
        return 0;
     }
-            
+
     sk1=STORAGE_KEY(beg,regs);
     sk2=STORAGE_KEY(end,regs);
 
@@ -1720,7 +1720,7 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
        skmid = sk2;
     }
 #endif /* defined(FEATURE_2K_STORAGE_KEYS) */
-            
+
     if (acctype == ACCTYPE_READ)
     {  /* Check for fetch protection  */
        if (  ((sk1 & STORKEY_FETCH) && (key != (sk1 & STORKEY_KEY)))
@@ -1761,7 +1761,7 @@ BYTE     psc;      /* List processing status code */
 
    /* Fetch the IO request control structure */
    ioctl=(IOCTL64 *)ctl;
-   
+
    /* Call the 32-bit BIOE request processor on this async thread*/
    psc=ARCH_DEP(d250_list64)(ioctl, ASYNC);
 
@@ -1775,7 +1775,7 @@ BYTE     psc;      /* List processing status code */
 /*-------------------------------------------------------------------*/
 /*  Input/Output Request - 64-bit Addressing                         */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(d250_iorq64)(DEVBLK *dev, int *rc, BIOPL_IORQ64 *biopl, 
+static int ARCH_DEP(d250_iorq64)(DEVBLK *dev, int *rc, BIOPL_IORQ64 *biopl,
              REGS *regs)
 {
 BIOPL_IORQ64   bioplx00;   /* Used to check reserved fields */
@@ -1806,7 +1806,7 @@ int     rc2;
    {
        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
    }
-   
+
    /* Return with an error return code if the device does not exist */
    if (!dev)
    {
@@ -1820,14 +1820,14 @@ int     rc2;
       *rc = RC_STATERR;
       return CC_FAILED;
    }
-   
+
    /* Fetch the block count from the BIOPL */
    FETCH_FW(ioctl.blkcount,&biopl->blkcount);
 #if 0
    logmsg("(d250_iorq64) ioctl.blkcount=%d,\n",
            ioctl.blkcount);
 #endif
-   
+
    /* Block count must be between 1 and 256, inclusive */
    if ((ioctl.blkcount<1) || (ioctl.blkcount>256))
    {
@@ -1844,11 +1844,11 @@ int     rc2;
 
    /* Extract the storage key from the BIOPL */
    ioctl.key=biopl->key;
-   
+
    /* Set the structures that are involved in this request */
    ioctl.dev = dev;
    ioctl.regs = regs;
-   
+
    /* Set I/O success/failure counts to zero */
    ioctl.goodblks = 0;
    ioctl.badblks = 0;
@@ -1891,7 +1891,7 @@ int     rc2;
        /* Launch the asynchronous request on a separate thread */
        snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
-       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async64), 
+       rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async64),
                asyncp, tname);
        if(rc2)
        {
@@ -1922,7 +1922,7 @@ int     rc2;
           WRMSG(HHC01937, "I", dev->devnum,psc,ioctl.goodblks,ioctl.badblks);
        }
    }
-   
+
    /* Processor status used to determine return and condition codes */
    switch(psc)
    {
@@ -1969,11 +1969,11 @@ BYTE   status;    /* Returned BIOE status                      */
 int    physblk;   /* Physical block number                     */
 RADR   bufbeg;    /* Address where the read/write will occur   */
 RADR   bufend;    /* Last byte read or written                 */
-        
+
 
    xcode = 0;   /* Initialize the address check exception code */
    status = 0;
-   
+
    /* Preserve pending sense if any and establish my ownership */
    /* of the device by reserving it if shared and locking it   */
    if (ioctl->dev->ccwtrace)
@@ -1985,11 +1985,11 @@ RADR   bufend;    /* Last byte read or written                 */
                ioctl->key
                );
    }
-   
+
    /* Take ownership of the device */
    d250_preserve(ioctl->dev);
    /* Note: the DEVBLK is now locked */
-   
+
    if (!ioctl->dev->vmd250env)
    {
        d250_restore(ioctl->dev);
@@ -2004,7 +2004,7 @@ RADR   bufend;    /* Last byte read or written                 */
    for ( block = 0 ; block < blocks ; block++ )
    {
       status = 0xFF;  /* Set undefined status */
-      
+
       bioeend=( bioebeg + sizeof(BIOE32) - 1 ) & AMASK31;
       xcode=ARCH_DEP(d250_addrck)
             (bioebeg,bioeend,ACCTYPE_READ,ioctl->key,ioctl->regs);
@@ -2016,37 +2016,37 @@ RADR   bufend;    /* Last byte read or written                 */
       {
          break;
       }
-      
+
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE64));
       STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
       STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
-      
+
       /* Process a single BIOE */
       do
       {
-      
+
          /* Make sure reserved field is zeros */
          if ( bioe.resv1[0]!=0x00 || bioe.resv1[1]!=0x00 )
          {
             status=BIOE_NOTZERO;
             continue;
          }
-      
+
          /* Fetch and validate block number */
          FETCH_DW(blknum,&bioe.blknum);
-         if ( (blknum < ioctl->dev->vmd250env->begblk) || 
+         if ( (blknum < ioctl->dev->vmd250env->begblk) ||
               (blknum > ioctl->dev->vmd250env->endblk)
             )
          {
             status=BIOE_BADBLOCK;
             continue;
          }
-      
+
          /* Fetch the storage address used for I/O */
          FETCH_DW(bufbeg,&bioe.bufaddr);
          bufbeg &= AMASK64;
-      
+
          /* Ensure the environment still exists */
          if (!ioctl->dev->vmd250env)
          {
@@ -2059,10 +2059,10 @@ RADR   bufend;    /* Last byte read or written                 */
          /* The I/O handler routines are normally called without the  */
          /* device lock being held.  The device is reserved by the    */
          /* busy status.                                              */
-      
+
          /* Determine the last byte of the I/O buffer */
          bufend=( bufbeg + ioctl->dev->vmd250env->blksiz -1 ) & AMASK64 ;
-      
+
          if (ioctl->dev->ccwtrace)
          {
             WRMSG (HHC01941, "I",
@@ -2073,14 +2073,14 @@ RADR   bufend;    /* Last byte read or written                 */
                      bufbeg
                     );
          }
-      
+
          /* Determine the physical block on the device relative to zero */
          physblk=(S64)blknum+ioctl->dev->vmd250env->offset-1;
          /* The read/write routines will convert this to a physical disk */
          /* location for reading or writing                              */
 
          if (bioe.type == BIOE_READ)
-         {  
+         {
             xcode=ARCH_DEP(d250_addrck)
                   (bufbeg,bufend,ACCTYPE_READ,ioctl->key,ioctl->regs);
             if (ioctl->dev->ccwtrace)
@@ -2103,19 +2103,19 @@ RADR   bufend;    /* Last byte read or written                 */
                                physblk,
                                ioctl->dev->vmd250env->blksiz,
                                ioctl->regs->mainstor+bufbeg);
-            
+
             /* Set I/O storage key references if successful */
             if (!status)
             {
                STORAGE_KEY(bufbeg, ioctl->regs) |= (STORKEY_REF);
                STORAGE_KEY(bufend, ioctl->regs) |= (STORKEY_REF);
             }
-            
+
             continue;
          }  /* end of BIOE_READ */
-         else 
+         else
          {  if (bioe.type == BIOE_WRITE)
-            {  
+            {
                xcode=ARCH_DEP(d250_addrck)
                      (bufbeg,bufend,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
                if (ioctl->dev->ccwtrace)
@@ -2126,7 +2126,7 @@ RADR   bufend;    /* Last byte read or written                 */
                            bufend,
                            ioctl->key);
                }
-               
+
                switch ( xcode )
                {
                   case PGM_ADDRESSING_EXCEPTION:
@@ -2136,7 +2136,7 @@ RADR   bufend;    /* Last byte read or written                 */
                      status=BIOE_PROTEXC;
                      continue;
                }
-               
+
                if (ioctl->dev->vmd250env->isRO)
                {
                   status=BIOE_DASDRO;
@@ -2149,9 +2149,9 @@ RADR   bufend;    /* Last byte read or written                 */
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs) 
+                  STORAGE_KEY(bufbeg, ioctl->regs)
                            |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs) 
+                  STORAGE_KEY(bufend, ioctl->regs)
                            |= (STORKEY_REF | STORKEY_CHANGE);
                }
                continue;
@@ -2163,7 +2163,7 @@ RADR   bufend;    /* Last byte read or written                 */
             } /* end of else BIOE_WRITE */
          } /* end of else BIOE_READ */
       }while(0); /* end of do */
-      
+
       /* Determine if we can store the status in the BIOE */
       xcode=ARCH_DEP(d250_addrck)
             (bioebeg+1,bioebeg+1,ACCTYPE_WRITE,ioctl->key,ioctl->regs);
@@ -2181,14 +2181,14 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Store the status in the BIOE */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
-     
+
       /* Set the storage key change bit */
       STORAGE_KEY(bioebeg+1, ioctl->regs)
                  |= (STORKEY_REF | STORKEY_CHANGE);
-     
+
       if (ioctl->dev->ccwtrace)
       {
-         WRMSG (HHC01945,"I",ioctl->dev->devnum,bioebeg,status); 
+         WRMSG (HHC01945,"I",ioctl->dev->devnum,bioebeg,status);
       }
 
       /* Count if this BIOE was a success or failure */
@@ -2209,16 +2209,16 @@ RADR   bufend;    /* Last byte read or written                 */
       bioebeg += sizeof(BIOE64);
       bioebeg &= AMASK64;
    } /* end of for loop */
-   
+
 #if 0
    /* remove after testing */
    logmsg(_("(d250_list64) BIOE's processed: %d\n"),block);
 #endif
-   
+
    /* Restore device to guest ownership */
    d250_restore(ioctl->dev);
    /* Note: device lock not held */
-   
+
    /* If an access exception occurred:                                 */
    /*   If this is a synchronous request, generate a program exception */
    /*   or if this is asynchrnous, just return with a storage error    */
@@ -2229,12 +2229,12 @@ RADR   bufend;    /* Last byte read or written                 */
       else
           ARCH_DEP(program_interrupt)(ioctl->regs, xcode);
    }
-   
+
    if ( status == BIOE_ABORTED )
    {
       return PSC_REMOVED;
    }
-   
+
    /* Determine if we were completely successful or only partially     */
    /* successful.  'Partial' includes none successful.                 */
    /* Synchronous and asynchronous requests handle all failed          */

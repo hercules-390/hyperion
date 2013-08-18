@@ -361,10 +361,10 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
 void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                       BYTE    bFlags,  BYTE  bChained,
-                      U16     sCount,  BYTE  bPrevCode,
+                      U32     sCount,  BYTE  bPrevCode,
                       int     iCCWSeq, BYTE* pIOBuf,
                       BYTE*   pMore,   BYTE* pUnitStat,
-                      U16*    pResidual )
+                      U32*    pResidual )
 {
     int             iNum;               // Number of bytes to move
     BYTE            bOpCode;            // CCW opcode with modifier
@@ -762,9 +762,9 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
 // it all available LCS Frames that we have buffered up in our buffer.
 // --------------------------------------------------------------------
 
-void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
+void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
                 BYTE*   pIOBuf,    BYTE* pUnitStat,
-                U16*    pResidual, BYTE* pMore )
+                U32*    pResidual, BYTE* pMore )
 {
     PLCSHDR     pLCSHdr;
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
@@ -943,9 +943,9 @@ static void  LCS_EndMWrite( DEVBLK* pDEVBLK, int nEthBytes, int nEthFrames )
 //                         LCS_Write
 // ====================================================================
 
-void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
+void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                  BYTE*   pIOBuf,    BYTE* pUnitStat,
-                 U16*    pResidual )
+                 U32*    pResidual )
 {
     PLCSDEV     pLCSDEV      = (PLCSDEV)pDEVBLK->dev_data;
     PLCSHDR     pLCSHDR      = NULL;

@@ -287,7 +287,7 @@ packet_trace( BYTE* pAddr, int iLen )
 
             if( offset < iLen )
             {
-                sprintf( tmp, "%2.2X", c ); 
+                sprintf( tmp, "%2.2X", c );
                 strcat( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
@@ -1152,10 +1152,10 @@ static void connect_message(int sfd, int na, int flag) {
     (void)getpeername (sfd, (struct sockaddr *)&client, &namelen);
     ipaddr = inet_ntoa(client.sin_addr);
     if (flag == 0)
-        MSGBUF( msgtext, "%s:%d VTAM CONNECTION ACCEPTED - NETWORK NODE= %4.4X", 
+        MSGBUF( msgtext, "%s:%d VTAM CONNECTION ACCEPTED - NETWORK NODE= %4.4X",
                 ipaddr, (int)ntohs(client.sin_port), na);
     else
-        MSGBUF( msgtext, "%s:%d VTAM CONNECTION TERMINATED", 
+        MSGBUF( msgtext, "%s:%d VTAM CONNECTION TERMINATED",
                 ipaddr, (int)ntohs(client.sin_port));
     WRMSG( HHC01047, "I", msgtext );
     write(sfd, msgtext, (u_int)strlen(msgtext));
@@ -1241,25 +1241,25 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
         }
          /* received data (rlen3270 > 0) is sufficient for 3270,
             but for TTY, eol_flag must also be set */
-     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270) 
+     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270)
      {
         ca->eol_flag = 0;
-        if (ca->is_3270) 
+        if (ca->is_3270)
         {
-           if (eor) 
+           if (eor)
            {
               ca->inpbufl = ca->rlen3270;
               ca->rlen3270 = 0; /* for next msg */
            }
-        } 
-        else 
+        }
+        else
         {
            ca->inpbufl = ca->rlen3270;
            ca->rlen3270 = 0; /* for next msg */
         }
         if(ca->dev->ccwtrace)
            WRMSG(HHC01056, "D",
-                            SSID_TO_LCSS(ca->dev->ssid), 
+                            SSID_TO_LCSS(ca->dev->ssid),
                             ca->dev->devnum,
                             ca->inpbufl);
      }
@@ -1273,7 +1273,7 @@ static void *telnet_thread(void *vca) {
     int rc;                     /* return code from various rtns     */
     struct sockaddr_in sin;     /* bind socket address structure     */
     BYTE bfr[256];
-        
+
     ca=(COMMADPT*)vca;
     /* get a work copy of devnum (for messages) */
     ca->sfd = 0;
@@ -1401,7 +1401,7 @@ static void *commadpt_thread(void *vca)
                     ca->unack_attn_count++;
                     rc = device_attention(ca->dev, CSW_ATTN);
                     if(ca->dev->ccwtrace)
-                        WRMSG(HHC01057, "D", 
+                        WRMSG(HHC01057, "D",
                                 SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
                 }
     }
@@ -1604,7 +1604,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
     *class = "LINE";
-    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%" I64_FMT "u]", 
+    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%" I64_FMT "u]",
         dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
 
@@ -1732,7 +1732,7 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
           ru_type = "DACTCONNIN";
        if ((requestp[10] & 0x08) == 0)
           ru_type = "";
-       WRMSG(HHC01062,"D", 
+       WRMSG(HHC01062,"D",
            SSID_TO_LCSS(ssid), devnum, tag, fmtbuf, fmtbuf2, fmtbuf3, ru_type);
 }
 
@@ -1745,7 +1745,7 @@ static void make_sna_requests2 (COMMADPT *ca) {
     while (ca->inpbufl > 0) {
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2"); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2");
                 return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
@@ -1819,7 +1819,7 @@ static void make_sna_requests3 (COMMADPT *ca) {
         if (!ca->telnet_int) return;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3"); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3");
                 return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
@@ -1863,7 +1863,7 @@ static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
         void    *eleptr;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4"); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4");
                 return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
@@ -1930,7 +1930,7 @@ static void make_sna_requests5 (COMMADPT *ca) {
         void    *eleptr;
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5"); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5");
                 return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
@@ -1975,7 +1975,7 @@ void make_sna_requests (BYTE * requestp, COMMADPT *ca) {
         if (memcmp(&requestp[13], R010201, 3)) return;   // we only want to process CONTACT
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request"); 
+                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request");
                 return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
@@ -2168,8 +2168,8 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
 }
 
 enum fid_remap {
-	MAP_FID1_FID2,
-	MAP_FID2_FID1
+    MAP_FID1_FID2,
+    MAP_FID2_FID1
 };
 
 static void th_remap(enum fid_remap r, BYTE * thptr)
@@ -2229,20 +2229,20 @@ int     len;
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void commadpt_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
 U32 num;                        /* Work : Actual CCW transfer count                   */
 BYTE    *piudata;
 int     piusize;
 void    *eleptr;
 int     llsize;
-    
+
     UNREFERENCED(flags);
     UNREFERENCED(chained);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
-    
+
     *residual = 0;
 
     /*

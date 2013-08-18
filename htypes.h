@@ -217,10 +217,10 @@ typedef int   DEVIF  (DEVBLK *dev, int argc, char *argv[]);
 typedef void  DEVQF  (DEVBLK *dev, char **devclass, int buflen,
                                    char *buffer);
 typedef void  DEVXF  (DEVBLK *dev, BYTE code, BYTE flags,
-                                   BYTE chained, U16 count,
+                                   BYTE chained, U32 count,
                                    BYTE prevcode, int ccwseq,
                                    BYTE *iobuf, BYTE *more,
-                                   BYTE *unitstat, U16 *residual);
+                                   BYTE *unitstat, U32 *residual);
 typedef void  DEVHF  (DEVBLK *dev);
 typedef int   DEVCF  (DEVBLK *dev);
 typedef void  DEVSF  (DEVBLK *dev);
