@@ -161,6 +161,7 @@ cmpsctst
 /hscutl2.lo
 /hsocket.lo
 /hsys.lo
+/hthreads.lo
 /httpserv.lo
 /ieee.lo
 /impl.lo
