@@ -3051,7 +3051,7 @@ U32 num;                                /* Number of bytes to move   */
 //! /* Display various information, maybe */
 //! if( grp->debug )
 //! {
-//!     // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+//!     // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
 //!     WRMSG(HHC03992, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
 //!         code, flags, count, chained, prevcode, ccwseq );
 //! }
@@ -3746,7 +3746,7 @@ U32 num;                                /* Number of bytes to move   */
 //! /* Display various information, maybe */
 //! if( grp->debug )
 //! {
-//!     // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+//!     // HHC03993 "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
 //!     WRMSG(HHC03993, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
 //!         *unitstat, *residual, *more );
 //! }

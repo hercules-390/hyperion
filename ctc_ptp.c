@@ -54,42 +54,42 @@ static int      ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] );
 
 static void     ptp_execute_ccw( DEVBLK* pDEVBLK,  BYTE  bCode,
                                  BYTE    bFlags,   BYTE  bChained,
-                                 U16     uCount,   BYTE  bPrevCode,
+                                 U32     uCount,   BYTE  bPrevCode,
                                  int     iCCWSeq,  BYTE* pIOBuf,
                                  BYTE*   pMore,    BYTE* pUnitStat,
-                                 U16*    pResidual );
+                                 U32*    pResidual );
 
 static int      ptp_close( DEVBLK* pDEVBLK );
 
 static void     ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                            int     iBufLen, char*  pBuffer );
 
-static void     ptp_write( DEVBLK* pDEVBLK,  U16  uCount,
+static void     ptp_write( DEVBLK* pDEVBLK,  U32  uCount,
                            int     iCCWSeq,  BYTE* pIOBuf,
                            BYTE*   pMore,    BYTE* pUnitStat,
-                           U16*    pResidual );
+                           U32*    pResidual );
 
-static void     write_th( DEVBLK* pDEVBLK,  U16  uCount,
+static void     write_th( DEVBLK* pDEVBLK,  U32  uCount,
                           int     iCCWSeq,  BYTE* pIOBuf,
                           BYTE*   pMore,    BYTE* pUnitStat,
-                          U16*    pResidual );
+                          U32*    pResidual );
 
 static int      write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static void     ptp_read( DEVBLK* pDEVBLK,  U16   uCount,
+static void     ptp_read( DEVBLK* pDEVBLK,  U32   uCount,
                           int     iCCWSeq,  BYTE* pIOBuf,
                           BYTE*   pMore,    BYTE* pUnitStat,
-                          U16*    pResidual );
+                          U32*    pResidual );
 
-static void     read_read_buffer( DEVBLK* pDEVBLK,   U16  uCount,
+static void     read_read_buffer( DEVBLK* pDEVBLK,   U32  uCount,
                                   int     iCCWSeq,   BYTE* pIOBuf,
                                   BYTE*   pMore,     BYTE* pUnitStat,
-                                  U16*    pResidual, PTPHDR* pPTPHDR );
+                                  U32*    pResidual, PTPHDR* pPTPHDR );
 
-static void     read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
+static void     read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
                                    int     iCCWSeq,   BYTE* pIOBuf,
                                    BYTE*   pMore,     BYTE* pUnitStat,
-                                   U16*    pResidual, PTPHDR* pPTPHDR );
+                                   U32*    pResidual, PTPHDR* pPTPHDR );
 
 static void*    ptp_read_thread( void* arg /* PTPBLK* pPTPBLK */ );
 
@@ -116,20 +116,20 @@ static void     get_tod_clock( BYTE* TodClock );
 
 static void     get_subarea_address( BYTE* SAaddress );
 
-static void     write_hx0_01( DEVBLK* pDEVBLK,  U16  uCount,
+static void     write_hx0_01( DEVBLK* pDEVBLK,  U32  uCount,
                               int     iCCWSeq,  BYTE* pIOBuf,
                               BYTE*   pMore,    BYTE* pUnitStat,
-                              U16*    pResidual );
+                              U32*    pResidual );
 
-static void     write_hx0_00( DEVBLK* pDEVBLK,  U16  uCount,
+static void     write_hx0_00( DEVBLK* pDEVBLK,  U32  uCount,
                               int     iCCWSeq,  BYTE* pIOBuf,
                               BYTE*   pMore,    BYTE* pUnitStat,
-                              U16*    pResidual );
+                              U32*    pResidual );
 
-static void     write_hx2( DEVBLK* pDEVBLK,  U16  uCount,
+static void     write_hx2( DEVBLK* pDEVBLK,  U32  uCount,
                            int     iCCWSeq,  BYTE* pIOBuf,
                            BYTE*   pMore,    BYTE* pUnitStat,
-                           U16*    pResidual );
+                           U32*    pResidual );
 
 static PTPHSV*  point_CSVcv( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2 );
 
@@ -635,10 +635,10 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
 void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
                        BYTE    bFlags,  BYTE  bChained,
-                       U16     uCount,  BYTE  bPrevCode,
+                       U32     uCount,  BYTE  bPrevCode,
                        int     iCCWSeq, BYTE* pIOBuf,
                        BYTE*   pMore,   BYTE* pUnitStat,
-                       U16*    pResidual )
+                       U32*    pResidual )
 {
 
     UNREFERENCED( bFlags    );
@@ -661,7 +661,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     // Display various information, maybe
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCCW))
     {
-        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %04X: Chained %02X: PrevCode %02X: CCWseq %d"
+        // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
         WRMSG(HHC03992, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
             bCode, bFlags, uCount, bChained, bPrevCode, iCCWSeq );
     }
@@ -738,8 +738,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         /* ---------------------------------------------------------- */
 
         // Calculate residual byte count
-        iNum = ( uCount < pDEVBLK->numsense ) ?
-            uCount : pDEVBLK->numsense;
+        iNum = ( uCount < pDEVBLK->numsense ) ? uCount : pDEVBLK->numsense;
 
         *pResidual = uCount - iNum;
 
@@ -763,8 +762,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
         /* ---------------------------------------------------------- */
 
         // Calculate residual byte count
-        iNum = ( uCount < pDEVBLK->numdevid ) ?
-            uCount : pDEVBLK->numdevid;
+        iNum = ( uCount < pDEVBLK->numdevid ) ? uCount : pDEVBLK->numdevid;
 
         *pResidual = uCount - iNum;
 
@@ -806,7 +804,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     // Display various information, maybe
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCCW))
     {
-        // HHC03993 "%1d:%04X %s: Status %02X: Residual %04X: More %02X"
+        // HHC03993 "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
         WRMSG(HHC03993, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
             *pUnitStat, *pResidual, *pMore );
     }
@@ -945,10 +943,10 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 //      pUnitStat The CSW status (CE+DE or CE+DE+UC or CE+DE+UC+SM)
 //      pResidual The CSW residual byte count
 
-void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
+void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
                  int     iCCWSeq, BYTE* pIOBuf,
                  BYTE*   pMore,   BYTE* pUnitStat,
-                 U16*    pResidual )
+                 U32*    pResidual )
 {
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
@@ -996,7 +994,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         write_th( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if (uCount >= SizeHX0 &&
+    else if (uCount >= SIZE_HX0 &&
              pPTPHX0->TH_seg == 0x00 &&
              pPTPHX0->TH_ch_flag == TH_CH_0x00)
     {
@@ -1005,7 +1003,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         write_hx0_00( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if (uCount >= SizeHX0 &&
+    else if (uCount >= SIZE_HX0 &&
              pPTPHX0->TH_seg == 0x00 &&
              pPTPHX0->TH_ch_flag == TH_CH_0x01)
     {
@@ -1014,7 +1012,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
         write_hx0_01( pDEVBLK, uCount, iCCWSeq, pIOBuf, pMore, pUnitStat, pResidual );
 
     }
-    else if (uCount >= ( SizeHX2 + SizeHSV ) &&
+    else if (uCount >= (SIZE_HX2 + SIZE_HSV) &&
              ( pPTPHX2->Ft & XID2_FORMAT_MASK ) == 0x20 &&
              pPTPHX2->NodeID[0] == 0xFF )
     {
@@ -1060,10 +1058,10 @@ void  ptp_write( DEVBLK* pDEVBLK, U16  uCount,
 /* write_th()                                                       */
 /* ------------------------------------------------------------------ */
 
-void  write_th( DEVBLK* pDEVBLK, U16  uCount,
+void  write_th( DEVBLK* pDEVBLK, U32  uCount,
                 int     iCCWSeq, BYTE* pIOBuf,
                 BYTE*   pMore,   BYTE* pUnitStat,
-                U16*    pResidual )
+                U32*    pResidual )
 {
 
     UNREFERENCED( uCount  );
@@ -1466,10 +1464,10 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 //      pUnitStat The CSW status (CE+DE or CE+DE+UC or CE+DE+UC+SM)
 //      pResidual The CSW residual byte count
 
-void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
+void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
                 int     iCCWSeq, BYTE* pIOBuf,
                 BYTE*   pMore,   BYTE* pUnitStat,
-                U16*    pResidual )
+                U32*    pResidual )
 {
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
@@ -1613,10 +1611,10 @@ void  ptp_read( DEVBLK* pDEVBLK, U16  uCount,
 /* ------------------------------------------------------------------ */
 // Note: The caller must hold the PTPBLK->ReadBufferLock.
 
-void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
+void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
                         int     iCCWSeq,   BYTE*   pIOBuf,
                         BYTE*   pMore,     BYTE*   pUnitStat,
-                        U16*    pResidual, PTPHDR* pPTPHDR )
+                        U32*    pResidual, PTPHDR* pPTPHDR )
 {
 
     UNREFERENCED( iCCWSeq );
@@ -1635,7 +1633,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
 
 
     // Point to the data and get its length.
-    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SIZE_HDR);
     pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + SIZE_TH);
     pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + SIZE_RRH);
     iDataLen = pPTPHDR->iDataLen - LEN_OF_PAGE_ONE;
@@ -1659,16 +1657,16 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         // ptp_read_thread().
 
         // Set the residual length and unit status.
-        if (uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH + iDataLen))
+        if (uCount >= (U32)(SIZE_TH + SIZE_RRH + SIZE_PH + iDataLen))
         {
             iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
             iLength2 = iDataLen;
             *pMore     = 0;
-            *pResidual = uCount - (U16)(iLength1 + iLength2);
+            *pResidual = uCount - (U32)(iLength1 + iLength2);
         }
         else
         {
-            if (uCount >= (U16)(SIZE_TH + SIZE_RRH + SIZE_PH))
+            if (uCount >= (U32)(SIZE_TH + SIZE_RRH + SIZE_PH))
             {
                 iLength1 = (int)(SIZE_TH + SIZE_RRH + SIZE_PH);
                 iLength2 = (int)uCount - iLength1;
@@ -1713,16 +1711,16 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
         // set-up by ptp_read_thread().
 
         // Set the residual length and unit status.
-        if (uCount >= (U16)(LEN_OF_PAGE_ONE + iDataLen))
+        if (uCount >= (U32)(LEN_OF_PAGE_ONE + iDataLen))
         {
             iLength1 = LEN_OF_PAGE_ONE;
             iLength2 = iDataLen;
             *pMore     = 0;
-            *pResidual = uCount - (U16)(iLength1 + iLength2);
+            *pResidual = uCount - (U32)(iLength1 + iLength2);
         }
         else
         {
-            if (uCount >= (U16)LEN_OF_PAGE_ONE)
+            if (uCount >= (U32)LEN_OF_PAGE_ONE)
             {
                 iLength1 = LEN_OF_PAGE_ONE;
                 iLength2 = (int)uCount - iLength1;
@@ -1805,10 +1803,10 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U16     uCount,
 /* read_chain_buffer()                                                */
 /* ------------------------------------------------------------------ */
 
-void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
+void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
                          int     iCCWSeq,   BYTE* pIOBuf,
                          BYTE*   pMore,     BYTE* pUnitStat,
-                         U16*    pResidual, PTPHDR* pPTPHDR )
+                         U32*    pResidual, PTPHDR* pPTPHDR )
 {
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
@@ -1820,17 +1818,17 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U16  uCount,
 
 
     // Point to the data and get its length.
-    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SIZE_HDR);
     iDataLen = pPTPHDR->iDataLen;
 
     // Get the first 4-bytes of the data.
     FETCH_FW( uFirst4, pMPC_TH->first4 );
 
     // Set the residual length and unit status.
-    if (uCount >= iDataLen)
+    if (uCount >= (U32)iDataLen)
     {
         *pMore     = 0;
-        *pResidual = (U16)uCount - (U16)iDataLen;
+        *pResidual = uCount - (U32)iDataLen;
     }
     else
     {
@@ -2229,7 +2227,7 @@ void*  ptp_read_thread( void* arg )
                 }
 
                 // Fix-up various pointers
-                pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+                pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SIZE_HDR);
                 pData   = (BYTE*)pMPC_TH + pPTPHDR->iDataLen;
 
                 // Copy the IP packet from the TUN/TAP read buffer
@@ -2424,7 +2422,7 @@ PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
 
 
     // Allocate the buffer.
-    iBufLen = SizeHDR + iSize;
+    iBufLen = SIZE_HDR + iSize;
     pPTPHDR = malloc( iBufLen );       // Allocate the buffer
     if (!pPTPHDR)                      // if the allocate was not successful...
     {
@@ -3950,10 +3948,10 @@ void     get_subarea_address( BYTE* SAaddress )
 // When we are handshaking the second CCW in the chain is the guest
 // OS on the y-side writing an PTPHX0 type 0x00 or 0x01.
 
-void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
+void  write_hx0_01( DEVBLK* pDEVBLK, U32  uCount,
                     int     iCCWSeq, BYTE* pIOBuf,
                     BYTE*   pMore,   BYTE* pUnitStat,
-                    U16*    pResidual )
+                    U32*    pResidual )
 {
 
     UNREFERENCED( uCount  );
@@ -4112,10 +4110,10 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U16  uCount,
 // When we are handshaking the second CCW in the chain is the guest
 // OS on the y-side writing an PTPHX0 type 0x00 or 0x01.
 
-void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
+void  write_hx0_00( DEVBLK* pDEVBLK, U32  uCount,
                     int     iCCWSeq, BYTE* pIOBuf,
                     BYTE*   pMore,   BYTE* pUnitStat,
-                    U16*    pResidual )
+                    U32*    pResidual )
 {
 
     UNREFERENCED( uCount  );
@@ -4166,10 +4164,10 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U16  uCount,
 // and 'VTAM' to be read by the fourth, fifth and sixth CCW's in the
 // chain.
 
-void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
+void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
                  int     iCCWSeq, BYTE* pIOBuf,
                  BYTE*   pMore,   BYTE* pUnitStat,
-                 U16*    pResidual )
+                 U32*    pResidual )
 {
 
     UNREFERENCED( uCount  );
@@ -4273,7 +4271,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
 //                  MPC_PH*    pMPC_PH;        // MPC_PH follows the MPC_RRH
 
                     // Fix-up various pointers
-                    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SizeHDR);
+                    pMPC_TH = (MPC_TH*)((BYTE*)pPTPHDR + SIZE_HDR);
                     pMPC_RRH = (MPC_RRH*)((BYTE*)pMPC_TH + SIZE_TH);
 //                  pMPC_PH = (MPC_PH*)((BYTE*)pMPC_RRH + SIZE_RRH);
 
@@ -4345,10 +4343,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         }
 
         // Allocate a buffer in which the PTPHX0 will be build.
-        pPTPHDRx0 = alloc_ptp_buffer( pDEVBLK, SizeHX0 );
+        pPTPHDRx0 = alloc_ptp_buffer( pDEVBLK, SIZE_HX0 );
         if (!pPTPHDRx0)
             return;
-        pPTPHX0re = (PTPHX0*)((BYTE*)pPTPHDRx0 + SizeHDR);
+        pPTPHX0re = (PTPHX0*)((BYTE*)pPTPHDRx0 + SIZE_HDR);
 
         // Allocate a buffer in which the PTPHX2 and PTPHSV will be build.
         pPTPHDRx2 = alloc_ptp_buffer( pDEVBLK, 255 );
@@ -4358,8 +4356,8 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
             free( pPTPHDRx0 );
             return;
         }
-        pPTPHX2re = (PTPHX2*)((BYTE*)pPTPHDRx2 + SizeHDR);
-        pPTPHSVre = (PTPHSV*)((BYTE*)pPTPHDRx2 + SizeHDR + SizeHX2);
+        pPTPHX2re = (PTPHX2*)((BYTE*)pPTPHDRx2 + SIZE_HDR);
+        pPTPHSVre = (PTPHSV*)((BYTE*)pPTPHDRx2 + SIZE_HDR + SIZE_HX2);
 
         // Allocate a buffer in which the literal 'VTAM' will be build.
         pPTPHDRvt = alloc_ptp_buffer( pDEVBLK, 4 );
@@ -4370,10 +4368,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
             free( pPTPHDRx0 );
             return;
         }
-        pPTPVTMre = (BYTE*)pPTPHDRvt + SizeHDR;
+        pPTPVTMre = (BYTE*)pPTPHDRvt + SIZE_HDR;
 
         // Prepare PTPHDRx0 and PTPHX0re
-        pPTPHDRx0->iDataLen = SizeHX0;
+        pPTPHDRx0->iDataLen = SIZE_HX0;
         // PTPHX0
         if (pPTPATH->fHandshakeCur == HANDSHAKE_ONE ||
             pPTPATH->fHandshakeCur == HANDSHAKE_TWO)
@@ -4392,10 +4390,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
         pPTPHDRx2->iDataLen = 255;
         // XID2
         pPTPHX2re->Ft = 0x20;
-        pPTPHX2re->Length = SizeHX2 + SizeHSV;
+        pPTPHX2re->Length = SIZE_HX2 + SIZE_HSV;
         uNodeID = ( sysblk.cpuid >> 36 ) | 0xFFF00000;
         STORE_FW( pPTPHX2re->NodeID, uNodeID );
-        pPTPHX2re->LenXcv = SizeHX2;
+        pPTPHX2re->LenXcv = SIZE_HX2;
         pPTPHX2re->ULPuse = 0x80;
         memcpy( pPTPHX2re->SAaddress, pPTPBLK->xSAaddress, 4 );
         if (pPTPATH->fHandshakeCur != HANDSHAKE_ONE)
@@ -4428,7 +4426,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U16  uCount,
             memcpy( pPTPHX2re->Token, pPTPBLK->yTokenIssuerRm, MPC_TOKEN_LENGTH );
         }
         // CSVcv
-        pPTPHSVre->Length = SizeHSV;
+        pPTPHSVre->Length = SIZE_HSV;
         pPTPHSVre->Key = CSV_KEY;
         pPTPHSVre->LenSIDs = sizeof(pPTPHSVre->LenSIDs) +
                               sizeof(pPTPHSVre->SID1) + sizeof(pPTPHSVre->SID2);
@@ -5032,7 +5030,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5179,7 +5177,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5284,7 +5282,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5393,7 +5391,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5551,7 +5549,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5679,7 +5677,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -5804,7 +5802,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     uLength1 = uLength2 + uLength3;            // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PUKre = (MPC_PUK*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -6867,7 +6865,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -6944,7 +6942,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7020,7 +7018,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7098,7 +7096,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7176,7 +7174,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7254,7 +7252,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7341,7 +7339,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7420,7 +7418,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7499,7 +7497,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7576,7 +7574,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7653,7 +7651,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7730,7 +7728,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     uLength1 = uLength2 + uLength3;          // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pMPC_PIXre = (MPC_PIX*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7819,7 +7817,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7896,7 +7894,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -7973,7 +7971,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;           // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -8051,7 +8049,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;             // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);
@@ -8139,7 +8137,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     uLength1 = uLength2 + uLength3;             // the MPC_TH/MPC_RRH/MPC_PH and data
 
     // Fix-up various pointers
-    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SizeHDR);
+    pMPC_THre = (MPC_TH*)((BYTE*)pPTPHDRre + SIZE_HDR);
     pMPC_RRHre = (MPC_RRH*)((BYTE*)pMPC_THre + SIZE_TH);
     pMPC_PHre = (MPC_PH*)((BYTE*)pMPC_RRHre + SIZE_RRH);
     pIP6FRMre = (IP6FRM*)((BYTE*)pMPC_PHre + SIZE_PH);

@@ -819,22 +819,22 @@ typedef struct _PTPHX0 PTPHX0, *PPTPHX0;
 typedef struct _PTPHX2 PTPHX2, *PPTPHX2;
 typedef struct _PTPHSV PTPHSV, *PPTPHSV;
 
-struct _PTPHX0                     // PTP Handshake
-{
-/*000*/  BYTE   TH_seg;            // Only seen 0x00
-/*001*/  BYTE   TH_ch_flag;        // Only seen 0x00 or 0x01
-#define TH_CH_0x00  0x00
-#define TH_CH_0x01  0x01
-#define TH_IS_XID   0x01
-/*002*/  BYTE   TH_blk_flag;       // Only seen 0x80 or 0xC0
-#define TH_DATA_IS_XID  0x80
-#define TH_RETRY  0x40
-#define TH_DISCONTACT 0xC0
-/*003*/  BYTE   TH_is_xid;         // Only seen 0x01
-#define TH_IS_0x01  0x01
-/*004*/  BYTE   TH_SeqNum[4];      // Only seen 0x00050010
-} ATTRIBUTE_PACKED;
-#define SizeHX0  0x0008            // Size of PTPHX0
+struct _PTPHX0                     /* PTP Handshake                  */
+{                                  /*                                */
+/*000*/  BYTE   TH_seg;            /* Only seen 0x00                 */
+/*001*/  BYTE   TH_ch_flag;        /* Only seen 0x00 or 0x01         */
+#define TH_CH_0x00  0x00           /*                                */
+#define TH_CH_0x01  0x01           /*                                */
+#define TH_IS_XID   0x01           /*                                */
+/*002*/  BYTE   TH_blk_flag;       /* Only seen 0x80 or 0xC0         */
+#define TH_DATA_IS_XID  0x80       /*                                */
+#define TH_RETRY  0x40             /*                                */
+#define TH_DISCONTACT 0xC0         /*                                */
+/*003*/  BYTE   TH_is_xid;         /* Only seen 0x01                 */
+#define TH_IS_0x01  0x01           /*                                */
+/*004*/  BYTE   TH_SeqNum[4];      /* Only seen 0x00050010           */
+} ATTRIBUTE_PACKED;                /*                                */
+#define SIZE_HX0  0x0008           /* Size of PTPHX0                 */
 
 struct _PTPHX2                     /* PTP Handshake XID2             */
 {                                  /*                                */
@@ -842,39 +842,41 @@ struct _PTPHX2                     /* PTP Handshake XID2             */
                                    /* of the PTPHX2 are an XID2,     */
                                    /* defined in SNA Formats.        */
                                    /*                                */
-/*000*/  BYTE   Ft;                // Format of XID (4-bits),
-                                   // Type of XID-sending node (4-bits)
-#define XID2_FORMAT_MASK  0xF0     // Mask out Format from Ft
-/*001*/  BYTE   Length;            // Length of the XID2
-/*002*/  BYTE   NodeID[4];         // Node identification:
-                                   // Block number (12 bits),
-                                   // ID number (20-bits)
+/*000*/  BYTE   Ft;                /* Format of XID (4-bits),        */
+                                   /* Type XID-sending node (4-bits) */
+#define XID2_FORMAT_MASK  0xF0     /* Mask out Format from Ft        */
+/*001*/  BYTE   Length;            /* Length of the XID2             */
+/*002*/  BYTE   NodeID[4];         /* Node identification:           */
+                                   /* Block number (12 bits),        */
+                                   /* ID number (20-bits)            */
                                    /* Note: the block number is      */
                                    /* always 0xFFF, the ID number is */
                                    /* the high order 5-digits of the */
                                    /* CPU serial number, i.e. if the */
                                    /* serial number is 123456, the   */
                                    /* nodeid will be 0xFFF12345.     */
-/*006*/  BYTE   LenXcv;            // Length of the XID2 exclusive
-                                   // of any control vectors
-/*007*/  BYTE   MiscFlags;         // Miscellaneous flags
-/*008*/  BYTE   TGstatus;          // TG status
-/*009*/  BYTE   FIDtypes;          // FID types supported
-/*00A*/  BYTE   ULPuse;            // Upper-layer protocol use
-/*00B*/  BYTE   LenMaxPIU[2];      // Length of the maximum PIU that
-                                   // the XID sender can receive
-/*00D*/  BYTE   TGNumber;          // Transmission group number (TGN)
-/*00E*/  BYTE   SAaddress[4];      // Subarea address of the XID sender
-                                   // (right-justified with leading 0's)
-/*012*/  BYTE   Flags;             // Flags
-/*013*/  BYTE   CLstatus;          // CONTACT or load status of XID sender
-/*014*/  BYTE   IPLname[8];        // IPL load module name
-/*01C*/  BYTE   ESAsupp;           // Extended Subarea Address support
-/*01D*/  BYTE   Reserved1D;        // Reserved
-/*01E*/  BYTE   DLCtype;           // DLC type
-#define DLCTYPE_WRITE 0x04         // DLC type: write path from sender
-#define DLCTYPE_READ  0x05         // DLC type: read path from sender
-
+/*006*/  BYTE   LenXcv;            /* Length of the XID2 exclusive   */
+                                   /* of any control vectors         */
+/*007*/  BYTE   MiscFlags;         /* Miscellaneous flags            */
+/*008*/  BYTE   TGstatus;          /* TG status                      */
+/*009*/  BYTE   FIDtypes;          /* FID types supported            */
+/*00A*/  BYTE   ULPuse;            /* Upper-layer protocol use       */
+/*00B*/  BYTE   LenMaxPIU[2];      /* Length of the maximum PIU that */
+                                   /* the XID sender can receive     */
+/*00D*/  BYTE   TGNumber;          /* Transmission group number      */
+/*00E*/  BYTE   SAaddress[4];      /* Subarea address of the XID     */
+                                   /* sender (right-justified        */
+                                   /* with leading 0's)              */
+/*012*/  BYTE   Flags;             /* Flags                          */
+/*013*/  BYTE   CLstatus;          /* CONTACT or load status of      */
+                                   /* XID sender                     */
+/*014*/  BYTE   IPLname[8];        /* IPL load module name           */
+/*01C*/  BYTE   ESAsupp;           /* Extended Subarea Address supp. */
+/*01D*/  BYTE   Reserved1D;        /* Reserved                       */
+/*01E*/  BYTE   DLCtype;           /* DLC type                       */
+#define DLCTYPE_WRITE 0x04         /*   Write path from sender       */
+#define DLCTYPE_READ  0x05         /*   Read path from sender        */
+                                   /*                                */
                                    /* Note: SNA Formats defines the  */
                                    /* first 31-bytes of an XID2, any */
                                    /* following bytes are DLC type   */
@@ -886,34 +888,36 @@ struct _PTPHX2                     /* PTP Handshake XID2             */
                                    /* write path from sender' and    */
                                    /* 'Multipath channel to channel; */
                                    /* read path from sender'.        */
-
-/*01F*/  BYTE   DataLen1[2];       // ?  Data length?
-/*021*/  BYTE   MpcFlag;           // Always contains 0x27
-/*022*/  BYTE   Unknown22;         // ?, only seen nulls
-/*023*/  BYTE   MaxReadLen[2];     // Maximum read length
+                                   /*                                */
+/*01F*/  BYTE   DataLen1[2];       /* ?  Data length?                */
+/*021*/  BYTE   MpcFlag;           /* Always contains 0x27           */
+/*022*/  BYTE   Unknown22;         /* ?, only seen nulls             */
+/*023*/  BYTE   MaxReadLen[2];     /* Maximum read length            */
 /*025*/  BYTE   TokenX5;           /* Token length or type or ...    */
-/*026*/  BYTE   Token[4];          // Token
-/*02A*/  BYTE   Unknown2A[7];      // ?, only seen nulls
-} ATTRIBUTE_PACKED;
-#define SizeHX2  0x0031            // Size of PTPHX2
+/*026*/  BYTE   Token[4];          /* Token                          */
+/*02A*/  BYTE   Unknown2A[7];      /* ?, only seen nulls             */
+} ATTRIBUTE_PACKED;                /*                                */
+#define SIZE_HX2  0x0031           /* Size of PTPHX2                 */
 
 // Call Security Verification (x'56') Control Vector
-struct _PTPHSV                             // PTP Handshake CSVcv
-{
-/*000*/  BYTE   Length;            // Vector length
-                                   // (including this length field)
-/*001*/  BYTE   Key;               // Vector key
-#define CSV_KEY 0x56               // CSVcv key
-/*002*/  BYTE   reserved02;        // Reserved
-/*003*/  BYTE   LenSIDs;           // Length of Security IDs
-                                   // (including this length field)
-/*004*/  BYTE   SID1[8];           // First 8-byte Security ID
-                                   // (random data or enciphered random data)
-/*00C*/  BYTE   SID2[8];           // Second 8-byte Security ID
-                                   // (random data or enciphered random data
-                                   //  or space characters)
-} ATTRIBUTE_PACKED;
-#define SizeHSV  0x0014            // Size of PTPHSV
+struct _PTPHSV                     /* PTP Handshake CSVcv            */
+{                                  /*                                */
+/*000*/  BYTE   Length;            /* Vector length                  */
+                                   /* (including this length field)  */
+/*001*/  BYTE   Key;               /* Vector key                     */
+#define CSV_KEY 0x56               /* CSVcv key                      */
+/*002*/  BYTE   reserved02;        /* Reserved                       */
+/*003*/  BYTE   LenSIDs;           /* Length of Security IDs         */
+                                   /* (including this length field)  */
+/*004*/  BYTE   SID1[8];           /* First 8-byte Security ID       */
+                                   /* (random data or                */
+                                   /* enciphered random data)        */
+/*00C*/  BYTE   SID2[8];           /* Second 8-byte Security ID      */
+                                   /* (random data or                */
+                                   /* enciphered random data or      */
+                                   /* space characters)              */
+} ATTRIBUTE_PACKED;                /*                                */
+#define SIZE_HSV  0x0014           /* Size of PTPHSV                 */
 
 
 /*********************************************************************/

@@ -283,7 +283,7 @@ struct _PTPHDR                             // PTP Message Buffer Header
                                            // End of the PTPHDR (or, if you
                                            // prefer, the start of the data).
 } ATTRIBUTE_PACKED;
-#define SizeHDR  sizeof(PTPHDR)            // Size of PTPHDR
+#define SIZE_HDR  sizeof(PTPHDR)           // Size of PTPHDR
 
 
 #if defined(_MSVC_)
