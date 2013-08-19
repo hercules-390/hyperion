@@ -944,7 +944,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
         *pResidual -= sSegLen;
 
         // We are done if current segment satisfies CCW count
-        if( iPos + sSegLen == sCount )
+        if( (U32)iPos + sSegLen == sCount )
         {
             *pResidual -= sSegLen;
             *pUnitStat = CSW_CE | CSW_DE;

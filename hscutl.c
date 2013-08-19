@@ -1143,7 +1143,7 @@ DLL_EXPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz )
     pTM = localtime( &todsecs );
     strftime( buf, bufsz, "%Y-%m-%d %H:%M:%S", pTM );
     if (bufsz > 20)
-        snprintf( &buf[19], bufsz-19, ".%06d", pTV->tv_usec );
+        snprintf( &buf[19], bufsz-19, ".%06d", (int)pTV->tv_usec );
     buf[ bufsz-1 ] = 0;
     return buf;
 }
