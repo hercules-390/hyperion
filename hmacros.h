@@ -574,7 +574,6 @@ typedef int CMPFUNC(const void*, const void*);
      OFF_IC_IOPENDING; \
    else { \
      ON_IC_IOPENDING; \
-     WAKEUP_CPU_MASK (sysblk.waiting_mask); \
    } \
  } while (0)
 

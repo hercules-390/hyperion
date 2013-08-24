@@ -5,7 +5,7 @@
  Interrupts_State & Interrupts_Mask bits definition (Initial_Mask=800E)
  Machine check, PER and external interrupt subclass bit positions
  are fixed by the architecture and cannot be changed
- Floating interrupts are made pending to all CPUs, and are 
+ Floating interrupts are made pending to all CPUs, and are
  recorded in the sysblk structure, CPU specific interrupts
  are recorded in the regs structure.
  hi0m mmmm pppp p00p xxxx xxxx xxxx h0hs : type U32
@@ -25,22 +25,22 @@
  || | |||| |||| |  | |||| ||+-------------> '1' : SERVSIG
  || | |||| |||| |  | |||| |+--------------> '1' : PTIMER
  || | |||| |||| |  | |||| +---------------> '1' : CLKC
- || | |||| |||| |  | |||| 
+ || | |||| |||| |  | ||||
  || | |||| |||| |  | |||+-----------------> '1' : TODSYNC
  || | |||| |||| |  | ||+------------------> '1' : EXTCALL
  || | |||| |||| |  | |+-------------------> '1' : EMERSIG
  || | |||| |||| |  | +--------------------> '1' : MALFALT
  || | |||| |||| |  |
  || | |||| |||| |  +----------------------> '1' : PER IFNUL
- || | |||| |||| |    
- || | |||| |||| |    
+ || | |||| |||| |
+ || | |||| |||| |
  || | |||| |||| +-------------------------> '1' : PER STURA
- || | |||| |||| 
+ || | |||| ||||
  || | |||| |||+---------------------------> '1' : PER GRA
  || | |||| ||+----------------------------> '1' : PER SA
  || | |||| |+-----------------------------> '1' : PER IF
  || | |||| +------------------------------> '1' : PER SB
- || | |||| 
+ || | ||||
  || | |||+--------------------------------> '1' : WARNING
  || | ||+---------------------------------> '1' : XDMGRPT
  || | |+----------------------------------> '1' : DGRDRPT
@@ -138,7 +138,7 @@
 
 /* External interrupt subclasses */
 
-/* 
+/*
  * Adds ECPS:VM Vtimer which has no individual
  * subclass mask in CR0
  */
@@ -311,19 +311,27 @@
 
 #define ON_IC_IOPENDING \
  do { \
-   int i; CPU_BITMAP mask; \
-   if ( !(sysblk.ints_state & BIT(IC_IO)) ) { \
+   REGS *regs; \
+   CPU_BITMAP mask = sysblk.started_mask; \
+   CPU_BITMAP wake; \
+   int i; \
+   if ( !(sysblk.ints_state & BIT(IC_IO)) ) \
+   { \
      sysblk.ints_state |= BIT(IC_IO); \
-     mask = sysblk.started_mask; \
-     for (i = 0; mask; i++) { \
-       if (mask & 1) { \
-         if ( sysblk.regs[i]->ints_mask & BIT(IC_IO) ) \
-           sysblk.regs[i]->ints_state |= BIT(IC_INTERRUPT) | BIT(IC_IO); \
+     wake = mask; \
+     for (i = 0; mask; mask >>= 1, ++i) \
+     { \
+       if (mask & 1) \
+       { \
+         regs = sysblk.regs[i]; \
+         if ( regs->ints_mask & BIT(IC_IO) ) \
+           regs->ints_state |= BIT(IC_INTERRUPT) | BIT(IC_IO); \
          else \
-           sysblk.regs[i]->ints_state |= BIT(IC_IO); \
+           regs->ints_state |= BIT(IC_IO), \
+           wake ^= regs->cpubit; \
        } \
-       mask >>= 1; \
      } \
+     WAKEUP_CPU_MASK(wake); \
    } \
  } while (0)
 
