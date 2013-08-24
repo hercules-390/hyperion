@@ -1168,9 +1168,10 @@ int DoGetRUsage( const int who, const int whotype, struct rusage* r_usage )
             if ( whoHandle == NULL )
                 return rusage_failure( r_usage );
             result = GetProcessTimes( whoHandle, &ftCreation, &ftExit, &ftKernel, &ftUser );
+            CloseHandle( whoHandle );
             break;
         case rusage_type_thread:
-            whoHandle = OpenThread( THREAD_QUERY_INFORMATION, FALSE, who );
+            whoHandle = win_thread_handle( who );
             if ( whoHandle == NULL )
                 return rusage_failure( r_usage );
             result = GetThreadTimes( whoHandle, &ftCreation, &ftExit, &ftKernel, &ftUser );
@@ -1183,7 +1184,6 @@ int DoGetRUsage( const int who, const int whotype, struct rusage* r_usage )
             return (result);
     }
 
-    CloseHandle( whoHandle );
 
     if ( !result )
         return rusage_failure( r_usage );

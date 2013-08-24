@@ -264,7 +264,7 @@ HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char
 HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
-HT_DLL_IMPORT int  hthread_win_thread_handle      ( TID tid, const char* location );
+HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
@@ -277,32 +277,32 @@ HT_DLL_IMPORT int  hthread_win_thread_handle      ( TID tid, const char* locatio
 #define destroy_lock(plk)                       hthread_destroy_lock( plk, PTT_LOC )
 
 #define initialize_rwlock( plk )                hthread_initialize_rwlock( plk, #plk, PTT_LOC )
-#define destroy_rwlock( plk )                   hthread_destroy_rwlock( plk, PTT_LOC )   
-#define obtain_rdlock( plk )                    hthread_obtain_rdlock( plk, PTT_LOC )    
-#define obtain_wrlock( plk )                    hthread_obtain_wrlock( plk, PTT_LOC )    
-#define release_rwlock( plk )                   hthread_release_rwlock( plk, PTT_LOC )   
+#define destroy_rwlock( plk )                   hthread_destroy_rwlock( plk, PTT_LOC )
+#define obtain_rdlock( plk )                    hthread_obtain_rdlock( plk, PTT_LOC )
+#define obtain_wrlock( plk )                    hthread_obtain_wrlock( plk, PTT_LOC )
+#define release_rwlock( plk )                   hthread_release_rwlock( plk, PTT_LOC )
 #define try_obtain_rdlock( plk )                hthread_try_obtain_rdlock( plk, PTT_LOC )
 #define try_obtain_wrlock( plk )                hthread_try_obtain_wrlock( plk, PTT_LOC )
 #define test_rdlock( plk )                      hthread_test_rdlock( plk, PTT_LOC )
 #define test_wrlock( plk )                      hthread_test_wrlock( plk, PTT_LOC )
 
-#define initialize_condition( plc )             hthread_initialize_condition( plc, PTT_LOC )         
-#define destroy_condition( plc )                hthread_destroy_condition( plc, PTT_LOC )            
-#define signal_condition( plc )                 hthread_signal_condition( plc, PTT_LOC )             
-#define broadcast_condition( plc )              hthread_broadcast_condition( plc, PTT_LOC )          
-#define wait_condition( plc, plk )              hthread_wait_condition( (plc), (plk), PTT_LOC )          
+#define initialize_condition( plc )             hthread_initialize_condition( plc, PTT_LOC )
+#define destroy_condition( plc )                hthread_destroy_condition( plc, PTT_LOC )
+#define signal_condition( plc )                 hthread_signal_condition( plc, PTT_LOC )
+#define broadcast_condition( plc )              hthread_broadcast_condition( plc, PTT_LOC )
+#define wait_condition( plc, plk )              hthread_wait_condition( (plc), (plk), PTT_LOC )
 #define timed_wait_condition( plc, plk, tm )    hthread_timed_wait_condition( (plc), (plk), (tm), PTT_LOC )
 
 #define initialize_join_attr( pat )             hthread_initialize_join_attr( pat, PTT_LOC )
 #define initialize_detach_attr( pat )           hthread_initialize_detach_attr( pat, PTT_LOC )
 #define create_thread( pt, pa, fn, ar, nm )     hthread_create_thread( (pt), (pa), (fn), (ar), (nm), PTT_LOC )
 #define join_thread( tid, prc )                 hthread_join_thread( (tid), (prc), PTT_LOC )
-#define detach_thread( tid )                    hthread_detach_thread( tid, PTT_LOC )       
-#define signal_thread( tid, sig )               hthread_signal_thread( (tid), (sig), PTT_LOC )  
-#define thread_id()                             hthread_thread_id( PTT_LOC )                
-#define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )         
+#define detach_thread( tid )                    hthread_detach_thread( tid, PTT_LOC )
+#define signal_thread( tid, sig )               hthread_signal_thread( (tid), (sig), PTT_LOC )
+#define thread_id()                             hthread_thread_id( PTT_LOC )
+#define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )
-#define win_thread_handle( tid )                hthread_win_thread_handle( tid, PTT_LOC )   
+#define win_thread_handle( tid )                hthread_win_thread_handle( tid )
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */

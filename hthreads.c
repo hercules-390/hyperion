@@ -33,7 +33,7 @@ struct ILOCK                    /* Hercules internal ILOCK structure */
     union      {
     HLOCK        lock;          /* The actual locking model mutex    */
     HRWLOCK      rwlock;        /* The actual locking model rwlock   */
-               };    
+               };
 };
 typedef struct ILOCK ILOCK;     /* Shorter name for the same thing   */
 
@@ -834,18 +834,9 @@ DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location 
 /*-------------------------------------------------------------------*/
 /* Return Windows thread HANDLE                                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_win_thread_handle( TID tid, const char* location )
+DLL_EXPORT HANDLE hthread_win_thread_handle( TID tid )
 {
-#if defined( _MSVC_ )
-    int rc;
-    UNREFERENCED( location );
-    rc = (int) (uintptr_t) hthread_get_handle( tid );
-    return rc;
-#else // !defined( _MSVC_ )
-    UNREFERENCED( location );
-    UNREFERENCED( tid );
-    return 0;
-#endif
+    return hthread_get_handle( tid );
 }
 
 /*-------------------------------------------------------------------*/
