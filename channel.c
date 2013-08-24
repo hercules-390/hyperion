@@ -322,7 +322,11 @@ scsw_clear_ac_Nr (SCSW* scsw)
 static INLINE void
 scsw_clear_sc_Cs (SCSW* scsw)
 {
-    scsw->flag3 &= ~SCSW3_SC_PEND;
+    scsw->flag3 &= ~(SCSW3_SC_ALERT |
+                     SCSW3_SC_INTER |
+                     SCSW3_SC_PRI   |
+                     SCSW3_SC_SEC   |
+                     SCSW3_SC_PEND);
 }
 
 
@@ -3775,13 +3779,13 @@ int     rc;                             /* Return code               */
 
     /* Initialize the subchannel status word */
     memset (&dev->scsw,     0, sizeof(SCSW));
-    dev->scsw.flag0 = (orb->flag4 & SCSW0_KEY);                /*@IWZ*/
-    if (orb->flag4 & ORB4_S) dev->scsw.flag0 |= SCSW0_S;       /*@IWZ*/
-    if (orb->flag5 & ORB5_F) dev->scsw.flag1 |= SCSW1_F;       /*@IWZ*/
-    if (orb->flag5 & ORB5_P) dev->scsw.flag1 |= SCSW1_P;       /*@IWZ*/
-    if (orb->flag5 & ORB5_I) dev->scsw.flag1 |= SCSW1_I;       /*@IWZ*/
-    if (orb->flag5 & ORB5_A) dev->scsw.flag1 |= SCSW1_A;       /*@IWZ*/
-    if (orb->flag5 & ORB5_U) dev->scsw.flag1 |= SCSW1_U;       /*@IWZ*/
+    dev->scsw.flag0 = (orb->flag4 & (SCSW0_KEY |
+                                     SCSW0_S));
+    dev->scsw.flag1 = (orb->flag5 & (SCSW1_F   |
+                                     SCSW1_P   |
+                                     SCSW1_I   |
+                                     SCSW1_A   |
+                                     SCSW1_U));
 
     /* Set the device busy indicator */
     set_subchannel_busy(dev);
@@ -5538,7 +5542,38 @@ retry:
         }
 
         /* See if another CPU can take this interrupt */
-        WAKEUP_CPU_MASK (sysblk.waiting_mask);
+        {
+            REGS *regs;
+            CPU_BITMAP mask = sysblk.waiting_mask;
+            CPU_BITMAP wake;
+            int i;
+
+            /* If any CPUs are waiting, isolate to subgroup enabled for
+             * I/O interrupts.
+             */
+            if (mask)
+            {
+                wake = mask;
+
+                /* Turn off wake mask bits for waiting CPUs that aren't
+                 * enabled for I/O interrupts.
+                 */
+                for (i = 0; mask; mask >>= 1, ++i)
+                {
+                    if (mask & 1)
+                    {
+                        regs = sysblk.regs[i];
+                        if (!OPEN_IC_IOPENDING(regs))
+                            wake ^= regs->cpubit;
+                    }
+                }
+
+                /* Wakeup the LRU waiting CPU enabled for I/O
+                 * interrupts.
+                 */
+                WAKEUP_CPU_MASK(wake);
+            }
+        }
 
     } /* end for(io) */
 
