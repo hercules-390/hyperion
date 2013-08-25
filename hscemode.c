@@ -1168,12 +1168,15 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     for (io = sysblk.iointq; io; io = io->next)
     {
         WRMSG( HHC00882, "I", SSID_TO_LCSS(io->dev->ssid), io->dev->devnum
-                ,io->pending      ? " normal"  : ""
-                ,io->pcipending   ? " PCI"     : ""
-                ,io->attnpending  ? " ATTN"    : ""
+                ,io->pending      ? " normal, " : ""
+                ,io->pcipending   ? " PCI,    " : ""
+                ,io->attnpending  ? " ATTN,   " : ""
                 ,!(io->pending || io->pcipending || io->attnpending) ?
-                                    " unknown" : ""
-                ,io->priority );
+                                    " unknown," : ""
+                ,(io->priority >> 16) & 0xFF
+                ,(io->priority >>  8) & 0xFF
+                , io->priority        & 0xFF
+                 );
     }
 
     return 0;
