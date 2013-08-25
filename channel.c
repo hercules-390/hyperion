@@ -5556,14 +5556,14 @@ retry:
                 wake = mask;
 
                 /* Turn off wake mask bits for waiting CPUs that aren't
-                 * enabled for I/O interrupts.
+                 * enabled for I/O interrupts for the device.
                  */
                 for (i = 0; mask; mask >>= 1, ++i)
                 {
                     if (mask & 1)
                     {
                         regs = sysblk.regs[i];
-                        if (!OPEN_IC_IOPENDING(regs))
+                        if (!ARCH_DEP(interrupt_enabled)(regs, io->dev))
                             wake ^= regs->cpubit;
                     }
                 }
@@ -5589,7 +5589,7 @@ retry:
         for (io = sysblk.iointq; io != NULL; io = io->next)
         {
             /* Exit loop if pending interrupts from this device */
-            if ((icode = ARCH_DEP(interrupt_enabled)(regs, io->dev)))
+            if (ARCH_DEP(interrupt_enabled)(regs, io->dev))
             {
                 dev = io->dev;
                 break;
