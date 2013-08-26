@@ -831,6 +831,7 @@ DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location 
     return rc;
 }
 
+#if defined(_MSVC_)
 /*-------------------------------------------------------------------*/
 /* Return Windows thread HANDLE                                      */
 /*-------------------------------------------------------------------*/
@@ -838,6 +839,7 @@ DLL_EXPORT HANDLE hthread_win_thread_handle( TID tid )
 {
     return hthread_get_handle( tid );
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 /* locks_cmd helper function: save offline copy of all locks in list */

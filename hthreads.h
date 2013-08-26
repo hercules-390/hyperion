@@ -264,7 +264,10 @@ HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char
 HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
+
+#if defined(_MSVC_)
 HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
+#endif
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
@@ -302,7 +305,10 @@ HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
 #define thread_id()                             hthread_thread_id( PTT_LOC )
 #define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )
+
+#if defined(_MSVC_)
 #define win_thread_handle( tid )                hthread_win_thread_handle( tid )
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */
