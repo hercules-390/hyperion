@@ -722,7 +722,7 @@ do { \
 
 #define HHC00880 "device %1d:%04X: status %s"
 #define HHC00881 "I/O interrupt queue:%s"
-#define HHC00882 "device %1d:%04X: %s%s%s%s, pri ISC %02X CSS %02X CU %02X"
+#define HHC00882 "device %1d:%04X: %s%s%s%s pri ISC %02X CSS %02X CU %02X"
 #define HHC00883 "Channel Report queue: (NULL)"
 #define HHC00884 "Channel Report queue: (empty)"
 #define HHC00885 "Channel Report queue:"
