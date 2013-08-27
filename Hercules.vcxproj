@@ -371,6 +371,14 @@
     <ClCompile Include="cckddiag.c" />
     <ClCompile Include="cckdfix.c" />
     <ClCompile Include="cckdswap.c" />
+    <ClCompile Include="cmpsctst.c" />
+    <ClCompile Include="cmpsctst_cmpsc.c" />
+    <ClCompile Include="cmpsctst_cmpsc_2012.c" />
+    <ClCompile Include="cmpsctst_cmpscdbg.c" />
+    <ClCompile Include="cmpsctst_cmpscdct.c" />
+    <ClCompile Include="cmpsctst_cmpscget.c" />
+    <ClCompile Include="cmpsctst_cmpscmem.c" />
+    <ClCompile Include="cmpsctst_cmpscput.c" />
     <ClCompile Include="conspawn.c" />
     <ClCompile Include="dasdcat.c" />
     <ClCompile Include="dasdconv.c" />
@@ -526,7 +534,9 @@
     <ClCompile Include="vm.c" />
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vstore.c" />
+    <ClCompile Include="w32chan.c" />
     <ClCompile Include="w32util.c" />
+    <ClCompile Include="wthreads.c" />
     <ClCompile Include="xstore.c" />
   </ItemGroup>
   <ItemGroup>
@@ -747,9 +757,13 @@
     <None Include="tests\trte.txt" />
     <None Include="herclogo.txt" />
     <None Include="hercules.cnf" />
+    <None Include="cmpsctst.cmd" />
+    <None Include="cmpsctst.rexx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chain.h" />
+    <ClInclude Include="cmpsctst.h" />
+    <ClInclude Include="cmpsctst_stdinc.h" />
     <ClInclude Include="cnsllogo.h" />
     <ClInclude Include="crypto\aes.h" />
     <ClInclude Include="crypto\des.h" />
@@ -847,8 +861,10 @@
     <ClInclude Include="sr.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="vstore.h" />
+    <ClInclude Include="w32chan.h" />
     <ClInclude Include="w32dl.h" />
     <ClInclude Include="w32util.h" />
+    <ClInclude Include="wthreads.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc" />

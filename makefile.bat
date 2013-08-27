@@ -303,9 +303,10 @@
 ::                                                -- Fish, March 2009
 ::
 ::-----------------------------------------------------------------------------
-::                   VS2005  or  VS2008  or  VS2010
+::              VS2005  or  VS2008  or  VS2010  or  VS2012
 ::-----------------------------------------------------------------------------
 
+:vs110
 :vs100
 :vs90
 :vs80
@@ -316,7 +317,8 @@
   if %rc% NEQ 0 (set "rc=1"
                  goto :exit)
 
-  :: (see PROGRAMMING NOTE further above!)
+  :: (see 'setlocal' PROGRAMMING NOTE further above!)
+
   setlocal
 
   call "%VSTOOLSDIR%..\..\VC\vcvarsall.bat"  %host_arch%%targ_arch%
@@ -330,14 +332,13 @@
 :sdk
 :toolkit
 
-  :: (see PROGRAMMING NOTE further above!)
+  :: (see 'setlocal' PROGRAMMING NOTE further above!)
 
   setlocal
 
-  if /i "%build_env%" == "toolkit" call "%bat_dir%vcvars32.bat"
-
-  if /i "%new_sdk%" == "NEW" call "%bat_dir%\bin\setenv" /%BLD%  /%CFG%
-  if /i not "%new_sdk%" == "NEW" call "%bat_dir%\setenv" /%BLD%  /%CFG%
+  if /i "%build_env%"   == "toolkit" call "%bat_dir%vcvars32.bat"
+  if /i     "%new_sdk%" == "NEW"     call "%bat_dir%\bin\setenv" /%BLD%  /%CFG%
+  if /i not "%new_sdk%" == "NEW"     call "%bat_dir%\setenv"     /%BLD%  /%CFG%
 
   goto :nmake
 
@@ -353,7 +354,7 @@
 
 :try_sdk
 
-  if "%MSSdk%" == "" goto :try_vs100
+  if "%MSSdk%" == "" goto :try_vs110
 
   set "build_env=sdk"
   set "bat_dir=%MSSdk%"
@@ -363,9 +364,17 @@
 :: however the V7 sdk has the "setenv.cmd" file in the "bin" directory
 :: so using that for now
 
-  if NOT exist "%MSSdk%\bin\setenv.cmd" goto :eof
+  if NOT exist "%MSSdk%\bin\setenv.cmd" %return%
   set "new_sdk=NEW"
-  goto :eof
+  %return%
+
+:try_vs110
+
+  if "%VS110COMNTOOLS%" == "" goto :try_vs100
+
+  set "build_env=vs110"
+  set "VSTOOLSDIR=%VS110COMNTOOLS%"
+  %return%
 
 :try_vs100
 
@@ -373,7 +382,7 @@
 
   set "build_env=vs100"
   set "VSTOOLSDIR=%VS100COMNTOOLS%"
-  goto :EOF
+  %return%
 
 :try_vs90
 
@@ -381,7 +390,7 @@
 
   set "build_env=vs90"
   set "VSTOOLSDIR=%VS90COMNTOOLS%"
-  goto :EOF
+  %return%
 
 :try_vs80
 
@@ -389,7 +398,7 @@
 
   set "build_env=vs80"
   set "VSTOOLSDIR=%VS80COMNTOOLS%"
-  goto :EOF
+  %return%
 
 
 :try_toolkit
@@ -398,26 +407,26 @@
 
   set "build_env=toolkit"
   set "bat_dir=%VCToolkitInstallDir%"
-  goto :EOF
+  %return%
 
 :try_xxxx
 
   echo.
   echo %~nx0^(1^) : error C9999 : No suitable Windows development product is installed
   set "rc=1"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
 :validate_makefile
 
   set "rc=0"
-  if exist "%makefile_name%" goto :EOF
+  if exist "%makefile_name%" %return%
 
   echo.
   echo %~nx0^(1^) : error C9999 : makefile "%makefile_name%" not found
   set "rc=1"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -430,14 +439,14 @@
   if %rc% NEQ 0        goto :bad_num_cpus
   if %num_cpus% LSS 1  goto :bad_num_cpus
   if %num_cpus% GTR 64 goto :bad_num_cpus
-  goto :EOF
+  %return%
 
 :bad_num_cpus
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%num_cpus%": Invalid number of cpu engines
   set "rc=1"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -458,15 +467,15 @@
 :: we need "release" not "retail"...
 
   if /i not "%new_sdk%" == "NEW" goto :cfg_sdk_env
-
   if /i "%CFG%" == "RETAIL" set "CFG=RELEASE"
 
 :cfg_sdk_env
 
 
-  :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
+  :: VS2008/VS2010/VS2012 multi-config multi-platform parallel build?
 
-  if    not "%CFG%"        == ""            goto :EOF
+  if    not "%CFG%"        == ""            %return%
+  if /i     "%build_env%"  == "vs110"       goto :multi_cfg
   if /i     "%build_env%"  == "vs100"       goto :multi_cfg
   if /i not "%build_env%"  == "vs90"        goto :bad_cfg
 
@@ -475,14 +484,14 @@
   if /i     "%build_type%" == "DEBUG-ALL"   set "CFG=debug"
   if /i     "%build_type%" == "RETAIL-ALL"  set "CFG=retail"
   if /i     "%build_type%" == "ALL-ALL"     set "CFG=all"
-  if    not "%CFG%"        == ""            goto :EOF
+  if    not "%CFG%"        == ""            %return%
 
 :bad_cfg
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
   set "rc=1"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -500,9 +509,10 @@
   if /i     "%build_type%" == "DEBUG-IA64"  set "targ_arch=ia64"
   if /i     "%build_type%" == "RETAIL-IA64" set "targ_arch=ia64"
 
-  :: Check for VS2008/VS2010 multi-configuration multi-platform parallel build...
+  :: VS2008/VS2010/VS2012 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
+  if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs100"       goto :multi_targ_arch
   if /i not "%build_env%"  == "vs90"        goto :bad_targ_arch
 
@@ -511,14 +521,14 @@
   if /i     "%build_type%" == "DEBUG-ALL"   set "targ_arch=all"
   if /i     "%build_type%" == "RETAIL-ALL"  set "targ_arch=all"
   if /i     "%build_type%" == "ALL-ALL"     set "targ_arch=all"
-  if    not "%targ_arch%"  == ""            goto :EOF
+  if    not "%targ_arch%"  == ""            %return%
 
 :bad_targ_arch
 
   echo.
   echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
   set "rc=1"
-  goto :EOF
+  %return%
 
 :set_CPU_etc
 
@@ -543,7 +553,7 @@
   if /i "%targ_arch%" == "amd64" set "BLD=XP64"
   if /i "%targ_arch%" == "ia64"  set "BLD=IA64"
 
-  goto :EOF
+  %return%
 
 :bld_sdk_env
 
@@ -551,7 +561,7 @@
   if /i "%targ_arch%" == "amd64" set "BLD=XP /X64"
   if /i "%targ_arch%" == "ia64"  set "BLD=IA64 /2003"
 
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -566,7 +576,7 @@
 
   ::  PROGRAMMING NOTE: there MUST NOT be any spaces before the ')'!!!
 
-  :: As there isn't a X64 or IA64 version of the x86 compiler
+  :: Since there isn't an X64 or IA64 version of the x86 compiler
   :: when building x86 builds we use the "x86" compiler under WOW
 
   if /i "%targ_arch%" == "x86" set "host_arch=x86"
@@ -574,14 +584,14 @@
   if /i not "%host_arch%" == "%targ_arch%" goto :cross
 
   set "host_arch="
-  if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" goto :EOF
+  if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" %return%
   goto :missing
 
 :cross
 
   set "host_arch=x86_"
 
-  if exist "%VSTOOLSDIR%..\..\VC\bin\%host_arch%%targ_arch%\vcvars%host_arch%%targ_arch%.bat" goto :EOF
+  if exist "%VSTOOLSDIR%..\..\VC\bin\%host_arch%%targ_arch%\vcvars%host_arch%%targ_arch%.bat" %return%
   goto :missing
 
 :missing
@@ -589,7 +599,7 @@
   echo.
   echo %~nx0^(1^) : error C9999 : Build support for target architecture %targ_arch% is not installed
   set "rc=1"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -731,7 +741,7 @@
 :set_VERSION_done
 
   echo Hercules version number is %VERSION% (%V1%.%V2%.%V3%.%V4%)
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -745,7 +755,7 @@
   set "path=.;%path%"
   set "fullpath=%~dpnx$PATH:1"
   set "path=%save_path%"
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -754,7 +764,7 @@
   :: The following called when set= contains (), which confuses poor windoze
 
   set %~1=%~2
-  goto :EOF
+  %return%
 
 
 ::-----------------------------------------------------------------------------
@@ -765,7 +775,7 @@
 
 :ifallorclean_loop
 
-  if    "%1" == ""      goto :EOF
+  if    "%1" == ""      %return%
   if /i "%1" == "-a"    set @=1
   if /i "%1" == "/a"    set @=1
   if /i "%1" == "all"   set @=1
@@ -799,7 +809,7 @@
 
 
 ::-----------------------------------------------------------------------------
-::       VS2008/VS2010 multi-configuration multi-platform parallel build
+::    VS2008/VS2010/VS2012 multi-config multi-platform parallel build
 ::-----------------------------------------------------------------------------
 ::
 ::  The following is special logic to leverage Fish's "RunJobs" tool

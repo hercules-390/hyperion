@@ -2234,7 +2234,7 @@
 						</File>
 					</Filter>
 					<Filter
-						Name="VC2010"
+						Name="VS2010"
 						>
 						<File
 							RelativePath=".\Hercules.vcxproj"
@@ -2242,6 +2242,18 @@
 						</File>
 						<File
 							RelativePath=".\Hercules.vcxproj.filters"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="VS2012"
+						>
+						<File
+							RelativePath=".\Hercules_VS2012.sln"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2012.vcxproj"
 							>
 						</File>
 					</Filter>
