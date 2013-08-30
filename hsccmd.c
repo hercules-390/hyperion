@@ -6806,8 +6806,8 @@ REGS *regs;
     {
         char buf1[32];
         char buf2[32];
-        MSGBUF( buf1, "%llX", (U64) aaddr );
-        MSGBUF( buf2, "%llX", (U64) aaddr2 );
+        MSGBUF( buf1, "%"I64_FMT"X", (U64) aaddr );
+        MSGBUF( buf2, "%"I64_FMT"X", (U64) aaddr2 );
         WRMSG(HHC02248, "I", buf1, buf2, fname );
     }
 
@@ -8167,7 +8167,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 if (kdd)
                 {
                     kss %= 86400;
-                    MSGBUF( kdays, "%llu/", kdd);
+                    MSGBUF( kdays, "%"I64_FMT"u/", kdd);
                 }
                 else
                     kdays[0] = 0;
@@ -8185,7 +8185,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 if (udd)
                 {
                     uss %= 86400;
-                    MSGBUF( udays, "%llu/", udd);
+                    MSGBUF( udays, "%"I64_FMT"u/", udd);
                 }
                 else
                     udays[0] = 0;
