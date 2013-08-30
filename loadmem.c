@@ -76,7 +76,7 @@ REGS *regs;
     // "Loading file %s to location %s"
     {
         char buf1[32];
-        MSGBUF( buf1, "%llX", (U64) aaddr );
+        MSGBUF( buf1, "%"I64_FMT"X", (U64) aaddr );
         WRMSG(HHC02250, "I", fname, buf1 );
     }
 

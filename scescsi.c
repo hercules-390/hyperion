@@ -38,7 +38,7 @@ typedef struct _SCSI_BOOT_BK {
 /*148*/ BYTE    ldind;                  /* Load/Dump indicator       */
 #define SCSI_BOOT_LDIND_LOAD     0x10
 #define SCSI_BOOT_LDIND_DUMP     0x20
-/*149*/ BYTE    resv149[3];     
+/*149*/ BYTE    resv149[3];
 /*14C*/ HWORD   resv14c;
 /*14E*/ HWORD   devno;                  /* Device Number             */
 /*150*/ FWORD   resv150;
@@ -237,7 +237,7 @@ int fd;
             if( pgo >= sysblk.mainsize)
                 goto eof;
             page = sysblk.mainstor + pgo;
-            if( !(size--) || !read(fd, page, STORAGE_KEY_PAGESIZE) ) 
+            if( !(size--) || !read(fd, page, STORAGE_KEY_PAGESIZE) )
                 goto eof;
             STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF|STORKEY_CHANGE);
         }
@@ -547,7 +547,7 @@ void ARCH_DEP(sdias_store_status)(REGS *regs)
 {
     UNREFERENCED(regs);
 
-    sdias_size = sysblk.mainsize < SDIAS_STORE_STATUS_MAXSIZE 
+    sdias_size = sysblk.mainsize < SDIAS_STORE_STATUS_MAXSIZE
                ? sysblk.mainsize : SDIAS_STORE_STATUS_MAXSIZE;
 
     if(!sdias_hsa)
@@ -572,7 +572,7 @@ SCSI_BOOT_BK *sb_bk;
 BYTE *xml;
 int scp_len;
 
-    if(sysblk.mainsize < (BOOT_PARM_ADDR + 0x1000)) 
+    if(sysblk.mainsize < (BOOT_PARM_ADDR + 0x1000))
         return -1;
 
     psa = (PSA*)sysblk.mainstor;
@@ -616,10 +616,10 @@ int scp_len;
     xml += sprintf((char*)xml,   "<ipl_platform_loader>\n" );
     xml += sprintf((char*)xml,    "<fcp_ipl>\n" );
     xml += sprintf((char*)xml,     "<devno>0x%4.4X</devno>\n", dev->devnum);
-    xml += sprintf((char*)xml,     "<wwpn>0x%16.16llX</wwpn>\n", scsi_lddev_wwpn[ldind]);
-    xml += sprintf((char*)xml,     "<lun>0x%16.16llX</lun>\n", scsi_lddev_lun[ldind]);
+    xml += sprintf((char*)xml,     "<wwpn>0x%16.16"I64_FMT"X</wwpn>\n", scsi_lddev_wwpn[ldind]);
+    xml += sprintf((char*)xml,     "<lun>0x%16.16"I64_FMT"X</lun>\n", scsi_lddev_lun[ldind]);
     xml += sprintf((char*)xml,     "<boot_program_selector>0x%8.8X</boot_program_selector>\n", scsi_lddev_prog[ldind]);
-    xml += sprintf((char*)xml,     "<br_lba>0x%16.16llX</br_lba>\n", scsi_lddev_brlba[ldind]);
+    xml += sprintf((char*)xml,     "<br_lba>0x%16.16"I64_FMT"X</br_lba>\n", scsi_lddev_brlba[ldind]);
     xml += sprintf((char*)xml,    "</fcp_ipl>\n" );
     xml += sprintf((char*)xml,   "</ipl_platform_loader>\n" );
     if(scp_len)
@@ -674,13 +674,13 @@ int bootfile;
 #if defined(_ARCHMODE2)
  #define  _GEN_ARCH _ARCHMODE2
  #include "scescsi.c"
-#endif 
+#endif
 
 #if defined(_ARCHMODE3)
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCHMODE3
  #include "scescsi.c"
-#endif 
+#endif
 
 
 #if defined(_FEATURE_HARDWARE_LOADER)
@@ -717,7 +717,7 @@ int n;
         for(ntf = n2flist; ntf->name && strcasecmp(ntf->name,argv[1]); ntf++);
         file = ntf->file;
 
-        if(!(!ntf->name 
+        if(!(!ntf->name
           && !strncasecmp("type",argv[1],4)
           && isdigit(*(argv[1]+4))
           && sscanf(argv[1]+4, "%u%c", &file, &c) == 1
@@ -770,7 +770,7 @@ int  ldind;  /* Load / Dump indicator */
 
     UNREFERENCED(cmdline);
 
-    ldind = ((islower(*argv[0]) ? toupper(*argv[0]) : *argv[0] ) == 'L') 
+    ldind = ((islower(*argv[0]) ? toupper(*argv[0]) : *argv[0] ) == 'L')
           ? 0 : 1;
 
     if(argc > 1)
@@ -780,13 +780,13 @@ int  ldind;  /* Load / Dump indicator */
         {
             if(!strcasecmp("portname",argv[i]) && (i+1) < argc)
             {
-                if(sscanf(argv[++i], "%llx%c", &scsi_lddev_wwpn[ldind], &c) != 1)
+                if(sscanf(argv[++i], "%"I64_FMT"x%c", &scsi_lddev_wwpn[ldind], &c) != 1)
                     logmsg(_("HHCSB002 Invalid PORTNAME\n"));
                 continue;
             }
             else if(!strcasecmp("lun",argv[i]) && (i+1) < argc)
             {
-                if(sscanf(argv[++i], "%llx%c", &scsi_lddev_lun[ldind], &c) != 1)
+                if(sscanf(argv[++i], "%"I64_FMT"x%c", &scsi_lddev_lun[ldind], &c) != 1)
                     logmsg(_("HHCSB003 Invalid LUN\n"));
                 continue;
             }
@@ -798,7 +798,7 @@ int  ldind;  /* Load / Dump indicator */
             }
             else if(!strcasecmp("br_lba",argv[i]) && (i+1) < argc)
             {
-                if(sscanf(argv[++i], "%llx%c", &scsi_lddev_brlba[ldind], &c) != 1)
+                if(sscanf(argv[++i], "%"I64_FMT"x%c", &scsi_lddev_brlba[ldind], &c) != 1)
                     logmsg(_("HHCSB005 Invalid BR_LBA\n"));
                 continue;
             }
@@ -822,13 +822,13 @@ int  ldind;  /* Load / Dump indicator */
     else
     {
         if(scsi_lddev_wwpn[ldind])
-            logmsg(_("portname %16.16llx\n"),scsi_lddev_wwpn[ldind]);
+            logmsg(_("portname %16.16"I64_FMT"x\n"),scsi_lddev_wwpn[ldind]);
         if(scsi_lddev_lun[ldind])
-            logmsg(_("lun      %16.16llx\n"),scsi_lddev_lun[ldind]);
+            logmsg(_("lun      %16.16"I64_FMT"x\n"),scsi_lddev_lun[ldind]);
         if(scsi_lddev_prog[ldind])
             logmsg(_("bootprog %8.8x\n"),scsi_lddev_prog[ldind]);
         if(scsi_lddev_brlba[ldind])
-            logmsg(_("br_lba   %16.16llx\n"),scsi_lddev_brlba[ldind]);
+            logmsg(_("br_lba   %16.16"I64_FMT"x\n"),scsi_lddev_brlba[ldind]);
         if(scsi_lddev_scpdata[ldind])
             logmsg(_("scpdata  %s\n"),scsi_lddev_scpdata[ldind]);
     }
