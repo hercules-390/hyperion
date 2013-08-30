@@ -384,7 +384,7 @@ int rc;
     if (!IS_CPU_ONLINE(cpu))
     {
         char buf[80];
-        MSGBUF(buf, "CP%02.2X Offline", devnum);
+        MSGBUF(buf, "CP%2.2X Offline", devnum);
         WRMSG (HHC00810, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         return -1;
     }
