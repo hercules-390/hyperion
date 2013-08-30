@@ -343,6 +343,8 @@ cmpsctst
 /util/Makefile
 
 # GIT Generics - Object Files
+*.lo
+*.loT
 *.o
 
 # GIT Generics - Libraries
