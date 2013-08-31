@@ -68,7 +68,7 @@ void _logmsg(char *msg,...)
 
     bfr = (char *)calloc(1, siz);
     rc = -1;
-    while (bfr && rc < 0)
+    while (bfr != NULL && rc < 0)
     {
         va_start(vl, msg);
 #if defined(_MSVC_)
@@ -87,13 +87,13 @@ void _logmsg(char *msg,...)
     }
     if (bfr != NULL)
     {
-        if (strlen(bfr) == 0 &&
-            strlen(msg) != 0)
+        if (strlen(bfr) == 0)
         {
-            free(bfr);
-            bfr = strdup(msg);
+            if (strlen(msg) != 0)
+                fputs(msg, stdout);
         }
-        printf(bfr);
+        else
+            fputs(bfr, stdout);
         free(bfr);
     }
 }
