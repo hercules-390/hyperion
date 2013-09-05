@@ -641,13 +641,13 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
                        U32*    pResidual )
 {
 
-    UNREFERENCED( bFlags    );
-    UNREFERENCED( bChained  );
-    UNREFERENCED( bPrevCode );
-
     PTPATH*   pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*   pPTPBLK  = pPTPATH->pPTPBLK;
     int       iNum;                          // Number of bytes to move
+
+    UNREFERENCED( bFlags    );
+    UNREFERENCED( bChained  );
+    UNREFERENCED( bPrevCode );
 
 
     // Intervention required if the device file is not open
@@ -1064,9 +1064,6 @@ void  write_th( DEVBLK* pDEVBLK, U32  uCount,
                 U32*    pResidual )
 {
 
-    UNREFERENCED( uCount  );
-    UNREFERENCED( iCCWSeq );
-
 //  PTPATH*    pPTPATH   = pDEVBLK->dev_data;
 //  PTPBLK*    pPTPBLK   = pPTPATH->pPTPBLK;
     MPC_TH*    pMPC_TH   = (MPC_TH*)pIOBuf;     // MPC_TH at start of IObuf
@@ -1081,6 +1078,9 @@ void  write_th( DEVBLK* pDEVBLK, U32  uCount,
 #define RRH_C108      2
 #define RRH_417E      3
 #define RRH_C17E      4
+
+    UNREFERENCED( uCount  );
+    UNREFERENCED( iCCWSeq );
 
 
     // Get the number of MPC_RRH and the displacement from the start
@@ -1617,8 +1617,6 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
                         U32*    pResidual, PTPHDR* pPTPHDR )
 {
 
-    UNREFERENCED( iCCWSeq );
-
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;   // PTPATH
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;    // PTPBLK
     MPC_TH*    pMPC_TH;                        // MPC_TH follows the PTPHDR
@@ -1630,6 +1628,8 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
     int        iLength2;
     U32        uTotalLen;
     int        iTraceLen;
+
+    UNREFERENCED( iCCWSeq );
 
 
     // Point to the data and get its length.
@@ -3954,13 +3954,13 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U32  uCount,
                     U32*    pResidual )
 {
 
-    UNREFERENCED( uCount  );
-    UNREFERENCED( iCCWSeq );
-    UNREFERENCED( pIOBuf  );
-
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
 //  PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
+
+    UNREFERENCED( uCount  );
+    UNREFERENCED( iCCWSeq );
+    UNREFERENCED( pIOBuf  );
 
 
     // Display various information, maybe
@@ -4116,13 +4116,13 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U32  uCount,
                     U32*    pResidual )
 {
 
-    UNREFERENCED( uCount  );
-    UNREFERENCED( iCCWSeq );
-    UNREFERENCED( pIOBuf  );
-
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
 //  PTPHX0*    pPTPHX0  = (PTPHX0*)pIOBuf;
+
+    UNREFERENCED( uCount  );
+    UNREFERENCED( iCCWSeq );
+    UNREFERENCED( pIOBuf  );
 
 
     // Display various information, maybe
@@ -4170,10 +4170,6 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
                  U32*    pResidual )
 {
 
-    UNREFERENCED( uCount  );
-    UNREFERENCED( iCCWSeq );
-    UNREFERENCED( pIOBuf  );
-
     PTPATH*    pPTPATH     = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK     = pPTPATH->pPTPBLK;
     PTPHX2*    pPTPHX2wr   = (PTPHX2*)pIOBuf;   // PTPHX2 being written
@@ -4191,6 +4187,10 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
     U16        uMaxReadLen;                     // Maximum read length
     PTPHDR*    pPTPHDR;                         // PTPHDR
     U32        uNodeID;
+
+    UNREFERENCED( uCount  );
+    UNREFERENCED( iCCWSeq );
+    UNREFERENCED( pIOBuf  );
 
 
     // Display various information, maybe
@@ -4482,11 +4482,11 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
 PTPHSV*  point_CSVcv( DEVBLK* pDEVBLK, PTPHX2* pPTPHX2 )
 {
 
-    UNREFERENCED( pDEVBLK );
-
     PTPHSV*   pPTPHSV;
     BYTE*     pCurCv;
     BYTE*     pEndCv;
+
+    UNREFERENCED( pDEVBLK );
 
 
     // Point to the first cv, point to the end of the cv's, and
@@ -4998,8 +4998,6 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
                              MPC_PUS* pMPC_PUSwr, u_int* fxSideWins )
 {
 
-    UNREFERENCED( pMPC_RRHwr );
-
     PTPATH*    pPTPATH      = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
@@ -5014,6 +5012,8 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     MPC_PUS*   pMPC_PUSre[3];  // MPC_PUSs follow MPC_PUK
     U64        uTod;
     int        rc;
+
+    UNREFERENCED( pMPC_RRHwr );
 
 
     // Allocate a buffer in which the response will be build.
@@ -5361,8 +5361,6 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
                                MPC_PUS* pMPC_PUSwr, u_int* fxSideWins )
 {
 
-    UNREFERENCED( pMPC_RRHwr );
-
     PTPATH*    pPTPATH      = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK      = pPTPATH->pPTPBLK;
     U32        uLength1;
@@ -5376,6 +5374,8 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     MPC_PUK*   pMPC_PUKre;      // MPC_PUK follows MPC_PH
     MPC_PUS*    pMPC_PUSre[2];  // MPC_PUSs follow MPC_PUK
     int        rc;
+
+    UNREFERENCED( pMPC_RRHwr );
 
 
     // Allocate a buffer in which the response will be build.
