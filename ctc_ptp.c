@@ -468,7 +468,9 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     // Create the TUN interface.
     rc = TUNTAP_CreateInterface( pPTPBLK->szTUNCharDevName,
+#if defined(BUILD_HERCIFC)
                                  (pPTPBLK->fPreconfigured ? IFF_NO_HERCIFC : 0) |
+#endif //defined(BUILD_HERCIFC)
                                  IFF_TUN | IFF_NO_PI,
                                  &pPTPBLK->fd,
                                  pPTPBLK->szTUNIfName );
