@@ -1,5 +1,7 @@
-/* LOADMEM.C    (c) Copyright Hercules Project, 2010-2013            */
-/*              load memory functions                                */
+/* LOADMEM.C    (c) Copyright Roger Bowler, 1999                     */
+/*              (c) Copyright Paul Leisy, 2001                       */
+/*              (c) Copyright TurboHercules SAS, 2010-2012           */
+/*              Load memory functions                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
