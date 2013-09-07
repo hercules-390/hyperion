@@ -1,4 +1,5 @@
 /* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2012                   */
+/*              (c)Copyright TurboHercules, SAS 2010-2011            */
 /*              Hercules HTTP Server for Console Ops                 */
 
 /* This file contains all code required for the HTTP server,         */
