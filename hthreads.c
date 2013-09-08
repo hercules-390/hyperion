@@ -306,11 +306,14 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
     {
         waitdur = host_tod();
         rc = hthread_mutex_lock( &ilk->lock );
+        gettimeofday( &tv, NULL );
         waitdur = host_tod() - waitdur;
     }
     else
+    {
+        gettimeofday( &tv, NULL );
         waitdur = 0;
-    gettimeofday( &tv, NULL );
+    }
     PTTRACE2( "lock after", plk, (void*) waitdur, location, rc, &tv );
     if (rc)
         loglock( ilk, rc, "obtain_lock", location );
@@ -438,7 +441,7 @@ DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_mutex_trylock( &ilk->lock );
     if (rc)
-        return rc;
+    return rc;
     hthread_mutex_unlock( &ilk->lock );
     return 0;
 }
@@ -484,11 +487,14 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
     {
         waitdur = host_tod();
         rc = hthread_rwlock_wrlock( &ilk->rwlock );
+        gettimeofday( &tv, NULL );
         waitdur = host_tod() - waitdur;
     }
     else
+    {
+        gettimeofday( &tv, NULL );
         waitdur = 0;
-    gettimeofday( &tv, NULL );
+    }
     PTTRACE2( "wrlock after", plk, (void*) waitdur, location, rc, &tv );
     if (rc)
         loglock( ilk, rc, "obtain_wrlock", location );
@@ -534,7 +540,7 @@ DLL_EXPORT int  hthread_try_obtain_wrlock( RWLOCK* plk, const char* location )
     PTTRACE2( "trywr after", plk, NULL, location, rc, &tv );
     if (rc && EBUSY != rc)
         loglock( ilk, rc, "try_obtain_wrlock", location );
-    if (!rc || EOWNERDEAD == rc)
+    if (!rc)
     {
         hthread_mutex_lock( &ilk->locklock );
         ilk->location = location;
