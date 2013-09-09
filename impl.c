@@ -541,6 +541,7 @@ int     dll_count;                      /* index into array          */
     sysblk.lparmode = 1;                /* LPARNUM 1    # LPAR ID 01 */
     sysblk.lparnum = 1;                 /* ...                       */
     sysblk.cpuidfmt = 0;                /* CPUIDFMT 0                */
+    sysblk.operation_mode = om_mif;     /* Default to MIF operaitons */
 
     /* set default CPU identifier */
     sysblk.cpumodel = 0x0586;
@@ -614,8 +615,8 @@ int     dll_count;                      /* index into array          */
         char buf[8];
 
         set_symbol("LPARNAME", str_lparname());
-        set_symbol("LPARNUM", "BASIC");
-        set_symbol("CPUIDFMT", "BASIC");
+        set_symbol("LPARNUM", "1");
+        set_symbol("CPUIDFMT", "0");
 
         MSGBUF( buf, "%06X", sysblk.cpuserial );
         set_symbol( "CPUSERIAL", buf );

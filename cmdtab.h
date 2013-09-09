@@ -696,12 +696,14 @@
 #define lparnum_cmd_desc        "Set LPAR identification number"
 #define lparnum_cmd_help        \
                                 \
-  "Specifies the one- or two-digit hexadecimal LPAR identification\n"            \
-  "number stored by the STIDP instruction, or BASIC. If a one-digit\n"           \
-  "number is specified then STIDP stores a format-0 CPU ID. If a \n"             \
-  "two-digit number is specified then STIDP stores a format-1 CPU ID.\n"         \
-  "If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID. The\n"            \
-  "default is BASIC."
+   "Specifies the one- or two-digit hexadecimal LPAR identification\n"           \
+   "number stored by the STIDP instruction, or BASIC. If a one-digit\n"          \
+   "hexadecimal number from 1 to F is specified, then STIDP stores a\n"          \
+   "format-0 CPU ID. If a two-digit hexadecimal number is specified,\n"          \
+   "except 10, then STIDP stores a format-1 CPU ID. For LPARNUM 10, \n"          \
+   "STIDP uses the current CPUIDFMT setting. If LPARNUM is BASIC, then\n"        \
+   "STIDP stores a basic-mode CPU ID. The default LPAR identification\n"         \
+   "number is 1.\n"
 
 #define ls_cmd_desc             "List directory contents"
 #define lsdep_cmd_desc          "List module dependencies"
@@ -712,7 +714,8 @@
   "Format: mainsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"                         \
   "        mmmm    - define main storage size mmmm Megabytes\n"                  \
   "\n"                                                                           \
-  "        nnnS    - define main storage size nnn S where S is the multiplier\n" \
+  "        nnnS    - define main storage size nnn S where S is the\n"            \
+  "                  multipler:\n"                                               \
   "                  B = no multiplier\n"                                        \
   "                  K = 2**10 (kilo/kibi)\n"                                    \
   "                  M = 2**20 (mega/mebi)\n"                                    \

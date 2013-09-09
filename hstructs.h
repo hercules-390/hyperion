@@ -440,6 +440,18 @@ struct GSYSINFO {
         BYTE    vmid[8];
 };
 
+
+/*-------------------------------------------------------------------*/
+/* Operation Modes                                                   */
+/*-------------------------------------------------------------------*/
+enum OPERATION_MODE
+{
+    om_basic = 0,   /*  lparmode = 0                                 */
+    om_mif   = 1,   /*  lparmode = 1; cpuidfmt = 0; partitions 1-16  */
+    om_emif  = 2    /*  lparmode = 1; cpuidfmt = 1; partitions 0-255 */
+};
+
+
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -475,6 +487,7 @@ struct SYSBLK {
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     wdtid;                  /* Thread-id for watchdog    */
+        enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
         U16     lparnum;                /* LPAR identification number*/
         U16     ipldev;                 /* IPL device                */
