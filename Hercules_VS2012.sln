@@ -1,0 +1,58 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hercules_VS2012", "Hercules_VS2012.vcxproj", "{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		All-All|Itanium = All-All|Itanium
+		All-All|Win32 = All-All|Win32
+		All-All|x64 = All-All|x64
+		Debug|Itanium = Debug|Itanium
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Debug-All|Itanium = Debug-All|Itanium
+		Debug-All|Win32 = Debug-All|Win32
+		Debug-All|x64 = Debug-All|x64
+		Release|Itanium = Release|Itanium
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		Release-All|Itanium = Release-All|Itanium
+		Release-All|Win32 = Release-All|Win32
+		Release-All|x64 = Release-All|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|Itanium.ActiveCfg = All-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|Itanium.Build.0 = All-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|Win32.ActiveCfg = All-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|Win32.Build.0 = All-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|x64.ActiveCfg = All-All|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.All-All|x64.Build.0 = All-All|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|Itanium.ActiveCfg = Debug|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|Itanium.Build.0 = Debug|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|Win32.Build.0 = Debug|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|x64.ActiveCfg = Debug|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug|x64.Build.0 = Debug|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|Itanium.ActiveCfg = Debug-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|Itanium.Build.0 = Debug-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|Win32.ActiveCfg = Debug-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|Win32.Build.0 = Debug-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|x64.ActiveCfg = Debug-All|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Debug-All|x64.Build.0 = Debug-All|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|Itanium.ActiveCfg = Release|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|Itanium.Build.0 = Release|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|Win32.ActiveCfg = Release|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|Win32.Build.0 = Release|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|x64.ActiveCfg = Release|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release|x64.Build.0 = Release|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|Itanium.ActiveCfg = Release-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|Itanium.Build.0 = Release-All|Itanium
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|Win32.ActiveCfg = Release-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|Win32.Build.0 = Release-All|Win32
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|x64.ActiveCfg = Release-All|x64
+		{89BE4F86-DE30-4293-BD32-AA3D8532F8FB}.Release-All|x64.Build.0 = Release-All|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
