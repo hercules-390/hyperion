@@ -441,7 +441,7 @@ DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_mutex_trylock( &ilk->lock );
     if (rc)
-    return rc;
+        return rc;
     hthread_mutex_unlock( &ilk->lock );
     return 0;
 }
