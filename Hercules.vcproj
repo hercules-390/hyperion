@@ -2281,14 +2281,6 @@
 						RelativePath=".\Makefile.am"
 						>
 					</File>
-					<File
-						RelativePath=".\makefile.generic"
-						>
-					</File>
-					<File
-						RelativePath=".\makefile.w32"
-						>
-					</File>
 				</Filter>
 			</Filter>
 			<Filter

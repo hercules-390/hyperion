@@ -989,12 +989,6 @@
     <None Include="Makefile.am">
       <Filter>Other Files\Build\other</Filter>
     </None>
-    <None Include="makefile.generic">
-      <Filter>Other Files\Build\other</Filter>
-    </None>
-    <None Include="makefile.w32">
-      <Filter>Other Files\Build\other</Filter>
-    </None>
     <None Include="util\awssl-v19g">
       <Filter>Other Files\Utilities</Filter>
     </None>

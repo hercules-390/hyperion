@@ -661,8 +661,6 @@
     <None Include="configure.ac" />
     <None Include="autoconf\hercules.m4" />
     <None Include="Makefile.am" />
-    <None Include="makefile.generic" />
-    <None Include="makefile.w32" />
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\cckddump.hla" />
