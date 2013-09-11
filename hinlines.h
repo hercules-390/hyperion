@@ -327,8 +327,10 @@ setCpuIdregs(REGS* regs, const unsigned int cpu,
             /* Clear MCEL and leave Format 1 bit as zero */
             MCEL = 0;
 
-            /* Use a single digit LPAR id to a maximum of 15*/
-            serial |= min(sysblk.lparnum, 15) << 16;
+            /* Use low-order nibble of LPAR id; LPARNUM 10 is
+             * indicated as a value of 0.
+             */
+            serial |= (sysblk.lparnum & 0x0F) << 16;
 
             /* and a single digit CPU ID to a maximum of 15 */
             serial |= min(regs->cpuad, 15) << 20;
