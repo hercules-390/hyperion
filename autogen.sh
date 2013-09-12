@@ -1,9 +1,5 @@
 #!/bin/sh
 
-# $Id$
-#
-# $Log$
-
 case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
   *c*,-n*) ECHO_N= ECHO_C='
 ' ECHO_T='	' ;;

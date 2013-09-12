@@ -3,10 +3,6 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-# $Id$
-#
-# $Log$
-
 lns=@LN_S@
 
 LDADD = @LTLIBINTL@ @LIBS@ ../libhercs.la ../libherc.la ../libhercu.la
