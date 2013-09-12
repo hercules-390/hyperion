@@ -10,7 +10,7 @@ AC_INIT(hercules.h)                     # (package, version, bugreport email, et
 AC_REVISION($Revision$)                 # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
 AM_INIT_AUTOMAKE(hercules,4.00)         # (the version of our software package)
-AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
+AC_CONFIG_HEADERS(config.h)             # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
 AC_CANONICAL_TARGET()                   # (sets $target_cpu, $target_vendor, and $target_os)
@@ -358,9 +358,6 @@ AS_IF([test "x${ac_cv_func_dlopen}" = "xyes" -o "x${ac_cv_lib_dl_dlopen}" = "xye
     [hc_cv_have_dlopen=yes],
     [hc_cv_have_dlopen=no])
 
-AM_GNU_GETTEXT([external])              # GNU internationalization and localization
-AM_ICONV()                              # GNU internationalization and localization
-
 HC_LD_DISALLOWDUPS()                    # Add linker options to LDFLAGS variable
                                         # to warn about duplicate libtool symbols,
                                         # if needed.
@@ -406,7 +403,6 @@ AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implemen
 AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
 AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
 AH_TEMPLATE( [_BSD_SOCKLEN_T_],         [Define missing macro on apple darwin (osx) platform] )
-AH_TEMPLATE( [_INTL_REDIRECT_MACROS],   [Define to 1 if non-Intel architecture (gettext)] )
 AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
@@ -567,8 +563,6 @@ AC_CHECK_HEADERS( bzlib.h,        [hc_cv_have_bzlib_h=yes],        [hc_cv_have_b
 AC_CHECK_HEADERS( dlfcn.h,        [hc_cv_have_dlfcn_h=yes],        [hc_cv_have_dlfcn_h=no]        )
 AC_CHECK_HEADERS( fenv.h,         [hc_cv_have_fenv_h=yes],         [hc_cv_have_fenv_h=no]         )
 AC_CHECK_HEADERS( inttypes.h,     [hc_cv_have_inttypes_h=yes],     [hc_cv_have_inttypes_h=no]     )
-AC_CHECK_HEADERS( iconv.h,        [hc_cv_have_iconv_h=yes],        [hc_cv_have_iconv_h=no]        )
-AC_CHECK_HEADERS( libintl.h,      [hc_cv_have_libintl_h=yes],      [hc_cv_have_libintl_h=no]      )
 AC_CHECK_HEADERS( locale.h,       [hc_cv_have_locale_h=yes],       [hc_cv_have_locale_h=no]       )
 AC_CHECK_HEADERS( ltdl.h,         [hc_cv_have_ltdl_h=yes],         [hc_cv_have_ltdl_h=no]         )
 AC_CHECK_HEADERS( malloc.h,       [hc_cv_have_malloc_h=yes],       [hc_cv_have_malloc_h=no]       )
@@ -723,7 +717,6 @@ AC_CHECK_LIB( z,      uncompress     )
 AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
             [ hc_cv_have_libbz2=no  ] )
-AC_CHECK_LIB( iconv,  iconv          )
 # jbs 10/15/2003 Solaris requires -lrt for sched_yield() and fdatasync()
 AC_CHECK_LIB( rt,     sched_yield    )
 # rbowler 2008/03/10 rev 1.196 Solaris 2.9 requires -lpthread
@@ -744,7 +737,6 @@ AC_CACHE_SAVE()
 #   defined gets added to the LIBS library search variable...
 ###############################################################################
 
-AC_CHECK_FUNCS( iconv )
 AC_CHECK_FUNCS( memrchr )
 AC_CHECK_FUNCS( getopt_long )
 AC_CHECK_FUNCS( sqrtl ldexpl fabsl fmodl frexpl )
@@ -2120,21 +2112,6 @@ if test "$hc_cv_is_windows"  != "yes"  &&
     AC_DEFINE(NO_IEEE_SUPPORT)
 fi
 
-if test "$hc_cv_is_apple" = "yes"; then
-
-    AC_DEFINE(_INTL_REDIRECT_MACROS)
-
-    #
-    #  TODO??
-    #
-    #  Do whatever is necessary to get the following symbol defined
-    #  so the included libltdl will be built and used...
-    #
-
-##  AC_PROVIDE_AC_LIBTOOL_DLOPEN()
-
-fi
-
 #--------------------------------------------------#
 #  CPPFLAGS  (pre-processor flags)                 #
 #--------------------------------------------------#
@@ -2208,7 +2185,7 @@ AC_SUBST(HQA_INC,$hc_cv_hqa_inc)
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
 
 ###############################################################################
 #   (end-of-file)

@@ -8,9 +8,9 @@ ACLOCAL_AMFLAGS  = -I m4 -I autoconf
 
 lns=@LN_S@
 
-SUBDIRS = decNumber m4 po util html man . crypto
+SUBDIRS = decNumber m4 util html man . crypto
 
-LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
+LDADD = @LIBS@
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I@HQA_INC@
 

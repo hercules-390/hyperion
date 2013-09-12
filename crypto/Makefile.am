@@ -5,9 +5,9 @@
 
 lns=@LN_S@
 
-LDADD = @LTLIBINTL@ @LIBS@ ../libhercs.la ../libherc.la ../libhercu.la
+LDADD = @LIBS@ ../libhercs.la ../libherc.la ../libhercu.la
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)\intl -I@HQA_INC@
+AM_CPPFLAGS = -I$(top_srcdir) -I@HQA_INC@
 
 dyndev_SRC = dyncrypt.c sha1.c sha256.c des.c aes.c
 

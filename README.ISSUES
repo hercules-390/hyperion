@@ -71,12 +71,3 @@ Change to Enter key function (Ivan 2004/10/02)
     pressing the start button (which was quite handy for debugging). It now
     displays the last commands typed. Instead, 'start' must be typed every
     time to execute the next instruction.
-
-*** Codepage translator ***
-Specifying some codepages produce garbled output and/or crash hercules (Ivan 2004/10/12)
-
-    Specifying some codepages (mostly complex type codepages such as unicode) 
-    can lead to various output issues and crashes. This is because hercules
-    only uses a single "iconv" descriptor while multiple threads may be
-    attempting to use this descriptor, something that is specifically
-    forbidden by the iconv API.

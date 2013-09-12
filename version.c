@@ -183,11 +183,7 @@ static const char *build_info[] = {
     "Without Automatic Operator support",
 #endif
 
-#if defined(ENABLE_NLS)
-    "With    National Language Support",
-#else
     "Without National Language Support",
-#endif
 
     "Machine dependent assists:"
 #if !defined( ASSIST_CMPXCHG1  ) \

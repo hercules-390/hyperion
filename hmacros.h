@@ -330,14 +330,8 @@
 #define MLVL( _lvl) \
     (sysblk.msglvl & (MLVL_ ## _lvl))
 
-#if defined(ENABLE_NLS)
-  #define _(_string) gettext(_string)
-#else
-  #define _(_string)  _string
-  #define N_(_string) _string
-  #define textdomain(_domain)
-  #define bindtextdomain(_package, _directory)
-#endif
+/* Obsolete NLS support macro */
+#define _(_string)  _string
 
 /* Opcode routing table function pointer */
 typedef void (ATTR_REGPARM(2)*FUNC)();
@@ -648,17 +642,6 @@ typedef int CMPFUNC(const void*, const void*);
 /* Perform standard utility initialization                           */
 /*-------------------------------------------------------------------*/
 
-#if !defined(ENABLE_NLS)
-  #define INITIALIZE_NLS()
-#else
-  #define INITIALIZE_NLS() \
-  do { \
-    setlocale(LC_ALL, ""); \
-    bindtextdomain(PACKAGE, HERC_LOCALEDIR); \
-    textdomain(PACKAGE); \
-  } while (0)
-#endif
-
 #if !defined(EXTERNALGUI)
   #define INITIALIZE_EXTERNAL_GUI()
 #else
@@ -709,7 +692,6 @@ typedef int CMPFUNC(const void*, const void*);
 #define INITIALIZE_UTILITY(name) \
   do { \
     SET_THREAD_NAME(name); \
-    INITIALIZE_NLS(); \
     INITIALIZE_EXTERNAL_GUI(); \
     memset (&sysblk, 0, sizeof(SYSBLK)); \
     INIT_MSGLCK \
