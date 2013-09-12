@@ -205,6 +205,29 @@ static inline int all_stopped()
 }
 
 
+/**********************************************************************/
+/*                                                                    */
+/* setOperationMode - Set the operation mode for the system           */
+/*                                                                    */
+/* Operations Mode:                                                   */
+/*   BASIC: lparmode = 0                                              */
+/*   MIF:   lparmode = 1; cpuidfmt = 0; lparnum = 1...16 (decimal)    */
+/*   EMIF:  lparmode = 1; cpuidfmt = 1                                */
+/**********************************************************************/
+
+static INLINE void
+setOperationMode
+(
+    void
+)
+{
+    sysblk.operation_mode =
+      sysblk.lparmode ?
+      ((sysblk.cpuidfmt || sysblk.lparnum < 1 || sysblk.lparnum > 16) ?
+       om_emif : om_mif) : om_basic;
+}
+
+
 /* Set/update all CPU IDs */
 static INLINE int
 setAllCpuIds(const S32 model, const S16 version, const S32 serial, const S32 MCEL)
@@ -302,8 +325,9 @@ enable_lparmode(const int enable)
 
     }
 
-    /* Set system lparmode indicator accordingly */
+    /* Set system lparmode and operation mode indicators accordingly */
     sysblk.lparmode = enable;
+    setOperationMode();
 }
 
 
@@ -4868,10 +4892,19 @@ BYTE    c;
             /* Obtain INTLOCK */
             OBTAIN_INTLOCK(NULL);
 
-            /* Set new LPAR number and CPU ID format */
+            /* Set new LPAR number, CPU ID format and operation mode */
             enable_lparmode(1);
             sysblk.lparnum = id;
-            sysblk.cpuidfmt = (n > 1);
+            if (id == 0)
+                sysblk.cpuidfmt = 1;
+            else if (sysblk.cpuidfmt)
+            {
+                if (n == 1)
+                    sysblk.cpuidfmt = 0;
+            }
+            else if (n == 2 && id != 16)
+                sysblk.cpuidfmt = 1;
+            setOperationMode();
 
             /* Update CPU IDs indicating LPAR mode active */
             if (!resetAllCpuIds())
@@ -4885,7 +4918,7 @@ BYTE    c;
                 char buf[20];
                 MSGBUF(buf, "%02X", sysblk.lparnum);
                 set_symbol("LPARNUM", buf);
-                set_symbol("CPUIDFMT", (n > 1) ? "1" : "0");
+                set_symbol("CPUIDFMT", sysblk.cpuidfmt ? "1" : "0");
                 if (MLVL( VERBOSE ))
                     WRMSG(HHC02204, "I", argv[0], buf);
             }
@@ -4894,7 +4927,8 @@ BYTE    c;
             if (MLVL( VERBOSE ))
             {
                 char buf[20];
-                MSGBUF(buf, "%02X", sysblk.lparnum);
+                MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
+                        sysblk.lparnum);
                 WRMSG(HHC02204, "I", argv[0], buf);
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
@@ -4910,6 +4944,7 @@ BYTE    c;
             enable_lparmode(0);
             sysblk.lparnum  = 0;
             sysblk.cpuidfmt = 0;
+            sysblk.operation_mode = om_basic;
 
             if (!resetAllCpuIds())
                 return -1;
@@ -4919,9 +4954,7 @@ BYTE    c;
 
             if ( MLVL(VERBOSE) )
             {
-                char buf[20];
-                MSGBUF( buf, "%02X", sysblk.lparnum);
-                WRMSG(HHC02204, "I", argv[0], buf);
+                WRMSG(HHC02204, "I", argv[0], "BASIC");
             }
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
             set_symbol("LPARNUM", "BASIC");
@@ -4930,7 +4963,7 @@ BYTE    c;
         }
         else
         {
-            WRMSG(HHC02205, "E", argv[1], ": must be BASIC, 0 to F (hex) or 00 to FF (hex)");
+            WRMSG(HHC02205, "E", argv[1], ": must be BASIC, 1 to F (hex) or 00 to FF (hex)");
             return -1;
         }
     }
@@ -4938,7 +4971,8 @@ BYTE    c;
     {
         char buf[20];
         if (sysblk.lparmode)
-            MSGBUF( buf, "%02X", sysblk.lparnum);
+            MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
+                    sysblk.lparnum);
         else
             strncpy(buf, "BASIC", sizeof(buf));
         WRMSG(HHC02203, "I", argv[0], buf);
@@ -5140,9 +5174,9 @@ u_int     id;
                 return -1;
             }
 
-            if(!id && sysblk.lparnum > 0x0F)
+            if(!id && (!sysblk.lparnum || sysblk.lparnum > 16))
             {
-                WRMSG(HHC02205, "E", argv[1],": LPAR number greater than 0F (hex)");
+                WRMSG(HHC02205, "E", argv[1],": LPAR number not in range of 1 to 10 (hex)");
                 return -1;
             }
 
@@ -5151,7 +5185,10 @@ u_int     id;
                 /* Obtain INTLOCK */
                 OBTAIN_INTLOCK(NULL);
 
+                /* Set the CPU ID format and subsequent operation mode
+                 */
                 sysblk.cpuidfmt = id;
+                setOperationMode();
 
                 /* Update all CPU IDs */
                 if (!resetAllCpuIds())
@@ -5180,7 +5217,9 @@ u_int     id;
                 /* Obtain INTLOCK */
                 OBTAIN_INTLOCK(NULL);
 
+                sysblk.lparnum = 0;
                 sysblk.cpuidfmt = 0;
+                sysblk.operation_mode = om_basic;
 
                 /* Update all CPU IDs */
                 if (!resetAllCpuIds())

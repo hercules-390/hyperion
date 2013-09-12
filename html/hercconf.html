@@ -821,11 +821,14 @@ and how they are used.
 <a name="LPARNUM"></a>
 <dt><code>LPARNUM &nbsp; <em>xx</em> &#124; BASIC</code>
 <dd><p>
-    specifies the one- or two-digit hexadecimal LPAR identification number
-    stored by the STIDP instruction, or BASIC.
-    If a one-digit number is specified then STIDP stores a format-0 CPU ID.
-    If a two-digit number is specified then STIDP stores a format-1 CPU ID.
-    If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
+    specifies the one- or two-digit hexadecimal LPAR identification
+    number stored by the STIDP instruction, or BASIC. If a one-digit
+    number from 1 to F (hexadecimal) is specified, then STIDP stores a
+    format-0 CPU ID unless a subsequent CPUIDFMT 1 statement is
+    specified. If zero or a a two-digit hexadecimal number, except 10
+    (hexadecimal), is specified, then STIDP stores a format-1 CPU ID.
+    For LPARNUM 10, the current CPUIDFMT is not changed. If LPARNUM is
+    BASIC, then STIDP stores a basic-mode CPU ID.
     The default is LPARNUM 1 with a format-0 CPU ID.
     <p>
 

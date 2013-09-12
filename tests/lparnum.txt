@@ -1,0 +1,119 @@
+*-----------------------------------------------------------------------
+* LPARNUM Test
+*-----------------------------------------------------------------------
+* Test 1
+* ------
+* Display current LPARNUM and CPUIDFMT; initial startup values should be
+* LPARNUM 1 and CPUIDFMT 0
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 2
+* ------
+* Set LPARNUM BASIC; results should be LPARNUM BASIC and CPUIDFMT BASIC.
+-lparnum basic
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 3
+* ------
+* Set LPARNUM 0; results should be LPARNUM 00 and CPUIDFMT 1.
+-lparnum 0
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 4
+* ------
+* Set CPUIDFMT 0; result should reject, leaving LPARNUM 00 and CPUIDFMT
+* 1.
+ cpuidfmt 0
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 5
+* ------
+* Set LPARNUM 1; results should be LPARNUM 1 and CPUIDFMT 0.
+-lparnum 1
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 6
+* ------
+* Set CPUIDFMT 1; results should be LPARNUM 01 and CPUIDFMT 1.
+-cpuidfmt 1
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 7
+* ------
+* Set LPARNUM F; results should be LPARNUM F and CPUIDFMT 0.
+-lparnum F
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 8
+* ------
+* Set LPARNUM 10; results should be LPARNUM 10 and CPUIDFMT 0.
+-lparnum 10
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 9
+* ------
+* Set LPARNUM 11; results should be LPARNUM 11 and CPUIDFMT 1.
+-lparnum 11
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 10
+* ------
+* Set LPARNUM 10; results should be LPARNUM 10 and CPUIDFMT 1.
+-lparnum 10
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 11
+* -------
+* Set LPARNUM FF; results should be LPARNUM FF and CPUIDFMT 1.
+-lparnum FF
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 12
+* -------
+* Set CPUIDFMT 0; result should reject, leaving LPARNUM FF and CPUIDFMT
+* 1.
+ cpuidfmt 0
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 13
+* -------
+* Set LPARNUM 11, CPUIDFMT 0; results should be LPARNUM 11, with
+* CPUIDFMT rejecting, and leaving CPUIDFMT 1.
+-lparnum 11
+ cpuidfmt 0
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 14
+* -------
+* Set LPARNUM 01; results should be LPARNUM 01 with CPUIDFMT 1.
+-lparnum 01
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Test 15
+* -------
+* Set LPARNUM 0F; results should be LPARNUM 0F with CPUIDFMT 1.
+-lparnum 0F
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------
+* Reset to initial
+* ----------------
+* Set LPARNUM 1; results should be LPARNUM 1 and CPUIDFMT 0.
+-lparnum 1
+-lparnum
+-cpuidfmt
+*-----------------------------------------------------------------------

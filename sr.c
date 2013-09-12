@@ -174,6 +174,7 @@ BYTE     psw[16];
     SR_WRITE_VALUE (file,SR_SYS_CPUMODEL,sysblk.cpumodel,sizeof(sysblk.cpumodel));
     SR_WRITE_VALUE (file,SR_SYS_CPUVERSION,sysblk.cpuversion,sizeof(sysblk.cpuversion));
     SR_WRITE_VALUE (file,SR_SYS_CPUSERIAL,sysblk.cpuserial,sizeof(sysblk.cpuserial));
+    SR_WRITE_VALUE (file,SR_SYS_OPERATION_MODE,(int)sysblk.operation_mode,sizeof(sysblk.operation_mode));
     SR_WRITE_VALUE (file,SR_SYS_LPARMODE,(int)sysblk.lparmode,sizeof(int));
     SR_WRITE_VALUE (file,SR_SYS_LPARNUM,sysblk.lparnum,sizeof(sysblk.lparnum));
     SR_WRITE_VALUE (file,SR_SYS_CPUIDFMT,sysblk.cpuidfmt,sizeof(sysblk.cpuidfmt));
@@ -568,6 +569,10 @@ S64      dreg;
 
         case SR_SYS_CPUSERIAL:
             SR_READ_VALUE(file, len, &sysblk.cpuserial, sizeof(sysblk.cpuserial));
+            break;
+
+        case SR_SYS_OPERATION_MODE:
+            SR_READ_VALUE (file, len, &sysblk.operation_mode, sizeof(sysblk.operation_mode));
             break;
 
         case SR_SYS_LPARMODE:

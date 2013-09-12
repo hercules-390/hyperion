@@ -191,6 +191,7 @@
 #define SR_SYS_LPARMODE         0xace10051
 #define SR_SYS_LPARNUM          0xace10052
 #define SR_SYS_CPUIDFMT         0xace10053
+#define SR_SYS_OPERATION_MODE   0xace10054
 
 #define SR_SYS_SERVC            0xace11000
 
