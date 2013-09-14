@@ -110,6 +110,7 @@ static void* test_locks_thread( void* parg)
 {
     // test thread exit with lock still held
     static LOCK testlock;
+    UNREFERENCED(parg);
     initialize_lock( &testlock );
     obtain_lock( &testlock );
     return NULL;

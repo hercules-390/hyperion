@@ -104,7 +104,7 @@ typedef struct _SCCB_HWL_BK {
 
 struct name2file {
     char *name;
-    int  file;
+    unsigned int file;
     };
 
 
@@ -533,6 +533,8 @@ static U32   sdias_size;
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(sdias_store_status_clear)(REGS *regs)
 {
+    UNREFERENCED(regs);
+
     sdias_size = 0;
     if(sdias_hsa)
         free(sdias_hsa);
@@ -684,7 +686,7 @@ int bootfile;
 
 
 #if defined(_FEATURE_HARDWARE_LOADER)
-static char *file2name(int file)
+static char *file2name(unsigned int file)
 {
 struct name2file *ntf;
 static char name[8];
@@ -721,7 +723,7 @@ int n;
           && !strncasecmp("type",argv[1],4)
           && isdigit(*(argv[1]+4))
           && sscanf(argv[1]+4, "%u%c", &file, &c) == 1
-          && file >= 0 && file < HWL_MAXFILETYPE))
+          && file < HWL_MAXFILETYPE))
         {
             if(!ntf->name)
             {
@@ -839,9 +841,9 @@ int  ldind;  /* Load / Dump indicator */
 /*-------------------------------------------------------------------*/
 /* Function to validate if the bootfile                              */
 /*-------------------------------------------------------------------*/
-static inline int validate_boot(int file)
+static inline int validate_boot(unsigned int file)
 {
-    return ((file >= 0 && file < HWL_MAXFILETYPE && hwl_fn[file]) ? file : -1);
+    return ((file < HWL_MAXFILETYPE && hwl_fn[file]) ? (int) file : -1);
 }
 
 
