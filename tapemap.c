@@ -13,22 +13,9 @@
 #include "hstdinc.h"
 
 #include "hercules.h"
+#include "tapedev.h"
+
 #define UTILITY_NAME    "tapemap"
-
-/*-------------------------------------------------------------------*/
-/* Structure definition for AWSTAPE block header                     */
-/*-------------------------------------------------------------------*/
-typedef struct _AWSTAPE_BLKHDR {
-        HWORD   curblkl;                /* Length of this block      */
-        HWORD   prvblkl;                /* Length of previous block  */
-        BYTE    flags1;                 /* Flags byte 1              */
-        BYTE    flags2;                 /* Flags byte 2              */
-    } AWSTAPE_BLKHDR;
-
-/* Definitions for AWSTAPE_BLKHDR flags byte 1 */
-#define AWSTAPE_FLAG1_NEWREC    0x80    /* Start of new record       */
-#define AWSTAPE_FLAG1_TAPEMARK  0x40    /* Tape mark                 */
-#define AWSTAPE_FLAG1_ENDREC    0x20    /* End of record             */
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -37,7 +24,7 @@ static BYTE vollbl[] = "\xE5\xD6\xD3";  /* EBCDIC characters "VOL"   */
 static BYTE hdrlbl[] = "\xC8\xC4\xD9";  /* EBCDIC characters "HDR"   */
 static BYTE eoflbl[] = "\xC5\xD6\xC6";  /* EBCDIC characters "EOF"   */
 static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
-static BYTE buf[65536];
+static BYTE buf[ MAX_BLKLEN ];
 
 #ifdef EXTERNALGUI
 /* Report progress every this many bytes */

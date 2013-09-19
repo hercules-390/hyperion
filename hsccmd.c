@@ -6472,51 +6472,61 @@ BYTE     unitstat, code = 0;
         {
             if ( dev->blockid == 0 )
             {
-                BYTE    sLABEL[65536];
+                BYTE *sLABEL = malloc( MAX_BLKLEN );
 
-                rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
-
-                if ( rc == 80 )
+                if (!sLABEL)
                 {
-                    int a = TRUE;
-                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) != 0 )
-                    {
-                        str_guest_to_host( sLABEL, sLABEL, 51 );
-                        a = FALSE;
-                    }
-
-                    if ( strncmp( (char *)sLABEL, "VOL1", 4 ) == 0 )
-                    {
-                        char msgbuf[64];
-                        char volser[7];
-                        char owner[15];
-
-                        memset( msgbuf, 0, sizeof(msgbuf) );
-                        memset( volser, 0, sizeof(volser) );
-                        memset( owner,  0, sizeof(owner)  );
-
-                        strncpy( volser, (char*)&sLABEL[04],  6 );
-                        strncpy( owner,  (char*)&sLABEL[37], 14 );
-
-                        MSGBUF( msgbuf, "%s%s%s%s%s",
-                                        volser,
-                                        strlen(owner) == 0? "":", Owner = \"",
-                                        strlen(owner) == 0? "": owner,
-                                        strlen(owner) == 0? "": "\"",
-                                        a ? " (ASCII LABELED) ": "" );
-
-                        WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf );
-                        msg = FALSE;
-                    }
-                    else
-                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                    WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], "Out of memory" );
+                    msg = FALSE;
                 }
                 else
                 {
-                    WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
-                }
+                    rc = dev->tmh->read( dev, sLABEL, &unitstat, code );
 
-                rc = dev->tmh->rewind( dev, &unitstat, code);
+                    if ( rc == 80 )
+                    {
+                        int a = TRUE;
+                        if ( strncmp( (char *)sLABEL, "VOL1", 4 ) != 0 )
+                        {
+                            str_guest_to_host( sLABEL, sLABEL, 51 );
+                            a = FALSE;
+                        }
+
+                        if ( strncmp( (char *)sLABEL, "VOL1", 4 ) == 0 )
+                        {
+                            char msgbuf[64];
+                            char volser[7];
+                            char owner[15];
+
+                            memset( msgbuf, 0, sizeof(msgbuf) );
+                            memset( volser, 0, sizeof(volser) );
+                            memset( owner,  0, sizeof(owner)  );
+
+                            strncpy( volser, (char*)&sLABEL[04],  6 );
+                            strncpy( owner,  (char*)&sLABEL[37], 14 );
+
+                            MSGBUF( msgbuf, "%s%s%s%s%s",
+                                            volser,
+                                            strlen(owner) == 0? "":", Owner = \"",
+                                            strlen(owner) == 0? "": owner,
+                                            strlen(owner) == 0? "": "\"",
+                                            a ? " (ASCII LABELED) ": "" );
+
+                            WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf );
+                            msg = FALSE;
+                        }
+                        else
+                            WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                    }
+                    else
+                    {
+                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                    }
+
+                    rc = dev->tmh->rewind( dev, &unitstat, code);
+
+                    free( sLABEL );
+                }
             }
             else
             {

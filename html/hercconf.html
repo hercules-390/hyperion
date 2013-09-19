@@ -150,8 +150,8 @@ and how they are used.
     0440.2    <a href="#LCS">LCS</a>      -n   /dev/net/tun   192.168.200.2
     0A00.3    <a href="#QETH">QETH</a>    iface /dev/net/tun
 
-    0580      <a href="#3420">3420</a>    /dev/nst0   # SCSI  (Linux or Windows)
-    0581      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
+    0580      <a href="#3420">3420</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
+    0581      <a href="#3420">3420</a>    \\.\Tape0   # <a href="#SCSI">SCSI</a>  (Windows only)
     0582      <a href="#3420">3420</a>    ickdsf.aws  <a href="#noautomount">noautomount</a>
     0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
     0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
@@ -2443,9 +2443,14 @@ and how they are used.
 
 <a name="3420"></a>
 <a name="tapedev"></a>
-<dt><em>Emulated tape devices</em>
+<dt><em>Tape devices</em>
 <dd><p>
-    Five types of tape emulation are supported (see further below).
+    Five types of tape emulation are supported (see further below): &nbsp;
+    <a href="#AWS"><b>AWS</b></a>, &nbsp;
+    <a href="#HET"><b>HET</b></a>, &nbsp;
+    <a href="#FAKETAPE"><b>FakeTape</b></a>, &nbsp;
+    <a href="#OMA"><b>Optical Media Attach (OMA)</b></a>, &nbsp; and &nbsp;
+    <a href="#SCSI"><b>real SCSI</b></a> .
     <p>
 
     The only required parameter is the device filename. All other parameters
@@ -2482,175 +2487,14 @@ and how they are used.
     Refer to the distributed source-code's "<b>README.TAPE</b>" document for
     additional information regarding system and application programming for tape
     devices and instructions regarding use of the emulated <b>ACF</b> (Automatic
-    Cartridge Feeder) and <b><a href="#AUTOMOUNT">AUTOMOUNT</a></b> features
+    Cartridge Feeder) and <a href="#AUTOMOUNT">AUTOMOUNT</a> features
     for virtual (non-SCSI) tape devices.
     <p>
 
     <dl> <!-- begin Emulated tape types of emulation -->
 
-    <dt><b>SCSI tape drives</b>
-    <dd><p>
-        These are real tape drives attached to the host machine via a SCSI
-        interface. Hercules emulation always makes the drive appear as a
-        channel attached device such as 3420 or 3480, although the underlying
-        physical drive may be any type of SCSI attached tape drive, including
-        4mm or 8mm DAT, DLT, SCSI attached 3480/3490 cartridge drives, and
-        SCSI attached 3420 open reel tape drives.
-        <p>
-        Host-attached SCSI tapes are read and written using variable length
-        EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
-        as a result can be freely used/exchanged on either (i.e. SCSI tapes
-        created on a real mainframe can subsequently be read by Hercules just
-        fine, and a SCSI tape created by Hercules can be subsequently read on
-        a mainframe just fine, thus providing a convenient means of exchanging
-        data between the two).
-        <p>
-        If you plan on using SCSI tapes with Hercules you might also be interested
-        in the <a href="#SCSIMOUNT">SCSIMOUNT</a> configuration option.
-        <p>
-        The only <i>required</i> device statement parameter for SCSI attached tape
-        drives is the name of the device as it is known
-        by the host operating system,
-        usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
-        Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
-        Windows only)</i>, where '0' means tape drive number
-        0 (your first or only host-attached SCSI tape drive), '1' means your
-        second host-attached SCSI tape drive, etc.
-        <p>
-        Depending on what actual model of SCSI tape drive you
-        actually have and how it behaves, you may need to specify one or more
-        additional optional parameters for Hercules to provide proper emulation
-        of the desired device type.
-        For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive does
-        not return nor use a block-id format compatible with 3480/3490 drives
-        (it instead uses a full 32-bit block-id just like the model 3590 does).
-        It also does not support the Erase Gap CCW at all.
-        <p>
-        Thus, in order to use, for example, a Quantum DLT drive with Hercules,
-        you <i>MUST</i> specify some special additional options to prevent the
-        Erase Gap command from being issued to the drive as well as to inform
-        Hercules that the drive uses 32-bit block-ids.
-        <p>
-        <b>Please note</b> that the below options define how the actual SCSI hardware
-        device behaves, which is completely different from the way the <i>emulated</i>
-        device will appear to behave to your guest. That is to say, if you define
-        your tape drive to Hercules as a 3480 device, then Hercules will perform
-        3480 device type emulation such that the device appears to your guest o/s
-        as if it were a 3480 device. If the <i>actual</i> SCSI device behaves as
-        a 3590 device however (perhaps using/returning 32-bit block-ids instead
-        of the expected 22-bit format block-ids that 3480's use), then you <i>MUST</i>
-        specify the <code>--blkid-32</code> special option on your Hercules device
-        statement so that Hercules's emulation logic can know that it needs to
-        translate 22-bit block-ids to 32-bit ones before sending them to the
-        actual SCSI hardware (and vice versa: to translate 32-bit block-ids from
-        the actual SCSI drive into 22-bit format block-ids that your guest expects
-        from a 3480 device).
-        <br>
-<a name="Quantum"></a>
-        <br>
-                <center><h4>Special options for SCSI tapes</h4></center>
-        <p>
-        As explained just above, certain model SCSI tape drives such as the Quantum
-        DLT series may require special handling in order to provide the desired proper
-        device type emulation. These special options are:
-        <p>
-        <dl>
-        <dt><code>--no-erg</code>
-        <dd><p>
-            This option is intended to prevent issuance of the Erase Gap
-            command to those SCSI tape drives which do not support it (such
-            as the Quantum DLT series). It causes Hercules's device emulation
-            logic to ignore any Erase Gap commands issued to the drive and
-            to return immediate 'success' instead.
-            <p>
-            This option should
-            only be used (specified) for drives such as the Quantum, which
-            support switching from read mode to write mode in the middle of
-            a data stream without the need of an intervening Erase Gap command.
-            Specifying it for any other model SCSI drive may cause incorrect
-            functioning as a result of the Erase Gap command not being issued
-            to the actual SCSI hardware.
-            <p>
-            Check the manufacturer information for your particular model of
-            SCSI-attached tape drive (and/or use Fish's
-            "<a href="http://www.softdevlabs.com/Hercules">ftape</a>"
-            Windows utility)
-            to determine whether or not this option is needed for your
-            particular drive.
-            <p>
-        <dt><code>--blkid-32</code>
-        <dd><p>
-            This option indicates that your SCSI-attached tape drive only
-            supports 32-bit block-ids (as used by 3590 drives) and not the 22-bit
-            format used by 3480/3490 drives. You should only specify this option
-            if you intend to define the drive as a model 3480 or 3490 device, and
-            then only if your actual SCSI drive uses 32-bit block-ids of course.
-            If you define your Hercules tape drive as a model 3590 device however,
-            then this option is of course not needed since model 3590 drives
-            are already presumed to use 32-bit block-ids.
-            <p>
-            Specifying this option on a 3480/3490 device statement will cause
-            Hercules device emulation logic to automatically translate the actual
-            SCSI tape drive's 32-bit block-id into 22-bit format before returning
-            it back to the guest operating system (since that is the format it
-            expects it to be in for a model 3480/3490 drive), and to translate the
-            guest's 22-bit format block-id into 32-bit format before sending it
-            to the actual SCSI hardware (since that is the format that the actual
-            hardware requires it to be in).
-            <p>
-        <dt><code>--blkid-22</code>
-        <dd><p>
-            The complete opposite of the above <code>--blkid-32</code> option.
-        </dl>
-        <p><br>
-
-    <dt><b>Optical Media Attach (OMA) virtual files</b>
-    <dd><p>
-        These are read-only files which usually reside on CDROM.
-        OMA virtual tapes consist of one CDROM file corresponding
-        to each physical file of the emulated tape.  An ASCII text
-        file called the tape descriptor file (TDF) specifies the
-        names of the files which make up the virtual tape.
-        The argument specifies the name of the tape descriptor
-        file (for example <code>/cdrom/tapes/uaa196.tdf</code>)
-        <p>
-
-        Each file on the virtual tape can be in one of three formats:
-        <p>
-
-        <dl>
-        <dt><code>TEXT</code>
-        <dd><p>
-            <b><i>TEXT</i></b> files consist of variable length
-            ASCII records delimited by carriage return line feed
-            sequences at the end of each record.  Each record is
-            translated to EBCDIC and presented to the program as
-            one physical tape block.
-            <p>
-
-        <dt><code>FIXED <em>nnnnn</em></code>
-        <dd><p>
-            <b><i>FIXED</i></b> files consist of fixed length
-            EBCDIC blocks of the specified length
-            (<code><em>nnnnn</em></code>)
-            <p>
-
-        <dt><code>HEADERS</code>
-        <dd><p>
-            <b><i>HEADERS</i></b> files consist of variable
-            length EBCDIC blocks.  Each block is preceded by a
-            12-byte header.
-            <p>
-
-        </dl>
-        <p>
-
-        If you have any IBM manuals in Bookmanager format on CDROM,
-        you can see some examples of TDF files in the
-        <code>\TAPES</code> directory on the CDROM.
-        <p><br>
-
-    <dt><b>AWSTAPE virtual files</b>
+<a name="AWS"></a>
+    <dt><b>AWSTAPE virtual tape files</b>
     <dd><p>
         These contain a complete tape in one file.  AWSTAPE files
         consist of variable length EBCDIC blocks.  Each block is
@@ -2659,9 +2503,10 @@ and how they are used.
         used by the P/390.
         The argument specifies the location of the AWSTAPE file
         (for example <code>ickdsf.aws</code>)
-        <p><br>
+    <p>
 
-    <dt><b>FakeTape virtual files</b>
+<a name="FAKETAPE"></a>
+    <dt><b>FakeTape virtual tape files</b>
     <dd><p>
         These contain a complete tape in one file.  FakeTape files
         consist of variable length EBCDIC blocks.  Each block is
@@ -2671,9 +2516,10 @@ and how they are used.
         The argument specifies the location of the FakeTape file
         (for example <code>ickdsf.fkt</code>). Note: "FLEX-ES" and
         "FakeTape" are trademarks of Fundamental Software, Inc.
-        <p><br>
+    <p>
 
-    <dt><b>HET virtual files</b> &nbsp;&nbsp; (<b>H</b>ercules <b>E</b>mulated <b>T</b>ape)
+<a name="HET"></a>
+    <dt><b>HET virtual tape files</b> &nbsp;&nbsp; (<b>H</b>ercules <b>E</b>mulated <b>T</b>ape)
     <dd><p>
         These contain a complete tape in one file and have the same
         structure as the AWSTAPE format with the added ability to have
@@ -2743,15 +2589,15 @@ and how they are used.
 
         </dl> <!-- end Additional HET arguments -->
 
-    </dl> <!-- begin Emulated tape types of emulation -->
-
-    <p><br>
-
-    The following parameters apply to <b>AWS</b>, <b>HET</b> and <b>FakeTape</b> emulation files:
     <p>
 
-    <blockquote>
-        <dl>
+    <dt>The following additional parameters apply to
+        <b><a href="#AWS">AWS</a></b>, <b><a href="#HET">HET</a></b>
+        and <b><a href="#FAKETAPE">FakeTape</a></b> virtual tape files:
+    <dd><p>
+
+        <dl> <!-- begin Additional AWS/HET/FAKE parameters -->
+
         <dt><code>MAXSIZE</code>=<i>n[s]</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
              &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
         <dd><p>
@@ -2886,8 +2732,178 @@ and how they are used.
             A sample guest automount program called <code>TMOUNT</code> for
             the DOS/VSE operating system is provided in the
             <code>util</code> subdirectory of the distributed source code.
+
+        </dl> <!-- end Additional AWS/HET/FAKE parameters -->
+
+    <p>
+
+<a name="OMA"></a>
+    <dt><b>Optical Media Attach (OMA) virtual tape files</b>
+    <dd><p>
+        These are read-only files which usually reside on CDROM.
+        OMA virtual tapes consist of one CDROM file corresponding
+        to each physical file of the emulated tape.  An ASCII text
+        file called the tape descriptor file (TDF) specifies the
+        names of the files which make up the virtual tape.
+        The argument specifies the name of the tape descriptor
+        file (for example <code>/cdrom/tapes/uaa196.tdf</code>)
+        <p>
+
+        Each file on the virtual tape can be in one of three formats:
+        <p>
+
+        <dl>
+        <dt><code>TEXT</code>
+        <dd><p>
+            <b><i>TEXT</i></b> files consist of variable length
+            ASCII records delimited by carriage return line feed
+            sequences at the end of each record.  Each record is
+            translated to EBCDIC and presented to the program as
+            one physical tape block.
+            <p>
+
+        <dt><code>FIXED <em>nnnnn</em></code>
+        <dd><p>
+            <b><i>FIXED</i></b> files consist of fixed length
+            EBCDIC blocks of the specified length
+            (<code><em>nnnnn</em></code>)
+            <p>
+
+        <dt><code>HEADERS</code>
+        <dd><p>
+            <b><i>HEADERS</i></b> files consist of variable
+            length EBCDIC blocks.  Each block is preceded by a
+            12-byte header.
+            <p>
+
         </dl>
-    </blockquote>
+        <p>
+
+        If you have any IBM manuals in Bookmanager format on CDROM,
+        you can see some examples of TDF files in the
+        <code>\TAPES</code> directory on the CDROM.
+
+    <p>
+
+<a name="SCSI"></a>
+    <dt><b>Real SCSI attached tape drives</b>
+    <dd><p>
+        These are real tape drives attached to the host machine via a SCSI
+        interface. Hercules emulation always makes the drive appear as a
+        channel attached device such as 3420 or 3480, although the underlying
+        physical drive may be any type of SCSI attached tape drive, including
+        4mm or 8mm DAT, DLT, SCSI attached 3480/3490 cartridge drives, and
+        SCSI attached 3420 open reel tape drives.
+        <p>
+        Host-attached SCSI tapes are read and written using variable length
+        EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
+        as a result can be freely used/exchanged on either (i.e. SCSI tapes
+        created on a real mainframe can subsequently be read by Hercules just
+        fine, and a SCSI tape created by Hercules can be subsequently read on
+        a mainframe just fine, thus providing a convenient means of exchanging
+        data between the two).
+        <p>
+        If you plan on using SCSI tapes with Hercules you might also be interested
+        in the <a href="#SCSIMOUNT">SCSIMOUNT</a> configuration option.
+        <p>
+        The only <i>required</i> device statement parameter for SCSI attached tape
+        drives is the name of the device as it is known
+        by the host operating system,
+        usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
+        Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
+        Windows only)</i>, where '0' means tape drive number
+        0 (your first or only host-attached SCSI tape drive), '1' means your
+        second host-attached SCSI tape drive, etc.
+        <p>
+        Depending on what actual model of SCSI tape drive you
+        actually have and how it behaves, you may need to specify one or more
+        additional optional parameters for Hercules to provide proper emulation
+        of the desired device type.
+        For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive does
+        not return nor use a block-id format compatible with 3480/3490 drives
+        (it instead uses a full 32-bit block-id just like the model 3590 does).
+        It also does not support the Erase Gap CCW at all.
+        <p>
+        Thus, in order to use, for example, a Quantum DLT drive with Hercules,
+        you <i>MUST</i> specify some special additional options to prevent the
+        Erase Gap command from being issued to the drive as well as to inform
+        Hercules that the drive uses 32-bit block-ids.
+        <p>
+        <b>Please note</b> that the below options define how the actual SCSI hardware
+        device behaves, which is completely different from the way the <i>emulated</i>
+        device will appear to behave to your guest. That is to say, if you define
+        your tape drive to Hercules as a 3480 device, then Hercules will perform
+        3480 device type emulation such that the device appears to your guest o/s
+        as if it were a 3480 device. If the <i>actual</i> SCSI device behaves as
+        a 3590 device however (perhaps using/returning 32-bit block-ids instead
+        of the expected 22-bit format block-ids that 3480's use), then you <i>MUST</i>
+        specify the <code>--blkid-32</code> special option on your Hercules device
+        statement so that Hercules's emulation logic can know that it needs to
+        translate 22-bit block-ids to 32-bit ones before sending them to the
+        actual SCSI hardware (and vice versa: to translate 32-bit block-ids from
+        the actual SCSI drive into 22-bit format block-ids that your guest expects
+        from a 3480 device).
+        <p>
+
+<a name="Quantum"></a>
+                <center><h4>Special options for SCSI tapes</h4></center>
+        <p>
+        As explained just above, certain model SCSI tape drives such as the Quantum
+        DLT series may require special handling in order to provide the desired proper
+        device type emulation. These special options are:
+        <p>
+        <dl>
+        <dt><code>--no-erg</code>
+        <dd><p>
+            This option is intended to prevent issuance of the Erase Gap
+            command to those SCSI tape drives which do not support it (such
+            as the Quantum DLT series). It causes Hercules's device emulation
+            logic to ignore any Erase Gap commands issued to the drive and
+            to return immediate 'success' instead.
+            <p>
+            This option should
+            only be used (specified) for drives such as the Quantum, which
+            support switching from read mode to write mode in the middle of
+            a data stream without the need of an intervening Erase Gap command.
+            Specifying it for any other model SCSI drive may cause incorrect
+            functioning as a result of the Erase Gap command not being issued
+            to the actual SCSI hardware.
+            <p>
+            Check the manufacturer information for your particular model of
+            SCSI attached tape drive (and/or use Fish's
+            "<a href="http://www.softdevlabs.com/Hercules">ftape</a>"
+            Windows utility)
+            to determine whether or not this option is needed for your
+            particular drive.
+            <p>
+        <dt><code>--blkid-32</code>
+        <dd><p>
+            This option indicates that your SCSI attached tape drive only
+            supports 32-bit block-ids (as used by 3590 drives) and not the 22-bit
+            format used by 3480/3490 drives. You should only specify this option
+            if you intend to define the drive as a model 3480 or 3490 device, and
+            then only if your actual SCSI drive uses 32-bit block-ids of course.
+            If you define your Hercules tape drive as a model 3590 device however,
+            then this option is of course not needed since model 3590 drives
+            are already presumed to use 32-bit block-ids.
+            <p>
+            Specifying this option on a 3480/3490 device statement will cause
+            Hercules device emulation logic to automatically translate the actual
+            SCSI tape drive's 32-bit block-id into 22-bit format before returning
+            it back to the guest operating system (since that is the format it
+            expects it to be in for a model 3480/3490 drive), and to translate the
+            guest's 22-bit format block-id into 32-bit format before sending it
+            to the actual SCSI hardware (since that is the format that the actual
+            hardware requires it to be in).
+            <p>
+        <dt><code>--blkid-22</code>
+        <dd><p>
+            The complete opposite of the above <code>--blkid-32</code> option.
+        </dl>
+
+    <p>
+
+    </dl> <!-- end Emulated tape types of emulation -->
 
 <hr width="50%"><p>
 

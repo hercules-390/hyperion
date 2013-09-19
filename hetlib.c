@@ -79,16 +79,16 @@ static const char *het_errstr[] =
             Currently, "HETOPEN_CREATE" is the only flag available and has
             the same function as the O_CREAT flag of the open(3) function.
 
-        @ISW@ Added flag HETOPEN_READONLY
+            @ISW@ Added flag HETOPEN_READONLY
 
-        HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
+            HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
 
-        When HETOPEN_READONLY is set, the het file must exist.
-        It is opened read only. Any attempt to write will fail.
+            When HETOPEN_READONLY is set, the het file must exist.
+            It is opened read only. Any attempt to write will fail.
 
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
-            and the address of the newly allocated HETB will be place at the
+            and the address of the newly allocated HETB will be placed at the
             "hetb" location.
 
             If an error occurs, then the return value will be < 0 and will be
@@ -232,18 +232,21 @@ het_open( HETB **hetb, char *filename, int flags )
     {
         if( rc != HETE_EOT )
         {
+            free( thetb );
             return( rc );
         }
 
         rc = het_tapemark( thetb );
         if( rc < 0 )
         {
+            free( thetb );
             return( rc );
         }
 
         rc = het_tapemark( thetb );
         if( rc < 0 )
         {
+            free( thetb );
             return( rc );
         }
 
@@ -258,6 +261,7 @@ het_open( HETB **hetb, char *filename, int flags )
     rc = het_rewind( thetb );
     if( rc < 0 )
     {
+        free( thetb );
         return( rc );
     }
 
@@ -715,6 +719,8 @@ het_read_header( HETB *hetb )
 
             HETE_UNKMETH        Unknown compression method encountered
 
+            HETE_NOMEM          Insufficient memory to allocate I/O buffer
+
             For other possible errors, see:
                 het_read_header()
 
@@ -725,12 +731,12 @@ het_read_header( HETB *hetb )
 
             #include "hetlib.h"
 
-            char buffer[ HETMAX_BLOCKSIZE ];
-
             int main( int argc, char *argv[] )
             {
                 HETB *hetb;
                 int rc;
+
+                char *buffer = malloc( HETMAX_BLOCKSIZE );
 
                 rc = het_open( &hetb, argv[ 1 ], 0 );
                 if( rc >= 0 )
@@ -749,6 +755,8 @@ het_read_header( HETB *hetb )
 
                 het_close( &hetb );
 
+                free( buffer );
+
                 return( 0 );
             }
 
@@ -765,7 +773,7 @@ het_read( HETB *hetb, void *sbuf )
     unsigned long slen;
     int flags1, flags2;
     unsigned long tlen;
-    char tbuf[ HETMAX_BLOCKSIZE ];
+    char *tbuf;
 
     /*
     || Initialize
@@ -773,6 +781,11 @@ het_read( HETB *hetb, void *sbuf )
     flags1 = flags2 = 0;
     tlen = 0;
     tptr = sbuf;
+    tbuf = malloc_aligned( HETMAX_BLOCKSIZE, 4096 );
+    if (!tbuf)
+    {
+        return( HETE_NOMEM );
+    }
 
     /*
     || Read chunks until entire block has been read
@@ -785,6 +798,7 @@ het_read( HETB *hetb, void *sbuf )
         rc = het_read_header( hetb );
         if( rc < 0 )
         {
+            free_aligned( tbuf );
             return( rc );
         }
 
@@ -798,6 +812,7 @@ het_read( HETB *hetb, void *sbuf )
             */
             if( !( hetb->chdr.flags1 & HETHDR_FLAGS1_BOR ) )
             {
+                free_aligned( tbuf );
                 return( HETE_BADBOR );
             }
 
@@ -813,6 +828,7 @@ het_read( HETB *hetb, void *sbuf )
                     if( ( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS ) &&
                         ( hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS ) )
                     {
+                        free_aligned( tbuf );
                         return( HETE_BADCOMPRESS );
                     }
                     tptr = tbuf;
@@ -832,6 +848,7 @@ het_read( HETB *hetb, void *sbuf )
             */
             if( hetb->chdr.flags1 & HETHDR_FLAGS1_BOR )
             {
+                free_aligned( tbuf );
                 return( HETE_BADBOR );
             }
         }
@@ -842,11 +859,13 @@ het_read( HETB *hetb, void *sbuf )
         if( (            flags1 & HETHDR_FLAGS1_COMPRESS ) !=
             ( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS ) )
         {
+            free_aligned( tbuf );
             return( HETE_BADCOMPRESS );
         }
         if( (            flags2 & HETHDR_FLAGS2_COMPRESS ) !=
             ( hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS ) )
         {
+            free_aligned( tbuf );
             return( HETE_BADCOMPRESS );
         }
 
@@ -861,6 +880,7 @@ het_read( HETB *hetb, void *sbuf )
         */
         if( tlen > HETMAX_BLOCKSIZE )
         {
+            free_aligned( tbuf );
             return( HETE_OVERFLOW );
         }
 
@@ -872,9 +892,11 @@ het_read( HETB *hetb, void *sbuf )
         {
             if( feof( hetb->fh ) )
             {
+                free_aligned( tbuf );
                 return( HETE_PREMEOF );
             }
 
+            free_aligned( tbuf );
             return( HETE_ERROR );
         }
 
@@ -910,6 +932,8 @@ het_read( HETB *hetb, void *sbuf )
                         rc = uncompress( sbuf, &slen, (unsigned char *)tbuf, tlen );
                         if( rc != Z_OK )
                         {
+                            rc = errno;
+                            free_aligned( tbuf );
                             errno = rc;
                             return( HETE_DECERR );
                         }
@@ -918,6 +942,7 @@ het_read( HETB *hetb, void *sbuf )
                     break;
 #endif /* defined( HAVE_LIBZ ) */
                     default:
+                        free_aligned( tbuf );
                         return( HETE_UNKMETH );
                     break;
                 }
@@ -930,6 +955,8 @@ het_read( HETB *hetb, void *sbuf )
                 rc = uncompress( sbuf, &slen, (unsigned char *)tbuf, tlen );
                 if( rc != Z_OK )
                 {
+                    rc = errno;
+                    free_aligned( tbuf );
                     errno = rc;
                     return( HETE_DECERR );
                 }
@@ -950,6 +977,8 @@ het_read( HETB *hetb, void *sbuf )
                                                  0 );
                 if (rc != BZ_OK)
                 {
+                    rc = errno;
+                    free_aligned( tbuf );
                     errno = rc;
                     return( HETE_DECERR );
                 }
@@ -959,6 +988,7 @@ het_read( HETB *hetb, void *sbuf )
 #endif /* defined( HET_BZIP2 ) */
 
             default:
+                free_aligned( tbuf );
                 return( HETE_UNKMETH );
             break;
         }
@@ -968,6 +998,11 @@ het_read( HETB *hetb, void *sbuf )
     || Save uncompressed length
     */
     hetb->ublksize = tlen;
+
+    /*
+    || Cleanup
+    */
+    free_aligned( tbuf );
 
     /*
     || Success
@@ -1175,6 +1210,8 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
 
             HETE_BADCOMPRESS    Compression mismatch between related chunks
 
+            HETE_NOMEM          Insufficient memory to allocate I/O buffer
+
             For other possible errors, see:
                 het_write_header()
 
@@ -1223,8 +1260,14 @@ het_write( HETB *hetb, void *sbuf, int slen )
     int rc;
     int flags;
     unsigned long tlen;
+    char *tbuf = NULL;
+    size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
 #if defined(HAVE_LIBZ) || defined( HET_BZIP2 )
-    char tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
+    tbuf = malloc_aligned( tsiz, 4096 );
+    if (!tbuf)
+    {
+        return( HETE_NOMEM );
+    }
 #endif
 
     /*
@@ -1232,6 +1275,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     */
     if( slen > HETMAX_BLOCKSIZE )
     {
+        if (tbuf) free_aligned( tbuf );
         return( HETE_BADLEN );
     }
 
@@ -1254,11 +1298,13 @@ het_write( HETB *hetb, void *sbuf, int slen )
         {
 #if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
-                tlen = sizeof( tbuf );
+                tlen = tsiz;
 
                 rc = compress2( (unsigned char *)tbuf, &tlen, sbuf, slen, hetb->level );
                 if( rc != Z_OK )
                 {
+                    rc = errno;
+                    if (tbuf) free_aligned( tbuf );
                     errno = rc;
                     return( HETE_COMPERR );
                 }
@@ -1274,7 +1320,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
-                tlen = sizeof( tbuf );
+                tlen = tsiz;
 
                 rc = BZ2_bzBuffToBuffCompress( tbuf,
                                                (void *) &tlen,
@@ -1285,6 +1331,8 @@ het_write( HETB *hetb, void *sbuf, int slen )
                                                0 );
                 if( rc != BZ_OK )
                 {
+                    rc = errno;
+                    if (tbuf) free_aligned( tbuf );
                     errno = rc;
                     return( HETE_COMPERR );
                 }
@@ -1329,6 +1377,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         rc = het_write_header( hetb, tlen, flags, 0 );
         if( rc < 0 )
         {
+            if (tbuf) free_aligned( tbuf );
             return( rc );
         }
 
@@ -1338,6 +1387,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         rc = (int)fwrite( sbuf, 1, tlen, hetb->fh );
         if( rc != (int)tlen )
         {
+            if (tbuf) free_aligned( tbuf );
             return( HETE_ERROR );
         }
 
@@ -1362,8 +1412,14 @@ het_write( HETB *hetb, void *sbuf, int slen )
     while (EINTR == rc);
     if (rc != 0)
     {
+        if (tbuf) free_aligned( tbuf );
         return( HETE_ERROR );
     }
+
+    /*
+    || Cleanup
+    */
+    if (tbuf) free_aligned( tbuf );
 
     /*
     || Success

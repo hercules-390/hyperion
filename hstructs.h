@@ -1338,9 +1338,9 @@ struct DEVBLK {                         /* Device configuration block*/
                                            to next block             */
         off_t   prvblkpos;              /* Offset from start of file
                                            to previous block         */
-        U16     curblkrem;              /* Number of bytes unread
+        U32     curblkrem;              /* Number of bytes unread
                                            from current block        */
-        U16     curbufoff;              /* Offset into buffer of data
+        U32     curbufoff;              /* Offset into buffer of data
                                            for next data chained CCW */
         U16     tapssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */

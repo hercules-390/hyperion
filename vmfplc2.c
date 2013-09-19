@@ -8,6 +8,7 @@
 #include "hstdinc.h"
 
 #include "hercules.h"
+#include "tapedev.h"
 #include "hetlib.h"
 #include "ftlib.h"
 #include "sllib.h"
@@ -15,6 +16,11 @@
 
 #define UTILITY_NAME    "vmfplc2"
 
+/*-------------------------------------------------------------------*/
+/* Maximum sized tape I/O buffers...                                 */
+/*-------------------------------------------------------------------*/
+static BYTE bfr[ MAX_BLKLEN ];
+static BYTE bfr2[ MAX_BLKLEN ];
 
 /* The blocksize of 4000 is the block size expected by VMFPLC2 */
 #define TAPE_BLOCKSIZE          4000
@@ -536,13 +542,12 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
     int     rsz;
     FILE    *ifile;
     int     maxsize;
-    unsigned char bfr[65536];
     struct  RECS *recs;
 
     if(recfm=='V')
-        maxsize=65535;
+        maxsize=MAX_BLKLEN-1;
     else
-        maxsize=65536;
+        maxsize=MAX_BLKLEN;
 
     ifile=fopen(infile,"r");
     if(ifile==NULL)
@@ -565,8 +570,6 @@ struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,s
 {
     int     rsz;
     FILE    *ifile;
-    char    bfr[65536];
-    unsigned char    bfr2[65536];
     struct  RECS *recs;
     char    *rec;
 
@@ -602,7 +605,6 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
 {
     int     rsz,rc;
     FILE    *ifile;
-    unsigned char bfr[65536];
     uint16_t    rlbfr;
     struct  RECS *recs;
 
@@ -836,7 +838,7 @@ int process_entry(struct options *opts,char *orec,int recno)
                 msg="Logical Record Length must be a numeric value";
                 break;
             }
-            if(reclen<1 || reclen>65535)
+            if(reclen<1 || reclen>=MAX_BLKLEN)
             {
                 msg="Logical Record Length must be between 1 and 65535";
                 break;
@@ -909,7 +911,6 @@ int process_entry(struct options *opts,char *orec,int recno)
 int process_procfile(struct options *opts)
 {
     FILE    *pfile;
-    char    recbfr[65536];
     char    *rec;
     int     recno=0;
     int     errcount=0;
@@ -920,7 +921,7 @@ int process_procfile(struct options *opts)
         perror(opts->procfile);
         return 1;
     }
-    while((rec=fgets(recbfr,sizeof(recbfr),pfile))!=NULL)
+    while((rec=fgets(bfr,sizeof(bfr),pfile))!=NULL)
     {
         recno++;
         rec[strlen(rec)-1]=0;

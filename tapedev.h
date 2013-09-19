@@ -22,7 +22,7 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define MAX_BLKLEN              65535   /* Maximum I/O buffer size   */
+#define MAX_BLKLEN              2097152 /* Maximum blocksize = 2MB   */
 #define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/

@@ -22,12 +22,18 @@
 #include "hstdinc.h"
 
 #include "hercules.h"
+#include "tapedev.h"
 #include "hetlib.h"
 #include "ftlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "hetupd"
+
+/*-------------------------------------------------------------------*/
+/* Maximum sized tape I/O buffer...                                  */
+/*-------------------------------------------------------------------*/
+static BYTE buf[ MAX_BLKLEN ];
 
 /*
 || Local volatile data
@@ -169,7 +175,6 @@ static int
 copytape( void )
 {
     int rc;
-    char buf[ HETMAX_BLOCKSIZE ];
 
     while( TRUE )
     {
