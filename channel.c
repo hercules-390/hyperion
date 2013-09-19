@@ -119,6 +119,15 @@ typedef struct
     {
         struct
         {
+            /* Note: when an IOBUF is reallocated larger, if the
+             * old size value is larger than IOBUF_DATASIZE bytes,
+             * then it means the buffer was malloc'ed on the heap
+             * and start/end point to the malloc'ed buffer which
+             * must then be free'ed. Otherwise if size is less than
+             * or equal to IOBUF_DATASIZE then it means start/end
+             * point to the static data buffer and free is skipped.
+             */
+#define IOBUF_DATASIZE  65536           /* Static data buffer size   */
             u_int   size;               /* Buffer size               */
             BYTE    *start;             /* Start of data address     */
             BYTE    *end;               /* Last byte address         */
@@ -127,10 +136,10 @@ typedef struct
              *       debugging and future use. No mapping of the space
              *       is presently done.
              */
-         };
+        };
         BYTE    pad[4096];              /* Pad to a 4K page boundary */
     };
-    BYTE    data[65536];                /* Channel I/O buffer        */
+    BYTE    data[IOBUF_DATASIZE];       /* Channel I/O buffer        */
 } IOBUF;
 
 static INLINE void
@@ -157,7 +166,7 @@ iobuf_validate (IOBUF *iobuf)
 {
     return
     ((iobuf == NULL                         ||
-      iobuf->size < 65536                   ||
+      iobuf->size < IOBUF_DATASIZE          ||
       iobuf->start != (BYTE *)iobuf->data   ||
       iobuf->end != (BYTE *)iobuf->start + (iobuf->size - 1 )) ?
      0 : 1);
@@ -170,7 +179,7 @@ iobuf_destroy (IOBUF *iobuf)
         return;
     if (!iobuf_validate(iobuf))
         raise(SIGSEGV);
-    if (iobuf->size > 65536)
+    if (iobuf->size > IOBUF_DATASIZE)
         free_aligned(iobuf);
 }
 
@@ -186,7 +195,7 @@ iobuf_reallocate (IOBUF *iobuf, const u_int size)
     if (iobufnew == NULL)
         return NULL;
     memcpy(iobufnew->start, iobuf->start, MIN(iobuf->size, size));
-    if (iobuf->size > 65536)
+    if (iobuf->size > IOBUF_DATASIZE)
         free_aligned(iobuf);
     return iobufnew;
 }
@@ -548,7 +557,7 @@ static void
 _dump ( const char *description, BYTE *addr, const u_int len )
 {
 int     i;
-int     k = MIN(len, 65536);
+int     k = MIN(len, IOBUF_DATASIZE);
 BYTE   *limit;
 char    msgbuf[133];
 
@@ -595,7 +604,7 @@ char    msgbuf[133];                    /* Message buffer            */
             (addr < sysblk.mainsize) ? (sysblk.mainsize - addr) : 0);
     if (k)
     {
-        k = MIN(k, 65536);
+        k = MIN(k, IOBUF_DATASIZE);
         storage = sysblk.mainstor + addr;
         limit = storage + k;
         if (description &&
@@ -1115,7 +1124,7 @@ int     cc;                             /* Condition code            */
         obtain_lock(&sysblk.ioqlock);
         if(sysblk.ioq != NULL)
         {
-         DEVBLK *tmp;
+        DEVBLK *tmp;
 
             /* special case for head of queue */
             if(sysblk.ioq == dev)
@@ -1135,7 +1144,7 @@ int     cc;                             /* Condition code            */
                 if(tmp->nextioq == dev)
                 {
                     tmp->nextioq = tmp->nextioq->nextioq;
-                    sysblk.devtunavail = MAX(0, sysblk.devtunavail -1);
+                    sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
                     cc = 0;
                 }
             }
@@ -1849,7 +1858,7 @@ halt_subchan (REGS *regs, DEVBLK *dev)
                 if(tmp->nextioq == dev)
                 {
                     tmp->nextioq = tmp->nextioq->nextioq;
-                    sysblk.devtunavail = MAX(0, sysblk.devtunavail -1);
+                    sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
                 }
             }
             dev->startpending = 0;
@@ -2180,7 +2189,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
             dev->nextioq = 0;
 
             /* Decrement waiting IOQ count */
-            sysblk.devtunavail = MAX(0, sysblk.devtunavail-1);
+            sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
 
             /* Create another device thread if pending work */
             create_device_thread();
