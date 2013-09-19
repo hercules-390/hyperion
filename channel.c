@@ -154,7 +154,7 @@ static INLINE IOBUF *
 iobuf_create (u_int size)
 {
     IOBUF *iobuf;
-    size  = (MIN(size, 1048576) + 4095) & ~0x0FFF;
+    size  = (MAX(size, 1048576) + 4095) & ~0x0FFF;
     iobuf = (IOBUF*)malloc_aligned(size + 4096, 4096);
     if (iobuf != NULL)
         iobuf_initialize(iobuf, size);
