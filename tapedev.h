@@ -267,37 +267,6 @@ typedef struct _OMATAPE_DESC
 OMATAPE_DESC;
 
 /*-------------------------------------------------------------------*/
-/* Structure definition for Flex FakeTape block headers              */
-/*-------------------------------------------------------------------*/
-/*
- * The character length fields in a Flex FakeTape header are in BIG
- * endian ASCII hex. That is to say, when the length field is ASCII
- * "0123" (i.e. 0x30, 0x31, 0x32, 0x33), the length of the block is
- * decimal 291 bytes (0x0123 == 291).
- *
- * The two block length fields are followed by an XOR "check" field
- * calculated as the XOR of the two preceding length fields and is
- * used to verify the integrity of the header.
- *
- * The Flex FakeTape tape format does not support any flag fields
- * in its header and thus does not support any type of compression.
- */
-typedef struct _FAKETAPE_BLKHDR
-{  /*
-    * PROGRAMMING NOTE: note that for Flex FakeTapes, the "previous
-    * chunk size" comes FIRST, followed by the "current chunk size"
-    * second. This is the complete opposite from the way it is for
-    * AWS tape files. Also note that for Flex FakeTape the size fields
-    * are in BIG endian ASCII hex-string whereas for AWS tapes
-    * they're LITTLE endian binary.
-    */
-    char  sprvblkl[4];                  /* length of previous block  */
-    char  scurblkl[4];                  /* length of this block      */
-    char  sxorblkl[4];                  /* XOR both lengths together */
-}
-FAKETAPE_BLKHDR;
-
-/*-------------------------------------------------------------------*/
 /* Tape Auto-Loader table entry                                      */
 /*-------------------------------------------------------------------*/
 struct TAPEAUTOLOADENTRY

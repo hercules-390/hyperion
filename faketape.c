@@ -22,6 +22,7 @@
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
+#include "ftlib.h"     /* Main faketape header file                  */
 
 //#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
 //#include "dbgtrace.h"                   // (Fish: DEBUGGING)
