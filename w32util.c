@@ -191,8 +191,6 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
         NULL
     );
 
-    ASSERT( dwBytesReturned );
-
     // (remove trailing whitespace)
     {
         char* p = pszBuffer + dwBytesReturned - 1;
