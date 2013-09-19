@@ -725,6 +725,16 @@ void get_mpfactors(BYTE *dest)
         size_t  i;
         U32     mpfactor = MPFACTOR_DENOMINATOR << 8;
         U16     result = 0;
+        U16     resmin = 1;
+
+        switch (MPFACTOR_DENOMINATOR)
+        {
+            default: /* resmin =   1; break; */
+            case   100: resmin =   1; break;
+            case   255: resmin = 101; break;
+            case 65535: resmin = 256; break;
+        }
+
         for (i=0; i < arraysize(mpfactors); i++)
         {
             /* Calculate the value of each subsequent entry as a
@@ -735,18 +745,7 @@ void get_mpfactors(BYTE *dest)
             {
                 mpfactor = (mpfactor * MPFACTOR_PERCENT) / 100;
                 result = (mpfactor + 128) >> 8;
-                switch (MPFACTOR_DENOMINATOR)
-                {
-                    case   100:
-                        result = MAX(result,   1);
-                        break;
-                    case   255:
-                        result = MAX(result, 101);
-                        break;
-                    case 65535:
-                        result = MAX(result, 256);
-                        break;
-                }
+                result = MAX(result, resmin);
             }
             STORE_HW( &mpfactors[i], result );
         }
