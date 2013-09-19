@@ -265,6 +265,15 @@ do { \
 #if !defined(_CHANNEL_C)
 #define _CHANNEL_C
 
+static INLINE U64
+BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
+{
+    if (dev) return ((addr <= dev->mainlim)   ? (dev->mainlim+1  - addr) : 0);
+    else     return ((addr < sysblk.mainsize) ? (sysblk.mainsize - addr) : 0);
+}
+
+#define CAPPED_BUFFLEN(_addr,_len,_dev) \
+    ((u_int)MIN((U64)(_len),(U64)BytesToEndOfStorage((_addr),(_dev))))
 
 /*--------------------------------------------------------------------*/
 /*  Inline routines for Conditions and Indications Cleared at the     */
@@ -533,8 +542,7 @@ format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
 u_int   k;                              /* Array subscripts          */
 BYTE    workarea[17];                   /* Character string work     */
 
-    k = MIN(len, sizeof(workarea)-1);
-    k = MIN(k, (addr < dev->mainlim) ? (dev->mainlim - addr) : 0);
+    k = MIN(sizeof(workarea)-1,CAPPED_BUFFLEN(addr,len,dev));
 
     if (k)
     {
@@ -591,17 +599,16 @@ static void
 _dump_storage ( const char *description,
                 RADR addr, const u_int len )
 {
-u_int   k = MIN(MIN(len,
-                    (addr < sysblk.mainsize) ?
-                        (sysblk.mainsize - addr) : 0),
-                65536);
+
+
+u_int   k;                              /* Amount of storage to dump */
 BYTE   *storage;                        /* Real storage address      */
 BYTE   *limit;                          /* Display limit             */
 char    msgbuf[133];                    /* Message buffer            */
 
     /* Set length to fully reside within defined storage */
-    k = MIN(len,
-            (addr < sysblk.mainsize) ? (sysblk.mainsize - addr) : 0);
+    k = CAPPED_BUFFLEN(addr,len,NULL);
+
     if (k)
     {
         k = MIN(k, IOBUF_DATASIZE);
