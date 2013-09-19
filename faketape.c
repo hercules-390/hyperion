@@ -281,24 +281,9 @@ U16             curblkl;                /* Current block length      */
     /* Read the block header to obtain the current block length */
     rc = readhdr_faketape (dev, blkpos, NULL, &curblkl, unitstat,code);
     if (rc < 0) return -1; /* (error message already issued) */
-    ASSERT( curblkl >= 0 );
 
     /* Calculate the offset of the next block header */
     blkpos += sizeof(FAKETAPE_BLKHDR) + curblkl;
-
-#if 0
-    /*BHE following code will never be true!!*/
-
-    /* Check that block length will not exceed buffer size */
-    if (curblkl > MAX_BLKLEN)
-    {
-        WRMSG (HHC00202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fake", (int)MAX_BLKLEN, blkpos);
-
-        /* Set unit check with data check */
-        build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
-        return -1;
-    }
-#endif
 
     /* If not a tapemark, read the data block */
     if (curblkl > 0)
