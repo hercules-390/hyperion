@@ -5277,9 +5277,9 @@ int     page_offset;                    /* Low order bits of R2      */
 
     PRIV_CHECK(regs);
 
-    if((regs->GR_L(r1) & (PFMF_RESERVED|PFMF_FMFI_FSC_RESV))
+    if((regs->GR_L(r1) & (PFMF_RESERVED|PFMF_FMFI_RESV|PFMF_FMFI_FSC_RESV))
       || (!FACILITY_ENABLED(NONQ_KEY_SET,regs) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
-        regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Wrap address according to addressing mode */
     aaddr = addr = ADDRESS_MAXWRAP(regs) & regs->GR_G(r2) & PAGEFRAME_PAGEMASK;
@@ -5294,7 +5294,7 @@ int     page_offset;                    /* Low order bits of R2      */
         break;
     /* Code for 2G pages goes here */
     default:
-        ASSERT(0); /* unexpected */
+        ASSERT(0); /* should have been catched by PFMF_FMFI_FSC_RESV bits being nonzero */
         break;
     case PFMF_FMFI_FSC_4K:
         /* Prefixing is applied in single frame operation */
