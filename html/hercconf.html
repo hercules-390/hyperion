@@ -147,7 +147,9 @@ and how they are used.
     0401      <a href="#CTCT">CTCT</a>    30881  192.168.100.2  30881  2048
     0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
     0430.2    <a href="#CTCI">CTCI</a>    tun0
-    0440.2    <a href="#LCS">LCS</a>      -n   /dev/net/tun   192.168.200.2
+    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
+    0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
+    0470.2    <a href="#PTP">PTP</a>     tun0
     0A00.3    <a href="#QETH">QETH</a>    iface /dev/net/tun
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
@@ -1955,6 +1957,20 @@ and how they are used.
 
             <tr>
                 <td>
+                        (( <a href="#PTP">PTP</a> ))
+                </td>
+                <td>
+                        MPCPTP/MPCPTP6 Channel to Channel link
+                </td>
+                <td>
+                        <a href="#PTP">"PTP" TUN/TAP Driver</a>
+                </td>
+            </tr>
+
+
+
+            <tr>
+                <td>
                         (( <a href="#QETH">QETH</a> ))
                 </td>
                 <td>
@@ -3330,6 +3346,222 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <li>Two device addresses will be defined (devnum and devnum + 1).
         </ul>
         <p>
+
+<p><br>
+
+<a name="PTP"></a>
+    <dt><b>PTP</b> &nbsp; &nbsp; (MPCPTP/MPCPTP6 Channel to Channel link)
+    <dd><p>
+        A point-to-point IP connection with the TCP/IP stack of the
+        host system on which Hercules is running.
+        From the point of view of the guest image running in the Hercules
+        machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to
+        another image.
+        <p>
+        For *nix systems, such as Linux, BSD, and OSX, you may use
+        preconfigured interfaces or you may request Hercules to configure
+        the interface for you.
+        In the first case you must know and supply the name of the interface
+        to use; in the second case the kernel supplies an interface name.
+        See the <a href="herctcp.html">Hercules TCP/IP</a> page for more details.
+        <p>
+
+        <dl> <!-- begin PTP parms -->
+        <dt>Required for *nix when using a preconfigured interface:
+
+        <dd><p>
+            <dl> <!-- begin Required for *nix preconfigured -->
+                <dt>[<code>-x</code>/<code>--if</code>] <code><em>ifname</em></code>
+                <dd><p>
+                    specifies the interface name of a TUN interface that is
+                    already configured. 
+                    <p>
+                    Specify no host names or IP addresses or other arguments as
+                    the information is already configured into the interface.
+                    <p>
+            </dl> <!-- end Required for *nix preconfigured -->
+
+        <dt>Required for *nix when not using a preconfigured interface,
+        and for Windows:
+        <dd><p>
+            <dl> <!-- begin Required for both *nix not preconfigured and Windows -->
+                <dt><code><em>guest1</em></code>
+                <dd><p>
+                    specifies the host name or IP address of the guest
+                    operating system running under Hercules.
+                    <p>
+
+                <dt><code><em>host1</em></code>
+                <dd><p>
+                    specifies the host name or IP address of the host
+                    (Linux or Windows) side of the point-to-point link.
+                    <p>
+
+                <dt><code><em>guest2</em></code>
+                <dd><p>
+                    specifies the host name or IP address of the guest
+                    operating system running under Hercules.
+                    <p>
+
+                <dt><code><em>host2</em></code>
+                <dd><p>
+                    specifies the host name or IP address of the host
+                    (Linux or Windows) side of the point-to-point link.
+                    <p>
+
+                <dt><code><em>guest1</em></code> and <code><em>host1</em></code>
+                must both be of the same address family, i.e. both IPv4 or
+                both IPv6.
+                <p>
+
+                <dt><code><em>guest2</em></code> and <code><em>host2</em></code>,
+                if specified, must both be of the same address family, i.e. both
+                IPv4 or both IPv6, and must not be of the same address family as
+                <code><em>guest1</em></code> and <code><em>host1</em></code>.
+                <p>
+
+                <dt>If a host name is specified for <code><em>guest1</em></code>,
+                and the host name can be resolved to both an IPv4 and an IPv6
+                address, use either the <code>-4</code>/<code>--inet</code>
+                or the <code>-6</code>/<code>--inet6</code> option to
+                specify which address family should be used;
+                if neither the <code>-4</code>/<code>--inet</code> nor the
+                <code>-6</code>/<code>--inet6</code> option is specified,
+                whichever address family the resolver returns first will
+                be used.
+                <p>
+
+                <dt><code><em>host1</em></code> or <code><em>host2</em></code> can
+                be followed by the prefix size expressed in CIDR notation,
+                e.g. 192.168.1.1/24 or 2001:db8:3003:1::543:210f/48.
+                For IPv4 the prefix size can have a value from 0 to 32;
+                if not specified a value of 32 is assumed.
+                For IPv6 the prefix size can have a value from 0 to 128;
+                if not specified a value of 128 is assumed.
+                For IPv4 the prefix size is used to produce the equivalent
+                subnet mask; for example, a value of 24 produces a subnet
+                mask of 255.255.255.0.
+                <p>
+
+                <dt>If <code><em>guest1</em></code>, <code><em>host1</em></code>,
+                <code><em>guest2</em></code> or <code><em>host2</em></code>
+                are numeric IPv6 addresses, they can be between braces,
+                e.g. [2001:db8:3003:1::543:210f].
+                <p>
+
+            </dl> <!-- end Required for both *nix not preconfigured and Windows -->
+
+            <p>
+
+        <dt>Optional for *nix:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments.
+            <p>
+
+            <dl> <!-- begin Optional for *nix -->
+
+                <dt><code>-t <em>size</em></code> &nbsp;&nbsp; or &nbsp; <code>--mtu <em>size</em></code>
+                <dd><p>
+                    where <code><em>size</em></code> is the maximum transmission
+                    unit size. The default size is 1500.
+                    <p>
+
+                <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
+                <dd><p>
+                    specifies the name of the TUN interface to use.
+                    There is no default for <code><em>name</em></code>.
+                    <p>
+
+            </dl> <!-- end Optional for *nix -->
+
+            <p>
+
+        <dt>Optional for Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments.
+            <p>
+
+            <dl> <!-- begin Optional for Windows -->
+
+                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
+                <dd><p>
+                    where <em>'MAC address'</em> is the optional hardware address for
+                    the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
+                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
+                    from the last 3 octets of the specified <code><i>guestip</i></code>.
+                    <p>
+
+                <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
+                    <dd>
+                <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
+                <dd><p>
+                    See Fish's
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
+                    page for further details and information.
+                    <p>
+
+            </dl> <!-- end Optional for Windows -->
+
+            <p>
+
+        <dt>Optional for both *nix and Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments:
+            <p>
+
+            <dl> <!-- begin Optional for both *nix and Windows -->
+
+                <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
+                <dd><p>
+                    specifies the name of the tunnel device to use.
+                    <p>
+                    The default
+                    for Linux is <code>/dev/net/tun</code>
+                    (which is correct for version 2.4
+                    and above of the Linux kernel).
+                    The default for OSX is <code>/dev/tun0</code>.
+                    <p>
+                    For Windows, specify the IP address or MAC address of the
+                    real Windows adapter to emulate the virtual guest's adapter on.
+                    The default is the first adapter found according to Windows'
+                    adapter binding order, which may not be the one you want if
+                    you have multiple adapters.
+                    <p>
+                    See
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-faq.html#wireless">question #22
+                    of the CTCI-W32 F.A.Q. (Frequently Asked Questions)</a>
+                    document for more information about adapter binding order, and the
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-readme.html#herccfg">CTCI-W32 Configuration</a>
+                    web page for general information regarding CTCI-W32 configuration.
+                    <p>
+
+                <dt><code>-4</code> &nbsp;&nbsp; or &nbsp; <code>--inet</code>
+                <dd><p>
+                    indicates that when a host name is specified for
+                    <code><em>guest1</em></code>, the host name must
+                    resolve to an IPv4 address.
+
+                <dt><code>-6</code> &nbsp;&nbsp; or &nbsp; <code>--inet6</code>
+                <dd><p>
+                    indicates that when a host name is specified for
+                    <code><em>guest1</em></code>, the host name must
+                    resolve to an IPv6 address.
+
+                <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
+                <dd><p>
+                    specifies that debugging output is to be produced on the
+                    Hercules control panel. This should normally be left
+                    unspecified.
+                    <p>
+
+            </dl> <!-- end Optional for both *nix and Windows -->
+
+        </dl> <!-- end PTP parms -->
+
+<p><br>
 
     </dl> <!-- end emulation types -->
     <p>
