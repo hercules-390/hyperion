@@ -191,9 +191,6 @@ HUT_DLL_IMPORT int timed_wait_condition_relative_usecs
     struct timeval*  pTV        // [OPTIONAL] ptr to tod value (may be NULL)
 );
 
-// TEST
-HUT_DLL_IMPORT void cause_crash();
-
 /* Read/write to socket functions */
 HUT_DLL_IMPORT int hprintf(int s,char *fmt,...);
 HUT_DLL_IMPORT int hwrite(int s,const char *,size_t);

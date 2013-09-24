@@ -19,7 +19,7 @@
 #define aeyesize 8
 #define eyesize 8
 #define raise_chain_validation_error                                   \
-    raise (SIGSEGV);
+    CRASH();
 #define chain_validate_pointer(_arg)                                   \
     if (_arg == 0 || _arg == NULL)                                     \
         raise_chain_validation_error;

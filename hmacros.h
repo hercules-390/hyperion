@@ -39,18 +39,119 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*      Round a value up to the next boundary                        */
+/*-------------------------------------------------------------------*/
+#define ROUND_UP(x,y)       ((((x)+((y)-1))/(y))*(y))
+
+/*-------------------------------------------------------------------*/
 /*      Define min/max macros                                        */
 /*-------------------------------------------------------------------*/
 #if !defined(min)
   #define min(_x, _y)       ((_x) < (_y) ? (_x) : (_y))
 #endif
-
 #if !defined(max)
   #define max(_x, _y)       ((_x) > (_y) ? (_x) : (_y))
 #endif
+#if !defined(MIN)
+  #define MIN(_x,_y)        min((_x),(_y))
+#endif
+#if !defined(MAX)
+  #define MAX(_x,_y)        max((_x),(_y))
+#endif
+/*-------------------------------------------------------------------*/
+/*      MINMAX        ensures var x remains within range y to z      */
+/*-------------------------------------------------------------------*/
+#if !defined(MINMAX)
+  #define  MINMAX(_x,_y,_z) ((_x) = MIN(MAX((_x),(_y)),(_z)))
+#endif
 
 /*-------------------------------------------------------------------*/
-/* "Portability" macros for handling _MSVC_ port...                  */
+/*      some handy array/struct macros...                            */
+/*-------------------------------------------------------------------*/
+#ifndef   _countof
+  #define _countof(x)       ( sizeof(x) / sizeof(x[0]) )
+#endif
+#ifndef   arraysize
+  #define arraysize(x)      _countof(x)
+#endif
+#ifndef   sizeof_member
+  #define sizeof_member(_struct,_member) sizeof(((_struct*)0)->_member)
+#endif
+#ifndef   offsetof
+  #define offsetof(_struct,_member)   (size_t)&(((_struct*)0)->_member)
+#endif
+
+/*-------------------------------------------------------------------*/
+/*      CASSERT macro       a compile time assertion check           */
+/*-------------------------------------------------------------------*/
+/** 
+ *  Validates at compile time whether condition is true without
+ *  generating code. It can be used at any point in a source file
+ *  where typedefs are legal.
+ *
+ *  On success, compilation proceeds normally.
+ *
+ *  Sample usage:
+ *
+ *      CASSERT(sizeof(struct foo) == 76, demo_c)
+ *
+ *  On failure, attempts to typedef an array type of negative size
+ *  resulting in a compiler error message that might look something
+ *  like the following:
+ *
+ *      demo.c:32: error: size of array 'assertion_failed_demo_c_32' is negative
+ *
+ *  The offending line itself will look something like this:
+ *
+ *      typedef assertion_failed_demo_c_32[-1]
+ *
+ *  where demo_c is the content of the second parameter which should
+ *  typically be related in some obvious way to the containing file
+ *  name, 32 is the line number in the file on which the assertion
+ *  appears, and -1 is the result of a calculation based on the cond
+ *  failing.
+ *
+ *  \param cond         The predicate to test. It should evaluate
+ *                      to something which can be coerced into a
+ *                      normal C boolean.
+ *
+ *  \param file         A sequence of legal identifier characters
+ *                      that should uniquely identify the source
+ *                      file where the CASSERT statement appears.
+ */
+#if !defined(CASSERT)
+#define CASSERT(cond, file)     _CASSERT_LINE(cond,__LINE__,file)
+#define _CASSERT_PASTE(a,b)     a##b
+#define _CASSERT_LINE(cond, line, file) \
+  typedef char _CASSERT_PASTE(assertion_failed_##file##_,line)[2*!!(cond)-1];
+#endif
+
+/*-------------------------------------------------------------------*/
+/*      compiler optimization hints         (for performance)        */
+/*-------------------------------------------------------------------*/
+
+#undef likely
+#undef unlikely
+
+#ifdef _MSVC_
+
+  #define likely(_c)      ( (_c) ? ( __assume((_c)), 1 ) :                    0   )
+  #define unlikely(_c)    ( (_c) ?                   1   : ( __assume(!(_c)), 0 ) )
+
+#else // !_MSVC_
+
+  #if __GNUC__ >= 3
+    #define likely(_c)    __builtin_expect((_c),1)
+    #define unlikely(_c)  __builtin_expect((_c),0)
+  #else
+    #define likely(_c)    (_c)
+    #define unlikely(_c)  (_c)
+  #endif
+
+#endif // _MSVC_
+
+/*-------------------------------------------------------------------*/
+/*      _MSVC_  portability macros                                   */
 /*-------------------------------------------------------------------*/
 
 /* PROGRAMMING NOTE: the following 'tape' portability macros are
@@ -162,7 +263,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* some handy quantity definitions                                   */
+/*      Some handy quantity definitions                              */
 /*-------------------------------------------------------------------*/
 #define  ONE_KILOBYTE   ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */
 #define  TWO_KILOBYTE   ((U32)(2           *        1024))  /* 2^11 (16^2)  * 8  */
@@ -226,41 +327,25 @@
 #define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))    /* zeros = 24 */
 
 /*-------------------------------------------------------------------*/
-/* some handy array/struct macros...                                 */
+/*      Some handy memory/string comparison macros                   */
 /*-------------------------------------------------------------------*/
-#define mem_eq(_a,_b,_n)        (!memcmp(_a,_b,_n))
-#define mem_ne(_a,_b,_n)        (memcmp(_a,_b,_n))
+#define mem_eq(_a,_b,_n)            (!memcmp(_a,_b,_n))
+#define mem_ne(_a,_b,_n)            ( memcmp(_a,_b,_n))
 
-#define str_eq(_a,_b)           (!strcmp(_a,_b))
-#define str_ne(_a,_b)           (strcmp(_a,_b))
+#define str_eq(_a,_b)               (!strcmp(_a,_b))
+#define str_ne(_a,_b)               ( strcmp(_a,_b))
 
-#define str_eq_n(_a,_b,_n)      (!strncmp(_a,_b,_n))
-#define str_ne_n(_a,_b,_n)      (strncmp(_a,_b,_n))
+#define str_eq_n(_a,_b,_n)          (!strncmp(_a,_b,_n))
+#define str_ne_n(_a,_b,_n)          ( strncmp(_a,_b,_n))
 
 #define str_caseless_eq(_a,_b)      (!strcasecmp(_a,_b))
-#define str_caseless_ne(_a,_b)      (strcasecmp(_a,_b))
+#define str_caseless_ne(_a,_b)      ( strcasecmp(_a,_b))
 
 #define str_caseless_eq_n(_a,_b,_n) (!strncasecmp(_a,_b,_n))
-#define str_caseless_ne_n(_a,_b,_n) (strncasecmp(_a,_b,_n))
+#define str_caseless_ne_n(_a,_b,_n) ( strncasecmp(_a,_b,_n))
 
 /*-------------------------------------------------------------------*/
-/* some handy array/struct macros...                                 */
-/*-------------------------------------------------------------------*/
-#ifndef   _countof
-  #define _countof(x)       ( sizeof(x) / sizeof(x[0]) )
-#endif
-#ifndef   arraysize
-  #define arraysize(x)      _countof(x)
-#endif
-#ifndef   sizeof_member
-  #define sizeof_member(_struct,_member) sizeof(((_struct*)0)->_member)
-#endif
-#ifndef   offsetof
-  #define offsetof(_struct,_member)   (size_t)&(((_struct*)0)->_member)
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Large File Support portability...                                 */
+/*      Large File Support portability                               */
 /*-------------------------------------------------------------------*/
 
 #ifdef _MSVC_
@@ -311,7 +396,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Macro for command parsing with variable length                    */
+/*      Macro for command parsing with variable length               */
 /*-------------------------------------------------------------------*/
 #define  CMD(str,cmd,min) ( strcaseabbrev(#cmd,str,min) )
 
@@ -319,13 +404,13 @@
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
 
 /*-------------------------------------------------------------------*/
-/* Script processing constants                                       */
+/*      Script processing constants                                  */
 /*-------------------------------------------------------------------*/
 #define  MAX_SCRIPT_STMT    1024        /* Max script stmt length    */
 #define  MAX_SCRIPT_DEPTH   10          /* Max script nesting depth  */
 
 /*-------------------------------------------------------------------*/
-/* Macro for Debugging / Tracing...                                  */
+/*      Debugging / Tracing macros.                                  */
 /*-------------------------------------------------------------------*/
 #define MLVL( _lvl) \
     (sysblk.msglvl & (MLVL_ ## _lvl))
@@ -347,31 +432,7 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 typedef int CMPFUNC(const void*, const void*);
 
 /*-------------------------------------------------------------------*/
-/* compiler optimization hints         (for performance)             */
-/*-------------------------------------------------------------------*/
-
-#undef likely
-#undef unlikely
-
-#ifdef _MSVC_
-
-  #define likely(_c)      ( (_c) ? ( __assume((_c)), 1 ) :                    0   )
-  #define unlikely(_c)    ( (_c) ?                   1   : ( __assume(!(_c)), 0 ) )
-
-#else // !_MSVC_
-
-  #if __GNUC__ >= 3
-    #define likely(_c)    __builtin_expect((_c),1)
-    #define unlikely(_c)  __builtin_expect((_c),0)
-  #else
-    #define likely(_c)    (_c)
-    #define unlikely(_c)  (_c)
-  #endif
-
-#endif // _MSVC_
-
-/*-------------------------------------------------------------------*/
-/* CPU state related macros and constants...                         */
+/*      CPU state related macros and constants                       */
 /*-------------------------------------------------------------------*/
 
 /* Definitions for CPU state */
@@ -387,8 +448,8 @@ typedef int CMPFUNC(const void*, const void*);
  ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)
 
 /*-------------------------------------------------------------------*/
-/* Obtain/Release mainlock.                                          */
-/* mainlock is only obtained by a CPU thread                         */
+/*      Obtain/Release mainlock                                      */
+/*      mainlock is only obtained by a CPU thread                    */
 /*-------------------------------------------------------------------*/
 
 #define OBTAIN_MAINLOCK(_regs) \
@@ -408,18 +469,18 @@ typedef int CMPFUNC(const void*, const void*);
  } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Obtain/Release crwlock.                                           */
-/* crwlock can be obtained by any thread.                            */
+/*      Obtain/Release crwlock                                       */
+/*      crwlock can be obtained by any thread                        */
 /*-------------------------------------------------------------------*/
 
 #define OBTAIN_CRWLOCK()    obtain_lock( &sysblk.crwlock )
 #define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
 
 /*-------------------------------------------------------------------*/
-/* Obtain/Release intlock.                                           */
-/* intlock can be obtained by any thread                             */
-/* if obtained by a cpu thread, check to see if synchronize_cpus     */
-/* is in progress.                                                   */
+/*      Obtain/Release intlock                                       */
+/*      intlock can be obtained by any thread                        */
+/*      if obtained by a cpu thread, check to see                    */
+/*      if synchronize_cpus is in progress.                          */
 /*-------------------------------------------------------------------*/
 
 #define OBTAIN_INTLOCK(_iregs) \
@@ -456,19 +517,15 @@ typedef int CMPFUNC(const void*, const void*);
   #define AT_SYNCPOINT(_regs)    ((_regs)->intwait)
 #endif // OPTION_SYNCIO
 
-
 /*-------------------------------------------------------------------*/
-/* Synchronize CPUS                                                  */
-/*                                                                   */
-/* Locks                                                             */
-/*      INTLOCK(regs)                                                */
+/*      Synchronize CPUS                                             */
+/*      Locks used: INTLOCK(regs)                                    */
 /*-------------------------------------------------------------------*/
 #define SYNCHRONIZE_CPUS(_regs) \
         synchronize_cpus(_regs)
 
-
 /*-------------------------------------------------------------------*/
-/* Macros to signal interrupt condition to a CPU[s]...               */
+/*      Macros to signal interrupt condition to a CPU[s]             */
 /*-------------------------------------------------------------------*/
 
 #define WAKEUP_CPU(_regs) \
@@ -502,10 +559,10 @@ typedef int CMPFUNC(const void*, const void*);
  } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Macros to queue/dequeue a device on the I/O interrupt queue...    */
+/*      Macros to queue/dequeue device on I/O interrupt queue        */
+/*      sysblk.iointqlk ALWAYS needed to examine sysblk.iointq       */
 /*-------------------------------------------------------------------*/
 
-/* NOTE: sysblk.iointqlk ALWAYS needed to examine sysblk.iointq */
 
 #define QUEUE_IO_INTERRUPT(_io) \
  do { \
@@ -551,10 +608,10 @@ typedef int CMPFUNC(const void*, const void*);
      } \
  } while (0)
 
-/* NOTE: sysblk.iointqlk needed to examine sysblk.iointq,
-   sysblk.intlock (which MUST be held before calling these
-   macros) needed in order to set/reset IC_IOPENDING flag */
-
+/*    NOTE: sysblk.iointqlk needed to examine sysblk.iointq,
+      sysblk.intlock (which MUST be held before calling these
+      macros) needed in order to set/reset IC_IOPENDING flag
+*/
 #define UPDATE_IC_IOPENDING() \
  do { \
    obtain_lock(&sysblk.iointqlk); \
@@ -572,7 +629,7 @@ typedef int CMPFUNC(const void*, const void*);
  } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Handy utility macro for channel.c                                 */
+/*      Handy utility macro for channel.c                            */
 /*-------------------------------------------------------------------*/
 
 #define IS_CCW_IMMEDIATE(_dev,_code) \
@@ -583,7 +640,7 @@ typedef int CMPFUNC(const void*, const void*);
   )
 
 /*-------------------------------------------------------------------*/
-/* Utility macro to check if DEVBLK is for an existing device        */
+/*      Macro to check if DEVBLK is for an existing device           */
 /*-------------------------------------------------------------------*/
 
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
@@ -595,7 +652,7 @@ typedef int CMPFUNC(const void*, const void*);
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
 
 /*-------------------------------------------------------------------*/
-/* Hercules Dynamic Loader macro to call optional function override  */
+/*      HDL macro to call optional function override                 */
 /*-------------------------------------------------------------------*/
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -627,7 +684,7 @@ typedef int CMPFUNC(const void*, const void*);
 #endif
 
 /*-------------------------------------------------------------------*/
-/* sleep for as long as we like                                      */
+/*      Sleep for as long as we like   (whole number of seconds)     */
 /*-------------------------------------------------------------------*/
 
 #define SLEEP(_n) \
@@ -639,7 +696,24 @@ typedef int CMPFUNC(const void*, const void*);
  } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Perform standard utility initialization                           */
+/*      CRASH                       (with hopefully a dump)          */
+/*-------------------------------------------------------------------*/
+
+#ifdef _MSVC_
+  #define CRASH() \
+    do { \
+      BYTE *p = NULL; \
+      *p=0; \
+    } while (0)
+#else
+  #define CRASH() \
+    do { \
+      abort(); \
+    } while (0)
+#endif
+
+/*-------------------------------------------------------------------*/
+/*      Perform standard utility initialization                      */
 /*-------------------------------------------------------------------*/
 
 #if !defined(EXTERNALGUI)
@@ -703,7 +777,7 @@ typedef int CMPFUNC(const void*, const void*);
   } while (0)
 
 /*-------------------------------------------------------------------*/
-/* Macro for Setting a Thread Name  (mostly for debugging purposes)  */
+/*      Assign name to thread           (debugging aid)              */
 /*-------------------------------------------------------------------*/
 
 #ifdef _MSVC_
@@ -835,22 +909,8 @@ do { \
 
 #endif /* !defined(NO_SETUID) */
 
-/* min/max macros */
-
-#if !defined(MIN)
-#define MIN(_x,_y) ( ( ( _x ) < ( _y ) ) ? ( _x ) : ( _y ) )
-#endif /*!defined(MIN)*/
-
-#if !defined(MAX)
-#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
-#endif /*!defined(MAX)*/
-
-#if !defined(MINMAX)  /* (ensures var x remains within range y to z) */
-#define  MINMAX(_x,_y,_z)  ((_x) = MIN(MAX((_x),(_y)),(_z)))
-#endif /*!defined(MINMAX)*/
-
 /*-------------------------------------------------------------------*/
-/* Pipe signaling support...  (i.e. thread signaling via pipe)       */
+/*      Pipe signaling            (thread signaling via pipe)        */
 /*-------------------------------------------------------------------*/
 
 #define RECV_PIPE_SIGNAL( rfd, lock, flag ) \

@@ -131,7 +131,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     if (argc > 1)
     {
         if ( CMD(argv[1],crash,5) )
-            cause_crash(); // (see hscutl.c)
+            CRASH();
         else if (CMD( argv[1], locks, 5 ))
         {
             // test thread exit with lock still held
