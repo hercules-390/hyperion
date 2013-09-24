@@ -680,6 +680,9 @@ int             attn = 0;
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;
 
+    /* Request a maximum sized device I/O buffer */
+    dev->bufsize = MAX_BLKLEN;
+
     /* ISW */
     /* Build a 'clear' sense */
     memset (dev->sense, 0, sizeof(dev->sense));
