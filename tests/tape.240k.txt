@@ -1,0 +1,122 @@
+#----------------------------------------------------
+
+msglvl -debug
+
+defsym  devnum  0180        # CUU of tape drive
+
+panrate fast
+stopall
+
+mainsize 8m
+sysclear
+
+archmode S/370
+sysreset
+
+#----------------------------------------------------
+
+r 00=0000000000000200       # restart new psw
+r 28=000A00000000DEAD       # program check new psw
+
+#----------------------------------------------------
+
+r 200=4110$(devnum)         # R1 = device address
+
+r 204=4120021C              # r2 -> i/o interupt rtn
+r 208=5020007C              # store into i/o new psw
+
+r 20C=41200500              # R2 -> channel program
+r 210=50200048              # store into caw
+r 214=9C001000              # sio 0(r1)
+r 218=82000400              # wait for i/o interrupt
+
+r 21C=D50300440300          # expected csw?
+r 222=4770024C              # no, error
+
+r 226=4120023E              # r2 -> i/o interupt rtn
+r 22A=5020007C              # store into i/o new psw
+
+r 22E=41200570              # R2 -> channel program
+r 232=50200048              # store into caw
+r 236=9C001000              # sio 0(r1)
+r 23A=82000400              # wait for i/o interrupt
+
+r 23E=D50300440304          # expected csw?
+r 244=4770024C              # no, error
+
+r 248=82000408              # yes, load okay psw
+r 24C=82000410              # no, load bad psw
+
+#----------------------------------------------------
+
+r 300=0D000010              # eof csw
+r 304=0C000000              # good csw
+
+#----------------------------------------------------
+
+r 400=020A000000000000      # enabled for i/o psw
+r 408=000A000000AAAAAA      # OK disabled wait psw
+r 410=000A000000BADBAD      # BAD disabled wait psw
+
+#----------------------------------------------------
+
+r 500=07020C7860000000      # rewind  SLI + CC
+
+r 508=01020D38E000F000      # write   SLI + CC + CD
+r 510=0102FD38E000F000      # write   SLI + CC + CD
+r 518=0103ED38E000F000      # write   SLI + CC + CD
+r 520=0104DD386000F000      # write   SLI + CC
+
+r 528=1F020CC060000000      # wtm     SLI + CC
+r 530=1F020CC060000000      # wtm     SLI + CC
+r 538=1F020CC060000000      # wtm     SLI + CC
+r 540=07020C7860000000      # rewind  SLI + CC
+
+r 548=02120D38E000F000      # read    SLI + CC + CD
+r 550=0212FD38E000F000      # read    SLI + CC + CD
+r 558=0213ED38E000F000      # read    SLI + CC + CD
+r 560=0214DD386000F000      # read    SLI + CC
+
+r 568=02120C7860000010      # read    SLI + CC  **UE**
+
+r 570=0720000020000000      # rewind  SLI
+
+#----------------------------------------------------
+
+r 020D38=11111111111111111111111111111111
+r 02FD38=22222222222222222222222222222222
+r 03ED38=33333333333333333333333333333333
+r 04DD38=44444444444444444444444444444444
+r 05CD38=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+r 120D38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 12FD38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 13ED38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 14DD38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 15CD38=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+r 200000=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+#----------------------------------------------------
+
+t+$(devnum)
+restart
+pause 1
+
+#----------------------------------------------------
+
+r 020D38.10
+r 02FD38.10
+r 03ED38.10
+r 04DD38.10
+r 05CD38.10
+
+r 120D38.10
+r 12FD38.10
+r 13ED38.10
+r 14DD38.10
+r 15CD38.10
+
+r 200000.10
+
+#----------------------------------------------------

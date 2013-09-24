@@ -696,8 +696,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x02:
     {
-        BYTE *buf = (flags & CCW_FLAGS_CD) ? dev->buf : iobuf;
-
         /* Command reject if the volume is currently fenced */
         if (dev->fenced)
         {
@@ -717,15 +715,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Read a block from the tape according to device type */
         /* Exit with unit check status if read error condition */
-        if ((len = dev->tmh->read( dev, buf, unitstat, code)) < 0)
+        if ((len = dev->tmh->read( dev, dev->buf, unitstat, code)) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
         RESIDUAL_CALC (len);
 
-        /* Copy data to I/O buffer if data chaining */
-        if (flags & CCW_FLAGS_CD)
-            memcpy (iobuf, dev->buf, num);
+        /* Copy data to I/O buffer */
+        memcpy (iobuf, dev->buf, num);
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;
@@ -891,8 +888,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x0C:
     {
-        BYTE *buf = (flags & CCW_FLAGS_CD) ? dev->buf : iobuf;
-
         /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -920,15 +915,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            we just backspaced over, and exit with unit check status
            on any read error condition
         */
-        if ((len = dev->tmh->read( dev, buf, unitstat, code )) < 0)
+        if ((len = dev->tmh->read( dev, dev->buf, unitstat, code )) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
         RESIDUAL_CALC (len);
 
-        /* Copy data to I/O buffer if data chaining */
-        if (flags & CCW_FLAGS_CD)
-            memcpy (iobuf, dev->buf, num);
+        /* Copy data to I/O buffer */
+        memcpy (iobuf, dev->buf, num);
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;

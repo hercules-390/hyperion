@@ -1,0 +1,147 @@
+#----------------------------------------------------
+
+msglvl -debug
+
+defsym  devnum  0180        # CUU of tape drive
+
+panrate fast
+stopall
+
+mainsize 8m
+sysclear
+
+archmode S/370
+sysreset
+
+#----------------------------------------------------
+
+r 00=0000000000000200       # restart new psw
+r 28=000200000000DEAD       # program check new psw
+
+#----------------------------------------------------
+
+r 200=4110$(devnum)         # R1 = device address
+r 204=4120021C              # r2 -> i/o interupt rtn
+r 208=5020007C              # store into i/o new psw
+r 20C=41200500              # R2 -> channel program
+r 210=50200048              # store into caw
+r 214=9C001000              # sio 0(r1)
+r 218=82000400              # wait for i/o interrupt
+r 21C=D50300440300          # expected csw?
+r 222=4770022A              # no, error
+r 226=82000408              # yes, load okay psw
+r 22A=82000410              # no, load bad psw
+r 300=0C000000              # good i/o csw
+
+#----------------------------------------------------
+
+r 400=020A000000000000      # enabled for i/o psw
+r 408=000A000000AAAAAA      # OK disabled wait psw
+r 410=000A000000BADBAD      # BAD disabled wait psw
+
+#----------------------------------------------------
+
+r 500=0700000060000000      # rewind  SLI + CC
+
+r 508=01001000E000F000      # write   SLI + CC + CD
+r 510=01001000E000F000      # write   SLI + CC + CD
+r 518=01001000E000F000      # write   SLI + CC + CD
+r 520=01001000E000F000      # write   SLI + CC + CD
+r 528=01001000E000F000      # write   SLI + CC + CD
+r 530=01001000E000F000      # write   SLI + CC + CD
+r 538=01001000E000F000      # write   SLI + CC + CD
+r 540=01001000E000F000      # write   SLI + CC + CD
+r 548=01001000E000F000      # write   SLI + CC + CD
+r 550=01001000E000F000      # write   SLI + CC + CD
+r 558=01001000E000F000      # write   SLI + CC + CD
+r 560=01001000E000F000      # write   SLI + CC + CD
+r 568=01001000E000F000      # write   SLI + CC + CD
+r 570=01001000E000F000      # write   SLI + CC + CD
+r 578=01001000E000F000      # write   SLI + CC + CD
+r 580=01001000E000F000      # write   SLI + CC + CD
+r 588=01001000E000F000      # write   SLI + CC + CD
+r 590=01001000E000F000      # write   SLI + CC + CD
+r 598=01001000E000F000      # write   SLI + CC + CD
+r 5A0=01001000E000F000      # write   SLI + CC + CD
+r 5A8=01001000E000F000      # write   SLI + CC + CD
+r 5B0=01001000E000F000      # write   SLI + CC + CD
+r 5B8=01001000E000F000      # write   SLI + CC + CD
+r 5C0=01001000E000F000      # write   SLI + CC + CD
+r 5C8=01001000E000F000      # write   SLI + CC + CD
+r 5D0=01001000E000F000      # write   SLI + CC + CD
+r 5D8=01001000E000F000      # write   SLI + CC + CD
+r 5E0=01001000E000F000      # write   SLI + CC + CD
+r 5E8=01001000E000F000      # write   SLI + CC + CD
+r 5F0=01001000E000F000      # write   SLI + CC + CD
+r 5F8=01001000E000F000      # write   SLI + CC + CD
+r 600=01001000E000F000      # write   SLI + CC + CD
+r 608=01001000E000F000      # write   SLI + CC + CD
+r 610=01001000E000F000      # write   SLI + CC + CD
+r 618=0100100060002000      # write   SLI + CC
+
+r 620=1F00000060000000      # wtm     SLI + CC
+r 628=1F00000060000000      # wtm     SLI + CC
+r 630=1F00000060000000      # wtm     SLI + CC
+r 638=0700000060000000      # rewind  SLI + CC
+
+r 640=02020000E000F000      # read    SLI + CC + CD
+r 648=02020000E000F000      # read    SLI + CC + CD
+r 650=02020000E000F000      # read    SLI + CC + CD
+r 658=02020000E000F000      # read    SLI + CC + CD
+r 660=02020000E000F000      # read    SLI + CC + CD
+r 668=02020000E000F000      # read    SLI + CC + CD
+r 670=02020000E000F000      # read    SLI + CC + CD
+r 678=02020000E000F000      # read    SLI + CC + CD
+r 680=02020000E000F000      # read    SLI + CC + CD
+r 688=02020000E000F000      # read    SLI + CC + CD
+r 690=02020000E000F000      # read    SLI + CC + CD
+r 698=02020000E000F000      # read    SLI + CC + CD
+r 6A0=02020000E000F000      # read    SLI + CC + CD
+r 6A8=02020000E000F000      # read    SLI + CC + CD
+r 6B0=02020000E000F000      # read    SLI + CC + CD
+r 6B8=02020000E000F000      # read    SLI + CC + CD
+r 6C0=02020000E000F000      # read    SLI + CC + CD
+r 6C8=02020000E000F000      # read    SLI + CC + CD
+r 6D0=02020000E000F000      # read    SLI + CC + CD
+r 6D8=02020000E000F000      # read    SLI + CC + CD
+r 6E0=02020000E000F000      # read    SLI + CC + CD
+r 6E8=02020000E000F000      # read    SLI + CC + CD
+r 6F0=02020000E000F000      # read    SLI + CC + CD
+r 6F8=02020000E000F000      # read    SLI + CC + CD
+r 700=02020000E000F000      # read    SLI + CC + CD
+r 708=02020000E000F000      # read    SLI + CC + CD
+r 710=02020000E000F000      # read    SLI + CC + CD
+r 718=02020000E000F000      # read    SLI + CC + CD
+r 720=02020000E000F000      # read    SLI + CC + CD
+r 728=02020000E000F000      # read    SLI + CC + CD
+r 730=02020000E000F000      # read    SLI + CC + CD
+r 738=02020000E000F000      # read    SLI + CC + CD
+r 740=02020000E000F000      # read    SLI + CC + CD
+r 748=02020000E000F000      # read    SLI + CC + CD
+r 750=0202000060002000      # read    SLI + CC
+
+r 758=0700000020000000      # rewind  SLI
+
+#----------------------------------------------------
+
+r 001000=0123456789ABCDEF
+r 010000=FFFFFFFFFFFFFFFF
+
+r 020000=BBBBBBBBBBBBBBBB
+r 02F000=FFFFFFFFFFFFFFFF
+
+#----------------------------------------------------
+
+t+$(devnum)
+restart
+pause 1
+
+#----------------------------------------------------
+
+r 001000.10
+r 010000.10
+
+r 020000.10
+r 02F000.10
+
+#----------------------------------------------------

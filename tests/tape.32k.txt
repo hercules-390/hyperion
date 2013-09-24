@@ -1,0 +1,104 @@
+#----------------------------------------------------
+
+msglvl -debug
+
+defsym  devnum  0180        # CUU of tape drive
+
+panrate fast
+stopall
+
+mainsize 8m
+sysclear
+
+archmode S/370
+sysreset
+
+#----------------------------------------------------
+
+r 00=0000000000000200       # restart new psw
+r 28=000A00000000DEAD       # program check new psw
+
+#----------------------------------------------------
+
+r 200=4110$(devnum)         # R1 = device address
+
+r 204=4120021C              # r2 -> i/o interupt rtn
+r 208=5020007C              # store into i/o new psw
+r 20C=41200500              # R2 -> channel program
+r 210=50200048              # store into caw
+r 214=9C001000              # sio 0(r1)
+r 218=82000400              # wait for i/o interrupt
+r 21C=D50300440304          # expected csw?
+r 222=4770026E              # no, error
+
+r 226=4120023E              # r2 -> i/o interupt rtn
+r 22A=5020007C              # store into i/o new psw
+r 22E=41200570              # R2 -> channel program
+r 232=50200048              # store into caw
+r 236=9C001000              # sio 0(r1)
+r 23A=82000400              # wait for i/o interrupt
+r 23E=D50300440300          # expected csw?
+r 244=4770026E              # no, error
+
+r 248=41200260              # r2 -> i/o interupt rtn
+r 24C=5020007C              # store into i/o new psw
+r 250=41200578              # R2 -> channel program
+r 254=50200048              # store into caw
+r 258=9C001000              # sio 0(r1)
+r 25C=82000400              # wait for i/o interrupt
+r 260=D50300440300          # expected csw?
+r 266=4770026E              # no, error
+
+r 26A=82000408              # yes, load okay psw
+r 26E=82000410              # no, load bad psw
+
+#----------------------------------------------------
+
+r 300=0C000000              # good csw
+r 304=0D000010              # eof csw
+
+#----------------------------------------------------
+
+r 400=020A000000000000      # enabled for i/o psw
+r 408=000A000000AAAAAA      # OK disabled wait psw
+r 410=000A000000BADBAD      # BAD disabled wait psw
+
+#----------------------------------------------------
+
+r 500=0700000040000000      # rewind  CC
+
+r 508=0100800040008000      # write   CC
+r 510=0100800040008000      # write   CC
+r 518=0100800040008000      # write   CC
+r 520=0100800040008000      # write   CC
+r 528=1F00000040000000      # wtm     CC
+r 530=1F00000040000000      # wtm     CC
+r 538=1F00000040000000      # wtm     CC
+r 540=0700000040000000      # rewind  cc
+r 548=0200800040008000      # read    CC
+r 550=0200800040008000      # read    CC
+r 558=0200800040008000      # read    CC
+r 560=0200800040008000      # read    CC
+r 568=0200800020000010      # read    SLI  **UE**
+
+r 570=0700000000000000      # rewind
+
+r 578=0200800000008000      # read
+
+#----------------------------------------------------
+
+r 008000=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+r 00FFF0=CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+#----------------------------------------------------
+
+t+$(devnum)
+restart
+pause 1
+
+#----------------------------------------------------
+
+r 008000.10
+r 00FFF0.10
+
+#----------------------------------------------------

@@ -2950,6 +2950,22 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\tape.240k-2.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\tape.240k.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\tape.2m.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\tape.32k.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\tapepos.txt"
 						>
 					</File>

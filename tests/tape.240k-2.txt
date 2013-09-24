@@ -1,0 +1,198 @@
+#----------------------------------------------------
+
+msglvl -debug
+
+defsym  devnum  0180        # CUU of tape drive
+
+panrate fast
+stopall
+
+mainsize 8m
+sysclear
+
+archmode S/370
+sysreset
+
+#----------------------------------------------------
+
+r 00=0000000000000200       # restart new psw
+r 28=000A00000000DEAD       # program check new psw
+
+#----------------------------------------------------
+
+r 200=4110$(devnum)         # R1 = device address
+
+##             REWIND
+
+r 204=4120021C              # r2 -> i/o interupt rtn
+r 208=5020007C              # store into i/o new psw
+r 20C=41200600              # R2 -> REWIND CCW
+r 210=50200048              # store into caw
+r 214=9C001000              # sio 0(r1)
+r 218=82000500              # wait for i/o interrupt
+r 21C=D50300440400          # expected csw?
+r 222=4770024C              # no, error
+
+##          WRITE BIG BLOCK
+
+r 226=4120023E              # r2 -> i/o interupt rtn
+r 22A=5020007C              # store into i/o new psw
+r 22E=41200608              # R2 -> channel program
+r 232=50200048              # store into caw
+r 236=9C001000              # sio 0(r1)
+r 23A=82000500              # wait for i/o interrupt
+r 23E=D50300440400          # expected csw?
+r 244=4770024C              # no, error
+
+##               WTM
+
+r 248=41200260              # r2 -> i/o interupt rtn
+r 24C=5020007C              # store into i/o new psw
+r 250=41200628              # R2 -> WTM CCW
+r 254=50200048              # store into caw
+r 258=9C001000              # sio 0(r1)
+r 25C=82000500              # wait for i/o interrupt
+r 260=D50300440400          # expected csw?
+r 266=4770033A              # no, error
+
+##               WTM
+
+r 26A=41200282              # r2 -> i/o interupt rtn
+r 26E=5020007C              # store into i/o new psw
+r 272=41200628              # R2 -> WTM CCW
+r 276=50200048              # store into caw
+r 27A=9C001000              # sio 0(r1)
+r 27E=82000500              # wait for i/o interrupt
+r 282=D50300440400          # expected csw?
+r 288=4770033A              # no, error
+
+##               WTM
+
+r 28C=412002A4              # r2 -> i/o interupt rtn
+r 290=5020007C              # store into i/o new psw
+r 294=41200628              # R2 -> WTM CCW
+r 298=50200048              # store into caw
+r 29C=9C001000              # sio 0(r1)
+r 2A0=82000500              # wait for i/o interrupt
+r 2A4=D50300440400          # expected csw?
+r 2AA=4770033A              # no, error
+
+##             REWIND
+
+r 2AE=412002C6              # r2 -> i/o interupt rtn
+r 2B2=5020007C              # store into i/o new psw
+r 2B6=41200600              # R2 -> REWIND CCW
+r 2BA=50200048              # store into caw
+r 2BE=9C001000              # sio 0(r1)
+r 2C2=82000500              # wait for i/o interrupt
+r 2C6=D50300440400          # expected csw?
+r 2CC=4770033A              # no, error
+
+##          READ BIG BLOCK
+
+r 2D0=412002E8              # r2 -> i/o interupt rtn
+r 2D4=5020007C              # store into i/o new psw
+r 2D8=41200630              # R2 -> channel program
+r 2DC=50200048              # store into caw
+r 2E0=9C001000              # sio 0(r1)
+r 2E4=82000500              # wait for i/o interrupt
+r 2E8=D50300440404          # expected csw?
+r 2EE=4770033A              # no, error
+
+##             REWIND
+
+r 2F2=4120030A              # r2 -> i/o interupt rtn
+r 2F6=5020007C              # store into i/o new psw
+r 2FA=41200600              # R2 -> REWIND CCW
+r 2FE=50200048              # store into caw
+r 302=9C001000              # sio 0(r1)
+r 306=82000500              # wait for i/o interrupt
+r 30A=D50300440400          # expected csw?
+r 310=4770033A              # no, error
+
+##        ONE SHORT READ OF BIG BLOCK
+
+r 314=4120032C              # r2 -> i/o interupt rtn
+r 318=5020007C              # store into i/o new psw
+r 31C=41200658              # R2 -> channel program
+r 320=50200048              # store into caw
+r 324=9C001000              # sio 0(r1)
+r 328=82000500              # wait for i/o interrupt
+r 32C=D50300440408          # expected csw?
+r 332=4770033A              # no, error
+
+##        ******* EOJ *******
+
+r 336=82000508              # yes, load okay psw
+r 33A=82000510              # no, load bad psw
+
+#----------------------------------------------------
+
+r 400=0C000000              # good csw
+r 404=0D000010              # eof csw
+r 408=0C400000              # length csw
+
+#----------------------------------------------------
+
+r 500=020A000000000000      # enabled for i/o psw
+r 508=000A000000AAAAAA      # OK disabled wait psw
+r 510=000A000000BADBAD      # BAD disabled wait psw
+
+#----------------------------------------------------
+
+r 600=0700000020000000      # rewind  SLI
+
+r 608=01020D38A000F000      # write   SLI + CD
+r 610=0102FD38A000F000      # write   SLI + CD
+r 618=0103ED38A000F000      # write   SLI + CD
+r 620=0104DD382000F000      # write   SLI
+
+r 628=1F00000020000000      # wtm     SLI
+
+r 630=02120D38E000F000      # read    SLI + CC + CD
+r 638=0212FD38E000F000      # read    SLI + CC + CD
+r 640=0213ED38E000F000      # read    SLI + CC + CD
+r 648=0214DD386000F000      # read    SLI + CC
+r 650=0220000020000010      # read    SLI  **(UE)**
+
+r 658=02120D3800008000      # read only 32k
+
+#----------------------------------------------------
+
+r 020D38=11111111111111111111111111111111
+r 02FD38=22222222222222222222222222222222
+r 03ED38=33333333333333333333333333333333
+r 04DD38=44444444444444444444444444444444
+r 05CD38=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+r 120D38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 12FD38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 13ED38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 14DD38=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+r 15CD38=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+r 200000=FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD
+
+#----------------------------------------------------
+
+t+$(devnum)
+restart
+pause 1
+
+#----------------------------------------------------
+
+r 020D38.10
+r 02FD38.10
+r 03ED38.10
+r 04DD38.10
+r 05CD38.10
+
+r 120D38.10
+r 12FD38.10
+r 13ED38.10
+r 14DD38.10
+r 15CD38.10
+
+r 200000.10
+
+#----------------------------------------------------
