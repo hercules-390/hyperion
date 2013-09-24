@@ -165,6 +165,7 @@ typedef enum
   ETOD_standard,
   ETOD_extended
 } ETOD_format;
+DLL_EXPORT
 TOD etod_clock(REGS*, ETOD*,            /* Get extended TOD clock    */
                ETOD_format);
 void set_tod_clock(const U64);          /* Set TOD clock             */
@@ -738,9 +739,11 @@ ETOD2us (const ETOD ETOD)
 
 #endif
 
-DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *);
+DLL_EXPORT
+void ARCH_DEP(store_int_timer) (REGS *);
 void ARCH_DEP(store_int_timer_nolock) (REGS *);
-DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *);
+DLL_EXPORT
+void ARCH_DEP(fetch_int_timer) (REGS *);
 
 void ARCH_DEP(set_gross_s_rate) (REGS *);
 void ARCH_DEP(set_fine_s_rate) (REGS *);

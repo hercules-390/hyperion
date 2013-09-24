@@ -558,6 +558,7 @@ S64 cpu_timer_SIE(REGS *regs)
 }
 
 
+DLL_EXPORT
 TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 {
     /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
@@ -1107,7 +1108,8 @@ S32 vtimer=0;
 }
 
 
-DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *regs)
+DLL_EXPORT
+void ARCH_DEP(store_int_timer) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,1);
 }
@@ -1119,7 +1121,8 @@ void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
 }
 
 
-DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
+DLL_EXPORT
+void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
