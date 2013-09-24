@@ -36,6 +36,16 @@ hdt3420_OBJ = \
     $(O)omatape.obj  \
     $(O)scsitape.obj
 
+tuntap_OBJ = \
+    $(O)tuntap.obj  \
+    $(O)w32ctca.obj \
+    $(O)resolve.obj
+
+ctc_OBJ = \
+    $(O)ctc_lcs.obj  \
+    $(O)ctc_ctci.obj \
+    $(O)ctcadpt.obj
+
 hutil_OBJ = \
     $(O)codepage.obj \
     $(O)fthreads.obj \

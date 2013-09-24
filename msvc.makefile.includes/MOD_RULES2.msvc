@@ -54,7 +54,7 @@ $(X)hdt2703.dll: $(O)commadpt.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O
 $(X)hdt3705.dll: $(O)comm3705.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)hdt3088.dll: $(O)ctc_lcs.obj $(O)ctc_ctci.obj $(O)ctcadpt.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3088.dll: $(ctc_OBJ) $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)hdt3420.dll: $(hdt3420_OBJ) $(O)hengine.lib $(O)htape.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
@@ -75,7 +75,10 @@ $(X)hdt3270.dll: $(O)console.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)
 $(X)hdt1052c.dll: $(O)con1052c.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)hdtqeth.dll: $(O)qeth.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)resolve.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdtqeth.dll: $(O)qeth.obj $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+    $(linkdll)
+
+$(X)hdtptp.dll: $(O)ctc_ptp.obj $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res

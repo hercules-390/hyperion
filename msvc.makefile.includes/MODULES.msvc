@@ -27,6 +27,7 @@ MODULES = \
     $(X)hdt3525.dll  \
     $(X)hdteq.dll    \
     $(X)hdtqeth.dll  \
+    $(X)hdtptp.dll   \
     $(X)hdtzfcp.dll  \
     $(X)dyninst.dll  \
     $(X)s37x.dll     \
