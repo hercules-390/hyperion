@@ -24,7 +24,7 @@ void* (*panel_command) (void*);
 static void* con1052_panel_command  (char *cmd);
 #endif
 
-#define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
+#define BUFLEN_1052     256             /* 1052 Send/Receive buffer  */
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
