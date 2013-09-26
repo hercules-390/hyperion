@@ -426,13 +426,14 @@ void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
-int             rc;                     /* Return code               */
-U32             len;                    /* Length of data block      */
-U32             num;                    /* Number of bytes to read   */
-int             drc;                    /* code disposition          */
-BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
+int     rc;                             /* Return code               */
+U32     len;     /*(see NOTE below)*/   /* Length of data block      */
+U32     num;     /*(see NOTE below)*/   /* Number of bytes to read   */
+int     drc;                            /* code disposition          */
+BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
-    UNREFERENCED(ccwseq);
+    /* PROGRAMMING NOTE: len, num, count, *residual and *more are
+       used and updated automatically by the RESIDUAL_CALC macro */
 
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
