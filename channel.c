@@ -1,12 +1,16 @@
-/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Jan Jaeger,   1999-2012                */
+/* CHANNEL.C    (c) Copyright Roger Bowler,    1999-2012             */
+/*              (c) Copyright Jan Jaeger,      1999-2012             */
+/*              (c) Copyright Mark L. Gaubatz, 2010, 2013            */
 /*              ESA/390 Channel Emulator                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support -                                          */
+/*      (c) Copyright Jan Jaeger, 1999-2012                          */
+/* Rewrite of channel code and associated structures -               */
+/*      (c) Copyright Mark L. Gaubatz, 2010, 2013                    */
 
 /*-------------------------------------------------------------------*/
 /* This module contains the channel subsystem functions for the      */
@@ -37,16 +41,16 @@
 #include "chsc.h"
 
 
-/* Debug Switches ---------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/* Debug Switches                                                    */
+/*-------------------------------------------------------------------*/
 
-#if !defined(CHANNEL_DEBUG_SWITCHES)
+#ifndef CHANNEL_DEBUG_SWITCHES
 #define CHANNEL_DEBUG_SWITCHES
 #define DEBUG_SCSW              0
 #define DEBUG_PREFETCH          0
 #define DEBUG_DUMP              0
 #endif
-
-/*-------------------------------------------------------------------*/
 
 
 /*-------------------------------------------------------------------*/
@@ -59,9 +63,9 @@ static int          schedule_ioq (const REGS* regs, DEVBLK* dev);
 static INLINE void  subchannel_interrupt_queue_cleanup (DEVBLK*);
 int                 test_subchan_locked (REGS*, DEVBLK*, IRB*, IOINT**, SCSW**);
 
-
-#if !defined(CHANNEL_INLINES)
+#ifndef CHANNEL_INLINES
 #define CHANNEL_INLINES
+
 static INLINE void
 set_subchannel_busy(DEVBLK* dev)
 {
@@ -111,51 +115,77 @@ clear_device_busy(DEVBLK* dev)
 /*-------------------------------------------------------------------*/
 /* Define I/O Buffer Structure and Inline Support Routines           */
 /*-------------------------------------------------------------------*/
-#if !defined(IOBUF_STRUCT)
+#ifndef IOBUF_STRUCT
 #define IOBUF_STRUCT
-typedef struct
+
+/*  CAUTION: for performance reasons the size of the data portion
+    of IOBUF (i.e. IOBUF_MINSIZE) should never be less than 64K-1,
+    and sizes greater than 64K may cause stack overflows to occur.
+*/
+#define IOBUF_ALIGN         4096          /* Must be a power of 2    */
+#define IOBUF_HDRSIZE       IOBUF_ALIGN   /* Multiple of IOBUF_ALIGN */
+#define IOBUF_MINSIZE       65536         /* Multiple of IOBUF_ALIGN */
+#define IOBUF_INCREASE      1048576       /* Multiple of IOBUF_ALIGN */
+
+CASSERT( IOBUF_HDRSIZE  == ROUND_UP( IOBUF_HDRSIZE,  IOBUF_ALIGN ), IOBUF_HDRSIZE  );
+CASSERT( IOBUF_MINSIZE  == ROUND_UP( IOBUF_MINSIZE,  IOBUF_ALIGN ), IOBUF_MINSIZE  );
+CASSERT( IOBUF_INCREASE == ROUND_UP( IOBUF_INCREASE, IOBUF_ALIGN ), IOBUF_INCREASE );
+
+struct IOBUF
 {
+    /* Every IOBUF struct starts with a 4K header the first few
+     * bytes of which hold the IOBUF control variables defining
+     * the size of the actual usable channel I/O buffer portion
+     * of the IOBUF structure, a pointer to the actual channel
+     * I/O buffer itself, and a second pointer pointing to the
+     * last logical byte of the channel I/O buffer. The actual
+     * channel I/O buffer immediately follows the IOBUF header.
+     *
+     * Every IOBUF is always aligned on a 4K boundary thus en-
+     * suring the actual channel I/O buffer itself is as well.
+     *
+     * The size of every IOBUF will always be a multiple of 4K.
+     *
+     * When an IOBUF is reallocated larger, if the old size is
+     * larger than IOBUF_MINSIZE bytes, it means the IOBUF was
+     * malloc'ed on the heap and thus the old IOBUF should then
+     * be freed. Otherwise if the old size is less or equal to
+     * IOBUF_MINSIZE, it means the IOBUF was allocated on the
+     * stack and thus free should not be done.
+     */
     union
     {
         struct
         {
-            /* Note: when an IOBUF is reallocated larger, if the
-             * old size value is larger than IOBUF_DATASIZE bytes,
-             * then it means the buffer was malloc'ed on the heap
-             * and start/end point to the malloc'ed buffer which
-             * must then be free'ed. Otherwise if size is less than
-             * or equal to IOBUF_DATASIZE then it means start/end
-             * point to the static data buffer and free is skipped.
-             */
-#define IOBUF_DATASIZE  65536           /* Static data buffer size   */
-            u_int   size;               /* Buffer size               */
+            u_int   size;               /* Channel I/O buffer size   */
             BYTE    *start;             /* Start of data address     */
             BYTE    *end;               /* Last byte address         */
 
-            /* Note: Remaining space from 4K page is reserved for
-             *       debugging and future use. No mapping of the space
-             *       is presently done.
+            /* Note:  Remaining space from 4K page is reserved
+             *        for debugging and future use. No mapping
+             *        of the space is presently done.
              */
         };
-        BYTE    pad[4096];              /* Pad to a 4K page boundary */
+        BYTE    pad[IOBUF_HDRSIZE];     /* Pad to alignment boundary */
     };
-    BYTE    data[IOBUF_DATASIZE];       /* Channel I/O buffer        */
-} IOBUF;
+    BYTE    data[IOBUF_MINSIZE];        /* Channel I/O buffer itself */
+};
+typedef struct IOBUF IOBUF;
 
 static INLINE void
 iobuf_initialize (IOBUF *iobuf, const u_int size)
 {
-    iobuf->size = size;
+    iobuf->size  = size;
     iobuf->start = (BYTE *)iobuf->data;
-    iobuf->end = (BYTE *)iobuf->start + (size - 1);
+    iobuf->end   = (BYTE *)iobuf->start + (size - 1);
 }
 
 static INLINE IOBUF *
 iobuf_create (u_int size)
 {
     IOBUF *iobuf;
-    size  = (MAX(size, 1048576) + 4095) & ~0x0FFF;
-    iobuf = (IOBUF*)malloc_aligned(size + 4096, 4096);
+    size = ROUND_UP( size, IOBUF_INCREASE );
+    iobuf = (IOBUF*)malloc_aligned(offsetof(IOBUF,data) + size, IOBUF_ALIGN);
     if (iobuf != NULL)
         iobuf_initialize(iobuf, size);
     return iobuf;
@@ -166,43 +196,62 @@ iobuf_validate (IOBUF *iobuf)
 {
     return
     ((iobuf == NULL                         ||
-      iobuf->size < IOBUF_DATASIZE          ||
+      iobuf->size < IOBUF_MINSIZE           ||
       iobuf->start != (BYTE *)iobuf->data   ||
-      iobuf->end != (BYTE *)iobuf->start + (iobuf->size - 1 )) ?
+      iobuf->end   != (BYTE *)iobuf->start + (iobuf->size - 1 )) ?
      0 : 1);
 }
 
 static INLINE void
 iobuf_destroy (IOBUF *iobuf)
 {
+    /* PROGRAMMING NOTE: The tests below are purposely neither macros
+     * or inlined routines. This is to permit breakpoints during
+     * development and testing. In the future, instead of aborting
+     * and/or crashing, the code will branch (or longjmp) to a point in
+     * channel code where the current CCW chain will be terminated,
+     * cleanup performed, and a Channel Check, and/or a Machine Check,
+     * will be returned.
+     */
     if (iobuf == NULL)
         return;
     if (!iobuf_validate(iobuf))
-        raise(SIGSEGV);
-    if (iobuf->size > IOBUF_DATASIZE)
+        CRASH();
+    if (iobuf->size > IOBUF_MINSIZE)
         free_aligned(iobuf);
 }
 
-static INLINE IOBUF *
+static INLINE IOBUF*
 iobuf_reallocate (IOBUF *iobuf, const u_int size)
 {
     IOBUF *iobufnew;
+    /* PROGRAMMING NOTE: The tests below are purposely neither macros
+     * or inlined routines. This is to permit breakpoints during
+     * development and testing. In the future, instead of aborting
+     * and/or crashing, the code will branch (or longjmp) to a point in
+     * channel code where the current CCW chain will be terminated,
+     * cleanup performed, and a Channel Check, and/or a Machine Check,
+     * will be returned.
+     */
     if (iobuf == NULL)
         return NULL;
     if (!iobuf_validate(iobuf))
-        raise(SIGSEGV);
+        CRASH();
     iobufnew = iobuf_create(size);
     if (iobufnew == NULL)
         return NULL;
     memcpy(iobufnew->start, iobuf->start, MIN(iobuf->size, size));
-    if (iobuf->size > IOBUF_DATASIZE)
+    if (iobuf->size > IOBUF_MINSIZE)
         free_aligned(iobuf);
     return iobufnew;
 }
-#endif
 
+#endif /* IOBUF_STRUCT */
 
-#if !defined(PREFETCH_STRUCT)
+/*--------------------------------------------------------------------*/
+/* CCW prefetch data structure                                        */
+/*--------------------------------------------------------------------*/
+#ifndef PREFETCH_STRUCT
 #define PREFETCH_STRUCT
 
 /* Define 256 entries in the prefetch table */
@@ -217,7 +266,7 @@ enum PF_IDATYPE
    PF_MIDAW   = 3
 };
 
-typedef struct                          /* Prefetch data structure   */
+struct PREFETCH                         /* Prefetch data structure   */
 {
     u_int   seq;                        /* Counter                   */
     u_int   pos;                        /* Highest valid position    */
@@ -234,10 +283,14 @@ typedef struct                          /* Prefetch data structure   */
     U32     idawaddr[PF_SIZE];          /* IDAW address              */
     U8      idawtype[PF_SIZE];          /* IDAW type                 */
     U8      idawflag[PF_SIZE];          /* IDAW flags                */
-} PREFETCH;
+};
+typedef struct PREFETCH PREFETCH;
 
-#endif
+#endif /* PREFETCH_STRUCT */
 
+/*--------------------------------------------------------------------*/
+/* IODELAY - kludge                                                   */
+/*--------------------------------------------------------------------*/
 #ifdef OPTION_IODELAY_KLUDGE
 #define IODELAY(_dev) \
 do { \
@@ -248,6 +301,9 @@ do { \
 #define IODELAY(_dev)
 #endif
 
+/*--------------------------------------------------------------------*/
+/* CHADDRCHK - validate guest channel i/o subsystem address           */
+/*--------------------------------------------------------------------*/
 #undef CHADDRCHK
 #if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
 #define CHADDRCHK(_addr,_dev)                   \
@@ -257,12 +313,15 @@ do { \
         && ((_addr) < sysblk.addrlimval))       \
       || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)  \
         && ((_addr) >= sysblk.addrlimval)) ) ))
-#else /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
+#else /* !defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
 #define CHADDRCHK(_addr,_dev) \
         ((_addr) > (_dev)->mainlim)
-#endif /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
+#endif /* defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
 
-#if !defined(_CHANNEL_C)
+/*--------------------------------------------------------------------*/
+/*              C H A N N E L   P R O C E S S I N G                   */
+/*--------------------------------------------------------------------*/
+#ifndef _CHANNEL_C
 #define _CHANNEL_C
 
 static INLINE U64
@@ -274,6 +333,7 @@ BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
 
 #define CAPPED_BUFFLEN(_addr,_len,_dev) \
     ((u_int)MIN((U64)(_len),(U64)BytesToEndOfStorage((_addr),(_dev))))
+
 
 /*--------------------------------------------------------------------*/
 /*  Inline routines for Conditions and Indications Cleared at the     */
@@ -291,17 +351,20 @@ scsw_clear_n_C (SCSW* scsw)
     scsw->flag1 &= ~SCSW1_N;
 }
 
+
 static INLINE void
 scsw_clear_q_C (SCSW* scsw)
 {
     scsw->flag2 &= ~SCSW2_Q;
 }
 
+
 static INLINE void
 scsw_clear_fc_C (SCSW* scsw)
 {
     scsw->flag2 &= ~SCSW2_FC;
 }
+
 
 static INLINE void
 scsw_clear_fc_Nc (SCSW* scsw)
@@ -310,6 +373,7 @@ scsw_clear_fc_Nc (SCSW* scsw)
         scsw->flag3 & SCSW3_AC_SUSP)
         scsw_clear_fc_C(scsw);
 }
+
 
 static INLINE void
 scsw_clear_ac_Cp (SCSW* scsw)
@@ -320,6 +384,7 @@ scsw_clear_ac_Cp (SCSW* scsw)
                          SCSW2_AC_CLEAR);
     scsw->flag3 &= ~SCSW3_AC_SUSP;
 }
+
 
 static INLINE void
 scsw_clear_ac_Nr (SCSW* scsw)
@@ -336,6 +401,7 @@ scsw_clear_ac_Nr (SCSW* scsw)
         }
     }
 }
+
 
 static INLINE void
 scsw_clear_sc_Cs (SCSW* scsw)
@@ -471,6 +537,7 @@ memcpy_backwards ( BYTE *to, BYTE *from, int length )
     }
 }
 
+
 /*-------------------------------------------------------------------*/
 /* FORMAT DATA                                                       */
 /*-------------------------------------------------------------------*/
@@ -565,7 +632,7 @@ static void
 _dump ( const char *description, BYTE *addr, const u_int len )
 {
 int     i;
-int     k = MIN(len, IOBUF_DATASIZE);
+int     k = MIN(len, IOBUF_MINSIZE);
 BYTE   *limit;
 char    msgbuf[133];
 
@@ -611,7 +678,7 @@ char    msgbuf[133];                    /* Message buffer            */
 
     if (k)
     {
-        k = MIN(k, IOBUF_DATASIZE);
+        k = MIN(k, IOBUF_MINSIZE);
         storage = sysblk.mainstor + addr;
         limit = storage + k;
         if (description &&
@@ -804,7 +871,7 @@ char    msgbuf[133];
 }
 #else
 #define display_prefetch(_prefetch, _ps, _count, _residual, _more)
-#endif
+#endif /* DEBUG_PREFETCH */
 
 
 /*-------------------------------------------------------------------*/
@@ -1088,6 +1155,7 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     return cc;
 
 } /* end function haltio */
+
 
 /*-------------------------------------------------------------------*/
 /* CANCEL SUBCHANNEL                                                 */
@@ -1714,6 +1782,7 @@ perform_halt (DEVBLK *dev)
     RELEASE_INTLOCK(NULL);
 }
 
+
 /*-------------------------------------------------------------------*/
 /* HALT SUBCHANNEL                                                   */
 /*-------------------------------------------------------------------*/
@@ -1883,6 +1952,7 @@ halt_subchan (REGS *regs, DEVBLK *dev)
 
 } /* end function halt_subchan */
 
+
 /*-------------------------------------------------------------------*/
 /* Reset a device to initialized status                              */
 /*                                                                   */
@@ -1975,6 +2045,7 @@ device_reset (DEVBLK *dev)
     release_lock (&dev->lock);
 } /* end device_reset() */
 
+
 /*-------------------------------------------------------------------*/
 /* Reset all devices on a particular channelset                      */
 /*                                                                   */
@@ -1994,6 +2065,7 @@ DEVBLK *dev;                            /* -> Device control block   */
             device_reset(dev);
     }
 } /* end function channelset_reset */
+
 
 /*-------------------------------------------------------------------*/
 /* Reset all devices on a particular chpid                           */
@@ -2333,6 +2405,7 @@ ScheduleIORequest ( DEVBLK *dev )
     /* Return condition code */
     return rc;
 }
+
 
 #if defined(OPTION_SYNCIO)
 /*-------------------------------------------------------------------*/
@@ -2724,6 +2797,7 @@ BYTE   *ccw;                            /* CCW pointer               */
     }
 } /* end function fetch_ccw */
 
+
 /*-------------------------------------------------------------------*/
 /* FETCH AN INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE             */
 /*-------------------------------------------------------------------*/
@@ -2856,6 +2930,7 @@ BYTE    storkey;                        /* Storage key               */
 
 } /* end function fetch_idaw */
 
+
 #if defined(FEATURE_MIDAW)                                      /*@MW*/
 /*-------------------------------------------------------------------*/
 /* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
@@ -2966,6 +3041,7 @@ U16     maxlen;                         /* Maximum allowable length  */
 
 } /* end function fetch_midaw */                                /*@MW*/
 #endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
+
 
 /*-------------------------------------------------------------------*/
 /* COPY DATA BETWEEN CHANNEL I/O BUFFER AND MAIN STORAGE             */
@@ -3437,7 +3513,6 @@ do {                                                                   \
         } /* end for(idaseq) */
 
     }
-
     else                              /* Non-IDA data addressing */
     {
 
@@ -3595,7 +3670,6 @@ do {                                                                   \
                     dump("iobuf:", iobuf, count);
             }
             #endif
-
         }
 
     } /* end if(!IDA) */
@@ -3893,7 +3967,7 @@ u_int       ts;                         /* Test prefetch sequence    */
 CACHE_ALIGN
 PREFETCH    prefetch;                   /* Prefetch buffer           */
 
-ALIGN_4K
+__ALIGN( IOBUF_ALIGN )
 IOBUF iobuf_initial;                    /* Channel I/O buffer        */
 
 #if !defined(execute_ccw_chain_return)
@@ -4807,7 +4881,6 @@ execute_halt:
                 chanstat = 0;
             }
 
-
 prefetch:
 
             /* Finish prefetch table entry initialization */
@@ -4849,11 +4922,6 @@ prefetch:
                 {
                     IOBUF *iobufnew;
 
-                    /* Round the new buffer size up to the next
-                     * megabyte boundary.
-                     */
-                    newsize += 1048575;
-                    newsize &= 0xFFF00000UL;
                     iobufnew = iobuf_reallocate(iobuf, newsize);
 
                     /* If new I/O buffer allocation failed, force a
@@ -4870,10 +4938,11 @@ prefetch:
                 if (!prefetch.chanstat[ps])
                 {
                     ARCH_DEP(copy_iobuf) (dev, dev->code, flags, addr,
-                                count, ccwkey, idawfmt, idapmask,
-                                iobuf->data + bufpos,
-                                iobuf->start, iobuf->end,
-                                &chanstat, &residual, &prefetch);
+                                          count, ccwkey,
+                                          idawfmt, idapmask,
+                                          iobuf->data + bufpos,
+                                          iobuf->start, iobuf->end,
+                                          &chanstat, &residual, &prefetch);
 
                     /* Update local copy of prefetch sequence entry */
                     ps = prefetch.seq - 1;
@@ -5280,7 +5349,6 @@ breakchain:
             prefetch.seq =
             prefetch.pos =
             bufpos = 0;
-
         }
 
         /* If Halt or Clear Pending, restart chaining to reset */
@@ -5491,6 +5559,7 @@ int     i;                              /* Interruption subclass     */
     /* Interrupts are enabled for this device */
     return SIE_NO_INTERCEPT;
 } /* end function interrupt_enabled */
+
 
 /*-------------------------------------------------------------------*/
 /* PRESENT PENDING I/O INTERRUPT                                     */
@@ -5782,6 +5851,9 @@ retry:
 } /* end function present_io_interrupt */
 
 
+/*-------------------------------------------------------------------*/
+/* present_zone_io_interrupt                                         */
+/*-------------------------------------------------------------------*/
 #if defined(_FEATURE_IO_ASSIST)
 int
 ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
@@ -5937,6 +6009,7 @@ device_attention (DEVBLK *dev, BYTE unitstat)
     }
     return 3;
 }
+
 
 void
 call_execute_ccw_chain (int arch_mode, void* pDevBlk)

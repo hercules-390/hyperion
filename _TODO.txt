@@ -151,10 +151,6 @@
 
 -------------------------------------------------------------------------------
 
-  Large block support in channel subsystem (blocks > 64K ==> 2MB maximum?)
-
--------------------------------------------------------------------------------
-
   Suspend and Resume need prompts. Suspend if overwriting existing file.
   Resume if machine is not in reset state.
 
