@@ -1400,6 +1400,8 @@ do { \
 #define HHC02315 "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
 #define HHC02316 "Script %s not found"
 #define HHC02317 "%s bytes %s so far..."
+#define HHC02318 "Config file[%d] %s: processing paused for %d milliseconds..."
+#define HHC02319 "Config file[%d] %s: processing resumed..."
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
