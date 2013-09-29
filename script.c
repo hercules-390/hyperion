@@ -166,7 +166,11 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                 || buf[stmtlen-1] == '\t')) stmtlen--;
         buf[stmtlen] = '\0';
 
-        /* Ignore comments and null statements */
+        /* Loud comments should always be logged */
+        if (stmtlen != 0 && buf[0] == '*')
+            WRMSG( HHC01603, "I", buf );  // "%s"
+
+        /* Ignore null statements and comments */
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
