@@ -92,13 +92,11 @@
   echo                    "dyn75"). One word without any spaces in it.
   echo.
   echo    {build_type}    Desired build configuration. Valid values are
-  echo                    DEBUG or RETAIL for building a 32-bit module,
-  echo                    DEBUG-X64 or RETAIL-X64 for a 64-bit module
-  echo                    targeting AMD64 processors, or DEBUG-IA64 or
-  echo                    RETAIL-IA64 for a 64-bit module targeting the
-  echo                    Intel Itanium-64 processor. The same value is
-  echo                    passed back to your optional prebuild.bat and
-  echo                    or postbld.bat scripts as the 2nd argument.
+  echo                    DEBUG or RETAIL for building a 32-bit version,
+  echo                    or DEBUG-X64/RETAIL-X64 for a 64-bit version.
+  echo                    The same value is passed back to your optional
+  echo                    prebuild.bat and or postbld.bat scripts as the
+  echo                    second argument.
   echo.
   echo    {num_cpus}      The maximum number of emulated CPUs (NUMCPU=)
   echo                    your module supports: 1 to 64. Must be the same

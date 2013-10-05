@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="All-All|Itanium">
-      <Configuration>All-All</Configuration>
-      <Platform>Itanium</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="All-All|Win32">
       <Configuration>All-All</Configuration>
       <Platform>Win32</Platform>
@@ -12,10 +8,6 @@
     <ProjectConfiguration Include="All-All|x64">
       <Configuration>All-All</Configuration>
       <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug-All|Itanium">
-      <Configuration>Debug-All</Configuration>
-      <Platform>Itanium</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug-All|Win32">
       <Configuration>Debug-All</Configuration>
@@ -25,10 +17,6 @@
       <Configuration>Debug-All</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Itanium">
-      <Configuration>Debug</Configuration>
-      <Platform>Itanium</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -37,10 +25,6 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-All|Itanium">
-      <Configuration>Release-All</Configuration>
-      <Platform>Itanium</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release-All|Win32">
       <Configuration>Release-All</Configuration>
       <Platform>Win32</Platform>
@@ -48,10 +32,6 @@
     <ProjectConfiguration Include="Release-All|x64">
       <Configuration>Release-All</Configuration>
       <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Itanium">
-      <Configuration>Release</Configuration>
-      <Platform>Itanium</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -81,21 +61,6 @@
     <ConfigurationType>Makefile</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'" Label="Configuration">
@@ -129,21 +94,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'" Label="PropertySheets">
@@ -270,55 +220,6 @@
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">./msvc.debug.IA64.bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">./msvc.debug.IA64.bin\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">makefile.bat DEBUG-IA64 makefile.msvc 32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">makefile.bat DEBUG-IA64 makefile.msvc 32 -a</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">makefile.bat DEBUG-IA64 makefile.msvc 32 clean</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">$(OutDir)</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">./msvc.IA64.bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">./msvc.IA64.bin\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">makefile.bat RETAIL-IA64 makefile.msvc 32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">makefile.bat RETAIL-IA64 makefile.msvc 32 -a</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">makefile.bat RETAIL-IA64 makefile.msvc 32 clean</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">$(OutDir)</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">makefile.bat DEBUG-ALL makefile.msvc 32 "$(SolutionDir)"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">makefile.bat DEBUG-ALL makefile.msvc 32 -a "$(SolutionDir)"</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">makefile.bat DEBUG-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">$(OutDir)</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">WIN32;_WIN64;_DEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">makefile.bat RETAIL-ALL makefile.msvc 32 "$(SolutionDir)"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">makefile.bat RETAIL-ALL makefile.msvc 32 -a "$(SolutionDir)"</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">makefile.bat RETAIL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">$(OutDir)</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">WIN32;_WIN64;NDEBUG;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">makefile.bat ALL-ALL makefile.msvc 32 "$(SolutionDir)"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">makefile.bat ALL-ALL makefile.msvc 32 -a "$(SolutionDir)"</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">makefile.bat ALL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">$(OutDir)</NMakeOutput>
-    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">WIN32;_WIN64;_MSVC_;CPU=IA64;HOST_ARCH=IA64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
-    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
-    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Win32'">
     <BuildLog>
@@ -346,21 +247,6 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">
-    <BuildLog>
-      <Path>$(SolutionDir)$(Configuration) BuildLog.htm</Path>
-    </BuildLog>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Itanium'">
-    <BuildLog>
-      <Path>$(SolutionDir)$(Configuration) BuildLog.htm</Path>
-    </BuildLog>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Itanium'">
-    <BuildLog>
-      <Path>$(SolutionDir)$(Configuration) BuildLog.htm</Path>
-    </BuildLog>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Itanium'">
     <BuildLog>
       <Path>$(SolutionDir)$(Configuration) BuildLog.htm</Path>
     </BuildLog>

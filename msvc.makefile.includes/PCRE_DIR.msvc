@@ -27,8 +27,6 @@
 PCRE_DIR = winbuild\pcre
 !ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\pcre\x64)
 PCRE_DIR = winbuild\pcre\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\pcre\ia64)
-PCRE_DIR = winbuild\pcre\ia64
 !ENDIF
 !ELSE
 # Defined: use explicit directory or subdirectory
@@ -43,10 +41,6 @@ PCRE_DIR = winbuild\pcre\ia64
 !ELSEIF "$(CPU)" == "AMD64"
 !IF EXIST($(PCRE_DIR)\x64)
 PCRE_DIR = $(PCRE_DIR)\x64
-!ENDIF
-!ELSEIF "$(CPU)" == "IA64"
-!IF EXIST($(PCRE_DIR)\ia64)
-PCRE_DIR = $(PCRE_DIR)\ia64
 !ENDIF
 !ENDIF
 !ENDIF

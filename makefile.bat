@@ -457,11 +457,9 @@
 
   if /i     "%build_type%" == "DEBUG"       set "CFG=DEBUG"
   if /i     "%build_type%" == "DEBUG-X64"   set "CFG=DEBUG"
-  if /i     "%build_type%" == "DEBUG-IA64"  set "CFG=DEBUG"
 
   if /i     "%build_type%" == "RETAIL"      set "CFG=RETAIL"
   if /i     "%build_type%" == "RETAIL-X64"  set "CFG=RETAIL"
-  if /i     "%build_type%" == "RETAIL-IA64" set "CFG=RETAIL"
 
 :: the latest SDk uses different arguments to the "setenv" batch file
 :: we need "release" not "retail"...
@@ -506,9 +504,6 @@
   if /i     "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
   if /i     "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
 
-  if /i     "%build_type%" == "DEBUG-IA64"  set "targ_arch=ia64"
-  if /i     "%build_type%" == "RETAIL-IA64" set "targ_arch=ia64"
-
   :: VS2008/VS2010/VS2012 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
@@ -536,12 +531,10 @@
 
   if /i "%targ_arch%" == "x86"   set "CPU=i386"
   if /i "%targ_arch%" == "amd64" set "CPU=AMD64"
-  if /i "%targ_arch%" == "ia64"  set "CPU=IA64"
 
   set "_WIN64="
 
   if /i "%targ_arch%" == "amd64" set "_WIN64=1"
-  if /i "%targ_arch%" == "ia64"  set "_WIN64=1"
 
   set "BLD="
 
@@ -551,7 +544,6 @@
 
   if /i "%targ_arch%" == "x86"   set "BLD=XP32"
   if /i "%targ_arch%" == "amd64" set "BLD=XP64"
-  if /i "%targ_arch%" == "ia64"  set "BLD=IA64"
 
   %return%
 
@@ -559,7 +551,6 @@
 
   if /i "%targ_arch%" == "x86"   set "BLD=XP /X86"
   if /i "%targ_arch%" == "amd64" set "BLD=XP /X64"
-  if /i "%targ_arch%" == "ia64"  set "BLD=IA64 /2003"
 
   %return%
 
@@ -572,12 +563,11 @@
 
   if /i "%PROCESSOR_ARCHITECTURE%" == "x86"   set "host_arch=x86"
   if /i "%PROCESSOR_ARCHITECTURE%" == "AMD64" set "host_arch=amd64"
-  if /i "%PROCESSOR_ARCHITECTURE%" == "IA64"  set "host_arch=ia64"
 
   ::  PROGRAMMING NOTE: there MUST NOT be any spaces before the ')'!!!
 
-  :: Since there isn't an X64 or IA64 version of the x86 compiler
-  :: when building x86 builds we use the "x86" compiler under WOW
+  :: Since there isn't an X64 version of the x86 compiler when
+  :: building x86 builds, we use the "x86" compiler under WOW64.
 
   if /i "%targ_arch%" == "x86" set "host_arch=x86"
 

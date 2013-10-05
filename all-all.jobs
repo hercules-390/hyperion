@@ -6,6 +6,3 @@ VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Release|Win32"    /time  /nologo
 
 VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Debug|x64"        /time  /nologo
 VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Release|x64"      /time  /nologo
-
-# VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Debug|Itanium"    /time  /nologo
-# VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Release|Itanium"  /time  /nologo

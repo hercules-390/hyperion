@@ -37,8 +37,6 @@ ZLIB_DIR = winbuild\zlib\win32_32
 ZLIB_DIR = winbuild\zlib
 !ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\zlib\x64)
 ZLIB_DIR = winbuild\zlib\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\zlib\ia64)
-ZLIB_DIR = winbuild\zlib\ia64
 !ENDIF
 !ELSE
 # Defined: use explicit directory or subdirectory
@@ -53,10 +51,6 @@ ZLIB_DIR = winbuild\zlib\ia64
 !ELSEIF "$(CPU)" == "AMD64"
 !IF EXIST($(ZLIB_DIR)\x64)
 ZLIB_DIR = $(ZLIB_DIR)\x64
-!ENDIF
-!ELSEIF "$(CPU)" == "IA64"
-!IF EXIST($(ZLIB_DIR)\ia64)
-ZLIB_DIR = $(ZLIB_DIR)\ia64
 !ENDIF
 !ENDIF
 !ENDIF

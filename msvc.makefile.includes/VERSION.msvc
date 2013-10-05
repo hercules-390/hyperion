@@ -101,7 +101,7 @@ VERSION = \"$(VERSION)\"
 # 
 
 
-!IF (("$(CPU)" == "AMD64") || ("$(CPU)" == "IA64"))
+!IF ("$(CPU)" == "AMD64")
 
 APPVER   = 5.02
 TARGETOS = WINNT

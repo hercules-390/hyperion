@@ -2,7 +2,6 @@ HERCULES FOR WIN64 README FILE
 
 There are two 64-bit architectures supported by 64-bit Windows:
 - x64 also known as x86_64 (for AMD64 and Intel EM64T processors)
-- ia64 (for Intel Itanium processors)
 
 This section of the document covers only the x64 architecture.
 
@@ -49,33 +48,31 @@ HOW TO COMPILE HERCULES FOR AMD64
 
 -------------------------------------------------------------------------------
 
-          How to build Hercules for the x64 (AMD64 and EM64T)
-            and/or Intel Itanium (IA64) Architectures:
+          How to build Hercules for the x64 (AMD64 and EM64T):
 
 
                  The Fish "Visual Studio 2008" method
 
 
-              (which accomplishes the exact same thing as
-               the above command-line build instructions)
+              (which accomplishes virtually the same thing
+              as the above command-line build instructions)
 
 
 
 
   1. Install Visual Studio 2008.
 
-     Be sure to select support for either/both of "x64" and/or "Ia64" Itanium
-     builds when installing depending on which (or both) you wish to support.
-     Note that only the Team Edition of Visual Studio supports Itanium builds.
+     Be sure to select compiler support for "x64" when installing Visual
+     Studio since the Hercules provided Visual Studio Solution expects it.
 
 
 
-  2. Open the "hercules.sln" Solution file.
+  2. Open the "Hercules.sln" Solution file.
 
 
 
-  3. Select your desired Solution Configuration (Debug or Release) and Solution
-     Platform (Win32, x64, or Itanium) from the appropriate dropdowns.
+  3. Select your desired Solution Configuration (Debug or Release) and
+     Solution Platform (Win32 or x64) from the appropriate dropdowns.
 
 
 
@@ -85,10 +82,9 @@ HOW TO COMPILE HERCULES FOR AMD64
 
 
   Note: Your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development
-        packages should be in an appropriate 'x64' and/or 'ia64' subdirectory
-        beneath their normal package home directory. See the 'ZLIB_DIR',
-        'BZIP2_dir' and 'PCRE_DIR' sections of the "README.MSVC" document
-        for further details.
+        packages should be in an appropriate 'x64' subdirectory beneath
+        their normal package home directory. See the ZLIB_DIR, BZIP2_DIR,
+        and/or PCRE_DIR sections of the README.MSVC document for details.
 
 
 -------------------------------------------------------------------------------

@@ -32,8 +32,6 @@
 BZIP2_DIR = winbuild\bzip2
 !ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\bzip2\x64)
 BZIP2_DIR = winbuild\bzip2\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\bzip2\ia64)
-BZIP2_DIR = winbuild\bzip2\ia64
 !ENDIF
 !ELSE
 # Defined: use explicit directory or subdirectory
@@ -48,10 +46,6 @@ BZIP2_DIR = winbuild\bzip2\ia64
 !ELSEIF "$(CPU)" == "AMD64"
 !IF EXIST($(BZIP2_DIR)\x64)
 BZIP2_DIR = $(BZIP2_DIR)\x64
-!ENDIF
-!ELSEIF "$(CPU)" == "IA64"
-!IF EXIST($(BZIP2_DIR)\ia64)
-BZIP2_DIR = $(BZIP2_DIR)\ia64
 !ENDIF
 !ENDIF
 !ENDIF
