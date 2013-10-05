@@ -351,11 +351,11 @@
 #ifdef _MSVC_
   /* "Native" 64-bit Large File Support */
   #define    off_t              __int64
-  #if (_MSC_VER >= 1400)
+  #if (_MSC_VER >= VS2005)
     #define  ftruncate          _chsize_s
     #define  ftell              _ftelli64
     #define  fseek              _fseeki64
-  #else // (_MSC_VER < 1400)
+  #else // (_MSC_VER < VS2005)
     #define  ftruncate          w32_ftrunc64
     #define  ftell              w32_ftelli64
     #define  fseek              w32_fseeki64

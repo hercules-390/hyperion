@@ -47,7 +47,7 @@ W32_DLL_IMPORT  char*  w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffS
 //////////////////////////////////////////////////////////////////////////////////////////
 // Large File Support...
 
-#if (_MSC_VER < 1400)
+#if (_MSC_VER < VS2005)
   W32_DLL_IMPORT  __int64  w32_ftelli64 ( FILE* stream );
   W32_DLL_IMPORT    int    w32_fseeki64 ( FILE* stream, __int64 offset, int origin );
   W32_DLL_IMPORT    int    w32_ftrunc64 ( int fd, __int64 new_size );
@@ -241,7 +241,7 @@ W32_DLL_IMPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 //////////////////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
-#if defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#if defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
 
 #define DISABLE_CRT_INVALID_PARAMETER_HANDLER()   DisableInvalidParameterHandling()
 #define ENABLE_CRT_INVALID_PARAMETER_HANDLING()   EnableInvalidParameterHandling()
@@ -249,12 +249,12 @@ W32_DLL_IMPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 W32_DLL_IMPORT  void  DisableInvalidParameterHandling();
 W32_DLL_IMPORT  void  EnableInvalidParameterHandling();
 
-#else // !defined( _MSVC_ ) || !defined( _MSC_VER ) || ( _MSC_VER < 1400 )
+#else // !defined( _MSVC_ ) || !defined( _MSC_VER ) || ( _MSC_VER < VS2005 )
 
 #define DISABLE_CRT_INVALID_PARAMETER_HANDLER()   /* (no nothing) */
 #define ENABLE_CRT_INVALID_PARAMETER_HANDLING()   /* (no nothing) */
 
-#endif // defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#endif // defined( _MSVC_ ) && defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

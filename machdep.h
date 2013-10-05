@@ -91,7 +91,7 @@
     #define  cmpxchg4(  x, y, z )  cmpxchg4_x86( x, y, z )
     #define  cmpxchg8(  x, y, z )  cmpxchg8_x86( x, y, z )
 
-    #if ( _MSC_VER < 1400 )
+    #if ( _MSC_VER < VS2005 )
 
       // PROGRAMMING NOTE: compiler versions earlier than VS8 2005
       // do not have the _InterlockedCompareExchange64 intrinsic so
@@ -128,7 +128,7 @@
           return rc;
       }
 
-    #else // ( _MSC_VER >= 1400 )
+    #else // ( _MSC_VER >= VS2005 )
 
       #pragma intrinsic ( _InterlockedCompareExchange64 )
 
@@ -140,7 +140,7 @@
           return ((tmp == *old) ? 0 : 1);
       }
 
-    #endif // ( _MSC_VER >= 1400 )
+    #endif // ( _MSC_VER >= VS2005 )
 
     static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 unew, volatile void *ptr )
     {

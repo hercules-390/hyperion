@@ -223,7 +223,7 @@
 #define OPCD_DLL_IMPORT DLL_EXPORT
 #endif
 
-#if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
+#if defined( _MSC_VER ) && (_MSC_VER < VS2005)
 //  '_ftol'   is defined in MSVCRT.DLL
 //  '_ftol2'  we define ourselves in "w32ftol2.c"
 extern long _ftol ( double dblSource );

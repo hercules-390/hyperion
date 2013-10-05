@@ -76,14 +76,14 @@
   // the #pragma must be outside the function (at global scope) to
   // prevent compiler error C2156 "pragma must be outside function".
 
-  #if ( _MSC_VER < 1400 )
+  #if ( _MSC_VER <= VS2003 )
     #pragma optimize("g",off)     // (disable global optimizations)
   #endif
   static __inline  uint64_t  __fastcall  bswap_64(uint64_t x)
   {
       return _byteswap_uint64((x));
   }
-  #if ( _MSC_VER < 1400 )
+  #if ( _MSC_VER <= VS2003 )
     #pragma optimize ( "", on )
   #endif
 

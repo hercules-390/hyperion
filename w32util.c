@@ -39,7 +39,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#if defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
 
 static void DummyCRTInvalidParameterHandler
 (
@@ -79,7 +79,7 @@ DLL_EXPORT void EnableInvalidParameterHandling()
 #endif
 }
 
-#endif // defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#endif // defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +204,7 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
 //////////////////////////////////////////////////////////////////////////////////////////
 // Large File Support...
 
-#if (_MSC_VER < 1400)
+#if (_MSC_VER < VS2005)
 
 //----------------------------------------------------------------------------------------
 
@@ -368,7 +368,7 @@ error_return:
     return rc;
 }
 
-#endif // (_MSC_VER < 1400)
+#endif // (_MSC_VER < VS2005)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1606,7 +1606,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = NULL;
     PCACHE_DESCRIPTOR Cache;
 
-#if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
+#if _MSC_VER >= VS2008 // && defined(PRODUCT_ULTIMATE_E)
     PGPI              pgpi;
 #endif /* VS9 && SDK7 */
 
@@ -1679,7 +1679,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     pHostInfo->num_logical_cpu += CountSetBits(ptr->ProcessorMask);
                 }
                 else
-#if _MSC_VER >= 1500
+#if _MSC_VER >= VS2008
                 if ( ptr->Relationship == RelationProcessorPackage )
                 {
                     pHostInfo->num_packages++;
@@ -1781,7 +1781,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "9x";
             break;
         case VER_PLATFORM_WIN32_NT:
-#if _MSC_VER >= 1500 // && defined(PRODUCT_ULTIMATE_E)
+#if _MSC_VER >= VS2008 // && defined(PRODUCT_ULTIMATE_E)
 // This list is current as of 2010-03-13 using V7.0 MS SDK
             if ( vi.dwMajorVersion == 6 )
             {
