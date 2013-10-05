@@ -50,34 +50,9 @@
 #include "qeth.h"
 
 
-/*-------------------------------------------------------------------*/
-/* QETH Debugging                                                    */
-/*-------------------------------------------------------------------*/
-
 #define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
-
-
-/*-------------------------------------------------------------------*/
-/* VS 2010 Compiler Crash Workaround                                 */
-/*-------------------------------------------------------------------*/
-#if defined(_MSVC_)
-
-    /* Keep store_f3 defined as a macro, but redefine to a local
-     * variant.
-     */
-    #undef  store_f3
-    #define store_f3(_ptr,_value) store_f3_local((_ptr),(_value))
-
-    /* Local definition for store_f3 */
-    static __inline__ void store_f3_local(void *ptr, const U32 value)
-    {
-        U32 temp = CSWAP32(value) >> 8;
-        memcpy((BYTE *)ptr, (BYTE *)&temp, 3);
-    }
-
-#endif
 
 
 /*-------------------------------------------------------------------*/

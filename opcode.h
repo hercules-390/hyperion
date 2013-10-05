@@ -605,10 +605,12 @@ do { \
 
 #define FETCH_HW(_value, _storage) (_value) = fetch_hw(_storage)
 #define FETCH_FW(_value, _storage) (_value) = fetch_fw(_storage)
+#define FETCH_F3(_value, _storage) (_value) = fetch_f3(_storage)
 #define FETCH_DW(_value, _storage) (_value) = fetch_dw(_storage)
 
 #define STORE_HW(_storage, _value) store_hw(_storage, _value)
 #define STORE_FW(_storage, _value) store_fw(_storage, _value)
+#define STORE_F3(_storage, _value) store_f3(_storage, _value)
 #define STORE_DW(_storage, _value) store_dw(_storage, _value)
 
 #include "machdep.h"

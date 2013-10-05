@@ -673,6 +673,40 @@ U32  *ptr4, val4, old4, new4;
 #endif
 
 /*-------------------------------------------------------------------
+ * fetch_f3_noswap and fetch_f3
+ *-------------------------------------------------------------------*/
+#if !defined(fetch_f3_noswap)
+  #if defined(fetch_f3)
+    #define fetch_f3_noswap(_p) CSWAP32(fetch_f3((_p)))
+  #else
+    static __inline__ U32 fetch_f3_noswap(const void *ptr) {
+      U32 value;
+      memcpy(((BYTE *)&value)+1, (BYTE *)ptr, 3);
+      return value;
+    }
+  #endif
+#endif
+#if !defined(fetch_f3)
+  #define fetch_f3(_p) CSWAP32(fetch_f3_noswap((_p)))
+#endif
+
+/*-------------------------------------------------------------------
+ * store_f3_noswap and store_f3
+ *-------------------------------------------------------------------*/
+#if !defined(store_f3_noswap)
+  #if defined(store_f3)
+    #define store_f3_noswap(_p, _v) store_f3((_p), CSWAP32(_v))
+  #else
+    static __inline__ void store_f3_noswap(void *ptr, U32 value) {
+      memcpy((BYTE *)ptr, ((BYTE *)&value)+1, 3);
+    }
+  #endif
+#endif
+#if !defined(store_f3)
+  #define store_f3(_p, _v) store_f3_noswap((_p), CSWAP32((_v)))
+#endif
+
+/*-------------------------------------------------------------------
  * fetch_dw_noswap and fetch_dw
  *-------------------------------------------------------------------*/
 #if !defined(fetch_dw_noswap)

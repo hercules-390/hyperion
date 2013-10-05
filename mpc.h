@@ -19,61 +19,6 @@
 #define MPC_DLL_IMPORT DLL_EXPORT
 #endif
 
-/*********************************************************************/
-/* Macros                                                            */
-/*********************************************************************/
-
-#define FETCH_F3(_value, _storage) (_value) = fetch_f3(_storage)
-
-#define STORE_F3(_storage, _value) store_f3(_storage, _value)
-
-/*-------------------------------------------------------------------*
- * fetch_f3_noswap and fetch_f3                                      *
- *-------------------------------------------------------------------*/
-#if !defined(fetch_f3_noswap)
-  #if defined(fetch_f3)
-    #define fetch_f3_noswap(_p) CSWAP32(fetch_f3((_p)))
-  #else
-//  #if !defined(OPTION_STRICT_ALIGNMENT)
-//    static __inline__ U32 fetch_fw_noswap(const void *ptr) {
-//      return *(U32 *)ptr;
-//    }
-//  #else
-      static __inline__ U32 fetch_f3_noswap(const void *ptr) {
-        U32 value;
-        memcpy(&value, (BYTE *)ptr, 3);
-        value <<= 8;
-        return value;
-      }
-//  #endif
-  #endif
-#endif
-#if !defined(fetch_f3)
-  #define fetch_f3(_p) CSWAP32(fetch_f3_noswap((_p)))
-#endif
-
-/*-------------------------------------------------------------------*
- * store_f3_noswap and store_f3                                      *
- *-------------------------------------------------------------------*/
-#if !defined(store_f3_noswap)
-  #if defined(store_f3)
-    #define store_f3_noswap(_p, _v) store_f3((_p), CSWAP32(_v))
-  #else
-//  #if !defined(OPTION_STRICT_ALIGNMENT)
-//    static __inline__ void store_f3_noswap(void *ptr, U32 value) {
-//      *(U32 *)ptr = value;
-//    }
-//  #else
-      static __inline__ void store_f3_noswap(void *ptr, U32 value) {
-        value >>= 8;
-        memcpy((BYTE *)ptr, (BYTE *)&value, 3);
-      }
-//  #endif
-  #endif
-#endif
-#if !defined(store_f3)
-  #define store_f3(_p, _v) store_f3_noswap((_p), CSWAP32((_v)))
-#endif
 
 /*********************************************************************/
 /* Structures                                                        */
