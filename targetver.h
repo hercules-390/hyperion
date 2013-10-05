@@ -9,6 +9,34 @@
 #define _TARGETVER_H_
 
 /*
+**  The following defines are to more easily test for known versions
+**  of Microsoft's Visual Studio compiler:
+**
+**    MSVC++ 11.0:  _MSC_VER = 1700  (Visual Studio 2012)
+**    MSVC++ 10.0:  _MSC_VER = 1600  (Visual Studio 2010)
+**    MSVC++  9.0:  _MSC_VER = 1500  (Visual Studio 2008)
+**    MSVC++  8.0:  _MSC_VER = 1400  (Visual Studio 2005)
+**    MSVC++  7.1:  _MSC_VER = 1310  (Visual Studio 2003)
+**    MSVC++  7.0:  _MSC_VER = 1300  (Visual Studio 2002)
+**    MSVC++  6.0:  _MSC_VER = 1200
+**    MSVC++  5.0:  _MSC_VER = 1100
+*/
+
+#define VS2012      1700                /* Visual Studio 2012 */
+#define VS2010      1600                /* Visual Studio 2010 */
+#define VS2008      1500                /* Visual Studio 2008 */
+#define VS2005      1400                /* Visual Studio 2005 */
+#define VS2003      1310                /* Visual Studio 2003 */
+#define VS2002      1300                /* Visual Studio 2002 */
+
+#define MSVC11      1700                /* Visual Studio 2012 */
+#define MSVC10      1600                /* Visual Studio 2010 */
+#define MSVC9       1500                /* Visual Studio 2008 */
+#define MSVC8       1400                /* Visual Studio 2005 */
+#define MSVC71      1310                /* Visual Studio 2003 */
+#define MSVC7       1300                /* Visual Studio 2002 */
+
+/*
 **  The following macros define the minimum required platform.
 **
 **  The minimum required platform is the oldest version of Windows
@@ -32,7 +60,7 @@
   #define _WIN32_IE         0x0603      /* IE 6.0 SP2                */
 #endif
 
-#if _MSC_VER >= 0x1600                  /* If VS2010 or greater,     */
+#if _MSC_VER >= VS2010                  /* If VS2010 or greater,     */
   #include <SDKDDKVer.h>                /* then need this header     */
 #endif
 
