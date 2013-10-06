@@ -15,7 +15,7 @@
 #       AFTER calling win32.mak since it sets it.
 # -------------------------------------------------
 
-!IF $(vsversion) < 8
+!IF $(vsversion) < $(vers_vs2005)
 MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
 !ELSE
 MAPFILE = /map:$(MAPDIR)\$(@B).map

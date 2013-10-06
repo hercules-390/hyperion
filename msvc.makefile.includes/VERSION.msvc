@@ -108,12 +108,12 @@ TARGETOS = WINNT
 
 !ELSE # 32 bit build
 
-!IF $(vsversion) < 9
+!IF $(vsversion) <= $(vers_vs2005)
 
 APPVER   = 4.0
 TARGETOS = BOTH
 
-!ELSE # $(vsversion) >= 9
+!ELSE # $(vsversion) >= $(vers_vs2008)
 
 APPVER   = 5.0
 TARGETOS = WINNT

@@ -66,7 +66,7 @@ cflags = $(cflags:/Wp64=)
 
 # Enable "/MP (Build with Multiple Processes)" option
 # if the building host has more than one processor...
-!IF $(vsversion) >= 9 && $(NUMBER_OF_PROCESSORS) > 1
+!IF $(vsversion) >= $(vers_vs2008) && $(NUMBER_OF_PROCESSORS) > 1
 cflags = $(cflags) /MP
 !ENDIF
 
