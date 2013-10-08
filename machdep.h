@@ -681,7 +681,8 @@ U32  *ptr4, val4, old4, new4;
   #else
     static __inline__ U32 fetch_f3_noswap(const void *ptr) {
       U32 value;
-      memcpy(((BYTE *)&value)+1, (BYTE *)ptr, 3);
+      memcpy(((BYTE *)&value), (BYTE *)ptr, 3);
+      value <<= 8;
       return value;
     }
   #endif
@@ -698,7 +699,8 @@ U32  *ptr4, val4, old4, new4;
     #define store_f3_noswap(_p, _v) store_f3((_p), CSWAP32(_v))
   #else
     static __inline__ void store_f3_noswap(void *ptr, U32 value) {
-      memcpy((BYTE *)ptr, ((BYTE *)&value)+1, 3);
+      value >>= 8;
+      memcpy((BYTE *)ptr, ((BYTE *)&value), 3);
     }
   #endif
 #endif
