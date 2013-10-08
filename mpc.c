@@ -458,7 +458,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pkt( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
                     break;
                 if( (int)uLenData > ( iLimit - iDone ) )
                     uLenData = ( iLimit - iDone );
-                iDone =+ uLenData;
+                iDone += uLenData;
             }
             mpc_display_stuff( pDEVBLK, "Pkt", pData, uLenData, bDir );
             pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
@@ -514,7 +514,7 @@ DLL_EXPORT void  mpc_display_rrh_and_pdu( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_
                     break;
                 if( (int)uLenData > ( iLimit - iDone ) )
                     uLenData = ( iLimit - iDone );
-                iDone =+ uLenData;
+                iDone += uLenData;
             }
             mpc_display_stuff( pDEVBLK, "PDU", pData, uLenData, bDir );
             pMPC_PH = (MPC_PH*)((BYTE*)pMPC_PH + SIZE_PH);
