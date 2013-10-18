@@ -3187,9 +3187,9 @@ and how they are used.
                 <dt>(Windows)
                 <dd><p>
                     is either the IP or MAC address of the driving
-                    systems network card. TunTap32 will automatically select
-                    the first network card it finds if this option is
-                    omitted, this may not be desirable for some users.
+                    systems network card. Note: If this option is omitted,
+                    then TunTap32 automatically selects the first network card
+                    it finds, which may not be desirable for some users.
                     <p>
 
              </dl> <!-- end 'devname' -->
@@ -3198,11 +3198,11 @@ and how they are used.
 
         <dt><code>-o <em>filename</em></code> &nbsp;&nbsp; or &nbsp; <code>--oat <em>filename</em></code>
         <dd><p>
-            where <em>filename</em> specifies the filename of the Address
-            Translation file. If this option is specified, the optional
+            where <em>filename</em> specifies the filename of the
+            OSA Address Table (OAT). If this option is specified, the optional
             <code>--mac</code> and <em>guestip</em> entries are ignored in preference to
             statements in the OAT. (See further below for the <a href=#OAT>syntax
-            of the OAT file</a>)
+            of the OAT</a>)
             <p>
 
         <dt><code>-m <em>MAC Address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
@@ -3222,9 +3222,9 @@ and how they are used.
             <p>
 
         <a name="OAT"></a>
-        <dt><b>OAT file syntax</b>
+        <dt><b>OAT syntax</b>
         <dd><p>
-            The syntax for the Address Translation file is as follows:
+            The syntax for the OSA Address Table (OAT) is as follows:
             <p>
 <table border=1 cellpadding=10><tr><td>
 <pre><code>
@@ -3246,7 +3246,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 </td></tr></table>
             <p>
 
-            <dl> <!-- begin LCS OATFILE parms -->
+            <dl> <!-- begin LCS OAT parms -->
             <dt>where:
             <dd><p>
                 <dl> <!-- (begin INDENT) -->
@@ -3264,7 +3264,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     <dd>is the virtual (relative) adapter number.
                         <p>
                 </dl> <!-- (end INDENT) -->
-            </dl> <!-- end LCS OATFILE parms -->
+            </dl> <!-- end LCS OAT parms -->
 
             <p>
 
@@ -3299,8 +3299,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <i><b>Note:</b> &nbsp;the SNA operation mode is NOT currently implemented.</i>
             <p>
 
-            Additionally, two other statements may be included in the
-            address translation file. The HWADD and ROUTE statements:
+            Additionally, a HWADD and/or ROUTE statement
+            may also be included in the OAT:
 
             <p>
             <dl> <!-- begin HWADD and ROUTE -->
@@ -3310,7 +3310,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dd><p>
                     Use the HWADD to specify a hardware (MAC) address for a
                     virtual adapter. The first parameter after HWADD specifies
-                    with relative adapter for which the address is applied.
+                    the relative adapter for which the address is applied.
 
                     <p>
 
@@ -3319,8 +3319,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     The ROUTE statement is included for convenience. This allows the
                     hercifc program to create a network route for this specified
                     virtual adapter. Please note that it is not necessary to include
-                    point-to-point routes for each IP address in the table. This is
-                    done automatically by the emulation module.
+                    point-to-point routes for each IP address in the table since this
+                    is done automatically by the emulation module.
 
                     <p>
 
@@ -3337,7 +3337,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
         <p>
 
-        If no Address Translation file is specified, the emulation module
+        If no OAT is specified, the emulation module
         will create the following:
         <p>
 
