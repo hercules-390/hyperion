@@ -3520,9 +3520,9 @@ DEF_INST(exclusive_or);
 DEF_INST(exclusive_or_immediate);
 DEF_INST(exclusive_or_character);
 DEF_INST(execute);
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 DEF_INST(execute_relative_long);                                /*208*/
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(extract_access_register);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
