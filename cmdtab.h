@@ -60,7 +60,7 @@
     "Note: it is possible to disable the $zapcmd itself so BE CAREFUL!\n"
 
 #define $locate_cmd_desc        "Display sysblk, regs or hostinfo"
-#define bangmsg_cmd_desc        "SCP priority messsage"
+#define bangmsg_cmd_desc        "SCP priority message"
 #define bangmsg_cmd_help        \
                                 \
   "To enter a system control program (i.e. guest operating system)\n"           \
