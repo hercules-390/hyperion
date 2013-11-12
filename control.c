@@ -31,6 +31,7 @@
 /*      ESAME BSA instruction - Roger Bowler                    v209c*/
 /*      ASN-and-LX-reuse facility - Roger Bowler            June 2004*/
 /*      SIGP orders 11,12.2,13,15 - Fish                     Oct 2005*/
+/*      Configuration topology facility fixes by PaoloG      Oct 2013*/
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -6697,9 +6698,13 @@ SYSIBVMDB *sysibvmdb;                   /* VM description block      */
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
 SYSIB1512 *sysib1512;                   /* Configuration Topology    */
+BYTE      *tle;                         /* Pointer to next TLE       */
+TLECNTNR  *tlecntnr;                    /* Container TLE pointer     */
 TLECPU    *tlecpu;                      /* CPU TLE Type              */
 U64        cpumask;                     /* work                      */
 int        cputype;                     /* work                      */
+U16        cpuad;                       /* CPU address               */
+BYTE       cntnrid;                     /* Container ID              */
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
                            /*  "0    1    2    3    4    5    6    7" */
@@ -7061,21 +7066,26 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 sysib1512 = (SYSIB1512 *)(m);
                 memset(sysib1512, 0, sizeof(SYSIB1512));
 
-                // PROGRAMMING NOTE: At present, Hercules only supports
-                // horizontal polarization, not vertical.
-                // TECHNICAL NOTE: Supported host platforms normally
-                // schedule and dispatch in what is considered shared
-                // and vertically polarized.
-                // FIXME: Futures. Properly support both horizontal and
-                // vertical polarization.
+                sysib1512->mnest = 2;
+                sysib1512->mag[4] = 1;
+                sysib1512->mag[5] = sysblk.maxcpu;
 
-                sysib1512->mnest = 1;
-                sysib1512->mag[5] = sysblk.cpus;
-                tlecpu = (TLECPU *)(sysib1512->tles);
+                tle = sysib1512->tles;
+                cntnrid = 1;
+                cpuad = 0;
 
-                /* For each type of CPU... */
+                /* Build a container TLE */
+                tlecntnr = (TLECNTNR *)tle;
+                memset(tlecntnr, 0x00, sizeof(TLECNTNR));
+                tlecntnr->nl = 1;
+                tlecntnr->cntnrid = cntnrid;
+                tle += sizeof(TLECNTNR);
+
+                /* For each type of CPU */
                 for (cputype = 0; cputype <= SCCB_PTYP_MAX; cputype++)
                 {
+                    tlecpu = (TLECPU *)tle;
+
                     /* For each CPU of this type */
                     cpumask = 0;
                     for (i=0; i < sysblk.hicpu; i++)
@@ -7091,9 +7101,12 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                             {
                                 memset(tlecpu, 0, sizeof(TLECPU));
                                 tlecpu->nl = 0;
-                                tlecpu->flags = CPUTLE_FLAG_SHARED +
-                                                CPUTLE_FLAG_HORIZONTAL;
-                                tlecpu->cpuadorg = 0;
+                                if (sysblk.topology == TOPOLOGY_VERT) {
+                                    tlecpu->flags = CPUTLE_FLAG_VERTMED;
+                                } else {
+                                    tlecpu->flags = CPUTLE_FLAG_HORIZ;
+                                }
+                                tlecpu->cpuadorg = cpuad;
                                 tlecpu->cputype = cputype;
                             }
                             /* Update CPU mask field for this type */
@@ -7104,12 +7117,12 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                     if (cpumask)
                     {
                         STORE_DW( &tlecpu->cpumask, cpumask );
-                        tlecpu++;
+                        tle += sizeof(TLECPU);
                     }
                 }
 
                 /* Save the length of this System Information Block */
-                STORE_HW(sysib1512->len,(U16)((BYTE*)tlecpu - (BYTE*)sysib1512));
+                STORE_HW(sysib1512->len,(U16)(tle - (BYTE*)sysib1512));
 
                 /* Successful completion */
                 regs->psw.cc = 0;

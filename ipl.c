@@ -298,6 +298,9 @@ int ARCH_DEP(system_reset)
     }
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+    /* Set horizontal polarization */
+    sysblk.topology = TOPOLOGY_HORIZ;
+
     /* Clear topology-change-report-pending condition */
     sysblk.topchnge = 0;
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/

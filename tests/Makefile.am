@@ -74,6 +74,7 @@ EXTRA_DIST =        \
     mxtr.txt        \
     popcnt.txt      \
     prtest.txt      \
+    ptf.txt         \
     rnsbg.txt       \
     rrdtr.txt       \
     rrxtr.txt       \

@@ -1,0 +1,39 @@
+* PTF (Perform Topology Function) test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
+r 200=41200002     # LA R2,2           R2=FC2
+r 204=B9A20020     # PTF R2            Check topology-change status
+r 208=477002FC     # BNZ ERR           Expect CC=0
+r 20C=41200000     # LA R2,0           R2=FC0
+r 210=B9A20020     # PTF R2            Request horizontal polarization
+r 214=47D002FC     # BNH ERR           Expect CC=2
+r 218=C22F00000100 # CLFI R2,X'00000100' Test PTF RC=1 already configured
+r 21E=477002FC     # BNE ERR           Expect CC=0
+r 222=C04900002000 # IILF R4,SYSIB     R4=>SYSIB on 4K boundary
+r 228=1894         # LR R9,R4          R9=>SYSIB area
+r 22A=C05900002000 # IILF R5,X'2000'   R5=SYSIB area length
+r 230=C079EE000000 # IILF R7,X'EE000000' R7=Padding byte, zero length
+r 236=0E46         # MVCL R4,R6        Fill SYSIB with padding byte
+r 238=98010350     # LM R0,R1,SCSIFC   Load R0=FC-SC1,R1=SC2
+r 23C=B27D9000     # STSI 0(R9)        Store System Information
+r 240=477002FC     # BNZ ERR           Expect CC=0
+r 244=41200001     # LA R2,1           R2=FC0
+r 248=B9A20020     # PTF R2            Request vertical polarization
+r 24C=477002FC     # BNZ ERR           Expect CC=0
+r 250=C29900001000 # AFI R9,X'00001000' R9=>2nd SYSIB area
+r 256=98010350     # LM R0,R1,SCSIFC   Load R0=FC-SC1,R1=SC2
+r 25A=B27D9000     # STSI 0(R9)        Store System Information
+r 25E=477002FC     # BNZ ERR           Expect CC=0
+r 262=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 2FC=B2B20310     #ERR LPSWE DISWAIT  Load disabled wait PSW
+r 300=07020001800000000000000000AAAAAA # WAITPSW Enabled wait state PSW
+r 350=F000000100000002 #SCSIFC         FC=15,SC1=1,SC2=2
+ostailor null
+restart
+pause 1
+* Display results of STSI 15.1.2 with horizontal polarization
+r 2000.100
+* Display results of STSI 15.1.2 with vertical polarization
+r 3000.100

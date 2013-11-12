@@ -4966,13 +4966,27 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     switch (fc)
     {
     case 0:                     /* Request horizontal polarization */
-        regs->psw.cc = 2;       /* Request rejected */
-        rc = 1;                 /* Already polarized as specified */
+        if (sysblk.topology == TOPOLOGY_HORIZ) {
+            regs->psw.cc = 2;   /* Request rejected */
+            rc = 1;             /* Already polarized as specified */
+        } else {
+            sysblk.topology = TOPOLOGY_HORIZ;
+            sysblk.topchnge = 1;
+            regs->psw.cc = 0;
+            rc = 0;
+        }
         break;
 
     case 1:                     /* Request vertical polarization */
-        regs->psw.cc = 2;       /* Request rejected */
-        rc = 0;                 /* No reason specified */
+        if (sysblk.topology == TOPOLOGY_VERT) {
+            regs->psw.cc = 2;   /* Request rejected */
+            rc = 1;             /* Already polarized as specified */
+        } else {
+            sysblk.topology = TOPOLOGY_VERT;
+            sysblk.topchnge = 1;
+            regs->psw.cc = 0;
+            rc = 0;
+        }
         break;
 
     case 2:                     /* Check topology-change status */
