@@ -1062,6 +1062,7 @@ U16 offph;
                     {
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
+                        int  rc;
 
                         /* Save guest IPv4 address and netmask*/
                         FETCH_FW( grp->hipaddr4, ip );
@@ -1077,50 +1078,38 @@ U16 offph;
                             free( grp->ttnetmask );
                         grp->ttnetmask = strdup( ipmask );
 
-                        if (grp->setip)
+                        rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+                        if (rc != 0)
                         {
-#if defined(OPTION_W32_CTCI)
-                            char* what = "TUNTAP_SetDestAddr() failed";
-                            int rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
-#else // !defined(OPTION_W32_CTCI)
-                            char* what = "TUNTAP_SetIPAddr() failed";
-                            int rc = TUNTAP_SetIPAddr(grp->ttifname,ipaddr);
-#endif // defined(OPTION_W32_CTCI)
-                            if (rc != 0)
-                            {
-                                qeth_errnum_msg( dev, grp, rc, "E", what );
-                                retcode = IPA_RC_FFFF;
-                            }
+                            qeth_errnum_msg( dev, grp, rc, "E",
+                                "TUNTAP_SetDestAddr() failed" );
+                            retcode = IPA_RC_FFFF;
                         }
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
+#if defined(HAVE_SETDESTADDR6)
+                        int rc;
+#endif /* defined(HAVE_SETDESTADDR6) */
+
                         memcpy( grp->ipaddr6, ip, 16 );
 
                         if(grp->ttipaddr6)
                             free(grp->ttipaddr6);
                         hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
 
-#if 0 // FIXME: How do we do this for IPv6?
+#if defined(HAVE_SETDESTADDR6)
                         /* Hmm... What does one do with an IPv6 address? */
                         /* TUNTAP_SetDestAddr isn't valid for IPv6.      */
-                        if (grp->setip)
+                        rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+                        if (rc != 0)
                         {
-#if defined(OPTION_W32_CTCI)
-                            const char* what = "TUNTAP_SetDestAddr6() failed";
-                            int rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
-#else // !defined(OPTION_W32_CTCI)
-                            const char* what = "TUNTAP_SetIPAddr6() failed";
-                            int rc = TUNTAP_SetIPAddr6(grp->ttifname,grp->ttipaddr6)
-#endif // defined(OPTION_W32_CTCI)
-                            if (rc != 0)
-                            {
-                                qeth_errnum_msg( dev, grp, rc, "E", what );
-                                retcode = IPA_RC_FFFF;
-                            }
+                            qeth_errnum_msg( dev, grp, rc, "E",
+                                "TUNTAP_SetDestAddr6() failed" );
+                            retcode = IPA_RC_FFFF;
                         }
-#endif // (how do we do this for IPv6?)
+#endif /* defined(HAVE_SETDESTADDR6) */
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
@@ -2528,18 +2517,6 @@ int i;
             grp->debug = 0;
             continue;
         }
-#if !defined(OPTION_W32_CTCI) /* (option is temporary on non-Windows) */
-        else if (!strcasecmp("setip",argv[i]))
-        {
-            grp->setip = 1;
-            continue;
-        }
-        else if(!strcasecmp("nosetip",argv[i]))
-        {
-            grp->setip = 0;
-            continue;
-        }
-#endif // !defined(OPTION_W32_CTCI)
         else
         {
             // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
@@ -2558,10 +2535,6 @@ int i;
         HRB      hrb;
         char     c;
         char    *p;
-
-#if defined(OPTION_W32_CTCI)
-        grp->setip = 1;   /* (forced for CTCI-WIN) */
-#endif
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)

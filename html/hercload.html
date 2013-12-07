@@ -90,7 +90,7 @@ where:
   -z         build compressed dasd image file using zlib
   -bz2       build compressed dasd image file using bzip2
   -0         build compressed dasd image file with no compression
-  -lfs       build a large (uncompressed) dasd file (if supported)
+  -lfs       create only one very large output file (if supported)
   -a         build dasd image file that includes alternate cylinders
              (option ignored if size is manually specified)
   -r         build 'raw' dasd image file  (no VOL1 or IPL track)
@@ -348,7 +348,7 @@ where
     <dt><code><i>-0</i></code>
     <dd>Build compressed dasd image file with no compression.
     <dt><code><i>-lfs</i></code>
-    <dd>Build a large dasd image file (can exceed 2G).
+    <dd>Create only one very large output file (can exceed 2G).
     <dt><code><i>-a</i></code>
     <dd>Build dasd image file that includes alternate cylinders.
     <dt><code><i>-b</i></code>

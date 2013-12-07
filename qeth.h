@@ -163,7 +163,6 @@ typedef struct _OSA_GRP {
     int   wrpack;               /* Adapter in write packing mode     */
     int   iqPCI;                /* Input Queue PCI has requested     */
     int   oqPCI;                /* Output Queue PCI has requested    */
-    int   setip;                /* Process IPA_CMD_SETIP             */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
