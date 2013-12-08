@@ -11,12 +11,16 @@
 
 # Use environment variables to determine the Visual Studio compiler level
 
+vers_vs2013=12
 vers_vs2012=11
 vers_vs2010=10
 vers_vs2008=9
 vers_vs2005=8
 
-!IFDEF VS110COMNTOOLS
+!IFDEF VS120COMNTOOLS
+!MESSAGE Makefile will assume VS12 or VS2013 Express (MSVC version 18)
+vsversion=$(vers_vs2013)
+!ELSEIFDEF VS110COMNTOOLS
 !MESSAGE Makefile will assume VS11 or VS2012 Express (MSVC version 17)
 vsversion=$(vers_vs2012)
 !ELSEIFDEF VS100COMNTOOLS
