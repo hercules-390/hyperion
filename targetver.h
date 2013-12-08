@@ -12,6 +12,7 @@
 **  The following defines are to more easily test for known versions
 **  of Microsoft's Visual Studio compiler:
 **
+**    MSVC++ 12.0:  _MSC_VER = 1800  (Visual Studio 2013)
 **    MSVC++ 11.0:  _MSC_VER = 1700  (Visual Studio 2012)
 **    MSVC++ 10.0:  _MSC_VER = 1600  (Visual Studio 2010)
 **    MSVC++  9.0:  _MSC_VER = 1500  (Visual Studio 2008)
@@ -22,6 +23,7 @@
 **    MSVC++  5.0:  _MSC_VER = 1100
 */
 
+#define VS2013      1800                /* Visual Studio 2013 */
 #define VS2012      1700                /* Visual Studio 2012 */
 #define VS2010      1600                /* Visual Studio 2010 */
 #define VS2008      1500                /* Visual Studio 2008 */
@@ -29,6 +31,7 @@
 #define VS2003      1310                /* Visual Studio 2003 */
 #define VS2002      1300                /* Visual Studio 2002 */
 
+#define MSVC12      1800                /* Visual Studio 2013 */
 #define MSVC11      1700                /* Visual Studio 2012 */
 #define MSVC10      1600                /* Visual Studio 2010 */
 #define MSVC9       1500                /* Visual Studio 2008 */
