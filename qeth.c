@@ -50,6 +50,10 @@
 #include "qeth.h"
 
 
+/*-------------------------------------------------------------------*/
+/* QETH Debugging                                                    */
+/*-------------------------------------------------------------------*/
+
 #define ENABLE_QETH_DEBUG   1   // 1:enable, 0:disable, #undef:default
 #define QETH_PTT_TRACING        // #define to enable PTT debug tracing
 //#define QETH_DUMP_DATA          // #undef to suppress i/o buffers dump
@@ -505,10 +509,12 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 
     if (grp->l3 && grp->ttipaddr)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, not, "IPv4", grp->ttipaddr );
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, not, "MASK", grp->ttnetmask );
+        if(grp->ttipaddr)
+            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+                grp->ttifname, not, "IPv4", grp->ttipaddr );
+        if(grp->ttnetmask)
+            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+                grp->ttifname, not, "MASK", grp->ttnetmask );
     }
 
     if (grp->l3 && grp->ttipaddr6)
@@ -645,7 +651,11 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     }
 
     /* If possible, assign an IPv4 address to the interface */
-    if(grp->l3 && grp->ttipaddr)
+    if(
+#if defined( OPTION_W32_CTCI )
+       grp->l3 &&
+#endif /*defined( OPTION_W32_CTCI )*/
+                  grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
         if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
@@ -658,7 +668,11 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Same thing with the IPv4 subnet mask */
 #if defined( OPTION_TUNTAP_SETNETMASK )
-    if(grp->l3 && grp->ttnetmask)
+    if(
+#if defined( OPTION_W32_CTCI )
+       grp->l3 &&
+#endif /*defined( OPTION_W32_CTCI )*/
+                  grp->ttnetmask)
         if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetNetMask() failed" );
@@ -666,7 +680,11 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Assign it an IPv6 address too, if possible */
 #if defined(ENABLE_IPV6)
-    if(grp->l3 && grp->ttipaddr6)
+    if(
+#if defined( OPTION_W32_CTCI )
+       grp->l3 &&
+#endif /*defined( OPTION_W32_CTCI )*/
+                  grp->ttipaddr6)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetIPAddr6() failed" );
@@ -1062,7 +1080,6 @@ U16 offph;
                     {
                         char ipaddr[16] = {0};
                         char ipmask[16] = {0};
-                        int  rc;
 
                         /* Save guest IPv4 address and netmask*/
                         FETCH_FW( grp->hipaddr4, ip );
@@ -1070,6 +1087,7 @@ U16 offph;
                         MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
                         MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
 
+#if defined(OPTION_W32_CTCI)
                         if (grp->ttipaddr)
                             free( grp->ttipaddr );
                         grp->ttipaddr = strdup( ipaddr );
@@ -1078,38 +1096,38 @@ U16 offph;
                             free( grp->ttnetmask );
                         grp->ttnetmask = strdup( ipmask );
 
-                        rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+#endif // defined(OPTION_W32_CTCI)
+                        char* what = "TUNTAP_SetDestAddr() failed";
+                        int rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+
                         if (rc != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc, "E",
-                                "TUNTAP_SetDestAddr() failed" );
+                            qeth_errnum_msg( dev, grp, rc, "E", what );
                             retcode = IPA_RC_FFFF;
                         }
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
-#if defined(HAVE_SETDESTADDR6)
-                        int rc;
-#endif /* defined(HAVE_SETDESTADDR6) */
-
                         memcpy( grp->ipaddr6, ip, 16 );
 
                         if(grp->ttipaddr6)
                             free(grp->ttipaddr6);
                         hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
 
-#if defined(HAVE_SETDESTADDR6)
+#if 0 // FIXME: How do we do this for IPv6?
                         /* Hmm... What does one do with an IPv6 address? */
                         /* TUNTAP_SetDestAddr isn't valid for IPv6.      */
-                        rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+
+                        const char* what = "TUNTAP_SetDestAddr6() failed";
+                        int rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+
                         if (rc != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc, "E",
-                                "TUNTAP_SetDestAddr6() failed" );
+                            qeth_errnum_msg( dev, grp, rc, "E", what );
                             retcode = IPA_RC_FFFF;
                         }
-#endif /* defined(HAVE_SETDESTADDR6) */
+#endif // (how do we do this for IPv6?)
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
@@ -2449,9 +2467,6 @@ int i;
         else if(!strcasecmp("ipaddr",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-            if(grp->ottipaddr)                 /* Save orig. ipaddr option */
-                free(grp->ottipaddr);
-            grp->ottipaddr = strdup(argv[i+1]);
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
                 slash[0] = 0;                  /* Replace slash with null  */
@@ -2580,11 +2595,14 @@ int i;
                 grp->hipaddr4 = ntohl( inet_addr( grp->ttipaddr ));
         }
 
+#if defined( OPTION_W32_CTCI )
         if (!grp->ttnetmask && !grp->ttpfxlen)
         {
             grp->ttnetmask = strdup("255.255.255.255");
             grp->ttpfxlen = strdup("32");
         }
+#endif /*!defined( OPTION_W32_CTCI )*/
+
         if (grp->ttnetmask)
         {
             char *new_ttpfxlen = NULL;
@@ -2603,7 +2621,7 @@ int i;
                 grp->ttipaddr = NULL;
                 grp->ttpfxlen = NULL;
             }
-            else /* (valid netmask) */
+            else if (grp->ttpfxlen)
             {
                 /* Check netmask value (via newly built prefix)
                    for consistency with existing prefix length */
@@ -2628,7 +2646,7 @@ int i;
             {
                 // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                     "ipaddr", grp->ottipaddr );
+                                     "ipaddr", grp->ttipaddr );
                 free(grp->ttpfxlen);
                 if(grp->ttipaddr)
                     free(grp->ttipaddr);
@@ -2638,7 +2656,7 @@ int i;
                 grp->ttipaddr = NULL;
                 grp->ttnetmask = NULL;
             }
-            else /* (valid prefix) */
+            else if (grp->ttnetmask)
             {
                 /* Check prefix length (via newly built netmask)
                    for consistency with existing netmask value */
@@ -2734,8 +2752,10 @@ int i;
         }
 
         /* Initialize mask fields */
-        grp->pfxmask4 = makepfxmask4( grp->ttpfxlen );
-        makepfxmask6( grp->ttpfxlen6, grp->pfxmask6 );
+        if(grp->ttpfxlen)
+            grp->pfxmask4 = makepfxmask4( grp->ttpfxlen );
+        if(grp->ttpfxlen6)
+            makepfxmask6( grp->ttpfxlen6, grp->pfxmask6 );
     }
 
     return 0;
@@ -3570,7 +3590,7 @@ U32 num;                                /* Number of bytes to move   */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
         dev->qtype = QTYPE_DATA;            /* Identify ourselves    */
 
-        DBGTRC( dev, "Activate Queues: Entry\n");
+        DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x\n",dev->qdio.i_qmask, dev->qdio.o_qmask);
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Loop until halt signal is received via notification pipe */
