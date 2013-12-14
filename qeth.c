@@ -5023,4 +5023,3 @@ END_DEVICE_SECTION
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings
 #endif
-
