@@ -1072,6 +1072,7 @@ U16 offph;
                 {
                 BYTE *ip = (BYTE*)(ipa+1);
                 U16  proto, retcode;
+                int rc;
 
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
@@ -1097,12 +1098,12 @@ U16 offph;
                         grp->ttnetmask = strdup( ipmask );
 
 #endif // defined(OPTION_W32_CTCI)
-                        char* what = "TUNTAP_SetDestAddr() failed";
-                        int rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+                        rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
 
                         if (rc != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc, "E", what );
+                            qeth_errnum_msg( dev, grp, rc,
+                                "E", "TUNTAP_SetDestAddr() failed" );
                             retcode = IPA_RC_FFFF;
                         }
                     }
@@ -1116,15 +1117,17 @@ U16 offph;
                         hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
 
 #if 0 // FIXME: How do we do this for IPv6?
-                        /* Hmm... What does one do with an IPv6 address? */
-                        /* TUNTAP_SetDestAddr isn't valid for IPv6.      */
+      // Basically, we don't. TUNTAP_SetDestAddr issues an ioctl SIOCSIFDSTADDR
+      // request, for which there doesn't appear to be an IPv6 equivalent. The
+      // concept of peer IPv6 addresses doesn't seem to exist, presumably one
+      // is supposed to use routing.
 
-                        const char* what = "TUNTAP_SetDestAddr6() failed";
-                        int rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
+                        rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
 
                         if (rc != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc, "E", what );
+                            qeth_errnum_msg( dev, grp, rc,
+                                "E", "TUNTAP_SetDestAddr6() failed" );
                             retcode = IPA_RC_FFFF;
                         }
 #endif // (how do we do this for IPv6?)
@@ -5020,3 +5023,4 @@ END_DEVICE_SECTION
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings
 #endif
+
