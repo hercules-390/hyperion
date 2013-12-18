@@ -536,8 +536,45 @@ AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_s
 #  PROGRAMMING NOTE: On Linux struct in6_ifreq is defined in linux/ipv6.h.
 #  On other systems it may be defined in netinet6/in6_var.h or elsewhere.
 
+#  in6_*.h files are stricly for library separation.  They should not be included
+#  directly.  This is enforced on FreeBSD and OS/X.  On OS/X you can get away with netinet/in_var.h;
+#  in FreeBSD you have to do it by the book, but this works for OS/X too.
+
 AC_CHECK_HEADERS( linux/ipv6.h,       [hc_cv_have_linux_ipv6_h=yes],       [hc_cv_have_linux_ipv6_h=no] )
-AC_CHECK_HEADERS( netinet6/in6_var.h, [hc_cv_have_netinet6_in6_var_h=yes], [hc_cv_have_netinet6_in6_var_h=no] )
+# FreeBSD has this guy
+AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_in_var_h=yes],   [hc_cv_have_net_in_var_h=no],
+[
+    #include <net/if.h>
+    #include <net/if_var.h>
+] )
+AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no] )
+AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no])
+AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no])
+AC_CHECK_HEADERS( netinet/in_var.h,   [hc_cv_have_netinet_in_var_h=yes],   [hc_cv_have_netinet_in_var_h=no],
+[
+    #if HAVE_NET_IF_VAR_H
+    #include <net/if.h>
+    #include <net/if_var.h>
+    #if HAVE_NETINET_IN_H
+    #include <netinet/in.h>
+    #include <netinet/in_var.h>
+    #endif
+    #endif
+] )
+
+# Autoconf adds an include for file being tested at the end of the program, but that is OK,
+# as we've been good boys.  The duplicate include has no effect.
+AC_CHECK_HEADERS( netinet6/in6_var.h, [hc_cv_have_netinet6_in6_var_h=yes], [hc_cv_have_netinet6_in6_var_h=no],
+[
+    #if HAVE_NET_IF_VAR_H
+    #include <net/if.h>
+    #include <net/if_var.h>
+    #if HAVE_NETINET_IN_H
+    #include <netinet/in.h>
+    #include <netinet/in_var.h>
+    #endif
+    #endif
+] )
 
 #------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: on *BSD systems sys/param.h must be #included before
@@ -849,6 +886,7 @@ AC_CHECK_MEMBERS( [struct in_addr.s_addr],
 #endif
 ] )
 
+# This test works for Linux and OS/X
 AC_CHECK_MEMBERS( [struct in6_ifreq.ifr6_addr],
                   [hc_cv_have_in6_ifreq_ifr6_addr=yes  ],
                   [hc_cv_have_in6_ifreq_ifr6_addr=no   ],
@@ -858,6 +896,22 @@ AC_CHECK_MEMBERS( [struct in6_ifreq.ifr6_addr],
 #endif
 #ifdef HAVE_NETINET6_IN6_VAR_H
 #include <netinet6/in6_var.h>
+#endif
+] )
+
+# FreeBSD naming scheme
+AC_CHECK_MEMBERS( [struct in6_ifreq.ifr_ifru.ifru_flags],
+                  [hc_cv_have_in6_ifreq_ifru_addr=yes  ],
+                  [hc_cv_have_in6_ifreq_ifru_addr=no   ],
+[
+#ifdef HAVE_LINUX_IPV6_H
+#include <linux/ipv6.h>
+#endif
+#ifdef HAVE_NETINET6_IN6_VAR_H
+#include <net/if.h>
+#include <net/if_var.h>
+#include <netinet/in.h>
+#include <netinet/in_var.h> // Not the ipv6 file, please
 #endif
 ] )
 
@@ -1746,8 +1800,9 @@ fi
 
 if test "$hc_cv_ena_ipv6" = "yes" ; then
 
-   if test "$hc_cv_have_in6_ifreq_ifr6_addr" != "yes"; then
-
+   if test "$hc_cv_have_in6_ifreq_ifr6_addr" != "yes" &&
+      test "$hc_cv_have_in6_ifreq_ifru_addr" != "yes"
+   then
       AC_MSG_RESULT( [ERROR: IPv6 support requested but struct in6_ifreq is not available] )
       hc_error=yes
    fi
