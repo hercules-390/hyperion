@@ -1,4 +1,5 @@
 /* HTHREADS.H   (C) Copyright Roger Bowler, 1999-2013                */
+/*              (C) Copyright "Fish" (David B. Trout), 2013          */
 /*              Hercules locking and threading                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
