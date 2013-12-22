@@ -303,9 +303,18 @@
 ::                                                -- Fish, March 2009
 ::
 ::-----------------------------------------------------------------------------
-::              VS2005  or  VS2008  or  VS2010  or  VS2012
+::                           Visual Studio
+::-----------------------------------------------------------------------------
+::
+::
+::        Add support for new Visual Studio versions here...
+::
+::        Don't forget to update the 'CONFIG.msvc' file too!
+::        Don't forget to update the 'targetver.h' header too!
+::
 ::-----------------------------------------------------------------------------
 
+:vs120
 :vs110
 :vs100
 :vs90
@@ -354,18 +363,39 @@
 
 :try_sdk
 
-  if "%MSSdk%" == "" goto :try_vs110
+  if "%MSSdk%" == "" goto :try_vstudio
 
   set "build_env=sdk"
   set "bat_dir=%MSSdk%"
 
-:: This is a fiddle by g4ugm
-:: I couldn't find a way to check the SDK versions
-:: however the V7 sdk has the "setenv.cmd" file in the "bin" directory
-:: so using that for now
+  ::  This is a fiddle by g4ugm (Dave Wade)
+  ::  I couldn't find a way to check the SDK versions
+  ::  however the V7 sdk has the "setenv.cmd" file in the "bin" directory
+  ::  so using that for now
 
   if NOT exist "%MSSdk%\bin\setenv.cmd" %return%
   set "new_sdk=NEW"
+  echo Windows Platform SDK detected
+  %return%
+
+:try_vstudio
+
+:: -------------------------------------------------------------------
+::
+::        Add support for new Visual Studio versions here...
+::
+::        Don't forget to update the 'CONFIG.msvc' file too!
+::        Don't forget to update the 'targetver.h' header too!
+::
+:: -------------------------------------------------------------------
+
+:try_vs120
+
+  if "%VS120COMNTOOLS%" == "" goto :try_vs110
+
+  set "build_env=vs120"
+  set "VSTOOLSDIR=%VS120COMNTOOLS%"
+  echo Visual Studio 2013 detected
   %return%
 
 :try_vs110
@@ -374,6 +404,7 @@
 
   set "build_env=vs110"
   set "VSTOOLSDIR=%VS110COMNTOOLS%"
+  echo Visual Studio 2012 detected
   %return%
 
 :try_vs100
@@ -382,6 +413,7 @@
 
   set "build_env=vs100"
   set "VSTOOLSDIR=%VS100COMNTOOLS%"
+  echo Visual Studio 2010 detected
   %return%
 
 :try_vs90
@@ -390,6 +422,7 @@
 
   set "build_env=vs90"
   set "VSTOOLSDIR=%VS90COMNTOOLS%"
+  echo Visual Studio 2008 detected
   %return%
 
 :try_vs80
@@ -398,18 +431,19 @@
 
   set "build_env=vs80"
   set "VSTOOLSDIR=%VS80COMNTOOLS%"
+  echo Visual Studio 2005 detected
   %return%
-
 
 :try_toolkit
 
-  if "%VCToolkitInstallDir%" == "" goto :try_xxxx
+  if "%VCToolkitInstallDir%" == "" goto :bad_build_env
 
   set "build_env=toolkit"
   set "bat_dir=%VCToolkitInstallDir%"
+  echo Visual Studio 2003 ToolKit detected
   %return%
 
-:try_xxxx
+:bad_build_env
 
   echo.
   echo %~nx0^(1^) : error C9999 : No suitable Windows development product is installed
