@@ -79,7 +79,7 @@
 #define  OSA_CTLUNIT_SDC        MAKE_SDC( OSA_SDC_TYPE_1730, MODEL_001, MFR_HRC, PLANT_ZZ, SEQ_000000000000 )
 #define  OSA_TOKEN_SDC          MAKE_SDC( OSA_SDC_TYPE_1730, MODEL_002, MFR_HRC, PLANT_ZZ, SEQ_000000000000 )
 
-#define  OSA_DEVICE_NED         MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_DEVICE,  NED_DEV_COMM, NED_RELATED,   OSA_DEVICE_SDC,  TAG_00 )
+#define  OSA_DEVICE_NED         MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_DEVICE,  NED_DEV_COMM,   NED_RELATED, OSA_DEVICE_SDC,  TAG_00 )
 #define  OSA_CTLUNIT_NED        MAKE_NED( FIELD_IS_NED, NED_NORMAL_NED, NED_SN_NODE, NED_REAL, NED_TYP_CTLUNIT, NED_DEV_UNSPEC, NED_RELATED, OSA_CTLUNIT_SDC, TAG_00 )
 #define  OSA_TOKEN_NED          MAKE_NED( FIELD_IS_NED, NED_TOKEN_NED,  NED_SN_NODE, NED_REAL, NED_TYP_UNSPEC,  NED_DEV_COMM,   NED_RELATED, OSA_TOKEN_SDC,   TAG_00 )
 #define  OSA_GENERAL_NEQ        NULL_GENEQ
@@ -92,7 +92,7 @@
 /* OSA Buffer Header                                                 */
 /*-------------------------------------------------------------------*/
 struct _OSA_BHR;                        /* OSA Buffer Header         */
-typedef struct _OSA_BHR OSA_BHR, *POSA_BHR;
+typedef struct _OSA_BHR   OSA_BHR,  *POSA_BHR;
 struct _OSA_BHR {                       /* OSA Buffer Header         */
     OSA_BHR*  next;                     /* Pointer to next OSA_BHR   */
     int       arealen;                  /* Data area length          */
@@ -161,8 +161,8 @@ typedef struct _OSA_GRP {
     int   l3;                   /* Adapter in layer 3 mode           */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
-    int   iqPCI;                /* Input Queue PCI has requested     */
-    int   oqPCI;                /* Output Queue PCI has requested    */
+    int   iqPCI;                /* Input  Queue PCI was requested    */
+    int   oqPCI;                /* Output Queue PCI was requested    */
 
     int   ttfd;                 /* File Descriptor TUNTAP Device     */
     int   ppfd[2];              /* Thread signalling socket pipe     */
