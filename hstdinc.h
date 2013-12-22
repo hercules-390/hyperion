@@ -97,13 +97,11 @@
 #ifdef HAVE_ARPA_INET_H
   #include <arpa/inet.h>
 #endif
-#if defined(BUILD_HERCIFC)
-  #ifdef HAVE_LINUX_IF_TUN_H
-    #include <linux/if_tun.h>
-  #endif
-  #ifdef HAVE_NET_ROUTE_H
-    #include <net/route.h>
-  #endif
+#ifdef HAVE_LINUX_IF_TUN_H
+  #include <linux/if_tun.h>
+#endif
+#ifdef HAVE_NET_ROUTE_H
+  #include <net/route.h>
 #endif
 #ifdef HAVE_NET_IF_H
   #include <net/if.h>

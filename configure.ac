@@ -379,6 +379,7 @@ hc_error=no
 
 AH_TEMPLATE( [CUSTOM_BUILD_STRING],     [Define to provide additional information about this build] )
 AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated CPU engines] )
+AH_TEMPLATE( [HOST_ARCH],               [Define as quoted 'target_cpu' value = target host CPU architecture] )
 AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
 AH_TEMPLATE( [C99_FLEXIBLE_ARRAYS],     [Define if your gcc properly supports C99 flexible arrays] )
 AH_TEMPLATE( [HAVE_ATTR_REGPARM],       [Define if your gcc properly supports __attribute__((regparm(n)))] )
@@ -2102,7 +2103,8 @@ if test "x$hc_cv_opt_custom_build_str" != "x"; then
     AC_DEFINE_UNQUOTED( [CUSTOM_BUILD_STRING], "${hc_cv_opt_custom_build_str}" )
 fi
 
-AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],    ${hc_cv_opt_num_cpu_engines}  )
+AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],  ${hc_cv_opt_num_cpu_engines} )
+AC_DEFINE_UNQUOTED( [HOST_ARCH],       "${target_cpu}" )
 
 AC_CACHE_SAVE()
 
