@@ -248,8 +248,10 @@ struct NED {
 }
 ATTRIBUTE_PACKED; typedef struct NED NED;
 
+#define _NED_FLAGS(_fib,_tkn,_sni,_emu)  \
+    (_fib << 6) | (_tkn << 5) | (_sni << 3) | (_emu << 1)
 #define MAKE_NED(_fib,_tkn,_sni,_emu,_typ,_cls,_lvl,_sdc,_tag) \
-    { (_fib << 6) | (_tkn << 5) | (_sni << 3) | (_emu << 1), _typ, _cls, _lvl, _sdc, _tag }
+    { _NED_FLAGS(_fib,_tkn,_sni,_emu), _typ, _cls, _lvl, _sdc, _tag }
 
 /*-------------------------------------------------------------------*/
 /* NEQ: Node-Element Qualifier                                       */
