@@ -43,7 +43,7 @@ cflags  = $(cflags)  /D _MSVC_ /D "VERSION=$(VERSION)" -D V1=$(V1) -D V2=$(V2) -
 cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"
 !ENDIF
 
-# Allow version.c to display the name of the host CPU architecture
+# Allow version.c to display the name of the target host CPU architecture
 cflags = $(cflags) /D HOST_ARCH=$(CPU)
 
 # The following instructs the declaration of DLL export symbols
