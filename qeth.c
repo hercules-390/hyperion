@@ -90,7 +90,7 @@
   #define PTT_QETH_TRACE(...)       __noop()
 #endif
 
-/* (always activate DBGTRC statements) */
+/* DBGTRC statements controlled by dev stmt "debug" option */
 static void DBGTRC( DEVBLK* dev, char* fmt, ... )
 {
   DEVGRP *devgrp = dev->group;
@@ -107,7 +107,9 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
 #else
       vsnprintf( buf, sizeof(buf), fmt, vargs );
 #endif
-      logmsg( "QETH dev %04X: %s", dev->devnum, buf );
+      // HHC03991 "%1d:%04X %s: %s"
+      WRMSG( HHC03991, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
+          "QETH", buf );
       va_end( vargs );
     }
   }
@@ -1676,9 +1678,9 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
         len = min( *sbrem, (U32)rem );
         memcpy( dst, src, len );
 
-        dst   += len;
-        src   += len;
-        rem   -= len;
+        dst    += len;
+        src    += len;
+        rem    -= len;
         *sboff += len;
         *sbrem -= len;
     }
