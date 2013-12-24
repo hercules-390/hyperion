@@ -81,58 +81,61 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
+    /* The mibs #ifdef-ed out below are not available on FreeBSD 9.1 */
     {
         size_t  length;
         int     mib[2];
         int     iRV;
         uint64_t ui64RV;
+#if defined(VM_SWAPUSAGE)
         struct  xsw_usage   xsu;
+#endif
         char    machine[64];
 
         memset(machine,0,sizeof(machine));
 
         mib[0] = CTL_HW;
 
-        length = (size_t)sizeof(machine);
+        length = sizeof(machine);
         if ( sysctl( mib, 2, &machine, &length, NULL, 0 ) != -1 )
         {
             machine[length] = 0;
             strlcpy( pHostInfo->machine, machine, sizeof( pHostInfo->machine ) );
         }
-        
-        length = (size_t)sizeof(iRV);
+
+        length = sizeof(iRV);
         if ( sysctlbyname("kern.maxfilesperproc", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->maxfilesopen = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( sysctlbyname("hw.packages", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->num_packages = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( sysctlbyname("hw.physicalcpu", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->num_physical_cpu = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( sysctlbyname("hw.logicalcpu", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->num_logical_cpu = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( sysctlbyname("hw.vectorunit", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->vector_unit = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( sysctlbyname("hw.optional.floatingpoint", &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->fp_unit = iRV;
 
-        length = (size_t)sizeof(ui64RV);
+        length = sizeof(ui64RV);
         if ( sysctlbyname("hw.busfrequency", &ui64RV, &length, NULL, 0 ) != -1 )
             pHostInfo->bus_speed = ui64RV;
 
-        length = (size_t)sizeof(ui64RV);
+        length = sizeof(ui64RV);
         if ( sysctlbyname("hw.cpufrequency", &ui64RV, &length, NULL, 0 ) != -1 )
             pHostInfo->cpu_speed = ui64RV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         if ( CMD(pHostInfo->machine,i386,4) )
         {
             if ( sysctlbyname("hw.optional.x86_64", &iRV, &length, NULL, 0 ) != -1 )
@@ -156,55 +159,69 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             }
         }
 
-        length = (size_t)sizeof(ui64RV);
+#if defined(HW_MEMSIZE)
+        length = sizeof(ui64RV);
         mib[1] = HW_MEMSIZE;
         if ( sysctl( mib, 2, &ui64RV, &length, NULL, 0 ) != -1 )
             pHostInfo->TotalPhys = ui64RV;
+#endif
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         mib[1] = HW_USERMEM;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->AvailPhys = iRV;
 
-        length = (size_t)sizeof(iRV);
+        length = sizeof(iRV);
         mib[1] = HW_PAGESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->hostpagesz = iRV;
-        
-        length = (size_t)sizeof(iRV);
+
+#if defined(HW_CACHELINE)
+        length = sizeof(iRV);
         mib[1] = HW_CACHELINE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->cachelinesz = iRV;
+#endif
 
-        length = (size_t)sizeof(iRV);
+#if defined(HW_L1ICACHESIZE)
+        length = sizeof(iRV);
         mib[1] = HW_L1ICACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L1Icachesz = iRV;
+#endif
 
-        length = (size_t)sizeof(iRV);
+#if defined(HW_L1DCACHESIZE)
+        length = sizeof(iRV);
         mib[1] = HW_L1DCACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L1Dcachesz = iRV;
+#endif
 
-        length = (size_t)sizeof(iRV);
+#if defined(HW_L2CACHESIZE)
+        length = sizeof(iRV);
         mib[1] = HW_L2CACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L2cachesz = iRV;
+#endif
 
-        length = (size_t)sizeof(iRV);
+#if defined(HW_L3CACHESIZE)
+        length = sizeof(iRV);
         mib[1] = HW_L3CACHESIZE;
         if ( sysctl( mib, 2, &iRV, &length, NULL, 0 ) != -1 )
             pHostInfo->L3cachesz = iRV;
+#endif
 
         mib[0] = CTL_VM;
-        length = (size_t)sizeof(xsu);
 
+#if defined(VM_SWAPUSAGE)
+        length = sizeof(xsu);
         mib[1] = VM_SWAPUSAGE;
         if ( sysctl( mib, 2, &xsu, &length, NULL, 0 ) != -1 )
         {
             pHostInfo->TotalPageFile = xsu.xsu_total;
             pHostInfo->AvailPageFile = xsu.xsu_total - xsu.xsu_used;
         }
+#endif
     }
 #endif
 
@@ -215,7 +232,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         pHostInfo->cachelinesz = 64;
         pHostInfo->valid_cache_nums = FALSE;
     }
-    
+
     if ( pHostInfo->L1Dcachesz == 0 && pHostInfo->L1Icachesz == 0 && pHostInfo->L1Ucachesz == 0 )
     {
         pHostInfo->L1Dcachesz = pHostInfo->L1Icachesz = (RADR)((RADR)8 << SHIFT_KILOBYTE );
@@ -223,7 +240,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     }
 
     if ( pHostInfo->L2cachesz == 0 )
-    {    
+    {
         pHostInfo->L2cachesz = (RADR)((RADR)256 << SHIFT_KILOBYTE );
         pHostInfo->valid_cache_nums = FALSE;
     }
@@ -243,12 +260,12 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
     {
         char num_procs[64];
         if ( !pHostInfo ) pHostInfo = &hostinfo;
-        
+
         if ( pHostInfo->num_packages     != 0 &&
              pHostInfo->num_physical_cpu != 0 &&
              pHostInfo->num_logical_cpu  != 0 )
         {
-            MSGBUF( num_procs, " LP=%d, Cores=%d, CPUs=%d", pHostInfo->num_logical_cpu, 
+            MSGBUF( num_procs, " LP=%d, Cores=%d, CPUs=%d", pHostInfo->num_logical_cpu,
                                 pHostInfo->num_physical_cpu, pHostInfo->num_packages );
         }
         else
