@@ -823,7 +823,19 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
         int probe_count )
 {
     int rc, optval = 1;
-    rc = setsockopt(sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
+    struct protoent * tcpproto = getprotobyname("TCP");
+    int l_tcp;
+
+    if (!tcpproto)
+    {
+       WRMSG(HHC02219, "E", "getprotobyname(\"TCP\")", strerror(errno));
+       fprintf(stderr, "Could not resolve protocol 'TCP'\n");
+       return;
+    }
+
+    l_tcp = tcpproto->p_proto;
+
+    rc = setsockopt(sfd, l_tcp, SO_KEEPALIVE, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(SO_KEEPALIVE)", strerror(errno));
 
   #if defined(TCP_KEEPALIVE)
@@ -832,7 +844,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #elif defined(TCP_KEEPIDLE)
     optval = idle_time;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE, &optval, sizeof(optval));
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPIDLE, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror(errno));
   #else
     UNREFERENCED(idle_time);
@@ -840,7 +852,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 
   #if defined(TCP_KEEPINTVL)
     optval = probe_interval;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL, &optval, sizeof(optval));
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPINTVL, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
   #else
     UNREFERENCED(probe_interval);
@@ -848,7 +860,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 
   #if defined(TCP_KEEPCNT)
     optval = probe_count;
-    rc = setsockopt(sfd, SOL_TCP, TCP_KEEPCNT, &optval, sizeof(optval));
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPCNT, &optval, sizeof(optval));
     if (rc) WRMSG(HHC02219, "E", "setsockopt(TCPKEEPCNT)", strerror(errno));
   #else
     UNREFERENCED(probe_count);
