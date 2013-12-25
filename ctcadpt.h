@@ -376,13 +376,6 @@ typedef struct  _LCSIPMPAIR LCSIPMPAIR, *PLCSIPMPAIR;
 typedef struct  _LCSIPMFRM  LCSIPMFRM,  *PLCSIPMFRM;
 typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
 
-#if       defined ( _MSVC_ )
-struct  _RBPKT;
-struct  _RINGBUFFER;
-typedef struct  _RBPKT      RBPKT,      *PRBPKT;
-typedef struct  _RINGBUFFER RINGBUFFER, *PRINGBUFFER;
-#endif
-
 // --------------------------------------------------------------------
 // LCS Device                              (host byte order)
 // --------------------------------------------------------------------
@@ -456,12 +449,6 @@ struct  _LCSPORT
     u_int       fCloseInProgress:1;       // Close in progress
 
     int         fd;                       // TUN/TAP fd
-#if       defined ( _MSVC_ )
-    HANDLE      handle;                   // NDIS handle
-    TID         rb_tid;                   // Ring Buffer Thread ID
-    pid_t       rb_pid;                   // Ring Buffer pid
-    PRINGBUFFER prb_struct;               // -> RINGBUFFER
-#endif // defined ( _MSVC_ )
     TID         tid;                      // Read Thread ID
     pid_t       pid;                      // Read Thread pid
     int         icDevices;                // Device count
