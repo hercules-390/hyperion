@@ -4098,7 +4098,7 @@ DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
 
     info.dwType     = 0x1000;
     info.pszName    = name;         // (should really be LPCTSTR)
-    info.dwThreadID = tid;          // (-1 == current thread, else tid)
+    info.dwThreadID = (DWORD)tid;   // (-1 == current thread, else tid)
     info.dwFlags    = 0;
 
     __try

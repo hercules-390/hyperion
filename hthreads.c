@@ -712,7 +712,7 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
     for (ple = locklist.Flink; ple != &locklist; ple = ple->Flink)
     {
         ilk = CONTAINING_RECORD( ple, ILOCK, locklink );
-        if (ilk->tid == tid)
+        if (hthread_equal(ilk->tid,tid))
         {
             char tod[27];           /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
 
@@ -922,7 +922,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
         tid = 0;
     else if (strcasecmp( argv[1], "HELD" ) == 0)
         tid = -1;
-    else if (sscanf( argv[1], "%x%c", (U32*) &tid, &c ) != 1)
+    else if (sscanf( argv[1], TIDPAT"%c", &tid, &c ) != 1)
         rc = -1;
 
     if (!rc)

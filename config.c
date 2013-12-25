@@ -976,13 +976,7 @@ int cpu;
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
         {
-            if(setpriority(PRIO_PROCESS,
-#if defined(USE_GETTID)
-                                        sysblk.cputidp[cpu],
-#else /*!defined(USE_GETTID)*/
-                                        sysblk.cputid[cpu],
-#endif /*!defined(USE_GETTID)*/
-                                                            prio))
+            if(setpriority(PRIO_PROCESS, sysblk.cputid[cpu], prio))
                 WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
         }
 
@@ -1015,13 +1009,7 @@ int configure_tod_priority(int prio)
     SETMODE(ROOT);
 
     if(sysblk.todtid)
-        if(setpriority(PRIO_PROCESS,
-#if defined(USE_GETTID)
-                                    sysblk.todtidp,
-#else /*!defined(USE_GETTID)*/
-                                    sysblk.todtid,
-#endif /*!defined(USE_GETTID)*/
-                                                   prio))
+        if(setpriority(PRIO_PROCESS, sysblk.todtid, prio))
             WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
 
     SETMODE(USER);

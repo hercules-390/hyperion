@@ -196,10 +196,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     UNREFERENCED(argp);
 
-#if defined(USE_GETTID)
-    sysblk.todtidp = gettid();
-#endif /*defined(USE_GETTID)*/
-
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 

@@ -518,15 +518,9 @@ struct SYSBLK {
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
-#if defined(USE_GETTID)
-        pid_t   cputidp[MAX_CPU_ENGINES];
-#endif /*defined(USE_GETTID)*/
         BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
-#if defined(USE_GETTID)
-        pid_t   todtidp;
-#endif /*defined(USE_GETTID)*/
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
         LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
         int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
@@ -1086,9 +1080,6 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  device i/o scheduling fields...                          */
 
         TID     tid;                    /* Thread-id executing CCW   */
-#if defined(USE_GETTID)
-        pid_t   tidp;
-#endif /*defined(USE_GETTID)*/
         int     priority;               /* I/O q scehduling priority */
         DEVBLK *nextioq;                /* -> next device in I/O q   */
         IOINT   ioint;                  /* Normal i/o interrupt

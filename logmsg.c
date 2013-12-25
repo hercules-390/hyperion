@@ -140,7 +140,7 @@ static int log_route_search(TID t)
     int i;
     for(i=0;i<MAX_LOG_ROUTES;i++)
     {
-        if(log_routes[i].t==t)
+        if(equal_threads(log_routes[i].t,t))
         {
             if(t==0)
             {

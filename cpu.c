@@ -1213,10 +1213,6 @@ int   cpu  = *(int*)ptr;
 char  cpustr[40];
 int   rc;
 
-#if defined(USE_GETTID)
-    sysblk.cputidp[cpu] = gettid();
-#endif /*defined(USE_GETTID)*/
-
     OBTAIN_INTLOCK(NULL);
 
     /* Increment number of CPUs online */

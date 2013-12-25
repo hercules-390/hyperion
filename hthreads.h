@@ -25,13 +25,6 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*                         Misc.                                     */
-/*-------------------------------------------------------------------*/
-#define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
-#define TIDPAT   "%8.8lX"      /* Pattern for displaying thread_id   */
-typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
-
-/*-------------------------------------------------------------------*/
 /*                 Locking/Threading Models                          */
 /*-------------------------------------------------------------------*/
 
@@ -84,7 +77,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 /*-------------------------------------------------------------------*/
 #if defined( OPTION_FTHREADS )
 
-typedef fthread_t               TID;
+typedef fthread_t               hthread_t;
 typedef fthread_cond_t          COND;
 typedef fthread_attr_t          ATTR;
 typedef fthread_mutexattr_t     MATTR;
@@ -143,14 +136,14 @@ typedef fthread_mutex_t         HLOCK;
 #define hthread_attr_setdetachstate( pat, s )   fthread_attr_setdetachstate( (pat), (s) )
 #define hthread_attr_destroy( pat )             fthread_attr_destroy( pat )
 
-#define hthread_create( pt, pa, fn, ar, nm )    fthread_create( (pt), (pa), (fn), (ar), (nm) )
-#define hthread_detach( tid )                   fthread_detach( tid )
-#define hthread_join( tid, prc )                fthread_join( (tid), (prc) )
-#define hthread_kill( tid, sig )                fthread_kill( (tid), (sig) )
+#define hthread_create( pt, pa, fn, ar, nm )    fthread_create( (hthread_t*)(pt), (pa), (fn), (ar), (nm) )
+#define hthread_detach( tid )                   fthread_detach( (hthread_t)tid )
+#define hthread_join( tid, prc )                fthread_join( (hthread_t)(tid), (prc) )
+#define hthread_kill( tid, sig )                fthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      fthread_exit( rc )
 #define hthread_self()                          fthread_self()
-#define hthread_equal( tid1, tid2 )             fthread_equal( (tid1), (tid2) )
-#define hthread_get_handle( tid )               fthread_get_handle( tid )
+#define hthread_equal( tid1, tid2 )             fthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
+#define hthread_get_handle( tid )               fthread_get_handle( (hthread_t)tid )
 
 #endif /* defined( OPTION_FTHREADS ) */
 
@@ -159,7 +152,7 @@ typedef fthread_mutex_t         HLOCK;
 /*-------------------------------------------------------------------*/
 #if !defined( OPTION_FTHREADS )
 
-typedef pthread_t               TID;
+typedef pthread_t               hthread_t;
 typedef pthread_cond_t          COND;
 typedef pthread_attr_t          ATTR;
 typedef pthread_mutexattr_t     MATTR;
@@ -201,16 +194,34 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_attr_setdetachstate( pat, s )   pthread_attr_setdetachstate( (pat), (s) )
 #define hthread_attr_destroy( pat )             pthread_attr_destroy( pat )
 
-#define hthread_create( pt, pa, fn, ar, nm )    pthread_create( (pt), (pa), (fn), (ar) )
-#define hthread_detach( tid )                   pthread_detach( tid )
-#define hthread_join( tid, prc )                pthread_join( (tid), (prc) )
-#define hthread_kill( tid, sig )                pthread_kill( (tid), (sig) )
+#define hthread_create( pt, pa, fn, ar, nm )    pthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
+#define hthread_detach( tid )                   pthread_detach( (hthread_t)tid )
+#define hthread_join( tid, prc )                pthread_join( (hthread_t)(tid), (prc) )
+#define hthread_kill( tid, sig )                pthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      pthread_exit( rc )
 #define hthread_self()                          pthread_self()
-#define hthread_equal( tid1, tid2 )             pthread_equal( (tid1), (tid2) )
+#define hthread_equal( tid1, tid2 )             pthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
 #define hthread_get_handle( tid )               NULL
 
 #endif /* !defined( OPTION_FTHREADS ) */
+
+/*-------------------------------------------------------------------*/
+/*       Hercules threading macros, consts and typedefs              */
+/*-------------------------------------------------------------------*/
+#define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
+typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
+typedef hthread_t   HID;                /* Hercules thread-id type   */
+typedef U64         TID;                /* Generic thread-id type    */
+#define TIDPAT      "%lld"              /* TID printf pattern        */
+#if !defined(EOWNERDEAD)
+  /* PROGRAMMING NOTE: we use a purposely large value to try and
+     prevent collision with any existing threading return value.     */
+  #define EOWNERDEAD        32768       /* Owner has died            */
+  #define ENOTRECOVERABLE   32769       /* State not recoverable     */
+  #undef  FEAT_ROBUST_MUTEX             /* Robust mutex NOT supported*/
+#else
+  #define FEAT_ROBUST_MUTEX             /* Robust mutex ARE supported*/
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

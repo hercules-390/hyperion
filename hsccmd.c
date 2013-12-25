@@ -3388,7 +3388,7 @@ BYTE c;
 
                     if ( tid == 0 ) continue; // the mask check should prevent this.
 
-                    curprio = getpriority(PRIO_PROCESS, tid );
+                    curprio = getpriority(PRIO_PROCESS, (id_t)tid );
 
                     if ( curprio == cpuprio ) continue;
 
@@ -3509,12 +3509,12 @@ BYTE c;
                 if ( tid == 0 )
                     break;
 
-                curprio = getpriority(PRIO_PROCESS, tid );
+                curprio = getpriority(PRIO_PROCESS, (id_t)tid );
 
                 if ( curprio == todprio )
                     break;
 
-                rc = setpriority( PRIO_PROCESS, tid, todprio );
+                rc = setpriority( PRIO_PROCESS, (id_t)tid, todprio );
                 if ( MLVL(VERBOSE) )
                 {
                     if ( rc == 0 )
@@ -3579,12 +3579,12 @@ BYTE c;
                 if ( tid[i] == 0 )
                     continue;
 
-                curprio = tid[i] == 0 ? 0: getpriority(PRIO_PROCESS, tid[i] );
+                curprio = tid[i] == 0 ? 0: getpriority(PRIO_PROCESS, (id_t)tid[i] );
 
                 if ( curprio == srvprio )
                     continue;
 
-                rc = setpriority( PRIO_PROCESS, tid[i], srvprio );
+                rc = setpriority( PRIO_PROCESS, (id_t)tid[i], srvprio );
                 if ( MLVL(VERBOSE) )
                 {
                     if ( rc == 0 )

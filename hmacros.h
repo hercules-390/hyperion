@@ -788,12 +788,6 @@ typedef int CMPFUNC(const void*, const void*);
   #define  SET_THREAD_NAME(n)
 #endif
 
-#if defined(HAVE_SYS_SYSCALL_H) && !defined(HAVE_GETTID)
-  #include <sys/syscall.h>
-  #define  gettid()         ((pid_t)(syscall(SYS_gettid)))
-  #define  USE_GETTID
-#endif
-
 #if !defined(NO_SETUID)
 
 /* SETMODE(INIT)
