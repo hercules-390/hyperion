@@ -55,7 +55,7 @@ int     i;                              /* Array subscript           */
     if (dev->fd >= 0)
     {
         (dev->hnd->close)(dev);
-    
+
         release_lock (&dev->lock);
         device_attention (dev, CSW_DE);
         obtain_lock (&dev->lock);
@@ -130,8 +130,16 @@ int     i;                              /* Array subscript           */
 
     /* Initialize the device identifier bytes */
     dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
-    dev->devid[2] = 0x21;
+    if (0x3525 == dev->devtype)
+    {
+        dev->devid[1] = 0x35;
+        dev->devid[2] = 0x05;
+    }
+    else
+    {
+        dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
+        dev->devid[2] = 0x21;
+    }
     dev->devid[3] = 0x01;
     dev->devid[4] = dev->devtype >> 8;
     dev->devid[5] = dev->devtype & 0xFF;

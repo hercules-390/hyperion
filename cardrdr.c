@@ -354,8 +354,16 @@ int     attn = 0;
     /* Initialize the device identifier bytes */
 
     dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
-    dev->devid[2] = 0x21;
+    if (0x3505 == dev->devtype || 0x2501 == dev->devtype)
+    {
+        dev->devid[1] = dev->devtype >> 8;
+        dev->devid[2] = dev->devtype;
+    }
+    else                              /* 2540 and unknown            */
+    {
+        dev->devid[1] = 0x28;         /* Control unit type is 2821-1 */
+        dev->devid[2] = 0x21;
+    }
     dev->devid[3] = 0x01;
     dev->devid[4] = dev->devtype >> 8;
     dev->devid[5] = dev->devtype & 0xFF;
