@@ -14,6 +14,7 @@ Makefile
 Makefile.in
 autogen.log
 config.log
+autoconf/compile
 /aclocal.m4
 /autom4te.cache
 /cckd2ckd

@@ -19,7 +19,7 @@ rm -f autogen.log
 
 echo $ECHO_N "aclocal...    $ECHO_C" && aclocal -I m4 -I autoconf >>./autogen.log 2>&1 && echo "OK.  (25% done)" &&
 echo $ECHO_N "autoheader... $ECHO_C" && autoheader                >>./autogen.log 2>&1 && echo "OK.  (50% done)" &&
-echo $ECHO_N "automake...   $ECHO_C" && automake                  >>./autogen.log 2>&1 && echo "OK.  (75% done)" &&
+echo $ECHO_N "automake...   $ECHO_C" && automake --add-missing    >>./autogen.log 2>&1 && echo "OK.  (75% done)" &&
 echo $ECHO_N "autoconf...   $ECHO_C" && autoconf                  >>./autogen.log 2>&1 && echo "OK.  (100% done)"
 
 R=$?
