@@ -41,7 +41,7 @@ static const char *build_info[] = {
 #if defined(_MSVC_)
     "Windows MSVC "
 #else
-    "*nix "
+    "*Nix "
 #endif
     QSTR_HOST_ARCH
     " "
