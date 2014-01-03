@@ -2161,10 +2161,10 @@ adjust_thread_priority (int *newprio)
 
 #if 0 // BHe: Design must be different than current
     /* Set device thread priority; ignore any errors */
-    if(setpriority(PRIO_PROCESS, 0, *newprio))
-       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    if(set_thread_priority(0, *newprio))
+       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
 #else
-    setpriority(PRIO_PROCESS, 0, *newprio);
+    set_thread_priority(0, *newprio);
 #endif
 
     /* Back to user mode */
@@ -2244,7 +2244,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
 
     UNREFERENCED(arg);
 
-    current_priority = getpriority(PRIO_PROCESS, 0);
+    current_priority = get_thread_priority(0);
     if (current_priority != sysblk.devprio)
     {
         adjust_thread_priority(&sysblk.devprio);

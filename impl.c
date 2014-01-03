@@ -214,8 +214,8 @@ int i;
        inoperable cpu */
     if(sysblk.cpuprio >= 0)
     {
-        if(setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1))
-        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+        if(set_thread_priority(0, sysblk.cpuprio+1))
+            WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
     }
 
     for (i = 0; i < sysblk.maxcpu; i ++) savecount[i] = -1;
@@ -1179,7 +1179,7 @@ int     dll_count;                      /* index into array          */
     fflush(stdout);
     usleep(10000);
     return 0;
-} /* end function main */
+} /* end function impl */
 
 
 /*-------------------------------------------------------------------*/

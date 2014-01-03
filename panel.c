@@ -2053,8 +2053,11 @@ char    buf[1024];                      /* Buffer workarea            */
 
     SET_THREAD_NAME("panel_display");
 
+    if(set_thread_priority(0,0))  /* (don't actually change priority) */
+       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
+
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Control panel");
 
     hdl_adsc("panel_cleanup",panel_cleanup, NULL);
 
@@ -3708,7 +3711,7 @@ FinishShutdown:
 
     sysblk.panel_init = 0;
 
-    WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Control panel");
+    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Control panel");
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

@@ -522,7 +522,7 @@ static void* hao_thread(void* dummy)
     return NULL;
   }
 
-  WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), "Hercules Automatic Operator");
 
   /* Wait for panel thread to engage */
   /* Do until shutdown */
@@ -561,7 +561,7 @@ static void* hao_thread(void* dummy)
     }
   }
 
-  WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Hercules Automatic Operator");
+  WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "Hercules Automatic Operator");
   return NULL;
 }
 

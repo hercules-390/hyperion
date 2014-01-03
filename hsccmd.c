@@ -3388,11 +3388,11 @@ BYTE c;
 
                     if ( tid == 0 ) continue; // the mask check should prevent this.
 
-                    curprio = getpriority(PRIO_PROCESS, (id_t)tid );
+                    curprio = get_thread_priority( tid );
 
                     if ( curprio == cpuprio ) continue;
 
-                    rc = setpriority( PRIO_PROCESS, tid, cpuprio );
+                    rc = set_thread_priority( tid, cpuprio );
                     if ( MLVL(VERBOSE) )
                     {
                         MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( i ), i );
@@ -3400,7 +3400,7 @@ BYTE c;
                         if ( rc == 0 )
                             WRMSG( HHC00103, "I", tid, cpustr, curprio, cpuprio );
                         else
-                            WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                            WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                     }
                 }
             }
@@ -3509,18 +3509,18 @@ BYTE c;
                 if ( tid == 0 )
                     break;
 
-                curprio = getpriority(PRIO_PROCESS, (id_t)tid );
+                curprio = get_thread_priority( tid );
 
                 if ( curprio == todprio )
                     break;
 
-                rc = setpriority( PRIO_PROCESS, (id_t)tid, todprio );
+                rc = set_thread_priority( tid, todprio );
                 if ( MLVL(VERBOSE) )
                 {
                     if ( rc == 0 )
                         WRMSG( HHC00103, "I", tid, "Timer", curprio, todprio );
                     else
-                        WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                        WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                 }
                 break;
             }
@@ -3579,18 +3579,18 @@ BYTE c;
                 if ( tid[i] == 0 )
                     continue;
 
-                curprio = tid[i] == 0 ? 0: getpriority(PRIO_PROCESS, (id_t)tid[i] );
+                curprio = tid[i] == 0 ? 0 : get_thread_priority( tid[i] );
 
                 if ( curprio == srvprio )
                     continue;
 
-                rc = setpriority( PRIO_PROCESS, (id_t)tid[i], srvprio );
+                rc = set_thread_priority( tid[i], srvprio );
                 if ( MLVL(VERBOSE) )
                 {
                     if ( rc == 0 )
                         WRMSG( HHC00103, "I", tid[i], tname[i], curprio, srvprio );
                     else
-                        WRMSG( HHC00136, "W", "setpriority()", strerror(errno));
+                        WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                 }
             }
 

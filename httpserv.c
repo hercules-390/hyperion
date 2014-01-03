@@ -811,14 +811,14 @@ struct timeval      timeout;            /* timeout value             */
     SETMODE(ROOT);
 
     /* Set server thread priority; ignore any errors */
-    if(setpriority(PRIO_PROCESS, 0, sysblk.srvprio))
-       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    if(set_thread_priority(0, sysblk.srvprio))
+       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "HTTP server");
 
     /* make sure root path is built */
     if ( http_root() == NULL )
@@ -938,7 +938,7 @@ http_server_stop:
         hdl_rmsc(http_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "HTTP server");
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "HTTP server");
 
     sysblk.httptid = 0;
 

@@ -823,14 +823,21 @@ static DWORD  __stdcall  FTWin32ThreadFunc
 DLL_EXPORT
 HANDLE fthread_get_handle
 (
-    fthread_t       pdwThreadID             // Thread ID
+    fthread_t       dwThreadID             // Thread ID
 )
 {    
     FTHREAD*      pFTHREAD = NULL;          // Local pointer storage
 
-    if ( pdwThreadID != 0 )
+    if ( dwThreadID != 0 )
     {
-        pFTHREAD = FindFTHREAD( pdwThreadID );
+        // If request is for current thread then it's easy
+
+        if (GetCurrentThreadId() == dwThreadID)
+            return GetCurrentThread();
+
+        // Otherwise we need to look in our list
+
+        pFTHREAD = FindFTHREAD( dwThreadID );
     }
 
     if ( pFTHREAD != NULL )
@@ -1244,11 +1251,11 @@ fthread_t  fthread_self ()
 DLL_EXPORT
 int  fthread_equal
 (
-    fthread_t  pdwThreadID_1,
-    fthread_t  pdwThreadID_2
+    fthread_t  dwThreadID_1,
+    fthread_t  dwThreadID_2
 )
 {
-    return ( pdwThreadID_1 == pdwThreadID_2 );
+    return ( dwThreadID_1 == dwThreadID_2 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1749,6 +1756,117 @@ int fthread_mutexattr_settype
         return RC(EINVAL);
     *pFT_MUTEX_ATTR = (DWORD) nMutexType;
     return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// Thread Execution Scheduling...
+
+static int  fthread_min_pri  =  -20;    // (same as Herc)
+static int  fthread_max_pri  =  +20;    // (same as Herc)
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT int fthread_get_min_prio( int policy )
+{
+    if (FTHREAD_SCHED_POLICY != policy)
+        return RC(ENOTSUP);
+    return fthread_min_pri;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT int fthread_get_max_prio( int policy )
+{
+    if (FTHREAD_SCHED_POLICY != policy)
+        return RC(ENOTSUP);
+    return fthread_max_pri;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// (HELPER): Convert Windows priority to Fthread priority
+
+static int W2FPriority( int nPriority )
+{
+    switch (nPriority)
+    {
+        case    THREAD_PRIORITY_TIME_CRITICAL:  return -20;
+        case    THREAD_PRIORITY_HIGHEST:        return -15;
+        case    THREAD_PRIORITY_ABOVE_NORMAL:   return  -8;
+        default:                                       
+        case    THREAD_PRIORITY_NORMAL:         return   0;
+        case    THREAD_PRIORITY_BELOW_NORMAL:   return   8;
+        case    THREAD_PRIORITY_LOWEST:         return  15;
+        case    THREAD_PRIORITY_IDLE:           return  20;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// (HELPER): Convert Fthread priority to Windows priority
+
+static int F2WPriority( int nPriority )
+{
+    if      (nPriority < -15) return THREAD_PRIORITY_TIME_CRITICAL;
+    else if (nPriority <  -8) return THREAD_PRIORITY_HIGHEST;
+    else if (nPriority <   0) return THREAD_PRIORITY_ABOVE_NORMAL;
+    else if (nPriority <   8) return THREAD_PRIORITY_NORMAL;
+    else if (nPriority <  15) return THREAD_PRIORITY_BELOW_NORMAL;
+    else if (nPriority <  20) return THREAD_PRIORITY_LOWEST;
+    else                      return THREAD_PRIORITY_IDLE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT int fthread_getschedparam( fthread_t dwThreadID, int* pnPolicy, struct sched_param* pSCHPARM )
+{
+    HANDLE  hThread;
+    int     nPriority;
+
+    if (0
+        || !pnPolicy
+        || !pSCHPARM
+        || !(hThread = fthread_get_handle( dwThreadID ))
+        || THREAD_PRIORITY_ERROR_RETURN == (nPriority = GetThreadPriority( hThread ))
+    )
+        return RC(EINVAL);
+
+    *pnPolicy = FTHREAD_SCHED_POLICY;
+    pSCHPARM->sched_priority = W2FPriority( nPriority );
+
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT int fthread_setschedparam( fthread_t dwThreadID, int nPolicy, const struct sched_param* pSCHPARM )
+{
+    HANDLE  hThread;
+
+    if (nPolicy != FTHREAD_SCHED_POLICY)
+        return RC(ENOTSUP);
+
+    if (0
+        || !pSCHPARM
+        ||  pSCHPARM->sched_priority < fthread_min_pri
+        ||  pSCHPARM->sched_priority > fthread_max_pri
+        || !(hThread = fthread_get_handle( dwThreadID ))
+        || !SetThreadPriority( hThread, F2WPriority( pSCHPARM->sched_priority ))
+    )
+        return RC(EINVAL);
+
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT int fthread_setschedprio( fthread_t dwThreadID, int nPriority )
+{
+    int rc;
+    struct sched_param param;
+    param.sched_priority = nPriority;
+    rc = fthread_setschedparam( dwThreadID, FTHREAD_SCHED_POLICY, &param );
+    return rc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

@@ -80,6 +80,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #if !defined(_MSVC_)
+  #include <sched.h>
   #include <sys/time.h>
   #include <sys/ioctl.h>
   #include <sys/mman.h>
@@ -193,9 +194,6 @@
 #endif
 #ifdef HAVE_REGEX_H
   #include <regex.h>
-#endif
-#ifdef HAVE_SCHED_H
-  #include <sched.h>
 #endif
 #ifdef HAVE_SIGNAL_H
   #include <signal.h>

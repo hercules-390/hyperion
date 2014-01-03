@@ -1231,14 +1231,14 @@ static void *commadpt_thread(void *vca)
     SETMODE(ROOT);
 
     /* Set server thread priority; ignore any errors */
-    if(setpriority(PRIO_PROCESS, 0, sysblk.srvprio))
-       WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    if(set_thread_priority(0, sysblk.srvprio))
+       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
-    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
 
@@ -1915,7 +1915,7 @@ static void *commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

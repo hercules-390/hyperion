@@ -167,7 +167,7 @@ endif
   noinst_LTLIBRARIES = $(HERCLIBS)
   lib_LTLIBRARIES = $(HERCLIBS2)
 
-# The following causes the dyanmic modules to not even get built
+# The following causes the dynamic modules to not even get built
 # unless support for building dynamic modules exists on the build system
 
 bin_PROGRAMS = hercules \

@@ -1238,15 +1238,15 @@ int   rc;
     SETMODE(ROOT);
 
     /* Set CPU thread priority */
-    if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+    if (set_thread_priority(0, sysblk.cpuprio))
+        WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
     MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), cpustr);
+    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), cpustr);
     SET_THREAD_NAME_ID(-1, cpustr);
 
     /* Execute the program in specified mode */
@@ -1271,7 +1271,7 @@ int   rc;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRMSG(HHC00101, "I", (u_long)thread_id(),  getpriority(PRIO_PROCESS,0), cpustr);
+    WRMSG(HHC00101, "I", thread_id(),  get_thread_priority(0), cpustr);
 
     RELEASE_INTLOCK(NULL);
 

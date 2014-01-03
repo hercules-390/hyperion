@@ -1563,7 +1563,7 @@ void* get_stape_status_thread( void* notused )
 
     UNREFERENCED(notused);
     MSGBUF( buf, "SCSI-TAPE status monitor");
-    WRMSG( HHC00100, "I", (u_long)thread_id(), getpriority( PRIO_PROCESS, 0 ), buf );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), buf );
 
     // PROGRAMMING NOTE: it is EXTREMELY IMPORTANT that the status-
     // retrieval thread (i.e. ourselves) be set to a priority that
@@ -1591,8 +1591,8 @@ void* get_stape_status_thread( void* notused )
 
     SETMODE( ROOT );
     {
-        if (setpriority( PRIO_PROCESS, 0, (sysblk.devprio - 10) ))
-            WRMSG( HHC00136, "W", "setpriority()", strerror( errno ));
+        if (set_thread_priority( 0, (sysblk.devprio - 10) ))
+            WRMSG( HHC00136, "W", "set_thread_priority()", strerror( errno ));
     }
     SETMODE( USER );
 
@@ -1687,7 +1687,7 @@ void* get_stape_status_thread( void* notused )
         InitializeListLink( pListEntry );
     }
 
-    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), buf);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), buf);
 
     sysblk.stape_getstat_busy = 0;
     sysblk.stape_getstat_tid = 0;
@@ -1978,7 +1978,7 @@ void *scsi_tapemountmon_thread( void *notused )
 
     UNREFERENCED(notused);
     MSGBUF( buf, "SCSI-TAPE mount monitor");
-    WRMSG( HHC00100, "I", (u_long)thread_id(), getpriority( PRIO_PROCESS, 0 ), buf );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), buf );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -2120,7 +2120,7 @@ void *scsi_tapemountmon_thread( void *notused )
         }
     }
 
-    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), buf);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), buf);
 
     sysblk.stape_mountmon_tid = 0;  // (we're going away)
     release_lock( &sysblk.stape_lock );

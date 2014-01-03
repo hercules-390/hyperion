@@ -200,14 +200,14 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     SETMODE(ROOT);
 
     /* Set timer thread priority */
-    if (setpriority(PRIO_PROCESS, 0, sysblk.todprio))
-        WRMSG (HHC00136, "W", "setpriority()", strerror(errno));
+    if (set_thread_priority(0, sysblk.todprio))
+        WRMSG (HHC00136, "W", "set_thread_priority()", strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Timer");
     SET_THREAD_NAME_ID(-1, "CPU Timer");
 
 #ifdef OPTION_MIPS_COUNTING
@@ -304,7 +304,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     } /* end while */
 
-    WRMSG (HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Timer");
+    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Timer");
 
     sysblk.todtid = 0;
 
@@ -362,7 +362,7 @@ int numcap = 1;              /* Number of CPU's being capped         */
     hdl_adsc("capping_manager_shutdown",capping_manager_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    WRMSG(HHC00100, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), "Capping manager");
 
     /* Initialize interrupt wait locks */
     for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
@@ -462,6 +462,6 @@ int numcap = 1;              /* Number of CPU's being capped         */
 
     sysblk.captid = 0;
 
-    WRMSG(HHC00101, "I", (u_long)thread_id(), getpriority(PRIO_PROCESS,0), "Capping manager");
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "Capping manager");
     return(NULL);
 }

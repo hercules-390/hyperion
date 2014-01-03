@@ -953,7 +953,7 @@ int rc;
     SETMODE(ROOT);
 
     /* Set Hercules base priority */
-    rc = setpriority(PRIO_PGRP, 0, (sysblk.hercprio = prio));
+    rc = setpriority(PRIO_PROCESS, 0, (sysblk.hercprio = prio));
 
     /* Back to user mode */
     SETMODE(USER);
@@ -976,8 +976,8 @@ int cpu;
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
         {
-            if(setpriority(PRIO_PROCESS, sysblk.cputid[cpu], prio))
-                WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+            if(set_thread_priority(sysblk.cputid[cpu], prio))
+                WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
         }
 
     SETMODE(USER);
@@ -1009,8 +1009,8 @@ int configure_tod_priority(int prio)
     SETMODE(ROOT);
 
     if(sysblk.todtid)
-        if(setpriority(PRIO_PROCESS, sysblk.todtid, prio))
-            WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
+        if(set_thread_priority(sysblk.todtid, prio))
+            WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
 
     SETMODE(USER);
 

@@ -137,13 +137,18 @@ typedef fthread_mutex_t         HLOCK;
 #define hthread_attr_destroy( pat )             fthread_attr_destroy( pat )
 
 #define hthread_create( pt, pa, fn, ar, nm )    fthread_create( (hthread_t*)(pt), (pa), (fn), (ar), (nm) )
-#define hthread_detach( tid )                   fthread_detach( (hthread_t)tid )
+#define hthread_detach( tid )                   fthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                fthread_join( (hthread_t)(tid), (prc) )
 #define hthread_kill( tid, sig )                fthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      fthread_exit( rc )
 #define hthread_self()                          fthread_self()
 #define hthread_equal( tid1, tid2 )             fthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
-#define hthread_get_handle( tid )               fthread_get_handle( (hthread_t)tid )
+#define hthread_get_handle( tid )               fthread_get_handle( (hthread_t)(tid) )
+/* Thread scheduling functions */
+#define hthread_getschedparam( tid, po, sc )    fthread_getschedparam( (hthread_t)(tid), (po), (sc) )
+#define hthread_setschedparam( tid, po, sc )    fthread_setschedparam( (hthread_t)(tid), (po), (sc) )
+#define hthread_sched_get_priority_min( po )    fthread_get_min_prio( po )
+#define hthread_sched_get_priority_max( po )    fthread_get_max_prio( po )
 
 #endif /* defined( OPTION_FTHREADS ) */
 
@@ -195,13 +200,18 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_attr_destroy( pat )             pthread_attr_destroy( pat )
 
 #define hthread_create( pt, pa, fn, ar, nm )    pthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
-#define hthread_detach( tid )                   pthread_detach( (hthread_t)tid )
+#define hthread_detach( tid )                   pthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                pthread_join( (hthread_t)(tid), (prc) )
 #define hthread_kill( tid, sig )                pthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      pthread_exit( rc )
 #define hthread_self()                          pthread_self()
 #define hthread_equal( tid1, tid2 )             pthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
 #define hthread_get_handle( tid )               NULL
+/* Thread scheduling functions */
+#define hthread_getschedparam( tid, po, sc )    pthread_getschedparam( (hthread_t)(tid), (po), (sc) )
+#define hthread_setschedparam( tid, po, sc )    pthread_setschedparam( (hthread_t)(tid), (po), (sc) )
+#define hthread_sched_get_priority_min( po )    sched_get_priority_min( po )
+#define hthread_sched_get_priority_max( po )    sched_get_priority_max( po )
 
 #endif /* !defined( OPTION_FTHREADS ) */
 
@@ -210,9 +220,13 @@ typedef pthread_rwlock_t        HRWLOCK;
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
-typedef hthread_t   HID;                /* Hercules thread-id type   */
-typedef U64         TID;                /* Generic thread-id type    */
-#define TIDPAT      "%lld"              /* TID printf pattern        */
+typedef hthread_t           HID;        /* Hercules thread-id type   */
+typedef U64                 TID;        /* Generic thread-id type    */
+#if defined(_MSVC_)
+  #define TIDPAT            "%lld"      /* TID printf pattern        */
+#else
+  #define TIDPAT            "%llx"      /* TID printf pattern        */
+#endif
 #if !defined(EOWNERDEAD)
   /* PROGRAMMING NOTE: we use a purposely large value to try and
      prevent collision with any existing threading return value.     */
@@ -222,6 +236,9 @@ typedef U64         TID;                /* Generic thread-id type    */
 #else
   #define FEAT_ROBUST_MUTEX             /* Robust mutex ARE supported*/
 #endif
+#define HTHREAD_SCHED_DEF   SCHED_RR    /* Default scheduling policy */
+#define HTHREAD_MIN_PRI     (+20)       /* (as in *nix "nice" value) */
+#define HTHREAD_MAX_PRI     (-20)       /* (as in *nix "nice" value) */
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */
@@ -276,10 +293,11 @@ HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char
 HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
-
 #if defined(_MSVC_)
 HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
 #endif
+HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio );
+HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid );
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
@@ -317,10 +335,11 @@ HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
 #define thread_id()                             hthread_thread_id( PTT_LOC )
 #define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )
-
 #if defined(_MSVC_)
 #define win_thread_handle( tid )                hthread_win_thread_handle( tid )
 #endif
+#define set_thread_priority( tid, prio )        hthread_set_thread_prio( (tid), (prio) )
+#define get_thread_priority( tid )              hthread_get_thread_prio( tid )
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */

@@ -1055,7 +1055,7 @@ static void *script_thread( void *arg )
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' started"
     WRMSG( HHC00100, "I", (u_long) tid,
-        getpriority( PRIO_PROCESS, 0 ), SCRTHREADNAME );
+        get_thread_priority(0), SCRTHREADNAME );
 #endif
 
     /* Retrieve our control entry */
@@ -1080,7 +1080,7 @@ static void *script_thread( void *arg )
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' ended"
     WRMSG( HHC00101, "I", (u_long) tid,
-        getpriority( PRIO_PROCESS, 0 ), SCRTHREADNAME );
+        get_thread_priority(0), SCRTHREADNAME );
 #endif
 
     return NULL;

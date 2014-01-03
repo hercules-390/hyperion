@@ -81,7 +81,7 @@ static void* ptt_timeout( void* arg )
     UNREFERENCED( arg );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", (u_long)hthread_self(), getpriority(PRIO_PROCESS,0),"PTT timeout timer");
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0),"PTT timeout timer");
 
     hthread_mutex_lock( &ptttolock );
 
@@ -92,7 +92,7 @@ static void* ptt_timeout( void* arg )
     hthread_cond_timedwait( &ptttocond, &ptttolock, &tm );
 
     /* Print the trace table automatically */
-    if (hthread_equal( hthread_self(), ptttotid ))
+    if (hthread_equal( thread_id(), ptttotid ))
     {
         ptt_pthread_print();
         pttto = 0;
@@ -102,7 +102,7 @@ static void* ptt_timeout( void* arg )
     hthread_mutex_unlock( &ptttolock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", (u_long) hthread_self(), getpriority( PRIO_PROCESS, 0 ), "PTT timeout timer");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "PTT timeout timer");
 
     return NULL;
 }
@@ -419,7 +419,7 @@ int i, n;
         else
             gettimeofday( &pttrace[i].tv, NULL );
     }
-    pttrace[i].tid     = hthread_self();
+    pttrace[i].tid     = thread_id();
     pttrace[i].trclass = trclass;
     pttrace[i].msg     = msg;
     pttrace[i].data1   = data1;
