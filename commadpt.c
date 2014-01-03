@@ -2667,7 +2667,7 @@ U32 num;                        /* Work : Actual CCW transfer count             
 BYTE    b;                      /* Input processing work variable : Current character */
 BYTE    setux;                  /* EOT kludge */
 BYTE    turnxpar;               /* Write contains turn to transparent mode */
-u_int   i;                      /* work */
+int     i;                      /* work */
 u_int   j;                      /* work */
 BYTE    gotdle;                 /* Write routine DLE marker */
 BYTE    b1, b2;                 /* 2741 overstrike rewriting */
@@ -3346,7 +3346,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
                 }
 
                 /* Scan the I/O buffer */
-                for(i=0;i<count;i++)
+                for(i=0;(U32)i<count;i++)
                 {
                     /* Get 1 byte */
                     b=iobuf[i];
