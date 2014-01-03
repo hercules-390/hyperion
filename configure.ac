@@ -1260,6 +1260,50 @@ else
     hc_cv_pp_macro_arg_counting_broke=no
 fi
 
+#------------------------------------------------------#
+#  Test for GCC strict aliasing insanity               #
+#------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [for gcc strict aliasing insanity],
+
+        [hc_cv_gcc_strict_aliasing_insanity],
+        [
+            hc_temp=$CFLAGS
+            CFLAGS="-O3 -fstrict-aliasing"
+
+            AC_TRY_RUN(
+                [
+                    #include <stdio.h>
+                    #include <stdlib.h>
+
+                    #ifdef WORDS_BIGENDIAN
+                    #define I 1
+                    #else
+                    #define I 0
+                    #endif
+
+                    int main()
+                    {
+                        unsigned long a;
+                        a = 111;
+                        *((unsigned short*)&a + I) = 222;
+                        return (a == 222 ? 0 : 1);
+                    }
+                ],
+                [hc_cv_gcc_strict_aliasing_insanity=no],
+                [hc_cv_gcc_strict_aliasing_insanity=yes],
+                [hc_cv_gcc_strict_aliasing_insanity=yes]
+            )
+
+            CFLAGS=$hc_temp
+        ]
+    )
+else
+    hc_cv_gcc_strict_aliasing_insanity=no
+fi
+
 #------------------------------------------------------------#
 #  Check if traditional preprocessor is the K&R C type...    #
 #------------------------------------------------------------#
@@ -1956,7 +2000,7 @@ AC_MSG_CHECKING( [for what optimization flags to use] )
 
     hc_cv_optimization_flags=""
 
-if test "$hc_cv_opt_debug" = "yes"; then
+if test "$GCC" = "yes"; then
 
     # Note: the -g option we start with below will be removed if they specified
     # their own optimization flags via "--enable-optimization=(flags)", but will
@@ -2079,6 +2123,10 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         else
             hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-omit-frame-pointer"
         fi
+    fi
+
+    if test "$hc_cv_gcc_strict_aliasing_insanity" = "yes"; then
+      hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-strict-aliasing"
     fi
 fi
 
