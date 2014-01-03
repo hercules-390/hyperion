@@ -3744,7 +3744,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #endif /*OPTION_CKD_KEY_TRACING*/
 
         /* Set flag if entire key was equal for SEARCH KEY EQUAL */
-        if (rc == 0 && num == dev->ckdcurkl && (code & 0x7F) == 0x29)
+        if (rc == 0 && num == (U32)dev->ckdcurkl && (code & 0x7F) == 0x29)
             dev->ckdkyeq = 1;
         else
             dev->ckdkyeq = 0;
@@ -4328,7 +4328,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Write end of track marker */
-        rc = ckd_erase (dev, iobuf, count, &size, unitstat);
+        rc = ckd_erase (dev, iobuf, count, (int*)&size, unitstat);
         if (rc < 0) break;
 
         /* Calculate number of bytes used and set residual count */

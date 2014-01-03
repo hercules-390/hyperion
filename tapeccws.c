@@ -432,6 +432,8 @@ U32     num;     /*(see NOTE below)*/   /* Number of bytes to read   */
 int     drc;                            /* code disposition          */
 BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
+    UNREFERENCED( ccwseq );
+
     /* PROGRAMMING NOTE: len, num, count, *residual and *more are
        used and updated automatically by the RESIDUAL_CALC macro */
 
@@ -716,7 +718,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
         /* Read a block from the tape according to device type */
         /* Exit with unit check status if read error condition */
-        if ((len = dev->tmh->read( dev, dev->buf, unitstat, code)) < 0)
+        if ((S32)(len = dev->tmh->read( dev, dev->buf, unitstat, code)) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
@@ -916,7 +918,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
            we just backspaced over, and exit with unit check status
            on any read error condition
         */
-        if ((len = dev->tmh->read( dev, dev->buf, unitstat, code )) < 0)
+        if ((S32)(len = dev->tmh->read( dev, dev->buf, unitstat, code )) < 0)
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */

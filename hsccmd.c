@@ -6890,7 +6890,7 @@ REGS *regs;
 
         written = write( fd, regs->mainstor + aaddr, chunk );
 
-        if (written < 0)
+        if ((S32)written < 0)
         {
             // "Error in function %s: %s"
             WRMSG(HHC02219, "E", "write()", strerror(errno) );

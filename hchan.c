@@ -134,8 +134,8 @@ static int hchan_close_device ( DEVBLK *dev )
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void hchan_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
-        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
+        BYTE chained, U32 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
 
     UNREFERENCED(flags);

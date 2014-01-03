@@ -581,7 +581,7 @@ struct TAPE_BLOCKS *load_text_file(char *infile,char recfm,int *recl,int *recc,s
     }
 
     recs=initrecs(recfm,*recl,plcd_hdr,5);
-    while((rec=fgets(bfr,sizeof(bfr),ifile))!=NULL)
+    while((rec=fgets((char*)bfr,sizeof(bfr),ifile))!=NULL)
     {
         rsz=(int)strlen(rec)-1;
         if(recfm=='F')
@@ -921,7 +921,7 @@ int process_procfile(struct options *opts)
         perror(opts->procfile);
         return 1;
     }
-    while((rec=fgets(bfr,sizeof(bfr),pfile))!=NULL)
+    while((rec=fgets((char*)bfr,sizeof(bfr),pfile))!=NULL)
     {
         recno++;
         rec[strlen(rec)-1]=0;
