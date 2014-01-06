@@ -195,7 +195,7 @@ static void logger_term(void *arg)
         }
 
         if ( fwrite("\n",1,1,stderr) ) {
-            perror("logger.c" "(" "202" ") : " "fwrite failure/HHC02102 ");
+            perror(QLINE "fwrite failure/HHC02102 ");
             }
         /* Read and display any msgs still remaining in the system log */
         lmsnum = log_line(-1);
@@ -227,16 +227,16 @@ static void logger_term(void *arg)
                 if (nLeft)
                 {
                     if ( fwrite(pLeft,nLeft,1,stderr) ) {
-                        perror("logger.c" "(" "202" ") : " "fwrite failure/HHC02102 ");
+                        perror(QLINE "fwrite failure/HHC02102 ");
                         }
                     if ( fwrite("\n",1,1,stderr) ) {
-                        perror("logger.c" "(" "202" ") : " "fwrite failure/HHC02102 ");
+                        perror(QLINE "fwrite failure/HHC02102 ");
             }
                 }
             }
         }
         if ( fwrite( term_msg, strlen(term_msg), 1, stderr ) ) {
-            perror("logger.c" "(" "202" ") : " "fwrite failure/HHC02102 ");
+            perror(QLINE "fwrite failure/HHC02102 ");
             }
 
         fflush(stderr);
@@ -388,7 +388,7 @@ int bytes_read;
                 /* (ignore any errors; we did the best we could) */
                 if (nLeft2) {
         if ( fwrite( pLeft2, nLeft2, 1, stderr ) ) {
-            perror("logger.c" "(" "202" ") : " "fwrite failure/HHC02102 ");
+            perror(QLINE "fwrite failure/HHC02102 ");
             }
             }
             }
