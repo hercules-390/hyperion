@@ -194,7 +194,9 @@ static void logger_term(void *arg)
 
         }
 
-        fwrite("\n",1,1,stderr);
+        if ( fwrite("\n",1,1,stderr) ) {
+            perror("fwrite failure: logger.c 01 -- or: HHC02102 ");
+            }
         /* Read and display any msgs still remaining in the system log */
         lmsnum = log_line(-1);
         while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_BLOCK)))
@@ -224,13 +226,18 @@ static void logger_term(void *arg)
 #endif // defined( OPTION_MSGCLR )
                 if (nLeft)
                 {
-                    fwrite(pLeft,nLeft,1,stderr);
-                    fwrite("\n",1,1,stderr);
+                    if ( fwrite(pLeft,nLeft,1,stderr) ) {
+                        perror("fwrite failure: logger.c 02 -- or: HHC02102 ");
+                        }
+                    if ( fwrite("\n",1,1,stderr) ) {
+                        perror("fwrite failure: logger.c 03 -- or: HHC02102 ");
+            }
                 }
             }
         }
-
-        fwrite( term_msg, strlen(term_msg), 1, stderr );
+        if ( fwrite( term_msg, strlen(term_msg), 1, stderr ) ) {
+            perror("fwrite failure: logger.c 04 -- or: HHC02102 ");
+            }
 
         fflush(stderr);
     }
@@ -379,8 +386,11 @@ int bytes_read;
 
 #endif // defined( OPTION_MSGCLR )
                 /* (ignore any errors; we did the best we could) */
-                if (nLeft2)
-                    fwrite( pLeft2, nLeft2, 1, stderr );
+                if (nLeft2) {
+        if ( fwrite( pLeft2, nLeft2, 1, stderr ) ) {
+            perror("fwrite failure: logger.c 05 -- or: HHC02102 ");
+            }
+            }
             }
         }
 
