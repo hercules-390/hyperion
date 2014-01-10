@@ -25,9 +25,9 @@
 //  TunTap ioctl codes and Standard and TUNSETIFF ifr interface flags
 // ====================================================================
 
-#if defined(__APPLE__) | defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
   /* Why tun0 rather than the clone device /dev/tun? jph             */
-  #define  HERCTUN_DEV  "/dev/tun0"     // Default TUN/TAP char dev
+  #define  HERCTUN_DEV  "/dev/tun"     // Default TUN/TAP char dev
 #else
   #define  HERCTUN_DEV  "/dev/net/tun"  // Default TUN/TAP char dev
 #endif

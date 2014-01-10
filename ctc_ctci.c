@@ -999,7 +999,9 @@ static void*  CTCI_ReadThread( void* arg )
     BYTE     szBuff[2048];
 
     // ZZ FIXME: Try to avoid race condition at startup with hercifc
+#if defined(BUILD_HERCIFC)
     SLEEP(10);
+#endif
 
     pCTCBLK->pid = getpid();
 
@@ -1452,6 +1454,19 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             return -1;
         }
+
+#if defined(__APPLE__) || defined(__FreeBSD__)
+        if (TRUE == pCTCBLK->fPreconfigured)
+        {
+            /* Need  to append the interface number to the character */
+            /* device name to open the requested interface.          */
+
+            char * s = pCTCBLK->szTUNIfName + strlen(pCTCBLK->szTUNIfName);
+
+            while(isdigit(s[- 1])) s--;
+            strlcat( pCTCBLK->szTUNCharDevName,  s, sizeof(pCTCBLK->szTUNCharDevName) );
+        }
+#endif
     }
     else // if( pCTCBLK->fOldFormat )
     {
