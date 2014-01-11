@@ -1314,6 +1314,9 @@ int     i;                              /* Loop index                */
 
     release_lock(&sysblk.config);
 
+    if ( rc == 0 && MLVL(DEBUG) )
+        WRMSG(HHC02198, "I", dev->devnum, dev->devtype, dev->chanset, dev->subchan);
+
     return 0;
 } /* end function attach_device */
 

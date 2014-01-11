@@ -5678,8 +5678,6 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
     rc = parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
-    if ( rc == 0 && MLVL(DEBUG) )
-        WRMSG(HHC02198, "I");
 
     return rc;
 }
