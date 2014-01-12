@@ -1069,6 +1069,7 @@ do { \
 #define HHC01471 "Incorrect device address range %04X < %04X"
 #define HHC01472 "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
 #define HHC01473 "Some or all devices in %04X-%04X duplicate already defined devices"
+#define HHC02198 "Device %04X type %04X subchannel %d:%04X attached"
 
 /* codepage.c c */
 #define HHC01474 "Using %s codepage conversion table %s"
@@ -1279,7 +1280,7 @@ do { \
 #define HHC02106 "Logger: log switched off"
 
 #define HHC02197 "Symbol name %s is reserved"
-#define HHC02198 "Device attached"
+/* 2198 moved to config.c                                            */
 #define HHC02199 "Symbol %-12s %s"
 // reserve 022xx for command processing */
 #define HHC02200 "%1d:%04X device not found"

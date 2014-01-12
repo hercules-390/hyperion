@@ -2039,7 +2039,7 @@ device_reset (DEVBLK *dev)
     }
 #endif /* defined(FEATURE_VM_BLOCKIO) */
 
-    if (dev->hnd->halt!=NULL)
+    if (dev->hnd && dev->hnd->halt)
         dev->hnd->halt(dev);
 
     release_lock (&dev->lock);

@@ -16,6 +16,17 @@
 // that works on all platforms with (hopefully) equal results.
 //
 
+/* On  Linux  you  open  the character special file /dev/net/tun and */
+/* then select the particular tunnel by ioctl().                     */
+/*                                                                   */
+/* On  FreeBSD  and  OS/X you can open /dev/tun which will clone the */
+/* interface  and  give  you a file descriptor for /dev/tun<n> where */
+/* <n>   is  the  lowest  unused  interface.   For  a  preconfigured */
+/* interface  you  open  /dev/tun0  (or  which ever one you desire). */
+/* Thus  for  preconfigured FreeBSD interfaces we need to modify the */
+/* name of the character file being opened.                          */
+
+
 #include "hstdinc.h"
 
 /* jbs 1/19/2008 added ifdef on __SOLARIS__ */
