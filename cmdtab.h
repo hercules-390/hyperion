@@ -19,8 +19,8 @@
 //  -------------- (template for new commands) ----------------
 //
 //#define xxx_cmd_desc            "Short XXX description"
-//#define xxx_cmd_help            \
-//                                \
+//#define xxx_cmd_help            \n
+//                                \n
 //  "Much longer, more detailed xxx command description...\n"                     \
 //  "Use other commands as reference for typical formatting and wording.\n"       \
 //
