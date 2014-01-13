@@ -3372,9 +3372,6 @@ BYTE c;
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
 #if 0
-            /* Set root mode in order to set priority */
-            SETMODE(ROOT);
-
             for (i = 0; i < sysblk.maxcpu; i++)
             {
                 S32 curprio;
@@ -3399,14 +3396,9 @@ BYTE c;
 
                         if ( rc == 0 )
                             WRMSG( HHC00103, "I", tid, cpustr, curprio, cpuprio );
-                        else
-                            WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                     }
                 }
             }
-
-            /* Back to user mode */
-            SETMODE(USER);
 #endif
         }
     }
@@ -3497,9 +3489,6 @@ BYTE c;
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
 
 #if 0
-            /* Set root mode in order to set priority */
-            SETMODE(ROOT);
-
             for(;;)
             {
                 S32 curprio;
@@ -3519,14 +3508,9 @@ BYTE c;
                 {
                     if ( rc == 0 )
                         WRMSG( HHC00103, "I", tid, "Timer", curprio, todprio );
-                    else
-                        WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                 }
                 break;
             }
-
-            /* Back to user mode */
-            SETMODE(USER);
 #endif
         }
     }
@@ -3568,9 +3552,6 @@ BYTE c;
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
 #if 0
-            /* Set root mode in order to set priority */
-            SETMODE(ROOT);
-
             for ( i = 0; tname[i] != NULL; i++ )
             {
                 S32 curprio;
@@ -3589,13 +3570,8 @@ BYTE c;
                 {
                     if ( rc == 0 )
                         WRMSG( HHC00103, "I", tid[i], tname[i], curprio, srvprio );
-                    else
-                        WRMSG( HHC00136, "W", "set_thread_priority()", strerror(errno));
                 }
             }
-
-            /* Back to user mode */
-            SETMODE(USER);
 #endif
         }
     }

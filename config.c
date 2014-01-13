@@ -943,89 +943,42 @@ int rc;
 int configure_herc_priority(int prio)
 {
 int rc;
-
-#if !defined(NO_SETUID)
-    /* Cap the default priority at zero if setuid not available */
-    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
-#endif /*!defined(NO_SETUID)*/
-
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
-
     /* Set Hercules base priority */
     rc = setpriority(PRIO_PROCESS, 0, (sysblk.hercprio = prio));
-
     /* Back to user mode */
     SETMODE(USER);
-
     return rc;
 }
 
 int configure_cpu_priority(int prio)
 {
 int cpu;
-#if !defined(NO_SETUID)
-    /* Cap the default priority at zero if setuid not available */
-    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
-#endif /*!defined(NO_SETUID)*/
-
     sysblk.cpuprio = prio;
-
-    SETMODE(ROOT);
-
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
-        {
-            if(set_thread_priority(sysblk.cputid[cpu], prio))
-                WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-        }
-
-    SETMODE(USER);
-
+            set_thread_priority(sysblk.cputid[cpu], prio);
     return 0;
 }
 
 int configure_dev_priority(int prio)
 {
-#if !defined(NO_SETUID)
-    /* Cap the default priority at zero if setuid not available */
-    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
-#endif /*!defined(NO_SETUID)*/
-
     sysblk.devprio = prio;
-
     return 0;
 }
 
 int configure_tod_priority(int prio)
 {
-#if !defined(NO_SETUID)
-    /* Cap the default priority at zero if setuid not available */
-    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
-#endif /*!defined(NO_SETUID)*/
-
     sysblk.todprio = prio;
-
-    SETMODE(ROOT);
-
     if(sysblk.todtid)
-        if(set_thread_priority(sysblk.todtid, prio))
-            WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    SETMODE(USER);
-
+        set_thread_priority(sysblk.todtid, prio);
     return 0;
 }
 
 int configure_srv_priority(int prio)
 {
-#if !defined(NO_SETUID)
-    /* Cap the default priority at zero if setuid not available */
-    prio = (sysblk.suid && (prio < 0)) ? 0 : prio;
-#endif /*!defined(NO_SETUID)*/
-
     sysblk.srvprio = prio;
-
     return 0;
 }
 

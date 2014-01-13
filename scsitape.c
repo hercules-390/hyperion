@@ -1589,12 +1589,7 @@ void* get_stape_status_thread( void* notused )
     // set to the next higher slot). If this ever changes then the
     // below code will need to be adjusted appropriately. -- Fish
 
-    SETMODE( ROOT );
-    {
-        if (set_thread_priority( 0, (sysblk.devprio - 10) ))
-            WRMSG( HHC00136, "W", "set_thread_priority()", strerror( errno ));
-    }
-    SETMODE( USER );
+    set_thread_priority( 0, (sysblk.devprio - 10) );
 
     obtain_lock( &sysblk.stape_lock );
 

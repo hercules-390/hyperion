@@ -1234,15 +1234,9 @@ int   rc;
             return NULL;
         }
     }
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
 
     /* Set CPU thread priority */
-    if (set_thread_priority(0, sysblk.cpuprio))
-        WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
+    set_thread_priority(0, sysblk.cpuprio);
 
     /* Display thread started message on control panel */
     MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( cpu ), cpu );

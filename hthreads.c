@@ -927,7 +927,7 @@ static int host2herc( int host_pri )
 /*-------------------------------------------------------------------*/
 /* Change a thread's dispatching priority      (host function)       */
 /*-------------------------------------------------------------------*/
-static int  hthread_setschedprio( TID tid, int prio )
+static int  hthread_setschedprio( TID tid, int prio, const char* location )
 {
     int rc;
     struct sched_param param;
@@ -936,42 +936,58 @@ static int  hthread_setschedprio( TID tid, int prio )
         tid = thread_id();
     param.sched_priority = prio;
     rc = hthread_setschedparam( tid, herc_policy, &param );
+    if (rc != 0)
+        // "'%s' failed at loc=%s: rc=%d: %s"
+        WRMSG( HHC90020, "W", "set_thread_priority",
+            TRIMLOC( location ), rc, strerror( rc ));
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Change a thread's dispatching priority    (HTHREADS function)     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_set_thread_prio( TID tid, int prio )
+DLL_EXPORT int  hthread_set_thread_prio( TID tid, int prio, const char* location )
 {
     int host_prio, rc;
     host_prio = herc2host( prio );
-    rc = hthread_setschedprio( tid, host_prio );
+    SETMODE(ROOT);
+    rc = hthread_setschedprio( tid, host_prio, location );
+    SETMODE(USER);
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Retrieve a thread's dispatching priority     (host function)      */
 /*-------------------------------------------------------------------*/
-static int  hthread_getschedprio( TID tid )
+static int  hthread_getschedprio( TID tid, const char* location )
 {
-    int prio, dummy;
+    int rc, prio, dummy;
     struct sched_param  param;
     memset( &param, 0, sizeof( param ));
     if (equal_threads(tid,0))
         tid = thread_id();
-    prio = (hthread_getschedparam( tid, &dummy, &param ) == 0) ?
-        param.sched_priority : INT_MAX;
+    rc = hthread_getschedparam( tid, &dummy, &param );
+    if (rc == 0)
+        prio = param.sched_priority;
+    else
+    {
+        prio = INT_MAX;
+        // "'%s' failed at loc=%s: rc=%d: %s"
+        WRMSG( HHC90020, "W", "get_thread_priority",
+            TRIMLOC( location ), rc, strerror( rc ));
+    }
     return prio;
 }
 
 /*-------------------------------------------------------------------*/
 /* Retrieve a thread's dispatching priority   (HTHREADS function)    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_get_thread_prio( TID tid )
+DLL_EXPORT int  hthread_get_thread_prio( TID tid, const char* location )
 {
     int host_prio, herc_prio;
-    host_prio = hthread_getschedprio( tid );
+    SETMODE(ROOT);
+    host_prio = hthread_getschedprio( tid, location );
+    SETMODE(USER);
     if (INT_MAX == host_prio)
         return INT_MAX;
     herc_prio = host2herc( host_prio );

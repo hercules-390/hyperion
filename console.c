@@ -1925,15 +1925,8 @@ BYTE                   unitstat;        /* Status after receive data */
 
     UNREFERENCED(arg);
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
     /* Set server thread priority; ignore any errors */
-    if(set_thread_priority(0, sysblk.srvprio))
-       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
+    set_thread_priority(0, sysblk.srvprio);
 
     /* Display thread started message on control panel */
     WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), "Console connection");

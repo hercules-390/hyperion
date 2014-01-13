@@ -2014,6 +2014,7 @@ do { \
 #define HHC90017 "Lock=%s, tid="TIDPAT", tod=%s, loc=%s"
 #define HHC90018 "Total locks defined: %d"
 #define HHC90019 "No locks found for thread "TIDPAT"."
+#define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"

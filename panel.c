@@ -2053,8 +2053,7 @@ char    buf[1024];                      /* Buffer workarea            */
 
     SET_THREAD_NAME("panel_display");
 
-    if(set_thread_priority(0,0))  /* (don't actually change priority) */
-       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
+    set_thread_priority(0,0);     /* (don't actually change priority) */
 
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Control panel");

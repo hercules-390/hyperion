@@ -1227,15 +1227,8 @@ static void *commadpt_thread(void *vca)
 
     init_signaled=0;
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
     /* Set server thread priority; ignore any errors */
-    if(set_thread_priority(0, sysblk.srvprio))
-       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
+    set_thread_priority(0, sysblk.srvprio);
 
     MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
     WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), threadname);

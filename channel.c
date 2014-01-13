@@ -2168,28 +2168,6 @@ int i;
 
 
 /*-------------------------------------------------------------------*/
-/* Set a thread's priority to its proper value                       */
-/*-------------------------------------------------------------------*/
-static void
-adjust_thread_priority (int *newprio)
-{
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
-#if 0 // BHe: Design must be different than current
-    /* Set device thread priority; ignore any errors */
-    if(set_thread_priority(0, *newprio))
-       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-#else
-    set_thread_priority(0, *newprio);
-#endif
-
-    /* Back to user mode */
-    SETMODE(USER);
-}
-
-
-/*-------------------------------------------------------------------*/
 /* Create a device thread                                            */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
@@ -2264,7 +2242,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
     current_priority = get_thread_priority(0);
     if (current_priority != sysblk.devprio)
     {
-        adjust_thread_priority(&sysblk.devprio);
+        set_thread_priority(0, sysblk.devprio);
         current_priority = sysblk.devprio;
     }
 
@@ -2311,7 +2289,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
             /* have any Hercules locks held                          */
             if (dev->devprio != current_priority)
             {
-                adjust_thread_priority(&dev->devprio);
+                set_thread_priority(0, dev->devprio);
                 current_priority = dev->devprio;
             }
 
@@ -2321,7 +2299,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
             /* Reset priority back to device default priority */
             if (current_priority != sysblk.devprio)
             {
-                adjust_thread_priority(&sysblk.devprio);
+                set_thread_priority(0, sysblk.devprio);
                 current_priority = sysblk.devprio;
             }
 

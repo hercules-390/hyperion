@@ -295,15 +295,8 @@ int bytes_read;
 
     UNREFERENCED(arg);
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
     /* Set device thread priority; ignore any errors */
-    if(set_thread_priority(0, sysblk.devprio))
-       WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
+    set_thread_priority(0, sysblk.devprio);
 
 #if !defined( _MSVC_ )
     /* Redirect stdout to the logger */

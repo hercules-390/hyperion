@@ -296,8 +296,8 @@ HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const ch
 #if defined(_MSVC_)
 HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
 #endif
-HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio );
-HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid );
+HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio, const char* location );
+HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* location );
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
@@ -338,8 +338,8 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid );
 #if defined(_MSVC_)
 #define win_thread_handle( tid )                hthread_win_thread_handle( tid )
 #endif
-#define set_thread_priority( tid, prio )        hthread_set_thread_prio( (tid), (prio) )
-#define get_thread_priority( tid )              hthread_get_thread_prio( tid )
+#define set_thread_priority( tid, prio )        hthread_set_thread_prio( (tid), (prio), PTT_LOC )
+#define get_thread_priority( tid )              hthread_get_thread_prio( (tid), PTT_LOC )
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */

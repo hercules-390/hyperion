@@ -196,15 +196,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     UNREFERENCED(argp);
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
     /* Set timer thread priority */
-    if (set_thread_priority(0, sysblk.todprio))
-        WRMSG (HHC00136, "W", "set_thread_priority()", strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
+    set_thread_priority(0, sysblk.todprio);
 
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Timer");

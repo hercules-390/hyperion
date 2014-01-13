@@ -212,11 +212,9 @@ int i;
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an
        inoperable cpu */
+
     if(sysblk.cpuprio >= 0)
-    {
-        if(set_thread_priority(0, sysblk.cpuprio+1))
-            WRMSG(HHC00136, "W", "set_thread_priority()", strerror(errno));
-    }
+        set_thread_priority(0, sysblk.cpuprio+1);
 
     for (i = 0; i < sysblk.maxcpu; i ++) savecount[i] = -1;
 
