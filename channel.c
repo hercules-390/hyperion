@@ -888,6 +888,10 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     /* Find a device on specified channel */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
+        if (!IS_DEV(dev))
+            continue;
+
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan
          || (dev->pmcw.flag5 & PMCW5_V) == 0
@@ -956,6 +960,10 @@ int     cc = 0;                         /* Returned condition code   */
     /* Scan devices on the channel */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
+        if (!IS_DEV(dev))
+            continue;
+
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan
          || (dev->pmcw.flag5 & PMCW5_V) == 0
@@ -2061,6 +2069,10 @@ DEVBLK *dev;                            /* -> Device control block   */
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
+        if (!IS_DEV(dev))
+            continue;
+
         if( regs->chanset == dev->chanset)
             device_reset(dev);
     }
@@ -2084,6 +2096,7 @@ int reset = 0;
     /* Reset each device in the configuration with this chpid */
     for (reset=0, dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
         if (!IS_DEV(dev))
             continue;
 
@@ -2137,6 +2150,10 @@ int i;
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
+        if (!IS_DEV(dev))
+            continue;
+
         device_reset(dev);
     }
 
@@ -5875,6 +5892,10 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
     /* Gather devices within our zone with pending interrupt flagged */
     for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
+        /* Skip "devices" that don't actually exist */
+        if (!IS_DEV(dev))
+            continue;
+
         obtain_lock (&dev->lock);
 
         if (1
