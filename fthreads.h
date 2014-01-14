@@ -427,6 +427,8 @@ int fthread_mutexattr_settype
 #define SCHED_OTHER      3          // Another scheduling policy.
 
 #define FTHREAD_SCHED_POLICY    SCHED_RR    // Our only valid scheduling policy
+#define FTHREAD_MIN_PRI         (+20)       // Same as Hercules
+#define FTHREAD_MAX_PRI         (-20)       // Same as Hercules
 
 struct sched_param                  // Scheduling parameters structure...
 {

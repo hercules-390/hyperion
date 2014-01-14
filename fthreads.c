@@ -1763,16 +1763,11 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 // Thread Execution Scheduling...
 
-static int  fthread_min_pri  =  -20;    // (same as Herc)
-static int  fthread_max_pri  =  +20;    // (same as Herc)
-
-////////////////////////////////////////////////////////////////////////////////////
-
 DLL_EXPORT int fthread_get_min_prio( int policy )
 {
     if (FTHREAD_SCHED_POLICY != policy)
         return RC(ENOTSUP);
-    return fthread_min_pri;
+    return FTHREAD_MIN_PRI;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1781,7 +1776,7 @@ DLL_EXPORT int fthread_get_max_prio( int policy )
 {
     if (FTHREAD_SCHED_POLICY != policy)
         return RC(ENOTSUP);
-    return fthread_max_pri;
+    return FTHREAD_MAX_PRI;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1848,8 +1843,8 @@ DLL_EXPORT int fthread_setschedparam( fthread_t dwThreadID, int nPolicy, const s
 
     if (0
         || !pSCHPARM
-        ||  pSCHPARM->sched_priority < fthread_min_pri
-        ||  pSCHPARM->sched_priority > fthread_max_pri
+        ||  pSCHPARM->sched_priority > FTHREAD_MIN_PRI  // (reversed)
+        ||  pSCHPARM->sched_priority < FTHREAD_MAX_PRI  // (reversed)
         || !(hThread = fthread_get_handle( dwThreadID ))
         || !SetThreadPriority( hThread, F2WPriority( pSCHPARM->sched_priority ))
     )
