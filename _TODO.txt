@@ -10,15 +10,75 @@
 
 -------------------------------------------------------------------------------
 
-  Add 'const' to as many functions' arguments as possible.
+  *BUG*: printer FCB parsing is FUBAR (wrong):
+
+  Old (original) style was: "fcb=66010713192531374361495561",
+  which yields:    66 1 7 13 19 25 31 37 43 61 49 55 61
+  int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
+
+  Notice the old style is a string of 26 digits (13 pairs), which are NOT
+  separated by commas. The current parsing code presumes comma separators
+  which is WRONG and incorrectly causes old format to always be rejected.
+
+  Also notice channel 9 and 12 are on same line number 61. This is valid
+  for old 1403 paper carraige-control tapes, but is invalid on newer 3211
+  FCB image printers which support only one channel defined per line. We
+  need to fix this (provide supported for BOTH) which is REQUIRED to fix
+  the incorrect parsing/support of the original "fcb=" option format.
 
 -------------------------------------------------------------------------------
+
+  "Generic-ize" the 'qd' command so that it works for ANY device
+  instead of just dasd devices. SenseId and RDC (Read Device
+  Characteristics) information is valuable information to display
+  for devices other than dasd! (e.g. tape devices for example)
+
+-------------------------------------------------------------------------------
+
+  BUG: instruction tracing: control registers not being shown for some
+  instructions which use/modify them. We need a better way to determine
+  if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
+  (see "display_inst_regs" function in "hscmisc.c")
+
+  Modify/enhance instruction/device tracing to write raw trace information
+  to a file (instead of formatting it to console which is slow/inefficient)
+  and develop a new offline utility to then format/display only the desired
+  information (selected registers, instructions, time range, buffers, etc).
+
+  Instruction Tracing: ability to specify multiple disparate trace ranges.
+
+-------------------------------------------------------------------------------
+
+  DUMP command (Windows only) to create on-demand mini-dump.
 
   modify fthread to maintain the thread's name in its FTHREAD list of
   threads and provide a function to return a copy of that information
   (linked list of thread ids and thread names), and then modify the
   minidump BuildUserStreams function in bootstrap.c to save that info
   so we can know which threads are which when we analyze a crash dump.
+
+  Add thread naming support to *Nix: autoconf: check for availability
+  of pthread_setname_np and pthread_getname_np functions.
+
+-------------------------------------------------------------------------------
+
+  Suspend/Resume:
+
+  Add filename option to suspend/Resume command.
+  Resume option to issue start command if resume is successful.
+  Suspend/Resume command needs prompts/error messages: Ask Y/N confirmation
+    during suspend if overwriting existing suspend file, error message when
+    resume command given and machine is not in the reset state.
+  Add missing Suspend/Resume support to tape devices.
+  Add missing Suspend/Resume support to CTC devices.
+
+-------------------------------------------------------------------------------
+
+  Add 'const' to as many functions' arguments as possible.
+
+-------------------------------------------------------------------------------
+
+  Document all DIAGNOSE instruction support
 
 -------------------------------------------------------------------------------
 
@@ -41,21 +101,14 @@
 
 -------------------------------------------------------------------------------
 
-  Also provide separate zip file containing .PDB files for download for
-  Windows snapshots (but especially for final official Windows releases!)
-  so that on the rare occasion that Hercules ever does crash we're able
-  to determine exactly where the crash occurred. We cannot do that without
-  the .PDB files!
-
--------------------------------------------------------------------------------
-
-  Design a more platform generic cpu features runtime check that checks for
-  the availability of certain processor features and then points some sysblk
-  function-pointers to the correct function. That way we can exploit certain
-  features if they're available. Of course going through a function pointer
-  may be too inefficient depending on where the function is being used, but
-  depending on what the function (feature) provides it may end up being an
-  overall gain than a loss.
+  Design a more platform generic host cpu features runtime check that
+  checks for the availability of certain host processor features
+  
+  and then point any needed function-pointers to the correct function.
+  That way we can exploit certain host processor features when they're
+  available. Going through a function pointer is inefficient of course
+  (depending on where the function is being used), but depending on
+  what the function provides, it may be more of a gain than a loss.
 
   E.g. (WIN64):
 
@@ -69,28 +122,8 @@
 
 -------------------------------------------------------------------------------
 
-  Document all DIAGNOSE instruction support
-
--------------------------------------------------------------------------------
-
-  Trace (instruction and/or device) to file instead of to console.
-  (Then new utility to format/display it offline).
-
--------------------------------------------------------------------------------
-
-  Instruction Tracing: ability to specify multiple disparate trace ranges.
-
--------------------------------------------------------------------------------
-
   Windows block device support (i.e. ability to define an entire drive
   (Windows drive letter / partition) as a Hercules dasd)
-
--------------------------------------------------------------------------------
-
-  BUG: instruction tracing: control registers not being shown for some
-  instructions which use/modify them. We need a better way to determine
-  if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
-  (see "display_inst_regs" function in "hscmisc.c")
 
 -------------------------------------------------------------------------------
 
@@ -113,10 +146,6 @@
 
 -------------------------------------------------------------------------------
 
-  DUMP command (Windows only) to create on-demand mini-dump.
-
--------------------------------------------------------------------------------
-
   Device or facility per Gerhard Postpischil's 9/20/2007 suggestion
   that allows one to generate random "problems" (i/o errors, machine
   checks, etc) for better software error recovery testing.
@@ -129,37 +158,11 @@
 
 -------------------------------------------------------------------------------
 
-  "Generic-ize" the 'qd' command so that it works for ANY device
-  instead of just dasd devices. SenseId and RDC (Read Device
-  Characteristics) information is valuable information to display
-  for devices other than dasd! (e.g. tape devices for example)
-
--------------------------------------------------------------------------------
-
-  Add SRF (Suspend/Resume) support for tape devices.
-
-  Add SRF (Suspend/Resume) support for CTC devices.
-
--------------------------------------------------------------------------------
-
   BCTC support for sysplex'ing via GRS.
 
 -------------------------------------------------------------------------------
 
   Generic native host SCSI support (mostly for tape,
   but having it opens other interesting possibilities)
-
--------------------------------------------------------------------------------
-
-  Suspend and Resume need prompts. Suspend if overwriting existing file.
-  Resume if machine is not in reset state.
-
--------------------------------------------------------------------------------
-
-  Suspend/Resume with file specification as an option.
-
--------------------------------------------------------------------------------
-
-  Resume with start if successful option
 
 -------------------------------------------------------------------------------
