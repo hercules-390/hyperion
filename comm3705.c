@@ -1298,19 +1298,11 @@ static void *telnet_thread(void *vca)
     sin.sin_family=AF_INET;
     sin.sin_addr.s_addr=ca->lhost;
     sin.sin_port=htons(ca->lport);
-    while(1)
+    rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
+    if (rc < 0)
     {
-        rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
-        if(rc<0)
-        {
-            WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
-            ca_shutdown=1;
-            break;
-        }
-        else
-        {
-            break;
-        }
+        WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
+        ca_shutdown=1;
     }
     /* Start the listen */
     if(!ca_shutdown)
@@ -1322,10 +1314,14 @@ static void *telnet_thread(void *vca)
     {
         ca->sfd = 0;
         ca->sfd=accept(ca->lfd,NULL,0);
-        if (ca->sfd < 1) continue;
-        if  (connect_client(&ca->sfd)) {
+        if (ca->sfd < 1)
+            continue;
+        if  (connect_client(&ca->sfd))
+        {
             ca->is_3270 = 1;
-        } else {
+        }
+        else
+        {
             ca->is_3270 = 0;
         }
         socket_set_blocking_mode(ca->sfd,0);  // set to non-blocking mode
