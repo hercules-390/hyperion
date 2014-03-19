@@ -662,7 +662,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetDestAddr() failed" );
-#else /*!defined( OPTION_W32_CTCI )*/
+#else /*defined( OPTION_W32_CTCI )*/
         if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
             return qeth_errnum_msg( dev, grp, rc,
                 "E", "TUNTAP_SetIPAddr() failed" );
@@ -998,7 +998,7 @@ U16 offph;
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 int rc = 0;
-#endif
+#endif /*defined(OPTION_W32_CTCI)*/
                     MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
@@ -1022,9 +1022,9 @@ U16 offph;
 
                         grp->tthwaddr = strdup( tthwaddr );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-#else
+#else /*defined(OPTION_W32_CTCI)*/
                     {
-#endif
+#endif /*defined(OPTION_W32_CTCI)*/
                         if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         else
@@ -2410,7 +2410,7 @@ int i;
             /* Set defaults */
 #if defined( OPTION_W32_CTCI )
             grp->tuntap = strdup( tt32_get_default_iface() );
-#else /*!defined( OPTION_W32_CTCI )*/
+#else /*defined( OPTION_W32_CTCI )*/
             grp->tuntap = strdup(TUNTAP_NAME);
 #endif /*defined( OPTION_W32_CTCI )*/
             grp->ttfd = -1;
@@ -2457,11 +2457,13 @@ int i;
             grp->tuntap = strdup(argv[++i]);
             continue;
         }
+#if !defined(OPTION_W32_CTCI)
         else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
         {
             strlcpy( grp->ttifname, argv[++i], sizeof(grp->ttifname) );
             continue;
         }
+#endif /*!defined(OPTION_W32_CTCI)*/
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
             if(grp->tthwaddr)
@@ -2606,7 +2608,7 @@ int i;
             grp->ttnetmask = strdup("255.255.255.255");
             grp->ttpfxlen = strdup("32");
         }
-#endif /*!defined( OPTION_W32_CTCI )*/
+#endif /*defined( OPTION_W32_CTCI )*/
 
         if (grp->ttnetmask)
         {

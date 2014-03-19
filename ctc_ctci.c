@@ -1236,7 +1236,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  CTCI_OPTSTRING  "n:x:k:i:m:t:s:d"
+  #define  CTCI_OPTSTRING  "n:k:i:m:t:s:d"
 #else
   #define  CTCI_OPTSTRING  "n:x:t:s:d"
 #endif
@@ -1247,8 +1247,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         static struct option options[] =
         {
             { "dev",     required_argument, NULL, 'n' },
+#if !defined( OPTION_W32_CTCI )
             { "tundev",  required_argument, NULL, 'x' },
             { "if",      required_argument, NULL, 'x' },
+#endif
 #if defined( OPTION_W32_CTCI )
             { "kbuff",   required_argument, NULL, 'k' },
             { "ibuff",   required_argument, NULL, 'i' },
@@ -1297,6 +1299,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strlcpy( pCTCBLK->szTUNCharDevName, optarg, sizeof(pCTCBLK->szTUNCharDevName) );
             break;
 
+#if !defined( OPTION_W32_CTCI )
         case 'x':     // TUN network interface name
             if( strlen( optarg ) > sizeof(pCTCBLK->szTUNIfName)-1 )
             {
@@ -1308,6 +1311,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strlcpy( pCTCBLK->szTUNIfName, optarg, sizeof(pCTCBLK->szTUNIfName) );
             saw_if = 1;
             break;
+#endif
 
 #if defined( OPTION_W32_CTCI )
         case 'k':     // Kernel Buffer Size (Windows only)
@@ -1400,9 +1404,25 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     if( !pCTCBLK->fOldFormat )
     {
-        // New format has 2 and only 2 parameters (though several options), or
-        // it has 1 or 0 parameters if using pre-configured TUN device (*nix only).
-        if (argc == 2 ) /* Not pre-configured */
+        // New format.
+        // For *nix, there can be either:-
+        // a) Two parameters (a pair of IPv4 addresses). If the -x option
+        //    has not been specified, CTCI will use a TUN interface whose
+        //    name is allocated by the kernel (e.g. tun0), that is
+        //    configured by CTCI. If the -x option has been specified,
+        //    CTCI will use a pre-named TUN interface. The TUN interface
+        //    may have been created before CTCI was started, or it may be
+        //    created by CTCI, but in either case the TUN interface is
+        //    configured by CTCI.
+        // b) One parameter when the -x option has not been specified.
+        //    The single parameter specifies the name of a pre-configured
+        //    TUN inferface that CTCI will use.
+        // c) Zero parameters when the -x option has been specified. The
+        //    The -x option specified the name of a pre-configured TUN
+        //    inferface that CTCI will use..
+        // For Windows there can be:-
+        // a) Two parameters (a pair of IPv4 addresses).
+        if (argc == 2 ) /* Not pre-configured, but possibly pre-named */
         {
             // Guest IP Address
             if( inet_aton( *argv, &addr ) == 0 )

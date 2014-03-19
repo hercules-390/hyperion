@@ -194,7 +194,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( pLCSBLK->pszIPAddress )
             {
-                inet_aton( pLCSBLK->pszIPAddress, &addr );
+                pLCSBLK->pDevices->pszIPAddress = strdup( pLCSBLK->pszIPAddress );
+                inet_aton( pLCSBLK->pDevices->pszIPAddress, &addr );
+                pLCSBLK->pDevices->lIPAddress = addr.s_addr; // (network byte order)
                 pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
             }
             else
@@ -203,8 +205,6 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->pDevices->sAddr        = pDEVBLK->devnum;
             pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
-            pLCSBLK->pDevices->lIPAddress   = addr.s_addr; // (network byte order)
-            pLCSBLK->pDevices->pszIPAddress = pLCSBLK->pszIPAddress;
             pLCSBLK->pDevices->pNext        = NULL;
 
             pLCSBLK->icDevices = 2;
@@ -601,6 +601,8 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         pDEVBLK->sense[0] = SENSE_CR;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
     }
+
+    return;
 }
 
 // ====================================================================
@@ -704,17 +706,8 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     {
         if( pLCSBLK->pszTUNDevice   ) { free( pLCSBLK->pszTUNDevice   ); pLCSBLK->pszTUNDevice   = NULL; }
         if( pLCSBLK->pszOATFilename ) { free( pLCSBLK->pszOATFilename ); pLCSBLK->pszOATFilename = NULL; }
-//      if( pLCSBLK->pszIPAddress   ) { free( pLCSBLK->pszIPAddress   ); pLCSBLK->pszIPAddress   = NULL; }
-        if( pLCSBLK->pszMACAddress  ) { free( pLCSBLK->pszMACAddress  ); pLCSBLK->pszMACAddress  = NULL; }
-
-        if( pLCSBLK->pszOATFilename )
-        {
-            if( pLCSBLK->pszIPAddress )
-            {
-                free( pLCSBLK->pszIPAddress );
-                pLCSBLK->pszIPAddress = NULL;
-            }
-        }
+        if( pLCSBLK->pszIPAddress   ) { free( pLCSBLK->pszIPAddress   ); pLCSBLK->pszIPAddress   = NULL; }
+//      if( pLCSBLK->pszMACAddress  ) { free( pLCSBLK->pszMACAddress  ); pLCSBLK->pszMACAddress  = NULL; }
 
         free( pLCSBLK );
         pLCSBLK = NULL;
@@ -993,7 +986,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
                 WRMSG(HHC00922, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-                packet_trace( (BYTE*)pCmdFrame, iLength, '<' );
+                packet_trace( (BYTE*)pCmdFrame, iLength, '>' );
             }
 
             // FIXME: what is this all about? I'm not saying it's wrong,
@@ -1072,7 +1065,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
             {
                 WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
-                packet_trace( (BYTE*)pEthFrame, iEthLen, '<' );
+                packet_trace( (BYTE*)pEthFrame, iEthLen, '>' );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -1237,14 +1230,20 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
-    VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetIfName, "0.0.0.0" ) == 0 );
-    VERIFY( TUNTAP_SetMTU   ( pLCSPORT->szNetIfName,  "1500"   ) == 0 );
+    if (!pLCSPORT->fPreconfigured)
+    {
+        VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetIfName, "0.0.0.0" ) == 0 );
+        VERIFY( TUNTAP_SetMTU   ( pLCSPORT->szNetIfName,  "1500"   ) == 0 );
+    }
 
 #ifdef OPTION_TUNTAP_SETMACADDR
-    if (pLCSPORT->fLocalMAC)
+    if (!pLCSPORT->fPreconfigured)
     {
-        VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetIfName,
-                                   pLCSPORT->szMACAddress ) == 0 );
+        if (pLCSPORT->fLocalMAC)
+        {
+            VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetIfName,
+                                       pLCSPORT->szMACAddress ) == 0 );
+        }
     }
 #endif // OPTION_TUNTAP_SETMACADDR
 
@@ -1310,7 +1309,10 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 
         // Enable the interface by turning on the IFF_UP flag...
-        VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, nIFFlags ) == 0 );
+        if (!pLCSPORT->fPreconfigured)
+        {
+            VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, nIFFlags ) == 0 );
+        }
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1318,13 +1320,16 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         // user may have specified in their OAT file
         // to the host's routing table...
 
-        for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
+        if (!pLCSPORT->fPreconfigured)
         {
-            VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
-                             pLCSRTE->pszNetAddr,
-                             pLCSRTE->pszNetMask,
-                             NULL,
-                             RTF_UP ) == 0 );
+            for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
+            {
+                VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
+                                 pLCSRTE->pszNetAddr,
+                                 pLCSRTE->pszNetMask,
+                                 NULL,
+                                 RTF_UP ) == 0 );
+            }
         }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1342,13 +1347,16 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Add a Point-To-Point routing entry to the
     // host's routing table for our interface...
 
-    if( pLCSDEV->pszIPAddress )
+    if (!pLCSPORT->fPreconfigured)
     {
-        VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
-                         pLCSDEV->pszIPAddress,
-                         "255.255.255.255",
-                         NULL,
-                         RTF_UP | RTF_HOST ) == 0 );
+        if( pLCSDEV->pszIPAddress )
+        {
+            VERIFY( TUNTAP_AddRoute( pLCSPORT->szNetIfName,
+                             pLCSDEV->pszIPAddress,
+                             "255.255.255.255",
+                             NULL,
+                             RTF_UP | RTF_HOST ) == 0 );
+        }
     }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1381,7 +1389,10 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     usleep( 250*1000 );
 
     // Disable the interface by turning off the IFF_UP flag...
-    VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, 0 ) == 0 );
+    if (!pLCSPORT->fPreconfigured)
+    {
+        VERIFY( TUNTAP_SetFlags( pLCSPORT->szNetIfName, 0 ) == 0 );
+    }
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1390,26 +1401,32 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // First, remove the Point-To-Point routing entry
     // we added when we brought the interface IFF_UP...
 
-    if( pLCSDEV->pszIPAddress )
+    if (!pLCSPORT->fPreconfigured)
     {
-        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
-                         pLCSDEV->pszIPAddress,
-                         "255.255.255.255",
-                         NULL,
-                         RTF_HOST ) == 0 );
+        if( pLCSDEV->pszIPAddress )
+        {
+            VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
+                             pLCSDEV->pszIPAddress,
+                             "255.255.255.255",
+                             NULL,
+                             RTF_HOST ) == 0 );
+        }
     }
 
     // Next, remove any extra routing entries
     // (specified by the user in their OAT file)
     // that we may have also added...
 
-    for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
+    if (!pLCSPORT->fPreconfigured)
     {
-        VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
-                         pLCSRTE->pszNetAddr,
-                         pLCSRTE->pszNetMask,
-                         NULL,
-                         RTF_UP ) == 0 );
+        for( pLCSRTE = pLCSPORT->pRoutes; pLCSRTE; pLCSRTE = pLCSRTE->pNext )
+        {
+            VERIFY( TUNTAP_DelRoute( pLCSPORT->szNetIfName,
+                             pLCSRTE->pszNetAddr,
+                             pLCSRTE->pszNetMask,
+                             NULL,
+                             RTF_UP ) == 0 );
+        }
     }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1562,9 +1579,12 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     /* Issue warning if different from specified value */
     if (memcmp( pPortMAC, pIFaceMAC, IFHWADDRLEN ) != 0)
     {
-        WRMSG(HHC00943, "W", pLCSPORT->szNetIfName, *(pPortMAC+0),*(pPortMAC+1),
-                                        *(pPortMAC+2),*(pPortMAC+3),
-                                        *(pPortMAC+4),*(pPortMAC+5));
+        if (pLCSPORT->fLocalMAC)
+        {
+            WRMSG(HHC00943, "W", pLCSPORT->szNetIfName, *(pPortMAC+0),*(pPortMAC+1),
+                                            *(pPortMAC+2),*(pPortMAC+3),
+                                            *(pPortMAC+4),*(pPortMAC+5));
+        }
 
         memcpy( pPortMAC, pIFaceMAC, IFHWADDRLEN );
 
@@ -2052,6 +2072,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif
     char            *argn[MAX_ARGS];
     char            **argv = argn;
+    int             saw_if = 0;        /* -x (or --if) specified */
+    int             saw_conf = 0;      /* Other configuration flags present */
 
 
     // Build a copy of the argv list.
@@ -2075,7 +2097,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif
     pLCSBLK->pszOATFilename = NULL;
     pLCSBLK->pszIPAddress   = NULL;
-    pLCSBLK->pszMACAddress  = NULL;
+//  pLCSBLK->pszMACAddress  = NULL;
 #if defined( OPTION_W32_CTCI )
     pLCSBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pLCSBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
@@ -2092,9 +2114,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  LCS_OPTSTRING    "n:m:o:d"  "k:i:w"
+  #define  LCS_OPTSTRING    "n:m:o:dk:i:w"
 #else
-  #define  LCS_OPTSTRING    "n:m:o:d"
+  #define  LCS_OPTSTRING    "n:x:m:o:d"
 #endif
 #if defined( HAVE_GETOPT_LONG )
         int     iOpt;
@@ -2102,6 +2124,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         static struct option options[] =
         {
             { "dev",    required_argument, NULL, 'n' },
+#if !defined(OPTION_W32_CTCI)
+            { "if",     required_argument, NULL, 'x' },
+#endif /*!defined(OPTION_W32_CTCI)*/
             { "mac",    required_argument, NULL, 'm' },
             { "oat",    required_argument, NULL, 'o' },
             { "debug",  no_argument,       NULL, 'd' },
@@ -2138,6 +2163,20 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             pLCSBLK->pszTUNDevice = strdup( optarg );
             break;
 
+#if !defined(OPTION_W32_CTCI)
+        case 'x':  /* TAP network interface name */
+            if( strlen( optarg ) > sizeof(pLCSBLK->Port[0].szNetIfName)-1 )
+            {
+                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                      "TAP device name", optarg );
+                return -1;
+            }
+            strlcpy( pLCSBLK->Port[0].szNetIfName, optarg, sizeof(pLCSBLK->Port[0].szNetIfName) );
+            saw_if = 1;
+            break;
+#endif /*!defined(OPTION_W32_CTCI)*/
+
         case 'm':
 
             if( ParseMAC( optarg, mac ) != 0 )
@@ -2148,12 +2187,15 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             }
 
             strcpy( pLCSBLK->Port[0].szMACAddress, optarg );
+            memcpy( pLCSBLK->Port[0].MAC_Address, &mac, sizeof(MAC) );
             pLCSBLK->Port[0].fLocalMAC = TRUE;
+            saw_conf = 1;
             break;
 
         case 'o':
 
             pLCSBLK->pszOATFilename = strdup( optarg );
+            saw_conf = 1;
             break;
 
         case 'd':
@@ -2208,30 +2250,66 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     argc -= optind;
     argv += optind;
 
-    if( argc > 1 )
+#if !defined(OPTION_W32_CTCI)
+    /* If the -x option and one of the configuration options (e.g. the */
+    /* -m or the -o options has been specified, reject the -x option.  */
+    if (saw_if && saw_conf)
     {
-        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        /* HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid" */
+        WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+              "TUN device name", pLCSBLK->Port[0].szNetIfName );
         return -1;
     }
+#endif /*!defined(OPTION_W32_CTCI)*/
 
-    // If an argument is left, it is the optional IP Address
-    if( argc )
+    if (argc > 1)
     {
-        if( inet_aton( *argv, &addr ) == 0 )
+        /* There are two or more arguments. */
+        /* HHC03975 "%1d:%04X %s: incorrect number of parameters" */
+        WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+        return -1;
+    }
+    else if (argc == 1)
+    {
+        /* There is one argument, check for an IPv4 address. */
+        if( inet_aton( *argv, &addr ) != 0 )
         {
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            /* The argument is an IPv4 address. If the -x option was specified, */
+            /* it has pre-named the TAP interface that LCS will use (*nix).     */
+            if ( pLCSBLK->pszIPAddress ) { free( pLCSBLK->pszIPAddress ); pLCSBLK->pszIPAddress = NULL; }
+            pLCSBLK->pszIPAddress = strdup( *argv );
+            pLCSBLK->Port[0].fPreconfigured = FALSE;
+        } else {
+#if defined(OPTION_W32_CTCI)
+            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                   "IP address", *argv );
             return -1;
+#else /*defined(OPTION_W32_CTCI)*/
+            /* The argument is not an IPv4 address. If the -x option was */
+            /* specified, the argument shouldn't have been specified.    */
+            if (saw_if ) {
+                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                      "IP address", *argv );
+                return -1;
+            }
+            /* The -x option was not specified, so the argument should be the  */
+            /* the name of the pre-configured TAP interface that LCS will use. */
+            strlcpy( pLCSBLK->Port[0].szNetIfName, argv[0], sizeof(pLCSBLK->Port[0].szNetIfName) );
+            pLCSBLK->Port[0].fPreconfigured = TRUE;
+#endif /*defined(OPTION_W32_CTCI)*/
         }
-
-        if ( pLCSBLK->pszIPAddress )
-        {
-            free( pLCSBLK->pszIPAddress );
-            pLCSBLK->pszIPAddress = NULL;
-        }
-
-        pLCSBLK->pszIPAddress = strdup( *argv );
     }
+#if !defined(OPTION_W32_CTCI)
+    else
+    {
+        /* There are no arguments. If the -x option was specified, it */
+        /* named a pre-configured TAP interface that LCS will use.    */
+        if (saw_if)
+            pLCSBLK->Port[0].fPreconfigured = TRUE;
+        else
+            pLCSBLK->Port[0].fPreconfigured = FALSE;
+    }
+#endif /*!defined(OPTION_W32_CTCI)*/
 
     return 0;
 }
