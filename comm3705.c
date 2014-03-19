@@ -1265,11 +1265,12 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
      }
 }
 
-static void *telnet_thread(void *vca) {
+static void *telnet_thread(void *vca)
+{
     COMMADPT *ca;
     int devnum;                 /* device number copy for convenience*/
     int        sockopt;         /* Used for setsocketoption          */
-    int ca_shutdown=0;            /* Thread shutdown internal flag     */
+    int ca_shutdown=0;          /* Thread shutdown internal flag     */
     int rc;                     /* return code from various rtns     */
     struct sockaddr_in sin;     /* bind socket address structure     */
     BYTE bfr[256];
@@ -1279,89 +1280,94 @@ static void *telnet_thread(void *vca) {
     ca->sfd = 0;
     devnum=ca->devnum;
 
-        ca->lfd=socket(AF_INET,SOCK_STREAM,0);
-        if(!socket_is_socket(ca->lfd))
-        {
-            WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
-            ca->have_cthread=0;
-            release_lock(&ca->lock);
-            return NULL;
-        }
+    ca->lfd=socket(AF_INET,SOCK_STREAM,0);
+    if(!socket_is_socket(ca->lfd))
+    {
+        WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
+        ca->have_cthread=0;
+        release_lock(&ca->lock);
+        return NULL;
+    }
 
-        /* Reuse the address regardless of any */
-        /* spurious connection on that port    */
-        sockopt=1;
-        setsockopt(ca->lfd,SOL_SOCKET,SO_REUSEADDR,(GETSET_SOCKOPT_T*)&sockopt,sizeof(sockopt));
+    /* Reuse the address regardless of any */
+    /* spurious connection on that port    */
+    sockopt=1;
+    setsockopt(ca->lfd,SOL_SOCKET,SO_REUSEADDR,(GETSET_SOCKOPT_T*)&sockopt,sizeof(sockopt));
 
-        /* Bind the socket */
-        sin.sin_family=AF_INET;
-        sin.sin_addr.s_addr=ca->lhost;
-        sin.sin_port=htons(ca->lport);
-        while(1)
+    /* Bind the socket */
+    sin.sin_family=AF_INET;
+    sin.sin_addr.s_addr=ca->lhost;
+    sin.sin_port=htons(ca->lport);
+    while(1)
+    {
+        rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
+        if(rc<0)
         {
-            rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
-            if(rc<0)
-            {
-                    WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
-                    ca_shutdown=1;
-                    break;
-            }
-            else
-            {
-                break;
-            }
+            WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
+            ca_shutdown=1;
+            break;
         }
-        /* Start the listen */
-        if(!ca_shutdown)
+        else
         {
-            listen(ca->lfd,10);
-            WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
+            break;
         }
-        for (;;) {
-            ca->sfd = 0;
-            ca->sfd=accept(ca->lfd,NULL,0);
-            if (ca->sfd < 1) continue;
-            if  (connect_client(&ca->sfd)) {
-                ca->is_3270 = 1;
-            } else {
-                ca->is_3270 = 0;
-            }
+    }
+    /* Start the listen */
+    if(!ca_shutdown)
+    {
+        listen(ca->lfd,10);
+        WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
+    }
+    for (;;)
+    {
+        ca->sfd = 0;
+        ca->sfd=accept(ca->lfd,NULL,0);
+        if (ca->sfd < 1) continue;
+        if  (connect_client(&ca->sfd)) {
+            ca->is_3270 = 1;
+        } else {
+            ca->is_3270 = 0;
+        }
         socket_set_blocking_mode(ca->sfd,0);  // set to non-blocking mode
             make_sna_requests4(ca, 0, (ca->is_3270) ? 0x02 : 0x01);   // send REQCONT
         ca->hangup = 0;
-        for (;;) {
-        usleep(50000);
-        if (ca->hangup)
-                    break;
-        /* read_socket has changed from 3.04 to 3.06 - we need old way */
+        for (;;)
+        {
+            usleep(50000);
+            if (ca->hangup)
+                break;
+            /* read_socket has changed from 3.04 to 3.06 - we need old way */
 #ifdef _MSVC_
-          rc=recv(ca->sfd,bfr,256-BUFPD,0);
+            rc=recv(ca->sfd,bfr,256-BUFPD,0);
 #else
-          rc=read(ca->sfd,bfr,256-BUFPD);
+            rc=read(ca->sfd,bfr,256-BUFPD);
 #endif
-        if (rc < 0) {
-                    if(0
+            if (rc < 0)
+            {
+                if (0
 #ifndef WIN32
-                                || EAGAIN == errno
+                    || EAGAIN == errno
 #endif
-                                || HSO_EWOULDBLOCK == HSO_errno
-                    ) {
-                continue;
-                    }
-            break;
-//                    make_sna_requests4(ca, 1);   // send REQDISCONT
-                    make_sna_requests5(ca);
+                    || HSO_EWOULDBLOCK == HSO_errno
+                )
+                {
+                    continue;
                 }
-        if (rc == 0) {
-//                    make_sna_requests4(ca, 1);   // send REQDISCONT
-                    make_sna_requests5(ca);
-                    break;
-        }
-                commadpt_read_tty(ca,bfr,rc);
+                break;
+//              make_sna_requests4(ca, 1);   // send REQDISCONT
+                make_sna_requests5(ca);
             }
+            if (rc == 0)
+            {
+//              make_sna_requests4(ca, 1);   // send REQDISCONT
+                make_sna_requests5(ca);
+                break;
+            }
+            commadpt_read_tty(ca,bfr,rc);
+        }
         close_socket(ca->sfd);
         ca->sfd = 0;
-        }
+    }
 }
 
 /*-------------------------------------------------------------------*/
