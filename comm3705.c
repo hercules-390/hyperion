@@ -591,14 +591,14 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
     UNREFERENCED(caption);
 
     rc = recv_packet (csock, buf, len, 0);
-    if (rc < 0) return -1;
-
+    if (rc < 0)
+        return -1;
 #if 1
-        /* TCP/IP FOR MVS DOES NOT COMPLY TO RFC 1576 THIS IS A BYPASS */
-        if(memcmp(buf, expected, len) != 0
-          && !(len == sizeof(will_bin)
-              && memcmp(expected, will_bin, len) == 0
-              && memcmp(buf, do_bin, len) == 0) )
+    /* TCP/IP FOR MVS DOES NOT COMPLY TO RFC 1576 THIS IS A BYPASS */
+    if(memcmp(buf, expected, len) != 0
+      && !(len == sizeof(will_bin)
+          && memcmp(expected, will_bin, len) == 0
+          && memcmp(buf, do_bin, len) == 0) )
 #else
     if (memcmp(buf, expected, len) != 0)
 #endif
@@ -1015,48 +1015,48 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
 }
 
 static void put_bufpool(void ** anchor, BYTE * ele) {
-       void ** elep = anchor;
-       for (;;) {
-               if (!*elep) break;
-               elep = *elep;
-       }
-       *elep = ele;
-       *(void**)ele = 0;
+    void ** elep = anchor;
+    for (;;) {
+        if (!*elep) break;
+        elep = *elep;
+    }
+    *elep = ele;
+    *(void**)ele = 0;
 }
 
 static BYTE * get_bufpool(void ** anchor) {
-       void ** elep = *anchor;
-       if (elep) {
-                *anchor = *elep;
-       } else {
-                *anchor = 0;
-       }
-       return (BYTE*)elep;
+    void ** elep = *anchor;
+    if (elep) {
+        *anchor = *elep;
+    } else {
+        *anchor = 0;
+    }
+    return (BYTE*)elep;
 }
 
 static void init_bufpool(COMMADPT *ca) {
-        BYTE * areap;
-        int i1;
-        int numbufs = 64;
-        int bufsize = 256+16+4;
-        ca->poolarea = (BYTE*)calloc (numbufs, bufsize);
-        if (!ca->poolarea) {
-                return;
-        }
-        areap = ca->poolarea;
-        for (i1 = 0; i1 < numbufs; i1++) {
-                put_bufpool(&ca->freeq, areap);
-                areap += (bufsize);
-        }
+    BYTE * areap;
+    int i1;
+    int numbufs = 64;
+    int bufsize = 256+16+4;
+    ca->poolarea = (BYTE*)calloc (numbufs, bufsize);
+    if (!ca->poolarea) {
+        return;
+    }
+    areap = ca->poolarea;
+    for (i1 = 0; i1 < numbufs; i1++) {
+        put_bufpool(&ca->freeq, areap);
+        areap += (bufsize);
+    }
 }
 
 static void free_bufpool(COMMADPT *ca) {
-        ca->sendq = 0;
-        ca->freeq = 0;
-        if (ca->poolarea) {
-            free(ca->poolarea);
-            ca->poolarea = 0;
-        }
+    ca->sendq = 0;
+    ca->freeq = 0;
+    if (ca->poolarea) {
+        free(ca->poolarea);
+        ca->poolarea = 0;
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -1070,18 +1070,18 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-                WRMSG(HHC01052,"D",
-                        SSID_TO_LCSS(dev->ssid),
-                        dev->devnum,"control block freed");
+            WRMSG(HHC01052,"D",
+                SSID_TO_LCSS(dev->ssid),
+                dev->devnum,"control block freed");
         }
     }
     else
     {
         if(dev->ccwtrace)
         {
-                WRMSG(HHC01052,"D",
-                        SSID_TO_LCSS(dev->ssid),
-                        dev->devnum,"control block not freed: not allocated");
+            WRMSG(HHC01052,"D",
+                SSID_TO_LCSS(dev->ssid),
+                dev->devnum,"control block not freed: not allocated");
         }
     }
     return;
@@ -1169,43 +1169,43 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
     BYTE        c;
     int i1;
     int eor=0;
-           logdump("RECV",ca->dev, bfr,len);
+    logdump("RECV",ca->dev, bfr,len);
     /* If there is a complete data record already in the buffer
        then discard it before reading more data
        For TTY, allow data to accumulate until CR is received */
-       if (ca->is_3270) {
-               if (ca->inpbufl) {
-                   ca->rlen3270 = 0;
-                   ca->inpbufl = 0;
-               }
-           }
-       for (i1 = 0; i1 < len; i1++) {
+    if (ca->is_3270) {
+            if (ca->inpbufl) {
+                ca->rlen3270 = 0;
+                ca->inpbufl = 0;
+            }
+        }
+    for (i1 = 0; i1 < len; i1++) {
         c = (unsigned char) bfr[i1];
         if (ca->telnet_opt) {
             ca->telnet_opt = 0;
-                  if(ca->dev->ccwtrace)
-                      WRMSG(HHC01053,"D",
-                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-                        ca->telnet_cmd, c);
+            if(ca->dev->ccwtrace)
+                WRMSG(HHC01053,"D",
+                    SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                    ca->telnet_cmd, c);
             bfr3[0] = 0xff;  /* IAC */
             /* set won't/don't for all received commands */
             bfr3[1] = (ca->telnet_cmd == 0xfd) ? 0xfc : 0xfe;
             bfr3[2] = c;
-                          if (ca->sfd > 0) {
-                              write_socket(ca->sfd,bfr3,3);
-                          }
-                  if(ca->dev->ccwtrace)
+            if (ca->sfd > 0) {
+                write_socket(ca->sfd,bfr3,3);
+            }
+            if(ca->dev->ccwtrace)
                 WRMSG(HHC01054,"D",
-                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-                        bfr3[1], bfr3[2]);
+                    SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                    bfr3[1], bfr3[2]);
             continue;
         }
         if (ca->telnet_iac) {
             ca->telnet_iac = 0;
-                  if(ca->dev->ccwtrace)
+            if(ca->dev->ccwtrace)
                 WRMSG(HHC01055, "D",
-                        SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
-                        c);
+                    SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum,
+                    c);
             switch (c) {
             case 0xFB:  /* TELNET WILL option cmd */
             case 0xFD:  /* TELNET DO option cmd */
@@ -1233,36 +1233,36 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
             ca->telnet_iac = 0;
         }
         if (!ca->is_3270) {
-          if (c == 0x0D) // CR in TTY mode ?
-              ca->eol_flag = 1;
-          c = host_to_guest(c);   // translate ASCII to EBCDIC for tty
+            if (c == 0x0D) // CR in TTY mode ?
+                ca->eol_flag = 1;
+            c = host_to_guest(c);   // translate ASCII to EBCDIC for tty
         }
         ca->inpbuf[ca->rlen3270++] = c;
-        }
-         /* received data (rlen3270 > 0) is sufficient for 3270,
-            but for TTY, eol_flag must also be set */
-     if ((ca->eol_flag || ca->is_3270) && ca->rlen3270)
-     {
+    }
+    /* received data (rlen3270 > 0) is sufficient for 3270,
+       but for TTY, eol_flag must also be set */
+    if ((ca->eol_flag || ca->is_3270) && ca->rlen3270)
+    {
         ca->eol_flag = 0;
         if (ca->is_3270)
         {
-           if (eor)
-           {
-              ca->inpbufl = ca->rlen3270;
-              ca->rlen3270 = 0; /* for next msg */
-           }
+            if (eor)
+            {
+                ca->inpbufl = ca->rlen3270;
+                ca->rlen3270 = 0; /* for next msg */
+            }
         }
         else
         {
-           ca->inpbufl = ca->rlen3270;
-           ca->rlen3270 = 0; /* for next msg */
+            ca->inpbufl = ca->rlen3270;
+            ca->rlen3270 = 0; /* for next msg */
         }
         if(ca->dev->ccwtrace)
-           WRMSG(HHC01056, "D",
-                            SSID_TO_LCSS(ca->dev->ssid),
-                            ca->dev->devnum,
-                            ca->inpbufl);
-     }
+            WRMSG(HHC01056, "D",
+                SSID_TO_LCSS(ca->dev->ssid),
+                ca->dev->devnum,
+                ca->inpbufl);
+    }
 }
 
 static void *telnet_thread(void *vca)
@@ -1325,7 +1325,7 @@ static void *telnet_thread(void *vca)
             ca->is_3270 = 0;
         }
         socket_set_blocking_mode(ca->sfd,0);  // set to non-blocking mode
-            make_sna_requests4(ca, 0, (ca->is_3270) ? 0x02 : 0x01);   // send REQCONT
+        make_sna_requests4(ca, 0, (ca->is_3270) ? 0x02 : 0x01);   // send REQCONT
         ca->hangup = 0;
         for (;;)
         {
@@ -1394,18 +1394,19 @@ static void *commadpt_thread(void *vca)
         release_lock(&ca->lock);
         usleep(50000 + (ca->unack_attn_count * 100000));
         obtain_lock(&ca->lock);
-                make_sna_requests2(ca);
-                make_sna_requests3(ca);
-                if (ca->sendq
+        make_sna_requests2(ca);
+        make_sna_requests3(ca);
+        if (ca->sendq
 // attempt to fix hot i/o bug
-                     && ca->unack_attn_count < 6
-                ) {
-                    ca->unack_attn_count++;
-                    rc = device_attention(ca->dev, CSW_ATTN);
-                    if(ca->dev->ccwtrace)
-                        WRMSG(HHC01057, "D",
-                                SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
-                }
+            && ca->unack_attn_count < 6
+        )
+        {
+            ca->unack_attn_count++;
+            rc = device_attention(ca->dev, CSW_ATTN);
+            if(ca->dev->ccwtrace)
+                WRMSG(HHC01057, "D",
+                    SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
+        }
     }
 
     WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
@@ -1428,7 +1429,7 @@ static void commadpt_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
+    WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
@@ -1446,157 +1447,157 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         char text[80];
     } res;
 
-        /* For re-initialisation, close the existing file, if any */
-        if (dev->fd >= 0)
-            (dev->hnd->close)(dev);
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd >= 0)
+        (dev->hnd->close)(dev);
 
-        dev->devtype=0x3705;
-        dev->excps = 0;
-        if(dev->ccwtrace)
-        {
-            WRMSG(HHC01058,"D",
-                SSID_TO_LCSS(dev->ssid), dev->devnum);
-        }
+    dev->devtype=0x3705;
+    dev->excps = 0;
+    if(dev->ccwtrace)
+    {
+        WRMSG(HHC01058,"D",
+            SSID_TO_LCSS(dev->ssid), dev->devnum);
+    }
 
-        if(dev->commadpt!=NULL)
-        {
-            commadpt_clean_device(dev);
-        }
-        rc=commadpt_alloc_device(dev);
-        if(rc<0)
-        {
-                WRMSG(HHC01011, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            return(-1);
-        }
-        if(dev->ccwtrace)
-        {
-            WRMSG(HHC01059,"D",
-                SSID_TO_LCSS(dev->ssid), dev->devnum);
-        }
-        errcnt=0;
-        /*
-         * Initialise ports & hosts
-        */
-        dev->commadpt->sfd=-1;
-        dev->commadpt->lport=0;
-        dev->commadpt->debug_sna=0;
-        dev->commadpt->emu3791=0;
+    if(dev->commadpt!=NULL)
+    {
+        commadpt_clean_device(dev);
+    }
+    rc=commadpt_alloc_device(dev);
+    if(rc<0)
+    {
+        WRMSG(HHC01011, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        return(-1);
+    }
+    if(dev->ccwtrace)
+    {
+        WRMSG(HHC01059,"D",
+            SSID_TO_LCSS(dev->ssid), dev->devnum);
+    }
+    errcnt=0;
+    /*
+     * Initialise ports & hosts
+    */
+    dev->commadpt->sfd=-1;
+    dev->commadpt->lport=0;
+    dev->commadpt->debug_sna=0;
+    dev->commadpt->emu3791=0;
 
-        for(i=0;i<argc;i++)
+    for(i=0;i<argc;i++)
+    {
+        pc=parser(ptab,argv[i],&res);
+        if(pc<0)
         {
-            pc=parser(ptab,argv[i],&res);
-            if(pc<0)
-            {
-                WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
-                errcnt++;
-                continue;
-            }
-            if(pc==0)
-            {
-                WRMSG(HHC01019, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
-                errcnt++;
-                continue;
-            }
-            switch(pc)
-            {
-                case COMMADPT_KW_DEBUG:
-            if (res.text[0] == 'y' || res.text[0] == 'Y')
-            dev->commadpt->debug_sna = 1;
-            else
-            dev->commadpt->debug_sna = 0;
+            WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+            errcnt++;
+            continue;
+        }
+        if(pc==0)
+        {
+            WRMSG(HHC01019, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+            errcnt++;
+            continue;
+        }
+        switch(pc)
+        {
+            case COMMADPT_KW_DEBUG:
+                if (res.text[0] == 'y' || res.text[0] == 'Y')
+                    dev->commadpt->debug_sna = 1;
+                else
+                    dev->commadpt->debug_sna = 0;
+                break;
+            case COMMADPT_KW_LPORT:
+                rc=commadpt_getport(res.text);
+                if(rc<0)
+                {
+                    errcnt++;
+                    msg013e(dev,"LPORT",res.text);
                     break;
-                case COMMADPT_KW_LPORT:
-                    rc=commadpt_getport(res.text);
-                    if(rc<0)
-                    {
-                        errcnt++;
-                        msg013e(dev,"LPORT",res.text);
-                        break;
-                    }
-                    dev->commadpt->lport=rc;
+                }
+                dev->commadpt->lport=rc;
+                break;
+            case COMMADPT_KW_LHOST:
+                if(strcmp(res.text,"*")==0)
+                {
+                    dev->commadpt->lhost=INADDR_ANY;
                     break;
-                case COMMADPT_KW_LHOST:
-                    if(strcmp(res.text,"*")==0)
-                    {
-                        dev->commadpt->lhost=INADDR_ANY;
-                        break;
-                    }
-                    rc=commadpt_getaddr(&dev->commadpt->lhost,res.text);
-                    if(rc!=0)
-                    {
-                        msg013e(dev,"LHOST",res.text);
-                        errcnt++;
-                    }
-                    break;
-                case COMMADPT_KW_EMU3791:
-                    if(strcasecmp(res.text,"yes")==0 || strcmp(res.text,"1"))
-                        dev->commadpt->emu3791=1;
-                    break;
-                default:
-                    break;
-            }
+                }
+                rc=commadpt_getaddr(&dev->commadpt->lhost,res.text);
+                if(rc!=0)
+                {
+                    msg013e(dev,"LHOST",res.text);
+                    errcnt++;
+                }
+                break;
+            case COMMADPT_KW_EMU3791:
+                if(strcasecmp(res.text,"yes")==0 || strcmp(res.text,"1"))
+                    dev->commadpt->emu3791=1;
+                break;
+            default:
+                break;
         }
-        if(errcnt>0)
-        {
-            WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
-            return -1;
-        }
-        dev->bufsize=256;
-        dev->numsense=2;
-        memset(dev->sense,0,sizeof(dev->sense));
+    }
+    if(errcnt>0)
+    {
+        WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        return -1;
+    }
+    dev->bufsize=256;
+    dev->numsense=2;
+    memset(dev->sense,0,sizeof(dev->sense));
 
-        init_bufpool(dev->commadpt);
+    init_bufpool(dev->commadpt);
 
-        dev->commadpt->devnum=dev->devnum;
+    dev->commadpt->devnum=dev->devnum;
 
-        /* Initialize the CA lock */
-        initialize_lock(&dev->commadpt->lock);
+    /* Initialize the CA lock */
+    initialize_lock(&dev->commadpt->lock);
 
-        /* Initialise thread->I/O & halt initiation EVB */
-        initialize_condition(&dev->commadpt->ipc);
-        initialize_condition(&dev->commadpt->ipc_halt);
+    /* Initialise thread->I/O & halt initiation EVB */
+    initialize_condition(&dev->commadpt->ipc);
+    initialize_condition(&dev->commadpt->ipc_halt);
 
-        /* Allocate I/O -> Thread signaling pipe */
-        create_pipe(dev->commadpt->pipe);
+    /* Allocate I/O -> Thread signaling pipe */
+    create_pipe(dev->commadpt->pipe);
 
-        /* Obtain the CA lock */
-        obtain_lock(&dev->commadpt->lock);
+    /* Obtain the CA lock */
+    obtain_lock(&dev->commadpt->lock);
 
-        /* Start the telnet worker thread */
+    /* Start the telnet worker thread */
 
     /* Set thread-name for debugging purposes */
-        snprintf(thread_name2,sizeof(thread_name2),
-            "commadpt %1d:%04X thread2",dev->ssid,dev->devnum);
-        thread_name2[sizeof(thread_name2)-1]=0;
+    snprintf(thread_name2,sizeof(thread_name2),
+        "commadpt %1d:%04X thread2",dev->ssid,dev->devnum);
+    thread_name2[sizeof(thread_name2)-1]=0;
 
-        rc = create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2);
-        if(rc)
-        {
-            WRMSG(HHC00102, "E" ,strerror(rc));
-            release_lock(&dev->commadpt->lock);
-            return -1;
-        }
-
-        /* Start the async worker thread */
-
-    /* Set thread-name for debugging purposes */
-        snprintf(thread_name,sizeof(thread_name),
-            "commadpt %1d:%04X thread",dev->ssid,dev->devnum);
-        thread_name[sizeof(thread_name)-1]=0;
-
-        rc = create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name);
-        if(rc)
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            release_lock(&dev->commadpt->lock);
-            return -1;
-        }
-        dev->commadpt->have_cthread=1;
-
-        /* Release the CA lock */
+    rc = create_thread(&dev->commadpt->tthread,&sysblk.detattr,telnet_thread,dev->commadpt,thread_name2);
+    if(rc)
+    {
+        WRMSG(HHC00102, "E" ,strerror(rc));
         release_lock(&dev->commadpt->lock);
-        /* Indicate succesfull completion */
-        return 0;
+        return -1;
+    }
+
+    /* Start the async worker thread */
+
+    /* Set thread-name for debugging purposes */
+    snprintf(thread_name,sizeof(thread_name),
+        "commadpt %1d:%04X thread",dev->ssid,dev->devnum);
+    thread_name[sizeof(thread_name)-1]=0;
+
+    rc = create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name);
+    if(rc)
+    {
+        WRMSG(HHC00102, "E", strerror(rc));
+        release_lock(&dev->commadpt->lock);
+        return -1;
+    }
+    dev->commadpt->have_cthread=1;
+
+    /* Release the CA lock */
+    release_lock(&dev->commadpt->lock);
+    /* Indicate succesfull completion */
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1659,96 +1660,96 @@ void make_seq (COMMADPT * ca, BYTE * reqptr) {
 }
 
 static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
-       char     fmtbuf[32];
-       char     fmtbuf2[32];
-       char     fmtbuf3[32];
-       char     fmtbuf4[32];
-//     char     fmtbuf5[256];
-       char     fmtbuf6[32];
-       char     *ru_type="";
-       int      len;
-       sprintf(fmtbuf, "%02X%02X %02X%02X %02X%02X %02X%02X %02X%02X",
-          requestp[0], requestp[1], requestp[2], requestp[3], requestp[4], requestp[5], requestp[6], requestp[7], requestp[8], requestp[9]);
-       sprintf(fmtbuf2, "%02X%02X%02X",
-          requestp[10], requestp[11], requestp[12]);
-       len = (requestp[8] << 8) + requestp[9];
-       len -= 3;   /* for len of ru only */
-       sprintf(fmtbuf3, "%02X", requestp[13]);
-       sprintf(fmtbuf4, "%02X", requestp[14]);
-       if (len > 1)
-          strcat(fmtbuf3, fmtbuf4);
-       sprintf(fmtbuf4, "%02X", requestp[15]);
-       if (len > 2)
-          strcat(fmtbuf3, fmtbuf4);
-       if (requestp[13] == 0x11)
-          ru_type = "ACTPU";
-       if (requestp[13] == 0x0D)
-          ru_type = "ACTLU";
-       if (requestp[13] == 0x0E)
-          ru_type = "DACTLU";
-       if (requestp[13] == 0x12)
-          ru_type = "DACTPU";
-       if (requestp[13] == 0xA0)
-          ru_type = "SDT";
-       if (requestp[13] == 0x31)
-          ru_type = "BIND";
-       if (requestp[13] == 0x32)
-          ru_type = "UNBIND";
-       if (!memcmp(&requestp[13], R010201, 3))
-          ru_type = "CONTACT";
-       if (!memcmp(&requestp[13], R010202, 3))
-          ru_type = "DISCONTACT";
-       if (!memcmp(&requestp[13], R010203, 3))
-          ru_type = "IPLINIT";
-       if (!memcmp(&requestp[13], R010204, 3))
-          ru_type = "IPLTEXT";
-       if (!memcmp(&requestp[13], R010205, 3))
-          ru_type = "IPLFINAL";
-       if (!memcmp(&requestp[13], R01020A, 3))
-          ru_type = "ACTLINK";
-       if (!memcmp(&requestp[13], R01020B, 3))
-          ru_type = "DACTLINK";
-       if (!memcmp(&requestp[13], R010211, 3)) {
+    char     fmtbuf[32];
+    char     fmtbuf2[32];
+    char     fmtbuf3[32];
+    char     fmtbuf4[32];
+//  char     fmtbuf5[256];
+    char     fmtbuf6[32];
+    char     *ru_type="";
+    int      len;
+    sprintf(fmtbuf, "%02X%02X %02X%02X %02X%02X %02X%02X %02X%02X",
+        requestp[0], requestp[1], requestp[2], requestp[3], requestp[4], requestp[5], requestp[6], requestp[7], requestp[8], requestp[9]);
+    sprintf(fmtbuf2, "%02X%02X%02X",
+        requestp[10], requestp[11], requestp[12]);
+    len = (requestp[8] << 8) + requestp[9];
+    len -= 3;   /* for len of ru only */
+    sprintf(fmtbuf3, "%02X", requestp[13]);
+    sprintf(fmtbuf4, "%02X", requestp[14]);
+    if (len > 1)
+        strcat(fmtbuf3, fmtbuf4);
+    sprintf(fmtbuf4, "%02X", requestp[15]);
+    if (len > 2)
+        strcat(fmtbuf3, fmtbuf4);
+    if (requestp[13] == 0x11)
+        ru_type = "ACTPU";
+    if (requestp[13] == 0x0D)
+        ru_type = "ACTLU";
+    if (requestp[13] == 0x0E)
+        ru_type = "DACTLU";
+    if (requestp[13] == 0x12)
+        ru_type = "DACTPU";
+    if (requestp[13] == 0xA0)
+        ru_type = "SDT";
+    if (requestp[13] == 0x31)
+        ru_type = "BIND";
+    if (requestp[13] == 0x32)
+        ru_type = "UNBIND";
+    if (!memcmp(&requestp[13], R010201, 3))
+        ru_type = "CONTACT";
+    if (!memcmp(&requestp[13], R010202, 3))
+        ru_type = "DISCONTACT";
+    if (!memcmp(&requestp[13], R010203, 3))
+        ru_type = "IPLINIT";
+    if (!memcmp(&requestp[13], R010204, 3))
+        ru_type = "IPLTEXT";
+    if (!memcmp(&requestp[13], R010205, 3))
+        ru_type = "IPLFINAL";
+    if (!memcmp(&requestp[13], R01020A, 3))
+        ru_type = "ACTLINK";
+    if (!memcmp(&requestp[13], R01020B, 3))
+        ru_type = "DACTLINK";
+    if (!memcmp(&requestp[13], R010211, 3)) {
         sprintf(fmtbuf6, "%s[%02x]", "SETCV", requestp[18]);
-            ru_type = fmtbuf6;
-            if ((requestp[10] & 0x80) != 0)
-                ru_type = "SETCV";
-      }
-       if (!memcmp(&requestp[13], R010280, 3))
-          ru_type = "CONTACTED";
-       if (!memcmp(&requestp[13], R010281, 3))
-          ru_type = "INOP";
-       if (!memcmp(&requestp[13], R010284, 3))
-          ru_type = "REQCONT";
-       if (!memcmp(&requestp[13], R01021B, 3))
-          ru_type = "REQDISCONT";
-       if (!memcmp(&requestp[13], R01021A, 3))
-          ru_type = "FNA";
-       if (!memcmp(&requestp[13], R01020F, 3))
-          ru_type = "ABCONN";
-       if (!memcmp(&requestp[13], R010219, 3))
-          ru_type = "ANA";
-       if (!memcmp(&requestp[13], R010216, 3))
-          ru_type = "ACTCONNIN";
-       if (!memcmp(&requestp[13], R010217, 3))
-          ru_type = "DACTCONNIN";
-       if ((requestp[10] & 0x08) == 0)
-          ru_type = "";
-       WRMSG(HHC01062,"D",
-           SSID_TO_LCSS(ssid), devnum, tag, fmtbuf, fmtbuf2, fmtbuf3, ru_type);
+        ru_type = fmtbuf6;
+        if ((requestp[10] & 0x80) != 0)
+            ru_type = "SETCV";
+    }
+    if (!memcmp(&requestp[13], R010280, 3))
+        ru_type = "CONTACTED";
+    if (!memcmp(&requestp[13], R010281, 3))
+        ru_type = "INOP";
+    if (!memcmp(&requestp[13], R010284, 3))
+        ru_type = "REQCONT";
+    if (!memcmp(&requestp[13], R01021B, 3))
+        ru_type = "REQDISCONT";
+    if (!memcmp(&requestp[13], R01021A, 3))
+        ru_type = "FNA";
+    if (!memcmp(&requestp[13], R01020F, 3))
+        ru_type = "ABCONN";
+    if (!memcmp(&requestp[13], R010219, 3))
+        ru_type = "ANA";
+    if (!memcmp(&requestp[13], R010216, 3))
+        ru_type = "ACTCONNIN";
+    if (!memcmp(&requestp[13], R010217, 3))
+        ru_type = "DACTCONNIN";
+    if ((requestp[10] & 0x08) == 0)
+        ru_type = "";
+    WRMSG(HHC01062,"D",
+        SSID_TO_LCSS(ssid), devnum, tag, fmtbuf, fmtbuf2, fmtbuf3, ru_type);
 }
 
 static void make_sna_requests2 (COMMADPT *ca) {
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        int     bufp = 0;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    int     bufp = 0;
     while (ca->inpbufl > 0) {
         eleptr = get_bufpool(&ca->freeq);
         if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2");
-                return;
+            WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request2");
+            return;
         }
         respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
@@ -1773,19 +1774,19 @@ static void make_sna_requests2 (COMMADPT *ca) {
         /* do RU */
 
         // FIXME - max. ru_size should be based on BIND settings
-    // A true fix would also require code changes to READ CCW processing
-    // including possibly (gasp) segmenting long PIUs into multiple BTUs
+        // A true fix would also require code changes to READ CCW processing
+        // including possibly (gasp) segmenting long PIUs into multiple BTUs
         ru_size = min(256-(BUFPD+10+3),ca->inpbufl);
         ru_ptr = &respbuf[13];
 
         if (!ca->bindflag) {
-           // send as character-coded logon to SSCP
-           if (ru_size > 0 && (ca->inpbuf[ca->inpbufl-1] == 0x0d || ca->inpbuf[ca->inpbufl-1] == 0x25)) {
-               ru_size--;
-           }
-           if (ru_size > 0 && (ca->inpbuf[ca->inpbufl-1] == 0x0d || ca->inpbuf[ca->inpbufl-1] == 0x25)) {
-               ru_size--;
-           }
+            // send as character-coded logon to SSCP
+            if (ru_size > 0 && (ca->inpbuf[ca->inpbufl-1] == 0x0d || ca->inpbuf[ca->inpbufl-1] == 0x25)) {
+                ru_size--;
+            }
+            if (ru_size > 0 && (ca->inpbuf[ca->inpbufl-1] == 0x0d || ca->inpbuf[ca->inpbufl-1] == 0x25)) {
+                ru_size--;
+            }
             respbuf[2] = ca->sscp_addr0;
             respbuf[3] = ca->sscp_addr1;
             respbuf[11] = 0x80;
@@ -1794,14 +1795,14 @@ static void make_sna_requests2 (COMMADPT *ca) {
         memcpy(ru_ptr, &ca->inpbuf[bufp], ru_size);
         bufp        += ru_size;
         ca->inpbufl -= ru_size;
-    if (!ca->is_3270) {
+        if (!ca->is_3270) {
             ca->inpbufl = 0;
         }
         if (!ca->inpbufl) {
             respbuf[10] |= 0x01;      /* set last in chain */
-        if (ca->bindflag) {
-              respbuf[12] |= 0x20;      /* set CD */
-        }
+            if (ca->bindflag) {
+                respbuf[12] |= 0x20;      /* set CD */
+            }
         }
 
         /* set length field in TH */
@@ -1814,223 +1815,223 @@ static void make_sna_requests2 (COMMADPT *ca) {
 }
 
 static void make_sna_requests3 (COMMADPT *ca) {
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        if (!ca->telnet_int) return;
-        eleptr = get_bufpool(&ca->freeq);
-        if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3");
-                return;
-        }
-        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    if (!ca->telnet_int) return;
+    eleptr = get_bufpool(&ca->freeq);
+    if (!eleptr)  {
+        WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request3");
+        return;
+    }
+    respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
-        /* first do the ten-byte FID1 TH */
-        respbuf[0] = 0x1D;
-        respbuf[1] = 0x00;
-        respbuf[2] = ca->tso_addr0;   // daf
-        respbuf[3] = ca->tso_addr1;
-        respbuf[4] = ca->lu_addr0;   // oaf
-        respbuf[5] = ca->lu_addr1;   // oaf
-        respbuf[6] = 0x11;
-        respbuf[7] = 0x11;
+    /* first do the ten-byte FID1 TH */
+    respbuf[0] = 0x1D;
+    respbuf[1] = 0x00;
+    respbuf[2] = ca->tso_addr0;   // daf
+    respbuf[3] = ca->tso_addr1;
+    respbuf[4] = ca->lu_addr0;   // oaf
+    respbuf[5] = ca->lu_addr1;   // oaf
+    respbuf[6] = 0x11;
+    respbuf[7] = 0x11;
 
-        /* do RH */
-        respbuf[10] = 0x4B;
-        respbuf[11] = 0x80;
-        respbuf[12] = 0x00;
+    /* do RH */
+    respbuf[10] = 0x4B;
+    respbuf[11] = 0x80;
+    respbuf[12] = 0x00;
 
-        /* do RU */
-        ru_size = 0;
-        ru_ptr = &respbuf[13];
+    /* do RU */
+    ru_size = 0;
+    ru_ptr = &respbuf[13];
 
-        ru_ptr[ru_size++] = 0xc9;      // SIG
-        ru_ptr[ru_size++] = 0x00;
-        ru_ptr[ru_size++] = 0x01;
+    ru_ptr[ru_size++] = 0xc9;      // SIG
+    ru_ptr[ru_size++] = 0x00;
+    ru_ptr[ru_size++] = 0x01;
 
-        ru_size += 3;   /* for RH */
-        respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
-        respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
+    ru_size += 3;   /* for RH */
+    respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
+    respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
 
-        put_bufpool(&ca->sendq, eleptr);
-        ca->telnet_int = 0;
+    put_bufpool(&ca->sendq, eleptr);
+    ca->telnet_int = 0;
 }
 
 static void make_sna_requests4 (COMMADPT *ca, int flag, BYTE pu_type) {
     /* send type flag: 0=REQCONT 1=REQDISCONT */
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        eleptr = get_bufpool(&ca->freeq);
-        if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4");
-                return;
-        }
-        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    eleptr = get_bufpool(&ca->freeq);
+    if (!eleptr)  {
+        WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request4");
+        return;
+    }
+    respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
-        /* first do the ten-byte FID1 TH */
-        respbuf[0] = 0x1C;
-        respbuf[1] = 0x00;
-        respbuf[2] = ca->sscp_addr0;   // daf
-        respbuf[3] = ca->sscp_addr1;
+    /* first do the ten-byte FID1 TH */
+    respbuf[0] = 0x1C;
+    respbuf[1] = 0x00;
+    respbuf[2] = ca->sscp_addr0;   // daf
+    respbuf[3] = ca->sscp_addr1;
     // set oaf
     if (flag == 0) {
-            respbuf[4] = ca->ncp_addr0;
-            respbuf[5] = ca->ncp_addr1;
-            make_seq(ca, respbuf);
-        } else {
-            respbuf[4] = ca->pu_addr0;
-            respbuf[5] = ca->pu_addr1;
-            respbuf[6] = 0x00;
-            respbuf[7] = 0x01;
-        }
-
-        /* do RH */
-        respbuf[10] = 0x0b;
-        respbuf[11] = 0x00;
-        respbuf[12] = 0x00;
-
-        /* do RU */
-        ru_size = 0;
-        ru_ptr = &respbuf[13];
-        if (flag == 0) {
-            ru_ptr[ru_size++] = 0x01;      // REQCONT (REQUEST CONTACT)
-            ru_ptr[ru_size++] = 0x02;
-            ru_ptr[ru_size++] = 0x84;
-
-            ru_ptr[ru_size++] = 0x40;      // network address of link
-            ru_ptr[ru_size++] = 0x01;
-
-            ru_ptr[ru_size++] = pu_type;      // PU type
-
-            ru_ptr[ru_size++] = 0x00;
-
-            ru_ptr[ru_size++] = 0x01;      // IDBLK=017,IDNUM=00017
-            ru_ptr[ru_size++] = 0x70;
-            ru_ptr[ru_size++] = 0x00;
-            ru_ptr[ru_size++] = 0x17;
-        } else {
-            ru_ptr[ru_size++] = 0x01;      // REQDISCONT (REQUEST DISCONTACT)
-            ru_ptr[ru_size++] = 0x02;
-            ru_ptr[ru_size++] = 0x1B;
-            ru_ptr[ru_size++] = 0x00;
+        respbuf[4] = ca->ncp_addr0;
+        respbuf[5] = ca->ncp_addr1;
+        make_seq(ca, respbuf);
+    } else {
+        respbuf[4] = ca->pu_addr0;
+        respbuf[5] = ca->pu_addr1;
+        respbuf[6] = 0x00;
+        respbuf[7] = 0x01;
     }
-        ru_size += 3;   /* for RH */
-        respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
-        respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
 
-        put_bufpool(&ca->sendq, eleptr);
-        ca->telnet_int = 0;
+    /* do RH */
+    respbuf[10] = 0x0b;
+    respbuf[11] = 0x00;
+    respbuf[12] = 0x00;
+
+    /* do RU */
+    ru_size = 0;
+    ru_ptr = &respbuf[13];
+    if (flag == 0) {
+        ru_ptr[ru_size++] = 0x01;      // REQCONT (REQUEST CONTACT)
+        ru_ptr[ru_size++] = 0x02;
+        ru_ptr[ru_size++] = 0x84;
+
+        ru_ptr[ru_size++] = 0x40;      // network address of link
+        ru_ptr[ru_size++] = 0x01;
+
+        ru_ptr[ru_size++] = pu_type;      // PU type
+
+        ru_ptr[ru_size++] = 0x00;
+
+        ru_ptr[ru_size++] = 0x01;      // IDBLK=017,IDNUM=00017
+        ru_ptr[ru_size++] = 0x70;
+        ru_ptr[ru_size++] = 0x00;
+        ru_ptr[ru_size++] = 0x17;
+    } else {
+        ru_ptr[ru_size++] = 0x01;      // REQDISCONT (REQUEST DISCONTACT)
+        ru_ptr[ru_size++] = 0x02;
+        ru_ptr[ru_size++] = 0x1B;
+        ru_ptr[ru_size++] = 0x00;
+    }
+    ru_size += 3;   /* for RH */
+    respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
+    respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
+
+    put_bufpool(&ca->sendq, eleptr);
+    ca->telnet_int = 0;
 }
 
 static void make_sna_requests5 (COMMADPT *ca) {
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        eleptr = get_bufpool(&ca->freeq);
-        if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5");
-                return;
-        }
-        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    eleptr = get_bufpool(&ca->freeq);
+    if (!eleptr)  {
+        WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request5");
+        return;
+    }
+    respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
-        /* first do the ten-byte FID1 TH */
-        respbuf[0] = 0x1C;
-        respbuf[1] = 0x00;
-        respbuf[2] = ca->sscp_addr0;   // daf
-        respbuf[3] = ca->sscp_addr1;
-        respbuf[4] = ca->ncp_addr0;    // oaf
-        respbuf[5] = ca->ncp_addr1;
+    /* first do the ten-byte FID1 TH */
+    respbuf[0] = 0x1C;
+    respbuf[1] = 0x00;
+    respbuf[2] = ca->sscp_addr0;   // daf
+    respbuf[3] = ca->sscp_addr1;
+    respbuf[4] = ca->ncp_addr0;    // oaf
+    respbuf[5] = ca->ncp_addr1;
     // set seq no.
-        make_seq(ca, respbuf);
-        /* do RH */
-        respbuf[10] = 0x0B;
-        respbuf[11] = 0x00;
-        respbuf[12] = 0x00;
+    make_seq(ca, respbuf);
+    /* do RH */
+    respbuf[10] = 0x0B;
+    respbuf[11] = 0x00;
+    respbuf[12] = 0x00;
 
-        /* do RU */
-        ru_size = 0;
-        ru_ptr = &respbuf[13];
+    /* do RU */
+    ru_size = 0;
+    ru_ptr = &respbuf[13];
 
-        ru_ptr[ru_size++] = 0x01;      // INOP
-        ru_ptr[ru_size++] = 0x02;
-        ru_ptr[ru_size++] = 0x81;
-        ru_ptr[ru_size++] = ca->pu_addr0;
-        ru_ptr[ru_size++] = ca->pu_addr1;
-        ru_ptr[ru_size++] = 0x01;      // format/reason
+    ru_ptr[ru_size++] = 0x01;      // INOP
+    ru_ptr[ru_size++] = 0x02;
+    ru_ptr[ru_size++] = 0x81;
+    ru_ptr[ru_size++] = ca->pu_addr0;
+    ru_ptr[ru_size++] = ca->pu_addr1;
+    ru_ptr[ru_size++] = 0x01;      // format/reason
 
-        ru_size += 3;   /* for RH */
-        respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
-        respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
+    ru_size += 3;   /* for RH */
+    respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
+    respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
 
-        put_bufpool(&ca->sendq, eleptr);
+    put_bufpool(&ca->sendq, eleptr);
 }
 
 void make_sna_requests (BYTE * requestp, COMMADPT *ca) {
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        if (memcmp(&requestp[13], R010201, 3)) return;   // we only want to process CONTACT
-        eleptr = get_bufpool(&ca->freeq);
-        if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request");
-                return;
-        }
-        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    if (memcmp(&requestp[13], R010201, 3)) return;   // we only want to process CONTACT
+    eleptr = get_bufpool(&ca->freeq);
+    if (!eleptr)  {
+            WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA request");
+            return;
+    }
+    respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
-        /* first do the ten-byte FID1 TH */
-//        respbuf[0] = requestp[0];
-//        respbuf[1] = requestp[1];
-        respbuf[0] = 0x1c;
-        respbuf[1] = 0x00;
-        respbuf[2] = requestp[4];   // daf
-        respbuf[3] = requestp[5];
-        respbuf[4] = requestp[2];   // oaf
-        respbuf[5] = requestp[3];
-        make_seq(ca, respbuf);
-        /* do RH */
-        respbuf[10] = requestp[10];
-        respbuf[11] = requestp[11];
-        respbuf[11] = 0x00;
-        respbuf[12] = requestp[12];
+    /* first do the ten-byte FID1 TH */
+//    respbuf[0] = requestp[0];
+//    respbuf[1] = requestp[1];
+    respbuf[0] = 0x1c;
+    respbuf[1] = 0x00;
+    respbuf[2] = requestp[4];   // daf
+    respbuf[3] = requestp[5];
+    respbuf[4] = requestp[2];   // oaf
+    respbuf[5] = requestp[3];
+    make_seq(ca, respbuf);
+    /* do RH */
+    respbuf[10] = requestp[10];
+    respbuf[11] = requestp[11];
+    respbuf[11] = 0x00;
+    respbuf[12] = requestp[12];
 
-        /* make a CONTACTED RU */
-        ru_size = 0;
-        ru_ptr = &respbuf[13];
-        ru_ptr[ru_size++] = 0x01;
-        ru_ptr[ru_size++] = 0x02;
-        ru_ptr[ru_size++] = 0x80;
-        ru_ptr[ru_size++] = requestp[16];
-        ru_ptr[ru_size++] = requestp[17];
-        ru_ptr[ru_size++] = 0x01;
+    /* make a CONTACTED RU */
+    ru_size = 0;
+    ru_ptr = &respbuf[13];
+    ru_ptr[ru_size++] = 0x01;
+    ru_ptr[ru_size++] = 0x02;
+    ru_ptr[ru_size++] = 0x80;
+    ru_ptr[ru_size++] = requestp[16];
+    ru_ptr[ru_size++] = requestp[17];
+    ru_ptr[ru_size++] = 0x01;
 
-        /* set length field in TH */
-        ru_size += 3;   /* for RH */
-        respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
-        respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
+    /* set length field in TH */
+    ru_size += 3;   /* for RH */
+    respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
+    respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
 
-        put_bufpool(&ca->sendq, eleptr);
+    put_bufpool(&ca->sendq, eleptr);
 }
 
 void make_sna_response (BYTE * requestp, COMMADPT *ca) {
-        BYTE    *respbuf;
-        BYTE    *ru_ptr;
-        int     ru_size;
-        void    *eleptr;
-        BYTE    obuf[4096];
-        BYTE    buf[BUFLEN_3270];
-        int     amt;
-        int     i1;
+    BYTE    *respbuf;
+    BYTE    *ru_ptr;
+    int     ru_size;
+    void    *eleptr;
+    BYTE    obuf[4096];
+    BYTE    buf[BUFLEN_3270];
+    int     amt;
+    int     i1;
 
-        if ((requestp[10] & 0x80) != 0) return;   // disregard if this is a resp.
-        if ((requestp[10] & (unsigned char)0xfc) == 0x00 && requestp[2] == ca->lu_addr0 && requestp[3] == ca->lu_addr1 && ca->sfd > 0) {   /* if type=data, and DAF matches up, and socket exists */
-          amt = (requestp[8] << 8) + requestp[9];
-          amt -= 3;
-          if (ca->is_3270) {
+    if ((requestp[10] & 0x80) != 0) return;   // disregard if this is a resp.
+    if ((requestp[10] & (unsigned char)0xfc) == 0x00 && requestp[2] == ca->lu_addr0 && requestp[3] == ca->lu_addr1 && ca->sfd > 0) {   /* if type=data, and DAF matches up, and socket exists */
+        amt = (requestp[8] << 8) + requestp[9];
+        amt -= 3;
+        if (ca->is_3270) {
             memcpy(buf, &requestp[13], amt);
             /* Double up any IAC bytes in the data */
             amt = double_up_iac (buf, amt);
@@ -2042,7 +2043,7 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
             /* Send the data to the client */
             logdump ("SEND", ca->dev, buf, amt);
             write_socket(ca->sfd,buf,amt);
-          } else {
+        } else {
             // convert data portion to ASCII and write to remote user
             if (amt > 0) {
                 memcpy(obuf, &requestp[13], amt);
@@ -2052,121 +2053,121 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
                 logdump ("SEND", ca->dev, obuf, amt);
                 write_socket(ca->sfd,obuf,amt);
             }
-          }
         }
-        if ((requestp[11] & 0xf0) != 0x80) return;   // disregard if not DR1 requested
+    }
+    if ((requestp[11] & 0xf0) != 0x80) return;   // disregard if not DR1 requested
 
-        eleptr = get_bufpool(&ca->freeq);
-        if (!eleptr)  {
-                WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA response");
-                return;
-        }
-        respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
+    eleptr = get_bufpool(&ca->freeq);
+    if (!eleptr)  {
+        WRMSG(HHC01020, "E", SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, "SNA response");
+        return;
+    }
+    respbuf = SIZEOF_INT_P + (BYTE*)eleptr;
 
-        /* first do the ten-byte FID1 TH */
-        respbuf[0] = requestp[0];
-        respbuf[1] = requestp[1];
-        respbuf[2] = requestp[4];   // daf
-        respbuf[3] = requestp[5];
-        respbuf[4] = requestp[2];   // oaf
-        respbuf[5] = requestp[3];
-        respbuf[6] = requestp[6];   // seq #
-        respbuf[7] = requestp[7];
+    /* first do the ten-byte FID1 TH */
+    respbuf[0] = requestp[0];
+    respbuf[1] = requestp[1];
+    respbuf[2] = requestp[4];   // daf
+    respbuf[3] = requestp[5];
+    respbuf[4] = requestp[2];   // oaf
+    respbuf[5] = requestp[3];
+    respbuf[6] = requestp[6];   // seq #
+    respbuf[7] = requestp[7];
 
-        /* do RH */
-        respbuf[10] = requestp[10];
-        respbuf[10] |= 0x83;         // indicate this is a resp.
-        respbuf[11] = requestp[11];
-//        respbuf[12] = requestp[12];
-        respbuf[12] = 0x00;
+    /* do RH */
+    respbuf[10] = requestp[10];
+    respbuf[10] |= 0x83;         // indicate this is a resp.
+    respbuf[11] = requestp[11];
+//    respbuf[12] = requestp[12];
+    respbuf[12] = 0x00;
 
-        /* do RU */
-        ru_size = 0;
-        ru_ptr = &respbuf[13];
-        if ((requestp[10] & 0x08) != 0)
-            ru_ptr[ru_size++] = requestp[13];
-        if (requestp[13] == 0x11 && requestp[14] == 0x02) {   /* ACTPU (NCP)*/
+    /* do RU */
+    ru_size = 0;
+    ru_ptr = &respbuf[13];
+    if ((requestp[10] & 0x08) != 0)
+        ru_ptr[ru_size++] = requestp[13];
+    if (requestp[13] == 0x11 && requestp[14] == 0x02) {   /* ACTPU (NCP)*/
         ca->ncp_addr0 = requestp[2];
         ca->ncp_addr1 = requestp[3];
-//            ca->ncp_sscp_seqn = 0;
-            ru_ptr[ru_size++] = 0x02;
-            if (requestp[2] == 0x40) {  /* DAF subarea field = 8? */
-                ru_ptr[ru_size++] = 0xd4;   /* DS CL8'MHPRMT1 ' - NCP load mod name */
-                ru_ptr[ru_size++] = 0xc8;
-                ru_ptr[ru_size++] = 0xd7;
-                ru_ptr[ru_size++] = 0xd9;
-                ru_ptr[ru_size++] = 0xd4;
-                ru_ptr[ru_size++] = 0xe3;
-                ru_ptr[ru_size++] = 0xf1;
-                ru_ptr[ru_size++] = 0x40;
-                ca->ncpb_sscp_seqn = 0;
-            } else {
-                ru_ptr[ru_size++] = 0xd4;   /* DS CL8'MHP3705 ' - NCP load mod name */
-                ru_ptr[ru_size++] = 0xc8;   /* checked by host at ACTPU time        */
-                ru_ptr[ru_size++] = 0xd7;
-                ru_ptr[ru_size++] = 0xf3;
-                ru_ptr[ru_size++] = 0xf7;
-                ru_ptr[ru_size++] = 0xf0;
-                ru_ptr[ru_size++] = 0xf5;
-                ru_ptr[ru_size++] = 0x40;
-                ca->ncpa_sscp_seqn = 0;
-            }
+//        ca->ncp_sscp_seqn = 0;
+        ru_ptr[ru_size++] = 0x02;
+        if (requestp[2] == 0x40) {  /* DAF subarea field = 8? */
+            ru_ptr[ru_size++] = 0xd4;   /* DS CL8'MHPRMT1 ' - NCP load mod name */
+            ru_ptr[ru_size++] = 0xc8;
+            ru_ptr[ru_size++] = 0xd7;
+            ru_ptr[ru_size++] = 0xd9;
+            ru_ptr[ru_size++] = 0xd4;
+            ru_ptr[ru_size++] = 0xe3;
+            ru_ptr[ru_size++] = 0xf1;
+            ru_ptr[ru_size++] = 0x40;
+            ca->ncpb_sscp_seqn = 0;
+        } else {
+            ru_ptr[ru_size++] = 0xd4;   /* DS CL8'MHP3705 ' - NCP load mod name */
+            ru_ptr[ru_size++] = 0xc8;   /* checked by host at ACTPU time        */
+            ru_ptr[ru_size++] = 0xd7;
+            ru_ptr[ru_size++] = 0xf3;
+            ru_ptr[ru_size++] = 0xf7;
+            ru_ptr[ru_size++] = 0xf0;
+            ru_ptr[ru_size++] = 0xf5;
+            ru_ptr[ru_size++] = 0x40;
+            ca->ncpa_sscp_seqn = 0;
         }
-        if (requestp[13] == 0x11 && requestp[14] == 0x01) {   /* ACTPU (PU)*/
-            ru_ptr[ru_size++] = 0x01;
-            /* save daf as our own net addr */
+    }
+    if (requestp[13] == 0x11 && requestp[14] == 0x01) {   /* ACTPU (PU)*/
+        ru_ptr[ru_size++] = 0x01;
+        /* save daf as our own net addr */
         ca->pu_addr0 = requestp[2];
         ca->pu_addr1 = requestp[3];
+    }
+    if (requestp[13] == 0x01) {   /* 01XXXX Network Services */
+        ru_ptr[ru_size++] = requestp[14];
+        ru_ptr[ru_size++] = requestp[15];
+    }
+    if (!memcmp(&requestp[13], R010219, 3) && ca->sfd > 0) {   /* ANA */
+        if (!ca->is_3270) {
+            connect_message(ca->sfd, (requestp[20] << 8) + requestp[21], 0);
         }
-        if (requestp[13] == 0x01) {   /* 01XXXX Network Services */
-            ru_ptr[ru_size++] = requestp[14];
-            ru_ptr[ru_size++] = requestp[15];
-        }
-        if (!memcmp(&requestp[13], R010219, 3) && ca->sfd > 0) {   /* ANA */
-            if (!ca->is_3270) {
-              connect_message(ca->sfd, (requestp[20] << 8) + requestp[21], 0);
-        }
-        }
-        if (requestp[13] == 0x0D) {   /* ACTLU */
-            /* save daf as our own net addr */
-            ca->lu_addr0 = requestp[2];
-            ca->lu_addr1 = requestp[3];
-            /* save oaf as our sscp net addr */
-            ca->sscp_addr0 = requestp[4];
-            ca->sscp_addr1 = requestp[5];
+    }
+    if (requestp[13] == 0x0D) {   /* ACTLU */
+        /* save daf as our own net addr */
+        ca->lu_addr0 = requestp[2];
+        ca->lu_addr1 = requestp[3];
+        /* save oaf as our sscp net addr */
+        ca->sscp_addr0 = requestp[4];
+        ca->sscp_addr1 = requestp[5];
 
-            ca->lu_sscp_seqn = 0;
-            ca->bindflag = 0;
-        }
-        if (requestp[13] == 0x0E || !memcmp(&requestp[13], R01020F, 3)) {  // DACTLU or ABCONN
-            if (!ca->is_3270) {
-              connect_message(ca->sfd, 0, 1);
+        ca->lu_sscp_seqn = 0;
+        ca->bindflag = 0;
+    }
+    if (requestp[13] == 0x0E || !memcmp(&requestp[13], R01020F, 3)) {  // DACTLU or ABCONN
+        if (!ca->is_3270) {
+            connect_message(ca->sfd, 0, 1);
         }
         ca->hangup = 1;
-        }
-        if (requestp[13] == 0x31) {   /* BIND */
-            /* save oaf from BIND request */
-            ca->tso_addr0 = requestp[4];
-            ca->tso_addr1 = requestp[5];
-            ca->lu_lu_seqn = 0;
-            ca->bindflag = 1;
-        }
-        if (requestp[13] == 0x32 && requestp[14] != 0x02) {   /* BIND */
-            ca->bindflag = 0;
-        }
+    }
+    if (requestp[13] == 0x31) {   /* BIND */
+        /* save oaf from BIND request */
+        ca->tso_addr0 = requestp[4];
+        ca->tso_addr1 = requestp[5];
+        ca->lu_lu_seqn = 0;
+        ca->bindflag = 1;
+    }
+    if (requestp[13] == 0x32 && requestp[14] != 0x02) {   /* BIND */
+        ca->bindflag = 0;
+    }
 #if 0
-        if (requestp[13] == 0x32 && requestp[14] == 0x01 && ca->sfd > 0) {   /* UNBIND */
-            close_socket(ca->sfd);
-            ca->sfd=-1;
-        }
+    if (requestp[13] == 0x32 && requestp[14] == 0x01 && ca->sfd > 0) {   /* UNBIND */
+        close_socket(ca->sfd);
+        ca->sfd=-1;
+    }
 #endif
 
-        /* set length field in TH */
-        ru_size += 3;   /* for RH */
-        respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
-        respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
+    /* set length field in TH */
+    ru_size += 3;   /* for RH */
+    respbuf[8] = (unsigned char)(ru_size >> 8) & 0xff;
+    respbuf[9] = (unsigned char)(ru_size     ) & 0xff;
 
-        put_bufpool(&ca->sendq, eleptr);
+    put_bufpool(&ca->sendq, eleptr);
 }
 
 enum fid_remap {
@@ -2261,86 +2262,86 @@ int     llsize;
         /* BASIC SENSE                                                   */
         /*---------------------------------------------------------------*/
         case 0x04:
-                dev->commadpt->unack_attn_count = 0;
-                num=count<dev->numsense?count:dev->numsense;
-                *more=count<dev->numsense?1:0;
-                memcpy(iobuf,dev->sense,num);
-                *residual=count-num;
-                *unitstat=CSW_CE|CSW_DE;
-                break;
+            dev->commadpt->unack_attn_count = 0;
+            num=count<dev->numsense?count:dev->numsense;
+            *more=count<dev->numsense?1:0;
+            memcpy(iobuf,dev->sense,num);
+            *residual=count-num;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
 
         /*---------------------------------------------------------------*/
         /* READ type CCWs                                                */
         /*---------------------------------------------------------------*/
         case 0x02:   /* READ */
-                dev->commadpt->read_ccw_count++;
-                dev->commadpt->unack_attn_count = 0;
-                *more = 0;
-                make_sna_requests2(dev->commadpt);
-                make_sna_requests3(dev->commadpt);
-                eleptr = get_bufpool(&dev->commadpt->sendq);
-                *residual=count;
-                if (eleptr) {
-                    piudata = SIZEOF_INT_P + (BYTE*)eleptr;
-                    piusize = (piudata[8] << 8) + piudata[9];
-                    piusize += 10;    // for FID1 TH
-                    iobuf[0] = BUFPD;
-                    memcpy (&iobuf[BUFPD], piudata, piusize);
-                    if (dev->commadpt->emu3791) {
-                        llsize = piusize + BUFPD;
-                        iobuf[0] = (llsize >> 8) & 0xff;
-                        iobuf[1] = llsize & 0xff;
-                        th_remap(MAP_FID1_FID2, &iobuf[BUFPD]);
-                    }
-                    *residual=count - (piusize + BUFPD);
-                    logdump("READ", dev, &iobuf[BUFPD], piusize);
-                    if (dev->commadpt->debug_sna)
-                        format_sna(piudata, "RD", dev->ssid, dev->devnum);
-                    put_bufpool(&dev->commadpt->freeq, eleptr);
+            dev->commadpt->read_ccw_count++;
+            dev->commadpt->unack_attn_count = 0;
+            *more = 0;
+            make_sna_requests2(dev->commadpt);
+            make_sna_requests3(dev->commadpt);
+            eleptr = get_bufpool(&dev->commadpt->sendq);
+            *residual=count;
+            if (eleptr) {
+                piudata = SIZEOF_INT_P + (BYTE*)eleptr;
+                piusize = (piudata[8] << 8) + piudata[9];
+                piusize += 10;    // for FID1 TH
+                iobuf[0] = BUFPD;
+                memcpy (&iobuf[BUFPD], piudata, piusize);
+                if (dev->commadpt->emu3791) {
+                    llsize = piusize + BUFPD;
+                    iobuf[0] = (llsize >> 8) & 0xff;
+                    iobuf[1] = llsize & 0xff;
+                    th_remap(MAP_FID1_FID2, &iobuf[BUFPD]);
                 }
-                *unitstat=CSW_CE|CSW_DE;
+                *residual=count - (piusize + BUFPD);
+                logdump("READ", dev, &iobuf[BUFPD], piusize);
+                if (dev->commadpt->debug_sna)
+                    format_sna(piudata, "RD", dev->ssid, dev->devnum);
+                put_bufpool(&dev->commadpt->freeq, eleptr);
+            }
+            *unitstat=CSW_CE|CSW_DE;
 #if 0
-                if (dev->commadpt->sendq) {
-                    *unitstat|=CSW_ATTN;
-                }
+            if (dev->commadpt->sendq) {
+                *unitstat|=CSW_ATTN;
+            }
 #endif
-                *unitstat|=CSW_UX;
-                break;
+            *unitstat|=CSW_UX;
+            break;
 
         /*---------------------------------------------------------------*/
         /* 3791 WRITE BLOCK                                              */
         /*---------------------------------------------------------------*/
         case 0x05:
-                logdump("WRITE BLOCK", dev, iobuf, count);
-                *residual=0;
-                *unitstat=CSW_CE|CSW_DE;
-                break;
+            logdump("WRITE BLOCK", dev, iobuf, count);
+            *residual=0;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
 
         /*---------------------------------------------------------------*/
         /* WRITE type CCWs                                               */
         /*---------------------------------------------------------------*/
         case 0x09:   /* WRITE BREAK */
         case 0x01:   /* WRITE */
-                dev->commadpt->write_ccw_count++;
-                dev->commadpt->unack_attn_count = 0;
-                logdump("WRITE", dev, iobuf, count);
-                if (dev->commadpt->emu3791 && (iobuf[4] & 0xf0) == 0x20)
-                    th_remap(MAP_FID2_FID1, iobuf);
-                if ((iobuf[0] & 0xf0) == 0x10) {  // if FID1
-                    if (dev->commadpt->debug_sna)
-                        format_sna(iobuf, "WR", dev->ssid, dev->devnum);
-                    make_sna_response(iobuf, dev->commadpt);
-                    make_sna_requests(iobuf, dev->commadpt);
-                }
-                *residual=0;
-                *unitstat=CSW_CE|CSW_DE;
+            dev->commadpt->write_ccw_count++;
+            dev->commadpt->unack_attn_count = 0;
+            logdump("WRITE", dev, iobuf, count);
+            if (dev->commadpt->emu3791 && (iobuf[4] & 0xf0) == 0x20)
+                th_remap(MAP_FID2_FID1, iobuf);
+            if ((iobuf[0] & 0xf0) == 0x10) {  // if FID1
+                if (dev->commadpt->debug_sna)
+                    format_sna(iobuf, "WR", dev->ssid, dev->devnum);
+                make_sna_response(iobuf, dev->commadpt);
+                make_sna_requests(iobuf, dev->commadpt);
+            }
+            *residual=0;
+            *unitstat=CSW_CE|CSW_DE;
 #if 0
-                if (dev->commadpt->sendq) {
-                    *unitstat|=CSW_ATTN;
-                    *unitstat|=CSW_UX|CSW_ATTN;
-                }
+            if (dev->commadpt->sendq) {
+                *unitstat|=CSW_ATTN;
+                *unitstat|=CSW_UX|CSW_ATTN;
+            }
 #endif
-                break;
+            break;
 
         /*---------------------------------------------------------------*/
         /* CCWs to be treated as NOPs                                    */
@@ -2351,9 +2352,9 @@ int     llsize;
         case 0x51:   /* WS1 */
         case 0x32:   /* RS0 */
         case 0x52:   /* RS1 */
-                *residual=count;
-                *unitstat=CSW_CE|CSW_DE;
-                break;
+            *residual=count;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
 
         default:
         /*---------------------------------------------------------------*/
@@ -2377,31 +2378,31 @@ int     llsize;
 static
 #endif
 DEVHND com3705_device_hndinfo = {
-        &commadpt_init_handler,        /* Device Initialisation      */
-        &commadpt_execute_ccw,         /* Device CCW execute         */
-        &commadpt_close_device,        /* Device Close               */
-        &commadpt_query_device,        /* Device Query               */
-        NULL,                          /* Device Extended Query      */
-        NULL,                          /* Device Start channel pgm   */
-        NULL,                          /* Device End channel pgm     */
-        NULL,                          /* Device Resume channel pgm  */
-        NULL,                          /* Device Suspend channel pgm */
-        &commadpt_halt,                /* Device Halt channel pgm    */
-        NULL,                          /* Device Read                */
-        NULL,                          /* Device Write               */
-        NULL,                          /* Device Query used          */
-        NULL,                          /* Device Reserve             */
-        NULL,                          /* Device Release             */
-        NULL,                          /* Device Attention           */
-        commadpt_immed_command,        /* Immediate CCW Codes        */
-        NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Output      */
-        NULL,                          /* Signal Adapter Sync        */
-        NULL,                          /* Signal Adapter Output Mult */
-        NULL,                          /* QDIO subsys desc           */
-        NULL,                          /* QDIO set subchan ind       */
-        NULL,                          /* Hercules suspend           */
-        NULL                           /* Hercules resume            */
+    &commadpt_init_handler,        /* Device Initialisation      */
+    &commadpt_execute_ccw,         /* Device CCW execute         */
+    &commadpt_close_device,        /* Device Close               */
+    &commadpt_query_device,        /* Device Query               */
+    NULL,                          /* Device Extended Query      */
+    NULL,                          /* Device Start channel pgm   */
+    NULL,                          /* Device End channel pgm     */
+    NULL,                          /* Device Resume channel pgm  */
+    NULL,                          /* Device Suspend channel pgm */
+    &commadpt_halt,                /* Device Halt channel pgm    */
+    NULL,                          /* Device Read                */
+    NULL,                          /* Device Write               */
+    NULL,                          /* Device Query used          */
+    NULL,                          /* Device Reserve             */
+    NULL,                          /* Device Release             */
+    NULL,                          /* Device Attention           */
+    commadpt_immed_command,        /* Immediate CCW Codes        */
+    NULL,                          /* Signal Adapter Input       */
+    NULL,                          /* Signal Adapter Output      */
+    NULL,                          /* Signal Adapter Sync        */
+    NULL,                          /* Signal Adapter Output Mult */
+    NULL,                          /* QDIO subsys desc           */
+    NULL,                          /* QDIO set subchan ind       */
+    NULL,                          /* Hercules suspend           */
+    NULL                           /* Hercules resume            */
 };
 
 
@@ -2413,27 +2414,27 @@ DEVHND com3705_device_hndinfo = {
 #define hdl_reso hdt3705_LTX_hdl_reso
 #define hdl_init hdt3705_LTX_hdl_init
 #define hdl_fini hdt3705_LTX_hdl_fini
-#endif
+#endif /* !defined(HDL_BUILD_SHARED)... */
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY(HERCULES);
-     HDL_DEPENDENCY(DEVBLK);
-     HDL_DEPENDENCY(SYSBLK);
+    HDL_DEPENDENCY(HERCULES);
+    HDL_DEPENDENCY(DEVBLK);
+    HDL_DEPENDENCY(SYSBLK);
 }
 END_DEPENDENCY_SECTION;
 
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
-  #undef sysblk
-  HDL_RESOLVER_SECTION;
-  {
+#undef sysblk
+HDL_RESOLVER_SECTION;
+{
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-  }
-  END_RESOLVER_SECTION;
-#endif
+}
+END_RESOLVER_SECTION;
+#endif /* defined(WIN32)... */
 
 
 HDL_DEVICE_SECTION;
@@ -2441,4 +2442,4 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3705, com3705_device_hndinfo );
 }
 END_DEVICE_SECTION;
-#endif
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
