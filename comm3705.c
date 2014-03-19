@@ -1270,7 +1270,6 @@ static void *telnet_thread(void *vca)
     COMMADPT *ca;
     int devnum;                 /* device number copy for convenience*/
     int        sockopt;         /* Used for setsocketoption          */
-    int ca_shutdown=0;          /* Thread shutdown internal flag     */
     int rc;                     /* return code from various rtns     */
     struct sockaddr_in sin;     /* bind socket address structure     */
     BYTE bfr[256];
@@ -1302,14 +1301,16 @@ static void *telnet_thread(void *vca)
     if (rc < 0)
     {
         WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
-        ca_shutdown=1;
+        return NULL;
     }
     /* Start the listen */
-    if(!ca_shutdown)
+    rc = listen(ca->lfd,10);
+    if (rc < 0)
     {
-        listen(ca->lfd,10);
-        WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
+        WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"listen()",strerror(HSO_errno));
+        return NULL;
     }
+    WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
     for (;;)
     {
         ca->sfd = 0;
