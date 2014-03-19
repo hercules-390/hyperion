@@ -1002,7 +1002,7 @@ static void*  CTCT_ListenThread( void* argp )
         // Hercules tries to connect).  This will also be fixed RSN.
     }
 
-    return NULL;    // make compiler happy
+    // UNREACHABLE
 }
 
 // ====================================================================

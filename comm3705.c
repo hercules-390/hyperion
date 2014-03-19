@@ -1351,8 +1351,6 @@ static void *telnet_thread(void *vca)
                     continue;
                 }
                 break;
-//              make_sna_requests4(ca, 1);   // send REQDISCONT
-                make_sna_requests5(ca);
             }
             if (rc == 0)
             {
@@ -1365,6 +1363,8 @@ static void *telnet_thread(void *vca)
         close_socket(ca->sfd);
         ca->sfd = 0;
     }
+
+    // UNREACHABLE
 }
 
 /*-------------------------------------------------------------------*/
@@ -1391,7 +1391,7 @@ static void *commadpt_thread(void *vca)
     MSGBUF(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
 
-    for (;;) {
+    while (!sysblk.shutdown) {
         release_lock(&ca->lock);
         usleep(50000 + (ca->unack_attn_count * 100000));
         obtain_lock(&ca->lock);
@@ -1409,6 +1409,7 @@ static void *commadpt_thread(void *vca)
                     SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
         }
     }
+    // end while(!sysblk.shutdown)
 
     WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
     release_lock(&ca->lock);

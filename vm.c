@@ -494,7 +494,6 @@ BYTE            skey1, skey2;           /* Storage keys of first and
     if (iopaddr & 0x00000003)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     }
 
     /* Ensure that parameter list operand is addressable */
@@ -537,7 +536,6 @@ BYTE            skey1, skey2;           /* Storage keys of first and
             || ioparm.type == HCPSBIOP_READ))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
     /* Set return code 8 and cond code 2 if blocksize is invalid */
@@ -552,7 +550,6 @@ BYTE            skey1, skey2;           /* Storage keys of first and
     if (sbiaddr & 0x00000007)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
     /* Program check if reserved fields are not zero */
@@ -563,7 +560,6 @@ BYTE            skey1, skey2;           /* Storage keys of first and
     if (accum != 0)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
     /* Set return code 11 and cond code 2 if SBI count is invalid */
@@ -751,7 +747,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     if (iopaddr & 0x00000003)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     }
 
     /* Ensure that parameter list operand is addressable */
@@ -783,7 +778,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     if ((ioparm.akey & 0x0F) || (ioparm.flag & HCPSGIOP_FLAG_RESV))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
 #ifdef FEATURE_S370_CHANNEL
@@ -791,7 +785,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 #endif /*FEATURE_S370_CHANNEL*/
 
@@ -802,7 +795,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
                         (U32)0x7FFFFFFF : (U32)0x00FFFFFF))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
     /* Program check if reserved fields are not zero */
@@ -817,7 +809,6 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     if (accum != 0)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-        return 0;
     }
 
     /* Obtain the interrupt lock */
@@ -941,7 +932,6 @@ BYTE       c;                           /* Character work area       */
     if (idaddr & 0x00000007)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return;
     }
 
     /* Load storage operand length from R2 register */
@@ -951,7 +941,6 @@ BYTE       c;                           /* Character work area       */
     if (idlen < 1)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return;
     }
 
     /* Bytes 0-7 contain the system name ("HERCULES" in EBCDIC) */
@@ -1076,7 +1065,6 @@ char    msgbuf[512];                    /* Message work area         */
             && (r1 == 15 || r2 == 15 || r1 == r2 + 1 || r2 == r1 + 1)))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     }
 
     /* Put machine into stopped state if command length is zero */
@@ -1218,7 +1206,6 @@ U32     buflen;                         /* Length of data buffer     */
     if ((S32)buflen < 0)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return;
     }
 
     /* Store IPL information if buffer length is non-zero */
@@ -1525,7 +1512,6 @@ static  char timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
         || (bufadr & 0x00000007))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return;
     }
 
     /* Build the response buffer */
@@ -1603,7 +1589,6 @@ BYTE    func;                           /* Function code...          */
     if (r1 & 1)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     }
 
     /* Extract the function code from R1+1 register bits 24-31 */
@@ -1618,7 +1603,6 @@ BYTE    func;                           /* Function code...          */
         && (start > end || end > regs->mainlim))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     }
 
     /* Process depending on function code */
@@ -1650,7 +1634,6 @@ BYTE    func;                           /* Function code...          */
 
     default:            /* Invalid function code */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 0;
     } /* end switch(func) */
 
     /* Return condition code zero */

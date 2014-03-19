@@ -2695,5 +2695,5 @@ int generic_tmhcall ( GENTMH_PARMS* pGenParms )
         }
     }
 
-    return -1;      // (never reached)
+    // UNREACHABLE
 }

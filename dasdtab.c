@@ -336,7 +336,7 @@ U32 i;                                  /* Loop Index                */
     default:
         return NULL;
     }
-    return NULL;
+    // UNREACHABLE
 }
 
 /*-------------------------------------------------------------------*/
