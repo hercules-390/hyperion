@@ -447,6 +447,7 @@ struct  _LCSPORT
     u_int       fStarted:1;               // Startup Received
     u_int       fRouteAdded:1;            // Routing Added
     u_int       fCloseInProgress:1;       // Close in progress
+    u_int       fPreconfigured:1;         // TAP device pre-configured
 
     int         fd;                       // TUN/TAP fd
     TID         tid;                      // Read Thread ID
@@ -486,8 +487,8 @@ struct  _LCSBLK
 #endif
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
-    char*       pszMACAddress;            // MAC Address (string)
-    MAC         MAC_Address;              // MAC Address (binary)
+//  char*       pszMACAddress;            // MAC Address (string)
+//  MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
 #if defined( OPTION_W32_CTCI )
