@@ -26,7 +26,7 @@
 
 #if !defined(OPTION_W32_CTCI)
 #include <ifaddrs.h>
-#endif /* defined(OPTION_W32_CTCI) */
+#endif /* !defined(OPTION_W32_CTCI) */
 
 
 #if defined(WIN32) && !defined(_MSVC_) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL)
@@ -531,7 +531,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #ifdef OPTION_TUNTAP_CLRIPADDR
         VERIFY( TUNTAP_ClrIPAddr ( pPTPBLK->szTUNIfName ) == 0 );
 #endif /* OPTION_TUNTAP_CLRIPADDR */
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
 
         if (pPTPBLK->fIPv4Spec)
         {
@@ -591,11 +591,11 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // Display various information, maybe
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DEBUGCONFVALUE))
     {
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
         // HHC03952 "%1d:%04X PTP: MAC: %s"
         WRMSG(HHC03952, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
             pPTPBLK->szMACAddress );
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
 #if defined(ENABLE_IPV6)
         if (pPTPBLK->fIPv4Spec)
         {
@@ -2608,13 +2608,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     memset( &mac,  0, sizeof(MAC) );
 
     // Set some initial defaults
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
     pPTPBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pPTPBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
     strlcpy( pPTPBLK->szTUNCharDevName, tt32_get_default_iface(), sizeof(pPTPBLK->szTUNCharDevName) );
-#else /* defined ( OPTION_W32_CTCI ) */
+#else /* defined(OPTION_W32_CTCI) */
     strlcpy( pPTPBLK->szTUNCharDevName, HERCTUN_DEV, sizeof(pPTPBLK->szTUNCharDevName) );
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
 #if defined(ENABLE_IPV6)
     pPTPBLK->iAFamily = AF_UNSPEC;
 #else /* defined(ENABLE_IPV6) */
@@ -2641,11 +2641,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     {
         int     c;
 
-#if defined( OPTION_W32_CTCI )
-  #define  PTP_OPTSTRING  "n:x:t:d::46" "m:k:i:"
-#else
+#if defined(OPTION_W32_CTCI)
+  #define  PTP_OPTSTRING  "n:t:d::46m:k:i:"
+#else /* defined(OPTION_W32_CTCI) */
   #define  PTP_OPTSTRING  "n:x:t:d::46"
-#endif
+#endif /* defined(OPTION_W32_CTCI) */
 
 #if defined(HAVE_GETOPT_LONG)
         int     iOpt;
@@ -2653,16 +2653,18 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         static struct option options[] =
         {
             { "dev",     required_argument, NULL, 'n' },
+#if !defined(OPTION_W32_CTCI)
             { "if",      required_argument, NULL, 'x' },
+#endif /* !defined(OPTION_W32_CTCI) */
             { "mtu",     required_argument, NULL, 't' },
             { "debug",   optional_argument, NULL, 'd' },
             { "inet",    no_argument,       NULL, '4' },
             { "inet6",   no_argument,       NULL, '6' },
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
             { "mac",     required_argument, NULL, 'm' },
             { "kbuff",   required_argument, NULL, 'k' },
             { "ibuff",   required_argument, NULL, 'i' },
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
             { NULL,      0,                 NULL,  0  }
         };
 
@@ -2678,7 +2680,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         {
 
         case 'n':     // Network Device
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
             // This could be the IP or MAC address of the
             // host ethernet adapter.
             if (inet_aton( optarg, &addr4 ) == 0)
@@ -2692,7 +2694,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     return -1;
                 }
             }
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
             // This is the file name of the special TUN/TAP character device
             if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharDevName)-1)
             {
@@ -2704,6 +2706,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             strlcpy( pPTPBLK->szTUNCharDevName, optarg, sizeof(pPTPBLK->szTUNCharDevName) );
             break;
 
+#if !defined(OPTION_W32_CTCI)
         case 'x':     // TUN network interface name
             if (strlen( optarg ) > sizeof(pPTPBLK->szTUNIfName)-1)
             {
@@ -2715,6 +2718,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             strlcpy( pPTPBLK->szTUNIfName, optarg, sizeof(pPTPBLK->szTUNIfName) );
             saw_if = 1;
             break;
+#endif /* !defined(OPTION_W32_CTCI) */
 
         case 't':     // MTU of link (ignored if Windows) (default 1500).
 
@@ -2827,7 +2831,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #endif /* defined(ENABLE_IPV6) */
             break;
 
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
         case 'm':
             if (ParseMAC( optarg, mac ) != 0 ||
                 strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
@@ -2865,7 +2869,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             }
             pPTPBLK->iIOBuff = iIOBuff * 1024;
             break;
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
 
         default:
             // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
@@ -2879,11 +2883,27 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     argc -= optind;
     argv += optind;
 
-    // Check for correct number of arguments. There can be either
-    // a) two parameters (a pair of IPv4 or IPv6 addresses), or four
-    // parameters (a pair of IPv4 addresses and a pair of IPv6 addresses),
-    // or b) one parameter when the -x option has not been specified,
-    // or c) zero parameters but the -x option has been speciffied.
+    // Check for correct number of arguments.
+    // For *nix, there can be either:-
+    // a) Two parameters (a pair of IPv4 or IPv6 addresses), or four
+    //    parameters (a pair of IPv4 addresses and a pair of IPv6
+    //    addresses). If the -x option has not been specified, PTP
+    //    will use a TUN interface whose name is allocated by the
+    //    kernel (e.g. tun0), that is configured by PTP. If the -x
+    //    option has been specified, PTP will use a pre-named TUN
+    //    interface. The TUN interface may have been created before
+    //    PTP was started, or it may be created by PTP, but in either
+    //    case the TUN interface is configured by PTP.
+    // b) One parameter when the -x option has not been specified.
+    //    The single parameter specifies the name of a pre-configured
+    //    TUN inferface that PTP will use.
+    // c) Zero parameters when the -x option has been specified. The
+    //    The -x option specified the name of a pre-configured TUN
+    //    inferface that PTP will use..
+    // For Windows there can be:-
+    // a) Two parameters (a pair of IPv4 or IPv6 addresses), or four
+    //    parameters (a pair of IPv4 addresses and a pair of IPv6
+    //    addresses).
 //  {
 //      char    tmp[256];
 //      snprintf( (char*)tmp, 256, "argc %d  saw_if %d  saw_conf %d", argc, saw_if, saw_conf );
@@ -2893,11 +2913,11 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #if defined(ENABLE_IPV6)
                        || argc == 4
 #endif /* defined(ENABLE_IPV6) */
-                                   ) /* Not pre-configured */
+                                   ) /* Not pre-configured, but possibly pre-named */
     {
         pPTPBLK->fPreconfigured = FALSE;
     }
-#if !defined( OPTION_W32_CTCI )
+#if !defined(OPTION_W32_CTCI)
     else if (argc == 1 && !saw_if && !saw_conf) /* Pre-configured using name */
     {
         if (strlen( argv[0] ) > sizeof(pPTPBLK->szTUNIfName)-1)
@@ -2915,13 +2935,26 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     {
         pPTPBLK->fPreconfigured = TRUE;
     }
-#endif /* !defined( OPTION_W32_CTCI ) */
+#endif /* !defined(OPTION_W32_CTCI) */
     else
     {
         // HHC03975 "%1d:%04X %s: incorrect number of parameters"
-        WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
         return -1;
     }
+
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    if (pPTPBLK->fPreconfigured == TRUE)
+    {
+        /* Need  to append the interface number to the character */
+        /* device name to open the requested interface.          */
+
+        char * s = pPTPBLK->szTUNIfName + strlen(pPTPBLK->szTUNIfName);
+
+        while(isdigit(s[- 1])) s--;
+        strlcat( pPTPBLK->szTUNCharDevName,  s, sizeof(pPTPBLK->szTUNCharDevName) );
+    }
+#endif
 
     //
     iWantFamily = pPTPBLK->iAFamily;
@@ -3237,7 +3270,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     if (rc != 0)
         return -1;
 
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
     // If the MAC address was not specified in the configuration
     // statement, create a MAC address using pseudo-random numbers.
     if (!pPTPBLK->szMACAddress[0])
@@ -3254,7 +3287,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );
     }
-#endif /* defined( OPTION_W32_CTCI ) */
+#endif /* defined(OPTION_W32_CTCI) */
 
     // That's all folks.
     return 0;
@@ -3266,12 +3299,12 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
 {
 
-#if defined( OPTION_W32_CTCI )
+#if defined(OPTION_W32_CTCI)
     // HHC03965 "%id:%04X %s; Preconfigured interface %s does not exist or is not accessible by Hercules"
     WRMSG(HHC03965, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                          pPTPBLK->szTUNIfName);
     return -1;
-#else
+#else /* defined(OPTION_W32_CTCI) */
 /* From Linux man page */
 //
 //    struct ifaddrs {
@@ -3618,7 +3651,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
 
     /* That's all folks. */
     return 0;
-#endif
+#endif /* defined(OPTION_W32_CTCI) */
 }   /* End function  get_preconfigured_value() */
 
 /* ------------------------------------------------------------------ */
@@ -9577,10 +9610,10 @@ HDL_REGISTER_SECTION;
     //              entry-point         entry-point
     //              name                value
 
-  #if defined( OPTION_W32_CTCI )
+  #if defined(OPTION_W32_CTCI)
     HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
     HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
-  #endif /*defined( OPTION_W32_CTCI )*/
+  #endif /* defined(OPTION_W32_CTCI) */
 }
 END_REGISTER_SECTION
 
