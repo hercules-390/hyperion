@@ -158,7 +158,7 @@ main     RMODE ANY
          B     init-*(,rf)
          DC    AL1(init-*)
 pgmid    DC    CL8'cckdload'
-vrm      DC    X'000101'          version 0 release 1 modlvl 1
+vrm      DC    X'000102'          version 0 release 1 modlvl 2  CZV70
          DC    C' &SYSDATE &SYSTIME '
 init     SAVE  (14,12)
          LR    rc,rf              set base reg
@@ -251,10 +251,10 @@ ut1      USING IHADCB,sysut1
          OPEN  (sysut1,INPUT),MODE=31,MF=(E,openl) open the cckd file
          TM    ut1.DCBOFLGS,DCBOFOPN             did cckd file open ?
          BNO   Eopenerr                           no, open error
-         CLC   ut1.DCBBLKSI,=Y(4096)             check block size
-         BNE   Ebadblksz                          error if not 4096
+         CLC   ut1.DCBBLKSI,=Y(16384)       check block size    CZV70
+         BNE   Ebadblksz                    error if not 16384  CZV70
          MVC   pl(l_tcpl),m_tcpl                 copy model parm list
-         TRKCALC FUNCTN=TRKCAP,TYPE=devta+3,RKDD==x'01001000',         x
+         TRKCALC FUNCTN=TRKCAP,TYPE=devta+3,RKDD==x'01004000',  CZV70  x
                REGSAVE=YES,MF=(E,pl)             calculate blks/trk
          LTR   rf,rf                             test return code
          BNZ   Etrkcalc                           error if non-zero
@@ -1079,6 +1079,8 @@ Ebadparm MVC   dw,=CL8' '
          B     Eexit
 Edevid  #MSG   '** SYSUT1 is not a cckd file; devid validation failed'
          B     Eexit
+Esynad1 #MSG   '** SYSUT1 fatal error, Synad EP loaded'    CZV70
+         B     Eexit                                       CZV70
 Edevterr STM   rf,r0,retcd
          CLC   retcd(8),=A(4,4)     missing ddname ?
          BE    Enoddn                yes, noddn error
@@ -1091,7 +1093,7 @@ Enotdasd1 #MSG '** SYSUT1 not a dasd file'
          B     Eexit
 Eopenerr #MSG  '** SYSUT1 did not open'
          B     Eexit
-Ebadblksz #MSG '** SYSUT1 blksz is not 4096'
+Ebadblksz #MSG '** SYSUT1 blksz is not 16384'              CZV70
          B     Eexit
 Etrkcalc ST    rf,retcd
         #MSG   '** TRKCAP failed for SYSUT1: rc=%d',retcd
@@ -1169,7 +1171,7 @@ m_unitdcb DCB   DDNAME=0,DSORG=PS,MACRF=E
 l_unitdcb EQU   *-m_unitdcb
 m_sysut1  DCB   DDNAME=SYSUT1,DSORG=PS,MACRF=RP,DCBE=m_sysut1e,RECFM=F
 l_sysut1  EQU   *-m_sysut1
-m_sysut1e DCBE  RMODE31=BUFF
+m_sysut1e DCBE  RMODE31=BUFF,SYNAD=Esynad1,BLOCKTOKENSIZE=LARGE CZV70
 l_sysut1e EQU   *-m_sysut1e
 m_prtdcb  DCB   DDNAME=SYSPRINT,DSORG=PS,MACRF=PL,DCBE=m_prtdcbe
 l_prtdcb  EQU   *-m_prtdcb
@@ -1256,7 +1258,7 @@ readr     STM  r0,rf,save1
 
 */* Read the first block into the tempbuf                            */
           LR   r7,r2                copy the offset
-          SRL  r7,12                get the block number
+          SRL  r7,14                get the block number   CZV70
           LTR  r2,r2                test offset
           BZ   r_getblk1            always read 1st block for offset 0
           CL   r7,lastblk           already have the 1st block ?
@@ -1264,9 +1266,9 @@ readr     STM  r0,rf,save1
           ST   r7,lastblk           remember this block
           SLR  r6,r6
           D    r6,bpt               calculate ttr
-          STCM r7,3,ttr
+          STCM r7,7,ttr                                    CZV70
           LA   r6,1(,r6)
-          STC  r6,ttr+2
+          STC  r6,ttr+3                                    CZV70
           POINT sysut1,ttr          position to the block
           LTR  rf,rf
           BNZ  Epoint
@@ -1276,8 +1278,8 @@ r_gotblk1 DS   0H
 
 */* Copy data from the first block to the caller's buffer            */
           LR   r5,r2                calculate data offset
-          N    r5,=A(X'00000fff')    in the first block
-          LH   r6,=Y(4096)          calculate data length
+          N    r5,=A(X'00003fff')    in the first block    CZV70
+          LH   r6,=Y(16384)         calculate data length  CZV70
           SR   r6,r5                 in the first block
           AR   r2,r6                new offset
           LR   re,r4                target address
@@ -1294,17 +1296,17 @@ r_gotblk1 DS   0H
 */* Read the intermediate blocks directly into the caller's buffer   */
 r_getint  LTR  r3,r3                test length left to read
           BZ   r_return             return if everything read
-          CH   r3,=Y(4096)          able to read a full block ?
+          CH   r3,=Y(16384)   able to read a full block ?  CZV70
           BL   r_getlast             no, special processing for last
           READ ut1decb,SF,sysut1,(r4),'S',MF=E
           CHECK ut1decb             read an intermediate block
-          AH   r2,=Y(4096)          adjust the offset
-          SH   r3,=Y(4096)          adjust the length left
-          AH   r4,=Y(4096)          adjust buffer position
+          AH   r2,=Y(16384)         adjust the offset      CZV70
+          SH   r3,=Y(16384)         adjust the length left CZV70
+          AH   r4,=Y(16384)         adjust buffer position CZV70
           B    r_getint             read some more
 
 */* Read the last block into the tempbuf                             */
-r_getlast SRL  r2,12                change offset to block number
+r_getlast SRL  r2,14       change offset to block number   CZV70
           ST   r2,lastblk            and save it
           READ ut1decb,SF,sysut1,tempbuf,'S',MF=E
           CHECK ut1decb
@@ -1755,7 +1757,7 @@ mr_oxit  CLI   DCBRECFM,0          any record format ?
 
          CH    r0,DCBBLKSI         any blksize
          BNE   *+10                 jumps if yes
-         MVC   DCBBLKSI,=Y(4096)     copy default blksize
+         MVC   DCBBLKSI,=Y(16384)    copy default blksize  CZV70
 
          TM    DCBRECFM,DCBRECU    test record type
          BO    mr_oxitu             undefined
@@ -1839,7 +1841,7 @@ ptoken   DS    D                        ucb pin token
 devta    DS    D                        devtype area
 ctime    DS    D                        current date/time
 dtime    DS    CL20                     date/time display area
-lastblk  DS    F                        last cckd 4096 block read
+lastblk  DS    F               last cckd 16384 block read  CZV70
 ttr      DS    F                        ttr for cckd block
 dw       DS    D                        double word work areas
 dw2      DS    D
@@ -1854,7 +1856,7 @@ cdevhdr  DS    XL(CCKDDASD_DEVHDR_SIZE) compressed device header
 l1tab    DS    A                        l1tab address
 l2tab    DS    XL(CCKD_L2TAB_SIZE)      l2tab
 msg      DS    CL256                    message
-tempbuf  DS    XL4096                   temp buffer for cckd read
+tempbuf  DS    XL16384          temp buffer for cckd read  CZV70
 workl    EQU   *-work
 
 work24    DSECT ,                  24-bit work area

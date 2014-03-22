@@ -3,7 +3,7 @@
 * * ---------------------------------------------------------------- */
 version  EQU   0
 release  EQU   1
-mod      EQU   14                                               SOMITCW
+mod      EQU   15                                               CZV70
 
 */* ----------------------------------------------------------------
 * *      macros
@@ -729,6 +729,10 @@ no_compress_1  DS 0H
 
 o        USING IHADCB,outdcb
          MVC   outdcb,model_outdcb
+         MVC   outdcbe,model_outdcbe                            CZV70
+         LA    r1,outdcbe                                       CZV70
+         ST    r1,o.DCBDCBE                                     CZV70
+
          OPEN  (o.IHADCB,OUTPUT),MF=(E,openl24)
          TM    o.DCBOFLGS,DCBOFOPN
          BNO   out_open_err
@@ -1676,8 +1680,10 @@ model_vtdcb_l    EQU  *-model_vtdcb
 model_exdcb      DCB  DDNAME=SYSUT1,DSORG=DA,MACRF=E
 model_exdcb_l    EQU  *-model_exdcb
 model_outdcb     DCB  DDNAME=SYSUT2,DSORG=PS,MACRF=(RP,WP),            x
-               RECFM=F,BLKSIZE=16384,LRECL=16384
+               RECFM=F,BLKSIZE=16384,LRECL=16384,DCBE=0         CZV70
 model_outdcb_l   EQU  *-model_outdcb
+model_outdcbe    DCBE BLOCKTOKENSIZE=LARGE                      CZV70
+model_outdcbe_l  EQU  *-model_outdcbe                           CZV70
 model_openl      OPEN (0),MODE=31,MF=L
 model_openl_l    EQU  *-model_openl
 model_openl24    OPEN (0),MODE=31,MF=L
@@ -2087,9 +2093,10 @@ bytes_ovh         DS  F
 bytes_free        DS  F
 handle            DS  F
 msgl              DS  16F
-extract        DS  XL(model_extract_l)                          SOMITCW
-indcbe         DS  XL(model_indcbe_l)                           SOMITCW
+extract           DS  XL(model_extract_l)                       SOMITCW
+indcbe            DS  XL(model_indcbe_l)                        SOMITCW
 prdcbe            DS  XL(model_prdcbe_l)
+outdcbe           DS  XL(model_outdcbe_l)                       CZV70
 openl             DS  XL(model_openl_l)
 devtl             DS  XL(model_devtl_l)
 devta             DS  XL(32)
