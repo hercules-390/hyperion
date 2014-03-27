@@ -2604,7 +2604,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     } // end for(;;)
 
-    return 0;
+    // UNREACHABLE
 }
 
 // ====================================================================

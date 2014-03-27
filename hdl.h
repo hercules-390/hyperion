@@ -329,10 +329,12 @@ DLL_EXPORT void HDL_RESO(void *(*hdl_reso_fent)(char *) _HDL_UNUSED ) \
 
 #define HDL_FINAL_SECTION                               \
 DLL_EXPORT int HDL_FINI()                               \
-{
+{                                                       \
+    int rc = 0;
 
 #define END_FINAL_SECTION                               \
-return 0; }
+    return rc;                                          \
+}
 
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 

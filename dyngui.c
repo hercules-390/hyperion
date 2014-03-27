@@ -2167,7 +2167,7 @@ HDL_FINAL_SECTION
 
     usleep(100000);             // (brief delay to give GUI time
                                 //  to display ALL shutdown msgs)
-    return gui_nounload;        // (reject unloads when activated)
+    rc = gui_nounload;          // (reject unloads when activated)
 }
 END_FINAL_SECTION
 

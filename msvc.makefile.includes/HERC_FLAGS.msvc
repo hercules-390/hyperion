@@ -15,6 +15,9 @@ ldebug = $(ldebug) $(MAPFILE)
 # user32.lib for the MessageBeep and MessageBox functions
 LIBS = $(LIBS) user32.lib
 
+# "C4702 unreachable code" is always a potentially very serious error
+cflags = $(cflags) /we4702
+
 # The following line makes all warnings into errors
 cflags = $(cflags) /WX
 
