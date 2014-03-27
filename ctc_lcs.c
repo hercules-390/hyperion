@@ -866,7 +866,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
         else
         {
             *pMore      = 0;
-            *pResidual -= (U16)iLength;
+            *pResidual -= iLength;
         }
 
         *pUnitStat = CSW_CE | CSW_DE;
@@ -1124,8 +1124,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
 // ====================================================================
 
 void  LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
-               U16     sCount,    BYTE*  pIOBuf,
-               BYTE*   UnitStat,  U16*   pResidual,
+               U32     sCount,    BYTE*  pIOBuf,
+               BYTE*   UnitStat,  U32*   pResidual,
                BYTE*   pMore )
 {
     PLCSDEV     pLCSDEV     = (PLCSDEV)pDEVBLK->dev_data;
