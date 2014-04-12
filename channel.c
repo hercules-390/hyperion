@@ -1917,7 +1917,7 @@ halt_subchan (REGS *regs, DEVBLK *dev)
         if (dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
-            signal_condition (&dev->resumecond);
+            schedule_ioq(NULL, dev);
         }
 
         release_lock(&dev->lock);
