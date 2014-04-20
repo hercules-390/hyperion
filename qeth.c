@@ -3592,8 +3592,6 @@ U32 num;                                /* Number of bytes to move   */
         ** guest readying (priming) additional output buffers in its
         ** existing Output Queue(s) because a SIGA-w is not required.
         */
-        tv.tv_sec  = 0;
-        tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
         dev->qtype = QTYPE_DATA;            /* Identify ourselves    */
 
@@ -3608,6 +3606,8 @@ U32 num;                                /* Number of bytes to move   */
             FD_SET( grp->ppfd[0], &readset );
             FD_SET( grp->ttfd,    &readset );
             fd = max( grp->ppfd[0], grp->ttfd );
+            tv.tv_sec  = 0;
+            tv.tv_usec = OSA_TIMEOUTUS;         /* Select timeout usecs  */
 
             /* Wait (but only very briefly) for more work to arrive */
             rc = qeth_select( fd+1, &readset, &tv );
