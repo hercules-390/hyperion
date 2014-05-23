@@ -40,7 +40,6 @@
 #include "opcode.h"
 #include "chsc.h"
 
-
 /*-------------------------------------------------------------------*/
 /* Debug Switches                                                    */
 /*-------------------------------------------------------------------*/
@@ -2357,8 +2356,10 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /* Schedule I/O Request (second half of Schedule IOQ)                */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Note: Queue is actually split with resume requests first, then    */
-/*       followed by start requests, sorted by priorities.           */
+/* Note: Queue is actually split, by priority, with resume requests  */
+/*       first for each priority, followed by start requests for     */
+/*       the priority.  The code within the locked section MUST be   */
+/*       minimized.                                                  */
 /*                                                                   */
 /* Locks held:                                                       */
 /*   dev->lock                                                       */
@@ -2366,36 +2367,96 @@ u_int   waitcount = 0;                  /* Wait counter              */
 /* Locks used:                                                       */
 /*   sysblk.ioqlock                                                  */
 /*                                                                   */
+/*  Returns:                                                         */
+/*                                                                   */
+/*  0 - Success                                                      */
+/*  2 - Unable to schedule channel thread (this RC belongs in IOP)   */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 static int
 ScheduleIORequest ( DEVBLK *dev )
 {
+    DEVBLK *ioq, *previoq, *nextioq;    /* Device I/O queue pointers */
+    int     count;                      /* I/O queue length          */
     int     rc = 0;                     /* Return Code               */
-    int     resume = dev->scsw.flag3 & SCSW3_AC_SUSP;   /* Resume?   */
-    DEVBLK *previoq, *ioq;              /* Device I/O queue pointers */
+    U8      device_resume;              /* Resume I/O flag - Device  */
 
-    /* Queue the I/O request */
-    obtain_lock (&sysblk.ioqlock);
+    /* Determine if the device is resuming */
+    device_resume = (dev->scsw.flag2 & SCSW2_AC_RESUM);
 
-    /* Insert the device into the I/O queue */
-    for (previoq = NULL, ioq = sysblk.ioq;
-         ioq &&
-            /* 1. Resume                                         */
-            resume >= (ioq->scsw.flag3 & SCSW3_AC_SUSP) &&
-            /* 2. Subchannel priority                            */
-            dev->priority >= ioq->priority;
-         previoq = ioq, ioq = ioq->nextioq);
-    dev->nextioq = ioq;
-    if (previoq != NULL)
-        previoq->nextioq = dev;
-    else
-        sysblk.ioq = dev;
-    sysblk.devtunavail++;
+    /* Lock the I/O request queue */
+    obtain_lock( &sysblk.ioqlock );
 
-    rc = create_device_thread();
+    /* Insert this I/O request into the appropriate I/O queue slot */
+    for (ioq = sysblk.ioq, previoq = NULL, count = 0;
+        ioq;
+        ++count, previoq = ioq, ioq = ioq->nextioq)
+    {
+        /* If DEVBLK already in queue, fail queueing of DEVBLK */
+        if (ioq == dev)
+        {
+            rc = 2;
+            BREAK_INTO_DEBUGGER();
+            break;
+        }
 
-    /* Release lock */
-    release_lock(&sysblk.ioqlock);
+        /* 1. Look for priority partition. */
+        if (dev->priority > ioq->priority)
+            break;
+        if (dev->priority < ioq->priority)
+            continue;
+
+        /* 2. Resumes precede Start I/Os in each priority partition */
+        if (device_resume > (ioq->scsw.flag2 & SCSW2_AC_RESUM))
+            break;
+    }
+
+    if (rc == 0)
+    {
+        /* Save next I/O queue position */
+        nextioq = ioq;
+
+        /* Validate and complete sanity count of I/O queue entries */
+        for (++count;
+             ioq;
+             ++count, ioq = ioq->nextioq)
+        {
+            /* If DEVBLK already in queue, fail queueing of DEVBLK */
+            if (ioq == dev)
+            {
+                rc = 2;
+                BREAK_INTO_DEBUGGER();
+                break;
+            }
+        }
+
+        /* I/O queue has been validated, insert DEVBLK into I/O queue.
+         */
+        if (rc == 0)
+        {
+            /* Chain our request ahead of this one */
+            dev->nextioq = nextioq;
+
+            /* Chain previous one (if any) to ours */
+            if (previoq != NULL)
+                previoq->nextioq = dev;
+            else
+                sysblk.ioq = dev;
+
+            /* Update device thread unavailable count. It will be
+             * decremented once a thread grabs this request.
+             */
+            sysblk.devtunavail = count;
+
+            /* Create another device thread, if needed, to service this
+             * I/O
+             */
+            rc = create_device_thread();
+        }
+    }
+
+    /* Release the I/O queue lock */
+    release_lock( &sysblk.ioqlock );
 
     /* Return condition code */
     return rc;
