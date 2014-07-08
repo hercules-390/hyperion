@@ -10,6 +10,34 @@
 
 -------------------------------------------------------------------------------
 
+  *BUG*:  FIX PORTABILITY ISSUES that have crept in over time.
+
+  Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
+
+  Ideally there should NEVER be ANY tests ANYWHERE for specific platforms.
+  Instead, you should test only for the existence of a given FEATURE (either
+  a programming feature or an operating system feature) in configure.ac and
+  set a define for that feature in configure.ac.
+
+  That way if a given platform begins supporting a feature that it previously
+  did not support, YOU DON'T HAVE TO CHANGE ANY HERCULES CODE AT ALL. This is
+  called "Writing portable code".
+
+  ONLY if you cannot design a test for the needed FEATURE within configure.ac
+  may you then add a test for a given platform, and then ONLY in "hostopts.h".
+  Our "hostopts.h" header is the ONLY SOURCE MODULE where tests for specific
+  platforms should be done.  Test for the platform and #define your FEATURE
+  accordingly.  Elsewhere in Hercules you then test for that #define FEATURE.
+
+  Again, this is called "Writing portable code".
+
+  But you should NEVER *EVER* test for a specific PLATFORM within Hercules.
+  (except within hostopts.h, but ONLY if you can't do a configure.ac test)
+  Of course, the exception to the above is testing for _MSVC_ and/or WIN32,
+  but that's only because Windows has always been the exception to the rule.
+
+-------------------------------------------------------------------------------
+
   *BUG*: printer FCB parsing is FUBAR (wrong):
 
   Old (original) style was: "fcb=66010713192531374361495561",
