@@ -1,5 +1,5 @@
-/* W32CTCA.C    (c) Copyright "Fish" (David B. Trout), 2002-2012     */
-/*    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)       */
+/* W32CTCA.C    (c) Copyright "Fish" (David B. Trout), 2002-2014     */
+/*    CTCI-WIN (Channel to Channel link to Win32 TCP/IP stack)       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

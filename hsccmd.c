@@ -2501,7 +2501,7 @@ ptp_cmd_duff:
 
 #if defined(OPTION_W32_CTCI)
 /*-------------------------------------------------------------------*/
-/* tt32 command - control/query CTCI-W32 functionality               */
+/* tt32 command - control/query CTCI-WIN functionality               */
 /*-------------------------------------------------------------------*/
 int tt32_cmd( int argc, char *argv[], char *cmdline )
 {

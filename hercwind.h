@@ -168,13 +168,13 @@ typedef u_int32_t           in_addr_t;
 
 // The following are needed by 'hostopts.h'...
 
-#define HAVE_DECL_SIOCSIFNETMASK  1     // (  supported by CTCI-W32)
-#define HAVE_DECL_SIOCSIFBRDADDR  1     // (  supported by CTCI-W32)
-#define HAVE_DECL_SIOCGIFHWADDR   1     // (  supported by CTCI-W32)
-#define HAVE_DECL_SIOCSIFHWADDR   1     // (  supported by CTCI-W32)
-#define HAVE_DECL_SIOCADDRT       0     // (UNsupported by CTCI-W32)
-#define HAVE_DECL_SIOCDELRT       0     // (UNsupported by CTCI-W32)
-#define HAVE_DECL_SIOCDIFADDR     0     // (UNsupported by CTCI-W32)
+#define HAVE_DECL_SIOCSIFNETMASK  1     // (  supported by CTCI-WIN)
+#define HAVE_DECL_SIOCSIFBRDADDR  1     // (  supported by CTCI-WIN)
+#define HAVE_DECL_SIOCGIFHWADDR   1     // (  supported by CTCI-WIN)
+#define HAVE_DECL_SIOCSIFHWADDR   1     // (  supported by CTCI-WIN)
+#define HAVE_DECL_SIOCADDRT       0     // (UNsupported by CTCI-WIN)
+#define HAVE_DECL_SIOCDELRT       0     // (UNsupported by CTCI-WIN)
+#define HAVE_DECL_SIOCDIFADDR     0     // (UNsupported by CTCI-WIN)
 
 // SCSI tape handling transparency/portability
 

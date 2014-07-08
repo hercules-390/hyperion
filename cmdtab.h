@@ -1402,12 +1402,12 @@
   "Entering the command without any argument simply displays the current\n"      \
   "mode.\n"
 
-#define tt32_cmd_desc           "Control/query CTCI-W32 functionality"
+#define tt32_cmd_desc           "Control/query CTCI-WIN functionality"
 #define tt32_cmd_help           \
                                 \
   "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n"                      \
   "\n"                                                                           \
-  "Enables or disables global CTCI-W32 debug tracing\n"                          \
+  "Enables or disables global CTCI-WIN debug tracing\n"                          \
   "or displays TunTap32 stats for the specified CTC device.\n"
 
 #define tzoffset_cmd_desc       "Set tzoffset parameter"
