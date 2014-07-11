@@ -4847,13 +4847,14 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int lparnum_cmd(int argc, char *argv[], char *cmdline)
 {
-U16     id;
+U16     lparnum;
 BYTE    c;
 
     UNREFERENCED(cmdline);
 
     if ( argc > 2 )
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
@@ -4864,22 +4865,32 @@ BYTE    c;
         int n = strlen(argv[1]);
 
         if ( (n == 2 || n == 1)
-             && sscanf(argv[1], "%hx%c", &id, &c) == 1)
+             && sscanf(argv[1], "%hx%c", &lparnum, &c) == 1)
         {
+            if (ARCH_370 == sysblk.arch_mode)
+            {
+                if (n == 2 || !lparnum || lparnum > 15)
+                {
+                    // "Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", argv[1], ": must be 1 to F (hex) for System/370" );
+                    return -1;
+                }
+            }
+
             /* Obtain INTLOCK */
             OBTAIN_INTLOCK(NULL);
 
             /* Set new LPAR number, CPU ID format and operation mode */
             enable_lparmode(1);
-            sysblk.lparnum = id;
-            if (id == 0)
+            sysblk.lparnum = lparnum;
+            if (lparnum == 0)
                 sysblk.cpuidfmt = 1;
             else if (sysblk.cpuidfmt)
             {
                 if (n == 1)
                     sysblk.cpuidfmt = 0;
             }
-            else if (n == 2 && id != 16)
+            else if (n == 2 && lparnum != 16)
                 sysblk.cpuidfmt = 1;
             setOperationMode();
 
@@ -4897,7 +4908,7 @@ BYTE    c;
                 set_symbol("LPARNUM", buf);
                 set_symbol("CPUIDFMT", sysblk.cpuidfmt ? "1" : "0");
                 if (MLVL( VERBOSE ))
-                    WRMSG(HHC02204, "I", argv[0], buf);
+                    WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
             }
 #else /* !defined(OPTION_CONFIG_SYMBOLS) || !defined(OPTION_BUILTIN_SYMBOLS) */
 
@@ -4906,7 +4917,7 @@ BYTE    c;
                 char buf[20];
                 MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
                         sysblk.lparnum);
-                WRMSG(HHC02204, "I", argv[0], buf);
+                WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
         }
@@ -4931,6 +4942,7 @@ BYTE    c;
 
             if ( MLVL(VERBOSE) )
             {
+                // "%-14s set to %s"
                 WRMSG(HHC02204, "I", argv[0], "BASIC");
             }
 #if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
@@ -4940,6 +4952,7 @@ BYTE    c;
         }
         else
         {
+            // "Invalid argument %s%s"
             WRMSG(HHC02205, "E", argv[1], ": must be BASIC, 1 to F (hex) or 00 to FF (hex)");
             return -1;
         }
@@ -4947,11 +4960,14 @@ BYTE    c;
     else
     {
         char buf[20];
+
         if (sysblk.lparmode)
             MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
                     sysblk.lparnum);
         else
             strncpy(buf, "BASIC", sizeof(buf));
+
+        // "%-14s: %s"
         WRMSG(HHC02203, "I", argv[0], buf);
     }
     return 0;
@@ -5127,7 +5143,7 @@ BYTE    c;
 /*-------------------------------------------------------------------*/
 int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
 {
-u_int     id;
+u_int     cpuidfmt;
 
     UNREFERENCED(cmdline);
 
@@ -5137,9 +5153,9 @@ u_int     id;
         int n = strlen(argv[1]);
 
         if (strlen(argv[1]) == 1
-            && sscanf(argv[1], "%u", &id) == 1)
+            && sscanf(argv[1], "%u", &cpuidfmt) == 1)
         {
-            if (id > 1)
+            if (cpuidfmt > 1)
             {
                 WRMSG(HHC02205, "E", argv[1], ": must be either 0 or 1");
                 return -1;
@@ -5151,20 +5167,32 @@ u_int     id;
                 return -1;
             }
 
-            if(!id && (!sysblk.lparnum || sysblk.lparnum > 16))
+            if (!cpuidfmt)  /* Trying to set format-0 cpuid format */
             {
-                WRMSG(HHC02205, "E", argv[1],": LPAR number not in range of 1 to 10 (hex)");
-                return -1;
+                if (!sysblk.lparnum || sysblk.lparnum > 16)
+                {
+                    WRMSG(HHC02205, "E", argv[1],": LPAR number not in range of 1 to 10 (hex)");
+                    return -1;
+                }
+            }
+            else    /* Trying to set format-1 cpuid format */
+            {
+                if (ARCH_370 == sysblk.arch_mode)
+                {
+                    // "Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", argv[1], ": must be 0 for System/370" );
+                    return -1;
+                }
             }
 
-            if (sysblk.cpuidfmt != id)
+            if (sysblk.cpuidfmt != cpuidfmt)
             {
                 /* Obtain INTLOCK */
                 OBTAIN_INTLOCK(NULL);
 
                 /* Set the CPU ID format and subsequent operation mode
                  */
-                sysblk.cpuidfmt = id;
+                sysblk.cpuidfmt = cpuidfmt;
                 setOperationMode();
 
                 /* Update all CPU IDs */
