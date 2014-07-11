@@ -62,17 +62,78 @@ U16 req_len, rsp_len;
 CHSC_REQ12 *chsc_req12 = (CHSC_REQ12 *)(chsc_req);
 CHSC_RSP12 *chsc_rsp12 = (CHSC_RSP12 *)(chsc_rsp+1);
 
+    /* Set response length based on MIF mode */
+    switch (sysblk.operation_mode)
+    {
+        case om_emif:
+            rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
+            break;
+
+        default:
+            rsp_len = 0x0138;
+            break;
+    }
+
     FETCH_HW(req_len, chsc_req12->length);
 
-    rsp_len = sizeof(CHSC_RSP) + sizeof(CHSC_RSP12);
-
+    /* If the response won't fit in the requested length, return an
+     * error back to the caller.
+     */
     if (!chsc_max_rsp(req_len, sizeof(CHSC_RSP12)))
         return chsc_req_errreq(chsc_rsp, 0);
 
-    memset(chsc_rsp12, 0, sizeof(CHSC_RSP12) );
+    /* Clear the response area */
+    memset(chsc_rsp12, 0, rsp_len);
 
+    /* Where did this bit come from? Is it a z-machine indicator? */
     chsc_rsp12->unknow00A = 0x01;
-    chsc_rsp12->pnum = 1;
+
+    /* FIXME: BASIC mode operations are not returning the proper
+     *        information; instead, return of an error may be required.
+     */
+    if (sysblk.operation_mode != om_basic)
+    {
+        BYTE*   z = (BYTE*)chsc_rsp;
+        BYTE    valid_bit_domain;
+        size_t  valid_bit_offset;
+        size_t  lparname_offset;
+
+        /* Save Hercules LPAR number as the partition number */
+        *(z + 11) = valid_bit_domain = sysblk.lparnum;
+
+        /* Set current LPAR name valid bit and LPAR name
+         *
+         * Note: The value fields are arrays of *ALL* defined and active
+         *       LPAR names and validity bits for the host system. It
+         *       should also be noted that the offsets to the array of
+         *       LPAR name valid bits and to the array of LPAR names is
+         *       different between non-EMIF and EMIF modes.
+         *
+         * FIXME: Future. Supply and maintain the information from *ALL*
+         *        active Hercules instances on the host system.
+         */
+        switch (sysblk.operation_mode)
+        {
+            case om_mif:
+                --valid_bit_domain;
+                valid_bit_offset = 180;
+                lparname_offset  = 184;
+                break;
+
+         /* case om_emif: */
+            default:
+                valid_bit_offset = 184;
+                lparname_offset  = 216;
+                break;
+        }
+
+        /* Set LPAR name */
+        get_lparname(z + lparname_offset + (sysblk.lparnum << 3));
+
+        /* Set valid bit */
+        *(z + valid_bit_offset + (valid_bit_domain >> 3)) |=
+            (0x80 >> (valid_bit_domain & 0x07));
+    }
 
     return chsc_req_ok(chsc_rsp, rsp_len, 0);
 }
@@ -246,6 +307,12 @@ U16 req_len, rsp_len;
 
     CHSC_SB(chsc_rsp10->general_char,7);         /* Concurrent Sense */
     CHSC_SB(chsc_rsp10->general_char,12);              /* Dynamic IO */
+
+    if (sysblk.lparmode)
+    {
+        CHSC_SB(chsc_rsp10->general_char,10);                 /* MIF */
+        CHSC_SB(chsc_rsp10->general_char,13);                /* LPAR */
+    }
 
 #if defined(FEATURE_QUEUED_DIRECT_IO)
     CHSC_SB(chsc_rsp10->general_char,41);         /* Adapter Int Fac */
