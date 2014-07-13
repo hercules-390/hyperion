@@ -2132,7 +2132,7 @@ static void*  CTCE_ListenThread( void* argp )
         // Hercules tries to connect).  This will also be fixed RSN.
     }
 
-    // UNREACHABLE
+    UNREACHABLE_CODE();
 }
 
 //
@@ -2540,5 +2540,5 @@ static void*  CTCE_RecvThread( DEVBLK* pDEVBLK )
         release_lock( &pDEVBLK->lock );
     }
 
-    // UNREACHABLE
+    UNREACHABLE_CODE();
 }
