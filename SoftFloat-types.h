@@ -104,11 +104,7 @@ typedef signed long long int sbits64;
 | that the default branch of the switch statement will never be reached.
 *----------------------------------------------------------------------------*/
 #ifndef NODEFAULT
-  #ifdef _MSVC_
-    #define NODEFAULT     default: __assume(0)
-  #else
-    #define NODEFAULT     default: __builtin_unreachable()
-  #endif
+#define NODEFAULT         default: UNREACHABLE_CODE();
 #endif
 
 /*----------------------------------------------------------------------------

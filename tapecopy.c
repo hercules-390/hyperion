@@ -549,7 +549,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     {
         print_usage();
         EXIT( RC_ERROR_BAD_ARGUMENTS );
-        // UNREACHABLE
+        UNREACHABLE_CODE();
     }
 
     if (0
@@ -895,7 +895,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     close_tape (devfd);
 
     EXIT( RC_SUCCESS );
-    // UNREACHABLE
+    UNREACHABLE_CODE();
 
 } /* end function main */
 

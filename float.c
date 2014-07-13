@@ -5074,7 +5074,7 @@ U64     msj, lsj;
             /* less than zero */
 
             ARCH_DEP(program_interrupt) (regs, PGM_SQUARE_ROOT_EXCEPTION);
-            return; /* Never reached */
+            UNREACHABLE_CODE();
         } else {
             /* normalize operand */
             normal_ef(&fl);

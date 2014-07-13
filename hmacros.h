@@ -17,6 +17,16 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
+/*      UNREACHABLE_CODE         code that should NEVER be reached   */
+/*-------------------------------------------------------------------*/
+
+#ifdef _MSVC_
+  #define UNREACHABLE_CODE()        __assume(0)
+#else // GCC presumed
+  #define UNREACHABLE_CODE()        __builtin_unreachable()
+#endif
+
+/*-------------------------------------------------------------------*/
 /*      Define INLINE attributes by compiler                         */
 /*-------------------------------------------------------------------*/
 #if !defined(INLINE)

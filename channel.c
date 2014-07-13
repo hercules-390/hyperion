@@ -5501,7 +5501,8 @@ breakchain:
     #undef execute_ccw_chain_return
     #undef execute_ccw_chain_fast_return
     #undef execute_ccw_chain_unlock_and_return
-    // UNREACHABLE
+
+    UNREACHABLE_CODE();
 
 } /* end function execute_ccw_chain */
 

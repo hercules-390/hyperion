@@ -1776,8 +1776,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 
     } while (1);
 
-    /* Never reached */
-    return NULL;
+    UNREACHABLE_CODE();
 
 } /* end function cpu_thread */
 

@@ -1364,7 +1364,7 @@ static void *telnet_thread(void *vca)
         ca->sfd = 0;
     }
 
-    // UNREACHABLE
+    UNREACHABLE_CODE();
 }
 
 /*-------------------------------------------------------------------*/
