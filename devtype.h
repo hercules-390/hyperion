@@ -75,6 +75,7 @@ FBA_DLL_IMPORT DEVHND fbadasd_device_hndinfo;
 extern DEVHND ctcadpt_device_hndinfo;
 extern DEVHND ctci_device_hndinfo;
 extern DEVHND ctct_device_hndinfo;
+extern DEVHND ctce_device_hndinfo;
 extern DEVHND lcs_device_hndinfo;
 extern DEVHND vmnet_device_hndinfo;
 extern DEVHND ptp_device_hndinfo;

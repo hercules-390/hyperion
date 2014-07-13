@@ -151,6 +151,8 @@ and how they are used.
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
     0A00.3    <a href="#QETH">QETH</a>    iface /dev/net/tun
+    0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
+    0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
     0581      <a href="#3420">3420</a>    \\.\Tape0   # <a href="#SCSI">SCSI</a>  (Windows only)
@@ -1922,6 +1924,8 @@ and how they are used.
                 </td>
                 <td>
                         <a href="#CTCT">"CTCT" driver</a>
+                        or
+                        <a href="#CTCE">"CTCE" driver</a>
                 </td>
             </tr>
 
@@ -3092,8 +3096,17 @@ and how they are used.
 <a name="CTCT"></a>
     <dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)
     <dd><p>
-        An emulated CTCA to another Hercules system. Four arguments
-        are required:
+        An emulated CTCA to another Hercules system.
+        This emulation mode appears to the operating system running in
+        the Hercules machine as an IBM 3088 Channel to Channel Adapter.
+        It provides communication via a TCP connection with another
+        instance of the CTCT driver, and is designed to carry TCP/IP
+        communications between two guest TCP/IP stacks.
+        CTCT may also be used for communication between the client and
+        server components of the
+        <a href="http://home.comcast.net/~mvsddt/">MVS Dynamic Debug Tool</a>.
+        <p>
+        Four arguments are required:
         <p>
 
         <dl> <!-- begin CTCT parms -->
@@ -3130,8 +3143,73 @@ and how they are used.
 
         <p>
 
-        Note: CTCT currently only supports IP traffic, so it cannot be used to
-        transport NJE, SNA, PVM, etc. type payloads. This may change in the future.
+        Note: CTCT only supports IP traffic. Use <a href="#CTCE">CTCE</a>
+        to transport general purpose payloads such as NJE, SNA, PVM, etc.
+        <p>
+
+<p><br>
+
+<a name="CTCE"></a>
+    <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel to Channel Emulation via TCP connection)
+    <dd><p>
+        The CTCE device type will emulate a real 3088 Channel to
+        Channnel Adapter also for non-IP traffic, enhancing the CTCT
+        capabilities. CTCE connections are also based on TCP/IP between
+        two (or more) Hercules instances, and requires an even-odd pair
+        of port numbers per device side. Only the even port numbers are
+        to be configured; the odd numbers are just derived by adding 1
+        to the (configured) even port numbers. The socket connection
+        pairs cross-connect, the arrows showing the send->receive
+        direction :
+        <pre>
+           x-lport-even -> y-rport-odd
+           x-lport-odd  <- y-rport-even
+        </pre>
+
+        <p>
+        Three arguments are required:
+        <p>
+
+        <dl> <!-- begin CTCE parms -->
+
+        <dt><code><em>lport</em></code>
+        <dd>is the even TCP/IP port on the local system.
+
+        <dt><code><em>raddress</em></code>
+        <dd>is the IP address of the remote system.
+
+        <dt><code><em>rport</em></code>
+        <dd>is the even TCP/IP port on the remote system.
+        </dl>
+
+        <p>
+        The remaining arguments are optional:
+        <p>
+        <dl>
+
+        <dt><code><em>mtu</em></code>
+        <dd>optional mtu buffer size, defaults to 32778
+
+        <dt><code><em>sml</em></code>
+        <dd>optional small minimum for mtu, defaults to 8
+
+        </dl> <!-- end CTCE parms -->
+
+        <p>
+        A sample CTCE device configuration is shown below:
+        <p>
+        Hercules PC Host A with IP address 192.168.1.100 :
+        <pre>
+              0E40  CTCE  30880  192.168.1.200  30880
+              0E41  CTCE  30882  192.168.1.200  30882 </pre>
+        <p>
+        Hercules PC Host B with IP address 192.168.1.200 :
+        <pre>
+              0E40  CTCE  30880  192.168.1.100  30880
+              0E41  CTCE  30882  192.168.1.100  30882 </pre>
+        <p>
+        CTCE connected Hercules instances can be hosted on either Unix
+        or Windows platforms, both sides do not need to be the same.
         <p>
 
 <p><br>

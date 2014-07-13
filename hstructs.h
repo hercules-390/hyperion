@@ -1284,6 +1284,21 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 
+        /*  Device dependent fields for ctcadpt : Enhanced CTC  @PJJ */
+
+        U16     ctcePktSeq;             /* CTCE Packet Sequence @PJJ */
+                                        /*      # in debug msgs @PJJ */
+        int     ctceSndSml;             /* CTCE Send Small size @PJJ */
+        BYTE    ctcexState;             /* CTCE State   x-side  @PJJ */
+        BYTE    ctcexCmd;               /* CTCE Command x-side  @PJJ */
+        BYTE    ctceyState;             /* CTCE State   y-side  @PJJ */
+        BYTE    ctceyCmd;               /* CTCE Command y-side  @PJJ */
+        BYTE    ctceyCmdSCB;            /* CTCE Cmd SCB source  @PJJ */
+        int     ctcefd;                 /* CTCE RecvThread File @PJJ */
+                                        /*      Desc / socket # @PJJ */
+        LOCK    ctceEventLock;          /* CTCE Condition LOCK  @PJJ */
+        COND    ctceEvent;              /* CTCE Recvd Condition @PJJ */
+
         /*  Device dependent fields for printer                      */
 
         int     printpos;               /* Number of bytes already

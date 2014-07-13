@@ -14,15 +14,15 @@ typedef struct _DTEQ {
 
 static DTEQ dteq[] = {
 /*
-    This table provides aliases for device types, such that various 
+    This table provides aliases for device types, such that various
     device types may be mapped to a common loadable module.
 
-    The only purpose of this table is to associate the right loadable 
-    module with a specific device type, before the device type in 
-    question has been registered.  This table will not be searched 
+    The only purpose of this table is to associate the right loadable
+    module with a specific device type, before the device type in
+    question has been registered.  This table will not be searched
     for registered device types or if the specific loadable module exists.
 
-       device type requested 
+       device type requested
        |
        |         base device support
        |         |
@@ -72,6 +72,7 @@ static DTEQ dteq[] = {
     { "LCS",    "3088"  },
     { "CTCI",   "3088"  },
     { "CTCT",   "3088"  },
+    { "CTCE",   "3088"  },
     { "VMNET",  "3088"  },
 
     { "HCHAN",  "2880"  },

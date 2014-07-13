@@ -166,6 +166,7 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCI, ctci_device_hndinfo    );
     HDL_DEVICE(CTCT, ctct_device_hndinfo    );
+    HDL_DEVICE(CTCE, ctce_device_hndinfo    );
     HDL_DEVICE(LCS,  lcs_device_hndinfo     );
     HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
 #if defined(WIN32)

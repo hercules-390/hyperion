@@ -797,6 +797,7 @@ do { \
 #define HHC00964 "CTC: packet trace: %s %s %s"
 
 /*ctcadpt.c */
+// Note: CTCE messages are in the 050xx range
 #define HHC00970 "%1d:%04X CTC: unrecognized emulation type %s"
 #define HHC00971 "%1d:%04X CTC: connect to %s:%s failed, starting server"
 #define HHC00972 "%1d:%04X CTC: connected to %s:%s"
@@ -805,32 +806,8 @@ do { \
 #define HHC00975 "%1d:%04X CTC: invalid %s length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
 
-/* ndis_lcs.c */
-#define HHC00980 "%1d:%04X NDIS Error: IPv4 address and --mac are mutually exclusive with --oat"
-#define HHC00981 "%1d:%04X NDIS open failed"
-#define HHC00982 "Error %s: [%04X]:%s"
-#define HHC00988 "NDIS RB Statistics for Port %d\n" \
-       "          \n" \
-       "          Ringbuffer size    = %d bytes\n" \
-       "          Numbers of slots   = %d\n" \
-       "          \n" \
-       "          Packet Read Count  = %d\n" \
-       "                 Write Count = %d\n" \
-       "          \n" \
-       "          Bytes Read         = %d\n" \
-       "                Written      = %d\n" \
-       "          \nLast Error: %s"
-#define HHC00989 "NDIS Statistics for Port %d\n" \
-       "          \n" \
-       "          Reads:  Cnt    %12" I64_FMT "d\n" \
-       "                  Busy   %12" I64_FMT "d\n" \
-       "                  Wait   %12" I64_FMT "d\n" \
-       "                  Errors %12" I64_FMT "d\n" \
-       "          \n" \
-       "          Writes: Cnt    %12" I64_FMT "d\n" \
-       "                  Busy   %12" I64_FMT "d\n" \
-       "                  Wait   %12" I64_FMT "d\n" \
-       "                  Errors %12" I64_FMT "d"
+// range 00980 - 00989 available
+// range 00990 - 00999 available
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c and commadpt.c console.c */
@@ -1867,6 +1844,18 @@ do { \
 #define HHC02805 "%1d:%04X Volser = %s"
 #define HHC02806 "%1d:%04X Unlabeled tape"
 
+// range 02900 - 02999 available
+
+// range 03000 - 03099 available
+// range 03100 - 03199 available
+// range 03200 - 03299 available
+// range 03300 - 03399 available
+// range 03400 - 03499 available
+// range 03500 - 03599 available
+// range 03600 - 03699 available
+// range 03700 - 03799 available
+// range 03800 - 03899 available
+
 // reserve 039xx for ptp related messages
 #define HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"
 #define HHC03902 "%1d:%04X PTP: Inet6 not supported"
@@ -1920,8 +1909,8 @@ do { \
 #define HHC03997 "%1d:%04X %s: %s: %susing %s %s"
 #define HHC03998 "%1d:%04X %s: %s inconsistent with %s"
 
-
 // reserve 04xxx for host os specific component messages
+
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
 #define HHC04101 "%s Statistics:\n" \
@@ -1949,6 +1938,67 @@ do { \
 #define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
 #define HHC04111 "%1d:%04X Function %s failed: [%02d] %s"
 #define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
+
+// range 04200 - 04299 available
+// range 04300 - 04399 available
+// range 04400 - 04499 available
+// range 04500 - 04599 available
+// range 04600 - 04699 available
+// range 04700 - 04799 available
+// range 04800 - 04899 available
+// range 04900 - 04999 available
+
+// reserve 050xx for CTCE related messages
+#define HHC05000 "%1d:%04X CTCE: Incorrect number of parameters"
+#define HHC05001 "%1d:%04X CTCE: Incorrect client or config error: config=%s+%d, connecting client=%s"
+#define HHC05003 "%1d:%04X CTCE: Invalid port number: %s"
+#define HHC05004 "%1d:%04X CTCE: Invalid IP address %s"
+#define HHC05005 "%1d:%04X CTCE: Invalid MTU size %s, allowed range is %d to 65536"
+#define HHC05006 "%1d:%04X CTCE: Invalid Small MTU size %s ignored"
+#define HHC05007 "%1d:%04X CTCE: Error creating socket: %s"
+#define HHC05008 "%1d:%04X CTCE: Error binding to socket (port %d): %s"
+#define HHC05009 "%1d:%04X CTCE: Error on call to listen (port=%d): %s"
+#define HHC05010 "%1d:%04X CTCE: Error reading from %s: %s"
+#define HHC05011 "%1d:%04X CTCE: Error writing to %s: %s"
+#define HHC05012 "%1d:%04X CTCE: local port number not even: %s"
+#define HHC05013 "%1d:%04X CTCE: remote port number not even: %s"
+#define HHC05014 "%1d:%04X CTCE: SCB executed: CB=%2.2X (x=%2.2X y=%2.2X)"
+#define HHC05015 "%1d:%04X CTCE: Waiting for connection :%d %s %s:%d"
+#define HHC05016 "%1d:%04X CTCE: Established connection :%d %s %s:%d"
+#define HHC05017 "%1d:%04X CTCE: Halt or Clear Recognized"
+#define HHC05018 "%1d:%04X CTCE: Read thread started for %s (bufsize=%d,%d)"
+#define HHC05020 "%1d:%04X CTCE: Zero length read from %s"
+#define HHC05021 "%1d:%04X CTCE: %d MB received in %d packets"
+#define HHC05022 "%1d:%04X CTCE: bufsize parameter %d is too small; increase at least to %d"
+#define HHC05023 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X l=%4.4X k=%8.8X"
+#define HHC05024 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X: wait RC=%d"
+#define HHC05025 "%1d:%04X CTCE: Recv %4.4X<-%s %s=%2.2X x=%2.2X y=%2.2X: WEOF -> UX"
+#define HHC05026 "%1d:%04X CTCE: Recv %4.4X<-%s %s=%2.2X x=%2.2X y=%2.2X l=%4.4X k=%8.8X"
+#define HHC05027 "%1d:%04X CTCE: Recv %4.4X<-%s %s=%2.2X x=%2.2X y=%2.2X: WEOF ->set"
+#define HHC05028 "%1d:%04X CTCE: Recv %4.4X<-%s %s=%2.2X x=%2.2X y=%2.2X: ATTN(%d) RC=%d"
+
+// range 05100 - 05199 available
+// range 05200 - 05299 available
+// range 05300 - 05399 available
+// range 05400 - 05499 available
+// range 05500 - 05599 available
+// range 05600 - 05699 available
+// range 05700 - 05799 available
+// range 05800 - 05899 available
+// range 05900 - 05999 available
+
+// range 06000 - 06999 available
+// range 07000 - 07999 available
+// range 08000 - 08999 available
+// range 09000 - 09999 available
+
+// range 10000 - 10999 available
+// range 11000 - 11999 available
+// range 12000 - 12999 available
+// range 13000 - 13999 available
+// range 14000 - 14999 available
+// range 15000 - 15999 available
+// range 16000 - 16999 available
 
 // reserve 17000-17499 messages command processing
 #define HHC17000 "Missing or invalid argument(s)"
@@ -1998,6 +2048,17 @@ do { \
 #define HHC17533 "REXX(%s) Unable to resolve symbol %s RC(%d)"
 #define HHC17534 "REXX(%s) Error Registering %s RC(%d)"
 #define HHC17535 "REXX(%s) Error Deregistering %s RC(%d)"
+
+// range 18000 - 18999 available
+// range 19000 - 19999 available
+
+// range 20000 - 29999 available
+// range 30000 - 39999 available
+// range 40000 - 49999 available
+// range 50000 - 59999 available
+// range 60000 - 69999 available
+// range 70000 - 79999 available
+// range 80000 - 89999 available
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
@@ -2105,14 +2166,39 @@ do { \
 #define HHC90364 "   zp    : %s"
 #define HHC90365 "dead_end : %02X %02X %s"
 
+// range 90400 - 90499 available
+// range 90500 - 90599 available
+// range 90600 - 90699 available
+// range 90700 - 90799 available
+// range 90800 - 90899 available
+
+// range 90900 - 90998 available
+//               90999 dbgtrace.h
+
+// range 91000 - 91999 available
+// range 92000 - 92999 available
+
+// range 93000 - 93099 available
+// range 93100 - 93199 available
+// range 93200 - 93299 available
+// range 93300 - 93399 available
+
+// range 93400 - 93479  (unused; reason unknown)
+
 /* tapeccws tapedev */
 #define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
+
 /* tape general     */
 #define HHC93590 "DBG: TAPE: %s"
 
-/* ctc/lcs/ndis */
-#define HHC90900 "DBG: CTC: %s device port %2.2X: %s"
-#define HHC90901 "DBG: CTC: %s: %s"
+// range 93600 - 93699 available
+// range 93700 - 93799 available
+// range 93800 - 93899 available
+// range 93900 - 93999 available
 
-//      HHC90999  see dbgtrace.h
-
+// range 94000 - 94999 available
+// range 95000 - 95999 available
+// range 96000 - 96999 available
+// range 97000 - 97999 available
+// range 98000 - 98999 available
+// range 99000 - 99999 available

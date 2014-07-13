@@ -434,6 +434,7 @@
 #define SR_DEV_CTCT             0xace3c000
 #define SR_DEV_VMNET            0xace3d000
 #define SR_DEV_LCS              0xace3e000
+#define SR_DEV_CTCE             0xace3f000
 
 #define SR_DELIMITER            0xaceffffe
 #define SR_EOF                  0xacefffff
