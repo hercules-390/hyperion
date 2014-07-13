@@ -484,11 +484,11 @@ The TUN interface could then be used with a PTP specified as:-
 
 
 =================================================================
-[1] The TunTap32.dll and FishPack.dll are part of Fish's CTCI-W32
-http://www.softdevlabs.com/Hercules/ctci-w32-index.html
-package, but the required WinPCap packet driver must be installed
-separately from http://www.winpcap.org  See Fish's web page for
-details.
+[1] The TunTap32.dll and FishPack.dll are part of Fish's CTCI-WIN
+http://www.softdevlabs.com/ctci-win
+package which includes the required WinPCap packet driver as well.
+http://www.winpcap.org
+See Fish's web page for details.
 
 ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using
 only the current RELEASE version of WinPCap and NOT any type of

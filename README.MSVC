@@ -7,7 +7,7 @@
 
 
         FOR MORE UP-TO-DATE INFORMATION, PLEASE REFER TO
-   http://www.softdevlabs.com/Hercules/hercules-msvc-build.html
+       http://www.softdevlabs.com/hercules-msvc-build.html
                               OR
       http://www.cbttape.org/~fish/hercules-msvc-build.html
 
@@ -131,9 +131,9 @@ after which you can delete the .NET Framework SDK.
 
 Please see Fish's detailed instructions at:
 
-   http://www.softdevlabs.com/Hercules/hercules-msvc-build.html
+   http://www.softdevlabs.com/hercules-msvc-build.html
 
-   
+
 -----------------------------------------------------------------------
 
             *** NOTE REGARDING PRECOMPILED HEADERS ***
