@@ -13,7 +13,7 @@ This page describes how to set up TCP/IP connectivity between
 a Hercules machine and the outside world.
 <p>
 Since Hercules runs as a user process under the control of a driving
-system (usually Linux/x86, OSX, or Windows), it does not have direct
+system (usually Linux/x86 or Windows), it does not have direct
 access to the driving system's network adapter.  This presents a
 problem in establishing connectivity between the network and the
 TCP/IP stack of an operating system running under Hercules.
@@ -24,7 +24,7 @@ point-to-point link between the TCP/IP stack running under
 Hercules and the TCP/IP stack of the driving system.  The
 driving system is then used as a router to pass IP frames
 between the Hercules TCP/IP stack and the rest of the network,
-as shown in the following diagram:
+as shown in the below diagram.
 <p>
 <code><pre>
         +--------------------------------+
@@ -39,7 +39,7 @@ as shown in the following diagram:
         |    CTCA     |         |        |
         |192.168.200.1|         |        |
         +------|------+   192.168.200.2  |
-        |/dev/net/tun         tun0       |
+        |  /dev/tun           tun0       |
         |      |                |        |
         |      +----------------+        |
         |       Virtual CTC link         |
@@ -57,13 +57,11 @@ a CTCA (Channel to Channel Adapter) to the S/390 operating system
 running under Hercules.  Each end of the link has its own IP
 address which is distinct from the IP address of the driving
 system's real network adapter.
-<p>
-The Universal TUN/TAP driver is currently only available for Linux, OSX,
-and FreeBSD. &nbsp; However, similar functionality may be
-obtained on Windows 98/Me/2000/XP systems (but not Windows NT) via the
-<a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> protocol.
-<p>TCP/IP configuration is slightly different depending on which
-subnet the CTC is in.
+<p class="note">
+    <i><b>Windows users</b> &nbsp; should refer to Fish's
+    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
+    web page which provides similar "TunTap" functionality
+    on Windows platforms.</i>
 
 <h2>Installing the TUN/TAP Driver (Linux 2.4)</h2>
 <p>

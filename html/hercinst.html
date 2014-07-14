@@ -16,8 +16,8 @@ Hercules Version 3: Installation and Operation</TITLE>
     <p>
         <a href="#install">Installation Procedure</a>
         <ul>
-            <li><a href="#instsource">- Building from source</a>
-            <li><a href="#instbinary">- Pre-built binaries</a>
+            <li><a href="#instsource">Building from source</a>
+            <li><a href="#instbinary">Pre-built binaries</a>
         </ul>
     </p>
     <p>
@@ -45,38 +45,44 @@ Hercules Version 3: Installation and Operation</TITLE>
 <p><hr><a name="install"></a>
 <h2>Installation Procedure</h2>
 <a name="instsource"></a>
-<h3>Building from source - Windows (without Cygwin)</h3>
-<p>
-For building the MSVC version of Hercules on Windows (a version of
-Hercules that does <i>not</i> require Cygwin), Fish has instructions
+<h3>Building from source - Windows</h3>
+<ol>
+<li>Download the distribution file
+<a href="http://downloads.hercules-390.eu/hercules-3.10.zip">hercules-3.10.zip</a>
+<li>
+Hercules for Windows is built using the Microsoft Visual C (MSVC) compiler.
+Refer to file README.WIN64 for details.<br /> Fish also has instructions
 on his <b><a href="http://www.softdevlabs.com/hercules-msvc-build.html">MSVC Hercules Build Instructions</a></b> web page.
+
+</ol>
 </p>
 
-<h3>Building from source - Windows with Cygwin</h3>
-<p>
-For building the Cygwin version of Hercules on Windows, Volker Bandke
-has instructions on his "<b>Building Hercules for Windows</b>" web page at
-<a href="http://www.bsp-gmbh.com/hercules/herc_w32_2.html">http://www.bsp-gmbh.com/hercules/herc_w32_2.html</a>.
-</p>
+
+<h3>Building from source - Mac OS X</h3>
+<ol>
+<li>Install <b>Xcode</b> from the
+<a href="http://itunes.apple.com/app/xcode/id497799835">
+App Store</a>.
+<li>Install <b>Homebrew</b> using the procedure described
+at <a href="http://brew.sh/">http://brew.sh/</a>
+<li>Use these commands to install pre-requisite software:
+<br><code>brew install autoconf</code>
+<br><code>brew install automake</code>
+<br><code>brew install gnu-sed</code>
+<br><code>automake --add-missing</code>
+<li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.
+</ol>
 
 <h3>Building from source - Linux and Mac OS X</h3>
 <ol>
 <li>Download the distribution file
-<a href="http://www.hercules-390.org/hercules-3.07.tar.gz">hercules-3.07.tar.gz</a>
-or access the 
-<a href="http://github.com/s390guy/hercules-390">development repository</a>
-or the
-<a href="http://sourceforge.net/projects/hercules-390">release repository</a>.
-<br><em>Note:</em> By downloading from any of these sources you agree to the terms
+<a href="http://downloads.hercules-390.eu/hercules-3.10.tar.gz">hercules-3.10.tar.gz</a>
+<br><em>Note:</em> By downloading this file you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
-<p>The 
-<a href="http://sourceforge.net/projects/hercules-390">release repository</a> 
-site is a mirror site for  
-<a href="http://hercules-390.org">hercules-390.org</a>.
 <p>
 <li>Use these commands to unzip the distribution file:
-<pre>tar xvzf ../hercules-3.07.tar.gz
-cd hercules-3.07</pre>
+<pre>tar xvzf ../hercules-3.10.tar.gz
+cd hercules-3.10</pre>
 
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
@@ -104,18 +110,19 @@ required packages installed:
 
 <p>
 <em>Important:</em>
-You must use at least version 2.95 of the gcc compiler and the glibc2 library.
+You must use at least version 3.00 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
 
 <a name="instbinary"></a>
-<h3>Installing prebuilt RPMs:</h3>
+<!--
+<h3>Installing pre-built RPMs:</h3>
 <ol>
 <li>Download the RPM file you want:
 <ul>
-<li><a href="http://www.hercules-390.org/hercules-3.07-1.i686.rpm">hercules-3.07-1.i686.rpm</a>: 32-bit Intel
-<li><a href="http://www.hercules-390.org/hercules-3.07-1.x86_64.rpm">hercules-3.07-1.x86_64.rpm</a>: 64-bit Intel
+<li><a href="http://downloads.hercules-390.eu/hercules-3.10.i686.rpm">hercules-3.10.i686.rpm</a>: 32-bit Intel
+<li><a href="http://downloads.hercules-390.eu/hercules-3.10.x86_64.rpm">hercules-3.10.x86_64.rpm</a>: 64-bit Intel
 </ul>
 <li>Install the RPM:
 <br><code>rpm -Uvh</code> <i>RPMfile</i>
@@ -126,8 +133,10 @@ libraries in /usr/lib and /usr/lib/hercules, where you can run them
 from anywhere. Sample configuration files will be placed in /etc/hercules,
 and the IPLable card deck for the ZZSA standalone utility will be placed in
 /var/share/hercules.
+-->
 
-<h3>Installing Debian packages:</h3>
+<!--
+<h3>Installing pre-built Debian packages:</h3>
 <p>
 Debian packages are available for "woody" and later releases.
 
@@ -141,7 +150,9 @@ Debian packages are available for "woody" and later releases.
   </ol>
 </ul>
 </p>
+-->
 
+<!--
 <h3>Installing on Gentoo Linux:</h3>
 <p>Hercules is installed like any other Gentoo package: do <code>emerge
 --sync</code> if you haven't done it lately, then <code>emerge
@@ -149,6 +160,7 @@ hercules</code>.</p>
 <p>Do not try to override the optimization flags automatically selected by
 <code>configure</code>. Hercules stresses the gcc optimizer, and will break
 in subtle ways if the wrong optimization settings are used.</p>
+-->
 
 <h3>Installing on Mac OS X:</h3>
 
@@ -171,34 +183,25 @@ file <code>OS&nbsp;X&nbsp;ReadMe.rtf</code>.
 to install the supplied Tunnel driver.
 </ol>
 
-<h3>Installing on Windows (without Cygwin):</h3>
+<h3>Installing pre-built binaries for Windows:</h3>
 <ol>
-<li>Download the <a
-href="http://www.hercules-390.org/hercules-3.07-w32.msi">Windows 32-bit
-Installer package</a> or the <a
-href="http://www.hercules-390.org/hercules-3.07-w64.msi">Windows 64-bit
-Installer package</a>.
-<li>Use the Windows Installer to install Hercules. The Windows Installer is
-included in Windows XP. It may already be on your older Windows system,
-depending on what other software you've installed. If it is, double-clicking
-on the Hercules package file will install Hercules. If not, you can download
-the Windows Installer for Windows NT and 2000 by following
-<a href="http://www.microsoft.com/downloads/release.asp?releaseid=32832">this
-link</a>, or the Windows Installer for Windows 98 and ME by following
-<a href="http://www.microsoft.com/downloads/release.asp?releaseid=32831">this
-link</a>.
+<li>Download one of the following packages
+  <ul>
+  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w32.msi">
+  http://downloads.hercules-390.eu/hercules-3.10-w32.msi</a>
+  Windows 32-bit Installer package
+  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w64.msi">
+  http://downloads.hercules-390.eu/hercules-3.10-w64.msi</a>
+  Windows 64-bit Installer package
+  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w32.zip">
+  http://downloads.hercules-390.eu/hercules-3.10-w32.zip</a>
+  Windows 32-bit binaries
+  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w64.zip">
+  http://downloads.hercules-390.eu/hercules-3.10-w64.zip</a>
+  Windows 64-bit binaries
+  </ul>
 <li>You will probably also want to install
 <a href="http://www.softdevlabs.com/hercgui">Fish's Hercules GUI for Windows</a>.
-</ol>
-
-<h3>Installing on Windows with Cygwin:</h3>
-<ol>
-<li>
-Hercules 3.07 is now supplied as prebuilt binaries only in a native Windows
-version. This version will work perfectly well under Cygwin, as well as
-native Windows, and does not require any specific version of the Cygwin
-libraries. Follow the instructions above to install the native Windows
-version.
 </ol>
 
 <p><hr><a name="config"></a>
@@ -943,11 +946,11 @@ run-commands file can completely automate Hercules startup.
 </a>
 <p>
 The Hercules Automatic Operator (HAO) feature is a facility which can
-automatically issue panel commands in response to specific messages 
+automatically issue panel commands in response to specific messages
 appearing on the Hercules console.
 <p>
 To use the Hercules Automatic Operator facility, you first define a "rule"
-consisting of a "target" and an associated "command". The "target" is 
+consisting of a "target" and an associated "command". The "target" is
 a regular expression pattern used to match against the text of the various
 messages that Hercules issues as it runs. Whenever a match is found, the
 rule "fires" and its associated command is automatically issued.
@@ -965,7 +968,7 @@ To define a HAO rule, enter the command:
    hao tgt <i>target</i>
 </pre>
 <p>
-to define the rule's "target" match pattern 
+to define the rule's "target" match pattern
 followed by the command:
 <pre>
    hao cmd <i>command</i>
@@ -995,7 +998,7 @@ triggered the command.
 <p>
 The following special variables are recognized:
 <ul>
-<li><code>$1</code> to <code>$9</code> - 
+<li><code>$1</code> to <code>$9</code> -
     the text which matched the 1st to 9th capturing
     group in the target regular expression
 <li><code>$`</code> - the text preceding the regular expression match

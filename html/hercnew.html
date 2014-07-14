@@ -8,13 +8,82 @@ Hercules: What's new</TITLE>
       VLINK="#008040" ALINK="#000000">
 <h1>What's new in Hercules</h1>
 <hr noshade>
-<h2>What's new in release 3.08</h2>
-<p>Release date: whenever it's ready
+<h2>What's new in release 3.10</h2>
+<p>Release date: 1 February 2014
 <ul>
-<li>1403 and 3211 FCB support (Enrico Sorichetti)
+<li>Fix incorrect PSW IA in SIE mode with PER (Ian Worthington)
+<li>Corrections to build procedures (Mike Frysinger, Dan Horak)
+<li>Fixes for Mac OS X (Butch Anton, Adam Vandenberg, Enrico Sorichetti)
+<li>Configuration topology facility fixes (Paolo Giacobbis)
+<li>Convert BFP instructions to use SoftFloat package (Roger Bowler)
+<li>Preliminary support for 2GB page frames (Roger Bowler)
+<li>PFMF fixes (John P. Hartmann)
+<li>CMPSC corrections (Bernard van der Helm)
+<li>dasdls enhancements (Chris Cheney)
 </ul>
 <p>Download
-<a href="http://www.hercules-390.org/hercules-3.08.tar.gz">hercules-3.08.tar.gz</a>
+<a href="http://downloads.hercules-390.eu/hercules-3.10.tar.gz">hercules-3.10.tar.gz</a>
+<h2>What's new in release 3.09</h2>
+<p>Release date: 15 July 2013
+<ul>
+<li>Allow regex replacement variables in HAO commands (Roger Bowler)
+<li>Prevent duplicate EQID (Gordon Bonorchis)
+<li>Permit concurrent read access to printer and punch files (Roger Bowler)
+<li>DFP zoned-conversion facility (Roger Bowler)
+<li>Execution-hint facility (Roger Bowler)
+<li>Miscellaneous-instruction-extensions facility (Roger Bowler)
+<li>Load-and-trap facility (Roger Bowler)
+<li>Fix for VSAM Extended Format (David "Fish" Trout)
+<li>APL\360 2741 patch (Max H. Parke)
+<li>Fix interval timer repeating interrupt (Ivan Warren, Kevin Leonard)
+<li>Corrections to build procedures (Mike Frysinger, Dan Horak)
+<li>Miscellaneous bug fixes (Roger Bowler)
+</ul>
+<p>Download
+<a href="http://downloads.hercules-390.eu/hercules-3.09.tar.gz">hercules-3.09.tar.gz</a>
+<h2>What's new in release 3.08</h2>
+<p>Release date: 8 December 2012
+<ul>
+<li>1403 and 3211 FCB support (Enrico Sorichetti)
+<li>Shutdown on SIGTERM (Frans Pop)
+<li>Disable close-window button (Paul Gorlinsky)
+<li>Allow larger IPL text (Laddie Hanus)
+<li>Drop support for Cygwin, Win98, WinNT, Win2000 (Roger Bowler)
+<li>Windows shutdown handlers (Paul Gorlinsky)
+<li>Dynamically loadable instructions (Jan Jaeger)
+<li>Additional codepages (Kevin Leonard)
+<li>Load/Store-on-Condition Facility (Roger Bowler)
+<li>Distinct-Operands Facility (Roger Bowler)
+<li>Population-Count Facility (Roger Bowler)
+<li>High-Word Facility (Roger Bowler)
+<li>Message Security Assist Extensions 3 and 4 (Bernard van der Helm)
+<li>Interlocked-Access Facility (Roger Bowler)
+<li>CMPSC-Enhancement Facility (Bernard van der Helm)
+<li>Fast-BCR-Serialization Facility (Roger Bowler)
+<li>Reset-Reference-Bits-Multiple Facility (Jan Jaeger)
+<li>Access-Exception-Fetch/Store-Indication Facility (Roger Bowler)
+<li>Enhanced-Monitor Facility (Jan Jaeger)
+<li>Load-Program-Parameter Facility (Paul Gorlinsky)
+<li>IPTE-Range Facility (Jan Jaeger)
+<li>Enhanced-DAT Facility (Jan Jaeger)
+<li>Increase CKD_MAXFILES from 4 to 27 for 3390-27 and -54 (Paul Gorlinsky)
+<li>CKD read attention message command (Florian Bilek)
+<li>Support 128 CPUs on 64-bit Linux (Jan Jaeger)
+<li>Issue Hercules commands via HTTP (Robert Hodge)
+<li>Compression performance enhancements (Bernard van der Helm)
+<li>Compression bug fixes (Bernard van der Helm, John P. Hartmann)
+<li>Crypto bug fixes (Bernard van der Helm)
+<li>Hexadecimal floating-point bug fixes (Andy Polyakov)
+<li>SCSI tape enhancements and bug fixes (David "Fish" Trout)
+<li>3420 sense code corrections for MTS (Harold Grovesteen)
+<li>Prevent multiple instances opening same output file under Windows (David "Fish" Trout)
+<li>2703 and 3705 fixes and 3791 support (Max H. Parke, Juergen Winkelmann)
+<li>Enable GUI support as default for all platforms (Jacob Dekel)
+<li>Miscellaneous bug fixes (Paul Gorlinsky, Ivan Warren, David "Fish" Trout, Jan Jaeger,
+Bernard van der Helm, Roger Bowler, Kevin Leonard, Ian Shorter, John P. Hartmann)
+</ul>
+<p>Download
+<a href="http://downloads.hercules-390.eu/hercules-3.08.tar.gz">hercules-3.08.tar.gz</a>
 <h2>What's new in release 3.07</h2>
 <p>Release date: 10 March 2010
 <ul>

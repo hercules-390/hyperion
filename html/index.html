@@ -37,10 +37,10 @@ The Hercules System/370, ESA/390, and z/Architecture Emulator</TITLE>
 <p>
 
 <b>Hercules</b> is an open source software implementation of the mainframe
-System/370 and ESA/390 architectures, in addition to the new 64-bit
-z/Architecture. Hercules runs under Linux, Windows (98, NT, 2000, and XP),
+System/370 and ESA/390 architectures, in addition to the latest 64-bit
+z/Architecture. Hercules runs under Linux, Windows,
 Solaris, FreeBSD,
-and Mac OS X (10.3 and later).
+and Mac OS X.
 
 <p>
 
@@ -49,7 +49,8 @@ licensed under the terms of the <a href="herclic.html">Q Public Licence</a>.
 
 <p>
 
-Hercules was created by <a href="http://perso.wanadoo.fr/rbowler/">Roger Bowler</a> and is maintained by Jay Maynard.
+Hercules was created by Roger Bowler.
+Jay Maynard (&#8220;the Tron Guy&#8221;) was the maintainer from 2000 to 2012.
 Jan Jaeger designed and implemented many of the advanced features of
 Hercules, including dynamic reconfiguration, integrated console,
 interpretive execution and z/Architecture support. A dedicated crew of
@@ -73,11 +74,11 @@ programmers is constantly at work implementing new features and fixing bugs.
 
 <h4>PDF manuals:</h4>
 <ul>
-<li><a href="HerculesGeneralInfo.pdf">Hercules General Information</a>
-<li><a href="HerculesReferenceSummary.pdf">Hercules Reference Summary</a>
-<li><a href="HerculesInstallation.pdf">Hercules Installation Guide</a>
-<li><a href="HerculesUserReference.pdf">Hercules User Reference Guide</a>
-<li><a href="HerculesMessagesandCodes.pdf">Hercules Messages and Codes</a>
+<li><a href="http://hercdoc.glanzmann.org/V400/HerculesGeneralInfo.pdf">Hercules General Information</a>
+<li><a href="http://hercdoc.glanzmann.org/V400/HerculesReferenceSummary.pdf">Hercules Reference Summary</a>
+<li><a href="http://hercdoc.glanzmann.org/V400/HerculesInstallation.pdf">Hercules Installation Guide</a>
+<li><a href="http://hercdoc.glanzmann.org/V400/HerculesUserReference.pdf">Hercules User Reference Guide</a>
+<li><a href="http://hercdoc.glanzmann.org/V400/HerculesMessagesandCodes.pdf">Hercules Messages and Codes</a>
 </ul>
 
 <p><br>
@@ -85,13 +86,14 @@ programmers is constantly at work implementing new features and fixing bugs.
 <h3>To download the current release version, use the following links:</h3>
 
 <ul>
-<li>Source tarball:
+<li>Source code:
 <p>
 <ul>
 <li><a href="http://www.hercules-390.org/hercules-3.07.tar.gz">hercules-3.07.tar.gz</a>
 </ul>
+<!--
 <p>
-<li>Linux:
+<li>Linux RPM:
 <p>
 <ul>
 <li><a href="http://www.hercules-390.org/hercules-3.07-1.i686.rpm">hercules-3.07-1.i686.rpm</a>: 32-bit Intel RPM
@@ -99,8 +101,9 @@ programmers is constantly at work implementing new features and fixing bugs.
 <li><a href="http://www.hercules-390.org/hercules-3.07-1.src.rpm">hercules-3.07-1.src.rpm</a>: Source
 RPM (if you want to build RPMs yourself)
 </ul>
+-->
 <p>
-<li>Windows native program:
+<li>Windows binaries:
 <p>
 <ul>
 <li><a href="http://www.hercules-390.org/hercules-3.07-w32.msi">hercules-3.07-w32.msi</a>:
@@ -118,11 +121,14 @@ required Microsoft Runtime components are installed and also provides
 convenience shortcuts in the programs menu. If the required components
 are already present and the shortcuts are not needed on the target system,
 the self-extracting or .zip archive may be used instead.
+<!--
 <br>
 The required component for this build is the x86 version of the C runtime at
 level 8.50727.762.
+-->
 </small>
 </ul>
+<!--
 <p>
 <li>Mac OS X:
 <p>
@@ -134,6 +140,7 @@ level 8.50727.762.
 <li><a href="http://www.hercules-390.org/hercules-3.07-snowleopard.dmg">hercules-3.07-snowleopard.dmg</a>: Mac OS X
 10.6 (Snow Leopard) universal binary version, 32- and 64-bit Intel
 </ul>
+-->
 </ul>
 
 <p><br>
@@ -272,9 +279,8 @@ http://www.tech-news.com/another/ap200601b.html</a>
 
 <p>
 Read Moshe Bar's BYTE.com article about Hercules at
-<a href="http://www.byte.com/documents/s=429/byt20000801s0002/">
-http://www.byte.com/documents/s=429/byt20000801s0002/</a>
-
+<a href="http://web.archive.org/web/20010712143133/http://www.byte.com/documents/s=429/BYT20000801S0002/">
+http://web.archive.org/web/20010712143133/http://www.byte.com/documents/s=429/BYT20000801S0002/</a>
 <p>
 For eighteen months, the IBM Redbook
 <em>SG24-4987 Linux for S/390</em> at
@@ -300,41 +306,49 @@ http://linuxvm.org/Present/SHARE99/S2880JMa.pdf</a>
 
 <center><hr width=15% noshade></center>
 <h3>
-The Subversion source code repository
+The source code repository
 </h3>
 
 <p>
-The complete source code for the current <i>development</i> version of
-Hercules is also available via anonymous access from our Subversion source
-code repository. The Subversion URL is:
-
-<center><b>svn://svn.hercules-390.org/hercules</b></center>
-
+The complete source code and development history for
+Hercules is also available via anonymous access from
+these git repositories:
+<dl>
+<dt>
+<a href="https://github.com/rbowler/spinhawk" target="_blank">
+https://github.com/rbowler/spinhawk</a>
+<dd>
 <p>
-
-Doing a checkout on module "hercules" will get you the source for all of
-Hercules. You'll want to check out the trunk, instead of the whole
-repository:
-
-<blockquote>
-<tt>
-    svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
-</tt>
-</blockquote>
-
+The spinhawk repository is used to build the 3.xx series
+of &#147;gold&#148; releases.
+The intent of the 3.xx release stream is to provide regular
+production-quality releases fully compatible with version 3.07,
+containing additional architectural features and bug fixes,
+as well as selected enhancements from the developer sandbox.
+</p>
+<dt>
+<a href="https://github.com/hercules-390/hyperion" target="_blank">
+https://github.com/hercules-390/hyperion</a>
+<dd>
 <p>
-(The last <tt>hercules</tt> specifies the directory the checked out copy is
-placed into.)
-Please note that this will get you the current
-<i>development</i> version of Hercules, which is <i>not</i>
-release quality and thus might not even work (since it's still under
-development). If you want the current, stable, <i>release</i> version
-of Hercules (i.e. one that is known to work properly), then use the
-previously mentioned links instead.
-
+The hyperion repository is used by a group of developers as a
+cutting-edge developer sandbox.
+It is currently designated as version 4.00.
+This repository evolved from Hercules version 3.07 enriched by
+a series of user interface changes and usability enhancements
+produced during the TurboHercules period.
+It also contains experimental support for the QDIO and MPCPTP6
+networking interfaces and a redesigned I/O subsystem.
+</p>
+</dl>
 <p>
-Please read the file <tt>README.SVN</tt> included with the source for additional and updated
-instructions for building the development version.
+Please note that the development repositories may contain faults which
+may be fixed at an unspecified later date, as well as experimental code
+which might not appear in any future production release.
+<p>
+Build instructions are contained in the source files
+<tt>INSTALL</tt> (for Unix)
+or <tt>README.WIN64</tt> (for Windows).
 
 <p><br>
 
@@ -345,25 +359,41 @@ Other Hercules-related sites
 </h3>
 
 <ul>
-<p><li><a href="http://www.ibiblio.org/jmaynard/">http://www.ibiblio.org/jmaynard/</a>
-    <br>Jay Maynard's IBM S/360 and S/370 Public Domain Software Collection
-<p><li><a href="http://www.bsp-gmbh.com/hercules">http://www.bsp-gmbh.com/hercules</a>
+<li><a href="http://www.bsp-gmbh.com/hercules/index.shtml">
+    http://www.bsp-gmbh.com/hercules/index.shtml</a>
     <br>Volker Bandke's Hercules site.  This is <i>the</i> site for
     users of Hercules on Windows, and here you can also obtain Volker's
     MVS 3.8J turnkey system.
-<p><li><a href="http://www.softdevlabs.com/hercgui">
+<li><a href="http://www.softdevlabs.com/hercgui">
     http://www.softdevlabs.com/hercgui</a>
     <br>Fish's Hercules GUI for Windows.
-<p><li><a href="http://cbttape.org/~jmorrison/">http://cbttape.org/~jmorrison/</a>
+<li><a href="http://cbttape.org/~jmorrison/">http://cbttape.org/~jmorrison/</a>
     <br>Jim Morrison's downloads (includes 3380 support for MVS 3.8!)
-<p><li><a href="http://www.jaymoseley.com/hercules">http://www.jaymoseley.com/hercules</a>
+<li><a href="http://www.jaymoseley.com/hercules">http://www.jaymoseley.com/hercules</a>
     <br>Jay Moseley's Hercules site - lots of Hercules and MVS information
-<p><li><a href="http://www.tommysprinkle.com/mvs">http://www.tommysprinkle.com/mvs</a>
+<li><a href="http://www.tommysprinkle.com/mvs">http://www.tommysprinkle.com/mvs</a>
     <br>Tommy Sprinkle's MVS 3.8 documentation
-<p><li><a href="http://hansen-family.com/mvs">http://hansen-family.com/mvs</a>
+<li><a href="http://hansen-family.com/mvs">http://hansen-family.com/mvs</a>
     <br>Bob Hansen's MVS 3.8 documentation
-<p><li><a href="http://www.schaefernet.de/hercules">http://www.schaefernet.de/hercules</a>
-    <br>Wolfgang Sch&auml;fer's Hercules site - MVT/MVS tutorials and add-ons
+<li><a href="http://www.clueful.co.uk/mbeattie/hercules/tso.html">
+    http://www.clueful.co.uk/mbeattie/hercules/tso.html</a>
+    <br>Malcolm Beattie's MVT/TSO documentation
+<li><a href="http://www.ibiblio.org/jmaynard">http://www.ibiblio.org/jmaynard</a>
+    <br>Jay Maynard's S/360 and S/370 public domain software archive
+<li><a href="http://www.shedlock.org/Shedlock/Hercules/index.html">
+    http://www.shedlock.org/Shedlock/Hercules/index.html</a>
+    <br>George Shedlock's archive of
+    DOS/VS Release 34 and VM/370 software, books, and information
+<li><a href="http://www.smrcc.org.uk/members/g4ugm/VM370.htm">
+    http://www.smrcc.org.uk/members/g4ugm/VM370.htm</a>
+    <br>Dave Wade's VM/370 archive
+<li><a href="http://perso.wanadoo.es/rptv2005/en/index.html">
+    http://perso.wanadoo.es/rptv2005/en/index.html</a>
+    <br>Rafael Pereira's Standalone Programs and 1401 simulator project
+<li><a href="http://timpinkawa.net/hercules/">http://timpinkawa.net/hercules/</a>
+    <br>Tim Pinkawa's Hercules Page
+<li><a href="http://www.lightlink.com/mhp/2703/">http://www.lightlink.com/mhp/2703/</a>
+    <br>Max Parke's Hercules 2703 Page - TTY, TCAM, 3705 and more
 </ul>
 
 <p><br>
@@ -378,10 +408,12 @@ Other Hercules-related sites
 <a href="http://groups.yahoo.com/group/hercules-390">
 http://groups.yahoo.com/group/hercules-390</a>.
 <p>
-Bug reports (together with your diagnosis of the fault, please)
-may be sent to me, <a href="http://www.conmicro.com">Jay Maynard</a>,
-at <a href="mailto:jmaynard@conmicro.com"><em>jmaynard </em>&#064;<em>
-conmicro.com</em></a>.
+Bug reports for the current release (together with your diagnosis of the fault, please)
+may be posted at the hercules-390 discussion group.
+Problems with the developer sandbox version should be entered
+into the Hyperion issue tracker at
+<a href="https://github.com/hercules-390/hyperion/issues">
+https://github.com/hercules-390/hyperion/issues</a>.
 
 <p><br>
 
