@@ -875,7 +875,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
         // Trace the i/o if requested...
 
-        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
+        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
             WRMSG(HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             packet_trace( pIOBuf, (int)iLength, '<' );
@@ -983,7 +983,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
             // Trace received command frame...
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
+            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
                 WRMSG(HHC00922, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
                 packet_trace( (BYTE*)pCmdFrame, iLength, '>' );
@@ -1062,7 +1062,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             iEthLen      = iLength - sizeof(LCSETHFRM);
 
             // Trace Ethernet frame before sending to TAP device
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug )
+            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
                 WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen, '>' );
@@ -1631,6 +1631,7 @@ static void  LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
 static void*  LCS_PortThread( void* arg)
 {
+    DEVBLK*     pDEVBLK;
     PLCSPORT    pLCSPORT = (PLCSPORT) arg;
     PLCSDEV     pLCSDev;
     PLCSDEV     pPrimaryLCSDEV;
@@ -1646,6 +1647,8 @@ static void*  LCS_PortThread( void* arg)
     BYTE*       pMAC;
     BYTE        szBuff[2048];
     char        bReported = 0;
+
+    pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
     pLCSPORT->pid = getpid();
 
@@ -1694,7 +1697,7 @@ static void*  LCS_PortThread( void* arg)
             break;
         }
 
-        if( pLCSPORT->pLCSBLK->fDebug )
+        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
             // Trace the frame
             WRMSG(HHC00945, "I", pLCSPORT->bPort );

@@ -413,6 +413,9 @@ struct  _LCSDEV
 };
 
 
+#define LCSDEV_READ_SUBCHANN    0       // 0 - Read subchannel
+#define LCSDEV_WRITE_SUBCHANN   1       // 1 - Write cubchannel
+
 
 #define LCSDEV_MODE_IP          0x01
 #define LCSDEV_MODE_SNA         0x02
