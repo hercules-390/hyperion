@@ -1983,7 +1983,7 @@ and how they are used.
                             TAP Adapter must be bridged to a local LAN.
                 </td>
                 <td>
-                        <a name="#QETH">"QETH" (OSA/QDIO Ethernet Adapter)
+                        <a href="#QETH">"QETH" (OSA/QDIO Ethernet Adapter)
                         <br>TUN/TAP Driver</a>
                 </td>
             </tr>
@@ -3636,8 +3636,128 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
 <p><br>
 
+<a name="QETH"></a>
+    <dt><b>QETH</b> &nbsp; &nbsp; (OSA/QDIO Ethernet Adapter)
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        <i>(<b>Note:</b> This is an experimental driver which may not be fully functional yet.)</i>
+    <dd><p>
+
+        emulates an OSA Express card running in QDIO mode.
+        Both layer-2 and layer-3 are currently supported.
+
+       
+        <dl> <!-- begin QETH parms -->
+
+        <dt>Optional for *nix:
+        <dd><p>
+
+            <dl> <!-- begin Optional for *nix -->
+
+                <dt><code>ifname &nbsp;<em>interface</em></code>
+                <dd><p>
+                    specifies the interface name of an interface
+                    that is already configured (e.g. <code>tun</code>,
+                    <code>tun0</code>, etc). &nbsp;(*nix only)
+                    <p>
+
+            </dl> <!-- end Optional for *nix -->
+
+            <p>
+
+        <dt>Optional for both *nix and Windows:
+        <dd><p>
+
+            <dl> <!-- begin Optional for both *nix and Windows -->
+
+                <dt><code>iface &nbsp;<em>device</em></code>
+                <dd><p>
+                    specifies the name of the tunnel device to use.
+                    <p>
+                    The default for Linux is
+                    <code>/dev/net/tun</code>
+                    (which is correct for version 2.4 and above of the Linux kernel).
+                    The default for OSX is
+                    <code>/dev/tun0</code>.
+                    For Windows, specify the IP address or MAC address
+                    of your Windows host's real network adapter that the Hercules
+                    driver should use to emulate your virtual guest's adapter on.
+                    The default is the first adapter found according to Windows'
+                    adapter binding order, which may not be the one you want
+                    if you have multiple adapters.
+                    <p>
+
+                <dt><code>ipaddr &nbsp;<em>address</em></code>
+                <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
+                <dd><p>
+                    specifies the IPv4 address to be assigned to your virtual OSA Express card.
+                    The address can be optionally followed by a prefix size
+                    expressed in CIDR notation, e.g. 192.168.1.1/24. For IPv4
+                    the prefix size can have a value from 0 to 32. If not specified
+                    a value of 32 is assumed. The prefix size is used to produce
+                    an equivalent subnet mask. For example, a value of 24 produces
+                    a subnet mask of 255.255.255.0.
+                    <p>
+
+                <dt><code>netmask &nbsp;<em>mask</em></code>
+                <dd><p>
+                    specifies the subnet mask to be used with your OSA card.
+                    The <code>netmask</code> option may only be specified when
+                    the subnet mask is not already defined via the optional
+                    prefix size parameter of the <code>ipaddr</code> option.
+                    <p>
+
+                <dt><code>ipaddr6 &nbsp;<em>address</em></code>
+                <dt><code>ipaddr6 &nbsp;<em>address/prefix</em></code>
+                <dd><p>
+                    specifies the IPv6 address to be assigned to your OSA card.
+                    The address can be optionally followed by the prefix size
+                    expressed in CIDR notation, e.g. 2001:db8:3003:1::543:210f/48.
+                    For IPv6 the prefix size can have a value from 0 to 128. If
+                    not specified a value of 128 is assumed. The prefix size
+                    is used to produce an equivalent subnet mask.
+                    <p>
+
+                <dt><code>hwaddr &nbsp;<em>MAC</em></code>
+                <dd><p>
+                    specifies the MAC address to be assigned to your OSA card.
+                    If not specified then one will be internally generated
+                    in the range 02:00:5E:80:00:00 - 02:00:5E:FF:FF:FF using
+                    the low order 23 bits of the IPv4 address. For example,
+                    if the ipv4 address is 10.1.2.3 the generated MAC address
+                    will be 02:00:5E:81:02:03.
+                    <p>
+
+                <dt><code>mtu &nbsp;<em>bytes</em></code>
+                <dd><p>
+                    specifies the Maximum Transmission Unit to be used.
+                    The maximum transmission unit (MTU) is the largest
+                    packet size, measured in bytes, that can be transmitted
+                    over a network.
+                    <p>
+
+                <dt><code>chpid &nbsp;<em>id</em></code>
+                <dd><p>
+                    specified the channel path identifier to be used
+                    with the device. This is mostly a cosmetic value
+                    but certain guest operating systems such as z/OS
+                    might require it to operate correctly.
+                    <p>
+
+                <dt><code>debug</code>
+                <dd><p>
+                    enables debug logging for the device. When logging is
+                    enabled the Hercules driver logs extra progress and
+                    status messages used to help debug an incorrectly
+                    functioning driver.
+                    <p>
+
+            </dl> <!-- end Optional for both *nix and Windows -->
+
+        </dl> <!-- end QETH parms -->
+
     </dl> <!-- end emulation types -->
-    <p>
+
+    <p><br>
 
 <hr width="50%"><p>
 
