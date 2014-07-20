@@ -3655,7 +3655,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>ifname &nbsp;<em>interface</em></code>
                 <dd><p>
-                    specifies the interface name of an interface
+                    specifies the interface name of a host interface
                     that is already configured (e.g. <code>tun</code>,
                     <code>tun0</code>, etc). &nbsp;(*nix only)
                     <p>
@@ -3671,7 +3671,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
-                    specifies the name of the tunnel device to use.
+                    specifies the name of the host tunnel device to use.
                     <p>
                     The default for Linux is
                     <code>/dev/net/tun</code>
@@ -3691,11 +3691,11 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dd><p>
                     specifies the IPv4 address to be assigned to your virtual OSA Express card.
                     The address can be optionally followed by a prefix size
-                    expressed in CIDR notation, e.g. 192.168.1.1/24. For IPv4
-                    the prefix size can have a value from 0 to 32. If not specified
-                    a value of 32 is assumed. The prefix size is used to produce
-                    an equivalent subnet mask. For example, a value of 24 produces
-                    a subnet mask of 255.255.255.0.
+                    expressed in CIDR notation, e.g. <code>192.168.1.1/24</code>.
+                    For IPv4 the prefix size can have a value from 0 to 32.
+                    If not specified a value of 32 is assumed.
+                    The prefix size is used to produce an equivalent subnet mask.
+                    For example, a value of 24 produces a subnet mask of 255.255.255.0.
                     <p>
 
                 <dt><code>netmask &nbsp;<em>mask</em></code>
@@ -3711,7 +3711,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dd><p>
                     specifies the IPv6 address to be assigned to your OSA card.
                     The address can be optionally followed by the prefix size
-                    expressed in CIDR notation, e.g. 2001:db8:3003:1::543:210f/48.
+                    expressed in CIDR notation, e.g.
+                    <code>2001:db8:3003:1::543:210f/48</code>.
                     For IPv6 the prefix size can have a value from 0 to 128. If
                     not specified a value of 128 is assumed. The prefix size
                     is used to produce an equivalent subnet mask.
