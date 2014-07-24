@@ -392,6 +392,7 @@
 :try_vs120
 
   if "%VS120COMNTOOLS%" == "" goto :try_vs110
+  if not exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs110
 
   set "build_env=vs120"
   set "VSTOOLSDIR=%VS120COMNTOOLS%"
@@ -401,6 +402,7 @@
 :try_vs110
 
   if "%VS110COMNTOOLS%" == "" goto :try_vs100
+  if not exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs100
 
   set "build_env=vs110"
   set "VSTOOLSDIR=%VS110COMNTOOLS%"
@@ -410,6 +412,7 @@
 :try_vs100
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
+  if not exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs90
 
   set "build_env=vs100"
   set "VSTOOLSDIR=%VS100COMNTOOLS%"
@@ -419,6 +422,7 @@
 :try_vs90
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
+  if not exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs80
 
   set "build_env=vs90"
   set "VSTOOLSDIR=%VS90COMNTOOLS%"
@@ -428,6 +432,7 @@
 :try_vs80
 
   if "%VS80COMNTOOLS%" == "" goto :try_toolkit
+  if not exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_toolkit
 
   set "build_env=vs80"
   set "VSTOOLSDIR=%VS80COMNTOOLS%"
