@@ -139,6 +139,7 @@ autoconf/compile
 /Hercules_VS*.sdf
 /Hercules_VS*.suo
 /msvc.*
+*.vcxproj.user
 
 # Editors
 *.aus

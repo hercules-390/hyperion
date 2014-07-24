@@ -387,57 +387,76 @@
 ::        Don't forget to update the 'CONFIG.msvc' file too!
 ::        Don't forget to update the 'targetver.h' header too!
 ::
+::        Note: Additional sanity checks are required to deal with
+::              leftover SET commands from temporary installations
+::              of newer VS versions. Consequently, both the
+::              environment variable and vcvarsall.bat must exist to
+::              properly determine the latest installed version.
+::
+::              Unsetting of the level environment variable only
+::              occurs for any given compilation. 
+::
 :: -------------------------------------------------------------------
 
 :try_vs120
 
   if "%VS120COMNTOOLS%" == "" goto :try_vs110
-  if not exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs110
-
-  set "build_env=vs120"
-  set "VSTOOLSDIR=%VS120COMNTOOLS%"
-  echo Visual Studio 2013 detected
-  %return%
+  if exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat"  (
+	 set "build_env=vs120"
+	 set "VSTOOLSDIR=%VS120COMNTOOLS%"
+	 echo Visual Studio 2013 detected
+	 %return%
+  )
+  
+  set "VS120COMNTOOLS="
 
 :try_vs110
 
   if "%VS110COMNTOOLS%" == "" goto :try_vs100
-  if not exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs100
+  if exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" (
+     set "build_env=vs110"
+     set "VSTOOLSDIR=%VS110COMNTOOLS%"
+     echo Visual Studio 2012 detected
+     %return%
+  )
 
-  set "build_env=vs110"
-  set "VSTOOLSDIR=%VS110COMNTOOLS%"
-  echo Visual Studio 2012 detected
-  %return%
+  set "VS110COMNTOOLS="
 
 :try_vs100
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
-  if not exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs90
+  if exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" (
+     set "build_env=vs100"
+     set "VSTOOLSDIR=%VS100COMNTOOLS%"
+     echo Visual Studio 2010 detected
+     %return%
+  )
 
-  set "build_env=vs100"
-  set "VSTOOLSDIR=%VS100COMNTOOLS%"
-  echo Visual Studio 2010 detected
-  %return%
+  set "VS100COMNTOOLS="
 
 :try_vs90
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
-  if not exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_vs80
+  if exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" (
+     set "build_env=vs90"
+     set "VSTOOLSDIR=%VS90COMNTOOLS%"
+     echo Visual Studio 2008 detected
+     %return%
+  )
 
-  set "build_env=vs90"
-  set "VSTOOLSDIR=%VS90COMNTOOLS%"
-  echo Visual Studio 2008 detected
-  %return%
+  set "VS90COMNTOOLS="
 
 :try_vs80
 
   if "%VS80COMNTOOLS%" == "" goto :try_toolkit
-  if not exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" goto :try_toolkit
+  if exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" (
+     set "build_env=vs80"
+     set "VSTOOLSDIR=%VS80COMNTOOLS%"
+     echo Visual Studio 2005 detected
+     %return%
+  )
 
-  set "build_env=vs80"
-  set "VSTOOLSDIR=%VS80COMNTOOLS%"
-  echo Visual Studio 2005 detected
-  %return%
+  set "VS80COMNTOOLS="
 
 :try_toolkit
 
