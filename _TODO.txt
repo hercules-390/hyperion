@@ -186,10 +186,6 @@
 
 -------------------------------------------------------------------------------
 
-  BCTC support for sysplex'ing via GRS.
-
--------------------------------------------------------------------------------
-
   Generic native host SCSI support (mostly for tape,
   but having it opens other interesting possibilities)
 
