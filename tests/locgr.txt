@@ -1,0 +1,40 @@
+
+* LOCGR test        (Load On Condition)
+
+#                     INITIALIZE TEST
+sysclear
+archmode esame
+
+
+#                     DEFINE LOW CORE
+
+r 1A0=00000001800000000000000000000300    #   z/Arch restart PSW
+r 1D0=00020001800000000000000000BADBAD    #   z/Arch pgm new PSW
+
+#                     WORKING STORAGE
+
+r 200=07020001800000000000000000AAAAAA    #   Success PSW
+r 210=0000000000000000                    #   ZEROS
+r 218=1111111111111111                    #   ONES
+r 220=2222222222222222                    #   TWOS
+
+#                     TEST CODE...
+
+r 300=E31002180004    #   LG      R1,ONES         Load R1   =  0000...
+r 306=E32002100004    #   LG      R2,ZEROS        Load R2   =  1111...
+r 30C=E3C002200004    #   LG      R12,TWOS        Load R12  =  2222...
+
+r 312=B9020012        #   LTGR    R1,R2           Clear R1  and set CC=0
+r 316=C02000000000    #   LARL    R2,*            Load  R2  with non-zero value
+r 31C=B9E2801C        #   LOCGRE  R1,R12          Load  R1  with R12 if CC=0
+
+r 320=E31002200021    #   CLG     R1,TWOS         Was R12 loaded into R1?
+r 326=4780032E        #   BE      *+8             If yes, then test SUCCESS
+r 32A=B2B201D0        #   LPSWE   BADPSW          If not, then test FAILURE
+r 32E=B2B20200        #   LPSWE   GOODPSW         Successful end of test
+
+#                 START TEST
+
+ostailor null
+t+
+restart
