@@ -2776,6 +2776,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\locgr.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\loop.txt"
 						>
 					</File>
