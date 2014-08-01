@@ -394,7 +394,7 @@
 ::              properly determine the latest installed version.
 ::
 ::              Unsetting of the level environment variable only
-::              occurs for any given compilation. 
+::              occurs for any given compilation.
 ::
 :: -------------------------------------------------------------------
 
@@ -402,12 +402,12 @@
 
   if "%VS120COMNTOOLS%" == "" goto :try_vs110
   if exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-	 set "build_env=vs120"
-	 set "VSTOOLSDIR=%VS120COMNTOOLS%"
-	 echo Visual Studio 2013 detected
-	 %return%
+     set "build_env=vs120"
+     set "VSTOOLSDIR=%VS120COMNTOOLS%"
+     echo Visual Studio 2013 detected
+     %return%
   )
-  
+
   set "VS120COMNTOOLS="
 
 :try_vs110
@@ -528,9 +528,10 @@
 :cfg_sdk_env
 
 
-  :: VS2008/VS2010/VS2012 multi-config multi-platform parallel build?
+  :: VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build?
 
   if    not "%CFG%"        == ""            %return%
+  if /i     "%build_env%"  == "vs120"       goto :multi_cfg
   if /i     "%build_env%"  == "vs110"       goto :multi_cfg
   if /i     "%build_env%"  == "vs100"       goto :multi_cfg
   if /i not "%build_env%"  == "vs90"        goto :bad_cfg
@@ -562,9 +563,10 @@
   if /i     "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
   if /i     "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
 
-  :: VS2008/VS2010/VS2012 multi-config multi-platform parallel build?
+  :: VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
+  if /i     "%build_env%"  == "vs120"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs100"       goto :multi_targ_arch
   if /i not "%build_env%"  == "vs90"        goto :bad_targ_arch
@@ -857,7 +859,7 @@
 
 
 ::-----------------------------------------------------------------------------
-::    VS2008/VS2010/VS2012 multi-config multi-platform parallel build
+::    VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build
 ::-----------------------------------------------------------------------------
 ::
 ::  The following is special logic to leverage Fish's "RunJobs" tool
