@@ -49,6 +49,8 @@
 #endif
 
 #ifdef _MSVC_
+  #include <math.h>             // Must come BEFORE <intrin.h> due to
+                                // MS VC Bug ID 381422
   #include <xmmintrin.h>
   #include <tchar.h>
   #include <wincon.h>
@@ -58,6 +60,7 @@
   #include <tlhelp32.h>
   #include <dbghelp.h>
   #include <crtdbg.h>
+  #include <intrin.h>
 #else
   #include <libgen.h>
 #endif
@@ -183,7 +186,7 @@
 #ifdef HAVE_MALLOC_H
   #include <malloc.h>
 #endif
-#ifdef HAVE_MATH_H
+#if defined(HAVE_MATH_H) && !defined(_MSVC_)
   #include <math.h>
 #endif
 #ifdef HAVE_NETDB_H
