@@ -968,7 +968,7 @@ do { \
  *
  */
 
-#if ( _MSC_VER >= VS2008 )
+#if defined( _MSC_VER ) && ( _MSC_VER >= VS2008 )
 # define ENABLE_VS_BUG_ID_363375_BYPASS                                 \
   __pragma( optimize( "", off ) )                                       \
   __pragma( optimize( "t", on ) )
