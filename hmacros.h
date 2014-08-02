@@ -94,7 +94,7 @@
 /*-------------------------------------------------------------------*/
 /*      CASSERT macro       a compile time assertion check           */
 /*-------------------------------------------------------------------*/
-/** 
+/**
  *  Validates at compile time whether condition is true without
  *  generating code. It can be used at any point in a source file
  *  where typedefs are legal.
@@ -950,5 +950,34 @@ do { \
 #define RECV_SOCKDEV_THREAD_PIPE_SIGNAL()  RECV_PIPE_SIGNAL( sysblk.sockrpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
 #define SIGNAL_CONSOLE_THREAD()            SEND_PIPE_SIGNAL( sysblk.cnslwpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
 #define SIGNAL_SOCKDEV_THREAD()            SEND_PIPE_SIGNAL( sysblk.sockwpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
+
+
+/*********************************************************************/
+/*                                                                   */
+/*  Define compiler error bypasses                                   */
+/*                                                                   */
+/*********************************************************************/
+
+
+/*      MS VC Bug ID 363375 Bypass
+ *
+ *      Note: This error, or similar, also occurs at VS 2010 and
+ *            VS 2012.
+ *
+ *      TODO: Verify if fixed in VS 2013 and/or VS 2014.
+ *
+ */
+
+#if ( _MSC_VER >= VS2008 )
+# define ENABLE_VS_BUG_ID_363375_BYPASS                                 \
+  __pragma( optimize( "", off ) )                                       \
+  __pragma( optimize( "t", on ) )
+# define DISABLE_VS_BUG_ID_363375_BYPASS                                \
+  __pragma( optimize( "", on ) )
+#else
+# define ENABLE_VS_BUG_ID_363375_BYPASS
+# define DISABLE_VS_BUG_ID_363375_BYPASS
+#endif
+
 
 #endif // _HMACROS_H
