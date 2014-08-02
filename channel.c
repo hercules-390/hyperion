@@ -4537,9 +4537,9 @@ execute_halt:
                 goto breakchain;
             }
 
-            /* Turn of chain command and suppress indicator bits     */
-            /* for processing purposes as settings ignored.          */
-            flags &= ~(CCW_FLAGS_CC | CCW_FLAGS_SLI);
+            /* Turn off suppress indicator bits for processing       */
+            /* purposes as setting is ignored with CD.               */
+            flags &= ~CCW_FLAGS_SLI;
         }
 
         /* Validate command chain (CC) flag                          */
