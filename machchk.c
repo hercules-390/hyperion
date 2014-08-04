@@ -415,14 +415,22 @@ int i;
     if( signo == SIGUSR2 )
     {
     DEVBLK *dev;
-        if ( equal_threads( tid, sysblk.cnsltid ) ||
-             equal_threads( tid, sysblk.socktid ) ||
-             equal_threads( tid, sysblk.shrdtid ) ||
-             equal_threads( tid, sysblk.httptid ) )
+        if (0
+            || equal_threads( tid, sysblk.cnsltid )
+            || equal_threads( tid, sysblk.socktid )
+#if defined(OPTION_SHARED_DEVICES)
+            || equal_threads( tid, sysblk.shrdtid )
+#endif // defined(OPTION_SHARED_DEVICES)
+            || equal_threads( tid, sysblk.httptid )
+        )
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if ( equal_threads( dev->tid, tid ) ||
-                 equal_threads( dev->shrdtid, tid ) )
+            if (0
+                || equal_threads( dev->tid, tid )
+#if defined(OPTION_SHARED_DEVICES)
+                || equal_threads( dev->shrdtid, tid )
+#endif // defined(OPTION_SHARED_DEVICES)
+            )
                  break;
         if( dev == NULL)
         {
