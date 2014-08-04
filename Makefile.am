@@ -616,29 +616,41 @@ EXTRA_DIST = autoconf/config.rpath \
              scripts/cmpsc.cnf     \
              scripts/cmpsc.rexx    \
              util/CMPSC.txt        \
-             COPYRIGHT             \
              hercules.cnf          \
              cckdfix.c             \
              license_dyn76.txt     \
-             README.COMMADPT       \
+             COPYRIGHT             \
+             BUILDING              \
+             INSTALL               \
+             CHANGES               \
+             RELEASE.NOTES         \
+             .gitignore            \
+             _build                \
+             README.AIX            \
              README.APL360         \
-             README.RXVT4APL       \
+             README.COMMADPT       \
+             README.DECNUMBER      \
              README.DYNMOD         \
              README.ECPSVM         \
              README.HAO            \
              README.HDL            \
+             README.HERCLOGO       \
+             README.HRAF           \
              README.IOARCH         \
              README.ISSUES         \
              README.MINGW          \
+             README.MSVC           \
              README.NETWORKING     \
              README.OSX            \
-             README.TAPE           \
-             README.HERCLOGO       \
-             CHANGES               \
-             RELEASE.NOTES         \
-             README.MSVC           \
+             README.PTT            \
+             README.REXX           \
+             README.RXVT4APL       \
+             README.S37X           \
+             README.SETUID         \
+             README.SOFTFLOAT      \
              README.SUN            \
-             README.AIX            \
+             README.TAPE           \
+             README.WIN64          \
              _TODO.txt             \
              makefile.msvc         \
              makefile-dllmod.msvc  \
