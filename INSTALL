@@ -2,7 +2,8 @@ Basic Installation
 ==================
 
    These are generic installation instructions for Unix-like systems.
-   For Windows refer to README.WIN32 or README.WIN64 instead.
+   For Windows refer to README.WIN64 instead.
+   For FreeBSD and OS/X (Apple) refer also to README.BSD.
 
    The `configure' shell script attempts to guess correct values for
 various system-dependent variables used during compilation.  It uses
@@ -29,12 +30,15 @@ The simplest way to compile this package is:
   1. `cd' to the directory containing the package's source code.
 
   2. Check that you have all of the necessary packages installed:
-        utils/bldlvlck
+        util/bldlvlck
+     This is a PERL script, so you need to have PERL installed to
+     run it.
+
      then create the configure script by running:
         ./autogen.sh
 
   3. Build the Makefiles by running:
-        ./configure 
+        ./configure
 
      Running `configure' takes awhile.  While running, it prints some
      messages telling which features it is checking for.
@@ -45,7 +49,8 @@ The simplest way to compile this package is:
      the package.
 
   6. Type `make install' to install the programs and any data files and
-     documentation.
+     documentation.  See below for instructions on running directly from
+     the build directory.
 
   7. You can remove the program binaries and object files from the
      source code directory by typing `make clean'.  To also remove the
@@ -59,32 +64,34 @@ The simplest way to compile this package is:
 Compilers and Options
 =====================
 
-   Some systems require unusual options for compilation or linking that
-the `configure' script does not know about.  You can give `configure'
-initial values for variables by setting them in the environment.  Using
-a Bourne-compatible shell, you can do that on the command line like
-this:
-     CC=c89 CFLAGS=-O2 LIBS=-lposix ./configure
-
-Or on systems that have the `env' program, you can do it like this:
-     env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure
+   Any non-standard option is specified by options to configure; in
+particular, options for debugging.  Trying to set variables such as
+CFLAGS will not work.
 
 Compiling For Multiple Architectures
 ====================================
 
    You can compile the package for more than one kind of computer at the
 same time, by placing the object files for each architecture in their
-own directory.  To do this, you must use a version of `make' that
-supports the `VPATH' variable, such as GNU `make'.  `cd' to the
-directory where you want the object files and executables to go and run
-the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+own directory.  To do this, create a directory called, say FreeBSD, in the
+directory where you have the hyperion directory.  Got to this directory and
+issue "../hyperion/configure ...".  Then, still in the architecture
+directory issue the "make" and "make install" commands.
 
-   If you have to use a `make' that does not supports the `VPATH'
-variable, you have to compile the package for one architecture at a time
-in the source code directory.  After you have installed the package for
-one architecture, use `make distclean' before reconfiguring for another
-architecture.
+   This is particularly useful if your source is on a NFS server being
+accessed from multiple systems.  You might also use this approach if you
+are trying to git bisect for an error.
+
+   You may wish not to install Hercules in system directories, but run
+directly from the object directory.  You must include this directory in
+your PATH variable.  You must also invoke the "hercules" executable (which
+is a shell script) once to create the real hercules executable (this is
+normally performed as part of the install process).  Thus, your workflow
+would be:
+
+../hyperion/configure
+make
+./hercules
 
 Installation Names
 ==================
