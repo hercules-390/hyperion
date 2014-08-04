@@ -3793,6 +3793,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
             MSGBUF( buf, "for host %s on port %s", host, serv);
             free( port );
         }
+        // "%s server listening %s"
         WRMSG( HHC17001, "I", "Console", buf);
         rc = 0;
     }
@@ -8088,18 +8089,28 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
 
 #if defined(OPTION_HTTP_SERVER)
     MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth());
+    // "%s server listening %s"
     WRMSG(HHC17001, "I", "HTTP", buf);
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
+#if defined(OPTION_SHARED_DEVICES)
     if ( sysblk.shrdport > 0 )
     {
         MSGBUF( buf, "on port %u", sysblk.shrdport);
+        // "%s server listening %s"
         WRMSG( HHC17001, "I", "Shared DASD", buf);
     }
     else
     {
+        // "%s server inactive"
         WRMSG( HHC17002, "I", "Shared DASD");
     }
+#else // !defined(OPTION_SHARED_DEVICES)
+
+    // "%s support not included in this engine build"
+    WRMSG( HHC17015, "I", "Shared DASD");
+
+#endif // defined(OPTION_SHARED_DEVICES)
 
     if (strchr(sysblk.cnslport, ':') == NULL)
     {
@@ -8120,6 +8131,7 @@ int qports_cmd(int argc, char *argv[], char *cmdline)
         MSGBUF( buf, "for host %s on port %s", host, serv);
         free( port );
     }
+    // "%s server listening %s"
     WRMSG( HHC17001, "I", "Console", buf);
 
     return 0;

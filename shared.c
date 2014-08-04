@@ -16,9 +16,6 @@
 
 #define FBA_BLKGRP_SIZE (120*512)
 
-/* Change the following to "define" when Shared FBA support is implemented */
-#undef FBA_SHARED
-
 /*-------------------------------------------------------------------*/
 /* Definitions for sense data format codes and message codes         */
 /*-------------------------------------------------------------------*/
@@ -51,6 +48,12 @@
 #define MESSAGE_F               15      /* Message F                 */
 
 #if defined(OPTION_SHARED_DEVICES)
+
+// FIXME: the OPTION_SHARED_DEVICES build option is currently incompatible
+// with our current channel subsystem design so it is being disabled until
+// we can develop a fix and/or workaround.
+
+WARNING( "OPTION_SHARED_DEVICES is currently broken. Use at your own risk." )
 
 DEVHND  shared_ckd_device_hndinfo;
 DEVHND  shared_fba_device_hndinfo;
@@ -895,7 +898,7 @@ int             sz;                     /* Size so far               */
     return sz;
 }
 
-#if defined(FBA_SHARED)
+#if defined( OPTION_SHARED_DEVICES ) && defined(FBA_SHARED)
 /*-------------------------------------------------------------------
  * Shared fba read block exit (client side)
  *-------------------------------------------------------------------*/
@@ -3036,7 +3039,7 @@ DEVHND shared_fba_device_hndinfo = {
         &fbadasd_hresume               /* Hercules resume            */
 };
 
-#else
+#else // !defined( OPTION_SHARED_DEVICES )
 
 int shared_update_notify (DEVBLK *dev, int block)
 {
@@ -3044,14 +3047,14 @@ int shared_update_notify (DEVBLK *dev, int block)
  UNREFERENCED(block);
  return 0;
 }
-int shared_ckd_init (DEVBLK *dev, int argc, BYTE *argv[] )
+int shared_ckd_init (DEVBLK *dev, int argc, char *argv[] )
 {
  UNREFERENCED(dev);
  UNREFERENCED(argc);
  UNREFERENCED(argv);
  return -1;
 }
-int shared_fba_init (DEVBLK *dev, int argc, BYTE *argv[] )
+int shared_fba_init (DEVBLK *dev, int argc, char *argv[] )
 {
  UNREFERENCED(dev);
  UNREFERENCED(argc);
@@ -3064,11 +3067,12 @@ void *shared_server (void *arg)
  WRMSG (HHC00742, "E");
  return NULL;
 }
-int shared_cmd(int argc, char *argv[], char *cmdline);
- UNREFERENCED(cmdline);
+int shared_cmd(int argc, char *argv[], char *cmdline)
+{
  UNREFERENCED(argc);
  UNREFERENCED(argv);
+ UNREFERENCED(cmdline);
  WRMSG (HHC00742, "E");
  return 0;
 }
-#endif /*defined(OPTION_SHARED_DEVICES)*/
+#endif /* defined(OPTION_SHARED_DEVICES) */

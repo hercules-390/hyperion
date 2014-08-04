@@ -1080,6 +1080,8 @@ static void NP_screen_redraw (REGS *regs)
     draw_text ("| ");
     set_color (COLOR_WHITE, COLOR_BLUE);
 
+#if defined(OPTION_SHARED_DEVICES)
+
     /* Center "Peripherals" on the right-hand-side */
     i = 40 + snprintf(buf, sizeof(buf),
                       "Peripherals [Shared Port %u]",
@@ -1090,6 +1092,8 @@ static void NP_screen_redraw (REGS *regs)
         fill_text (' ', 40 + ((cons_cols - i) / 2));
     draw_text (buf);
     fill_text (' ', (short)cons_cols);
+
+#endif // defined(OPTION_SHARED_DEVICES)
 
     /* Line 2 - peripheral headings */
     set_pos (2, 41);
@@ -1207,7 +1211,12 @@ static void NP_screen_redraw (REGS *regs)
         draw_text ("MIPS");
     }
 
-    if (sysblk.hicpu || sysblk.shrdport)
+    if (0
+        || sysblk.hicpu
+#if defined(OPTION_SHARED_DEVICES)
+        || sysblk.shrdport
+#endif // defined(OPTION_SHARED_DEVICES)
+    )
     {
         set_pos ((BUTTONS_LINE+1), 10);
         draw_text ("IO/s");
@@ -1688,7 +1697,13 @@ static void NP_update(REGS *regs)
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
     }
-    if (((!NPsios_valid || NPsios != sysblk.siosrate) && sysblk.hicpu) || sysblk.shrdport)
+
+    if (0
+        || (sysblk.hicpu && (!NPsios_valid || NPsios != sysblk.siosrate))
+#if defined(OPTION_SHARED_DEVICES)
+        || sysblk.shrdport
+#endif // defined(OPTION_SHARED_DEVICES)
+    )
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
@@ -3532,8 +3547,13 @@ FinishShutdown:
 
                     if ( cnt_online > cnt_stopped && cnt_disabled == 0 )
                         state = "AMBER";
-                    if ( ( sysblk.hicpu && ( cnt_stopped == 0 && cnt_disabled == 0 ) ) ||
-                         ( !sysblk.hicpu && sysblk.shrdport ) )
+
+                    if (0
+                        || ( sysblk.hicpu && (cnt_stopped == 0 && cnt_disabled == 0))
+#if defined(OPTION_SHARED_DEVICES)
+                        || (!sysblk.hicpu && (sysblk.shrdport))
+#endif // defined(OPTION_SHARED_DEVICES)
+                    )
                         state = "GREEN";
                     set_console_title(state);
                 }
@@ -3630,9 +3650,15 @@ FinishShutdown:
                 }
 
                 /* Prepare I/O statistics */
-                if ((len + i + (numcpu ? 13 : 11)) < cons_cols &&
-                    (numcpu ||
-                     (!numcpu && sysblk.shrdport)))
+                if (1
+                    && (len + i + (numcpu ? 13 : 11)) < cons_cols
+                    && (0
+                        ||   numcpu
+#if defined(OPTION_SHARED_DEVICES)
+                        || (!numcpu && sysblk.shrdport)
+#endif // defined(OPTION_SHARED_DEVICES)
+                       )
+                )
                 {
                     if (numcpu)
                         ibuf[(int)i++] = ';',

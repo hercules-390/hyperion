@@ -231,6 +231,34 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* QA Scenario 12:         With Shared Devices support               */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 12  // With Shared Devices support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 12\n"
+
+  #define OPTION_SHARED_DEVICES
+  #undef  OPTION_NO_SHARED_DEVICES
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 13:         Without Shared Devices support            */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 13  // Without Shared Devices support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 13\n"
+
+  #undef  OPTION_SHARED_DEVICES
+  #define OPTION_NO_SHARED_DEVICES
+
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
 

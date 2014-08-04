@@ -150,6 +150,22 @@
   #error CKD_MAXFILES can not exceed design limit of 35
 #endif
 
+#if defined( OPTION_SHARED_DEVICES ) && defined( OPTION_NO_SHARED_DEVICES )
+  #error Either OPTION_SHARED_DEVICES or OPTION_NO_SHARED_DEVICES must be specified, not both
+#elif !defined( OPTION_SHARED_DEVICES ) && !defined( OPTION_NO_SHARED_DEVICES )
+  // Neither is #defined.  Use default settings.
+  // FIXME: the OPTION_SHARED_DEVICES build option is currently incompatible
+  // with our current channel subsystem design so it is being disabled until
+  // we can develop a fix and/or workaround.
+  #undef OPTION_SHARED_DEVICES
+  #undef FBA_SHARED
+#elif defined( OPTION_NO_SHARED_DEVICES )
+  #undef OPTION_SHARED_DEVICES
+  #undef FBA_SHARED
+#elif defined( OPTION_SHARED_DEVICES )
+// Leave FBA_SHARED alone, either #defined or #undefined, as desired.
+#endif // OPTION_SHARED_DEVICES
+
 /*********************************************************************/
 /*                  Hercules Mutex Locks Model                       */
 /*********************************************************************/

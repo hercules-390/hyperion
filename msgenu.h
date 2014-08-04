@@ -2016,6 +2016,7 @@ do { \
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "Specified value is invalid or outside of range %d to %d"
+#define HHC17015 "%s support not included in this engine build"
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
 #define HHC17199 "%.4s %s"
