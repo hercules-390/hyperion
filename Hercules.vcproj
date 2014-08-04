@@ -1652,10 +1652,6 @@
 					Name="README"
 					>
 					<File
-						RelativePath=".\INSTALL"
-						>
-					</File>
-					<File
 						RelativePath=".\README.AIX"
 						>
 					</File>
@@ -1984,6 +1980,14 @@
 			<Filter
 				Name="Build"
 				>
+				<File
+					RelativePath=".\BUILDING"
+					>
+				</File>
+				<File
+					RelativePath=".\INSTALL"
+					>
+				</File>
 				<Filter
 					Name="msvc"
 					>
