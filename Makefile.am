@@ -623,7 +623,6 @@ EXTRA_DIST = autoconf/config.rpath \
              README.COMMADPT       \
              README.APL360         \
              README.RXVT4APL       \
-             README.SVN            \
              README.DYNMOD         \
              README.ECPSVM         \
              README.HAO            \
