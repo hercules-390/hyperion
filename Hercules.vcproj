@@ -1652,6 +1652,10 @@
 					Name="README"
 					>
 					<File
+						RelativePath=".\INSTALL"
+						>
+					</File>
+					<File
 						RelativePath=".\README.AIX"
 						>
 					</File>
@@ -1737,10 +1741,6 @@
 					</File>
 					<File
 						RelativePath=".\README.SUN"
-						>
-					</File>
-					<File
-						RelativePath=".\README.SVN"
 						>
 					</File>
 					<File
