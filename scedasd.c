@@ -331,8 +331,8 @@ char fmt_mem[8];
 
         chunk = (64 * 1024 * 1024);
 
-        if (chunk > (sysblk.mainsize - aaddr))
-            chunk = (sysblk.mainsize - aaddr);
+        if (chunk > (int) (sysblk.mainsize - aaddr))
+            chunk = (int) (sysblk.mainsize - aaddr);
 
     } /* end for( ; ; ) */
 
