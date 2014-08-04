@@ -59,7 +59,7 @@ static void     CTCE_Send( DEVBLK* pDEVBLK,   U32   sCount,
                             BYTE*  pIOBuf,    BYTE* pUnitStat,
                             U32*   pResidual );
 
-static void*    CTCE_RecvThread( DEVBLK* pDEVBLK );
+static void*    CTCE_RecvThread( void* argp );
 
 static void*    CTCE_ListenThread( void* argp );
 
@@ -2345,8 +2345,9 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32   sCount,
 // CTCE_RecvThread
 //
 
-static void*  CTCE_RecvThread( DEVBLK* pDEVBLK )
+static void*  CTCE_RecvThread( void* argp )
 {
+    DEVBLK        *pDEVBLK = (DEVBLK*) argp;     // device block pointer
     CTCE_SOKPFX   *pSokBuf;                      // overlay for buf inside DEVBLK
     ssize_t        iLength  = 0;
     BYTE          *buf;                          //-> Device recv data buffer
