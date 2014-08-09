@@ -237,7 +237,7 @@ U64 loaded;
 RADR aaddr;
 RADR pageaddr;
 int fd;
-int chunk;
+size_t chunk;
 int bytes;
 time_t begtime, curtime;
 char fmt_mem[8];
@@ -331,8 +331,8 @@ char fmt_mem[8];
 
         chunk = (64 * 1024 * 1024);
 
-        if (chunk > (int) (sysblk.mainsize - aaddr))
-            chunk = (int) (sysblk.mainsize - aaddr);
+        if (chunk > (sysblk.mainsize - aaddr))
+            chunk = (sysblk.mainsize - aaddr);
 
     } /* end for( ; ; ) */
 
