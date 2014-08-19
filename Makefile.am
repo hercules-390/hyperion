@@ -628,6 +628,7 @@ EXTRA_DIST = autoconf/config.rpath \
              _build                \
              README.AIX            \
              README.APL360         \
+             README.BSD            \
              README.COMMADPT       \
              README.DECNUMBER      \
              README.DYNMOD         \

@@ -1660,6 +1660,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.BSD"
+						>
+					</File>
+					<File
 						RelativePath=".\README.COMMADPT"
 						>
 					</File>
