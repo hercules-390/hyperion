@@ -74,7 +74,7 @@ Compiling For Multiple Architectures
    You can compile the package for more than one kind of computer at the
 same time, by placing the object files for each architecture in their
 own directory.  To do this, create a directory called, say FreeBSD, in the
-directory where you have the hyperion directory.  Got to this directory and
+directory where you have the hyperion directory.  Go to this directory and
 issue "../hyperion/configure ...".  Then, still in the architecture
 directory issue the "make" and "make install" commands.
 
