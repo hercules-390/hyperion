@@ -1867,7 +1867,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
-                         ioactive:1,    /* 1=Channel program active  */
+                         cckdioact:1,   /* 1=Channel program active  */
                          bufused:1,     /* 1=newbuf was used         */
                          updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
@@ -1878,10 +1878,10 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
                          sfforce:1;     /* 1=sf-xxxx force           */
         int              sflevel;       /* sfk xxxx level            */
         LOCK             filelock;      /* File lock                 */
-        LOCK             iolock;        /* I/O lock                  */
-        COND             iocond;        /* I/O condition             */
+        LOCK             cckdiolock;    /* I/O lock                  */
+        COND             cckdiocond;    /* I/O condition             */
         S64              maxsize;       /* Maximum file size         */
-        int              iowaiters;     /* Number I/O waiters        */
+        int              cckdwaiters;   /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */
         int              sfn;           /* Number active shadow files*/

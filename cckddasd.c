@@ -155,7 +155,7 @@ static  CCKD_L2ENT empty_l2[CKDDASD_NULLTRK_FMTMAX+1][256];
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 DEVHND  cckddasd_device_hndinfo;
 DEVHND  cfbadasd_device_hndinfo;
-DLL_EXPORT CCKDBLK cckdblk;                        /* cckd global area          */
+DLL_EXPORT CCKDBLK cckdblk;             /* cckd global area          */
 
 /*-------------------------------------------------------------------*/
 /* CCKD global initialization                                        */
@@ -297,9 +297,9 @@ int             fdflags;                /* File flags                */
         return -1;
 
     /* Initialize locks and conditions */
-    initialize_lock (&cckd->iolock);
+    initialize_lock (&cckd->cckdiolock);
     initialize_lock (&cckd->filelock);
-    initialize_condition (&cckd->iocond);
+    initialize_condition (&cckd->cckdiocond);
 
     /* Initialize some variables */
     obtain_lock (&cckd->filelock);
@@ -379,21 +379,21 @@ int             i;                      /* Index                     */
     release_lock(&cckdblk.ralock);
 
     /* Flush the cache and wait for the writes to complete */
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     cckd->stopping = 1;
     cckd_flush_cache (dev);
-    while (cckd->wrpending || cckd->ioactive)
+    while (cckd->wrpending || cckd->cckdioact)
     {
-        cckd->iowaiters++;
-        wait_condition (&cckd->iocond, &cckd->iolock);
-        cckd->iowaiters--;
+        cckd->cckdwaiters++;
+        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+        cckd->cckdwaiters--;
         cckd_flush_cache (dev);
     }
-    broadcast_condition (&cckd->iocond);
+    broadcast_condition (&cckd->cckdiocond);
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
     if (cckd->newbuf) cckd_free (dev, "newbuf", cckd->newbuf);
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* Remove the device from the cckd queue */
     cckd_lock_devchain(1);
@@ -474,19 +474,19 @@ int             trk = 0;                /* Last active track         */
 #else // OPTION_NOSYNCIO
     /* Check for merge */
 #endif // OPTION_SYNCIO
-    obtain_lock(&cckd->iolock);
+    obtain_lock(&cckd->cckdiolock);
     if (cckd->merging)
     {
         cckd_trace (dev, "start i/o waiting for merge%s","");
         while (cckd->merging)
         {
-            cckd->iowaiters++;
-            wait_condition (&cckd->iocond, &cckd->iolock);
-            cckd->iowaiters--;
+            cckd->cckdwaiters++;
+            wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+            cckd->cckdwaiters--;
         }
         dev->bufcur = dev->cache = -1;
     }
-    cckd->ioactive = 1;
+    cckd->cckdioact = 1;
 
     cache_lock(CACHE_DEVBUF);
 
@@ -505,8 +505,8 @@ int             trk = 0;                /* Last active track         */
         {
             cache_setflag (CACHE_DEVBUF, dev->cache, ~CCKD_CACHE_WRITE, CCKD_CACHE_UPDATED);
             cckd->wrpending--;
-            if (cckd->iowaiters && !cckd->wrpending)
-                broadcast_condition (&cckd->iocond);
+            if (cckd->cckdwaiters && !cckd->wrpending)
+                broadcast_condition (&cckd->cckdiocond);
         }
     }
     else
@@ -514,7 +514,7 @@ int             trk = 0;                /* Last active track         */
 
     cache_unlock (CACHE_DEVBUF);
 
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     return;
 
@@ -539,11 +539,11 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     dev->bufupd = 0;
 
     cckd_trace (dev, "end i/o bufcur %d cache[%d] waiters %d",
-                dev->bufcur, dev->cache, cckd->iowaiters);
+                dev->bufcur, dev->cache, cckd->cckdwaiters);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
 
-    cckd->ioactive = 0;
+    cckd->cckdioact = 0;
 
     /* Make the current entry inactive */
     if (dev->cache >= 0)
@@ -554,12 +554,12 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     }
 
     /* Cause writers to start after first update */
-    if (cckd->updated && (cckdblk.wrs == 0 || cckd->iowaiters != 0))
+    if (cckd->updated && (cckdblk.wrs == 0 || cckd->cckdwaiters != 0))
         cckd_flush_cache (dev);
-    else if (cckd->iowaiters)
-        broadcast_condition (&cckd->iocond);
+    else if (cckd->cckdwaiters)
+        broadcast_condition (&cckd->cckdiocond);
 
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
 } /* end function cckddasd_end */
 
@@ -1234,7 +1234,7 @@ BYTE           *buf;                    /* Read buffer               */
     maxlen = cckd->ckddasd ? dev->ckdtrksz
                            : CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
 
-    if (!ra) obtain_lock (&cckd->iolock);
+    if (!ra) obtain_lock (&cckd->cckdiolock);
 
     cache_lock (CACHE_DEVBUF);
 
@@ -1273,7 +1273,7 @@ cckd_read_trk_retry:
                 cckdblk.stats_synciomisses++;
                 dev->syncio_retry = 1;
                 cache_unlock (CACHE_DEVBUF);
-                release_lock (&cckd->iolock);
+                release_lock (&cckd->cckdiolock);
                 return -1;
             }
             else cckdblk.stats_syncios++;
@@ -1289,8 +1289,8 @@ cckd_read_trk_retry:
         {
             cache_setflag(CACHE_DEVBUF, fnd, ~CCKD_CACHE_WRITE, CCKD_CACHE_UPDATED);
             cckd->wrpending--;
-            if (cckd->iowaiters && !cckd->wrpending)
-                broadcast_condition (&cckd->iocond);
+            if (cckd->cckdwaiters && !cckd->wrpending)
+                broadcast_condition (&cckd->cckdiocond);
         }
         buf = cache_getbuf(CACHE_DEVBUF, fnd, 0);
 
@@ -1310,15 +1310,15 @@ cckd_read_trk_retry:
                         cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_READING ?
                         "read" : "write");
             cache_setflag (CACHE_DEVBUF, fnd, ~0, CCKD_CACHE_IOWAIT);
-            cckd->iowaiters++;
-            wait_condition (&cckd->iocond, &cckd->iolock);
-            cckd->iowaiters--;
+            cckd->cckdwaiters++;
+            wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+            cckd->cckdwaiters--;
             cache_setflag (CACHE_DEVBUF, fnd, ~CCKD_CACHE_IOWAIT, 0);
             cckd_trace (dev, "%d rdtrk[%d] %d io wait complete",
                         ra, fnd, trk);
         }
 
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
 
         /* Asynchrously schedule readaheads */
         if (curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
@@ -1333,7 +1333,7 @@ cckd_read_trk_retry:
     if (!ra && dev->syncio_active)
     {
         cache_unlock(CACHE_DEVBUF);
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
         cckd_trace (dev, "%d rdtrk[%d] %d syncio cache miss", ra, lru, trk);
         cckdblk.stats_synciomisses++;
         dev->syncio_retry = 1;
@@ -1352,7 +1352,7 @@ cckd_read_trk_retry:
         cckd_trace (dev, "%d rdtrk[%d] %d no available cache entry",
                     ra, lru, trk);
         cache_unlock (CACHE_DEVBUF);
-        if (!ra) release_lock (&cckd->iolock);
+        if (!ra) release_lock (&cckd->cckdiolock);
         cckd_flush_cache_all();
         cache_lock (CACHE_DEVBUF);
         cckdblk.stats_cachewaits++;
@@ -1360,7 +1360,7 @@ cckd_read_trk_retry:
         if (!ra)
         {
             cache_unlock (CACHE_DEVBUF);
-            obtain_lock (&cckd->iolock);
+            obtain_lock (&cckd->cckdiolock);
             cache_lock (CACHE_DEVBUF);
         }
         goto cckd_read_trk_retry;
@@ -1397,7 +1397,7 @@ cckd_read_trk_retry:
 
     cache_unlock (CACHE_DEVBUF);
 
-    if (!ra) release_lock (&cckd->iolock);
+    if (!ra) release_lock (&cckd->cckdiolock);
 
     /* Asynchronously schedule readaheads */
     if (!ra && curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
@@ -1412,7 +1412,7 @@ cckd_read_trk_retry:
     release_lock (&cckd->filelock);
     cache_setval (CACHE_DEVBUF, lru, len);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
 
     /* Turn off the READING bit */
     cache_lock (CACHE_DEVBUF);
@@ -1420,13 +1420,13 @@ cckd_read_trk_retry:
     cache_unlock (CACHE_DEVBUF);
 
     /* Wakeup other thread waiting for this read */
-    if (cckd->iowaiters && (flag & CCKD_CACHE_IOWAIT))
+    if (cckd->cckdwaiters && (flag & CCKD_CACHE_IOWAIT))
     {   cckd_trace (dev, "%d rdtrk[%d] %d signalling read complete",
                     ra, lru, trk);
-        broadcast_condition (&cckd->iocond);
+        broadcast_condition (&cckd->cckdiocond);
     }
 
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     if (ra)
     {
@@ -1630,7 +1630,7 @@ int             rc;
 /*-------------------------------------------------------------------*/
 /* Flush updated cache entries for a device                          */
 /*                                                                   */
-/* Caller holds the cckd->iolock                                     */
+/* Caller holds the cckd->cckdiolock                                 */
 /* cckdblk.wrlock then cache_lock is obtained and released           */
 /*-------------------------------------------------------------------*/
 void cckd_flush_cache(DEVBLK *dev)
@@ -1689,10 +1689,10 @@ DEVBLK         *dev = NULL;             /* -> device block           */
     for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
     {
         cckd = dev->cckd_ext;
-        obtain_lock (&cckd->iolock);
+        obtain_lock (&cckd->cckdiolock);
         if (!cckd->merging && !cckd->stopping)
             cckd_flush_cache(dev);
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
     }
     cckd_unlock_devchain();
 }
@@ -1700,7 +1700,7 @@ DEVBLK         *dev = NULL;             /* -> device block           */
 /*-------------------------------------------------------------------*/
 /* Purge cache entries for a device                                  */
 /*                                                                   */
-/* Caller holds the iolock                                           */
+/* Caller holds the cckdiolock                                       */
 /* cache_lock is obtained and released                               */
 /*-------------------------------------------------------------------*/
 void cckd_purge_cache(DEVBLK *dev)
@@ -1883,17 +1883,17 @@ int             rc;
                 WRMSG(HHC00102, "E", strerror(rc));
         }
 
-        obtain_lock (&cckd->iolock);
+        obtain_lock (&cckd->cckdiolock);
         cache_lock (CACHE_DEVBUF);
         flag = cache_setflag (CACHE_DEVBUF, o, ~CCKD_CACHE_WRITING, 0);
         cache_unlock (CACHE_DEVBUF);
         cckd->wrpending--;
-        if (cckd->iowaiters && ((flag & CCKD_CACHE_IOWAIT) || !cckd->wrpending))
+        if (cckd->cckdwaiters && ((flag & CCKD_CACHE_IOWAIT) || !cckd->wrpending))
         {   cckd_trace (dev, "writer[%d] cache[%2.2d] %d signalling write complete",
                         writer, o, trk);
-            broadcast_condition (&cckd->iocond);
+            broadcast_condition (&cckd->cckdiocond);
         }
-        release_lock(&cckd->iolock);
+        release_lock(&cckd->cckdiolock);
 
         cckd_trace (dev, "%d wrtrk[%2.2d] %d complete flags:%8.8x",
                     writer, o, trk, cache_getflag(CACHE_DEVBUF,o));
@@ -3822,28 +3822,28 @@ int             syncio;                 /* Saved syncio bit          */
 #endif // OPTION_SYNCIO
 
     /* Schedule updated track entries to be written */
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
 #ifdef OPTION_SYNCIO
         dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
         WRMSG (HHC00318, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
     cckd_flush_cache (dev);
-    while (cckd->wrpending || cckd->ioactive)
+    while (cckd->wrpending || cckd->cckdioact)
     {
-        cckd->iowaiters++;
-        wait_condition (&cckd->iocond, &cckd->iolock);
-        cckd->iowaiters--;
+        cckd->cckdwaiters++;
+        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+        cckd->cckdwaiters--;
         cckd_flush_cache (dev);
     }
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* Obtain control of the file */
     obtain_lock (&cckd->filelock);
@@ -3871,14 +3871,14 @@ cckd_sf_add_exit:
 
     release_lock (&cckd->filelock);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     cckd->merging = 0;
-    if (cckd->iowaiters)
-        broadcast_condition (&cckd->iocond);
+    if (cckd->cckdwaiters)
+        broadcast_condition (&cckd->cckdiocond);
 #ifdef OPTION_SYNCIO
     dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     cckd_sf_stats (dev);
     return NULL;
@@ -3950,28 +3950,28 @@ BYTE            buf[65536];             /* Buffer                    */
 #endif // OPTION_SYNCIO
 
     /* Schedule updated track entries to be written */
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
 #ifdef OPTION_SYNCIO
         dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
         WRMSG (HHC00322, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
     cckd_flush_cache (dev);
-    while (cckd->wrpending || cckd->ioactive)
+    while (cckd->wrpending || cckd->cckdioact)
     {
-        cckd->iowaiters++;
-        wait_condition (&cckd->iocond, &cckd->iolock);
-        cckd->iowaiters--;
+        cckd->cckdwaiters++;
+        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+        cckd->cckdwaiters--;
         cckd_flush_cache (dev);
     }
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     obtain_lock (&cckd->filelock);
 
@@ -4184,17 +4184,17 @@ sf_remove_exit:
 
     release_lock (&cckd->filelock);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
     cckd->merging = 0;
-    if (cckd->iowaiters)
-        broadcast_condition (&cckd->iocond);
+    if (cckd->cckdwaiters)
+        broadcast_condition (&cckd->cckdiocond);
 #ifdef OPTION_SYNCIO
     dev->syncio = syncio;
 #endif // OPTION_SYNCIO
     cckd_trace (dev, "merge complete%s","");
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     cckd_sf_stats (dev);
     return NULL;
@@ -4260,28 +4260,28 @@ int             rc;                     /* Return code               */
 #endif // OPTION_SYNCIO
 
     /* schedule updated track entries to be written */
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
 #ifdef OPTION_SYNCIO
         dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
         WRMSG (HHC00329, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
     cckd_flush_cache (dev);
-    while (cckd->wrpending || cckd->ioactive)
+    while (cckd->wrpending || cckd->cckdioact)
     {
-        cckd->iowaiters++;
-        wait_condition (&cckd->iocond, &cckd->iolock);
-        cckd->iowaiters--;
+        cckd->cckdwaiters++;
+        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+        cckd->cckdwaiters--;
         cckd_flush_cache (dev);
     }
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* obtain control of the file */
     obtain_lock (&cckd->filelock);
@@ -4297,14 +4297,14 @@ int             rc;                     /* Return code               */
 
     release_lock (&cckd->filelock);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     cckd->merging = 0;
-    if (cckd->iowaiters)
-        broadcast_condition (&cckd->iocond);
+    if (cckd->cckdwaiters)
+        broadcast_condition (&cckd->cckdiocond);
 #ifdef OPTION_SYNCIO
     dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* Display the shadow file statistics */
     cckd_sf_stats (dev);
@@ -4358,28 +4358,28 @@ int             level = 2;              /* Check level               */
 #endif // OPTION_SYNCIO
 
     /* schedule updated track entries to be written */
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
 #ifdef OPTION_SYNCIO
         dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-        release_lock (&cckd->iolock);
+        release_lock (&cckd->cckdiolock);
         WRMSG (HHC00331, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
     }
     cckd->merging = 1;
     cckd_flush_cache (dev);
-    while (cckd->wrpending || cckd->ioactive)
+    while (cckd->wrpending || cckd->cckdioact)
     {
-        cckd->iowaiters++;
-        wait_condition (&cckd->iocond, &cckd->iolock);
-        cckd->iowaiters--;
+        cckd->cckdwaiters++;
+        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+        cckd->cckdwaiters--;
         cckd_flush_cache (dev);
     }
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* obtain control of the file */
     obtain_lock (&cckd->filelock);
@@ -4395,14 +4395,14 @@ int             level = 2;              /* Check level               */
 
     release_lock (&cckd->filelock);
 
-    obtain_lock (&cckd->iolock);
+    obtain_lock (&cckd->cckdiolock);
     cckd->merging = 0;
-    if (cckd->iowaiters)
-        broadcast_condition (&cckd->iocond);
+    if (cckd->cckdwaiters)
+        broadcast_condition (&cckd->cckdiocond);
 #ifdef OPTION_SYNCIO
     dev->syncio = syncio;
 #endif // OPTION_SYNCIO
-    release_lock (&cckd->iolock);
+    release_lock (&cckd->cckdiolock);
 
     /* Display the shadow file statistics */
     cckd_sf_stats (dev);
@@ -4615,24 +4615,24 @@ int             gctab[5]= {             /* default gcol parameters   */
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
             cckd = dev->cckd_ext;
-            obtain_lock (&cckd->iolock);
+            obtain_lock (&cckd->cckdiolock);
 
             /* Bypass if merging or stopping */
             if (cckd->merging || cckd->stopping)
             {
-                release_lock (&cckd->iolock);
+                release_lock (&cckd->cckdiolock);
                 continue;
             }
 
             /* Bypass if not opened read-write */
             if (cckd->open[cckd->sfn] != CCKD_OPEN_RW)
             {
-                release_lock (&cckd->iolock);
+                release_lock (&cckd->cckdiolock);
                 continue;
             }
 
             /* Free newbuf if it hasn't been used */
-            if (!cckd->ioactive && !cckd->bufused && cckd->newbuf)
+            if (!cckd->cckdioact && !cckd->bufused && cckd->newbuf)
                 cckd->newbuf = cckd_free (dev, "newbuf", cckd->newbuf);
             cckd->bufused = 0;
 
@@ -4640,7 +4640,7 @@ int             gctab[5]= {             /* default gcol parameters   */
             if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
             {
                 if (cckd->updated) cckd_flush_cache (dev);
-                release_lock (&cckd->iolock);
+                release_lock (&cckd->cckdiolock);
                 continue;
             }
 
@@ -4666,21 +4666,21 @@ int             gctab[5]= {             /* default gcol parameters   */
                 size = cckd->cdevhdr[cckd->sfn].used >> 10;
             if (size < 64) size = 64;
 
-            release_lock (&cckd->iolock);
+            release_lock (&cckd->cckdiolock);
 
             /* Call the garbage collector */
             cckd_gc_percolate (dev, (unsigned int)size);
 
             /* Schedule any updated tracks to be written */
-            obtain_lock (&cckd->iolock);
+            obtain_lock (&cckd->cckdiolock);
             cckd_flush_cache (dev);
             while (cckdblk.fsync && cckd->wrpending)
             {
-                cckd->iowaiters++;
-                wait_condition (&cckd->iocond, &cckd->iolock);
-                cckd->iowaiters--;
+                cckd->cckdwaiters++;
+                wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
+                cckd->cckdwaiters--;
             }
-            release_lock (&cckd->iolock);
+            release_lock (&cckd->cckdiolock);
 
             /* Sync the file */
             if (cckdblk.fsync && cckd->lastsync + 10 <= tv_now.tv_sec)
