@@ -261,8 +261,10 @@ char           *strtok_str = NULL;      /* save last position        */
         MSGBUF(filename, "'%s'", dev->filename);
     }
 
+#if defined( OPTION_SHARED_DEVICES )
     /* Device is shareable */
     dev->shareable = 1;
+#endif // defined( OPTION_SHARED_DEVICES )
 
     /* Check for possible remote device */
     if (stat(dev->filename, &statbuf) < 0)

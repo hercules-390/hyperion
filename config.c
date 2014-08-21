@@ -594,7 +594,9 @@ DEVBLK**dvpp;
 
         initialize_lock      ( &dev->lock               );
         initialize_condition ( &dev->kbcond             );
+#if defined( OPTION_SHARED_DEVICES )
         initialize_condition ( &dev->shiocond           );
+#endif // defined( OPTION_SHARED_DEVICES )
 #if defined(OPTION_SCSI_TAPE)
         initialize_condition ( &dev->stape_sstat_cond   );
         InitializeListLink   ( &dev->stape_statrq.link  );

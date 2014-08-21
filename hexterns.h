@@ -609,6 +609,7 @@ GOP_DLL_IMPORT int   getopt      ( int nargc, char * const *nargv, const char *o
 GOP_DLL_IMPORT int   getopt_long ( int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx );
 
 /* Function in channel.c */
+                void shared_iowait (DEVBLK *dev);
 CHAN_DLL_IMPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
 CHAN_DLL_IMPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 

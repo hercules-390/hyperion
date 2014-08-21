@@ -1118,14 +1118,26 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+#if defined( OPTION_SHARED_DEVICES )
         if (dev->shioactive == DEV_SYS_NONE)
             strlcpy( sysid, "(none)", sizeof(sysid) );
         else if (dev->shioactive == DEV_SYS_LOCAL)
             strlcpy( sysid, "local", sizeof(sysid) );
         else
             MSGBUF( sysid, "id=%d", dev->shioactive);
-        if (dev->busy && !(dev->suspended && dev->shioactive == DEV_SYS_NONE))
+#else // !defined( OPTION_SHARED_DEVICES )
+        if (dev->busy && !(dev->suspended))
+            strlcpy( sysid, "local", sizeof(sysid) );
+        else
+            strlcpy( sysid, "(none)", sizeof(sysid) );
+#endif // defined( OPTION_SHARED_DEVICES )
+        if (dev->busy && !(dev->suspended
+#if defined( OPTION_SHARED_DEVICES )
+            && dev->shioactive == DEV_SYS_NONE
+#endif // defined( OPTION_SHARED_DEVICES )
+        ))
         {
+            // "device %1d:%04X: status %s"
             MSGBUF(buf, "busy %s", sysid);
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
         }

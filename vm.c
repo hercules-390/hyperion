@@ -334,7 +334,15 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
     rdat->rdevtyp = vmentry->vmdevtyp;
 
     /* Indicate if the device is busy */
-    if ( (dev->busy && dev->shioactive == DEV_SYS_LOCAL) || dev->startpending )
+    if (0
+        || dev->startpending
+        || (1
+            && dev->busy
+#if defined( OPTION_SHARED_DEVICES )
+            && dev->shioactive == DEV_SYS_LOCAL
+#endif // defined( OPTION_SHARED_DEVICES )
+           )
+    )
         vdat->vdevstat |= DS_BUSY;
 
     /* Set virtual device flags, and real device model and features */
