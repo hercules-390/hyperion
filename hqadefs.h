@@ -231,7 +231,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 12:         With Shared Devices support               */
+/* QA Scenario 12:         With Shared Devices, With Syncio          */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 12  // With Shared Devices support
@@ -241,11 +241,12 @@
 
   #define OPTION_SHARED_DEVICES
   #undef  OPTION_NO_SHARED_DEVICES
+  #define OPTION_SYNCIO
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 13:         Without Shared Devices support            */
+/* QA Scenario 13:         Without Shared Devices, With Syncio       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 13  // Without Shared Devices support
@@ -255,6 +256,37 @@
 
   #undef  OPTION_SHARED_DEVICES
   #define OPTION_NO_SHARED_DEVICES
+  #define OPTION_SYNCIO
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 14:         With Shared Devices, Without Syncio       */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 14  // With Shared Devices support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 14\n"
+
+  #define OPTION_SHARED_DEVICES
+  #undef  OPTION_NO_SHARED_DEVICES
+  #define OPTION_NOSYNCIO
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 15:         Without Shared Devices, Without Syncio    */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 15  // Without Shared Devices support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 15\n"
+
+  #undef  OPTION_SHARED_DEVICES
+  #define OPTION_NO_SHARED_DEVICES
+  #define OPTION_NOSYNCIO
 
 #endif
 
