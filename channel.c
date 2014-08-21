@@ -469,9 +469,9 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev)
     if (!(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC)) &&
         !dev->reserved)
     {
-        dev->ioactive = DEV_SYS_NONE;
-        if (dev->iowaiters)
-            signal_condition (&dev->iocond);
+        dev->shioactive = DEV_SYS_NONE;
+        if (dev->shiowaiters)
+            signal_condition (&dev->shiocond);
     }
 }
 
@@ -508,9 +508,9 @@ queue_io_interrupt_and_update_status(DEVBLK* dev)
             !dev->reserved)
         {
             obtain_lock(&dev->lock);
-            dev->ioactive = DEV_SYS_NONE;
-            if (dev->iowaiters)
-                signal_condition (&dev->iocond);
+            dev->shioactive = DEV_SYS_NONE;
+            if (dev->shiowaiters)
+                signal_condition (&dev->shiocond);
             release_lock(&dev->lock);
         }
     }
@@ -1009,7 +1009,7 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
     obtain_lock(&dev->lock);
 
     /* Test device status and set condition code */
-    if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy && dev->shioactive == DEV_SYS_LOCAL)
      || dev->startpending)
     {
         /* Set condition code 2 for device busy */
@@ -1592,9 +1592,9 @@ perform_clear_subchan (DEVBLK *dev)
     /* Wake up any waiters if the device isn't reserved */
     if (!dev->reserved)
     {
-        dev->ioactive = DEV_SYS_NONE;
-        if (dev->iowaiters)
-           signal_condition (&dev->iocond);
+        dev->shioactive = DEV_SYS_NONE;
+        if (dev->shiowaiters)
+           signal_condition (&dev->shiocond);
     }
 }
 
@@ -1627,7 +1627,7 @@ clear_subchan (REGS *regs, DEVBLK *dev)
     obtain_lock(&dev->lock);
 
     /* If the device is busy then signal the device to clear */
-    if ((dev->busy  && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy  && dev->shioactive == DEV_SYS_LOCAL)
      || dev->startpending)
     {
         /* Set clear pending condition */
@@ -1905,7 +1905,7 @@ halt_subchan (REGS *regs, DEVBLK *dev)
         dev->scsw.flag3 &= ~(SCSW3_SC_INTER | SCSW3_SC_PEND);
 
     /* If the device is busy then signal subchannel to halt */
-    if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy && dev->shioactive == DEV_SYS_LOCAL)
      || dev->startpending || dev->suspended)
     {
         /* Set halt condition and reset pending condition */
@@ -1989,13 +1989,13 @@ device_reset (DEVBLK *dev)
 
     dev->reserved = dev->pending = dev->pcipending =
     dev->attnpending = dev->startpending = 0;
-    dev->ioactive = DEV_SYS_NONE;
+    dev->shioactive = DEV_SYS_NONE;
     if (dev->suspended)
     {
         dev->suspended = 0;
         schedule_ioq(NULL, dev);
     }
-    if (dev->iowaiters) signal_condition (&dev->iocond);
+    if (dev->shiowaiters) signal_condition (&dev->shiocond);
     store_fw (dev->pmcw.intparm, 0);
     dev->pmcw.flag4 &= ~PMCW4_ISC;
     dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D);
@@ -2500,7 +2500,7 @@ execute_syncio (REGS* regs, DEVBLK* dev)
     /* Initiate synchronous I/O */
     dev->s370start = 0;
     dev->syncio_active = 1;
-    dev->ioactive = DEV_SYS_LOCAL;
+    dev->shioactive = DEV_SYS_LOCAL;
     dev->regs = regs;
     release_lock (&dev->lock);
 
@@ -2614,7 +2614,7 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
         else
             syncio = 0;
 
-        if (syncio && dev->ioactive == DEV_SYS_NONE
+        if (syncio && dev->shioactive == DEV_SYS_NONE
 #ifdef OPTION_IODELAY_KLUDGE
          && sysblk.iodelay < 1
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -3907,7 +3907,7 @@ int     rc;                             /* Return code               */
 
     /* Return condition code 2 if device is busy */
     if (unlikely((dev->busy &&
-                  dev->ioactive == DEV_SYS_LOCAL)   ||
+                  dev->shioactive == DEV_SYS_LOCAL)   ||
                  dev->startpending))
     {
         release_lock (&dev->lock);
@@ -4060,27 +4060,27 @@ do {                                                                   \
     obtain_lock (&dev->lock);
 
 #ifdef OPTION_SYNCIO
-    if (!dev->syncio_active && dev->shared)
+    if (!dev->syncio_active && dev->shareable)
 #else // OPTION_NOSYNCIO
-    if (dev->shared)
+    if (dev->shareable)
 #endif // OPTION_SYNCIO
     {
-        while (dev->ioactive != DEV_SYS_NONE
-            && dev->ioactive != sysid)
+        while (dev->shioactive != DEV_SYS_NONE
+            && dev->shioactive != sysid)
         {
-            dev->iowaiters++;
-            wait_condition(&dev->iocond, &dev->lock);
-            dev->iowaiters--;
+            dev->shiowaiters++;
+            wait_condition(&dev->shiocond, &dev->lock);
+            dev->shiowaiters--;
         }
         set_subchannel_busy(dev);
-        dev->ioactive = sysid;
+        dev->shioactive = sysid;
         if (sysid == DEV_SYS_LOCAL)
             dev->startpending = 0;
     }
     else
     {
         set_subchannel_busy(dev);
-        dev->ioactive = DEV_SYS_LOCAL;
+        dev->shioactive = DEV_SYS_LOCAL;
         dev->startpending = 0;
     }
 
@@ -4117,14 +4117,14 @@ do {                                                                   \
         dev->resumesuspended=0;
 
         /* Wait for the device to become available */
-        while (dev->ioactive != DEV_SYS_NONE
-            && dev->ioactive != sysid)
+        while (dev->shioactive != DEV_SYS_NONE
+            && dev->shioactive != sysid)
         {
-            dev->iowaiters++;
-            wait_condition(&dev->iocond, &dev->lock);
-            dev->iowaiters = MAX(0, dev->iowaiters - 1);
+            dev->shiowaiters++;
+            wait_condition(&dev->shiocond, &dev->lock);
+            dev->shiowaiters = MAX(0, dev->shiowaiters - 1);
         }
-        dev->ioactive = sysid;
+        dev->shioactive = sysid;
         set_device_busy(dev);
 
         if (dev->ccwtrace || dev->ccwstep || tracethis)

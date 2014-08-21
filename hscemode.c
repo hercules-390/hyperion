@@ -1118,13 +1118,13 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        if (dev->ioactive == DEV_SYS_NONE)
+        if (dev->shioactive == DEV_SYS_NONE)
             strlcpy( sysid, "(none)", sizeof(sysid) );
-        else if (dev->ioactive == DEV_SYS_LOCAL)
+        else if (dev->shioactive == DEV_SYS_LOCAL)
             strlcpy( sysid, "local", sizeof(sysid) );
         else
-            MSGBUF( sysid, "id=%d", dev->ioactive);
-        if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
+            MSGBUF( sysid, "id=%d", dev->shioactive);
+        if (dev->busy && !(dev->suspended && dev->shioactive == DEV_SYS_NONE))
         {
             MSGBUF(buf, "busy %s", sysid);
             WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);

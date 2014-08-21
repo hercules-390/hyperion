@@ -695,20 +695,20 @@ static void d250_preserve(DEVBLK *dev)
     /* Note: this logic comes from the beginning of */
     /* channel.c ARCH_DEP(execute_ccw_chain)        */
     obtain_lock(&dev->lock);
-    if ( dev->shared )
+    if ( dev->shareable )
     {
-        while (dev->ioactive != DEV_SYS_NONE
-            && dev->ioactive != DEV_SYS_LOCAL)
+        while (dev->shioactive != DEV_SYS_NONE
+            && dev->shioactive != DEV_SYS_LOCAL)
         {
-            dev->iowaiters++;
-            wait_condition(&dev->iocond, &dev->lock);
-            dev->iowaiters--;
+            dev->shiowaiters++;
+            wait_condition(&dev->shiocond, &dev->lock);
+            dev->shiowaiters--;
         }
-        dev->ioactive = DEV_SYS_LOCAL;
+        dev->shioactive = DEV_SYS_LOCAL;
     }
     else
     {
-        dev->ioactive = DEV_SYS_LOCAL;
+        dev->shioactive = DEV_SYS_LOCAL;
     }
     dev->busy = 1;
     dev->startpending = 0;
@@ -759,7 +759,7 @@ static void d250_restore(DEVBLK *dev)
        {  WRMSG (HHC01920, "I", dev->devnum);
        }
     }
-    dev->ioactive = DEV_SYS_NONE;
+    dev->shioactive = DEV_SYS_NONE;
     dev->busy = 0;
     release_lock(&dev->lock);
 }

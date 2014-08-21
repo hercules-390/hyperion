@@ -262,7 +262,7 @@ char           *strtok_str = NULL;      /* save last position        */
     }
 
     /* Device is shareable */
-    dev->shared = 1;
+    dev->shareable = 1;
 
     /* Check for possible remote device */
     if (stat(dev->filename, &statbuf) < 0)

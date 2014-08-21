@@ -76,7 +76,7 @@ int      i, j;                          /* Indexes                   */
 
         /* Ignore the entry if it doesn't exist or if it's ours
            our if it's already maxed out */
-        if (dev->shrd[i] == NULL || dev->shrd[i]->id == dev->ioactive
+        if (dev->shrd[i] == NULL || dev->shrd[i]->id == dev->shioactive
          || dev->shrd[i]->purgen < 0)
             continue;
 
@@ -1735,17 +1735,17 @@ int      off;                           /* Offset into record        */
         obtain_lock (&dev->lock);
 
         /* Make the device available if this system active on it */
-        if (dev->ioactive == id)
+        if (dev->shioactive == id)
         {
             if (!dev->suspended)
             {
                 dev->busy = 0;
-                dev->ioactive = DEV_SYS_NONE;
+                dev->shioactive = DEV_SYS_NONE;
             }
             else
-                dev->ioactive = DEV_SYS_LOCAL;
-            if (dev->iowaiters)
-                signal_condition (&dev->iocond);
+                dev->shioactive = DEV_SYS_LOCAL;
+            if (dev->shiowaiters)
+                signal_condition (&dev->shiocond);
         }
 
         release_lock (&dev->lock);
@@ -1757,14 +1757,14 @@ int      off;                           /* Offset into record        */
         obtain_lock (&dev->lock);
 
         /* If the device is suspended locally then grab it */
-        if (dev->ioactive == DEV_SYS_LOCAL && dev->suspended && !dev->reserved)
-            dev->ioactive = id;
+        if (dev->shioactive == DEV_SYS_LOCAL && dev->suspended && !dev->reserved)
+            dev->shioactive = id;
 
         /* Check if the device is busy */
-        if (dev->ioactive != id && dev->ioactive != DEV_SYS_NONE)
+        if (dev->shioactive != id && dev->shioactive != DEV_SYS_NONE)
         {
-            shrdtrc(dev,"server_request busy id=%d ioactive=%d reserved=%d\n",
-                    id,dev->ioactive,dev->reserved);
+            shrdtrc(dev,"server_request busy id=%d shioactive=%d reserved=%d\n",
+                    id,dev->shioactive,dev->reserved);
             /* If the `nowait' bit is on then respond `busy' */
             if (flag & SHRD_NOWAIT)
             {
@@ -1777,15 +1777,15 @@ int      off;                           /* Offset into record        */
             dev->shrd[ix]->waiting = 1;
 
             /* Wait while the device is busy by the local system */
-            while (dev->ioactive == DEV_SYS_LOCAL && !dev->suspended)
+            while (dev->shioactive == DEV_SYS_LOCAL && !dev->suspended)
             {
-                dev->iowaiters++;
-                wait_condition (&dev->iocond, &dev->lock);
-                dev->iowaiters--;
+                dev->shiowaiters++;
+                wait_condition (&dev->shiocond, &dev->lock);
+                dev->shiowaiters--;
             }
 
             /* Return with the `waiting' bit on if busy by a remote system */
-            if (dev->ioactive != DEV_SYS_NONE && dev->ioactive != DEV_SYS_LOCAL)
+            if (dev->shioactive != DEV_SYS_NONE && dev->shioactive != DEV_SYS_LOCAL)
             {
                 release_lock (&dev->lock);
                 break;
@@ -1795,7 +1795,7 @@ int      off;                           /* Offset into record        */
         }
 
         /* Make this system active on the device */
-        dev->ioactive = id;
+        dev->shioactive = id;
         dev->busy = 1;
 #ifdef OPTION_SYNCIO
         dev->syncio_active = dev->syncio_retry = 0;
@@ -1833,7 +1833,7 @@ int      off;                           /* Offset into record        */
     case SHRD_END:
     case SHRD_SUSPEND:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -1854,12 +1854,12 @@ int      off;                           /* Offset into record        */
             /* If locally suspended then return the device to local */
             if (dev->suspended)
             {
-                dev->ioactive = DEV_SYS_LOCAL;
+                dev->shioactive = DEV_SYS_LOCAL;
                 dev->busy = 1;
             }
             else
             {
-                dev->ioactive = DEV_SYS_NONE;
+                dev->shioactive = DEV_SYS_NONE;
                 dev->busy = 0;
             }
 
@@ -1869,8 +1869,8 @@ int      off;                           /* Offset into record        */
                     dev->shrd[i]->waiting = 0;
 
             /* Notify any waiters */
-            if (dev->iowaiters)
-                signal_condition (&dev->iocond);
+            if (dev->shiowaiters)
+                signal_condition (&dev->shiocond);
         }
         shrdtrc(dev,"server_request inactive id=%d\n", id);
 
@@ -1883,7 +1883,7 @@ int      off;                           /* Offset into record        */
 
     case SHRD_RESERVE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -1907,7 +1907,7 @@ int      off;                           /* Offset into record        */
 
     case SHRD_RELEASE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -1931,7 +1931,7 @@ int      off;                           /* Offset into record        */
 
     case SHRD_READ:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -1966,7 +1966,7 @@ int      off;                           /* Offset into record        */
 
     case SHRD_WRITE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -1994,7 +1994,7 @@ int      off;                           /* Offset into record        */
 
     case SHRD_SENSE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id)
+        if (dev->shioactive != id)
         {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
@@ -2258,7 +2258,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 static int serverDisconnectable (DEVBLK *dev, int ix) {
 
     if (dev->shrd[ix]->waiting || dev->shrd[ix]->pending
-     || dev->ioactive == dev->shrd[ix]->id)
+     || dev->shioactive == dev->shrd[ix]->id)
         return 0;
     else
         return 1;
@@ -2280,7 +2280,7 @@ int i;                                  /* Loop index                */
 
     /* If the device is active by the client then extricate it.
        This is *not* a good situation */
-    if (dev->ioactive == id)
+    if (dev->shioactive == id)
     {
         WRMSG(HHC00730, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, id, dev->reserved ? "reserved" : "");
 
@@ -2299,18 +2299,18 @@ int i;                                  /* Loop index                */
 
         /* Make the device available */
         if (dev->suspended) {
-            dev->ioactive = DEV_SYS_LOCAL;
+            dev->shioactive = DEV_SYS_LOCAL;
             dev->busy = 1;
         }
         else
         {
-            dev->ioactive = DEV_SYS_NONE;
+            dev->shioactive = DEV_SYS_NONE;
             dev->busy = 0;
         }
 
         /* Notify any waiters */
-        if (dev->iowaiters)
-            signal_condition (&dev->iocond);
+        if (dev->shiowaiters)
+            signal_condition (&dev->shiocond);
     }
 
     WRMSG(HHC00731, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, id);

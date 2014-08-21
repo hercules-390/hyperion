@@ -594,7 +594,7 @@ DEVBLK**dvpp;
 
         initialize_lock      ( &dev->lock               );
         initialize_condition ( &dev->kbcond             );
-        initialize_condition ( &dev->iocond             );
+        initialize_condition ( &dev->shiocond           );
 #if defined(OPTION_SCSI_TAPE)
         initialize_condition ( &dev->stape_sstat_cond   );
         InitializeListLink   ( &dev->stape_statrq.link  );

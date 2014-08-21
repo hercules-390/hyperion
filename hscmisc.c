@@ -640,7 +640,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 
     len+=snprintf(buf+len,buflen-len-1,
         "%s  DEVBLK Status\n"
-        "%s    busy             %1.1X    shared        %1.1X\n"
+        "%s    busy             %1.1X    shareable     %1.1X\n"
         "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"
         "%s    pending          %1.1X    connected     %1.1X\n"
         "%s    pcipending       %1.1X    readpending   %1.1X\n"
@@ -649,7 +649,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         "%s    resumesuspended  %1.1X    reserved      %1.1X\n"
         "%s    tschpending      %1.1X    locked        %1.1X\n",
         hdr,
-        hdr, dev->busy,               dev->shared,
+        hdr, dev->busy,               dev->shareable,
         hdr, dev->suspended,          dev->console,     dev->rlen3270,
         hdr, dev->pending,            dev->connected,
         hdr, dev->pcipending,         dev->readpending,

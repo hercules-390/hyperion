@@ -1139,11 +1139,11 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    reserved2[4];           /* (pad/align/unused/avail)  */
         U16     fla[8];                 /* Full Link Address Array   */
         BYTE    chptype[8];             /* Channel Path Type         */
-        COND    iocond;                 /* I/O active condition      */
-        int     iowaiters;              /* Number of I/O waiters     */
-        int     ioactive;               /* System Id active on device*/
-#define DEV_SYS_NONE    0               /* No active system on device*/
-#define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
+        COND    shiocond;               /* shared I/O active cond    */
+        int     shiowaiters;            /* Num shared I/O waiters    */
+        int     shioactive;             /* Sys Id active on shrd dev */
+#define DEV_SYS_NONE    0               /* No active sys on shrd dev */
+#define DEV_SYS_LOCAL   0xffff          /* Local sys act on shrd dev */
         BYTE    drvpwd[11];             /* Password for drive        */
         BYTE    sensemm[5];             /* Manuf. & model for sense  */
 
@@ -1156,7 +1156,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #ifdef OPTION_SYNCIO
                 syncio:2,               /* 1=Synchronous I/Os allowed*/
 #endif // OPTION_SYNCIO
-                shared:1,               /* 1=Device is shareable     */
+                shareable:1,            /* 1=Device is shareable     */
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
