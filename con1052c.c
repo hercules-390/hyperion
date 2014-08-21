@@ -257,9 +257,9 @@ BYTE    c;                              /* Print character           */
                 WRCMSG ("<pnl,color(lightyellow,black)>", HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
             obtain_lock(&dev->lock);
-            dev->iowaiters++;
-            wait_condition(&dev->iocond, &dev->lock);
-            dev->iowaiters--;
+            dev->kbwaiters++;
+            wait_condition(&dev->kbcond, &dev->lock);
+            dev->kbwaiters--;
             release_lock(&dev->lock);
         }
 
@@ -400,9 +400,9 @@ int  i;
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
             dev->keybdrem = dev->buflen = i;
             obtain_lock(&dev->lock);
-            if(dev->iowaiters)
+            if(dev->kbwaiters)
             {
-                signal_condition(&dev->iocond);
+                signal_condition(&dev->kbcond);
                 release_lock(&dev->lock);
             }
             else

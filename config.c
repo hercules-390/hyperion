@@ -593,6 +593,7 @@ DEVBLK**dvpp;
         /* Initialize the device lock and conditions */
 
         initialize_lock      ( &dev->lock               );
+        initialize_condition ( &dev->kbcond             );
         initialize_condition ( &dev->iocond             );
 #if defined(OPTION_SCSI_TAPE)
         initialize_condition ( &dev->stape_sstat_cond   );

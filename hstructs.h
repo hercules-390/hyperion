@@ -1249,6 +1249,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     pos3270;                /* Current screen position   */
         int     keybdrem;               /* Number of bytes remaining
                                            in keyboard read buffer   */
+        COND    kbcond;                 /* Wait for keyb condition   */
+        int     kbwaiters;              /* Number of keyb waiters    */
         u_int   eab3270:1;              /* 1=Extended attributes     */
         u_int   ewa3270:1;              /* 1=Last erase was EWA      */
         u_int   prompt1052:1;           /* 1=Prompt for linemode i/p */
