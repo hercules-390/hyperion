@@ -32,14 +32,14 @@
 !  IF "$(HQA_DIR)" == "NONE"
 !    UNDEF HQA_DIR
 !  ELSEIF !EXIST($(HQA_DIR))
-!    ERROR Directory "$(HQA_DIR)" does not exist. Check HQA_DIR.
+!    ERROR HQA ERROR: Directory "$(HQA_DIR)" does not exist. Check HQA_DIR.
 !  ELSE
 !    IF !EXIST($(HQA_DIR)\hqa.h)
-!      MESSAGE WARNING: HQA_DIR defined but "hqa.h" not found in "$(HQA_DIR)"
+!      MESSAGE HQA WARNING: HQA_DIR defined but "hqa.h" not found in "$(HQA_DIR)"
 !    ELSE
 HQA_INC = $(HQA_DIR)
 HASH=^#
-!      MESSAGE NOTE: "hqa.h" will be $(HASH)included from "$(HQA_DIR)"
+!      MESSAGE HQA NOTE: "hqa.h" will be $(HASH)included from "$(HQA_DIR)"
 !    ENDIF
 !  ENDIF
 !ENDIF
