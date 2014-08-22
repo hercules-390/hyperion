@@ -341,8 +341,11 @@ static float32
     int8 shiftCount;
 
     shiftCount = countLeadingZeros32( zSig ) - 1;
-    return roundAndPackFloat32( ctx, zSign, zExp - shiftCount, zSig<<shiftCount );
 
+    if (shiftCount >= 0)
+        return roundAndPackFloat32( ctx, zSign, zExp - shiftCount, zSig << shiftCount );
+    else
+        return roundAndPackFloat32( ctx, zSign, zExp + 1, zSig >> 1 );
 }
 
 /*----------------------------------------------------------------------------
@@ -503,8 +506,11 @@ static float64
     int8 shiftCount;
 
     shiftCount = countLeadingZeros64( zSig ) - 1;
-    return roundAndPackFloat64( ctx, zSign, zExp - shiftCount, zSig<<shiftCount );
 
+    if (shiftCount >= 0)
+        return roundAndPackFloat64( ctx, zSign, zExp - shiftCount, zSig << shiftCount );
+    else
+        return roundAndPackFloat64( ctx, zSign, zExp + 1, zSig >> 1 );
 }
 
 #ifdef FLOAT128
