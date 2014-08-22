@@ -8,6 +8,40 @@ Hercules: What's new</TITLE>
       VLINK="#008040" ALINK="#000000">
 <h1>What's new in Hercules</h1>
 <hr noshade>
+<h2>What's new in release 4.00 Hyperion</h2>
+<p>Release date: Not yet determined.
+<ul>
+<li>BRCTH, SSKE, STFL, STIDP, TRACE/TRACG, PFMF, PTF instruction fixes (Jan Jaeger, Mark Gaubatz, John P. Hartmann, Roger Bowler)
+<li>Improved CMPSC instruction implementation including CMPSC-Enhancement Facility support (Fish (David B. Trout))
+<li>Binary Floating-Point instructions now use John Hauser's IEEE-754 'softfloat' implementation (Fish (David B. Trout))
+<li>Driver for MPCPTP and/or MPCPTP6 devices (Ian Shorter)
+<li>QDIO/OSA support (Jan Jaeger, Harold Grovesteen, Ian Shorter, Fish (David B. Trout))
+<li>New CTCE driver providing "BCTC" support for Hercules SYSPLEX'ing via GRS (Peter J. Jansen)
+<li>IBM 3791 support (Max. H. Park)
+<li>Pre-configured tun device support (John P. Hartmann)
+<li>LCS zero MAC address fix (Fish (David B. Trout))
+<li>TCP_NODELAY and 3270 binary xfer IAC bug fix (Dr. Hans-Walter Latz)
+<li>Fix dasd PSF PRSD suborder 03 bug (Florian Bilek)
+<li>Increase dasdload ipl2 read command length to 32K (Laddie Hanus)
+<li>Various DASD utilities fixes and enhancements (Kevin Leonard)
+<li>3390 mod 54 fix (Jan Jaeger)
+<li>3990-3 LRE and VSAM Extended Format Dataset fix (Fish (David B. Trout))
+<li>Prevent duplicate EQID (Gordon Bonorchis)
+<li>FIX async comm lines bug impacting VM/ESA 1.5 (David Durgee)
+<li>Support for large tape block sizes up to 2 MB (Fish (David B. Trout))
+<li>I/O subsystem enhanced to more closely comply to architecture (Mark Gaubatz)
+<li>Enhanced timer resolution (Mark Gaubatz, Fish (David B. Trout))
+<li>Integrated REXX support (Jan Jaeger, Enrico Sorichetti)
+<li>Selective enablement of architecural features (Jan Jaeger)
+<li>Message restructure (Bernard van der Helm, Paul Gorlinsky)
+<li>Allow regex replacement variables in HAO commands (Roger Bowler)
+<li>Hercules build quality assurance (Fish (David B. Trout) per Mark Gaubatz)
+<li>Report individual CPU percentages to external GUI (Fish (David B. Trout))
+<li>VS2012 and VS2013 support (RobiOneKenobi)
+</ul>
+<p>Download: &nbsp;
+<a href="https://github.com/hercules-390/hyperion/archive/master.zip">master.zip</a>
+&nbsp; &nbsp; (GitHub)
 <h2>What's new in release 3.10</h2>
 <p>Release date: 1 February 2014
 <ul>
@@ -21,7 +55,7 @@ Hercules: What's new</TITLE>
 <li>CMPSC corrections (Bernard van der Helm)
 <li>dasdls enhancements (Chris Cheney)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://downloads.hercules-390.eu/hercules-3.10.tar.gz">hercules-3.10.tar.gz</a>
 <h2>What's new in release 3.09</h2>
 <p>Release date: 15 July 2013
@@ -39,7 +73,7 @@ Hercules: What's new</TITLE>
 <li>Corrections to build procedures (Mike Frysinger, Dan Horak)
 <li>Miscellaneous bug fixes (Roger Bowler)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://downloads.hercules-390.eu/hercules-3.09.tar.gz">hercules-3.09.tar.gz</a>
 <h2>What's new in release 3.08</h2>
 <p>Release date: 8 December 2012
@@ -82,7 +116,7 @@ Hercules: What's new</TITLE>
 <li>Miscellaneous bug fixes (Paul Gorlinsky, Ivan Warren, David "Fish" Trout, Jan Jaeger,
 Bernard van der Helm, Roger Bowler, Kevin Leonard, Ian Shorter, John P. Hartmann)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://downloads.hercules-390.eu/hercules-3.08.tar.gz">hercules-3.08.tar.gz</a>
 <h2>What's new in release 3.07</h2>
 <p>Release date: 10 March 2010
@@ -111,7 +145,7 @@ Bernard van der Helm, Roger Bowler, Kevin Leonard, Ian Shorter, John P. Hartmann
 <li>Numerous bug fixes (Ivan Warren, Fish, Jan Jaeger, Bernard van der Helm,
 Roger Bowler, Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.07.tar.gz">hercules-3.07.tar.gz</a>
 <h2>What's new in release 3.06</h2>
 <p>Release date: 11 January 2009
@@ -152,7 +186,7 @@ sfk (David "Fish" Trout, Bernard van der Helm)
 "Fish" Trout, Greg Smith, Paul Leisy, Jay Maynard, Bernard van der Helm,
 Kevin Leonard, Tony Harminc)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.06.tar.gz">hercules-3.06.tar.gz</a>
 <h2>What's new in release 3.05</h2>
 <p>Release date: 23 June 2007
@@ -181,7 +215,7 @@ Helm)
 <li>Miscellaneous new panel commands: qd (Greg Smith), fpc, traceopt (Roger
 Bowler), logopt (Kevin Leonard), cd, pwd, timerint, defsym (David "Fish" Trout)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.05.tar.gz">hercules-3.05.tar.gz</a>
 <h2>What's new in release 3.04.1</h2>
 <p>Release date: 25 March 2006
@@ -190,7 +224,7 @@ Bowler), logopt (Kevin Leonard), cd, pwd, timerint, defsym (David "Fish" Trout)
 <br>Note: This version only applies to the Mac OS X 10.4 (Tiger) platform.
 Version 3.04 is current for all other platforms.
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.04.1.tar.gz">hercules-3.04.1.tar.gz</a>
 <h2>What's new in release 3.04</h2>
 <p>Release date: 24 February 2006
@@ -209,7 +243,7 @@ Helm)
 "Fish" Trout, Greg Smith, Pasi Pirhonen)
 <li>Fix for Windows ..\relative path dasd files (David "Fish" Trout)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.04.tar.gz">hercules-3.04.tar.gz</a>
 <h2>What's new in release 3.03.1</h2>
 <p>Release date: 30 December 2005
@@ -222,7 +256,7 @@ panic (Fabrizio Calabretta, Greg Smith, Ivan Warren)
 <li>Performance improvements in TM instruction family (Bernard van der Helm)
 <li>Support for Linux zipl LOADPARM of PROMPT (Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.03.1.tar.gz">hercules-3.03.1.tar.gz</a>
 <h2>What's new in release 3.03</h2>
 <p>Release date: 20 December 2005
@@ -245,7 +279,7 @@ Dilbert, Bernard van der Helm)
 <li>Integrated 1052-C / 3215-C console support (Jan Jaeger)
 <li>tapecopy support for writing as well as reading tapes (Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.03.tar.gz">hercules-3.03.tar.gz</a>
 <h2>What's new in release 3.02</h2>
 <p>Release date: 11 December 2004
@@ -269,7 +303,7 @@ Warren)
 Warren)
 <li>Pentium 4 optimizations enabled in gcc (Ivan Warren)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.02.tar.gz">hercules-3.02.tar.gz</a>
 <h2>What's new in release 3.01</h2>
 <p>Release date: 30 November 2003
@@ -288,7 +322,7 @@ still performing better (David "Fish" Trout)
 "Fish" Trout)
 <li>Performance and integrity enhancements for RS instructions (Greg Smith)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.01.tar.gz">hercules-3.01.tar.gz</a>
 <h2>What's new in release 3.00</h2>
 <p>Release date: 2 October 2003
@@ -317,7 +351,7 @@ Pierson)
 <li>S/370 I/O race condition fixes (Victor Shkamerda, Greg Smith)
 <li>Manual pages for some commands (Jim Morrison)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-3.00.tar.gz">hercules-3.00.tar.gz</a>
 <h2>What's new in release 2.17.1</h2>
 <p>Release date: 12 February 2003
@@ -329,7 +363,7 @@ no file loaded (Jay Maynard)
 <li>Correct SLB instruction condition code (Jan Jaeger)
 <li>Fix dasdutil.c track conversion function (Jim Morrison)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.17.1.tar.gz">hercules-2.17.1.tar.gz</a>
 <h2>What's new in release 2.17</h2>
 <p>Release date: 1 February 2003
@@ -350,7 +384,7 @@ numbers, and began message documentation (Jay Maynard)
 Smith, Jan Jaeger, Juergen Dobrinski, Bernard van der Helm,
 Andy Norrie, and David "Fish" Trout)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.17.tar.gz">hercules-2.17.tar.gz</a>
 <h2>What's new in release 2.16.5</h2>
 <p>Release date: 8 July 2002
@@ -358,7 +392,7 @@ Andy Norrie, and David "Fish" Trout)
 <li>Correct serious CCKD image file corruption error (Greg Smith)
 <li>Allow tape files to be opened for input if on CD-ROM (Volker Bandke)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.5.tar.gz">hercules-2.16.5.tar.gz</a>
 <h2>What's new in release 2.16.4</h2>
 <p>Release date: 3 July 2002
@@ -366,7 +400,7 @@ Andy Norrie, and David "Fish" Trout)
 <li>Read backward support for emulated tape (Volker Bandke)
 <li>Added 9313, 9332, and 9335 to list of supported devices (Tomas Masek)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.4.tar.gz">hercules-2.16.4.tar.gz</a>
 <h2>What's new in release 2.16.3</h2>
 <p>Release date: 2 July 2002
@@ -382,7 +416,7 @@ Andy Norrie, and David "Fish" Trout)
 <li>FBA fixes contributed by Tomas Masek (Greg Smith)
 <li>Compatibility fixes for cckd and 2.17 (Greg Smith)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.3.tar.gz">hercules-2.16.3.tar.gz</a>
 <h2>What's new in release 2.16.2</h2>
 <p>Release date: 20 May 2002
@@ -391,7 +425,7 @@ Andy Norrie, and David "Fish" Trout)
 <li>Fixed 370 interval timer error (Valery Pogonchenko)
 <li>Control panel attach command bug fix (David "Fish" Trout)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.2.tar.gz">hercules-2.16.2.tar.gz</a>
 <h2>What's new in release 2.16.1</h2>
 <p>Release date: 4 May 2002
@@ -402,7 +436,7 @@ Andy Norrie, and David "Fish" Trout)
 <li>Control panel attach command bug fix (Kris Van Hees)
 <li>Windows versions (finally) accessible from main page (Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.1.tar.gz">hercules-2.16.1.tar.gz</a>
 <h2>What's new in release 2.16</h2>
 <p>Release date: 20 April 2002
@@ -422,7 +456,7 @@ Leisy)
 <li>Various fixes (as recorded in CHANGES) (Paul Leisy, Matt Zimmerman,
 Greg Smith, Volker Bandke, Bernard van der Helm, David "Fish" Trout)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.16.tar.gz">hercules-2.16.tar.gz</a>
 <h2>What's new in release 2.15</h2>
 <p>Release date: 04 December 2001
@@ -441,7 +475,7 @@ Willem Konynenberg)
 <li> Machine checks now reported for host exceptions, loops, and wait states
 (Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.15.tar.gz">hercules-2.15.tar.gz</a>
 <h2>(There was no release 2.14)</h2>
 <h2>What's new in release 2.13</h2>
@@ -464,7 +498,7 @@ Willem Konynenberg)
 <li>Storage Key Assist (Jan Jaeger)
 <li>Move Page Facility 2 (Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.13.tar.gz">hercules-2.13.tar.gz</a>
 <h2>What's new in release 2.12</h2>
 <p>Release date: 04 May 2001
@@ -505,7 +539,7 @@ Willem Konynenberg)
 <li>Floating point enhancements (Roger Bowler, Jan Jaeger)
 <li>Country codepage tables (Roger Bowler)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.12.tar.gz">hercules-2.12.tar.gz</a>
 <h2>What's new in release 2.11</h2>
 <p>Release date: 09 February 2001
@@ -521,7 +555,7 @@ Willem Konynenberg)
 <li>Extended Translation Facility 2 (Roger Bowler)
 <li>Divide Logical instructions (Vic Cross)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.11.tar.gz">hercules-2.11.tar.gz</a>
 <h2>What's new in release 2.10</h2>
 <p>Release date: 02 February 2001
@@ -548,7 +582,7 @@ Willem Konynenberg)
 <li>Fix MVCLE instruction (Jan Jaeger)
 <li>Interval Timer fix (Bob Abeles)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-2.10.tar.gz">hercules-2.10.tar.gz</a>
 <h2>What's new in release 1.71</h2>
 <p>Release date: 18 January 2001
@@ -569,7 +603,7 @@ Morrison)
 <li> Increased MAXDBLK from 3000 to 40000 and MAXTTR from 10000 to 40000 in
 dasdload (Volker Bandke)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.71.tar.gz">hercules-1.71.tar.gz</a>
 <h2>What's new in release 1.70</h2>
 <p>Release date: 3 December 2000
@@ -587,7 +621,7 @@ Abeles)
 <li>Change license to the QPL Open Source Definition-compliant license (Roger
 Bowler, Jay Maynard, and Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.70.tar.gz">hercules-1.70.tar.gz</a>
 <h2>What's new in release 1.69</h2>
 <p>Release date: 29 October 2000
@@ -602,7 +636,7 @@ Bowler, Jay Maynard, and Jan Jaeger)
 <li>Spelling corrections (Adam Thornton)
 <li>Fixed version number (Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.69.tar.gz">hercules-1.69.tar.gz</a>
 <h2>What's new in release 1.68</h2>
 <p>Release date: 8 October 2000
@@ -616,7 +650,7 @@ Bowler, Jay Maynard, and Jan Jaeger)
 <li>Fix for random bug in MP instruction (Mario Bezzi)
 <li>Treat all 3505 card reader read CCWs the same (Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.68.tar.gz">hercules-1.68.tar.gz</a>
 <h2>What's new in release 1.67</h2>
 <p>Release date: 4 September 2000
@@ -637,7 +671,7 @@ Maynard, found by Greg Smith)
 <li>Floating point instructions SQDR and SQER (by Peter Kuschnerus)
 <li>Lock Page instruction (Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.67.tar.gz">hercules-1.67.tar.gz</a>
 <h2>What's new in release 1.66</h2>
 <p>Release date: 3 August 2000
@@ -661,7 +695,7 @@ Maynard, found by Greg Smith)
 form_stack_entry and unstack_registers (Jan Jaeger)
 <li>Fix loss of interrupts in PR (Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.66.tar.gz">hercules-1.66.tar.gz</a>
 <h2>What's new in release 1.65</h2>
 <p>Release date: 22 July 2000
@@ -685,7 +719,7 @@ Kuschnerus)
 Jaeger)
 <li> Fix STCKE instruction (by Bernard van der Helm)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.65.tar.gz">hercules-1.65.tar.gz</a>
 <h2>What's new in release 1.64</h2>
 <p>Release date: 4 July 2000
@@ -703,7 +737,7 @@ subdirectory (by Jay Maynard, suggested by Soren Jorvang)
 <li> Rework cpu.c to decode instructions by macro (by Jan Jaeger)
 <li> Bypass bug in IBM telnet client (by Jan Jaeger)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.64.tar.gz">hercules-1.64.tar.gz</a>
 <h2>What's new in release 1.63</h2>
 <p>Release date: 18 June 2000
@@ -724,7 +758,7 @@ Beattie)
 <li>New AWSTAPE handling commands: tapesplt, tapemap (by Jay Maynard)
 <li><code>make install</code> target to install in /usr/bin (by Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.63.tar.gz">hercules-1.63.tar.gz</a>
 <h2>What's new in release 1.62</h2>
 <p>Release date: 3 June 2000
@@ -737,7 +771,7 @@ Beattie)
 <li>WRITE SPECIAL CKD CCW (X'01') support (by Jay Maynard)
 <li>FBA DASD model reporting fixes (by Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.62.tar.gz">hercules-1.62.tar.gz</a>
 <h2>What's new in release 1.61</h2>
 <p>Release date: 21 May 2000
@@ -753,7 +787,7 @@ Beattie)
 <li>New OSTAILOR configuration option allows selective suppression
     of program check messages (by Jay Maynard)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.61.tar.gz">hercules-1.61.tar.gz</a>
 
 <h2>What's new in release 1.60</h2>
@@ -777,7 +811,7 @@ Beattie)
 <li>Floating point version 5 including fixes by Mario Bezzi
     (contributed by Peter Kuschnerus)
 </ul>
-<p>Download
+<p>Download: &nbsp;
 <a href="http://www.hercules-390.org/hercules-1.60.tar.gz">hercules-1.60.tar.gz</a>
 
 <h2>What's new in release 1.59</h2>
