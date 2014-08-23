@@ -283,6 +283,7 @@ int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
 int  detach_device (U16 lcss, U16 devnum);
 int  define_device (U16 lcss, U16 olddev, U16 newdev);
 CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
+CONF_DLL_IMPORT BYTE free_group(DEVGRP *group, int locked, const char *msg, DEVBLK *errdev);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);

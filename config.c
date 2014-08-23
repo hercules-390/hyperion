@@ -561,8 +561,8 @@ CHPBLK**chpp;
 }
 
 
-static
-DEVBLK *get_devblk(U16 lcss, U16 devnum)
+/* NOTE: also does obtain_lock(&dev->lock); */
+static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
 DEVBLK *dev;
 DEVBLK**dvpp;
@@ -616,7 +616,7 @@ DEVBLK**dvpp;
         dev->subchan = sysblk.highsubchan[lcss]++;
     }
 
-    /* Initialize the device block */
+    /* Obtain the device lock. Caller will release it. */
     obtain_lock (&dev->lock);
 
     dev->group = NULL;
@@ -682,9 +682,8 @@ DEVBLK**dvpp;
     return dev;
 }
 
-
-static
-void ret_devblk(DEVBLK *dev)
+/* NOTE: also does release_lock(&dev->lock);*/
+static void ret_devblk(DEVBLK *dev)
 {
     /* PROGRAMMING NOTE: the device buffer will be freed by the
        'attach_device' function whenever it gets reused and not
@@ -703,12 +702,24 @@ void ret_devblk(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block                   */
 /*-------------------------------------------------------------------*/
-static int detach_devblk (DEVBLK *dev)
+static int detach_devblk (DEVBLK *dev, int locked, const char *msg,
+                          DEVBLK *errdev)
 {
 int     i;                              /* Loop index                */
 
-    /* Obtain the device lock */
-    obtain_lock(&dev->lock);
+    /* Free the entire group if this is a grouped device */
+    if (free_group( dev->group, locked, msg, errdev ))
+    {
+        /* Group successfully freed. All devices in the group
+           have been detached. Nothing remains for us to do.
+           All work has been completed. Return to caller.
+        */
+        return 0;
+    }
+
+    /* Obtain the device lock. ret_devblk will release it */
+    if (!locked)
+        obtain_lock(&dev->lock);
 
     DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
@@ -719,6 +730,23 @@ int     i;                              /* Loop index                */
         /* Call the device close handler */
         (dev->hnd->close)(dev);
 
+    /* Issue device detached message and build channel report */
+    if (dev != errdev)
+    {
+        if (MLVL(DEBUG))
+        {
+            // "%1d:%04X %s detached"
+            WRMSG (HHC01465, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msg);
+        }
+
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
+#if defined(_370)
+        if (sysblk.arch_mode != ARCH_370)
+#endif
+            build_detach_chrpt( dev );
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+    }
+
     /* Free the argv array */
     for (i = 0; i < dev->argc; i++)
         if (dev->argv[i])
@@ -726,42 +754,11 @@ int     i;                              /* Loop index                */
     if (dev->argv)
         free(dev->argv);
 
+    /* Free the device type name */
     free(dev->typname);
 
-    /* detach all devices in group */
-    if(dev->group)
-    {
-    int i;
-
-        dev->group->memdev[dev->member] = NULL;
-
-        if(dev->group->members)
-        {
-            dev->group->members = 0;
-
-            for(i = 0; i < dev->group->acount; i++)
-            {
-                if(dev->group->memdev[i] && dev->group->memdev[i]->allocated)
-                {
-                    detach_devblk(dev->group->memdev[i]);
-                }
-            }
-
-            free(dev->group);
-        }
-
-        dev->group = NULL;
-    }
-
-    ret_devblk(dev);
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Build Channel Report */
-#if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
-#endif
-        build_detach_chrpt( dev );
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+    /* Release lock and return the device to the DEVBLK pool */
+    ret_devblk( dev ); /* also does release_lock(&dev->lock);*/
 
     return 0;
 } /* end function detach_devblk */
@@ -782,18 +779,19 @@ char   str[64];
 
     if (dev == NULL)
     {
+        // "%1d:%04X %s does not exist"
         WRMSG (HHC01464, "E", lcss, devnum, str);
         return 1;
     }
 
     obtain_lock(&sysblk.config);
 
-    rc = detach_devblk( dev );
+    if (dev->group)
+        MSGBUF( str, "group subchannel %1d:%04X", lcss, subchan);
+
+    rc = detach_devblk( dev, FALSE, str, NULL );
 
     release_lock(&sysblk.config);
-
-    if(!rc)
-        WRMSG (HHC01465, "I", lcss, devnum, str);
 
     return rc;
 }
@@ -1162,18 +1160,27 @@ int     i;                              /* Loop index                */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(lcss,devnum) != NULL)
     {
+        // "%1d:%04X device already exists"
         WRMSG (HHC01461, "E", lcss, devnum);
         release_lock(&sysblk.config);
         return 1;
     }
 
-    /* obtain device block */
-    dev = get_devblk(lcss, devnum);
+    /* Obtain device block from our DEVBLK pool and lock the device. */
+    dev = get_devblk(lcss, devnum); /* does obtain_lock(&dev->lock); */
+
+    // PROGRAMMING NOTE: the rule is, once a DEVBLK has been obtained
+    // from the pool it can be returned back to the pool via a simple
+    // call to ret_devblk if the device handler initialization function
+    // has NOT yet been called. Once the device handler initialization
+    // function has been called however then you MUST use detach_devblk
+    // to return it back to the pool so that the entire group is freed.
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
+        // "%1d:%04X devtype %s not recognized"
         WRMSG (HHC01462, "E", lcss, devnum, type);
-        ret_devblk(dev);
+        ret_devblk(dev); /* also does release_lock(&dev->lock);*/
         release_lock(&sysblk.config);
         return 1;
     }
@@ -1199,17 +1206,11 @@ int     i;                              /* Loop index                */
 
     if (rc < 0)
     {
+        // "%1d:%04X device initialization failed"
         WRMSG (HHC01463, "E", lcss, devnum);
 
-        for (i = 0; i < dev->argc; i++)
-            if (dev->argv[i])
-                free(dev->argv[i]);
-        if (dev->argv)
-            free(dev->argv);
-
-        free(dev->typname);
-
-        ret_devblk(dev);
+        /* Detach the device and return it back to the DEVBLK pool */
+        detach_devblk( dev, TRUE, "device", dev );
 
         release_lock(&sysblk.config);
         return 1;
@@ -1231,18 +1232,12 @@ int     i;                              /* Loop index                */
         if (dev->buf == NULL)
         {
             char buf[64];
+            // "%1d:%04X error in function %s: %s"
             MSGBUF( buf, "malloc(%lu)", (unsigned long) dev->bufsize);
             WRMSG (HHC01460, "E", lcss, dev->devnum, buf, strerror(errno));
 
-            for (i = 0; i < dev->argc; i++)
-                if (dev->argv[i])
-                    free(dev->argv[i]);
-            if (dev->argv)
-                free(dev->argv);
-
-            free(dev->typname);
-
-            ret_devblk(dev);
+            /* Detach the device and return it back to the DEVBLK pool */
+            detach_devblk( dev, TRUE, "device", dev );
 
             release_lock(&sysblk.config);
             return 1;
@@ -1263,6 +1258,7 @@ int     i;                              /* Loop index                */
     /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
+        // "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
         WRMSG (HHC01458, "W", lcss, devnum);
     }
     */
@@ -1270,7 +1266,10 @@ int     i;                              /* Loop index                */
     release_lock(&sysblk.config);
 
     if ( rc == 0 && MLVL(DEBUG) )
+    {
+        // "Device %04X type %04X subchannel %d:%04X attached"
         WRMSG(HHC02198, "I", dev->devnum, dev->devtype, dev->chanset, dev->subchan);
+    }
 
     return 0;
 } /* end function attach_device */
@@ -1283,24 +1282,26 @@ int detach_device (U16 lcss,U16 devnum)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int    rc;
+char* str = "device";
 
     /* Find the device block */
     dev = find_device_by_devnum (lcss,devnum);
 
     if (dev == NULL)
     {
-        WRMSG (HHC01464, "E", lcss, devnum, "device");
+        // "%1d:%04X %s does not exist"
+        WRMSG (HHC01464, "E", lcss, devnum, str);
         return 1;
     }
 
     obtain_lock(&sysblk.config);
 
-    rc = detach_devblk( dev );
+    if (dev->group)
+        str = "group device";
+
+    rc = detach_devblk( dev, FALSE, str, NULL );
 
     release_lock(&sysblk.config);
-
-    if(!rc)
-        WRMSG (HHC01465, "I", lcss, devnum, "device");
 
     return rc;
 }
@@ -1468,7 +1469,9 @@ DEVBLK *tmp;
     else if(members)
     {
         // Allocate a new Group when requested
-        dev->group = malloc(sizeof(DEVGRP) + members * sizeof(DEVBLK *));
+        size_t size = sizeof(DEVGRP) + (members * sizeof(DEVBLK*));
+        dev->group = malloc( size );
+        memset( dev->group, 0, size );
         dev->group->members = members;
         dev->group->acount = 1;
         dev->group->memdev[0] = dev;
@@ -1476,6 +1479,38 @@ DEVBLK *tmp;
     }
 
     return (dev->group && (dev->group->members == dev->group->acount));
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to free a device group  (i.e. all devices in the group)  */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT BYTE free_group( DEVGRP *group, int locked,
+                            const char *msg, DEVBLK *errdev )
+{
+    DEVBLK *dev;
+    int i;
+
+    if (!group || !group->members)
+        return FALSE;       // no group or group has no members
+
+    for (i=0; i < group->acount; i++)
+    {
+        if ((dev = group->memdev[i]) && dev->allocated)
+        {
+            // PROGRAMMING NOTE: detach_devblk automatically calls
+            // free_group (i.e. THIS function) to try and free the
+            // entire group at once in case it is a grouped device.
+            // Therefore we must clear dev->group to NULL *before*
+            // calling detach_devblk to prevent infinite recursion.
+
+            dev->group = NULL;
+            detach_devblk( dev, dev == errdev && locked, msg, errdev );
+        }
+    }
+
+    free( group );
+    return TRUE;        // group successfully freed
 }
 
 

@@ -66,14 +66,16 @@ U32 crw_erc, crwarray[8], crwcount=0;
 void build_attach_chrpt( DEVBLK *dev )
 {
 U32 ssid, subchan, crwarray[8], crwcount=0;
+int devlock_obtained;
 
     /* Retrieve Source IDs */
-    obtain_lock( &dev->lock );
+    devlock_obtained = (try_obtain_lock( &dev->lock ) == 0);
     {
         ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
         subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
-    release_lock( &dev->lock );
+    if (devlock_obtained)
+        release_lock( &dev->lock );
 
     /* Build Subchannel Alert Channel Report */
     crwarray[crwcount++] =
@@ -104,14 +106,16 @@ U32 ssid, subchan, crwarray[8], crwcount=0;
 void build_detach_chrpt( DEVBLK *dev )
 {
 U32 ssid, subchan, crwarray[8], crwcount=0;
+int devlock_obtained;
 
     /* Retrieve Source IDs */
-    obtain_lock( &dev->lock );
+    devlock_obtained = (try_obtain_lock( &dev->lock ) == 0);
     {
         ssid    = ((U32)SSID_TO_LCSS( dev->ssid )) & CRW_RSID_MASK;
         subchan = ((U32)dev->subchan)              & CRW_RSID_MASK;
     }
-    release_lock( &dev->lock );
+    if (devlock_obtained)
+        release_lock( &dev->lock );
 
     /* Build Subchannel Alert Channel Report */
     crwarray[crwcount++] =
