@@ -328,12 +328,16 @@ int bytes_read;
         bytes_read = read_pipe(logger_syslogfd[LOG_READ],logger_buffer + logger_currmsg,
           ((logger_bufsize - logger_currmsg) > LOG_DEFSIZE ? LOG_DEFSIZE : logger_bufsize - logger_currmsg));
 
-        if(bytes_read == -1)
+        if (bytes_read == 0)    /* Has pipe been closed? */
+            break;              /* Yes, then we are done */
+
+        if (bytes_read < 0)
         {
             int read_pipe_errno = HSO_errno;
 
-            // (ignore any/all errors at shutdown)
-            if (sysblk.shutdown) continue;
+            /* Ignore any/all errors during shutdown */
+            if (sysblk.shutdown)
+                continue;
 
             if (HSO_EINTR == read_pipe_errno)
                 continue;
@@ -463,8 +467,10 @@ int bytes_read;
         obtain_lock(&logger_lock);
         broadcast_condition(&logger_cond);
         release_lock(&logger_lock);
-    }
 
+    } /* end while(logger_active) */
+
+    logger_active = 0;
     logger_tid = 0;
 
     /* Logger is now terminating */
