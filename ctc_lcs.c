@@ -296,6 +296,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetIfName );
 
+            if( rc < 0 ) return -1;
+
             // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
             WRMSG(HHC00901, "I", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                                  pLCSDev->pDEVBLK[0]->typname,
