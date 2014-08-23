@@ -111,7 +111,12 @@ error:
 
 void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    WRMSG ( HHC90000, "D", debug_string );
+    // Remove all trailing whitespace to conform to Hercules logmsg format.
+    char* p = strdup( debug_string );
+    char* nl = p + strlen( p );
+    while (--nl > p && isspace(*nl)) *nl = 0;
+    WRMSG ( HHC90000, "D", p );
+    free(p);
 }
 
 void  enable_tt32_debug_tracing( int enable )
