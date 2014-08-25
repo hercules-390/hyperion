@@ -4036,6 +4036,52 @@ int     rc;                             /* Return code               */
 
 
 /*-------------------------------------------------------------------*/
+/* execute_ccw_chain exit functions                                  */
+/*-------------------------------------------------------------------*/
+
+#ifndef EXECUTE_CCW_CHAIN_RETURN_FUNCS
+#define EXECUTE_CCW_CHAIN_RETURN_FUNCS
+
+static INLINE void* execute_ccw_chain_fast_return
+(
+    IOBUF*  pIOBUF,
+    IOBUF*  pInitial_IOBUF,
+    void*   pvRetVal
+)
+{
+    if (pIOBUF != pInitial_IOBUF)
+        iobuf_destroy( pIOBUF );
+    return pvRetVal;
+}
+
+static INLINE void* execute_ccw_chain_clear_busy_unlock_and_return
+(
+    DEVBLK*  dev,
+    IOBUF*   pIOBUF,
+    IOBUF*   pInitial_IOBUF,
+    void*    pvRetVal
+)
+{
+    clear_subchannel_busy( dev );
+    release_lock( &dev->lock );
+    return execute_ccw_chain_fast_return( pIOBUF, pInitial_IOBUF, pvRetVal );
+}
+
+static INLINE void* execute_ccw_chain_clear_busy_and_return
+(
+    DEVBLK*  dev,
+    IOBUF*   pIOBUF,
+    IOBUF*   pInitial_IOBUF,
+    void*    pvRetVal
+)
+{
+    obtain_lock( &dev->lock );
+    return execute_ccw_chain_clear_busy_unlock_and_return( dev, pIOBUF, pInitial_IOBUF, pvRetVal );
+}
+#endif // EXECUTE_CCW_CHAIN_RETURN_FUNCS
+
+
+/*-------------------------------------------------------------------*/
 /* EXECUTE A CHANNEL PROGRAM                                         */
 /*-------------------------------------------------------------------*/
 void*
@@ -4082,29 +4128,6 @@ PREFETCH    prefetch;                   /* Prefetch buffer           */
 
 __ALIGN( IOBUF_ALIGN )
 IOBUF iobuf_initial;                    /* Channel I/O buffer        */
-
-#if !defined(execute_ccw_chain_return)
-
-#define execute_ccw_chain_fast_return(_result)                         \
-do {                                                                   \
-    if (iobuf != &iobuf_initial)                                       \
-        iobuf_destroy(iobuf);                                          \
-    return (void*) (_result);                                          \
-} while(0)
-
-#define execute_ccw_chain_unlock_and_return(_result)                   \
-do {                                                                   \
-    clear_subchannel_busy(dev);                                        \
-    release_lock(&dev->lock);                                          \
-    execute_ccw_chain_fast_return(_result);                            \
-} while(0)
-
-#define execute_ccw_chain_return(_result)                              \
-do {                                                                   \
-    obtain_lock(&dev->lock);                                           \
-    execute_ccw_chain_unlock_and_return(_result);                      \
-} while(0)
-#endif
 
     /* Initialize prefetch */
     memset(&prefetch, 0, sizeof(prefetch));
@@ -4349,7 +4372,8 @@ execute_clear:
             RELEASE_INTLOCK(NULL);
 
             /* Return */
-            execute_ccw_chain_fast_return(NULL);
+            return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
+
         } /* end perform clear subchannel */
 
         /* Test for halt subchannel request */
@@ -4367,7 +4391,8 @@ execute_halt:
                 WRMSG (HHC01309, "I", SSID_TO_LCSS(dev->ssid),
                                       dev->devnum);
 
-            execute_ccw_chain_fast_return(NULL);
+            return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
+
         } /* end perform halt subchannel */
 
         /* Test for attention status from device */
@@ -4392,7 +4417,8 @@ execute_halt:
                 WRMSG (HHC01307, "I", SSID_TO_LCSS(dev->ssid),
                                       dev->devnum);
 
-            execute_ccw_chain_fast_return(NULL);
+            return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
+
         } /* end attention processing */
 
         /* Clear the channel status and unit status, unless skipping
@@ -4672,7 +4698,7 @@ execute_halt:
         )
         {
             dev->syncio_retry = 1;
-            execute_ccw_chain_return(NULL);
+            return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
         }
 #endif // OPTION_SYNCIO
 
@@ -4696,7 +4722,7 @@ execute_halt:
             if (dev->syncio_active)
             {
                 dev->syncio_retry = 1;
-                execute_ccw_chain_return(NULL);
+                return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
             }
 #endif // OPTION_SYNCIO
 
@@ -4799,7 +4825,7 @@ execute_halt:
                     goto execute_halt;
                 }
 
-                execute_ccw_chain_fast_return(NULL);
+                return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
             }
 
             release_lock (&dev->lock);
@@ -4911,7 +4937,7 @@ execute_halt:
 
             /* Leave device as busy, unlock device and return */
             release_lock(&dev->lock);
-            execute_ccw_chain_fast_return(NULL);
+            return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
         }
 
         /* Handle initial status settings on first non-immediate CCW */
@@ -5123,7 +5149,7 @@ prefetch:
 #ifdef OPTION_SYNCIO
             /* Check if synchronous I/O needs to be retried */
             if (dev->syncio_active && dev->syncio_retry)
-                execute_ccw_chain_unlock_and_return(NULL);
+                return execute_ccw_chain_clear_busy_unlock_and_return( dev, iobuf, &iobuf_initial, NULL );
             /*
              * NOTE: syncio_retry is left on for asynchronous I/O
              * until after the first call to the execute ccw device
@@ -5545,13 +5571,7 @@ breakchain:
     /* Present the interrupt and return */
     release_lock (&dev->lock);
     queue_io_interrupt_and_update_status(dev);
-    execute_ccw_chain_return(NULL);
-
-    #undef execute_ccw_chain_return
-    #undef execute_ccw_chain_fast_return
-    #undef execute_ccw_chain_unlock_and_return
-
-    UNREACHABLE_CODE();
+    return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
 
 } /* end function execute_ccw_chain */
 
