@@ -65,6 +65,16 @@ int                 test_subchan_locked (REGS*, DEVBLK*, IRB*, IOINT**, SCSW**);
 #ifndef CHANNEL_INLINES
 #define CHANNEL_INLINES
 
+static INLINE U8 IS_CCW_IMMEDIATE( const DEVBLK* dev, const BYTE code )
+{
+    return
+    (0
+        || (dev->hnd->immed && dev->hnd->immed[code])
+        || (dev->immed      && dev->immed[code])
+        || IS_CCW_NOP( dev->code )
+    );
+}
+
 static INLINE void
 set_subchannel_busy(DEVBLK* dev)
 {
@@ -6130,6 +6140,114 @@ void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 #if defined(_900)
         case ARCH_900: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*  Functions to queue/dequeue device on I/O interrupt queue.        */
+/*  sysblk.iointqlk is ALWAYS needed to examine sysblk.iointq        */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT void Queue_IO_Interrupt( IOINT* io)
+{
+    obtain_lock( &sysblk.iointqlk );
+    Queue_IO_Interrupt_QLocked( io );
+    release_lock( &sysblk.iointqlk );
+}
+
+DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io )
+{
+IOINT* prev;
+
+    /* Check if an I/O interrupt is already queued for this device */
+    for
+    (
+        prev = (IOINT*) &sysblk.iointq;
+        (1
+            && prev->next != NULL
+            && prev->next != io
+            && prev->next->priority >= io->dev->priority
+        );
+        prev = prev->next
+    )
+    {
+        ;   /* (do nothing, we are only searching) */
+    }
+
+    /* If no interrupt in queue for this device then add one */
+    if (prev->next != io)
+    {
+        io->next     = prev->next;
+        prev->next   = io;
+        io->priority = io->dev->priority;
+    }
+
+    /* Update device flags according to interrupt type */
+         if (io->pending)     io->dev->pending     = 1;
+    else if (io->pcipending)  io->dev->pcipending  = 1;
+    else if (io->attnpending) io->dev->attnpending = 1;
+}
+
+DLL_EXPORT int Dequeue_IO_Interrupt( IOINT* io )
+{
+int rc;
+    obtain_lock( &sysblk.iointqlk );
+    rc = Dequeue_IO_Interrupt_QLocked( io );
+    release_lock( &sysblk.iointqlk );
+    return rc;
+}
+
+DLL_EXPORT int Dequeue_IO_Interrupt_QLocked( IOINT* io )
+{
+IOINT* prev;
+
+    /* Search the I/O interrupt queue for an interrupt
+       for this device and dequeue it if one is found. */
+    for
+    (
+        prev = (IOINT*) &sysblk.iointq;
+        prev->next != NULL;
+        prev = prev->next
+    )
+    {
+        /* Is this I/O interrupt for requested device? */
+        if (prev->next == io)
+        {
+            /* Yes, dequeue the I/O interrupt and update
+               device flags according to interrupt type. */
+            prev->next = io->next;
+                 if (io->pending)     io->dev->pending     = 0;
+            else if (io->pcipending)  io->dev->pcipending  = 0;
+            else if (io->attnpending) io->dev->attnpending = 0;
+
+            return 0;   /* I/O interrupt successfully dequeued */
+        }
+    }
+    return -1;   /* No I/O interrupts were queued for this device */
+}
+
+/*-------------------------------------------------------------------*/
+/*  NOTE: sysblk.iointqlk needed to examine sysblk.iointq.           */
+/*  sysblk.intlock (which MUST be held before calling these          */
+/*  functions) needed in order to set/reset IC_IOPENDING flag.       */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT void Update_IC_IOPENDING()
+{
+    obtain_lock( &sysblk.iointqlk );
+    Update_IC_IOPENDING_QLocked();
+    release_lock( &sysblk.iointqlk );
+}
+
+DLL_EXPORT void Update_IC_IOPENDING_QLocked()
+{
+    if (sysblk.iointq == NULL)
+    {
+        OFF_IC_IOPENDING;
+    }
+    else
+    {
+        ON_IC_IOPENDING;
     }
 }
 

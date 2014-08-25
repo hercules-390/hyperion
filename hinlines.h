@@ -492,14 +492,16 @@ synchronize_cpus(REGS* regs)
      */
 }
 
-static INLINE void
-wakeup_cpu(REGS* regs)
+#define WAKEUP_CPU          wakeup_cpu
+#define WAKEUP_CPU_MASK     wakeup_cpu_mask
+#define WAKEUP_CPUS_MASK    wakeup_cpus_mask
+
+static INLINE void wakeup_cpu( REGS* regs )
 {
-    signal_condition(&regs->intcond);
+    signal_condition( &regs->intcond );
 }
 
-static INLINE void
-wakeup_cpu_mask(CPU_BITMAP mask)
+static INLINE void wakeup_cpu_mask( CPU_BITMAP mask )
 {
     REGS   *current_regs;
     REGS   *lru_regs = NULL;
@@ -509,7 +511,7 @@ wakeup_cpu_mask(CPU_BITMAP mask)
 
     if (mask)
     {
-        for (i = 0; mask; mask >>= 1, ++i)
+        for (i=0; mask; mask >>= 1, ++i)
         {
             if (mask & 1)
             {
@@ -543,20 +545,61 @@ wakeup_cpu_mask(CPU_BITMAP mask)
         }
 
         /* Wake up the least recently used CPU */
-        wakeup_cpu(lru_regs);
+        wakeup_cpu( lru_regs );
     }
 }
 
-static INLINE void
-wakeup_cpus_mask(CPU_BITMAP mask)
+static INLINE void wakeup_cpus_mask( CPU_BITMAP mask )
 {
     int i;
 
-    for (i = 0; mask; mask >>= 1, i++)
+    for (i=0; mask; mask >>= 1, i++)
     {
         if (mask & 1)
-            wakeup_cpu(sysblk.regs[i]);
+            wakeup_cpu( sysblk.regs[i] );
     }
+}
+
+/*-------------------------------------------------------------------*/
+/*  Obtain/Release master interrupt lock. The master interrupt lock  */
+/*  can be obtained by any thread. If obtained by a CPU thread, we   */
+/*  check to see if synchronize_cpus is in progress.                 */
+/*-------------------------------------------------------------------*/
+
+#define OBTAIN_INTLOCK      Obtain_Interrupt_Lock
+#define RELEASE_INTLOCK     Release_Interrupt_Lock
+
+static INLINE void Obtain_Interrupt_Lock( REGS* regs )
+{
+    if (regs)
+        regs->hostregs->intwait = 1;
+
+    obtain_lock( &sysblk.intlock );
+
+    if (regs)
+    {
+        while (sysblk.syncing)
+        {
+            sysblk.sync_mask &= ~regs->hostregs->cpubit;
+
+            if (!sysblk.sync_mask)
+                signal_condition( &sysblk.sync_cond );
+
+            wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock );
+        }
+
+        regs->hostregs->intwait = 0;
+        sysblk.intowner = regs->hostregs->cpuad;
+    }
+    else
+        sysblk.intowner = LOCK_OWNER_OTHER;
+}
+
+static INLINE void Release_Interrupt_Lock( REGS* regs )
+{
+    UNREFERENCED( regs );
+    sysblk.intowner = LOCK_OWNER_NONE;
+    release_lock( &sysblk.intlock );
 }
 
 #endif // _HINLINES_H
