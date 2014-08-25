@@ -5482,7 +5482,12 @@ breakchain:
     /* Call the i/o end exit */
     if (dev->hnd->end) (dev->hnd->end) (dev);
 
-    obtain_lock (&dev->lock);
+    /* Final sequence MUST be performed with INTLOCK held to prevent
+       I/O instructions (such as test_subchan) from proceeding before
+       we can set our flags properly and queue the actual I/O interrupt.
+    */
+    OBTAIN_INTLOCK(NULL);
+    obtain_lock(&dev->lock);
 
     /* Complete the subchannel status word */
     dev->scsw.flag3 &= ~(SCSW3_AC_SCHAC | SCSW3_AC_DEVAC | SCSW3_SC_INTER);
@@ -5549,6 +5554,7 @@ breakchain:
     {
         U8 halt = (dev->scsw.flag2 & SCSW2_AC_HALT) ? TRUE : FALSE;
         release_lock(&dev->lock);
+        RELEASE_INTLOCK(NULL);
         if (halt)
             goto execute_halt;
         goto execute_clear;
@@ -5559,9 +5565,10 @@ breakchain:
 #endif // OPTION_SYNCIO
 
     /* Present the interrupt and return */
-    release_lock (&dev->lock);
-    queue_io_interrupt_and_update_status(dev,TRUE);
-    return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
+    queue_io_interrupt_and_update_status_locked( dev, TRUE );
+    release_lock( &dev->lock );
+    RELEASE_INTLOCK( NULL );
+    return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
 } /* end function execute_ccw_chain */
 
