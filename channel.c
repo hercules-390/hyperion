@@ -107,12 +107,11 @@ clear_device_busy(DEVBLK* dev)
     clear_device_busy_scsw(&dev->scsw);
 }
 
-
 #endif /*CHANNEL_INLINES*/
 
 
 /*-------------------------------------------------------------------*/
-/* Define I/O Buffer Structure and Inline Support Routines           */
+/* Internal I/O Buffer Structure and Inline Support Routines         */
 /*-------------------------------------------------------------------*/
 #ifndef IOBUF_STRUCT
 #define IOBUF_STRUCT
@@ -436,11 +435,11 @@ AIPSX (const SCSW* scsw)
 /*  Queue I/O interrupt and update status (locked)                    */
 /*                                                                    */
 /*  Locks Held on Entry                                               */
-/*    dev->lock                                                       */
 /*    sysblk.intlock                                                  */
+/*    dev->lock                                                       */
 /*  Locks Held on Return                                              */
-/*    dev->lock                                                       */
 /*    sysblk.intlock                                                  */
+/*    dev->lock                                                       */
 /*  Locks Used                                                        */
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
@@ -1031,6 +1030,8 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
             cc = 2;
         else            /* Status pending */
         {
+            cc = 1;     /* CSW stored */
+
             /* Obtain I/O interrupt queue lock */
             obtain_lock(&sysblk.iointqlk);
 
@@ -1039,9 +1040,6 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 
             /* Store the channel status word at PSA+X'40' */
             store_scsw_as_csw(regs, &irb.scsw);
-
-            /* Set condition code 1 for CSW stored */
-            cc = 1;
 
             /* Cleanup after SCSW */
             subchannel_interrupt_queue_cleanup(dev);
@@ -1052,7 +1050,7 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
         }
     }
     else
-        cc = 0;
+        cc = 0;         /* Available */
 
     if (dev->ccwtrace || dev->ccwstep)
         WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
@@ -1337,10 +1335,15 @@ test_subchan_clear(DEVBLK* dev, SCSW* scsw)
             /* SA22-7832-09, page 16-17, TEST SUBCHANNEL clears
              * device suspended indication if suppressed
              */
-            if (scsw == &dev->scsw          &&
-                scsw->flag1 & SCSW1_U       &&
-                scsw->flag3 & SCSW3_AC_SUSP)
-                dev->busy = dev->suspended = 0;
+            if (1
+                && scsw == &dev->scsw
+                && scsw->flag1 & SCSW1_U
+                && scsw->flag3 & SCSW3_AC_SUSP
+            )
+            {
+                dev->busy = 0;
+                dev->suspended = 0;
+            }
 
             scsw_clear_fc_C(scsw);
             scsw_clear_ac_Cp(scsw);
@@ -1392,7 +1395,7 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
         attn                            /* Attention Status          */
     } status;                           /* ...                       */
 
-    int cc = 1;                         /* No status pending         */
+    int cc;                             /* Returned condition code   */
 
     UNREFERENCED( regs );
 
@@ -1425,7 +1428,7 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
         display_scsw (dev, **scsw);
     }
 
-    /* Copy the PCI SCSW to the IRB */
+    /* Copy the SCSW to the IRB */
     irb->scsw = **scsw;
 
     /* Clear the ESW and ECW in the IRB */
@@ -4651,8 +4654,12 @@ execute_halt:
 #ifdef OPTION_SYNCIO
         /* If synchronous I/O and a syncio 2 device and not an
            immediate CCW then retry asynchronously */
-        if (dev->syncio_active && dev->syncio == 2
-         && !dev->is_immed && !IS_CCW_SENSE(dev->code))
+        if (1
+            && dev->syncio_active
+            && dev->syncio == 2
+            && !dev->is_immed
+            && !IS_CCW_SENSE(dev->code)
+        )
         {
             dev->syncio_retry = 1;
             execute_ccw_chain_return(NULL);
@@ -5514,8 +5521,9 @@ breakchain:
     /* mess.                                                         */
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
+        U8 halt = (dev->scsw.flag2 & SCSW2_AC_HALT) ? TRUE : FALSE;
         release_lock(&dev->lock);
-        if (dev->scsw.flag2 & SCSW2_AC_HALT)
+        if (halt)
             goto execute_halt;
         goto execute_clear;
     }
@@ -6068,6 +6076,10 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
 } /* end function present_zone_io_interrupt */
 #endif
 
+/*-------------------------------------------------------------------*/
+/*            END OF PRIMARY CHANNEL PROCESSING CODE                 */
+/*-------------------------------------------------------------------*/
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
@@ -6081,11 +6093,14 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
  #include "channel.c"
 #endif
 
+/*-------------------------------------------------------------------*/
+/*            Exported non-ARCH_DEP functions go here                */
+/*-------------------------------------------------------------------*/
 
-DLL_EXPORT int
-device_attention (DEVBLK *dev, BYTE unitstat)
+DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 {
-    switch(sysblk.arch_mode) {
+    switch(sysblk.arch_mode)
+    {
 #if defined(_370)
         case ARCH_370:
             /* Do NOT raise if initial power-on state */
@@ -6099,12 +6114,10 @@ device_attention (DEVBLK *dev, BYTE unitstat)
         case ARCH_900: return z900_device_attention(dev, unitstat);
 #endif
     }
-    return 3;
+    return 3;   /* subchannel is not valid or not enabled */
 }
 
-
-void
-call_execute_ccw_chain (int arch_mode, void* pDevBlk)
+void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 {
     switch (arch_mode)
     {
