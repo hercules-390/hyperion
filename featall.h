@@ -154,11 +154,8 @@
   #error Either OPTION_SHARED_DEVICES or OPTION_NO_SHARED_DEVICES must be specified, not both
 #elif !defined( OPTION_SHARED_DEVICES ) && !defined( OPTION_NO_SHARED_DEVICES )
   // Neither is #defined.  Use default settings.
-  // FIXME: the OPTION_SHARED_DEVICES build option is currently incompatible
-  // with our current channel subsystem design so it is being disabled until
-  // we can develop a fix and/or workaround.
-  #undef OPTION_SHARED_DEVICES
-  #undef FBA_SHARED
+  #define OPTION_SHARED_DEVICES
+  #define FBA_SHARED
 #elif defined( OPTION_NO_SHARED_DEVICES )
   #undef OPTION_SHARED_DEVICES
   #undef FBA_SHARED

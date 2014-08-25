@@ -49,12 +49,6 @@
 
 #if defined(OPTION_SHARED_DEVICES)
 
-// FIXME: the OPTION_SHARED_DEVICES build option is currently incompatible
-// with our current channel subsystem design so it is being disabled until
-// we can develop a fix and/or workaround.
-
-WARNING( "OPTION_SHARED_DEVICES is currently broken. Use at your own risk." )
-
 DEVHND  shared_ckd_device_hndinfo;
 DEVHND  shared_fba_device_hndinfo;
 

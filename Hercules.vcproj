@@ -2344,6 +2344,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\channel-370.txt"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\comments.txt"
 						>
 					</File>

@@ -1,0 +1,78 @@
+#------------------------------------------------------------------------------
+#     Channel I/O Subsystem test    (S/370 mode)
+#------------------------------------------------------------------------------
+
+#   Define test variables...
+
+defsym  TAPEFILE  "C:\Users\Fish\HercGUI\Tape Files\_foobar.aws"
+defsym  TAPE0CUU  0580
+defsym  LOOPS     00004FFF    # (adjust as desired for longer/shorter test)
+
+
+#   Add the needed tape drive to the configuation
+
+detach $(TAPE0CUU)
+attach $(TAPE0CUU) 3420 "$(TAPEFILE)"
+
+
+#   Set the architecture mode for this test
+
+sysclear
+archmode S/370
+sysreset
+
+
+#   Load the test program...
+
+r 00=0004000000000200     # BC-mode PSW w/MACHK enabled Restart New PSW
+r 68=0002000000000EEE     # BC-mode Program Check New disabled wait PSW
+
+r 48=00000600             # CAW --> CCW
+
+r 200=58800300            # L     R8,TSTCOUNT
+
+#             Loop until TIO returns cc=0 device available (not busy)
+
+r 204=9D00$(TAPE0CUU)     # TIO   TAPE0CUU
+r 208=4710022C            # BC    cc3,FAIL  (device not operational? ABORT)
+r 20C=47200204            # BC    cc2,TIO   (device busy; retry until cc=0)
+r 210=47400204            # BC    cc1,TIO   (CSW stored;  retry until cc=0)
+
+#             Abort if SIO returns anything other than cc=0 started
+
+r 214=9C00$(TAPE0CUU)     # SIO   TAPE0CUU
+r 218=4710022C            # BC    cc3,FAIL  (device not operational? ABORT)
+r 21C=4720022C            # BC    cc2,FAIL  (busy?! prior TIO said available!)
+r 220=4740022C            # BC    cc1,FAIL  (CSW?!  prior TIO said otherwise!)
+
+r 224=46800204            # BCT   R8,TIO    (loooop... requested #of times)
+
+r 228=82000400            # LPSW  SUCCESS   (successful completion)
+r 22C=82000500            # LPSW  FAILURE   (abnormal termination)
+
+r 300=$(LOOPS)            # Test count (number of SIO loops)
+r 400=0002000000000AAA    # BC-mode SUCCESSFUL COMPLETION disabled wait PSW
+r 500=0002000000000EEE    # BC-mode ABNORMAL TERMINATION  disabled wait PSW
+r 600=0700000000000000    # Tape Rewind CCW
+
+
+#   Enable tracing if desired
+
+##ptt control 250000
+##pause 1
+##t+580
+
+
+#   Start the test
+
+restart
+pause 10
+maxrates
+devtmax
+*
+********************************************************************
+*   NOTE:   Eventual expected result  ==  PSW 00020000 00000AAA    *
+********************************************************************
+*
+
+#------------------------------------------------------------------------------
