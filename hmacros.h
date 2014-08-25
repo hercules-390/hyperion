@@ -33,9 +33,7 @@
 /*-------------------------------------------------------------------*/
 #if !defined(INLINE)
   #if defined(__GNUC__)
-    #define INLINE          __inline__ __attribute__((always_inline))
-  #elif defined(_MSVC_)
-    #define INLINE          __forceinline
+    #define INLINE          __inline
   #else
     #define INLINE          __inline
   #endif
