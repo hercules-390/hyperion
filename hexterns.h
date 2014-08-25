@@ -614,8 +614,8 @@ GOP_DLL_IMPORT int   getopt_long ( int nargc, char * const *nargv, const char *o
 CHAN_DLL_IMPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
 CHAN_DLL_IMPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
-CHAN_DLL_IMPORT void Queue_IO_Interrupt           (IOINT* io);
-CHAN_DLL_IMPORT void Queue_IO_Interrupt_QLocked   (IOINT* io);
+CHAN_DLL_IMPORT void Queue_IO_Interrupt           (IOINT* io, U8 clrbsy);
+CHAN_DLL_IMPORT void Queue_IO_Interrupt_QLocked   (IOINT* io, U8 clrbsy);
 CHAN_DLL_IMPORT int  Dequeue_IO_Interrupt         (IOINT* io);
 CHAN_DLL_IMPORT int  Dequeue_IO_Interrupt_QLocked (IOINT* io);
 CHAN_DLL_IMPORT void Update_IC_IOPENDING          ();

@@ -454,14 +454,14 @@ AIPSX (const SCSW* scsw)
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
 static INLINE void
-queue_io_interrupt_and_update_status_locked(DEVBLK* dev)
+queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
 {
     /* Get the I/O interrupt queue lock */
     obtain_lock(&sysblk.iointqlk);
 
     /* Ensure the interrupt is queued/dequeued per pending flag */
     if (dev->scsw.flag3 & SCSW3_SC_PEND)
-        QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+        QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint,clrbsy);
     else
         DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
 
@@ -500,13 +500,13 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev)
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
 static INLINE void
-queue_io_interrupt_and_update_status(DEVBLK* dev)
+queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
 {
     if (likely(dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         OBTAIN_INTLOCK(NULL);
         obtain_lock(&dev->lock);
-        queue_io_interrupt_and_update_status_locked(dev);
+        queue_io_interrupt_and_update_status_locked(dev,clrbsy);
 
         /* Finish releasing locks */
         release_lock(&dev->lock);
@@ -1600,7 +1600,7 @@ perform_clear_subchan (DEVBLK *dev)
     store_hw (dev->scsw.count, 0);
 
     /* Queue the pending interrupt and update status */
-    QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+    QUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint,TRUE);
     subchannel_interrupt_queue_cleanup(dev);
     UPDATE_IC_IOPENDING_QLOCKED();
     release_lock(&sysblk.iointqlk);
@@ -1782,10 +1782,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
         WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
 
     /* Queue pending I/O interrupt and update status */
-    queue_io_interrupt_and_update_status_locked(dev);
-
-    /* Turn off busy bit */
-    clear_subchannel_busy(dev);
+    queue_io_interrupt_and_update_status_locked(dev,TRUE);
 
     release_lock(&dev->lock);
 }
@@ -2830,7 +2827,7 @@ ARCH_DEP(raise_pci) (DEVBLK *dev,       /* -> Device block           */
 
     /* Queue the PCI pending interrupt */
     obtain_lock(&sysblk.iointqlk);
-    QUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+    QUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint,FALSE);
 
     /* Update interrupt status */
     subchannel_interrupt_queue_cleanup(dev);
@@ -3898,7 +3895,7 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     store_hw (dev->attnscsw.count, 0);
 
     /* Queue the attention interrupt */
-    QUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
+    QUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint,FALSE);
 
     /* Update interrupt status */
     subchannel_interrupt_queue_cleanup(dev);
@@ -4403,15 +4400,8 @@ execute_halt:
             /* Call the i/o end exit */
             if (dev->hnd->end) (dev->hnd->end) (dev);
 
-            obtain_lock (&dev->lock);
-
-            /* Turn off busy bit, turn on pending bit */
-            clear_subchannel_busy(dev);
-//          dev->pending = 1;
-
             /* Queue the pending interrupt and update status */
-            release_lock (&dev->lock);
-            queue_io_interrupt_and_update_status(dev);
+            queue_io_interrupt_and_update_status(dev,TRUE);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 WRMSG (HHC01307, "I", SSID_TO_LCSS(dev->ssid),
@@ -4813,7 +4803,7 @@ execute_halt:
 
                 /* Present the interrupt and return */
                 if (dev->scsw.flag3 & SCSW3_SC_PEND)
-                    queue_io_interrupt_and_update_status_locked(dev);
+                    queue_io_interrupt_and_update_status_locked(dev,FALSE);
 
                 release_lock(&dev->lock);
                 RELEASE_INTLOCK(NULL);
@@ -4977,7 +4967,7 @@ execute_halt:
 
                 /* Queue the interrupt and update interrupt status */
                 release_lock(&dev->lock);
-                queue_io_interrupt_and_update_status(dev);
+                queue_io_interrupt_and_update_status(dev,FALSE);
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
                     WRMSG (HHC01306, "I", SSID_TO_LCSS(dev->ssid),
@@ -5570,7 +5560,7 @@ breakchain:
 
     /* Present the interrupt and return */
     release_lock (&dev->lock);
-    queue_io_interrupt_and_update_status(dev);
+    queue_io_interrupt_and_update_status(dev,TRUE);
     return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
 
 } /* end function execute_ccw_chain */
@@ -6168,14 +6158,14 @@ void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 /*  sysblk.iointqlk is ALWAYS needed to examine sysblk.iointq        */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT void Queue_IO_Interrupt( IOINT* io)
+DLL_EXPORT void Queue_IO_Interrupt( IOINT* io, U8 clrbsy )
 {
     obtain_lock( &sysblk.iointqlk );
-    Queue_IO_Interrupt_QLocked( io );
+    Queue_IO_Interrupt_QLocked( io, clrbsy );
     release_lock( &sysblk.iointqlk );
 }
 
-DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io )
+DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io, U8 clrbsy )
 {
 IOINT* prev;
 
@@ -6206,6 +6196,17 @@ IOINT* prev;
          if (io->pending)     io->dev->pending     = 1;
     else if (io->pcipending)  io->dev->pcipending  = 1;
     else if (io->attnpending) io->dev->attnpending = 1;
+
+    /* While I/O interrupt queue is locked
+       clear subchannel busy if asked to do so */
+    if (clrbsy)
+    {
+        io->dev->scsw.flag3 &= ~( SCSW3_AC_SCHAC |
+                                  SCSW3_AC_DEVAC |
+                                  SCSW3_SC_INTER );
+        io->dev->startpending = 0;
+        io->dev->busy = 0;
+    }
 }
 
 DLL_EXPORT int Dequeue_IO_Interrupt( IOINT* io )

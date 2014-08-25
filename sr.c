@@ -1272,21 +1272,21 @@ S64      dreg;
             SR_SKIP_NULL_DEV(dev, file, len);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             dev->pending = rc;
-            QUEUE_IO_INTERRUPT(&dev->ioint);
+            QUEUE_IO_INTERRUPT(&dev->ioint,FALSE);
             break;
 
         case SR_DEV_PCIPENDING:
             SR_SKIP_NULL_DEV(dev, file, len);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             dev->pcipending = rc;
-            QUEUE_IO_INTERRUPT(&dev->pciioint);
+            QUEUE_IO_INTERRUPT(&dev->pciioint,FALSE);
             break;
 
         case SR_DEV_ATTNPENDING:
             SR_SKIP_NULL_DEV(dev, file, len);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             dev->attnpending = rc;
-            QUEUE_IO_INTERRUPT(&dev->attnioint);
+            QUEUE_IO_INTERRUPT(&dev->attnioint,FALSE);
             break;
 
         case SR_DEV_STARTPENDING:

@@ -1374,7 +1374,7 @@ static void raise_adapter_interrupt(DEVBLK *dev)
             dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
             dev->pciscsw.chanstat = CSW_PCI;
             obtain_lock(&sysblk.iointqlk);
-            QUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+            QUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint,FALSE);
             UPDATE_IC_IOPENDING_QLOCKED();
             release_lock(&sysblk.iointqlk);
         }
