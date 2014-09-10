@@ -227,6 +227,9 @@ int     rc = 0;                         /* Return codes (work)       */
 
 } /* end function load_hmc */
 
+#define    CHUNKSIZE   (64 * 1024 * 1024)
+CASSERT(   CHUNKSIZE < (INT_MAX - PAGEFRAME_PAGESIZE), scedasd_c );
+CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c );
 
 /*-------------------------------------------------------------------*/
 /* Function to Load (read) specified file into absolute main storage */
@@ -237,6 +240,7 @@ U64 loaded;
 RADR aaddr;
 RADR pageaddr;
 int fd;
+int pages;
 size_t chunk;
 int bytes;
 time_t begtime, curtime;
@@ -261,9 +265,14 @@ char fmt_mem[8];
     }
 
     /* Read file into storage until end of file or end of storage */
-    for( ; ; ) {
+    for (;;)
+    {
+        if (chunk > (sysblk.mainsize - aaddr))
+            chunk = (sysblk.mainsize - aaddr);
 
         bytes = read(fd, sysblk.mainstor + aaddr, chunk);
+
+        chunk = CHUNKSIZE;
 
         /* Check for I/O error */
         if (bytes < 0)
@@ -282,14 +291,15 @@ char fmt_mem[8];
         }
 
         /* Update the storage keys for all of the pages we just read */
-        chunk = bytes;
+        pages = ROUND_UP( bytes, PAGEFRAME_PAGESIZE ) / PAGEFRAME_PAGESIZE;
         pageaddr = aaddr;
 
-        for ( ; chunk > 0; chunk -= PAGEFRAME_PAGESIZE)
+        do
         {
             STORAGE_KEY(pageaddr, &sysblk) |= STORKEY_REF|STORKEY_CHANGE;
             pageaddr += PAGEFRAME_PAGESIZE;
         }
+        while (--pages);
 
         aaddr += bytes;
         aaddr &= PAGEFRAME_PAGEMASK;
@@ -328,13 +338,7 @@ char fmt_mem[8];
                         "loaded" );
             }
         }
-
-        chunk = (64 * 1024 * 1024);
-
-        if (chunk > (sysblk.mainsize - aaddr))
-            chunk = (sysblk.mainsize - aaddr);
-
-    } /* end for( ; ; ) */
+    } /* end for (;;) */
 
 } /* end function load_main */
 
