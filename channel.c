@@ -5482,6 +5482,10 @@ breakchain:
     /* Call the i/o end exit */
     if (dev->hnd->end) (dev->hnd->end) (dev);
 
+    /* If we're shutting down, skip final sequence and just exit now */
+    if (sysblk.shutdown)
+        return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
+
     /* Final sequence MUST be performed with INTLOCK held to prevent
        I/O instructions (such as test_subchan) from proceeding before
        we can set our flags properly and queue the actual I/O interrupt.

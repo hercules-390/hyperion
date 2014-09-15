@@ -1364,6 +1364,10 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
+    /* Don't waste time queuing interrupts during power off sequence */
+    if (sysblk.shutdown)
+        return;
+
     DBGTRC(dev, "Adapter Interrupt\n");
 
     OBTAIN_INTLOCK(NULL);

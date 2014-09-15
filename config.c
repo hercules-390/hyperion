@@ -703,7 +703,7 @@ static void ret_devblk(DEVBLK *dev)
 /* Function to delete a device configuration block                   */
 /*-------------------------------------------------------------------*/
 static int detach_devblk (DEVBLK *dev, int locked, const char *msg,
-                          DEVBLK *errdev)
+                          DEVBLK *errdev, DEVGRP *group)
 {
 int     i;                              /* Loop index                */
 
@@ -716,6 +716,9 @@ int     i;                              /* Loop index                */
         */
         return 0;
     }
+
+    /* Restore group ptr that that 'free_group' may have set to NULL */
+    dev->group = group;
 
     /* Obtain the device lock. ret_devblk will release it */
     if (!locked)
@@ -740,11 +743,15 @@ int     i;                              /* Loop index                */
         }
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
+        /* Don't bother with channel report if we're shutting down */
+        if (!sysblk.shutdown)
+        {
 #if defined(_370)
-        if (sysblk.arch_mode != ARCH_370)
+            if (sysblk.arch_mode != ARCH_370)
 #endif
-            build_detach_chrpt( dev );
+                build_detach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+        }
     }
 
     /* Free the argv array */
@@ -789,7 +796,7 @@ char   str[64];
     if (dev->group)
         MSGBUF( str, "group subchannel %1d:%04X", lcss, subchan);
 
-    rc = detach_devblk( dev, FALSE, str, NULL );
+    rc = detach_devblk( dev, FALSE, str, NULL, dev->group );
 
     release_lock(&sysblk.config);
 
@@ -1210,7 +1217,7 @@ int     i;                              /* Loop index                */
         WRMSG (HHC01463, "E", lcss, devnum);
 
         /* Detach the device and return it back to the DEVBLK pool */
-        detach_devblk( dev, TRUE, "device", dev );
+        detach_devblk( dev, TRUE, "device", dev, dev->group );
 
         release_lock(&sysblk.config);
         return 1;
@@ -1237,7 +1244,7 @@ int     i;                              /* Loop index                */
             WRMSG (HHC01460, "E", lcss, dev->devnum, buf, strerror(errno));
 
             /* Detach the device and return it back to the DEVBLK pool */
-            detach_devblk( dev, TRUE, "device", dev );
+            detach_devblk( dev, TRUE, "device", dev, dev->group );
 
             release_lock(&sysblk.config);
             return 1;
@@ -1299,7 +1306,7 @@ char* str = "device";
     if (dev->group)
         str = "group device";
 
-    rc = detach_devblk( dev, FALSE, str, NULL );
+    rc = detach_devblk( dev, FALSE, str, NULL, dev->group );
 
     release_lock(&sysblk.config);
 
@@ -1505,7 +1512,8 @@ DLL_EXPORT BYTE free_group( DEVGRP *group, int locked,
             // calling detach_devblk to prevent infinite recursion.
 
             dev->group = NULL;
-            detach_devblk( dev, dev == errdev && locked, msg, errdev );
+            detach_devblk( dev, dev == errdev && locked, msg, errdev,
+                           group );
         }
     }
 
