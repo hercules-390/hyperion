@@ -42,6 +42,10 @@ void build_chp_reset_chrpt( BYTE chpid, int solicited, int found )
 {
 U32 crw_erc, crwarray[8], crwcount=0;
 
+    /* Just return if shutting down */
+    if (sysblk.shutdown)
+        return;
+
     chpid = ((U32)chpid) & CRW_RSID_MASK;
 
     /* If a subchannel was found on this path and was reset. Ref:
@@ -67,6 +71,10 @@ void build_attach_chrpt( DEVBLK *dev )
 {
 U32 ssid, subchan, crwarray[8], crwcount=0;
 int devlock_obtained;
+
+    /* Just return if shutting down */
+    if (sysblk.shutdown)
+        return;
 
     /* Retrieve Source IDs */
     devlock_obtained = (try_obtain_lock( &dev->lock ) == 0);
@@ -107,6 +115,10 @@ void build_detach_chrpt( DEVBLK *dev )
 {
 U32 ssid, subchan, crwarray[8], crwcount=0;
 int devlock_obtained;
+
+    /* Just return if shutting down */
+    if (sysblk.shutdown)
+        return;
 
     /* Retrieve Source IDs */
     devlock_obtained = (try_obtain_lock( &dev->lock ) == 0);
