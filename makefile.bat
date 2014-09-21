@@ -710,7 +710,7 @@
   set "repo_type=svn"
   set "modified_str="
 
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=  (modified)"
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=-modified"
   for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Updated to revision"') do set "V4=%%j"
   if defined V4 goto :set_VERSION_do_set
   goto :set_VERSION_try_SVN
@@ -765,7 +765,7 @@
   for /f %%a in ('%git% rev-parse --verify HEAD') do set "modified_str=%%a"
   set "modified_str=-g%modified_str:~0,7%"
   %call_git% diff-index --quiet HEAD
-  if %errorlevel% NEQ 0 set "modified_str=%modified_str%  (modified)"
+  if %errorlevel% NEQ 0 set "modified_str=%modified_str%-modified"
   for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc -l`) do set "V4=%%a"
   if defined V4 goto :set_VERSION_do_set
   goto :set_VERSION_do_set
