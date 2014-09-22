@@ -581,9 +581,9 @@ static char *pgmintname[] = {
     if(code && (CPU_STEPPING_OR_TRACING(realregs, ilc)
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
-     BYTE *ip;
-     char buf1[10] = "";
-     char buf2[32] = "";
+    BYTE *ip;
+    char buf1[10] = "";
+    char buf2[32] = "";
 #if defined(OPTION_FOOTPRINT_BUFFER)
         if(!(sysblk.insttrace || sysblk.inststep))
             for(n = sysblk.footprptr[realregs->cpuad] + 1 ;
@@ -598,22 +598,33 @@ static char *pgmintname[] = {
           strlcpy(buf1, "SIE: ", sizeof(buf1) );
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
-       strlcpy(buf2, QSTR(_GEN_ARCH), sizeof(buf2) );
-       strlcat(buf2, " ", sizeof(buf2) );
+        strlcpy(buf2, QSTR(_GEN_ARCH), sizeof(buf2) );
+        strlcat(buf2, " ", sizeof(buf2) );
 #endif /*defined(SIE_DEBUG)*/
-       if (code == PGM_DATA_EXCEPTION)
+        if (code == PGM_DATA_EXCEPTION)
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
-       dxcstr[sizeof(dxcstr)-1] = '\0';
-       WRMSG(HHC00801, "I",
-        PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2,
-                pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
+        dxcstr[sizeof(dxcstr)-1] = '\0';
 
         /* Calculate instruction pointer */
         ip = realregs->instinvalid ? NULL
            : (realregs->ip - ilc < realregs->aip)
              ? realregs->inst : realregs->ip - ilc;
 
-        ARCH_DEP(display_inst) (realregs, ip);
+        /* Trace pgm interrupt if not being specially suppressed */
+        if (0
+            || !ip
+            || ip[0] != 0xB1 /* LRA */
+            || code != PGM_SPECIAL_OPERATION_EXCEPTION
+            || !sysblk.nolrasoe /* suppression not requested */
+        )
+        {
+            // "Processor %s%02X: %s%s %s code %4.4X  ilc %d%s"
+            WRMSG(HHC00801, "I",
+            PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2,
+                    pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
+
+            ARCH_DEP(display_inst) (realregs, ip);
+        }
     }
 
     realregs->instinvalid = 0;

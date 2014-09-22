@@ -734,7 +734,9 @@ struct SYSBLK {
                                         /*   legacy devices          */
                 haveiplparm:1,          /* IPL PARM a la VM          */
                 logoptnotime:1,         /* 1 = don't timestamp log   */
-                showdvol1:2;            /* Show dasd VOL1 in devlist */
+                showdvol1:2,            /* Show dasd VOL1 in devlist */
+                nolrasoe:1;             /* 1 = No trace LRA Special  */
+                                        /*     Operation Exceptions  */
 #define SHOWDVOL1_NO            0       /*   Do not show vol1 at all */
 #define SHOWDVOL1_YES           1       /*   Show vol1 AND filename  */
 #define SHOWDVOL1_ONLY          2       /*   Show vol1 NOT filename  */

@@ -859,7 +859,7 @@
 #define ostailor_cmd_desc       "Tailor trace information for specific OS"
 #define ostailor_cmd_help       \
                                 \
-  "Format: \"ostailor [quiet|os/390|z/os|vm|vse|linux|opensolaris|null]\".\n"    \
+  "Format: \"ostailor [quiet|os/390|z/os|vm|vse|z/vse|linux|opensolaris|null]\".\n"    \
   "Specifies the intended operating system. The effect is to reduce\n"           \
   "control panel message traffic by selectively suppressing program\n"           \
   "check trace messages which are considered normal in the specified\n"          \
@@ -876,8 +876,8 @@
   "Format: \"panrate [nnn | fast | slow]\".\n"                                                  \
   "Sets or displays the panel refresh rate.\n"                                                  \
   "panrate nnn sets the refresh rate to nnn milliseconds.\n"                                    \
-  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"  \
-  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"  \
+  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"     \
+  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"     \
   "If no operand is specified, panrate displays the current refresh rate.\n"
 
 #define pantitle_cmd_desc       "Display or set console title"

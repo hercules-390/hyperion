@@ -5818,10 +5818,11 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 int ostailor_cmd(int argc, char *argv[], char *cmdline)
 {
-    char   *postailor   = NULL;
-    int     b_on    = FALSE;
-    int     b_off   = FALSE;
-    U64     mask    = 0;
+    char   *postailor  = NULL;
+    int     b_on       = FALSE;
+    int     b_off      = FALSE;
+    int     nolrasoe   = FALSE;
+    U64     mask       = 0;
 
     UNREFERENCED(cmdline);
 
@@ -5838,7 +5839,10 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
 
         if (sysblk.pgminttr == OS_OS390             )   sostailor = "OS/390";
         if (sysblk.pgminttr == OS_ZOS               )   sostailor = "z/OS";
-        if (sysblk.pgminttr == OS_VSE               )   sostailor = "VSE";
+        if (sysblk.pgminttr == OS_VSE
+                   && sysblk.nolrasoe == 1          )   sostailor = "z/VSE";
+        if (sysblk.pgminttr == OS_VSE
+                   && sysblk.nolrasoe == 0          )   sostailor = "VSE";
         if (sysblk.pgminttr == OS_VM                )   sostailor = "VM";
         if (sysblk.pgminttr == OS_LINUX             )   sostailor = "LINUX";
         if (sysblk.pgminttr == OS_OPENSOLARIS       )   sostailor = "OpenSolaris";
@@ -5873,12 +5877,22 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         b_off = FALSE;
     }
 
+    nolrasoe = FALSE;
+
     if      ( CMD( postailor, OS/390, 2 ) )
         mask = OS_OS390;
-    else if ( CMD( postailor, Z/OS,   1 ) )
+    else if ( CMD( postailor, Z/OS,   3 ) )
         mask = OS_ZOS;
-    else if ( CMD( postailor, VSE,    2 ) )
+    else if ( CMD( postailor, Z/VSE,  3 ) )
+    {
         mask = OS_VSE;
+        nolrasoe = TRUE;
+    }
+    else if ( CMD( postailor, VSE,    2 ) )
+    {
+        mask = OS_VSE;
+        nolrasoe = FALSE;
+    }
     else if ( CMD( postailor, VM,     2 ) )
         mask = OS_VM;
     else if ( CMD( postailor, LINUX,  5 ) )
@@ -5912,6 +5926,8 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     if      ( b_off ) sysblk.pgminttr |= ~mask;
     else if ( b_on  ) sysblk.pgminttr &=  mask;
     else              sysblk.pgminttr  =  mask;
+
+    sysblk.nolrasoe = nolrasoe;
 
     return 0;
 }
