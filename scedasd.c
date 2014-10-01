@@ -119,117 +119,11 @@ char tempreal[MAX_PATH];
     return fullpath;
 }
 
-#endif /* !defined(_SCEDASD_C) */
-
-
-/*-------------------------------------------------------------------*/
-/* function load_hmc simulates the load from the service processor   */
-/*   the filename pointed to is a descriptor file which has the      */
-/*   following format:                                               */
-/*                                                                   */
-/*   '*' in col 1 is comment                                         */
-/*   core image file followed by address where it should be loaded   */
-/*                                                                   */
-/* For example:                                                      */
-/*                                                                   */
-/* * Linux/390 cdrom boot image                                      */
-/* boot_images/tapeipl.ikr 0x00000000                                */
-/* boot_images/initrd 0x00800000                                     */
-/* boot_images/parmfile 0x00010480                                   */
-/*                                                                   */
-/* The location of the image files is relative to the location of    */
-/* the descriptor file.                         Jan Jaeger 10-11-01  */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
-{
-REGS   *regs;                           /* -> Regs                   */
-FILE   *fp;
-char    inputbuff[MAX_PATH];
-char   *inputline;
-char    filename[MAX_PATH];             /* filename of image file    */
-char    pathname[MAX_PATH];             /* pathname of image file    */
-U32     fileaddr;
-int     rc = 0;                         /* Return codes (work)       */
-
-    /* Get started */
-    if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
-        return -1;
-
-    /* The actual IPL proper starts here... */
-
-    regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
-
-    if(fname == NULL)                   /* Default ipl from DASD     */
-        fname = "HERCULES.ins";         /*   from HERCULES.ins       */
-
-    hostpath(pathname, fname, sizeof(pathname));
-
-    if(!(fname = set_sce_basedir(pathname)))
-        return -1;
-
-    /* Construct and check full pathname */
-    if(!check_sce_filepath(fname,filename))
-    {
-        WRMSG(HHC00601,"E",fname,strerror(errno));
-        return -1;
-    }
-
-    fp = fopen(filename, "r");
-    if(fp == NULL)
-    {
-        WRMSG(HHC00600,"E", fname,"fopen()",strerror(errno));
-        return -1;
-    }
-
-    do
-    {
-        inputline = fgets(inputbuff,sizeof(inputbuff),fp);
-
-#if !defined(_MSVC_)
-        if(inputline && *inputline == 0x1a)
-            inputline = NULL;
-#endif /*!defined(_MSVC_)*/
-
-        if(inputline)
-        {
-            rc = sscanf(inputline,"%" QSTR(MAX_PATH) "s %i",filename,&fileaddr);
-        }
-
-        /* If no load address was found load to location zero */
-        if(inputline && rc < 2)
-            fileaddr = 0;
-
-        if(inputline && rc > 0 && *filename != '*' && *filename != '#')
-        {
-            hostpath(pathname, filename, sizeof(pathname));
-
-            /* Construct and check full pathname */
-            if(!check_sce_filepath(pathname,filename))
-            {
-                WRMSG(HHC00602,"E",pathname,strerror(errno));
-                return -1;
-            }
-
-            if( ARCH_DEP(load_main) (filename, fileaddr, 0) < 0 )
-            {
-                fclose(fp);
-                HDC1(debug_cpu_state, regs);
-                return -1;
-            }
-            sysblk.main_clear = sysblk.xpnd_clear = 0;
-        }
-    } while(inputline);
-    fclose(fp);
-
-    /* Finish up... */
-    return ARCH_DEP(common_load_finish) (regs);
-
-} /* end function load_hmc */
-
 #define    CHUNKSIZE   (64 * 1024 * 1024)
 CASSERT(   CHUNKSIZE < (INT_MAX - PAGEFRAME_PAGESIZE), scedasd_c );
 CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c );
+
+#endif /* !defined(_SCEDASD_C) */
 
 /*-------------------------------------------------------------------*/
 /* Function to Load (read) specified file into absolute main storage */
@@ -341,6 +235,112 @@ char fmt_mem[8];
     } /* end for (;;) */
 
 } /* end function load_main */
+
+
+/*-------------------------------------------------------------------*/
+/* function load_hmc simulates the load from the service processor   */
+/*   the filename pointed to is a descriptor file which has the      */
+/*   following format:                                               */
+/*                                                                   */
+/*   '*' in col 1 is comment                                         */
+/*   core image file followed by address where it should be loaded   */
+/*                                                                   */
+/* For example:                                                      */
+/*                                                                   */
+/* * Linux/390 cdrom boot image                                      */
+/* boot_images/tapeipl.ikr 0x00000000                                */
+/* boot_images/initrd 0x00800000                                     */
+/* boot_images/parmfile 0x00010480                                   */
+/*                                                                   */
+/* The location of the image files is relative to the location of    */
+/* the descriptor file.                         Jan Jaeger 10-11-01  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
+{
+REGS   *regs;                           /* -> Regs                   */
+FILE   *fp;
+char    inputbuff[MAX_PATH];
+char   *inputline;
+char    filename[MAX_PATH];             /* filename of image file    */
+char    pathname[MAX_PATH];             /* pathname of image file    */
+U32     fileaddr;
+int     rc = 0;                         /* Return codes (work)       */
+
+    /* Get started */
+    if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
+        return -1;
+
+    /* The actual IPL proper starts here... */
+
+    regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
+
+    if(fname == NULL)                   /* Default ipl from DASD     */
+        fname = "HERCULES.ins";         /*   from HERCULES.ins       */
+
+    hostpath(pathname, fname, sizeof(pathname));
+
+    if(!(fname = set_sce_basedir(pathname)))
+        return -1;
+
+    /* Construct and check full pathname */
+    if(!check_sce_filepath(fname,filename))
+    {
+        WRMSG(HHC00601,"E",fname,strerror(errno));
+        return -1;
+    }
+
+    fp = fopen(filename, "r");
+    if(fp == NULL)
+    {
+        WRMSG(HHC00600,"E", fname,"fopen()",strerror(errno));
+        return -1;
+    }
+
+    do
+    {
+        inputline = fgets(inputbuff,sizeof(inputbuff),fp);
+
+#if !defined(_MSVC_)
+        if(inputline && *inputline == 0x1a)
+            inputline = NULL;
+#endif /*!defined(_MSVC_)*/
+
+        if(inputline)
+        {
+            rc = sscanf(inputline,"%" QSTR(MAX_PATH) "s %i",filename,&fileaddr);
+        }
+
+        /* If no load address was found load to location zero */
+        if(inputline && rc < 2)
+            fileaddr = 0;
+
+        if(inputline && rc > 0 && *filename != '*' && *filename != '#')
+        {
+            hostpath(pathname, filename, sizeof(pathname));
+
+            /* Construct and check full pathname */
+            if(!check_sce_filepath(pathname,filename))
+            {
+                WRMSG(HHC00602,"E",pathname,strerror(errno));
+                return -1;
+            }
+
+            if( ARCH_DEP(load_main) (filename, fileaddr, 0) < 0 )
+            {
+                fclose(fp);
+                HDC1(debug_cpu_state, regs);
+                return -1;
+            }
+            sysblk.main_clear = sysblk.xpnd_clear = 0;
+        }
+    } while(inputline);
+    fclose(fp);
+
+    /* Finish up... */
+    return ARCH_DEP(common_load_finish) (regs);
+
+} /* end function load_hmc */
 
 
 #if defined(FEATURE_SCEDIO)
