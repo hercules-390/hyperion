@@ -3042,7 +3042,7 @@ BYTE    storkey;                        /* Storage key               */
 /*-------------------------------------------------------------------*/
 /* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
 /*-------------------------------------------------------------------*/
-INLINE void
+static INLINE void
 ARCH_DEP(fetch_midaw) (DEVBLK *dev,     /* -> Device block           */
                        BYTE code,       /* CCW operation code        */
                        BYTE ccwkey,     /* Bits 0-3=key, 4-7=zeroes  */

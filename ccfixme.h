@@ -33,10 +33,10 @@
 /* Macro to suppress compiler "unreferenced variable" warnings       */
 /*-------------------------------------------------------------------*/
 
-#define UNREFERENCED(x)         while(0 && x)
-#define UNREFERENCED_370(x)     while(0 && x)
-#define UNREFERENCED_390(x)     while(0 && x)
-#define UNREFERENCED_900(x)     while(0 && x)
+#define UNREFERENCED(x)         do{}while(0 && x)
+#define UNREFERENCED_370(x)     do{}while(0 && x)
+#define UNREFERENCED_390(x)     do{}while(0 && x)
+#define UNREFERENCED_900(x)     do{}while(0 && x)
 
 /*-------------------------------------------------------------------*/
 /* Determine GCC diagnostic pragma support level                     */

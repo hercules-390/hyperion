@@ -704,7 +704,8 @@ static void do_panel_command( void* cmd )
     char *cmdsep;
     if (!is_currline_visible())
         scroll_to_bottom_screen( 1 );
-    strlcpy( cmdline, cmd, sizeof(cmdline) );
+    if (cmd != (void*)cmdline)
+        strlcpy( cmdline, cmd, sizeof(cmdline) );
     if ( sysblk.cmdsep != NULL &&
          strlen(sysblk.cmdsep) == 1 &&
          strstr(cmdline, sysblk.cmdsep) != NULL )
@@ -2713,9 +2714,10 @@ char    buf[1024];                      /* Buffer workarea            */
                                 {
                                     char delim = *p;
 
-                                    while (*++p && *p != delim); if (!*p) break; // find end of quoted string
-
-                                    p++; if (!*p) break;                    // found end of args
+                                    do {} while (*++p && *p != delim);
+                                    if (!*p) break;                    // find end of quoted string
+                                    p++;
+                                    if (!*p) break;                    // found end of args
 
                                     if ( *p != ' ')
                                     {
