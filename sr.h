@@ -457,7 +457,7 @@
 #define SR_DEFAULT_FILENAME "hercules.srf.gz"
 #define SR_FILE gzFile
 #define SR_OPEN(_path, _mode) \
- gzopen((gzFile)(_path), (_mode))
+ gzopen((_path), (_mode))
 #define SR_READ(_ptr, _size, _nmemb, _stream) \
  gzread((gzFile)(_stream), (_ptr), (unsigned int)((_size) * (_nmemb)))
 #define SR_WRITE(_ptr, _size, _nmemb, _stream) \
@@ -468,7 +468,7 @@
  gzclose((gzFile)(_stream))
 #else
 #define SR_DEFAULT_FILENAME "hercules.srf"
-#define SR_FILE FILE
+#define SR_FILE FILE *
 #define SR_OPEN(_path, _mode) \
  fopen((_path), (_mode))
 #define SR_READ(_ptr, _size, _nmemb, _stream) \

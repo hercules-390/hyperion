@@ -67,7 +67,7 @@ DEVBLK *dev;
 int suspend_cmd(int argc, char *argv[],char *cmdline)
 {
 char    *fn = SR_DEFAULT_FILENAME;
-SR_FILE *file;
+SR_FILE  file;
 CPU_BITMAP started_mask;
 struct   timeval tv;
 time_t   tt;
@@ -363,7 +363,7 @@ sr_error_exit:
 int resume_cmd(int argc, char *argv[],char *cmdline)
 {
 char    *fn = SR_DEFAULT_FILENAME;
-SR_FILE *file;
+SR_FILE  file;
 U32      key = 0, len = 0;
 U64      mainsize = 0;
 U64      xpndsize = 0;
