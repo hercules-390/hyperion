@@ -221,7 +221,7 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 typedef hthread_t           HID;        /* Hercules thread-id type   */
-typedef U64                 TID;        /* Generic thread-id type    */
+typedef pthread_t           TID;        /* Generic thread-id type    */
 #if defined(_MSVC_)
   #define TIDPAT            "%lld"      /* TID printf pattern        */
 #else
