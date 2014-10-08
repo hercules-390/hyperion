@@ -154,7 +154,7 @@ int     cc = 0;                         /* Condition code            */
         {
             /* (1) - No boundaries are crossed */
             for (i = 0; i <= len; i++)
-                if (*dest1++ |= *source1++) cc = 1;
+                if ( (*dest1++ |= *source1++) ) cc = 1;
 
         }
         else
@@ -164,10 +164,10 @@ int     cc = 0;                         /* Condition code            */
              source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
                               b2, regs, ACCTYPE_READ, regs->psw.pkey);
              for ( i = 0; i < len2; i++)
-                 if (*dest1++ |= *source1++) cc = 1;
+                 if ( (*dest1++ |= *source1++) ) cc = 1;
              len2 = len - len2;
              for ( i = 0; i <= len2; i++)
-                 if (*dest1++ |= *source2++) cc = 1;
+                 if ( (*dest1++ |= *source2++) ) cc = 1;
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
@@ -183,10 +183,10 @@ int     cc = 0;                         /* Condition code            */
         {
              /* (3) - First operand crosses a boundary */
              for ( i = 0; i < len2; i++)
-                 if (*dest1++ |= *source1++) cc = 1;
+                 if ( (*dest1++ |= *source1++) ) cc = 1;
              len2 = len - len2;
              for ( i = 0; i <= len2; i++)
-                 if (*dest2++ |= *source1++) cc = 1;
+                 if ( (*dest2++ |= *source1++) ) cc = 1;
         }
         else
         {
@@ -198,34 +198,34 @@ int     cc = 0;                         /* Condition code            */
             {
                 /* (4a) - Both operands cross at the same time */
                 for ( i = 0; i < len2; i++)
-                    if (*dest1++ |= *source1++) cc = 1;
+                    if ( (*dest1++ |= *source1++) ) cc = 1;
                 len2 = len - len2;
                 for ( i = 0; i <= len2; i++)
-                    if (*dest2++ |= *source2++) cc = 1;
+                    if ( (*dest2++ |= *source2++) ) cc = 1;
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
                 for ( i = 0; i < len2; i++)
-                    if (*dest1++ |= *source1++) cc = 1;
+                    if ( (*dest1++ |= *source1++) ) cc = 1;
                 len2 = len3 - len2;
                 for ( i = 0; i < len2; i++)
-                    if (*dest2++ |= *source1++) cc = 1;
+                    if ( (*dest2++ |= *source1++) ) cc = 1;
                 len2 = len - len3;
                 for ( i = 0; i <= len2; i++)
-                    if (*dest2++ |= *source2++) cc = 1;
+                    if ( (*dest2++ |= *source2++) ) cc = 1;
             }
             else
             {
                 /* (4c) - Second operand crosses first */
                 for ( i = 0; i < len3; i++)
-                    if (*dest1++ |= *source1++) cc = 1;
+                    if ( (*dest1++ |= *source1++) ) cc = 1;
                 len3 = len2 - len3;
                 for ( i = 0; i < len3; i++)
-                    if (*dest1++ |= *source2++) cc = 1;
+                    if ( (*dest1++ |= *source2++) ) cc = 1;
                 len3 = len - len2;
                 for ( i = 0; i <= len3; i++)
-                    if (*dest2++ |= *source2++) cc = 1;
+                    if ( (*dest2++ |= *source2++) ) cc = 1;
             }
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);

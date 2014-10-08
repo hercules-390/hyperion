@@ -130,7 +130,7 @@ main( int argc, char *argv[] )
             case 'h':
                 usage( pgm );
                 goto exit;
-            break;
+            UNREACHABLE_CODE();
 
             case 'i':
                 o_iehinitt = TRUE;
@@ -145,7 +145,7 @@ main( int argc, char *argv[] )
             default:
                 usage( pgm );
                 goto exit;
-            break;
+            UNREACHABLE_CODE();
         }
     }
 
@@ -197,7 +197,7 @@ main( int argc, char *argv[] )
     if( o_owner )
         het_string_to_upper( o_owner );
 
-    if ( o_faketape )  
+    if ( o_faketape )
     {
         rc = fet_open( &fetb, o_filename, FETOPEN_CREATE );
         if ( rc < 0 )
@@ -215,7 +215,7 @@ main( int argc, char *argv[] )
             WRMSG( HHC00075, "E", "het_open()", het_error( rc ) );
             goto exit;
         }
-   
+
         rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
         if( rc < 0 )
         {
@@ -252,8 +252,8 @@ main( int argc, char *argv[] )
             WRMSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) );
             goto exit;
         }
-        
-        if ( o_faketape )  
+
+        if ( o_faketape )
             rc = fet_write( fetb, &lab, (U16)sizeof(lab) );
         else
             rc = het_write( hetb, &lab, sizeof( lab ) );
@@ -269,7 +269,7 @@ main( int argc, char *argv[] )
     }
     else if( o_nl )
     {
-        if ( o_faketape )  
+        if ( o_faketape )
             rc = fet_tapemark( fetb );
         else
             rc = het_tapemark( hetb );
@@ -283,7 +283,7 @@ main( int argc, char *argv[] )
         }
     }
 
-    if ( o_faketape )  
+    if ( o_faketape )
         rc = fet_tapemark( fetb );
     else
         rc = het_tapemark( hetb );

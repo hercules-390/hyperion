@@ -495,9 +495,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                 /* if record is "SPB" then process */
                 else if (ObjectSPB)
                 {
-                    aaddr = (MAX(aaddr, ahighaddr) + 4093) &&
-                            0xFFFFF000;
-
+                    aaddr = (MAX(aaddr, ahighaddr) + 4093) & 0xFFFFF000;
 
                     /* Warn if further action may exceed storage */
 

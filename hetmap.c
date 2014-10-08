@@ -328,7 +328,7 @@ main( int argc, char *argv[] )
                 case 'h':
                     Print_Usage( pgm );
                     exit( 1 );
-                    break;
+                UNREACHABLE_CODE();
                 case 'l':
                     opts = O_LABELS;
                     break;
@@ -341,7 +341,7 @@ main( int argc, char *argv[] )
                 default:
                     Print_Usage( pgm );
                     exit( 1 );
-                    break;
+                UNREACHABLE_CODE();
             }
         }
 

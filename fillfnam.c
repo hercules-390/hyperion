@@ -6,6 +6,10 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
+#ifndef _FILLFNAM_C_
+#define _FILLFNAM_C_
+#endif
+
 #include "hercules.h"
 #include "fillfnam.h"
 
@@ -17,16 +21,16 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
   UNREFERENCED(cmdlinefull);
   UNREFERENCED(cmdoffset);
   UNREFERENCED(cmdlinelen);
-  return 0; 
+  return 0;
 }
-#else 
+#else
 
 char *filterarray;
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__SOLARIS__) || defined(_MSVC_)
-int filter(      struct dirent *ent) 
+#if defined(__FreeBSD__) || defined(__SOLARIS__) || defined(_MSVC_)
+int filter(      struct dirent *ent)
 #else
-int filter(const struct dirent *ent) 
+int filter(const struct dirent *ent)
 #endif
 {
   if (filterarray == NULL)
@@ -190,7 +194,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
     /* if maximal intersection of filenames is longer then original filename */
     if (strlen(buff) > strlen(filename)) {
       char *fullfilename;
-      
+
       bl = (size_t)(strlen(path) + strlen(buff) + 2);
       fullfilename = (char*)calloc(1,bl);
 
@@ -208,7 +212,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
       strlcpy(cmdlinefull, result, cmdlinelen);
       free(fullfilename);
     }
-    else 
+    else
     {
       /* display all alternatives */
       for (i = 0; i< n; i++)

@@ -697,7 +697,7 @@ sl_fmtdate( char *dest, char *src, int fromto )
 
             default:
                 return( NULL );
-            break;
+                UNREACHABLE_CODE();
         }
 
         /*
@@ -1547,7 +1547,7 @@ sl_ds2( SLLABEL *lab,
 
             default:
                 return( SLE_TRTCH );
-            break;
+                UNREACHABLE_CODE();
         }
     }
 

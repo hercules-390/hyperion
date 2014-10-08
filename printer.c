@@ -1106,7 +1106,7 @@ char            wbuf[150];
                 *unitstat = CSW_CE | CSW_DE;
             return;
         }
-        break;
+        UNREACHABLE_CODE();
 
     case 0x63:
     /*---------------------------------------------------------------*/

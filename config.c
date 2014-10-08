@@ -7,6 +7,10 @@
 
 #include "hstdinc.h"
 
+#if defined(__GNUC__) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 ) )
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #define _CONFIG_C_
 #define _HENGINE_DLL_
 
@@ -518,6 +522,7 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
     sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
 }
 
+#ifdef NEED_FND_CHPBLK
 static
 CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
 {
@@ -528,8 +533,9 @@ CHPBLK *chp;
             return chp;
     return NULL;
 }
+#endif
 
-
+#ifdef NEED_GET_CHPBLK
 static
 CHPBLK *get_chpblk(U16 css, BYTE chpid, BYTE chptype)
 {
@@ -559,6 +565,7 @@ CHPBLK**chpp;
         *chpp = chp;
     }
 }
+#endif
 
 
 /* NOTE: also does obtain_lock(&dev->lock); */

@@ -129,6 +129,6 @@ int main(int ac,char **av)
 #ifdef _MSVC_
     CloseHandle(hLogCallbackThread);
 #endif
-    return 0;
+    UNREACHABLE_CODE();
 }
 

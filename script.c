@@ -86,7 +86,8 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
         {
             char delim = *p;
             if (p == *pargv) *pargv = p+1;
-            while (*++p && *p != delim); if (!*p) break; // find end of quoted string
+            do {} while (*++p && *p != delim);
+            if (!*p) break; // find end of quoted string
         }
 
         *p++ = 0; // mark end of arg

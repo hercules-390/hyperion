@@ -49,6 +49,10 @@
 
 #include "hstdinc.h"
 
+#if defined(__GNUC__) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 ) )
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
 #endif

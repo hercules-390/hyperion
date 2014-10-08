@@ -471,10 +471,10 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         }
         if( i%4 == 0 && i)
         {
-            strncat(buf, " ", sizeof(buf));
+            strncat(buf, " ", sizeof(buf) - strlen(buf) - 1);
         }
         MSGBUF(byte, "%02X",bfr[i]);
-        strncat(buf, byte, sizeof(buf));
+        strncat(buf, byte, sizeof(buf) - strlen(buf) - 1);
     }
     WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
 }

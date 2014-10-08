@@ -377,7 +377,7 @@ void showf1(    FILE            *fmsg,
         MSGBUF( msgbuf, "Dataset has %d extent(s)\n", num_extents);
         fprintf(stderr, MSG(HHC90000, "D", msgbuf ));
         if (verbose > 2)
-            data_dump((void *)extent, sizeof(extent) * MAX_EXTENTS);
+            data_dump((void *)extent, sizeof(DSXTENT) * MAX_EXTENTS);
 
         fprintf(stderr, MSG(HHC90000, "D", "Extent Information:"));
         fprintf(stderr, MSG(HHC90000, "D", "     EXTENT --begin-- ---end---"));

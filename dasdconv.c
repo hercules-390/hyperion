@@ -410,11 +410,11 @@ H30CKD_TRKHDR   h30trkhdr;              /* Input track header        */
 IFD             ifd;                    /* Input file descriptor     */
 int             len;                    /* Length of input           */
 U16             code;                   /* Device type code          */
-U16             dt;                     /* Device type               */
+U16             dt = 0;                 /* Device type               */
 U32             cyls;                   /* Device size (pri+alt cyls)*/
 U32             alts;                   /* Number of alternate cyls  */
 BYTE           *itrkbuf;                /* -> Input track buffer     */
-U32             itrklen;                /* Input track length        */
+U32             itrklen = 0;            /* Input track length        */
 BYTE           *pbuf;                   /* Current byte in input buf */
 BYTE            klen;                   /* Key length                */
 U16             dlen;                   /* Data length               */

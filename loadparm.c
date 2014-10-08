@@ -13,8 +13,12 @@
 
 #include "hstdinc.h"
 
-#define _HENGINE_DLL_
+#ifndef _LOADPARM_C_
 #define _LOADPARM_C_
+#endif
+#ifndef _HENGINE_DLL_
+#define _HENGINE_DLL_
+#endif
 
 #include "hercules.h"
 
@@ -94,11 +98,13 @@ static GSYSINFO gsysinfo;
     size_t i = 0; \
     size_t n = MIN(strlen(_source), sizeof(_target)); \
     if (_source) \
+        { \
         for (; i < n; i++) \
              if (isprint(_source[i])) \
                  _target[i] = host_to_guest((int)toupper(_source[i])); \
              else \
                  _target[i] = 0x40; \
+        } \
     for (; i < sizeof(_target); i++) \
         _target[i] = 0x40; \
 }

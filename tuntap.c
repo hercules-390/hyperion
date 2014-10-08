@@ -656,6 +656,8 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
 
     return FormatMAC( ppszMACAddr, (BYTE*) addr->sa_data );
 #else // defined(OPTION_TUNTAP_GETMACADDR)
+    UNREFERENCED(pszNetDevName);
+    UNREFERENCED(ppszMACAddr);
     WRMSG(HHC00136, "E", "TUNTAP_GetMACAddr", "Unsupported" );
     return -1; // (unsupported)
 #endif // defined(OPTION_TUNTAP_GETMACADDR)

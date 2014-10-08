@@ -548,7 +548,7 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
         default:
             return( HETE_BADFUNC );
-        break;
+            UNREACHABLE_CODE();
     }
 
     /*
@@ -944,7 +944,7 @@ het_read( HETB *hetb, void *sbuf )
                     default:
                         free_aligned( tbuf );
                         return( HETE_UNKMETH );
-                    break;
+                        UNREACHABLE_CODE();
                 }
             break;
 
@@ -990,7 +990,7 @@ het_read( HETB *hetb, void *sbuf )
             default:
                 free_aligned( tbuf );
                 return( HETE_UNKMETH );
-            break;
+                UNREACHABLE_CODE();
         }
     }
 

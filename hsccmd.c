@@ -54,6 +54,10 @@
 
 #include "hstdinc.h"
 
+#if defined(__GNUC__) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 ) )
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #define _HSCCMD_C_
 #define _HENGINE_DLL_
 
@@ -3621,7 +3625,7 @@ BYTE c;
     else if ( argc == 1)
     {
         char msgbuf[16];
-        MSGBUF(msgbuf, "%hu", sysblk.numvec );
+        MSGBUF(msgbuf, "%d", sysblk.numvec );
         WRMSG( HHC02203, "I", argv[0], msgbuf );
         if ( sysblk.numvec == 0 )
             return 1;

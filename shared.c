@@ -7,6 +7,10 @@
 
 #include "hstdinc.h"
 
+#if defined(__GNUC__) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 ) )
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #define _HERCULES_SHARED_C
 #define _SHARED_C_
 #define _HDASD_DLL_
@@ -2656,7 +2660,7 @@ COND shrdcond;
 static void shared_device_manager_shutdown(void * unused)
 {
     UNREFERENCED(unused);
-    
+
     if(sysblk.shrdport)
     {
         sysblk.shrdport = 0;
