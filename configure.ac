@@ -91,9 +91,8 @@ esac
 #----------------------------------------------------------------------#
 #  Determine GCC level                                                 #
 #----------------------------------------------------------------------#
-
-hc_gcc_level="`gcc -v 2>&1 | tail -1 | awk '{print $3}'`"
-AC_MSG_NOTICE( [Detected GCC level is: ${hc_gcc_level}] )
+hc_gcc_level="`${CC} -dumpversion`"
+AC_MSG_NOTICE( [Detected GCC equivalent level for ${CC} : ${hc_gcc_level}] )
 
 #------------------------#
 #  Fix CFLAGS if needed  #
