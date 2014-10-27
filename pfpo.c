@@ -53,6 +53,8 @@ typedef struct
 }
 FLOAT;
 
+#define float_strlcat(s)  strlcat(f->str, s, sizeof(f->str))
+
 /*-------------------------------------------------------------------*/
 /* Binairy floating point routines                                   */
 /*-------------------------------------------------------------------*/
@@ -120,23 +122,23 @@ void BFPshortGet(FLOAT *f, U32 r)
       else
         strcpy(f->str, "0.");
       if(f->fpclass == CLASS_NORMAL)
-        strcat(f->str, "1");
+        float_strlcat("1");
       else
-        strcat(f->str, "0");
+        float_strlcat("0");
       mask = 0x00400000;
       for(i = 0; i < 23; i++)
       {
         if(frac & mask)
-          strcat(f->str, "1");
+          float_strlcat("1");
         else
-          strcat(f->str, "0");
+          float_strlcat("0");
         mask >>= 1;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 127);
       else
-        strcat(f->str, "1");
+        float_strlcat("1");
       break;
   }
 }
@@ -204,23 +206,23 @@ void BFPlongGet(FLOAT *f, U64 r)
       else
         strcpy(f->str, "0.");
       if(f->fpclass == CLASS_NORMAL)
-        strcat(f->str, "1");
+        float_strlcat("1");
       else
-        strcat(f->str, "0");
+        float_strlcat("0");
       mask = 0x0008000000000000;
       for(i = 0; i < 52; i++)
       {
         if(frac & mask)
-          strcat(f->str, "1");
+          float_strlcat("1");
         else
-          strcat(f->str, "0");
+          float_strlcat("0");
         mask >>= 1;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 1023);
       else
-        strcat(f->str, "1");
+        float_strlcat("1");
       break;
   }
 }
@@ -290,32 +292,32 @@ void BFPextGet(FLOAT *f, U64 h, U64 l)
       else
         strcpy(f->str, "0.");
       if(f->fpclass == CLASS_NORMAL)
-        strcat(f->str, "1");
+        float_strlcat("1");
       else
-        strcat(f->str, "0");
+        float_strlcat("0");
       mask = 0x0000800000000000;
       for(i = 0; i < 48; i++)
       {
         if(frach & mask)
-          strcat(f->str, "1");
+          float_strlcat("1");
         else
-          strcat(f->str, "0");
+          float_strlcat("0");
         mask >>= 1;
       }
       mask = 0x8000000000000000;
       for(i = 0; i < 64; i++)
       {
         if(fracl & mask)
-          strcat(f->str, "1");
+          float_strlcat("1");
         else
-          strcat(f->str, "0");
+          float_strlcat("0");
         mask >>= 1;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       if(f->fpclass == CLASS_NORMAL)
         sprintf(&f->str[strlen(f->str)], "%d", exp - 16383);
       else
-        strcat(f->str, "1");
+        float_strlcat("1");
       break;
   }
 }
@@ -458,7 +460,7 @@ void HFPshortGet(FLOAT *f, U32 r)
         sprintf(&f->str[strlen(f->str)], "%02x", (r & mask) >> (16 - (i * 8)));
         mask >>= 8;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       sprintf(&f->str[strlen(f->str)], "%d", exp - 64);
       break;
   }
@@ -500,7 +502,7 @@ void HFPlongGet(FLOAT *f, U64 r)
         sprintf(&f->str[strlen(f->str)], "%02x", (r & mask) >> (48 - (i * 8)));
         mask >>= 8;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       sprintf(&f->str[strlen(f->str)], "%d", exp - 64);
       break;
   }
@@ -550,7 +552,7 @@ void HFPextGet(FLOAT *f, U64 h, U64 l)
         sprintf(&f->str[strlen(f->str)], "%02x", (l & mask) >> (48 - (i * 8)));
         mask >>= 8;
       }
-      strcat(f->str, "@");
+      float_strlcat("@");
       sprintf(&f->str[strlen(f->str)], "%d", exp - 64);
       break;
   }

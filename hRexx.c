@@ -650,13 +650,13 @@ Enable_Rexx_Loaded:
 
     if ( !PathsInitialized )
         InitializePaths(NULL);
-    strcpy(Result, "Rexx Path " );
+    strlcpy(Result, "Rexx Path ", sizeof(Result));
     sprintf(temp,"(%2d) - ",RexxPathCount);
-    strcat(Result,temp);
+    strlcat(Result,temp,sizeof(Result));
     for (i=0; i<RexxPathCount; i++)
     {
-        strcat(Result,RexxPathArray[i]);
-        strcat(Result,i == RexxPathCount-1 ? "" : PATHDELIM );
+        strlcat(Result,RexxPathArray[i],sizeof(Result));
+        strlcat(Result,i == RexxPathCount-1 ? "" : PATHDELIM, sizeof(Result) );
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
@@ -667,11 +667,11 @@ Enable_Rexx_Loaded:
         InitializeExtensions(NULL);
     strcpy(Result, "Extensions");
     sprintf(temp,"(%2d) - ",ExtensionsCount);
-    strcat(Result,temp);
+    strlcat(Result,temp,sizeof(Result));
     for (i=0; i<ExtensionsCount; i++)
     {
-        strcat(Result, ExtensionsArray[i]);
-        strcat(Result, i == ExtensionsCount-1 ? "" : EXTNDELIM );
+        strlcat(Result, ExtensionsArray[i],sizeof(Result));
+        strlcat(Result, i == ExtensionsCount-1 ? "" : EXTNDELIM, sizeof(Result) );
     }
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
@@ -917,11 +917,11 @@ skipResolver:
             for (argl = 0, iarg = 2; iarg < argc; iarg++)
                 argl += (int)strlen(argv[iarg]) + 1;
             wArgs = malloc(argl);
-            strcpy(wArgs, argv[2]);
+            strlcpy(wArgs, argv[2],argl);
             for ( iarg = 3; iarg < argc; iarg++ )
             {
-                strcat( wArgs, " " );
-                strcat( wArgs, argv[iarg] );
+                strlcat( wArgs, " ", argl );
+                strlcat( wArgs, argv[iarg], argl );
             }
         }
         else

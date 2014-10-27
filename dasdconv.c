@@ -902,12 +902,12 @@ U32             trksize;                /* AWSCKD image track length */
         {
             i = s - ofname;
             strcpy (sfname + i, "_1");
-            strcat (sfname, ofname + i);
+            strlcat (sfname, ofname + i, sizeof(sfname));
             suffix = sfname + i + 1;
         }
         else
         {
-            strcat (sfname, "_1");
+            strlcat (sfname, "_1", sizeof(sfname));
             suffix = sfname + strlen(sfname) - 1;
         }
     }

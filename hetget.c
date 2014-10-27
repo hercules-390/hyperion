@@ -837,14 +837,14 @@ main( int argc, char *argv[] )
 
                 if( ( ( i + 1 ) % 3 ) == 0 )
                 {
-                    strcat( msgbuf2, msgbuf3 );
+                    strlcat( msgbuf2, msgbuf3, sizeof(msgbuf2) );
                     MSGBUF( msgbuf4, MSG( HHC02752, "I", msgbuf2 ) );
-                    strcat( msgbuf, msgbuf4 );
+                    strlcat( msgbuf, msgbuf4, sizeof(msgbuf) );
                     msgbuf2[0] = 0;
                 }
                 else
                 {
-                    strcat( msgbuf2, msgbuf3 );
+                    strlcat( msgbuf2, msgbuf3, sizeof(msgbuf2) );
                 }
             }
             printf( "%s", msgbuf );

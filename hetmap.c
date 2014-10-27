@@ -633,10 +633,9 @@ Print_Dataset( SInt32 len, SInt32 fileno )
     else if( sl_iseof( gBuffer, 2 ) )
     {
         recfm[ 0 ] = '\0';
-        strcat( strcat( strcat( recfm,
-                               fmt.slds2.recfm ),
-                       fmt.slds2.blkattr ),
-               fmt.slds2.ctrl );
+        strlcat( recfm, fmt.slds2.recfm,   sizeof( recfm ));
+        strlcat( recfm, fmt.slds2.blkattr, sizeof( recfm ));
+        strlcat( recfm, fmt.slds2.ctrl,    sizeof( recfm ));
         printf ( "job=%17.17s  recfm=%-3.3s       lrecl=%-5d     blksize=%-5d\n\n",
                fmt.slds2.jobid,
                recfm,
@@ -965,31 +964,31 @@ Print_Standard_Labels (void )
                         printf ( "%-4sCreated by: Job %-8s; Step %-11s%-6s"
                                 , "", jname, sname, "" );
 
-                        strcat ( dcb, "DCB=(RECFM=" );
+                        strlcat ( dcb, "DCB=(RECFM=", sizeof(dcb) );
 
-                        strcat ( dcb, fmt );                    /* first character of the RECFM F|V|U                   */
+                        strlcat ( dcb, fmt, sizeof(dcb) );      /* first character of the RECFM F|V|U                   */
                                                                 /* next 'S' means SPANNED for 'V' and STANDARD for 'F'  */
                         if ( battr[0] == 'R' )                  /* next 1 or 2 (if = 'R') characters B|S|R|' '          */
-                            strcat ( dcb, "BS" );               /* 'R' = both B & S together                            */
+                            strlcat ( dcb, "BS", sizeof(dcb) ); /* 'R' = both B & S together                            */
                         else
                             if ( battr[0] != ' ' )
-                                strcat ( dcb, battr );          /* just the B|S if not 'R' - blank is not included      */
+                                strlcat ( dcb, battr, sizeof(dcb) ); /* just the B|S if not 'R' - blank is not included      */
 
                         if ( pcchr[0] != ' ' )
-                            strcat ( dcb, pcchr );              /* last is the printer carriage control type A|M        */
+                            strlcat ( dcb, pcchr, sizeof(dcb) );/* last is the printer carriage control type A|M        */
                                                                 /* A = ANSI and M = Machine                             */
-                        strcat ( dcb, ",LRECL=" );
+                        strlcat ( dcb, ",LRECL=", sizeof(dcb) );
                         sprintf ( tmp, "%d", atoi( rsize ) );
-                        strcat ( dcb, tmp );
+                        strlcat ( dcb, tmp, sizeof(dcb) );
 
-                        strcat ( dcb, ",BLKSIZE=" );
+                        strlcat ( dcb, ",BLKSIZE=", sizeof(dcb) );
                         if ( lbsiz[0] == '0' )
                             sprintf ( tmp, "%ld", atol( lbsiz ) );
                         else
                             sprintf ( tmp, "%d", atoi( bsize ) );
-                        strcat ( dcb, tmp );
+                        strlcat ( dcb, tmp, sizeof(dcb) );
 
-                        strcat ( dcb, ")" );
+                        strlcat ( dcb, ")", sizeof(dcb) );
 
                         printf ( "%-51s", dcb );
 

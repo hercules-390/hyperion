@@ -275,9 +275,9 @@ packet_trace( BYTE* pAddr, int iLen )
 
     for( offset = 0; offset < iLen; )
     {
-        memset( print_ascii, 0, sizeof( print_ascii ) );
+        memset( print_ascii,  0, sizeof( print_ascii  ) );
         memset( print_ebcdic, 0, sizeof( print_ebcdic ) );
-        memset( print_line, 0, sizeof( print_line ) );
+        memset( print_line,   0, sizeof( print_line   ) );
 
         sprintf(print_line, "+%4.4X  ", offset );
 
@@ -288,7 +288,7 @@ packet_trace( BYTE* pAddr, int iLen )
             if( offset < iLen )
             {
                 sprintf( tmp, "%2.2X", c );
-                strcat( print_line, tmp );
+                strlcat( print_line, tmp, sizeof( print_line ));
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -300,13 +300,13 @@ packet_trace( BYTE* pAddr, int iLen )
             }
             else
             {
-                strcat( print_line, "  " );
+                strlcat( print_line, "  ", sizeof( print_line ));
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strcat( print_line, " " );
+                strlcat( print_line, " ", sizeof( print_line ));
             }
         }
 
@@ -1679,10 +1679,10 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
     sprintf(fmtbuf3, "%02X", requestp[13]);
     sprintf(fmtbuf4, "%02X", requestp[14]);
     if (len > 1)
-        strcat(fmtbuf3, fmtbuf4);
+        strlcat(fmtbuf3, fmtbuf4, sizeof(fmtbuf3));
     sprintf(fmtbuf4, "%02X", requestp[15]);
     if (len > 2)
-        strcat(fmtbuf3, fmtbuf4);
+        strlcat(fmtbuf3, fmtbuf4, sizeof(fmtbuf3));
     if (requestp[13] == 0x11)
         ru_type = "ACTPU";
     if (requestp[13] == 0x0D)

@@ -323,16 +323,16 @@ void showf1(    FILE            *fmsg,
     x = f1dscb->ds1credt[0] + 1900;
     y = (f1dscb->ds1credt[1] << 8) | f1dscb->ds1credt[2];
     sprintf(txtcredt, "%4.4d", x);
-    strcat(txtcredt, ".");
+    strlcat(txtcredt, ".", sizeof(txtcredt));
     sprintf(txtscr, "%3.3d", y);
-    strcat(txtcredt, txtscr);
+    strlcat(txtcredt, txtscr,sizeof(txtcredt));
     if (f1dscb->ds1expdt[0] || f1dscb->ds1expdt[1] || f1dscb->ds1expdt[2]) {
         x = f1dscb->ds1expdt[0] + 1900;
         y = (f1dscb->ds1expdt[1] << 8) | f1dscb->ds1expdt[2];
         sprintf(txtexpdt, "%4.4d", x);
-        strcat(txtexpdt, ".");
+        strlcat(txtexpdt, ".",sizeof(txtexpdt));
         sprintf(txtscr, ".%3.3d", y);
-        strcat(txtexpdt, txtscr);
+        strlcat(txtexpdt, txtscr,sizeof(txtexpdt));
     }
     num_extents = f1dscb->ds1noepv;
 //  Field ignored: ds1nobdb (# bytes used in last PDS dir blk)
@@ -346,17 +346,17 @@ void showf1(    FILE            *fmsg,
     if (dsorg & (DSORG_PO * 256))               strcpy(txtdsorg, "PO");
     if (dsorg &  DSORG_AM)                      strcpy(txtdsorg, "VS");
     if (txtdsorg[0] == '\0')                    strcpy(txtdsorg, "??");
-    if (dsorg & (DSORG_U * 256))                strcat(txtdsorg, "U");
+    if (dsorg & (DSORG_U * 256))                strlcat(txtdsorg, "U",sizeof(txtdsorg));
 
     if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strcpy(txtrecfm, "F");
     if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strcpy(txtrecfm, "V");
     if ((f1dscb->ds1recfm & RECFM_FORMAT_U) == RECFM_FORMAT_U)
                                                 strcpy(txtrecfm, "U");
-    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strcat(txtrecfm, "B");
-    if (f1dscb->ds1recfm & RECFM_SPANNED)       strcat(txtrecfm, "S");
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strcat(txtrecfm, "A");
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strcat(txtrecfm, "M");
-    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strcat(txtrecfm, "T");
+    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strlcat(txtrecfm, "B",sizeof(txtrecfm));
+    if (f1dscb->ds1recfm & RECFM_SPANNED)       strlcat(txtrecfm, "S",sizeof(txtrecfm));
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strlcat(txtrecfm, "A",sizeof(txtrecfm));
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strlcat(txtrecfm, "M",sizeof(txtrecfm));
+    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strlcat(txtrecfm, "T",sizeof(txtrecfm));
 //  Field ignored: ds1optcd (option codes, same as in DCB)
     blksize = (f1dscb->ds1blkl[0] << 8) | f1dscb->ds1blkl[1];
     lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
