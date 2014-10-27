@@ -27,10 +27,10 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
 
 char *filterarray;
 
-#if defined(__FreeBSD__) || defined(__SOLARIS__) || defined(_MSVC_)
-int filter(      struct dirent *ent)
-#else
+#ifdef SCANDIR_CONST_STRUCT_DIRENT 
 int filter(const struct dirent *ent)
+#else
+int filter(      struct dirent *ent)
 #endif
 {
   if (filterarray == NULL)

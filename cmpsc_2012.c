@@ -42,7 +42,7 @@
 
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
-#if defined(__GNUC__) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 ) )
+#ifdef UNUSED_FUNCTION_WARNING
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 

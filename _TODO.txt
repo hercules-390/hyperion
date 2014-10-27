@@ -14,10 +14,10 @@
 
   Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
 
-  Ideally there should NEVER be ANY tests ANYWHERE for specific platforms.
-  Instead, you should test only for the existence of a given FEATURE (either
-  a programming feature or an operating system feature) in configure.ac and
-  set a define for that feature in configure.ac.
+  You should NOT test for specific platforms. Instead, create a configure.ac
+  test for specific functionality or for feature a specific that your code
+  requires, and then #define HAVE_FEATURE_ABCXYZ if a platform supports it.
+  Then simply use #if defined(HAVE_FEATURE_ABCXYZ) in your Hercules code.
 
   That way if a given platform begins supporting a feature that it previously
   did not support, YOU DON'T HAVE TO CHANGE ANY HERCULES CODE AT ALL. This is
@@ -25,16 +25,16 @@
 
   ONLY if you cannot design a test for the needed FEATURE within configure.ac
   may you then add a test for a given platform, and then ONLY in "hostopts.h".
+
   Our "hostopts.h" header is the ONLY SOURCE MODULE where tests for specific
-  platforms should be done.  Test for the platform and #define your FEATURE
-  accordingly.  Elsewhere in Hercules you then test for that #define FEATURE.
+  platforms should be done. Test for the platform and #define your FEATURE
+  accordingly. Elsewhere in Hercules you then test for that #define FEATURE.
 
-  Again, this is called "Writing portable code".
+  Windows is the only allowed exception to the rule. You may test for _MSVC_
+  or _WIN32, etc, but for non-Windows platforms #define HAVE_FEATURE_ABCXYZ
+  and then test for that instead.
 
-  But you should NEVER *EVER* test for a specific PLATFORM within Hercules.
-  (except within hostopts.h, but ONLY if you can't do a configure.ac test)
-  Of course, the exception to the above is testing for _MSVC_ and/or WIN32,
-  but that's only because Windows has always been the exception to the rule.
+  Refer to "hostopts.h" for an example of the technique I'm referring to.
 
 -------------------------------------------------------------------------------
 
