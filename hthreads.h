@@ -76,8 +76,9 @@
 /*                      Fish Threads                                 */
 /*-------------------------------------------------------------------*/
 #if defined( OPTION_FTHREADS )
-
 typedef fthread_t               hthread_t;
+typedef hthread_t               HID;    /* Hercules thread-id type   */
+typedef U64                     TID;    /* Generic thread-id type    */
 typedef fthread_cond_t          COND;
 typedef fthread_attr_t          ATTR;
 typedef fthread_mutexattr_t     MATTR;
@@ -156,8 +157,9 @@ typedef fthread_mutex_t         HLOCK;
 /*                      Posix Threads                                */
 /*-------------------------------------------------------------------*/
 #if !defined( OPTION_FTHREADS )
-
 typedef pthread_t               hthread_t;
+typedef hthread_t               HID;    /* Hercules thread-id type   */
+typedef pthread_t               TID;    /* Generic thread-id type    */
 typedef pthread_cond_t          COND;
 typedef pthread_attr_t          ATTR;
 typedef pthread_mutexattr_t     MATTR;
@@ -220,8 +222,6 @@ typedef pthread_rwlock_t        HRWLOCK;
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
-typedef hthread_t           HID;        /* Hercules thread-id type   */
-typedef pthread_t           TID;        /* Generic thread-id type    */
 #if defined(_MSVC_)
   #define TIDPAT            "%lld"      /* TID printf pattern        */
 #else
