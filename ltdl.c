@@ -3650,7 +3650,7 @@ lt_argz_insertdir (pargz, pargz_len, dirnam, dp)
 
   strlcpy( buf, dirnam, buf_len+1);
   strlcat( buf, "/", buf_len+1);
-  strncat( buf, dp->d_name, end_offset);
+  strlcat( buf, dp->d_name, end_offset);
   buf[buf_len] = LT_EOS_CHAR;
 
   /* Try to insert (in order) into ARGZ/ARGZ_LEN.  */

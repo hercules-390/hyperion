@@ -266,7 +266,7 @@ main( int argc, char *argv[] )
 #if defined( _MSVC_ )
     GetModuleFileName( NULL, pgmpath, MAX_PATH );
     _splitpath( pgmpath, NULL, NULL, fname, ext );
-    pgm = strncat( fname, ext, _MAX_FNAME );
+    pgm = strncat( fname, ext, _MAX_FNAME - strlen(fname) - 1 );
 #else
     hostpath(pgmpath, argv[0], sizeof(pgmpath));
     pgm = strrchr(pgmpath, '/');
