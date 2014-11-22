@@ -350,7 +350,9 @@ int stop_cmd_cpu (int argc, char *argv[], char *cmdline);
 HCEM_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 
 /* Functions in module cmdtab.c */
-CMDT_DLL_IMPORT int HercCmdLine (char *cmdline);
+CMDT_DLL_IMPORT int InternalHercCmd(char *cmdline); /* (NEVER for guest) */
+CMDT_DLL_IMPORT int HercCmdLine (char *cmdline);    /* (maybe guest cmd) */
+/* Note: ALL arguments -- including argument 3 (cmdline) -- are REQUIRED */
 CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 
 /* Functions in module losc.c */

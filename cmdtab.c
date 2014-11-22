@@ -268,7 +268,7 @@ char*  argv[MAX_ARGS];
 /*-------------------------------------------------------------------*/
 /* Route Hercules command to proper command handling function        */
 /*-------------------------------------------------------------------*/
-int CallHercCmd ( CMDFUNC_ARGS_PROTO )
+DLL_EXPORT int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 {
 CMDTAB* pCmdTab;
 size_t  cmdlen, matchlen;
@@ -437,7 +437,7 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
 /*-------------------------------------------------------------------*/
 /* Hercules command line processor                                   */
 /*-------------------------------------------------------------------*/
-int HercCmdLine (char* pszCmdLine)
+static int DoCallHercCmdLine (char* pszCmdLine, BYTE internal)
 {
     int      argc;
     char*    argv[ MAX_ARGS ];
@@ -459,9 +459,11 @@ int HercCmdLine (char* pszCmdLine)
 
 #if defined( _FEATURE_SYSTEM_CONSOLE )
     /* See if maybe it's a command that the guest understands. */
-    if ( sysblk.scpimply && can_send_command() )
+    if ( !internal && sysblk.scpimply && can_send_command() )
         rc = scp_command( cmdline, FALSE, sysblk.scpecho ? TRUE : FALSE );
     else
+#else
+        UNREFERENCED( internal );
 #endif
         /* Error: unknown/unsupported command */
         WRMSG( HHC01600, "E", argv[0] );
@@ -480,7 +482,15 @@ HercCmdExit:
 
     return rc;
 }
-/* end HercCmdLine */
+DLL_EXPORT int InternalHercCmd (char* pszCmdLine)
+{
+    return DoCallHercCmdLine( pszCmdLine, 1 );
+}
+DLL_EXPORT int HercCmdLine (char* pszCmdLine)
+{
+    return DoCallHercCmdLine( pszCmdLine, 0 );
+}
+/* end DoCallHercCmdLine */
 
 /*-------------------------------------------------------------------*/
 /* HelpMessage - print help text for message hhcnnnnna               */

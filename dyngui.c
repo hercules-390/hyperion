@@ -1983,9 +1983,9 @@ void  Initialize ()
 {
     // Disable the "quiet" command...
     {
-        char* $zapcmd[] = { "$zapcmd", "quiet", "NoCmd" };
-
-        CallHercCmd( 3, $zapcmd, NULL );
+        char cmdbuf[128] = {0};
+        MSGBUF( cmdbuf, "%s %s %s", "$zapcmd", "quiet", "NoCmd" );
+        VERIFY( 0 == InternalHercCmd( cmdbuf ));
     }
 
     // Initialize streams...
