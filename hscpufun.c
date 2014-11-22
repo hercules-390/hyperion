@@ -1026,29 +1026,31 @@ int stop_cmd_cpu(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int alrf_cmd(int argc, char *argv[], char *cmdline)
 {
-static char *ArchlvlCmd[3] = { "archlvl", "Query", "asn_lx_reuse" };
-int     rc = 0;
+char    buffer[128] = {0};
+char   *archlvl_func;
 
     UNREFERENCED(cmdline);
 
-    WRMSG( HHC02256, "W", "ALRF", "archlvl enable|disable|query asn_lx_reuse" );
-
-    if ( argc == 2 )
-    {
-        ArchlvlCmd[1] = argv[1];
-        CallHercCmd(3,ArchlvlCmd,NULL);
-    }
-    else if ( argc == 1 )
-    {
-        CallHercCmd(3,ArchlvlCmd,NULL);
-    }
-    else
+    if (argc < 1 || argc > 2)
     {
         WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
+        return -1;
     }
 
-    return rc;
+    // HHC02256 "Command %s is deprecated, use %s instead"
+
+    if (argc == 1)
+    {
+        archlvl_func = "query";
+    }
+    else /* (argc == 2) */
+    {
+        archlvl_func = argv[1];
+    }
+
+    MSGBUF( buffer, "archlvl %s asn_lx_reuse", archlvl_func );
+    WRMSG( HHC02256, "W", "ALRF", buffer );
+    return InternalHercCmd( buffer );
 }
 #endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
