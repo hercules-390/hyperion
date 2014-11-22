@@ -181,21 +181,21 @@ and how they are used.
 <a name="system_parameters"></a>
 <h3>System parameters</h3>
 <p>
-    System parameters may appear in any order but they must precede all
-    device statements.  Each system parameter must be on a separate line.
-    The following system parameters may be specified:
+    Except for the ARCHLVL statements, system parameter statements may appear
+    in any order but must precede any device statements. Each system parameter
+    must be on a separate line. The following system parameters may be specified:
 
 <dl>
 
 <a name="ARCHLVL"></a>
-<dt><code>ARCHLVL &nbsp; S/370 &#124; ESA/390 &#124; ESAME &#124; z/Arch</code>
+<dt><code>ARCHLVL &nbsp; S/370 &#124; ESA/390 &#124; ESAME &#124; <u>z/Arch</u></code>
 <dd><p>
     specifies the initial architecture mode:<p>
     <ul compact>
     <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
     <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
     Linux/390, and ZZSA.
-    <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux.
+    <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux. This is the default.
     </ul>
     <p><code>ESAME</code> is similar to <code>z/Arch</code>.
     When <code>z/Arch</code> or <code>ESAME</code> is specified,
@@ -215,36 +215,49 @@ and how they are used.
     For the time being however, <code>ARCHMODE</code> is still accepted and is treated as
     simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
+
 <a name="ARCHLVL_FACILITY"></a>
-<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY <em>facility</em></code>
+<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archmode]</em></code>
 <dd><p>
-    specifies a particular STFLE facility to be enabled or disabled, or the current setting queried.
-    Use <code>QUERY ALL</code> to obtain a list of valid <code><em>facility</em></code> &nbsp; names
-    that may be used.
+    specifies a particular STFLE facility to be enabled or disabled, or a query of the current settings.
+    Use <code>QUERY ALL</code> to obtain a list of valid <code><em>facility</em></code> &nbsp;names
+    that may be used for the given archmode.
    <p>
     Alternatively, you can also specify the actual STFLE bit number to be turned off or on
-    (disabled or enabled) using the format <code><em>BITnn</em></code> &nbsp; where 'nn'
+    (disabled or enabled) using the format <code><em>BITnn</em></code> &nbsp;where 'nn'
     corresponds to the exact STFLE facility bit you wish to be forced on or off. A popular
     one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO Facility bit on.
+   <p>
+    The optional <code><em>archmode</em></code> &nbsp;argument limits the enable,
+    disable or query function to a specific <a href="#ARCHLVL">architecture</a>.
+    It should be noted that attempts to enable or disable a facility that a given
+    architecture does not support are ignored without error. The default value is
+    whatever architecture mode was previously established by a preceding
+    <a href="#ARCHLVL">ARCHLVL</a> statement or the default mode if there was no
+    preceding ARCHLVL statement.
    <p>
 
 
 <a name="ASN_AND_LX_REUSE"></a>
-<dt><code>ASN_AND_LX_REUSE &nbsp; DISABLE &#124; ENABLE</code>
+<dt><code>ASN_AND_LX_REUSE &nbsp; <u>DISABLE</u> &#124; ENABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
 <dd><p>
     specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
     or enabled. The default is disabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
-    to <code>ENABLE</code>&nbsp; if the operating system supports
+    to <code>ENABLE</code> &nbsp;if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
-    Set it to <code>DISABLE</code>&nbsp; or do not specify anything
+    Set it to <code>DISABLE</code> &nbsp;or do not specify anything
     if the operating system doesn't support this feature, and it
     inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
     program interrupt when instructions such as LASP are issued.
     <p>
-    <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>
+    <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>.
     <p>
-    The <code>ASN_AND_LX_REUSE</code> statement has been superseded by <code>ARCHLVL ENABLE/DISABLE ASN_LX_REUSE</code>
+    <b>Note:</b> The <code>ASN_AND_LX_REUSE</code> statement has been superseded
+    by "<code>ARCHLVL ENABLE/DISABLE ASN_LX_REUSE</code>" and is thus deprecated.
+    Existing <code>ALRF</code> or <code>ASN_AND_LX_REUSE</code> statements
+    should be changed to use the new <a href="#ARCHLVL_FACILITY">ARCHLVL
+    facility</a> statement format instead.
     <p>
 
 <a name="AUTOMOUNT"></a>
@@ -441,14 +454,14 @@ and how they are used.
     values that control automatic detection of disconnected tn3270/telnet
     client sessions.
     <p>
-    <code><i>idle</i></code> &nbsp; specifies the number of seconds
+    <code><i>idle</i></code> &nbsp;specifies the number of seconds
     of inactivity until the first keep-alive probe is
     sent (idle time until first probe, or probe frequency).
     <br><code><i>intv</i></code> &nbsp;
     specifies the interval in seconds between when successive
     keep-alive packets are sent if no acknowledgement is received from
     the previous one (i.e. the timeout value of the probes themselves).
-    <br><code><i>count</i></code> &nbsp; specifies the number of unacknowledged
+    <br><code><i>count</i></code> &nbsp;specifies the number of unacknowledged
     keep-alive packets sent before the connection is considered to have
     failed.
     <p>
@@ -506,7 +519,7 @@ and how they are used.
     below for more information.
     <p>
 
-    <i><b>Caution:</b> &nbsp; CPUPRIO should not have a higher dispatching
+    <i><b>Caution:</b> &nbsp;CPUPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     </ol>
     <p>
@@ -560,7 +573,7 @@ and how they are used.
     below for more information.
     <p>
 
-    <i><b>Caution:</b> &nbsp; DEVPRIO should not have a higher dispatching
+    <i><b>Caution:</b> &nbsp;DEVPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     <p>
 
@@ -598,7 +611,7 @@ and how they are used.
     <p>
 
 <a name="DIAG8CMD"></a>
-<dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE [ECHO &#124; NOECHO]</code>
+<dt><code>DIAG8CMD &nbsp; <u>DISABLE</u> &#124; ENABLE [ECHO &#124; <u>NOECHO</u>]</code>
 <dd><p>
     When <code>ENABLE</code> is specified, commands issued through the Diagnose 8 interface
     will be executed by Hercules as Hercules commands.  When set to <code>DISABLE</code>,
@@ -617,7 +630,7 @@ and how they are used.
     <p>The default is <code>DISABLE NOECHO</code>
     <p>
 
-    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences.</i>
+    <i><b>Caution:</b> &nbsp;Enabling this feature may have security consequences.</i>
     <p>
 
     When this feature is enabled it is possible for guest operating systems
@@ -648,7 +661,7 @@ and how they are used.
     <p>
 
 <a name="ENGINES"></a>
-<dt><code>ENGINES &nbsp; [<em>nn</em>*]CP&#124;IL&#124;AP&#124;IP[,...]</code>
+<dt><code>ENGINES &nbsp; [<em>nn</em>*]<u>CP</u>&#124;IL&#124;AP&#124;IP[,...]</code>
 <dd><p>
     specifies the type of engine for each installed processor.
     The default engine type is CP.
@@ -709,7 +722,7 @@ and how they are used.
     vary depending on how the Hercules package was built, but is usually
     <tt>/usr/local/share/hercules/</tt>).
     <p>
-    Note: <code>HTTPROOT <em>directory </em></code>&nbsp; is still supported, however, it has been deprecated.
+    Note: <code>HTTPROOT <em>directory </em></code> &nbsp;is still supported, however, it has been deprecated.
     <p>
 
 <a name="HTTPSTRT"></a>
@@ -769,7 +782,7 @@ and how they are used.
     <p>
 
 <a name="LEGACYSENSEID"></a>
-<dt><code>LEGACYSENSEID &nbsp; OFF &#124; DISABLE &#124; ON &#124; ENABLE</code>
+<dt><code>LEGACYSENSEID &nbsp; <u>OFF</u> &#124; <u>DISABLE</u> &#124; ON &#124; ENABLE</code>
 <dd><p>
     specifies whether the SENSE ID CCW (X'E4') will be honored for
     the devices that originally didn't support that feature. This
@@ -801,7 +814,7 @@ and how they are used.
     <p>
 
 <a name="LOGOPT"></a>
-<dt><code>LOGOPT &nbsp; TIMESTAMP &#124; NOTIMESTAMP</code>
+<dt><code>LOGOPT &nbsp; <u>TIMESTAMP</u> &#124; NOTIMESTAMP</code>
 <dd><p>
     sets Hercules log options. TIMESTAMP causes messages to the log
     to be time stamped.  NOTIMESTAMP prevents time stamping of log
@@ -843,8 +856,8 @@ and how they are used.
                           <em>nnn</em>E</code>
 <dd><p>
     specifies the main storage size in megabytes, where
-    <code><em>nnnn</em></code>&nbsp; is a decimal number. Or,
-    <code><em>nnnM</em></code>&nbsp; where <code><em>M</em></code>&nbsp;
+    <code><em>nnnn</em></code> &nbsp;is a decimal number. Or,
+    <code><em>nnnM</em></code> &nbsp;where <code><em>M</em></code>&nbsp;
     is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
     P - Petabytes, E - Exabytes. The default on startup is 2M.
     <p>
@@ -953,7 +966,7 @@ and how they are used.
     <p>
 
 <a name="MOUNTED_TAPE_REINIT"></a>
-<dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; DISABLE &#124; ALLOW &#124; ENABLE </code>
+<dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; DISABLE &#124; <u>ALLOW</u> &#124; <u>ENABLE</u> </code>
 <dd><p>
     specifies whether reinitialization of tape drive devices (via the
     <code>devinit</code> command, in order to mount a new tape) should
@@ -1033,7 +1046,7 @@ and how they are used.
     <p>
 
 <a name="PANRATE"></a>
-<dt><code>PANRATE &nbsp; SLOW &#124; FAST &#124; <em>nn</em></code>
+<dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code>
 <dd><p>
     specifies the panel refresh rate, in milliseconds between refreshes. SLOW
     is the same as 500, and FAST is the same as 50. A value less than the
@@ -1061,7 +1074,7 @@ and how they are used.
     <p>
 
 <a name="PGMPRDOS"></a>
-<dt><code>PGMPRDOS &nbsp; RESTRICTED &#124; LICENSED</code>
+<dt><code>PGMPRDOS &nbsp; <u>RESTRICTED</u> &#124; LICENSED</code>
 <dd><p>
     specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems. If <code>RESTRICTED</code> is
@@ -1094,7 +1107,7 @@ and how they are used.
     <p>
 
 <a name="SCSIMOUNT"></a>
-<dt><code>SCSIMOUNT &nbsp; NO &#124; YES &#124; <em>nn</em></code>
+<dt><code>SCSIMOUNT &nbsp; <u>NO</u> &#124; YES &#124; <em>nn</em></code>
 <dd><p>
     specifies whether automatic detection of SCSI tape mounts are to be
     enabled or not.
@@ -1154,7 +1167,7 @@ and how they are used.
     setting to the console.
     <p>
     <i>
-    <b>Note:</b> &nbsp; support for this command/statement must be specifically
+    <b>Note:</b> &nbsp;support for this command/statement must be specifically
     generated by enabling the </i><code>#define OPTION_SHOWDVOL1</code><i>
     statement in source header 'featall.h' and then rebuilding Hercules.
     </i>
@@ -1182,7 +1195,7 @@ and how they are used.
     below for more information.
     <p>
 
-    <i><b>Caution:</b> &nbsp; SRVPRIO should not have a higher dispatching
+    <i><b>Caution:</b> &nbsp;SRVPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     <p>
 
@@ -1214,7 +1227,7 @@ and how they are used.
     performance. The minimum allowed value is 1 microsecond and the maximum
     is 1000000 microseconds (i.e. one second).
     <p>
-    <i><b>Caution:</b> &nbsp; While a lower TIMERINT value may help
+    <i><b>Caution:</b> &nbsp;While a lower TIMERINT value may help
     increase the accuracy of your guest's TOD Clock and CPU Timer values,
     it could also have a severe negative impact on the overall performance
     of your host operating system. This is especially true when a low TIMERINT
@@ -1248,12 +1261,12 @@ and how they are used.
     below for more information.
     <p>
 
-    <i><b>Caution:</b> &nbsp; TODPRIO should be given a dispatching
+    <i><b>Caution:</b> &nbsp;TODPRIO should be given a dispatching
     priority equal to or higher than any other thread within Hercules.</i>
     <p>
 
 <a name="TRACEOPT"></a>
-<dt><code>TRACEOPT &nbsp; TRADITIONAL &#124; REGSFIRST &#124; NOREGS</code>
+<dt><code>TRACEOPT &nbsp; <u>TRADITIONAL</u> &#124; REGSFIRST &#124; NOREGS</code>
 <dd><p>
     sets the Hercules instruction tracing display option.
     <code>TRADITIONAL</code> (the default), displays the registers following
@@ -1297,7 +1310,7 @@ and how they are used.
 <dd><p>
     specifies the expanded storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number. Or,
-    <code><em>nnnM</em></code>&nbsp; where <code><em>M</em></code>&nbsp;
+    <code><em>nnnM</em></code> &nbsp;where <code><em>M</em></code>&nbsp;
     is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
     P - Petabytes, E - Exabytes.
     <p>
@@ -1611,7 +1624,7 @@ and how they are used.
 <blockquote>
     <p>
     <i>
-    <b>Caution:</b> &nbsp; On Windows, the value you choose for your
+    <b>Caution:</b> &nbsp;On Windows, the value you choose for your
     <a href="#HERCPRIO">Process Priority</a>
     has a direct impact on how your
     <a href="#thread_priorities">Thread Priorities</a> are interpreted!
@@ -1747,7 +1760,7 @@ and how they are used.
 <blockquote>
     <p>
     <i>
-    <b>Caution:</b> &nbsp; On Windows, your Thread Priority is interpreted
+    <b>Caution:</b> &nbsp;On Windows, your Thread Priority is interpreted
     differently based on your chosen <a href="#HERCPRIO">Process Priority</a> setting!
     You should never modify your Thread Priority settings without first reviewing your
     chosen <a href="#HERCPRIO">Process Priority</a> setting!
