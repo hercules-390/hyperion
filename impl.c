@@ -15,8 +15,13 @@
 
 #include "hstdinc.h"
 
+#ifndef _IMPL_C_
 #define _IMPL_C_
+#endif
+
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
+#endif
 
 #include "hercules.h"
 #include "opcode.h"
@@ -447,9 +452,7 @@ int     dll_count;                      /* index into array          */
             sysblk.hercules_pgmpath = strdup("");
     }
 
-#if defined( OPTION_CONFIG_SYMBOLS )
-
-    /* These were moved from console.c to make them available sooner */
+#if defined(ENABLE_BUILTIN_SYMBOLS)
     set_symbol( "VERSION", VERSION);
     set_symbol( "BDATE", __DATE__ );
     set_symbol( "BTIME", __TIME__ );
@@ -484,8 +487,7 @@ int     dll_count;                      /* index into array          */
 
     set_symbol( "MODNAME", sysblk.hercules_pgmname );
     set_symbol( "MODPATH", sysblk.hercules_pgmpath );
-
-#endif // defined( OPTION_CONFIG_SYMBOLS )
+#endif
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
     sysblk.msglvl   = DEFAULT_MLVL;                 /* Defaults to TERSE and DEVICES */
@@ -607,8 +609,8 @@ int     dll_count;                      /* index into array          */
     sysblk.keep_timeout_secs = 120;
 #endif
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
-    /* setup defaults for BUILTIN symbols  */
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+    /* setup defaults for CONFIG symbols  */
     {
         char buf[8];
 
@@ -623,7 +625,7 @@ int     dll_count;                      /* index into array          */
         set_symbol( "CPUMODEL", buf );
 
     }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS */
+#endif
 
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
@@ -735,10 +737,12 @@ int     dll_count;                      /* index into array          */
 #define  HERCULES_BASE_OPTS     "hf:r:db:v"
 #define  HERCULES_SYM_OPTS      ""
 #define  HERCULES_HDL_OPTS      ""
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 #undef   HERCULES_SYM_OPTS
 #define  HERCULES_SYM_OPTS      "s:"
 #endif
+
 #if defined(OPTION_DYNAMIC_LOAD)
 #undef   HERCULES_HDL_OPTS
 #define  HERCULES_HDL_OPTS      "p:l:"
@@ -754,9 +758,11 @@ int     dll_count;                      /* index into array          */
         { "daemon",   no_argument,       NULL, 'd' },
         { "herclogo", required_argument, NULL, 'b' },
         { "verbose",  no_argument,       NULL, 'v' },
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         { "defsym",   required_argument, NULL, 's' },
 #endif
+
 #if defined(OPTION_DYNAMIC_LOAD)
         { "modpath",  required_argument, NULL, 'p' },
         { "ldmod",    required_argument, NULL, 'l' },
@@ -778,7 +784,8 @@ int     dll_count;                      /* index into array          */
         case 'r':
             rcname = optarg;
             break;
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         case 's':
             {
             char *sym        = NULL;
@@ -805,7 +812,8 @@ int     dll_count;                      /* index into array          */
                     WRMSG(HHC01419, "E");
             }
             break;
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
+#endif
+
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
             if(optarg)

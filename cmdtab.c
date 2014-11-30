@@ -11,8 +11,13 @@
 
 #include "hstdinc.h"
 
+#ifndef _CMDTAB_C_
 #define _CMDTAB_C_
+#endif
+
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
+#endif
 
 #include "hercules.h"
 #include "history.h"
@@ -852,21 +857,23 @@ void *panel_command (void *cmdline)
             {
                 if (hercecho && *cmd)
                     EchoHercCmdLine( cmd );
-#if defined( OPTION_CONFIG_SYMBOLS )
-                /* Perform variable substitution */
-                /* First, set some 'dynamic' symbols
-                   to their own values */
+#if defined( ENABLE_SYSTEM_SYMBOLS )
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
                 set_symbol( "CUU",  "$(CUU)"  );
                 set_symbol( "CCUU", "$(CCUU)" );
                 set_symbol( "DEVN", "$(DEVN)" );
-                {
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
+                /* Perform variable substitution */
                 char *cl = resolve_symbol_string( cmd );
                 rc = HercCmdLine( cl );
                 free( cl );
-                }
-#else /* !defined( OPTION_CONFIG_SYMBOLS ) */
+
+#else /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
                 rc = HercCmdLine( cmd );
-#endif /* defined( OPTION_CONFIG_SYMBOLS ) */
+
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
             }
 #if defined( OPTION_CMDTGT )
             break;

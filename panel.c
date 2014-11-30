@@ -2078,7 +2078,7 @@ char    buf[1024];                      /* Buffer workarea            */
 
     history_init();
 
-#if       defined( OPTION_CONFIG_SYMBOLS )
+#if defined( ENABLE_BUILTIN_SYMBOLS )
     /* Set Some Function Key Defaults */
     {
         set_symbol("PF01", "SUBST IMMED "
@@ -2097,7 +2097,7 @@ char    buf[1024];                      /* Buffer workarea            */
 #endif
                                             "devinit &*");
     }
-#endif
+#endif  /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
     /* Set up the input file descriptors */
     confp = stderr;
@@ -2634,11 +2634,12 @@ char    buf[1024];                      /* Buffer workarea            */
                     else if ( !strcmp(kbbuf+i, KBD_PF20)                               ) szPF = "PF20";
                     else szPF = NULL;
 #endif
-#if    defined ( OPTION_CONFIG_SYMBOLS )
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
                     pf = (char*)get_symbol(szPF);
-#else  // !OPTION_CONFIG_SYMBOLS
+#else
                     pf = NULL;
-#endif //  OPTION_CONFIG_SYMBOLS
+#endif
 
                     if ( pf == NULL )
                     {

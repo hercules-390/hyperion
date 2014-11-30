@@ -110,9 +110,10 @@ int     c;                              /* Character work area       */
 unsigned int     stmtlen;               /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
                                         /* has been seen yet in line */
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
 char   *buf1;                           /* Pointer to resolved buffer*/
-#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
+#endif
 
     while (1)
     {
@@ -175,15 +176,15 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(ENABLE_SYSTEM_SYMBOLS)
 
-        /* Perform variable substitution */
-        /* First, set some 'dynamic' symbols to their own values */
-
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         set_symbol("CUU","$(CUU)");
         set_symbol("CCUU","$(CCUU)");
         set_symbol("DEVN","$(DEVN)");
+#endif
 
+        /* Perform variable substitution */
         buf1=resolve_symbol_string(buf);
 
         if(buf1!=NULL)
@@ -197,7 +198,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             strlcpy(buf,buf1,buflen);
             free(buf1);
         }
-#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
+#endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
         /* Special handling for 'pause' statement */
         if (strncasecmp( buf, "pause ", 6 ) == 0)
@@ -274,15 +275,20 @@ int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
 int     inc_level;                      /* Current nesting level     */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
-int     inc_ignore_errors = 0;          /* 1==ignore include errors  */
 BYTE    c;                              /* Work area for sscanf      */
+
+#if defined(ENABLE_CONFIG_INCLUDE)
+int     inc_ignore_errors = 0;          /* 1==ignore include errors  */
 char    pathname[MAX_PATH];             /* file path in host format  */
+#endif
+
 char    fname[MAX_PATH];                /* normalized filename       */
 int     errorcount = 0;
+
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 int     shell_flg = FALSE;              /* indicate it is has a shell
                                            path specified            */
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif
 
     /* Open the base configuration file */
     hostpath(fname, cfg_name, sizeof(fname));
@@ -352,7 +358,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         }
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)   */
 
-#if defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+#if defined( ENABLE_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
         {
             if  (strcasecmp (addargv[1], "include_errors") == 0)
@@ -397,7 +403,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
             inc_stmtnum[inc_level] = 0;
             continue;
         }
-#endif // defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+#endif /* #if defined( ENABLE_CONFIG_INCLUDE ) */
 
         if ( ( strlen(addargv[0]) <= 4 &&
 #if defined( _MSVC_)
@@ -528,12 +534,12 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 rexx_done:
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif
 
-#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+#if !defined( ENABLE_CONFIG_INCLUDE )
     /* close configuration file */
     rc = fclose(inc_fp[inc_level]);
-#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+#endif
 
     if(!sysblk.msglvl)
         sysblk.msglvl = DEFAULT_MLVL;
@@ -930,8 +936,7 @@ int     rc;                             /* (work)                    */
         exec_cmd( 2, rcmd, NULL );  /* (synchronous) */
         goto script_end;
     }
-
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif
 
     // "Script %d: begin processing file '%s'"
     WRMSG( HHC02260, "I", pCtl->scr_id, script_path );
@@ -955,15 +960,15 @@ int     rc;                             /* (work)                    */
             struct timespec ts  = {0,0};  /* (nanosleep arg) */
             U64 i, nsecs        =   0;    /* (nanoseconds)   */
 
-#if defined( OPTION_CONFIG_SYMBOLS )
+#if defined( ENABLE_BUILTIN_SYMBOLS )
             {
                 char *secs = resolve_symbol_string( p+6 );
                 pauseamt = atof( secs );
                 free( secs );
             }
-#else /* !defined( OPTION_CONFIG_SYMBOLS ) */
+#else
             pauseamt = atof( p+6 );
-#endif /* defined( OPTION_CONFIG_SYMBOLS ) */
+#endif
 
             if (pauseamt < 0.0 || pauseamt > 999.0)
             {

@@ -19,10 +19,10 @@
 //  -------------- (template for new commands) ----------------
 //
 //#define xxx_cmd_desc            "Short XXX description"
-//#define xxx_cmd_help            \
-//                                \
-//  "Much longer, more detailed xxx command description...\n"                     \
-//  "Use other commands as reference for typical formatting and wording.\n"       \
+//#define xxx_cmd_help            <backslash>
+//                                <backslash>
+//  "Much longer, more detailed xxx command description...\n" <backslash>
+//  "Use other commands as reference for typical formatting and wording.\n" <backslash>
 //
 //  -------------- (template for new commands) ----------------
 //  -------------- (template for new commands) ----------------
@@ -1674,10 +1674,12 @@ COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        
 COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL )
 #endif
 #endif
+
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          rexx_cmd_desc,          rexx_cmd_help       )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
 #endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+
 #if 0
 #if defined( _MSVC_ )
 COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       dir_cmd_desc,           NULL                )
@@ -1691,11 +1693,13 @@ COMMAND( "herc",                    herc_cmd,               SYSCMD,             
 COMMAND( "pscp",                    prioscp_cmd,            SYSCMD,             pscp_cmd_desc,          pscp_cmd_help       )
 COMMAND( "scp",                     scp_cmd,                SYSCMD,             scp_cmd_desc,           scp_cmd_help        )
 #endif
-#if defined( OPTION_CONFIG_SYMBOLS )
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
 CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
 COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        delsym_cmd_desc,        delsym_cmd_help     )
-#endif
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
 #if defined(HAVE_MLOCKALL)
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
 COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          NULL,                   NULL                )

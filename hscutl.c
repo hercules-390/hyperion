@@ -18,8 +18,13 @@
 
 #include "hstdinc.h"
 
+#ifndef _HSCUTL_C_
 #define _HSCUTL_C_
+#endif
+
+#ifndef _HUTIL_DLL_
 #define _HUTIL_DLL_
+#endif
 
 #include "hercules.h"
 
@@ -250,11 +255,11 @@ strlcat(char *dst, const char *src, size_t siz)
 }
 #endif // !defined(HAVE_STRLCAT)
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(ENABLE_SYSTEM_SYMBOLS)
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* The following structures are defined herein because they are private structures */
 /* that MUST be opaque to the outside world                                        */
-
 typedef struct _SYMBOL_TOKEN
 {
     char *var;
@@ -271,9 +276,11 @@ typedef struct _SYMBOL_TOKEN
 static SYMBOL_TOKEN **symbols=NULL;
 static int symbol_count=0;
 static int symbol_max=0;
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* This function retrieves or allocates a new SYMBOL_TOKEN */
-static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
+static SYMBOL_TOKEN *get_symbol_token(const char *sym, int alloc)
 {
     SYMBOL_TOKEN        *tok;
     int i;
@@ -285,7 +292,11 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
         {
             continue;
         }
+#if defined(CASELESS_SYMBOLS)
         if(strcasecmp(symbols[i]->var,sym)==0)
+#else
+        if(strcmp(symbols[i]->var,sym)==0)
+#endif
         {
             return(symbols[i]);
         }
@@ -335,6 +346,9 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
     symbol_count++;
     return(tok);
 }
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 DLL_EXPORT void del_symbol(const char *sym)
 {
     SYMBOL_TOKEN        *tok;
@@ -347,7 +361,11 @@ DLL_EXPORT void del_symbol(const char *sym)
         {
             continue;
         }
+#if defined(CASELESS_SYMBOLS)
         if(strcasecmp(symbols[i]->var,sym)==0)
+#else
+        if(strcmp(symbols[i]->var,sym)==0)
+#endif
         {
             if ( tok->val != NULL ) free(tok->val);
             if ( tok->var != NULL ) free(tok->var);
@@ -359,78 +377,15 @@ DLL_EXPORT void del_symbol(const char *sym)
 
     return;
 }
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-DLL_EXPORT void set_symbol(const char *sym,const char *value)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+DLL_EXPORT void set_symbol(const char *sym, const char *value)
 {
     SYMBOL_TOKEN        *tok;
 
     if ( sym == NULL || value == NULL || strlen(sym) == 0 )
         return;
-
-#if defined ( _MSVC_ )
-    {
-        size_t   evl = strlen(sym)+strlen(value)+2;
-        char    *ev=malloc(evl);
-
-        if ( !ev )
-        {
-            WRMSG(HHC00136, "W", "malloc()", strerror(errno));
-        }
-        else
-        {
-            int rc;
-
-            strlcpy( ev, sym, evl );
-            strlcat( ev, "=", evl );
-            strlcat( ev, value, evl );
-            rc = putenv( ev );
-            free( ev );
-            if ( rc )
-                WRMSG(HHC00136, "W", "putenv()", strerror(errno));
-        }
-    }
-
-#else
-    #if 0
-
-    setenv/putenv are not thread safe.  This needs redesign.  Essentially,
-    you must maintain your own set of variables, under proper mutexing,
-    in front of the environment proper, which must remain read only.  When
-    running a command (system()), you must fork(), kill all other threads,
-    stow the local variables in the environment, and issue the command.
-
-    It will not work to restrict all access to the environment from Hercules
-    to a single thread as many library routines access _environment
-    directly.  That is, once you do setenv(), even getenv() is unsafe.
-
-    In short, pthreads is not for the average Joe COBOL.
-
-    A workable solution is to have a separate process that is not
-    multithreaded.  It can maintain its environment as this code tries to;
-    it can issue system() with impunity.  Of course, you have the problem
-    of designing a working protocol, but that can be done with a message
-    queue, or with pipes as long as the message length is within the
-    maximum atomic pipe buffer size PIPE_BUF.
-
-    #endif
-    if (!pttthread)
-    {
-       if ( setenv( sym, value, TRUE ) )
-           WRMSG(HHC00136, "W", "setenv()", strerror(errno));
-    }
-    else
-    {
-        char b[4096];
-        static int toldhim;
-
-        if (!toldhim)
-        {
-            sprintf (b, "cannot set %s: Not thread safe--setting disabled", sym);
-            WRMSG(HHC00136, "W", "setenv()", b);
-            toldhim = 1;
-        }
-    }
-#endif
 
     tok=get_symbol_token(sym,1);
     if(tok==NULL)
@@ -449,14 +404,17 @@ DLL_EXPORT void set_symbol(const char *sym,const char *value)
     strlcpy(tok->val,value,strlen(value)+1);
     return;
 }
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
+#if defined(ENABLE_SYSTEM_SYMBOLS)
 DLL_EXPORT const char *get_symbol(const char *sym)
 {
-    char *val;
-    SYMBOL_TOKEN   *tok;
-    static char     buf[80];
+char *val;
+static char     buf[MAX_PATH];
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+SYMBOL_TOKEN   *tok;
+
     if ( CMD(sym,DATE,4) )
     {
         time_t  raw_tt;
@@ -474,19 +432,26 @@ DLL_EXPORT const char *get_symbol(const char *sym)
         return(buf);
     }
     else
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-
+    {
         tok=get_symbol_token(sym,0);
+    }
+    if (tok != NULL)
+    {
+        return(tok->val);
+    }
+    else
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-    if(tok==NULL)
     {
         val=getenv(sym);
         MSGBUF(buf, "%s", val == NULL? "" : val );
         return(buf);
     }
-    return(tok->val);
-}
 
+}
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+
+#if defined( ENABLE_SYSTEM_SYMBOLS )
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
     char    buf[MAX_PATH*4];                /* Statement buffer          */
@@ -500,9 +465,14 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     int     inc_equals = -1;                /* >=0 Ndx of equals         */
     int     lstarted;                       /* Indicate if non-whitespace*/
     char   *inc_envvar;                     /* ->Environment variable    */
-    int     fDParens    = TRUE;             /* Is it $() or ${} ?        */
 
+	char	symc, symt;						/* Character work area       */
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
     if( strstr( text, "$(" ) == NULL && strstr( text, "${" ) == NULL )
+#else
+    if( strstr( text, "${" ) == NULL )
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
     {
         /* Malloc anyway - the caller will free() */
         return( strdup( text ) );
@@ -537,7 +507,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                 if (inc_lbrace >= 0)
                 {
                     /* End of variable spec? */
-                    if ( ( fDParens && c == ')' )  || ( !fDParens && c == '}' ) )
+                    if ( c == symt )
                     {
                         /* Terminate it */
                         buf[stmtlen] = '\0';
@@ -610,13 +580,19 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                 else // (inc_lbrace < 0)
                 {
                     /* Remember start of variable name */
-                    if (c == '(' || c == '{' )
-                    {
-                        if ( c == '(' )
-                            fDParens = TRUE;
-                        else
-                            fDParens = FALSE;
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+                    if ( c == '(' )
+                    {
+                        symt = ')' ;
+                        inc_lbrace = stmtlen + 1;
+                    }
+                    else
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
+                    if ( c == '{' )
+                    {
+                        symt = '}' ;
                         inc_lbrace = stmtlen + 1;
                     }
                     else
@@ -646,7 +622,9 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 
     return (strdup(buf));
 }
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* (called by defsym panel command) */
 DLL_EXPORT void list_all_symbols(void)
 {
@@ -660,8 +638,9 @@ DLL_EXPORT void list_all_symbols(void)
     }
     return;
 }
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
 /* Return code: success == 0, error == -1 (difference was negative) */

@@ -10,7 +10,11 @@
 #ifndef _CNSLLOGO_H_
 #define _CNSLLOGO_H_
 
-/* The following is an extract from the README.HERCLOGO file 
+#if !defined SHORT_HOSTINFO && !defined LONG_HOSTINFO
+#define SHORT_HOSTINFO
+#endif
+
+/* The following is an extract from the README.HERCLOGO file
 
 Each line in the array represent either an order or a plain text line.
 
@@ -26,7 +30,7 @@ Set the Highlight and/or Protected attribute
 Forces going to the next line
 
 @ALIGN NONE|LEFT|RIGHT|CENTER
-Specified the text alignement (relative to the left and right borders of the 
+Specified the text alignement (relative to the left and right borders of the
 terminal). When ALIGN is other than "NONE", a new line is automatically
 inserted after each line of text. If ALIGN is "NONE", then the text will
 be written without skipping to the next line.
@@ -53,7 +57,7 @@ It is also possible to use any defined symbol or environment variable.
  */
 
 static char *herclogo[]={
-#if defined( OPTION_CONFIG_SYMBOLS )
+#if defined( ENABLE_BUILTIN_SYMBOLS )
 "@ALIGN NONE",
 "@SBA 0,0",
 "@SF P",
@@ -69,7 +73,13 @@ static char *herclogo[]={
 "@SF P",
 "Host OS           :",
 "@SF HP",
+
+#ifdef SHORT_HOSTINFO
+"$(HOSTOS)-$(HOSTOSREL)",
+#else
 "$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
+#endif
+
 "@NL",
 "@SF P",
 "Host Architecture :",
@@ -96,7 +106,8 @@ static char *herclogo[]={
 "@SF HP",
 "$(SUBCHAN)",
 "@SF P",
-#endif
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
 "@ALIGN LEFT",
 "",
 "",
@@ -115,5 +126,4 @@ static char *herclogo[]={
 "           Copyright (C) 1999-2012 Roger Bowler, Jan Jaeger, and others"
 };
 
-
-#endif /* _CNSLLOGO_H_ */
+#endif /* #ifndef _CNSLLOGO_H_ */

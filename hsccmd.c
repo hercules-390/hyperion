@@ -58,8 +58,13 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
+#ifndef _HSCCMD_C_
 #define _HSCCMD_C_
+#endif
+
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
+#endif
 
 #include "hercules.h"
 #include "devtype.h"
@@ -1431,8 +1436,6 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #ifdef OPTION_IODELAY_KLUDGE
-
-
 /*-------------------------------------------------------------------*/
 /* iodelay command - display or set I/O delay value                  */
 /*-------------------------------------------------------------------*/
@@ -1464,8 +1467,7 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
-#endif /*OPTION_IODELAY_KLUDGE*/
+#endif /* #ifdef OPTION_IODELAY_KLUDGE */
 
 /*-------------------------------------------------------------------*/
 /* autoinit_cmd - show or set AUTOINIT switch                        */
@@ -4833,9 +4835,9 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
     {
         set_lparname(argv[1]);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         set_symbol("LPARNAME", str_lparname());
-#endif /* define(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
         if ( MLVL(VERBOSE) )
             WRMSG(HHC02204, "I", argv[0], str_lparname());
@@ -4906,7 +4908,7 @@ BYTE    c;
             /* Release INTLOCK */
             RELEASE_INTLOCK(NULL);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
             {
                 char buf[20];
                 MSGBUF(buf, "%02X", sysblk.lparnum);
@@ -4915,8 +4917,7 @@ BYTE    c;
                 if (MLVL( VERBOSE ))
                     WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
             }
-#else /* !defined(OPTION_CONFIG_SYMBOLS) || !defined(OPTION_BUILTIN_SYMBOLS) */
-
+#else
             if (MLVL( VERBOSE ))
             {
                 char buf[20];
@@ -4924,7 +4925,8 @@ BYTE    c;
                         sysblk.lparnum);
                 WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
             }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
         }
         else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
         {
@@ -4950,10 +4952,12 @@ BYTE    c;
                 // "%-14s set to %s"
                 WRMSG(HHC02204, "I", argv[0], "BASIC");
             }
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
             set_symbol("LPARNUM", "BASIC");
             set_symbol("CPUIDFMT", "BASIC");
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
+
         }
         else
         {
@@ -5003,9 +5007,9 @@ BYTE    c;
 
             MSGBUF(buf,"%02X",cpuverid);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
             set_symbol("CPUVERID", buf);
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
@@ -5058,9 +5062,9 @@ BYTE    c;
 
             sprintf(buf,"%04X",cpumodel);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
             set_symbol("CPUMODEL", buf);
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
@@ -5114,9 +5118,9 @@ BYTE    c;
 
             sprintf(buf,"%06X",cpuserial);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
             set_symbol("CPUSERIAL", buf);
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
             if ( MLVL(VERBOSE) )
                 WRMSG( HHC02204, "I", argv[0], buf );
@@ -5207,9 +5211,9 @@ u_int     cpuidfmt;
                 /* Release INTLOCK */
                 RELEASE_INTLOCK(NULL);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
                 set_symbol("CPUIDFMT", (sysblk.cpuidfmt) ? "1" : "0");
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
             }
         }
@@ -5238,9 +5242,9 @@ u_int     cpuidfmt;
                 /* Release INTLOCK */
                 RELEASE_INTLOCK(NULL);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
                 set_symbol("CPUIDFMT", "BASIC");
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
                 if ( MLVL(VERBOSE) )
                     WRMSG(HHC02204, "I", argv[0], "BASIC");
@@ -6953,7 +6957,7 @@ REGS *regs;
     return 0;
 }
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /*-------------------------------------------------------------------*/
 /* defsym command - define substitution symbol                       */
 /*-------------------------------------------------------------------*/
@@ -6979,12 +6983,16 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    /* store Symbol names in UC */
+
+#if defined(CASELESS_SYMBOLS)
+	/* store Symbol names in UC */
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
             sym[i] = toupper( sym[i] );
     }
+#endif
+
     if (
          CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    ||
          CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
@@ -6992,7 +7000,6 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
          CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||
          CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      ||
          CMD(sym,DEVN,4)     ||
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
          CMD(sym,DATE,4)     || CMD(sym,TIME,4)     ||
          CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) ||
          CMD(sym,ARCHMODE,8) ||
@@ -7000,8 +7007,6 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
          CMD(sym,CPUVERID,8) ||
          CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  ||
          CMD(sym,SYSPLEX,7)  ||
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-
          FALSE
        )
     {
@@ -7025,7 +7030,9 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     free(sym);
     return 0;
 }
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /*-------------------------------------------------------------------*/
 /* delsym command - delete substitution symbol                       */
 /*-------------------------------------------------------------------*/
@@ -7048,19 +7055,21 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    /* Symbol names stored in UC */
+#if defined(CASELESS_SYMBOLS)
+	/* store Symbol names in UC */
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
             sym[i] = toupper( sym[i] );
     }
+#endif
+
     if (
          CMD(sym,VERSION,7)  || CMD(sym,BDATE,5)    || CMD(sym,BTIME,5)    ||
          CMD(sym,HOSTNAME,8) || CMD(sym,HOSTOS,6)   || CMD(sym,HOSTOSREL,9)||
          CMD(sym,HOSTOSVER,9)|| CMD(sym,HOSTARCH,8) || CMD(sym,HOSTNUMCPUS,11)||
          CMD(sym,MODPATH,7)  || CMD(sym,MODNAME,7)  ||
          CMD(sym,CUU,3)      || CMD(sym,CCUU,4)     || CMD(sym,CSS,3)      ||
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
          CMD(sym,DATE,4)     || CMD(sym,TIME,4)     ||
          CMD(sym,LPARNUM,7)  || CMD(sym,LPARNAME,8) ||
          CMD(sym,ARCHMODE,8) ||
@@ -7068,8 +7077,6 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
          CMD(sym,CPUVERID,8) ||
          CMD(sym,SYSLEVEL,8) || CMD(sym,SYSTYPE,7)  || CMD(sym,SYSNAME,7)  ||
          CMD(sym,SYSPLEX,7)  ||
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
-
          FALSE
        )
     {
@@ -7082,8 +7089,7 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
     free(sym);
     return 0;
 }
-#endif // defined(OPTION_CONFIG_SYMBOLS)
-
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* x+ and x- commands - turn switches on or off                      */
@@ -7295,7 +7301,6 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* scpecho - enable echo of '.' and '!' replys/responses to hardcopy */
 /*           and console.                                            */
@@ -7328,6 +7333,7 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
 /*-------------------------------------------------------------------*/
 /* scpimply - enable/disable non-hercules commands to the scp        */
 /*           if scp has enabled scp commands.                        */
@@ -7362,7 +7368,6 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-
 #if defined(OPTION_DYNAMIC_LOAD)
 /*-------------------------------------------------------------------*/
 /* ldmod - load a module                                             */
@@ -7391,7 +7396,6 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* rmmod - delete a module                                           */
 /*-------------------------------------------------------------------*/
@@ -7417,7 +7421,6 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* lsmod - list dynamic modules                                      */
 /*-------------------------------------------------------------------*/
@@ -7431,7 +7434,6 @@ int lsmod_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* lsdep - list module dependencies                                  */
@@ -7447,7 +7449,6 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* modpath - set module path                                         */
 /*-------------------------------------------------------------------*/
@@ -7462,11 +7463,13 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
     }
     else if (argc == 2)
     {
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
 #else
         hdl_setpath(argv[1], TRUE);
-#endif /* defined(OPTION_CONFIG_SYMBOLS) */
+#endif
+
     }
     else
     {
@@ -7476,7 +7479,6 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
 
 #ifdef FEATURE_ECPSVM
 /*-------------------------------------------------------------------*/
@@ -7532,7 +7534,6 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-
 /*-------------------------------------------------------------------*/
 /* herclogo - Set the hercules logo file                             */
 /*-------------------------------------------------------------------*/
@@ -7580,7 +7581,6 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* sizeof - Display sizes of various structures/tables               */
 /*-------------------------------------------------------------------*/
@@ -7612,7 +7612,6 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 #if defined(OPTION_HAO)
 /*-------------------------------------------------------------------*/
 /* hao - Hercules Automatic Operator                                 */
@@ -7625,7 +7624,6 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 #endif /* defined(OPTION_HAO) */
-
 
 /*-------------------------------------------------------------------*/
 /* conkpalv - set console session TCP keep-alive values              */
@@ -7723,7 +7721,6 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
   return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* scp - Send scp command in any mode                                */
 /*-------------------------------------------------------------------*/
@@ -7738,7 +7735,6 @@ int scp_cmd(int argc, char *argv[], char *cmdline)
   return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* pscp - Send a priority message in any mode                        */
 /*-------------------------------------------------------------------*/
@@ -7752,7 +7748,6 @@ int prioscp_cmd(int argc, char *argv[], char *cmdline)
     rc = scp_command(&cmdline[5], 1, TRUE);
   return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* herc - Send a Hercules command in any mode                        */
@@ -7810,6 +7805,7 @@ int cache_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
+
 /*-------------------------------------------------------------------*/
 /* msglevel command                                                  */
 /*-------------------------------------------------------------------*/
@@ -8032,7 +8028,7 @@ int qcpuid_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if       defined( OPTION_CONFIG_SYMBOLS )
+#if defined(ENABLE_BUILTIN_SYMBOLS)
 /*-------------------------------------------------------------------*/
 /* qpfkeys command                                                   */
 /*-------------------------------------------------------------------*/
@@ -8069,7 +8065,7 @@ int qpfkeys_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-#endif // defined( OPTION_CONFIG_SYMBOLS )
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* qpid command                                                      */
@@ -8303,7 +8299,6 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* qstor command                                                     */
 /*-------------------------------------------------------------------*/
@@ -8350,8 +8345,6 @@ int qstor_cmd(int argc, char *argv[], char *cmdline)
     }
     return 0;
 }
-
-
 
 /*-------------------------------------------------------------------*/
 /* cmdlevel - display/set the current command level group(s)         */

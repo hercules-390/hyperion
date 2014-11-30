@@ -32,15 +32,15 @@ typedef struct HOST_INFO
         BLOCK_HEADER;                   /* Name of block             */
 /*-------------------- HDR /\ ---------------------------------------*/
 
-        char    sysname[20];
-        char    nodename[20];
-        char    release[20];
-        char    version[50];
-        char    machine[20];
+        char    sysname[64];
+        char    nodename[64];
+        char    release[64];
+        char    version[64];
+        char    machine[64];
         char    cpu_brand[64];          /* x86/x64 cpu brand string  */
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
         int     maxfilesopen;           /* Max num of open files     */
-        
+
         int     num_procs;              /* #of processors            */
         int     num_physical_cpu;       /* #of cores                 */
         int     num_logical_cpu;        /* #of of hyperthreads       */
@@ -59,7 +59,7 @@ typedef struct HOST_INFO
         RADR    L1Ucachesz;             /* cache size L1 Unified     */
         RADR    L2cachesz;              /* cache size L2             */
         RADR    L3cachesz;              /* cache size L3             */
-        
+
         RADR    hostpagesz;             /* Host page size            */
         RADR    AllocationGranularity;  /*                           */
         RADR    TotalPhys;              /* Installed Real Memory     */

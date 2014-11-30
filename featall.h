@@ -101,9 +101,8 @@
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
+
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_CONFIG_SYMBOLS           /* $(defsym) support         */
-#define OPTION_BUILTIN_SYMBOLS          /* "LPARNAME", "DATE", etc.  */
 
 #if 0
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
@@ -134,12 +133,20 @@
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #undef  OPTION_SHOWDVOL1                /* showdvol1 support         */
 
-#if !defined(OPTION_BUILTIN_SYMBOLS) && !defined(NO_BUILTIN_SYMBOLS)
-#define  NO_BUILTIN_SYMBOLS             /* Internal Symbols Defined  */
+#if !defined(ENABLE_CONFIG_INCLUDE) && !defined(NO_CONFIG_INCLUDE)
+#define  ENABLE_CONFIG_INCLUDE          /* enable config file includes */
 #endif
 
-#if defined(OPTION_BUILTIN_SYMBOLS) && !defined(OPTION_CONFIG_SYMBOLS)
-  #error OPTION_BUILTIN_SYMBOLS requires OPTION_CONFIG_SYMBOLS
+#if !defined(ENABLE_SYSTEM_SYMBOLS) && !defined(NO_SYSTEM_SYMBOLS)
+#define  ENABLE_SYSTEM_SYMBOLS          /* access to system symbols  */
+#endif
+
+#if !defined(ENABLE_BUILTIN_SYMBOLS) && !defined(NO_BUILTIN_SYMBOLS)
+#define  ENABLE_BUILTIN_SYMBOLS          /* Internal Symbols          */
+#endif
+
+#if defined(ENABLE_BUILTIN_SYMBOLS) && !defined(ENABLE_SYSTEM_SYMBOLS)
+  #error ENABLE_BUILTIN_SYMBOLS requires ENABLE_SYMBOLS_SYMBOLS
 #endif
 
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)

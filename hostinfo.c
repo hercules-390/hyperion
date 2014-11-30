@@ -12,8 +12,17 @@
 
 #include "hstdinc.h"
 
+#ifndef _HOSTINFO_C_
 #define _HOSTINFO_C_
+#endif
+
+#ifndef _HUTIL_DLL_
 #define _HUTIL_DLL_
+#endif
+
+#if !defined SHORT_HOSTINFO && !defined LONG_HOSTINFO
+#define SHORT_HOSTINFO
+#endif
 
 #include "hercules.h"
 
@@ -135,28 +144,25 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         if ( sysctlbyname("hw.cpufrequency", &ui64RV, &length, NULL, 0 ) != -1 )
             pHostInfo->cpu_speed = ui64RV;
 
-        length = sizeof(iRV);
-        if ( CMD(pHostInfo->machine,i386,4) )
+        length = (size_t)sizeof(iRV);
+        iRV = 0;
+        if ( sysctlbyname("hw.optional.x86_64", &iRV, &length, NULL, 0 ) != -1 )
         {
-            if ( sysctlbyname("hw.optional.x86_64", &iRV, &length, NULL, 0 ) != -1 )
-            {
-                char mach[64];
+            char mach[64];
 
-                MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
-                strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
-                pHostInfo->cpu_64bits = 1;
-            }
+            MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
+            strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+            pHostInfo->cpu_64bits = 1;
         }
-        else
-        {
-            if ( sysctlbyname("hw.optional.64bitops", &iRV, &length, NULL, 0 ) != -1 )
-            {
-                char mach[64];
 
-                MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
-                strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
-                pHostInfo->cpu_64bits = 1;
-            }
+        iRV = 0;
+        if ( sysctlbyname("hw.optional.aes", &iRV, &length, NULL, 0 ) != -1 )
+        {
+            char mach[64];
+
+            MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
+            strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+            pHostInfo->cpu_aes_extns = 1;
         }
 
 #if defined(HW_MEMSIZE)
@@ -278,6 +284,16 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
                 strlcpy( num_procs,   "",  sizeof(num_procs) );
         }
 
+#ifdef SHORT_HOSTINFO
+        snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
+            _("Running on: %s (%s-%s %s) %s"),
+            pHostInfo->nodename,
+            pHostInfo->sysname,
+            pHostInfo->release,
+            pHostInfo->machine,
+            num_procs
+        );
+#else
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
             _("Running on %s %s-%s. %s, %s%s"),
             pHostInfo->nodename,
@@ -287,6 +303,7 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
             pHostInfo->machine,
             num_procs
         );
+#endif
         *(pszHostInfoStrBuff + nHostInfoStrBuffSiz - 1) = 0;
     }
     return pszHostInfoStrBuff;

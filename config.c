@@ -11,8 +11,13 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
+#ifndef _CONFIG_C_
 #define _CONFIG_C_
+#endif
+
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
+#endif
 
 #include "hercules.h"
 #include "opcode.h"
@@ -1946,27 +1951,31 @@ parse_and_attach_devices(const char *sdevnum,
         U16         devnum;
         int         rc;
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(ENABLE_SYSTEM_SYMBOLS)
         int         j;
         char        **newargv;
         char        **orig_newargv;
-#endif
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
         devncount=parse_devnums(sdevnum,&dnd);
 
         if(devncount==0)
             return HERRDEVIDA; /* Invalid Device Address */
 
-#if defined(OPTION_CONFIG_SYMBOLS)
+#if defined(ENABLE_SYSTEM_SYMBOLS)
         newargv=malloc(MAX_ARGS*sizeof(char *));
         orig_newargv=malloc(MAX_ARGS*sizeof(char *));
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
             da=dnd.da;
             for(devnum=da[i].cuu1;devnum<=da[i].cuu2;devnum++)
             {
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
                char wrkbfr[32];
                MSGBUF( wrkbfr, "%3.3X",devnum);
                set_symbol("CUU",wrkbfr);
@@ -1975,6 +1984,8 @@ parse_and_attach_devices(const char *sdevnum,
                set_symbol("DEVN", wrkbfr);
                MSGBUF( wrkbfr, "%d",dnd.lcss);
                set_symbol("CSS",wrkbfr);
+#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+
                for(j=0;j<addargc;j++)
                {
                    orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
@@ -1985,10 +1996,11 @@ parse_and_attach_devices(const char *sdevnum,
                {
                    free(orig_newargv[j]);
                }
-#else /* #if defined(OPTION_CONFIG_SYMBOLS) */
+#else
                 /* Build the device configuration block (no syms) */
                rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, addargv);
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+#endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
+
                if(rc!=0)
                {
                    baddev=1;
@@ -2000,10 +2012,12 @@ parse_and_attach_devices(const char *sdevnum,
                 break;
             }
         }
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
         free(newargv);
         free(orig_newargv);
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+
         free(dnd.da);
         return baddev?-1:0;
 }

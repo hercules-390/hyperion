@@ -138,11 +138,31 @@ static const char *build_info[] = {
 
 #if defined(OPTION_HTTP_SERVER)
     "With    HTTP Server support",
-#if defined(PKGDATADIR) && defined(DEBUG)
+#if defined(VERBOSE_VERSION) && defined(PKGDATADIR)
     "        HTTP document default root directory is "PKGDATADIR,
 #endif
 #else
     "Without HTTP Server support",
+#endif
+
+#ifdef VERBOSE_VERSION
+#if defined(ENABLE_CONFIG_INCLUDE)
+    "With    CONFIG_INCLUDE support",
+#else
+    "Without CONFIG_INCLUDE support",
+#endif
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
+    "With    SYSTEM_SYMBOLS support",
+#else
+    "Without SYSTEM_SYMBOLS support",
+#endif
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+    "With    CONFIG_SYMBOLS support",
+#else
+    "Without CONFIG_SYMBOLS support",
+#endif
 #endif
 
 #if defined(NO_IEEE_SUPPORT)

@@ -197,7 +197,10 @@
 #define DEFAULT_TOD_PRIO  -20
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4           
+#define DEFAULT_SRV_PRIO    4
+
+#define CASELESS_SYMBOLS
+
 
 #ifdef _MSVC_
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK

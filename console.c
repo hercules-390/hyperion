@@ -1380,11 +1380,13 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
         {
             if(cline[0]!='@')
             {
-#if defined(OPTION_CONFIG_SYMBOLS)
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
                 wrk=resolve_symbol_string(cline);
                 free(cline);
                 cline=wrk;
-#endif
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+
                 switch(align)
                 {
                     case ALIGN_RIGHT:
@@ -1793,22 +1795,25 @@ char                    *logoout;
     /* Send connection message to client */
     if (devclass != 'K')
     {
-#if defined(OPTION_CONFIG_SYMBOLS)
 
+#if defined(ENABLE_BUILTIN_SYMBOLS)
         MSGBUF(conmsg,"%3.3X",dev->devnum);
         set_symbol("CUU",conmsg);
         MSGBUF(conmsg,"%4.4X",dev->devnum);
-  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-        if (dev == sysblk.sysgdev)
-           strncpy(conmsg,"SYSG",sizeof(conmsg));
-  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+  	#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+        if 	(dev == sysblk.sysgdev)
+           	strncpy(conmsg,"SYSG",sizeof(conmsg));
+  	#endif
+
         set_symbol("CCUU",conmsg);
         set_symbol("DEVN",conmsg);
         MSGBUF(conmsg,"%d",SSID_TO_LCSS(dev->ssid));
         set_symbol("CSS",conmsg);
         MSGBUF(conmsg,"%4.4X",dev->subchan);
         set_symbol("SUBCHAN",conmsg);
-#endif // defined(OPTION_CONFIG_SYMBOLS)
+#endif /* #if defined(ENABLE_BUILTIN_SYMBOLS) */
+
         if(sysblk.herclogo!=NULL)
         {
             logobfr=build_logo(sysblk.herclogo,sysblk.logolines,&len);

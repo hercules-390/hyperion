@@ -362,17 +362,16 @@ U64  syslevel;
 
     WRMSG(HHC00004, "I",systype,sysname,sysplex,syslevel);
 
-#if defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS)
+#if defined(ENABLE_BUILTIN_SYMBOLS)
     {
         char buf[128];
-
         MSGBUF(buf, "%"I64_FMT"X", syslevel );
         set_symbol("SYSTYPE", systype);
         set_symbol("SYSNAME", sysname);
         set_symbol("SYSPLEX", sysplex);
         set_symbol("SYSLEVEL", buf);
     }
-#endif /* defined(OPTION_CONFIG_SYMBOLS) && defined(OPTION_BUILTIN_SYMBOLS) */
+#endif
 
 #if defined(OPTION_LPP_RESTRICT)
     losc_check(systype);
@@ -1381,7 +1380,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             ARCH_DEP(checkstop_config)();
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp,SIE_NO_INTERCEPT);
-            break;
+            UNREACHABLE_CODE();
 
     case SCLP_READ_CHP_INFO:
 

@@ -130,12 +130,20 @@ typedef u_int32_t           in_addr_t;
 #define MAX_CPU_ENGINES  8
 #endif
 
-#if !defined(OPTION_CONFIG_SYMBOLS)
-#define OPTION_CONFIG_SYMBOLS
+#if !defined(ENABLE_CONFIG_INCLUDE) && !defined(NO_CONFIG_INCLUDE)
+#define  ENABLE_CONFIG_INCLUDE          /* enable config file includes */
 #endif
 
-#if !defined(OPTION_ENHANCED_CONFIG_INCLUDE)
-#define OPTION_ENHANCED_CONFIG_INCLUDE
+#if !defined(ENABLE_SYSTEM_SYMBOLS) && !defined(NO_SYSTEM_SYMBOLS)
+#define  ENABLE_SYSTEM_SYMBOLS          /* access to system symbols  */
+#endif
+
+#if !defined(ENABLE_BUILTIN_SYMBOLS) && !defined(NO_BUILTIN_SYMBOLS)
+#define  ENABLE_BUILTIN_SYMBOLS          /* Internal Symbols          */
+#endif
+
+#if defined(ENABLE_BUILTIN_SYMBOLS) && !defined(ENABLE_SYSTEM_SYMBOLS)
+  #error ENABLE_BUILTIN_SYMBOLS requires ENABLE_SYMBOLS_SYMBOLS
 #endif
 
 #define OPTION_FTHREADS
