@@ -1801,10 +1801,10 @@ char                    *logoout;
         set_symbol("CUU",conmsg);
         MSGBUF(conmsg,"%4.4X",dev->devnum);
 
-  	#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-        if 	(dev == sysblk.sysgdev)
-           	strncpy(conmsg,"SYSG",sizeof(conmsg));
-  	#endif
+    #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+        if  (dev == sysblk.sysgdev)
+            strncpy(conmsg,"SYSG",sizeof(conmsg));
+    #endif
 
         set_symbol("CCUU",conmsg);
         set_symbol("DEVN",conmsg);

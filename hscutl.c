@@ -466,7 +466,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     int     lstarted;                       /* Indicate if non-whitespace*/
     char   *inc_envvar;                     /* ->Environment variable    */
 
-	char	symc, symt;						/* Character work area       */
+    char    symt;                           /* Character work area       */
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     if( strstr( text, "$(" ) == NULL && strstr( text, "${" ) == NULL )

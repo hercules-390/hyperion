@@ -866,9 +866,11 @@ void *panel_command (void *cmdline)
 #endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
                 /* Perform variable substitution */
-                char *cl = resolve_symbol_string( cmd );
-                rc = HercCmdLine( cl );
-                free( cl );
+                {
+                    char *cl = resolve_symbol_string( cmd );
+                    rc = HercCmdLine( cl );
+                    free( cl );
+                }
 
 #else /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
                 rc = HercCmdLine( cmd );

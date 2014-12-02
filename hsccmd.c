@@ -6985,7 +6985,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
 
 
 #if defined(CASELESS_SYMBOLS)
-	/* store Symbol names in UC */
+    /* store Symbol names in UC */
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
@@ -7056,7 +7056,7 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
     }
 
 #if defined(CASELESS_SYMBOLS)
-	/* store Symbol names in UC */
+    /* store Symbol names in UC */
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
