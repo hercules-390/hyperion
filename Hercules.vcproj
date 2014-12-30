@@ -853,7 +853,27 @@
 							>
 						</File>
 						<File
-							RelativePath=".\cmpsc.c"
+							RelativePath=".\cmpsc_2012.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdbg.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdct.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscget.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscmem.c"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscput.c"
 							>
 						</File>
 						<File
@@ -1241,6 +1261,34 @@
 							>
 						</File>
 						<File
+							RelativePath=".\cmpsc.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscbit.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdbg.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscdct.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscget.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscmem.h"
+							>
+						</File>
+						<File
+							RelativePath=".\cmpscput.h"
+							>
+						</File>
+						<File
 							RelativePath=".\codepage.h"
 							>
 						</File>
@@ -1549,66 +1597,10 @@
 				<Filter
 					Name="altcmpsc"
 					>
-					<Filter
-						Name="Source Files"
+					<File
+						RelativePath=".\cmpsc.c"
 						>
-						<File
-							RelativePath=".\cmpsc_2012.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdbg.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdct.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscget.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscmem.c"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscput.c"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="Header Files"
-						>
-						<File
-							RelativePath=".\cmpsc.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscbit.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdbg.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscdct.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscget.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscmem.h"
-							>
-						</File>
-						<File
-							RelativePath=".\cmpscput.h"
-							>
-						</File>
-					</Filter>
+					</File>
 				</Filter>
 			</Filter>
 		</Filter>
@@ -1661,6 +1653,10 @@
 					</File>
 					<File
 						RelativePath=".\README.BSD"
+						>
+					</File>
+					<File
+						RelativePath=".\README.CMPSC"
 						>
 					</File>
 					<File

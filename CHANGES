@@ -1,3 +1,5 @@
+29 Dec 2014 New 2012 CMPSC instruction implementation is now the default.
+            Original/legacy implementation moved to altcmpsc.dll module.
 28 Jul 2013 COMMADPT driver mods for APL\360 - Max Parke <ikj1234i@yahoo.com> by Fish
 21 May 2013 Removed all "FishIO" (OPTION_FISHIO) code - Fish
             NOTE: HQA scenarios in hqadefs.h adjusted appropriately.

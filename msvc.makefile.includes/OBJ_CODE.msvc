@@ -82,12 +82,7 @@ decNumber_OBJ = \
     $(O)decPacked.obj
 
 altcmpsc_OBJ = \
-    $(O)cmpsc_2012.obj \
-    $(O)cmpscdbg.obj \
-    $(O)cmpscdct.obj \
-    $(O)cmpscget.obj \
-    $(O)cmpscmem.obj \
-    $(O)cmpscput.obj
+    $(O)cmpsc.obj
 
 hengine_OBJ = \
     $(O)archlvl.obj  \
@@ -99,7 +94,12 @@ hengine_OBJ = \
     $(O)chsc.obj     \
     $(O)clock.obj    \
     $(O)cmdtab.obj   \
-    $(O)cmpsc.obj    \
+    $(O)cmpsc_2012.obj  \
+    $(O)cmpscdbg.obj    \
+    $(O)cmpscdct.obj    \
+    $(O)cmpscget.obj    \
+    $(O)cmpscmem.obj    \
+    $(O)cmpscput.obj    \
     $(O)config.obj   \
     $(O)control.obj  \
     $(O)cpu.obj      \

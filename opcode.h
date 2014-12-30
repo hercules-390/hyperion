@@ -3114,7 +3114,7 @@ DEF_INST(trace_svc_return);
 
 /* Instructions in cmpsc.c */
 #if defined(FEATURE_COMPRESSION)
-DEF_INST(compression_call);
+DEF_INST(cmpsc_2012);
 #endif /*defined(FEATURE_COMPRESSION)*/
 
 

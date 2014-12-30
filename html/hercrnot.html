@@ -45,6 +45,34 @@ Hercules Release Notes and Known Issues</TITLE>
     entered as a panel command. Most panel commands are now also allowed as
     configuration file statements. See the documentation for full details.
   </p>
+
+  <dt>New and improved CMPSC Compression Call 2012 instruction implementation is now the default
+  <dd>
+  <p>
+    The default implementation for the CMPSC Compression Call instruction is
+    now the new cmpsc_2012 implementation. The previous legacy implementation
+    is now the alternate implementation implemented as a dynamically loadable
+    module called "altcmpsc.dll". Refer to the README.CMPSC document for more
+    information.
+  </p>
+
+  <dt>More architecturally compliant Channel Subsystem implementation
+  <dd>
+  <p>
+    Hercules 4.0 Hyperion's channel subsystem implementation now more closely
+    adheres to published and unpublished architectural specifications. It does
+    not precisely adhere to the complete specification but it does adhere much
+    more closely than ever before (and definitely more closely than the legacy
+    implementation still used in the older spinhawk 3.xx series of Hercules).
+  </p>
+  <p>
+    If you experience any anomalies in the behavior of your guest operating
+    system, verify that you are using architecurally valid/correct configuration
+    settings that your guest operating system expects. Pay particular attention
+    to your LPARNUM, CPUMODEL, CPUSERIAL, CPUVERID, CPUIDFMT, MODEL, PLANT
+    and MANUFACTURER values since they have a direct impact on how your guest
+    operating system will behave.
+  </p>
 </dl>
 
 
@@ -341,7 +369,7 @@ more. Every system on which Hercules is now prebuilt has the TUN/TAP
 driver functionality available in one form or another, and it's much more
 robust.</li>
 </ul>
-Both of these will go away in a future release.</p>
+<p>Both of these will go away in a future release.</p>
 <p>In addition, you <b>must not</b> define both even/odd CTCI device pairs in
 your configuration file. You should <b>only</b> define the first even
 numbered device. Hercules will automatically define the odd numbered device

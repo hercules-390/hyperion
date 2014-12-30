@@ -822,7 +822,7 @@
 
 
 #if !defined(FEATURE_COMPRESSION)
- UNDEF_INST(compression_call)
+ UNDEF_INST(cmpsc_2012)
 #endif /*!defined(FEATURE_COMPRESSION)*/
 
 
@@ -2742,7 +2742,7 @@ static zz_func opcode_b2xx[0x100][GEN_MAXARCH] = {
  /*B260*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B261*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B262*/ GENx___x390x900 (lock_page,RRE,"LKPG"),
- /*B263*/ GENx37Xx390x900 (compression_call,RRE,"CMPSC"),
+ /*B263*/ GENx37Xx390x900 (cmpsc_2012,RRE,"CMPSC"),
  /*B264*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B265*/ GENx___x___x900 (set_vector_summary,RRE,"SVS"),    /*           */
  /*B266*/ GENx___x___x___ ,                                     /* Sysplex   */

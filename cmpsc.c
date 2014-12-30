@@ -37,8 +37,6 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#else                                             // (building utility)
-#define compression_call    legacy_cmpsc
 #endif
 
 #ifdef FEATURE_COMPRESSION
@@ -262,7 +260,7 @@ static int   ARCH_DEP(cmpsc_vstore)(struct ec *ec, BYTE *buf, unsigned len);
 /*----------------------------------------------------------------------------*/
 /* B263 CMPSC - Compression Call                                        [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compression_call)
+DEF_INST(legacy_cmpsc)
 {
   REGS iregs;                          /* Intermediate registers              */
   int r1;                              /* Guess what                          */
@@ -735,7 +733,7 @@ static int ARCH_DEP(cmpsc_fetch_ch)(struct cc *cc)
   /* Calculate source length in page */
   cc->srclen = 0x800 - (GR_A(cc->r2, cc->iregs) & 0x7ff);
   if(unlikely(GR_A(cc->r2 + 1, cc->iregs) < cc->srclen))
-    cc->srclen = GR_A(cc->r2 + 1, cc->iregs);
+    cc->srclen = (unsigned int) (GR_A(cc->r2 + 1, cc->iregs));
 
   /* Get address */
   cc->src = MADDR(GR_A(cc->r2, cc->iregs) & ADDRESS_MAXWRAP(cc->regs), cc->r2, cc->regs, ACCTYPE_READ, cc->regs->psw.pkey);
@@ -1210,15 +1208,15 @@ static void ARCH_DEP(cmpsc_store_iss)(struct cc *cc)
       /* 012345670123456701234567012345670123456701234567012345670123456701234567 */
       /* 012345678012345678012345678012345678012345678012345678012345678012345678 */
       /* 0        1        2        3        4        5        6        7         */
-      mem[0] = (               (is[0] >> 1));
-      mem[1] = ((is[0] << 7) | (is[1] >> 2));
-      mem[2] = ((is[1] << 6) | (is[2] >> 3));
-      mem[3] = ((is[2] << 5) | (is[3] >> 4));
-      mem[4] = ((is[3] << 4) | (is[4] >> 5));
-      mem[5] = ((is[4] << 3) | (is[5] >> 6));
-      mem[6] = ((is[5] << 2) | (is[6] >> 7));
-      mem[7] = ((is[6] << 1) | (is[7] >> 8));
-      mem[8] = ((is[7])                    );
+      mem[0] = (BYTE) (               (is[0] >> 1));
+      mem[1] = (BYTE) ((is[0] << 7) | (is[1] >> 2));
+      mem[2] = (BYTE) ((is[1] << 6) | (is[2] >> 3));
+      mem[3] = (BYTE) ((is[2] << 5) | (is[3] >> 4));
+      mem[4] = (BYTE) ((is[3] << 4) | (is[4] >> 5));
+      mem[5] = (BYTE) ((is[4] << 3) | (is[5] >> 6));
+      mem[6] = (BYTE) ((is[5] << 2) | (is[6] >> 7));
+      mem[7] = (BYTE) ((is[6] << 1) | (is[7] >> 8));
+      mem[8] = (BYTE) ((is[7])                    );
       break;
     }
     case 10: /* 10-bits */
@@ -1227,16 +1225,16 @@ static void ARCH_DEP(cmpsc_store_iss)(struct cc *cc)
       /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567 */
       /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
       /* 0         1         2         3         4         5         6         7          */
-      mem[0] = (               (is[0] >> 2));
-      mem[1] = ((is[0] << 6) | (is[1] >> 4));
-      mem[2] = ((is[1] << 4) | (is[2] >> 6));
-      mem[3] = ((is[2] << 2) | (is[3] >> 8));
-      mem[4] = ((is[3])                    );
-      mem[5] = (               (is[4] >> 2));
-      mem[6] = ((is[4] << 6) | (is[5] >> 4));
-      mem[7] = ((is[5] << 4) | (is[6] >> 6));
-      mem[8] = ((is[6] << 2) | (is[7] >> 8));
-      mem[9] = ((is[7])                    );
+      mem[0] = (BYTE) (               (is[0] >> 2));
+      mem[1] = (BYTE) ((is[0] << 6) | (is[1] >> 4));
+      mem[2] = (BYTE) ((is[1] << 4) | (is[2] >> 6));
+      mem[3] = (BYTE) ((is[2] << 2) | (is[3] >> 8));
+      mem[4] = (BYTE) ((is[3])                    );
+      mem[5] = (BYTE) (               (is[4] >> 2));
+      mem[6] = (BYTE) ((is[4] << 6) | (is[5] >> 4));
+      mem[7] = (BYTE) ((is[5] << 4) | (is[6] >> 6));
+      mem[8] = (BYTE) ((is[6] << 2) | (is[7] >> 8));
+      mem[9] = (BYTE) ((is[7])                    );
       break;
     }
     case 11: /* 11-bits */
@@ -1245,17 +1243,17 @@ static void ARCH_DEP(cmpsc_store_iss)(struct cc *cc)
       /* 0123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
       /* 0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a */
       /* 0          1          2          3          4          5          6          7           */
-      mem[ 0] = (               (is[0] >>  3));
-      mem[ 1] = ((is[0] << 5) | (is[1] >>  6));
-      mem[ 2] = ((is[1] << 2) | (is[2] >>  9));
-      mem[ 3] = (               (is[2] >>  1));
-      mem[ 4] = ((is[2] << 7) | (is[3] >>  4));
-      mem[ 5] = ((is[3] << 4) | (is[4] >>  7));
-      mem[ 6] = ((is[4] << 1) | (is[5] >> 10));
-      mem[ 7] = (               (is[5] >>  2));
-      mem[ 8] = ((is[5] << 6) | (is[6] >>  5));
-      mem[ 9] = ((is[6] << 3) | (is[7] >>  8));
-      mem[10] = ((is[7])                     );
+      mem[ 0] = (BYTE) (               (is[0] >>  3));
+      mem[ 1] = (BYTE) ((is[0] << 5) | (is[1] >>  6));
+      mem[ 2] = (BYTE) ((is[1] << 2) | (is[2] >>  9));
+      mem[ 3] = (BYTE) (               (is[2] >>  1));
+      mem[ 4] = (BYTE) ((is[2] << 7) | (is[3] >>  4));
+      mem[ 5] = (BYTE) ((is[3] << 4) | (is[4] >>  7));
+      mem[ 6] = (BYTE) ((is[4] << 1) | (is[5] >> 10));
+      mem[ 7] = (BYTE) (               (is[5] >>  2));
+      mem[ 8] = (BYTE) ((is[5] << 6) | (is[6] >>  5));
+      mem[ 9] = (BYTE) ((is[6] << 3) | (is[7] >>  8));
+      mem[10] = (BYTE) ((is[7])                     );
       break;
     }
     case 12: /* 12-bits */
@@ -1264,18 +1262,18 @@ static void ARCH_DEP(cmpsc_store_iss)(struct cc *cc)
       /* 012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
       /* 0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab */
       /* 0           1           2           3           4           5           6           7            */
-      mem[ 0] = (               (is[0] >> 4));
-      mem[ 1] = ((is[0] << 4) | (is[1] >> 8));
-      mem[ 2] = ((is[1])                    );
-      mem[ 3] = (               (is[2] >> 4));
-      mem[ 4] = ((is[2] << 4) | (is[3] >> 8));
-      mem[ 5] = ((is[3])                    );
-      mem[ 6] = (               (is[4] >> 4));
-      mem[ 7] = ((is[4] << 4) | (is[5] >> 8));
-      mem[ 8] = ((is[5])                    );
-      mem[ 9] = (               (is[6] >> 4));
-      mem[10] = ((is[6] << 4) | (is[7] >> 8));
-      mem[11] = ((is[7])                    );
+      mem[ 0] = (BYTE) (               (is[0] >> 4));
+      mem[ 1] = (BYTE) ((is[0] << 4) | (is[1] >> 8));
+      mem[ 2] = (BYTE) ((is[1])                    );
+      mem[ 3] = (BYTE) (               (is[2] >> 4));
+      mem[ 4] = (BYTE) ((is[2] << 4) | (is[3] >> 8));
+      mem[ 5] = (BYTE) ((is[3])                    );
+      mem[ 6] = (BYTE) (               (is[4] >> 4));
+      mem[ 7] = (BYTE) ((is[4] << 4) | (is[5] >> 8));
+      mem[ 8] = (BYTE) ((is[5])                    );
+      mem[ 9] = (BYTE) (               (is[6] >> 4));
+      mem[10] = (BYTE) ((is[6] << 4) | (is[7] >> 8));
+      mem[11] = (BYTE) ((is[7])                    );
       break;
     }
     case 13: /* 13-bits */
@@ -1284,19 +1282,19 @@ static void ARCH_DEP(cmpsc_store_iss)(struct cc *cc)
       /* 01234567012345670123456701234567012345670123456701234567012345670123456701234567012345670123456701234567 */
       /* 0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc0123456789abc */
       /* 0            1            2            3            4            5            6            7             */
-      mem[ 0] = (               (is[0] >>  5));
-      mem[ 1] = ((is[0] << 3) | (is[1] >> 10));
-      mem[ 2] = (               (is[1] >>  2));
-      mem[ 3] = ((is[1] << 6) | (is[2] >>  7));
-      mem[ 4] = ((is[2] << 1) | (is[3] >> 12));
-      mem[ 5] = (               (is[3] >>  4));
-      mem[ 6] = ((is[3] << 4) | (is[4] >>  9));
-      mem[ 7] = (               (is[4] >>  1));
-      mem[ 8] = ((is[4] << 7) | (is[5] >>  6));
-      mem[ 9] = ((is[5] << 2) | (is[6] >> 11));
-      mem[10] = (               (is[6] >>  3));
-      mem[11] = ((is[6] << 5) | (is[7] >>  8));
-      mem[12] = ((is[7])                     );
+      mem[ 0] = (BYTE) (               (is[0] >>  5));
+      mem[ 1] = (BYTE) ((is[0] << 3) | (is[1] >> 10));
+      mem[ 2] = (BYTE) (               (is[1] >>  2));
+      mem[ 3] = (BYTE) ((is[1] << 6) | (is[2] >>  7));
+      mem[ 4] = (BYTE) ((is[2] << 1) | (is[3] >> 12));
+      mem[ 5] = (BYTE) (               (is[3] >>  4));
+      mem[ 6] = (BYTE) ((is[3] << 4) | (is[4] >>  9));
+      mem[ 7] = (BYTE) (               (is[4] >>  1));
+      mem[ 8] = (BYTE) ((is[4] << 7) | (is[5] >>  6));
+      mem[ 9] = (BYTE) ((is[5] << 2) | (is[6] >> 11));
+      mem[10] = (BYTE) (               (is[6] >>  3));
+      mem[11] = (BYTE) ((is[6] << 5) | (is[7] >>  8));
+      mem[12] = (BYTE) ((is[7])                     );
       break;
     }
   }
@@ -1978,4 +1976,35 @@ static int ARCH_DEP(cmpsc_vstore)(struct ec *ec, BYTE *buf, unsigned len)
     #define _GEN_ARCH _ARCHMODE3
     #include "cmpsc.c"
   #endif /* #ifdef _ARCHMODE3 */
+
+
+#if !defined( NOT_HERC )        // (building Hercules?)
+
+HDL_DEPENDENCY_SECTION;
+{
+    HDL_DEPENDENCY( HERCULES );
+    HDL_DEPENDENCY( REGS );
+}
+END_DEPENDENCY_SECTION;
+
+HDL_INSTRUCTION_SECTION;
+{
+    char info[256];
+    const char* fn = NULL;
+    if (!fn) fn = strrchr( __FILE__, '\\' );
+    if (!fn) fn = strrchr( __FILE__ , '/' );
+    if (!fn) fn =          __FILE__        ; else fn++;
+#ifdef __TIMESTAMP__
+    MSGBUF( info, "%s version %s last updated on %s", fn, VERSION, __TIMESTAMP__ );
+#else
+    MSGBUF( info, "%s version %s compiled on %s at %s", fn, VERSION, __DATE__, __TIME__ );
+#endif
+    WRMSG( HHC01417, "I", info );
+
+    HDL_DEFINST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB263, legacy_cmpsc );
+}
+END_INSTRUCTION_SECTION;
+
+#endif // !defined( NOT_HERC )  // (building Hercules?)
+
 #endif /* #ifndef _GEN_ARCH */

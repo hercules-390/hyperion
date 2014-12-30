@@ -450,6 +450,7 @@
     <None Include="README.ISSUES" />
     <None Include="RELEASE.NOTES" />
     <None Include="README.AIX" />
+    <None Include="README.CMPSC" />
     <None Include="README.COMMADPT" />
     <None Include="README.DYNMOD" />
     <None Include="README.ECPSVM" />

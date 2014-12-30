@@ -261,7 +261,7 @@ if OPTION_DYNAMIC_LOAD
   hdtptp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   hdtptp_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-  altcmpsc_la_SOURCES  = cmpsc_2012.c cmpscdbg.c cmpscdct.c cmpscget.c cmpscmem.c cmpscput.c
+  altcmpsc_la_SOURCES  = cmpsc.c
   altcmpsc_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   altcmpsc_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -378,7 +378,12 @@ endif
                        machchk.c    \
                        vector.c     \
                        xstore.c     \
-                       cmpsc.c      \
+                       cmpsc_2012.c \
+                       cmpscdbg.c   \
+                       cmpscdct.c   \
+                       cmpscget.c   \
+                       cmpscmem.c   \
+                       cmpscput.c   \
                        sie.c        \
                        qdio.c       \
                        clock.c      \
@@ -630,6 +635,7 @@ EXTRA_DIST = autoconf/config.rpath \
              README.APL360         \
              README.BSD            \
              README.COMMADPT       \
+             README.CMPSC          \
              README.DECNUMBER      \
              README.DYNMOD         \
              README.ECPSVM         \

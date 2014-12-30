@@ -662,6 +662,9 @@
     <None Include="README.AIX">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="README.CMPSC">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="README.COMMADPT">
       <Filter>Other Files\DOC\README</Filter>
     </None>

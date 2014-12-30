@@ -94,14 +94,12 @@
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
-#undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
-
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
 #if 0
