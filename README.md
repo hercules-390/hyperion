@@ -2,9 +2,6 @@
 
 ## Hercules 4.0 (Hyperion)
 
-This is official web page for the **Hercules 4.0** version
-of the Hercules mainframe emulator, code named **"Hyperion"**.
-
 The **Hyperion** version of Hercules is the official development version of
 the Hercules emulator and contains the latest bleeding edge changes made by Hercules
 developers to address various bugs that may exist in the production version.
