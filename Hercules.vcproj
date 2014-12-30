@@ -1637,6 +1637,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\README.md"
+					>
+				</File>
+				<File
 					RelativePath=".\RELEASE.NOTES"
 					>
 				</File>
