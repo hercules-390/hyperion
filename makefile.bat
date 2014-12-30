@@ -783,7 +783,7 @@
   if not defined repo_type set "repo_type=unk"
 
                        set "VERSION=%V1%.%V2%.%V3%"
-  if not "%V4%" == "0" set "VERSION=%VERSION%-%repo_type%-%V4%"
+  if not "%V4%" == "0" set "VERSION=%VERSION%.%V4%"
                        set  VERSION=\"%VERSION%%modified_str%\"
 
   goto :set_VERSION_done
