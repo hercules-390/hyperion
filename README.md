@@ -2,10 +2,6 @@
 
 ## Hercules 4.0 (Hyperion)
 
-The **Hyperion** version of Hercules is the official development version of
-the Hercules emulator and contains the latest bleeding edge changes made by Hercules
-developers to address various bugs that may exist in the production version.
-
 **Hercules** is an open source software implementation of the mainframe
 System/370 and ESA/390 architectures, in addition to the latest 64-bit
 z/Architecture. Hercules runs under Linux, Windows,
@@ -14,6 +10,10 @@ and Mac OS X.
 
 Hercules is [OSI Certified Open Source Software](http://www.opensource.org/)
 licensed under the terms of the [Q Public Licence](http://hercules-390.github.io/html/herclic.html).
+
+The **Hyperion** version of Hercules is the official development version of
+the Hercules emulator and contains the latest bleeding edge changes made by Hercules
+developers to address various bugs that may exist in the production version.
 
 Hercules was created by Roger Bowler.
 Jay Maynard "the Tron Guy" was the maintainer from 2000 to 2012.
