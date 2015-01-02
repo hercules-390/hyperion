@@ -1059,6 +1059,9 @@ static CPCONV cpconv[] = {
 
 static CPCONV *codepage_conv = cpconv;
 
+DLL_EXPORT unsigned char *h2g_tab() { return codepage_conv->h2g; }
+DLL_EXPORT unsigned char *g2h_tab() { return codepage_conv->g2h; }
+
 DLL_EXPORT char * query_codepage(void)
 {
     return codepage_conv->name;
