@@ -311,6 +311,7 @@ endif
 #
   libhercu_la_SOURCES = version.c    \
                         hscutl.c     \
+                        hexdumpe.c   \
                         hscutl2.c    \
                         codepage.c   \
                         logger.c     \
@@ -753,6 +754,7 @@ noinst_HEADERS = hostinfo.h     \
                  memrchr.h      \
                  shared.h       \
                  hscutl.h       \
+                 hexdumpe.h     \
                  cmdtab.h       \
                  hdl.h          \
                  sockdev.h      \

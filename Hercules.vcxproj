@@ -379,6 +379,7 @@
     <ClCompile Include="hscmisc.c" />
     <ClCompile Include="hscpufun.c" />
     <ClCompile Include="hscutl.c" />
+    <ClCompile Include="hexdumpe.c" />
     <ClCompile Include="hscutl2.c" />
     <ClCompile Include="hsocket.c" />
     <ClCompile Include="hsys.c" />
@@ -722,6 +723,7 @@
     <ClInclude Include="hRexx.h" />
     <ClInclude Include="hRexxapi.h" />
     <ClInclude Include="hscutl.h" />
+    <ClInclude Include="hexdumpe.h" />
     <ClInclude Include="hsocket.h" />
     <ClInclude Include="hstdinc.h" />
     <ClInclude Include="hstdint.h" />

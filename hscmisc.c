@@ -22,6 +22,7 @@
 #include "inline.h"
 #include "hconsole.h"
 #include "esa390io.h"
+#include "hexdumpe.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -230,6 +231,7 @@ TID tid;
                 do_shutdown_now();
     }
 }
+
 /*-------------------------------------------------------------------*/
 /* The following 2 routines display an array of 32/64 registers      */
 /* 1st parameter is the register type (GR, CR, AR, etc..)            */
@@ -1826,6 +1828,86 @@ int     stid;                           /* Segment table indication  */
 
 
 /*-------------------------------------------------------------------*/
+/*                  Hexdump real storage page                        */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*   regs     CPU register context                                   */
+/*   raddr    Real address of start of page to be dumped             */
+/*   adr      Cosmetic address of start of page                      */
+/*   offset   Offset from start of page where to begin dumping       */
+/*   amt      Number of bytes to dump                                */
+/*   real     1 = alter_display_real call, 0 = alter_display_virt    */
+/*   wid      Width of addresses in bits (32 or 64)                  */
+/*                                                                   */
+/* Message number HHC02290 used if real == 1, otherwise HHC02291.    */
+/* raddr must be page aligned. offset must be < pagesize. amt must   */
+/* be <= pagesize - offset. Results printed directly via logmsg.     */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
+                                        size_t offset, size_t amt,
+                                        BYTE real, BYTE wid )
+{
+    char*   msgnum;                 /* "HHC02290" or "HHC02291"      */
+    char*   dumpdata;               /* pointer to data to be dumped  */
+    char*   dumpbuf = NULL;         /* pointer to hexdump buffer     */
+    char    pfx[24];                /* string prefixed to each line  */
+    RADR    aaddr;                  /* absolute addresses (work)     */
+
+    msgnum = real ? "HHC02290" : "HHC02291";
+
+    if (0
+        || raddr  >= regs->mainlim          /* invalid address       */
+        || raddr  &  PAGEFRAME_BYTEMASK     /* not page aligned      */
+        || adr    &  PAGEFRAME_BYTEMASK     /* not page aligned      */
+        || offset >= PAGEFRAME_PAGESIZE     /* offset >= pagesize    */
+        || amt    > (PAGEFRAME_PAGESIZE - offset)/* more than 1 page */
+        || (wid != 32 && wid != 64)         /* invalid address width */
+    )
+    {
+        logmsg( "%s%c %s\n", msgnum, 'E',
+            "dump_real_page(): invalid parameters" );
+        return;
+    }
+
+    /* Flush interval timer value to storage */
+    ITIMER_SYNC( raddr + offset, amt, regs );
+
+    /* Get absolute address of page */
+    aaddr = APPLY_PREFIXING( raddr, regs->PX );
+
+    /* Format string each dump line should be prefixed with */
+    MSGBUF( pfx, "%sI %c:", msgnum, real ? 'R' : 'V' );
+
+    /* Point to first byte of actual real storage to be dumped */
+    dumpdata = (char*) regs->mainstor + aaddr + offset;
+
+    /* Adjust cosmetic starting address of first line of dump */
+    adr += offset;                  /* exact cosmetic start address  */
+    adr &= ~0xF;                    /* align to 16-byte boundary     */
+    offset &= 0xF;                  /* offset must be < (bpg * gpl)  */
+
+    /* Use hexdump to format 16-byte aligned dump of real storage... */
+
+    hexdumpew                       /* afterwards dumpbuf --> dump   */
+    (
+        pfx,                        /* string prefixed to each line  */
+        &dumpbuf,                   /* ptr to hexdump buffer pointer */
+                                    /* (if NULL hexdump will malloc) */
+        dumpdata,                   /* pointer to data to be dumped  */
+        offset,                     /* bytes to skip on first line   */
+        amt,                        /* amount of data to be dumped   */
+        adr,                        /* cosmetic dump address of data */
+        wid,                        /* width of dump address in bits */
+        4,                          /* bpg value (bytes per group)   */
+        4                           /* gpl value (groups per line)   */
+    );
+    logmsg( "%s", dumpbuf );        /* print the formatted dump      */
+    free( dumpbuf );                /* free hexdump dump buffer      */
+
+} /* end function dump_real_page */
+
+
+/*-------------------------------------------------------------------*/
 /* Disassemble real                                                  */
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(disasm_stor) (REGS *regs, int argc, char *argv[], char *cmdline)
@@ -1955,7 +2037,7 @@ RADR    aaddr;                          /* Absolute storage address  */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
-char    buf[512];                       /* Message buffer            */
+size_t  totamt;                         /* Total amount to be dumped */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1997,17 +2079,45 @@ char    buf[512];                       /* Message buffer            */
 
             regs->mainstor[aaddr] = newval[i];
             STORAGE_KEY(aaddr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        } /* end for(i) */
 
+        } /* end for(i) */
     }
 
     /* Display real storage */
-    for (i = 0; i < 999 && raddr <= eaddr; i++)
+    if ((totamt = (eaddr - saddr) + 1) > 0)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, sizeof(buf), 1, "");
-        WRMSG( HHC02290, "I", buf );
-        raddr += 16;
-    } /* end for(i) */
+        RADR    pageadr  = saddr & PAGEFRAME_PAGEMASK;
+        size_t  pageoff  = saddr - pageadr;
+        size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
+        BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
+        char    buf[32];
+
+        if (pageamt > totamt)
+            pageamt = totamt;
+
+        /* Dump requested real storage one whole page at a time */
+
+        for (;;)
+        {
+            MSGBUF( buf, "R:"F_RADR"  K:%2.2X", pageadr, STORAGE_KEY( pageadr, regs ));
+            WRMSG( HHC02290, "I", buf );
+
+            ARCH_DEP( dump_real_page )( regs, pageadr, pageadr, pageoff, pageamt, 1, addrwid );
+
+            /* Check if we're done */
+            if (!(totamt -= pageamt))
+                break;
+
+            /* Go on to the next page */
+
+            pageoff =  0; // (from now on)
+            pageamt =  PAGEFRAME_PAGESIZE;
+            pageadr += PAGEFRAME_PAGESIZE;
+
+            if (pageamt > totamt)
+                pageamt = totamt;
+        }
+    }
 
 } /* end function alter_display_real */
 
@@ -2026,12 +2136,12 @@ RADR    aaddr;                          /* Absolute storage address  */
 int     stid;                           /* Segment table indication  */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
-int     n;                              /* Number of bytes in buffer */
 int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[512];                       /* Message buffer            */
-char    type;
+char    type;                           /* optional addr-space type  */
+size_t  totamt;                         /* Total amount to be dumped */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -2098,44 +2208,62 @@ char    type;
 
             regs->mainstor[aaddr] = newval[i];
             STORAGE_KEY(aaddr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+
         } /* end for(i) */
     }
 
     /* Display virtual storage */
-    for (i = 0; i < 999 && vaddr <= eaddr; i++)
+    if ((totamt = (eaddr - saddr) + 1) > 0)
     {
-        if (i == 0 || (vaddr & PAGEFRAME_BYTEMASK) < 16)
+        RADR    pageadr  = saddr & PAGEFRAME_PAGEMASK;
+        size_t  pageoff  = saddr - pageadr;
+        size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
+        BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
+        BYTE    real     = (USE_REAL_ADDR == arn);
+        char    trans[16]; // (address translation mode)
+
+        if (pageamt > totamt)
+            pageamt = totamt;
+
+        /* Dump requested virtual storage one whole page at a time */
+
+        for (;;)
         {
-            xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
-                                            regs, ACCTYPE_LRA);
-            n = snprintf (buf, sizeof(buf)-1, "V:"F_VADR" ", vaddr);
-            if (REAL_MODE(&regs->psw))
-                n += snprintf (buf+n, sizeof(buf)-n-1, "(dat off)");
-            else if (stid == TEA_ST_PRIMARY)
-                n += snprintf (buf+n, sizeof(buf)-n-1, "(primary)");
-            else if (stid == TEA_ST_SECNDRY)
-                n += snprintf (buf+n, sizeof(buf)-n-1, "(secondary)");
-            else if (stid == TEA_ST_HOME)
-                n += snprintf (buf+n, sizeof(buf)-n-1, "(home)");
-            else
-                n += snprintf (buf+n, sizeof(buf)-n-1, "(AR%2.2d)", arn);
+            /* Convert virtual address to real address */
+            xcode = ARCH_DEP( virt_to_abs )( &raddr, &stid, pageadr, arn, regs, ACCTYPE_LRA );
+
+            /* Show how virtual address was translated */
+                 if (REAL_MODE( &regs->psw )) MSGBUF( trans, "%s", "(dat off)"   );
+            else if (stid == TEA_ST_PRIMARY)  MSGBUF( trans, "%s", "(primary)"   );
+            else if (stid == TEA_ST_SECNDRY)  MSGBUF( trans, "%s", "(secondary)" );
+            else if (stid == TEA_ST_HOME)     MSGBUF( trans, "%s", "(home)"      );
+            else                              MSGBUF( trans, "(AR%2.2d)", arn    );
+
             if (xcode == 0)
-                n += snprintf (buf+n, sizeof(buf)-n-1, " R:"F_RADR, raddr);
-            WRMSG(HHC02291, "I", buf);
+                MSGBUF( buf, "R:"F_RADR"  K:%2.2X  %s", raddr, STORAGE_KEY( raddr, regs ), trans );
+            else
+                MSGBUF( buf, "V:"F_RADR"  Translation exception %4.4hX  %s", pageadr, xcode, trans );
+
+            WRMSG( HHC02291, "I", buf );
+
+            /* Now hexdump that entire page */
+            if (xcode == 0)
+                ARCH_DEP( dump_real_page )( regs, raddr, pageadr, pageoff, pageamt, real, addrwid );
+
+            /* Check if we're done */
+            if (!(totamt -= pageamt))
+                break;
+
+            /* Go on to the next page */
+
+            pageoff =  0; // (from now on)
+            pageamt =  PAGEFRAME_PAGESIZE;
+            pageadr += PAGEFRAME_PAGESIZE;
+
+            if (pageamt > totamt)
+                pageamt = totamt;
         }
-        ARCH_DEP(display_virt) (regs, vaddr, buf, sizeof(buf), arn, ACCTYPE_LRA, "", &xcode);
-        WRMSG(HHC02291, "I", buf);
-        if (xcode)
-        {
-            /* Skip ahead to next 2K page boundary */
-            vaddr +=         0x800;
-            vaddr &= ~((VADR)0x7FF);
-        }
-        else
-        {
-            vaddr += 16;
-        }
-    } /* end for(i) */
+    }
 
 } /* end function alter_display_virt */
 

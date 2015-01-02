@@ -997,6 +997,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hexdumpe.c"
+							>
+						</File>
+						<File
 							RelativePath=".\history.c"
 							>
 						</File>
@@ -1398,6 +1402,10 @@
 						</File>
 						<File
 							RelativePath=".\herror.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hexdumpe.h"
 							>
 						</File>
 						<File
