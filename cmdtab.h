@@ -1072,9 +1072,9 @@
 #define r_cmd_desc              "Display or alter real storage"
 #define r_cmd_help              \
                                 \
-  "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display real\n"             \
-  "storage, or \"r addr=value\" to alter real storage, where 'value'\n"          \
-  "is a hex string of up to 32 pairs of digits.\n"
+  "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display up to 64K\n"        \
+  "of real storage, or \"r addr=value\" to alter up to 64 bytes of real\n"       \
+  "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
 
 #define restart_cmd_desc        "Generate restart interrupt"
 #define resume_cmd_desc         "Resume hercules"
@@ -1415,20 +1415,21 @@
 #define u_cmd_help              \
                                 \
   "Format: \"u [R|V|P|H]addr[.len]\" or \"u [R|V|P|H]addr[-addr2]\" to\n"       \
-  "disassemble storage beginning at address 'addr' for length 'len' or\n"       \
-  "to address 'addr2'. The optional 'R', 'V', 'P' or 'H' address prefix\n"      \
-  "forces Real, Virtual, Primary Space, or Home Space address translation\n"    \
-  "mode instead of using the current PSW mode, which is the default.\n"
+  "disassemble up to 64K of storage beginning at address 'addr' for length\n"   \
+  "'len' or to address 'addr2'. The optional R, V, P or H address prefix\n"     \
+  "forces Real, Virtual, Primary, or Home Space address translation mode\n"     \
+  "instead of using the current PSW mode, which is the default.\n"
 
 #define uptime_cmd_desc         "Display how long Hercules has been running"
 #define v_cmd_desc              "Display or alter virtual storage"
 #define v_cmd_help              \
                                 \
   "Format: \"v [P|S|H]addr[.len]\" or \"v [P|S|H]addr[-addr2]\" to display\n"   \
-  "virtual storage, or \"v [P|S|H]addr=value\" to alter virtual storage,\n"     \
-  "where 'value' is a hex string of up to 32 pairs of digits. The optional\n"   \
-  "'P', 'S' or 'H' address prefix character forces Primary Space, Secondary\n"  \
-  "Space or Home Space address translation mode instead of current PSW mode.\n"
+  "up to 64K of virtual storage, or \"v [P|S|H]addr=value\" to alter up to\n"   \
+  "64 bytes of virtual storage, where 'value' is a string of up to 32 pairs\n"  \
+  "of hex digits. The optional P, S or H address prefix character forces\n"     \
+  "Primary, Secondary or Home Space address translation mode instead of\n"  \
+  "using the current PSW mode, which is the default.\n"
 
 #define version_cmd_desc        "Display version information"
 #define xpndsize_cmd_desc       "Define/Display xpndsize parameter"

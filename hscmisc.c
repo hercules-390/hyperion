@@ -1700,6 +1700,14 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 #endif /*!defined(_HSCMISC_C)*/
 
 
+#define RANGE_LIMIT     _64_KILOBYTE
+#define LIMIT_RANGE( _s, _e, _n )                       \
+    do {                                                \
+        if ((_e) > (_n) && ((_e) - (_n) + 1) > (_s))    \
+            (_e) = ((_s) + (_n) - 1);                   \
+    } while(0)
+
+
 /*-------------------------------------------------------------------*/
 /* Convert virtual address to absolute address                       */
 /*                                                                   */
@@ -1842,21 +1850,21 @@ int     stid;                           /* Segment table indication  */
 /* Message number HHC02290 used if real == 1, otherwise HHC02291.    */
 /* raddr must be page aligned. offset must be < pagesize. amt must   */
 /* be <= pagesize - offset. Results printed directly via logmsg.     */
+/* Returns 0 on success, -1 = error otherwise.                       */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
-                                        size_t offset, size_t amt,
-                                        BYTE real, BYTE wid )
+static int ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
+                                       size_t offset, size_t amt,
+                                       BYTE real, BYTE wid )
 {
     char*   msgnum;                 /* "HHC02290" or "HHC02291"      */
     char*   dumpdata;               /* pointer to data to be dumped  */
     char*   dumpbuf = NULL;         /* pointer to hexdump buffer     */
-    char    pfx[24];                /* string prefixed to each line  */
+    char    pfx[64];                /* string prefixed to each line  */
     RADR    aaddr;                  /* absolute addresses (work)     */
 
     msgnum = real ? "HHC02290" : "HHC02291";
 
     if (0
-        || raddr  >= regs->mainlim          /* invalid address       */
         || raddr  &  PAGEFRAME_BYTEMASK     /* not page aligned      */
         || adr    &  PAGEFRAME_BYTEMASK     /* not page aligned      */
         || offset >= PAGEFRAME_PAGESIZE     /* offset >= pagesize    */
@@ -1864,9 +1872,9 @@ static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
         || (wid != 32 && wid != 64)         /* invalid address width */
     )
     {
-        logmsg( "%s%c %s\n", msgnum, 'E',
-            "dump_real_page(): invalid parameters" );
-        return;
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "dump_real_page()", "invalid parameters" );
+        return -1;
     }
 
     /* Flush interval timer value to storage */
@@ -1874,6 +1882,15 @@ static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
 
     /* Get absolute address of page */
     aaddr = APPLY_PREFIXING( raddr, regs->PX );
+    if (aaddr > regs->mainlim)
+    {
+        MSGBUF( pfx, "R:"F_RADR"  Addressing exception", raddr );
+        if (real)
+            WRMSG( HHC02290, "I", pfx );
+        else
+            WRMSG( HHC02291, "I", pfx );
+        return -1;
+    }
 
     /* Format string each dump line should be prefixed with */
     MSGBUF( pfx, "%sI %c:", msgnum, real ? 'R' : 'V' );
@@ -1901,8 +1918,19 @@ static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
         4,                          /* bpg value (bytes per group)   */
         4                           /* gpl value (groups per line)   */
     );
-    logmsg( "%s", dumpbuf );        /* print the formatted dump      */
-    free( dumpbuf );                /* free hexdump dump buffer      */
+
+    /* Check for internal hexdumpew error */
+    if (!dumpbuf)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "dump_real_page()", "hexdumpew failed" );
+        return -1;
+    }
+
+    /* Display the dump and free the buffer hexdump malloc'ed for us */
+    logmsg( "%s", dumpbuf );
+    free( dumpbuf );
+    return 0;
 
 } /* end function dump_real_page */
 
@@ -1912,20 +1940,19 @@ static void ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(disasm_stor) (REGS *regs, int argc, char *argv[], char *cmdline)
 {
-char*   opnd;                           /* range/alteration operand  */
+char*   opnd;                           /* Range/alteration operand  */
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
 RADR    raddr;                          /* Real storage address      */
 RADR    aaddr;                          /* Absolute storage address  */
-int     stid = -1;
+int     stid = -1;                      /* How translation was done  */
 int     len;                            /* Number of bytes to alter  */
-int     i;                              /* Loop counter              */
-int     ilc;
+int     ilc;                            /* Instruction length counter*/
 BYTE    inst[6];                        /* Storage alteration value  */
-BYTE    opcode;
-U16     xcode;
-char    type;
-char    buf[512];
+BYTE    opcode;                         /* Instruction opcode        */
+U16     xcode;                          /* Exception code            */
+char    type;                           /* Address space type        */
+char    buf[512];                       /* MSGBUF work buffer        */
 
     UNREFERENCED(cmdline);
 
@@ -1968,44 +1995,53 @@ char    buf[512];
         return;
     }
 
-    /* Display real storage */
-    for (i = 0; i < 999 && saddr <= eaddr; i++)
-    {
+    /* Limit the amount to be displayed to a reasonable value */
+    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
 
+    /* Display real storage */
+    while (saddr <= eaddr)
+    {
         if(type == 'R')
             raddr = saddr;
         else
         {
+            /* Convert virtual address to real address */
             if((xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
             {
-                MSGBUF(buf, "Storage not accessible code = %4.4X", xcode);
-                WRMSG(HHC02289, "I", buf);
+                MSGBUF( buf, "R:"F_RADR"  Storage not accessible code = %4.4X", saddr, xcode );
+                WRMSG( HHC02289, "I", buf );
                 return;
             }
         }
 
+        /* Convert real address to absolute address */
         aaddr = APPLY_PREFIXING (raddr, regs->PX);
         if (aaddr > regs->mainlim)
         {
-            WRMSG(HHC02289, "I", "Addressing exception");
+            MSGBUF( buf, "R:"F_RADR"  Addressing exception", raddr );
+            WRMSG( HHC02289, "I", buf );
             return;
         }
 
+        /* Determine opcode and check for addressing exception */
         opcode = regs->mainstor[aaddr];
         ilc = ILC(opcode);
 
         if (aaddr + ilc > regs->mainlim)
         {
-            WRMSG(HHC02289, "I", "Addressing exception\n");
+            MSGBUF( buf, "R:"F_RADR"  Addressing exception", aaddr );
+            WRMSG( HHC02289, "I", buf );
             return;
         }
 
+        /* Copy instruction to work area and hex print it */
         memcpy(inst, regs->mainstor + aaddr, ilc);
-        len = sprintf(buf, "%c" F_RADR ": %2.2X%2.2X",
+        len = sprintf(buf, "%c:"F_RADR"  %2.2X%2.2X",
           stid == TEA_ST_PRIMARY ? 'P' :
           stid == TEA_ST_HOME ? 'H' :
           stid == TEA_ST_SECNDRY ? 'S' : 'R',
           raddr, inst[0], inst[1]);
+
         if(ilc > 2)
         {
             len += snprintf(buf + len, sizeof(buf)-len-1, "%2.2X%2.2X", inst[2], inst[3]);
@@ -2016,10 +2052,15 @@ char    buf[512];
         }
         else
             len += snprintf(buf + len, sizeof(buf)-len-1, "         ");
+
+        /* Disassemble the instruction and display the results */
         DISASM_INSTRUCTION(inst, buf + len);
         WRMSG(HHC02289, "I", buf);
+
+        /* Go on to the next instruction */
         saddr += ilc;
-    } /* end for(i) */
+
+    } /* end while (saddr <= eaddr) */
 
 } /* end function disasm_stor */
 
@@ -2034,10 +2075,11 @@ U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
 RADR    raddr;                          /* Real storage address      */
 RADR    aaddr;                          /* Absolute storage address  */
+size_t  totamt;                         /* Total amount to be dumped */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
-size_t  totamt;                         /* Total amount to be dumped */
+char    buf[64];                        /* MSGBUF work buffer        */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -2058,7 +2100,8 @@ size_t  totamt;                         /* Total amount to be dumped */
 
     if (regs->mainlim == 0)
     {
-        WRMSG(HHC02290, "I", "Real address is not valid");
+        MSGBUF( buf, "R:"F_RADR"  Real address is not valid", saddr );
+        WRMSG( HHC02290, "I", buf );
         return;
     }
 
@@ -2073,7 +2116,8 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Validate real address */
             if (aaddr > regs->mainlim)
             {
-                WRMSG(HHC02290, "I", "Addressing exception");
+                MSGBUF( buf, "R:"F_RADR"  Addressing exception", aaddr );
+                WRMSG( HHC02290, "I", buf );
                 return;
             }
 
@@ -2083,6 +2127,9 @@ size_t  totamt;                         /* Total amount to be dumped */
         } /* end for(i) */
     }
 
+    /* Limit the amount to be displayed to a reasonable value */
+    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
+
     /* Display real storage */
     if ((totamt = (eaddr - saddr) + 1) > 0)
     {
@@ -2090,7 +2137,6 @@ size_t  totamt;                         /* Total amount to be dumped */
         size_t  pageoff  = saddr - pageadr;
         size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
         BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
-        char    buf[32];
 
         if (pageamt > totamt)
             pageamt = totamt;
@@ -2099,10 +2145,20 @@ size_t  totamt;                         /* Total amount to be dumped */
 
         for (;;)
         {
+            /* Check for addressing exception */
+            if (APPLY_PREFIXING( pageadr, regs->PX ) > regs->mainlim)
+            {
+                MSGBUF( buf, "R:"F_RADR"  Addressing exception", pageadr );
+                WRMSG( HHC02290, "I", buf );
+                break;
+            }
+
+            /* Display address and storage key */
             MSGBUF( buf, "R:"F_RADR"  K:%2.2X", pageadr, STORAGE_KEY( pageadr, regs ));
             WRMSG( HHC02290, "I", buf );
 
-            ARCH_DEP( dump_real_page )( regs, pageadr, pageadr, pageoff, pageamt, 1, addrwid );
+            /* Now hexdump that entire page */
+            VERIFY( ARCH_DEP( dump_real_page )( regs, pageadr, pageadr, pageoff, pageamt, 1, addrwid ) == 0);
 
             /* Check if we're done */
             if (!(totamt -= pageamt))
@@ -2212,6 +2268,9 @@ size_t  totamt;                         /* Total amount to be dumped */
         } /* end for(i) */
     }
 
+    /* Limit the amount to be displayed to a reasonable value */
+    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
+
     /* Display virtual storage */
     if ((totamt = (eaddr - saddr) + 1) > 0)
     {
@@ -2232,6 +2291,14 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Convert virtual address to real address */
             xcode = ARCH_DEP( virt_to_abs )( &raddr, &stid, pageadr, arn, regs, ACCTYPE_LRA );
 
+            /* Check for addressing exception */
+            if (APPLY_PREFIXING( raddr, regs->PX ) > regs->mainlim)
+            {
+                MSGBUF( buf, "R:"F_RADR"  Addressing exception", raddr );
+                WRMSG( HHC02291, "I", buf );
+                break;
+            }
+
             /* Show how virtual address was translated */
                  if (REAL_MODE( &regs->psw )) MSGBUF( trans, "%s", "(dat off)"   );
             else if (stid == TEA_ST_PRIMARY)  MSGBUF( trans, "%s", "(primary)"   );
@@ -2248,7 +2315,7 @@ size_t  totamt;                         /* Total amount to be dumped */
 
             /* Now hexdump that entire page */
             if (xcode == 0)
-                ARCH_DEP( dump_real_page )( regs, raddr, pageadr, pageoff, pageamt, real, addrwid );
+                VERIFY( ARCH_DEP( dump_real_page )( regs, raddr, pageadr, pageoff, pageamt, real, addrwid ) == 0);
 
             /* Check if we're done */
             if (!(totamt -= pageamt))
