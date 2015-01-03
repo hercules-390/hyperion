@@ -399,12 +399,12 @@ struct  _LCSDEV
     BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
     U16         iFrameOffset;           // Curr Offset into Buffer
 
-    LOCK        Lock;                   // Data LOCK
-    LOCK        EventLock;              // Condition LOCK
-    COND        Event;                  // Condition signal
+    LOCK        DevDataLock;            // Data LOCK
+    LOCK        DevEventLock;           // Condition LOCK
+    COND        DevEvent;               // Condition signal
 
-    u_int       fCreated:1;             // DEVBLK(s) Created
-    u_int       fStarted:1;             // Device Started
+    u_int       fDevCreated:1;          // DEVBLK(s) Created
+    u_int       fDevStarted:1;          // Device Started
     u_int       fRouteAdded:1;          // Routing Added
     u_int       fReplyPending:1;        // Cmd Reply is Pending
     u_int       fDataPending:1;         // Data is Pending
@@ -440,14 +440,14 @@ struct  _LCSPORT
     U16         sIPAssistsSupported;      // IP Assist Info
     U16         sIPAssistsEnabled;
 
-    LOCK        Lock;                     // Data LOCK
-    LOCK        EventLock;                // Condition LOCK
-    COND        Event;                    // Condition signal
+    LOCK        PortDataLock;             // Data LOCK
+    LOCK        PortEventLock;            // Condition LOCK
+    COND        PortEvent;                // Condition signal
 
     u_int       fUsed:1;                  // Port is used
     u_int       fLocalMAC:1;              // MAC is specified in OAT
-    u_int       fCreated:1;               // Interface Created
-    u_int       fStarted:1;               // Startup Received
+    u_int       fPortCreated:1;           // Interface Created
+    u_int       fPortStarted:1;           // Startup Received
     u_int       fRouteAdded:1;            // Routing Added
     u_int       fCloseInProgress:1;       // Close in progress
     u_int       fPreconfigured:1;         // TAP device pre-configured
@@ -482,12 +482,6 @@ struct  _LCSBLK
 {
     // Config line parameters
     char*       pszTUNDevice;             // TUN/TAP char device
-#if defined ( _MSVC_ )
-    char*       pszNDISDevice;            // NDIS char device name
-    char*       pszNDISDevDesc;           // NDIS common name of device
-    char*       pszNDISDevMac;            // MAC Address of the physical card
-    char*       pszServiceName;           // Service Name for NDIS
-#endif
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
 //  char*       pszMACAddress;            // MAC Address (string)
@@ -496,9 +490,6 @@ struct  _LCSBLK
     u_int       fDebug:1;
 #if defined( OPTION_W32_CTCI )
     u_int       fNoMultiWrite:1;          // CTCI-WIN v3.3+ WinPCap v4.1+
-#endif
-#if defined ( _MSVC_ )
-    u_int       passthruStarted:1;        // NDIS passthru services started
 #endif
     int         icDevices;                // Number of devices
     int         iKernBuff;                // Kernel buffer in K bytes.
