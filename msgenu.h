@@ -768,7 +768,7 @@ do { \
 #define HHC00934 "%1d:%04X CTC: sending packet to file %s"
 #define HHC00936 "%1d:%04X CTC: error writing to file %s: %s"
 #define HHC00937 "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
-#define HHC00938 "%1d:%04X CTC: lcs triggering event"
+#define HHC00938 "%1d:%04X CTC: lcs triggering device event"
 #define HHC00939 "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X %s compiled size 0x%4.4X: ignored"
 #define HHC00940 "CTC: error in function %s: %s"
 #define HHC00941 "CTC: ioctl %s failed for device %s: %s"
@@ -795,6 +795,10 @@ do { \
 #define HHC00962 "CTC: error in file %s: reading line %d: %s"
 #define HHC00963 "CTC: error in file %s: line %d is too long"
 #define HHC00964 "CTC: packet trace: %s %s %s"
+#define HHC00965 "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
+#define HHC00966 "%1d:%04X CTC: lcs triggering port %2.2X event"
+#define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
+#define HHC00968 "CTC: lcs device port %2.2X: read thread: port started"
 
 /*ctcadpt.c */
 // Note: CTCE messages are in the 050xx range

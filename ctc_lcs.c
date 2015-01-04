@@ -147,7 +147,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         {
             char buf[40];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(LCSBLK));
-            WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
+            // "%1d:%04X CTC: error in function %s: %s"
+            WRMSG( HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
@@ -235,7 +236,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if( !pLCSDev->pDEVBLK[0] )
         {
-            WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid) ,
+            // "%1d:%04X CTC: lcs device %04X not in configuration"
+            WRMSG( HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid) ,
                   pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr );
             return -1;
         }
@@ -259,7 +261,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( !pLCSDev->pDEVBLK[1] )
             {
-                WRMSG(HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid),
+                // "%1d:%04X CTC: lcs device %04X not in configuration"
+                WRMSG( HHC00920, "E", SSID_TO_LCSS(pDEVBLK->group->memdev[0]->ssid),
                       pDEVBLK->group->memdev[0]->devnum, pLCSDev->sAddr^1 );
                 return -1;
             }
@@ -298,8 +301,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             if( rc < 0 ) return -1;
 
-            // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
-            WRMSG(HHC00901, "I", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+            // "%1d:%04X %s: interface %s, type %s opened"
+            WRMSG( HHC00901, "I", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                                  pLCSDev->pDEVBLK[0]->typname,
                                  pLCSBLK->Port[pLCSDev->bPort].szNetIfName, "TAP");
 
@@ -313,9 +316,11 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetIfName, sizeof(tt32ctl.tt32ctl_name) );
 
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
-                if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
+
+                if (TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0)
                 {
-                    WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+                    // "%1d:%04X %s: ioctl %s failed for device %s: %s"
+                    WRMSG( HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                           pLCSDev->pDEVBLK[0]->typname,
                           "TT32SDEVBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetIfName, strerror( errno ) );
                 }
@@ -323,7 +328,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 tt32ctl.tt32ctl_iobuffsize = pLCSBLK->iIOBuff;
                 if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
                 {
-                    WRMSG(HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
+                    // "%1d:%04X %s: ioctl %s failed for device %s: %s"
+                    WRMSG( HHC00902, "W", SSID_TO_LCSS(pLCSDev->pDEVBLK[0]->ssid), pLCSDev->pDEVBLK[0]->devnum,
                           pLCSDev->pDEVBLK[0]->typname,
                           "TT32SIOBUFF", pLCSBLK->Port[pLCSDev->bPort].szNetIfName, strerror( errno ) );
                 }
@@ -339,7 +345,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                            &pLCSBLK->Port[pLCSDev->bPort],
                            "LCS_PortThread" );
             if(rc)
-                WRMSG(HHC00102, "E", strerror(rc));
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror(rc));
             /* Identify the thread ID with the devices on which they are active */
             pLCSDev->pDEVBLK[0]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
             if (pLCSDev->pDEVBLK[1])
@@ -653,6 +660,10 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             TID tid = pLCSPORT->tid;
             obtain_lock( &pLCSPORT->PortEventLock );
             {
+                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+                    // "%1d:%04X CTC: lcs triggering port %2.2X event"
+                    WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
+
                 pLCSPORT->fPortStarted = 0;
                 pLCSPORT->fCloseInProgress = 1;
                 signal_condition( &pLCSPORT->PortEvent );
@@ -807,7 +818,8 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                        // "%1d:%04X CTC: halt or clear recognized"
+                        WRMSG( HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = sCount;
@@ -878,7 +890,8 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
-            WRMSG(HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            // "%1d:%04X CTC: lcs read"
+            WRMSG( HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
             packet_trace( pIOBuf, (int)iLength, '<' );
         }
 
@@ -992,10 +1005,11 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
             // Trace received command frame...
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+            if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
             {
-                WRMSG(HHC00922, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-                packet_trace( (BYTE*)pCmdFrame, iLength, '>' );
+                // "%1d:%04X CTC: lcs command packet received"
+                WRMSG( HHC00922, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
+                packet_trace( (BYTE*) pCmdFrame, iLength, '>' );
             }
 
             // FIXME: what is this all about? I'm not saying it's wrong,
@@ -1007,39 +1021,41 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
 
             switch( pCmdFrame->bCmdCode )
             {
+                //  HHC00933  =  "%1d:%04X CTC: executing command %s"
+
             case LCS_CMD_STARTUP:       // Start Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "startup");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "startup");
                 LCS_Startup( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_SHUTDOWN:      // Shutdown Host
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "shutdown");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "shutdown");
                 LCS_Shutdown( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STRTLAN:       // Start LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "start lan");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "start lan");
                 LCS_StartLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STOPLAN:       // Stop  LAN
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "stop lan");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "stop lan");
                 LCS_StopLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "query IP assist");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "query IP assist");
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    WRMSG(HHC00933, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "lan statistics");
+                    WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "lan statistics");
                 LCS_LanStats( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1073,7 +1089,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // Trace Ethernet frame before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
+                // "%1d:%04X CTC: sending packet to file %s"
+                WRMSG( HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( (BYTE*)pEthFrame, iEthLen, '>' );
             }
 
@@ -1085,7 +1102,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
                 PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*WRITE ERR", 0, iEthLen, 1 );
-                WRMSG(HHC00936, "E",
+                // "%1d:%04X CTC: error writing to file %s: %s"
+                WRMSG( HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
                 pDEVBLK->sense[0] = SENSE_EC;
@@ -1097,7 +1115,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             break;
 
         default:
-            WRMSG(HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
+            // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
+            WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -1117,7 +1136,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     if( pLCSDEV->fReplyPending )
     {
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-            WRMSG(HHC00938, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            // "%1d:%04X CTC: lcs triggering device event"
+            WRMSG( HHC00938, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
         obtain_lock( &pLCSDEV->DevEventLock );
         signal_condition( &pLCSDEV->DevEvent );
@@ -1291,6 +1311,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     PLCSRTE     pLCSRTE;
 #endif // OPTION_TUNTAP_DELADD_ROUTES
     int         nIFFlags;
+    DEVBLK*     pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
 
     INIT_REPLY_FRAME( reply, pCmdFrame );
 
@@ -1342,6 +1363,10 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
+        if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+            // "%1d:%04X CTC: lcs triggering port %2.2X event"
+            WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
+
         obtain_lock( &pLCSPORT->PortEventLock );
         pLCSPORT->fPortStarted = 1;
         signal_condition( &pLCSPORT->PortEvent );
@@ -1383,13 +1408,19 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
     PLCSRTE     pLCSRTE;
 #endif // OPTION_TUNTAP_DELADD_ROUTES
+    DEVBLK*     pDEVBLK;
 
     INIT_REPLY_FRAME( reply, pCmdFrame );
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
+    pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
 
     // Serialize access to eliminate ioctl errors
     obtain_lock( &pLCSPORT->PortDataLock );
+
+    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+        // "%1d:%04X CTC: lcs triggering port %2.2X event"
+        WRMSG( HHC00966, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSPORT->bPort );
 
     obtain_lock( &pLCSPORT->PortEventLock );
     pLCSPORT->fPortStarted = 0;
@@ -1550,7 +1581,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     if( fd == -1 )
     {
         // "CTC: error in function %s: %s"
-        WRMSG(HHC00940, "E", "socket()", strerror( HSO_errno ) );
+        WRMSG( HHC00940, "E", "socket()", strerror( HSO_errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0x0001 );
         return;
@@ -1567,7 +1598,8 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
-        WRMSG(HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetIfName, strerror( errno ) );
+        // "CTC: ioctl %s failed for device %s: %s"
+        WRMSG( HHC00941, "E", "SIOCGIFHWADDR", pLCSPORT->szNetIfName, strerror( errno ) );
         // FIXME: we should probably be returning a non-zero hwReturnCode
         // STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0x0002 );
         return;
@@ -1582,7 +1614,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     /* Report what MAC address we will really be using */
     // "CTC: lcs device '%s' using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
-    WRMSG(HHC00942, "I", pLCSPORT->szNetIfName, *(pIFaceMAC+0),*(pIFaceMAC+1),
+    WRMSG( HHC00942, "I", pLCSPORT->szNetIfName, *(pIFaceMAC+0),*(pIFaceMAC+1),
                                     *(pIFaceMAC+2),*(pIFaceMAC+3),
                                     *(pIFaceMAC+4),*(pIFaceMAC+5));
 
@@ -1592,7 +1624,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         if (pLCSPORT->fLocalMAC)
         {
             // "CTC: lcs device %s not using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
-            WRMSG(HHC00943, "W", pLCSPORT->szNetIfName, *(pPortMAC+0),*(pPortMAC+1),
+            WRMSG( HHC00943, "W", pLCSPORT->szNetIfName, *(pPortMAC+0),*(pPortMAC+1),
                                             *(pPortMAC+2),*(pPortMAC+3),
                                             *(pPortMAC+4),*(pPortMAC+5));
         }
@@ -1669,6 +1701,10 @@ static void*  LCS_PortThread( void* arg)
         {
             // Don't read unless/until port is enabled...
 
+            if (pLCSPORT->pLCSBLK->fDebug)
+                // "CTC: lcs device port %2.2X: read thread: waiting for start event"
+                WRMSG( HHC00967, "D", pLCSPORT->bPort );
+
             while (1
                 && !(pLCSPORT->fd < 0)
                 && !pLCSPORT->fCloseInProgress
@@ -1683,6 +1719,10 @@ static void*  LCS_PortThread( void* arg)
                     NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
                 );
             }
+
+            if (pLCSPORT->pLCSBLK->fDebug)
+                // "CTC: lcs device port %2.2X: read thread: port started"
+                WRMSG( HHC00968, "D", pLCSPORT->bPort );
         }
         release_lock( &pLCSPORT->PortEventLock );
 
@@ -1704,14 +1744,16 @@ static void*  LCS_PortThread( void* arg)
         {
             if( pLCSPORT->fd < 0 || pLCSPORT->fCloseInProgress )
                 break;
-            WRMSG(HHC00944, "E", pLCSPORT->bPort, strerror( errno ) );
+            // "CTC: lcs device read error from port %2.2X: %s"
+            WRMSG( HHC00944, "E", pLCSPORT->bPort, strerror( errno ) );
             break;
         }
 
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
             // Trace the frame
-            WRMSG(HHC00945, "I", pLCSPORT->bPort );
+            // "CTC: lcs device port %2.2X: read buffer"
+            WRMSG( HHC00945, "I", pLCSPORT->bPort );
             packet_trace( szBuff, iLength, '>' );
 
             bReported = 0;
@@ -1745,8 +1787,8 @@ static void*  LCS_PortThread( void* arg)
                         c.i = ntohl(lIPAddress);
                         MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
-                        WRMSG(HHC00946, "I", pLCSPORT->bPort, str );
-
+                        // "CTC: lcs device port %2.2X: IPv4 frame received for %s"
+                        WRMSG( HHC00946, "D", pLCSPORT->bPort, str );
                         bReported = 1;
                     }
 
@@ -1776,8 +1818,8 @@ static void*  LCS_PortThread( void* arg)
                         c.i = ntohl(lIPAddress);
                         MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
-                        WRMSG(HHC00947, "I", pLCSPORT->bPort, str );
-
+                        // "CTC: lcs device port %2.2X: ARP frame received for %s"
+                        WRMSG( HHC00947, "D", pLCSPORT->bPort, str );
                         bReported = 1;
                     }
 
@@ -1803,7 +1845,9 @@ static void*  LCS_PortThread( void* arg)
                     {
                         WRMSG
                         (
-                            HHC00948, "I"
+                            // "CTC: lcs device port %2.2X: RARP frame received for %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
+
+                            HHC00948, "D"
 
                             ,pLCSPORT->bPort
                             ,*(pMAC+0)
@@ -1813,7 +1857,6 @@ static void*  LCS_PortThread( void* arg)
                             ,*(pMAC+4)
                             ,*(pMAC+5)
                         );
-
                         bReported = 1;
                     }
 
@@ -1834,8 +1877,8 @@ static void*  LCS_PortThread( void* arg)
                 {
                     if( pLCSPORT->pLCSBLK->fDebug && !bReported )
                     {
-                        WRMSG(HHC00949, "I", pLCSPORT->bPort );
-
+                        // "CTC: lcs device port %2.2X: SNA frame received"
+                        WRMSG( HHC00949, "D", pLCSPORT->bPort );
                         bReported = 1;
                     }
 
@@ -1863,14 +1906,16 @@ static void*  LCS_PortThread( void* arg)
                 pMatchingLCSDEV = pPrimaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRMSG(HHC00950, "I", pLCSPORT->bPort, "primary", pMatchingLCSDEV->sAddr );
+                    // "CTC: lcs device port %2.2X: no match found, selecting %s %4.4X"
+                    WRMSG( HHC00950, "D", pLCSPORT->bPort, "primary", pMatchingLCSDEV->sAddr );
             }
             else if( pSecondaryLCSDEV && pSecondaryLCSDEV->fDevStarted )
             {
                 pMatchingLCSDEV = pSecondaryLCSDEV;
 
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRMSG(HHC00950, "I", pLCSPORT->bPort, "secondary", pMatchingLCSDEV->sAddr );
+                    // "CTC: lcs device port %2.2X: no match found, selecting %s %4.4X"
+                    WRMSG( HHC00950, "D", pLCSPORT->bPort, "secondary", pMatchingLCSDEV->sAddr );
             }
         }
 
@@ -1878,7 +1923,8 @@ static void*  LCS_PortThread( void* arg)
         if( !pMatchingLCSDEV )
         {
             if( pLCSPORT->pLCSBLK->fDebug )
-                WRMSG(HHC00951, "I", pLCSPORT->bPort );
+                // "CTC: lcs device port %2.2X: no match found, discarding frame"
+                WRMSG( HHC00951, "D", pLCSPORT->bPort );
 
             continue;
         }
@@ -1891,7 +1937,8 @@ static void*  LCS_PortThread( void* arg)
             c.i = ntohl(pMatchingLCSDEV->lIPAddress);
             MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
 
-            WRMSG( HHC00952, "I", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
+            // "CTC: lcs device port %2.2X: enqueing frame to device %4.4X %s"
+            WRMSG( HHC00952, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
         }
 
         // Match was found.
@@ -1904,9 +1951,21 @@ static void*  LCS_PortThread( void* arg)
             if (EMSGSIZE == errno)
             {
                 if( pLCSPORT->pLCSBLK->fDebug )
-                    WRMSG(HHC00953, "W", pLCSPORT->bPort );
+                    // "CTC: lcs device port %2.2X: packet frame too big, dropped"
+                    WRMSG( HHC00953, "W", pLCSPORT->bPort );
                 PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq drop", 0, iLength, 0 );
                 break;
+            }
+            if( pLCSPORT->pLCSBLK->fDebug )
+            {
+                union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                char  str[40];
+
+                c.i = ntohl(pMatchingLCSDEV->lIPAddress);
+                MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+
+                // "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
+                WRMSG( HHC00965, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
             }
             PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq wait", 0, iLength, 0 );
             ASSERT( ENOBUFS == errno );
@@ -2169,7 +2228,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "device name", optarg );
                 return -1;
             }
@@ -2195,7 +2255,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "MAC address", optarg );
                 return -1;
             }
@@ -2226,7 +2287,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "kernel buffer size", optarg );
                 return -1;
             }
@@ -2241,7 +2303,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                       "dll i/o buffer size", optarg );
                 return -1;
             }
@@ -2370,7 +2433,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         char msgbuf[MAX_PATH+80];
         MSGBUF( msgbuf, "fopen(%s, \"r\")", pathname);
         // "CTC: error in function %s: %s"
-        WRMSG(HHC00940, "E", msgbuf, strerror( errno ) );
+        WRMSG( HHC00940, "E", msgbuf, strerror( errno ) );
         return -1;
     }
 
@@ -2428,7 +2491,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 1    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                WRMSG(HHC00954, "E", "HWADD", pszOATName, szBuff );
+                // "CTC: invalid statement %s in file %s: %s"
+                WRMSG( HHC00954, "E", "HWADD", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2436,7 +2500,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             if( ParseMAC( argv[0], pLCSPORT->MAC_Address ) != 0 )
             {
-                WRMSG(HHC00955, "E", "MAC", argv[0], "HWADD", pszOATName, szBuff );
+                // "CTC: invalid %s %s in statement %s in file %s: %s"
+                WRMSG( HHC00955, "E", "MAC", argv[0], "HWADD", pszOATName, szBuff );
 
                 memset( pLCSPORT->MAC_Address, 0, sizeof(MAC) );
                 return -1;
@@ -2451,13 +2516,15 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 2    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                WRMSG(HHC00954, "E", "ROUTE", pszOATName, szBuff );
+                // "CTC: invalid statement %s in file %s: %s"
+                WRMSG( HHC00954, "E", "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
             if( inet_aton( argv[0], &addr ) == 0 )
             {
-                WRMSG(HHC00955, "E", "net address", argv[0], "ROUTE", pszOATName, szBuff );
+                // "CTC: invalid %s %s in statement %s in file %s: %s"
+                WRMSG( HHC00955, "E", "net address", argv[0], "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2466,7 +2533,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             if( inet_aton( argv[1], &addr ) == 0 )
             {
                 free(pszNetAddr);
-                WRMSG(HHC00955, "E", "netmask", argv[1], "ROUTE", pszOATName, szBuff );
+                // "CTC: invalid %s %s in statement %s in file %s: %s"
+                WRMSG( HHC00955, "E", "netmask", argv[1], "ROUTE", pszOATName, szBuff );
                 return -1;
             }
 
@@ -2497,14 +2565,16 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         {
             if( !pszKeyword || !pszOperand )
             {
-                WRMSG(HHC00956, "E", pszOATName );
+                // "CTC: error in file %s: missing device number or mode"
+                WRMSG( HHC00956, "E", pszOATName );
                 return -1;
             }
 
             if( strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1 )
             {
-                WRMSG(HHC00957, "E", pszOATName, "device number", pszKeyword );
+                // "CTC: error in file %s: invalid %s value %s"
+                WRMSG( HHC00957, "E", pszOATName, "device number", pszKeyword );
                 return -1;
             }
 
@@ -2514,13 +2584,15 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    WRMSG(HHC00958, "E", pszOATName, szBuff );
+                    // "CTC: error in file %s: %s: missing port number"
+                    WRMSG( HHC00958, "E", pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    WRMSG(HHC00957, "E", pszOATName, "port number", argv[0] );
+                    // "CTC: error in file %s: invalid %s value %s"
+                    WRMSG( HHC00957, "E", pszOATName, "port number", argv[0] );
                     return -1;
                 }
 
@@ -2534,7 +2606,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         bType = LCSDEV_TYPE_NONE;
                     else
                     {
-                        WRMSG(HHC00959, "E", pszOATName, szBuff, argv[1] );
+                        // "CTC: error in file %s: %s: invalid entry starting at %s"
+                        WRMSG( HHC00959, "E", pszOATName, szBuff, argv[1] );
                         return -1;
                     }
 
@@ -2544,7 +2617,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                         if( inet_aton( pszIPAddress, &addr ) == 0 )
                         {
-                            WRMSG(HHC00957, "E", pszOATName, "IP address", pszIPAddress );
+                            // "CTC: error in file %s: invalid %s value %s"
+                            WRMSG( HHC00957, "E", pszOATName, "IP address", pszIPAddress );
                             return -1;
                         }
 
@@ -2558,25 +2632,29 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    WRMSG(HHC00958, "E", pszOATName, szBuff );
+                    // "CTC: error in file %s: %s: missing port number"
+                    WRMSG( HHC00958, "E", pszOATName, szBuff );
                     return -1;
                 }
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    WRMSG(HHC00957, "E", pszOATName, "port number", argv[0] );
+                    // "CTC: error in file %s: invalid %s value %s"
+                    WRMSG( HHC00957, "E", pszOATName, "port number", argv[0] );
                     return -1;
                 }
 
                 if( argc > 1 )
                 {
-                    WRMSG(HHC00960, "E", pszOATName, szBuff );
+                    // "CTC: error in file %s: %s: SNA does not accept any arguments"
+                    WRMSG( HHC00960, "E", pszOATName, szBuff );
                     return -1;
                 }
             }
             else
             {
-                WRMSG(HHC00961, "E", pszOATName, pszOperand );
+                // "CTC: error in file %s: %s: invalid mode"
+                WRMSG( HHC00961, "E", pszOATName, pszOperand );
                 return -1;
             }
 
@@ -2646,7 +2724,8 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check for I/O error
             if( ferror( fp ) )
             {
-                WRMSG(HHC00962, "E", pszOATName, iLine, strerror( errno ) );
+                // "CTC: error in file %s: reading line %d: %s"
+                WRMSG( HHC00962, "E", pszOATName, iLine, strerror( errno ) );
                 return NULL;
             }
 
@@ -2669,7 +2748,8 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check that statement does not overflow bufffer
             if( iLen >= 255 )
             {
-                WRMSG(HHC00963, "E", pszOATName, iLine );
+                // "CTC: error in file %s: line %d is too long"
+                WRMSG( HHC00963, "E", pszOATName, iLine );
                 exit(1);
             }
 
