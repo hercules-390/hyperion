@@ -799,6 +799,7 @@ do { \
 #define HHC00966 "%1d:%04X CTC: lcs triggering port %2.2X event"
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
 #define HHC00968 "CTC: lcs device port %2.2X: read thread: port started"
+#define HHC00969 "CTC: lcs device port %2.2X: read thread: port stopped"
 
 /*ctcadpt.c */
 // Note: CTCE messages are in the 050xx range
@@ -809,6 +810,7 @@ do { \
 #define HHC00974 "%1d:%04X CTC: incorrect client or config error: config file %s connecting client %s"
 #define HHC00975 "%1d:%04X CTC: invalid %s length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
+#define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == 0x01)"
 
 // range 00980 - 00989 available
 // range 00990 - 00999 available

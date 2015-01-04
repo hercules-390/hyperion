@@ -541,7 +541,7 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
     LCSHDR      bLCSHdr;                // LCS Frame header
 
     BYTE        bCmdCode;               // (see below #defines)
-    BYTE        bInitiator;
+    BYTE        bInitiator;             // FIXME! What is this field?!
     HWORD       hwSequenceNo;
     HWORD       hwReturnCode;
 

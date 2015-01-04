@@ -21,6 +21,7 @@
 //#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 //#define  NO_LCS_OPTIMIZE                // (Fish: DEBUGGING) (MSVC only)
 //#define  LCS_TIMING_DEBUG               // (Fish: DEBUG speed/timing)
+#define  LCS_NO_950_952                 // (Fish: DEBUGGING: HHC00950 and HHC00952 are rarely interesting)
 
 #if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
@@ -973,6 +974,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     U16         iEthLen      = 0;
     int         nEthFrames   = 0;
     int         nEthBytes    = 0;
+    char        buf[32];
 
     UNREFERENCED( sCount );
 
@@ -1005,10 +1007,10 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
             // Trace received command frame...
-            if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+            if( pLCSDEV->pLCSBLK->fDebug )
             {
                 // "%1d:%04X CTC: lcs command packet received"
-                WRMSG( HHC00922, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
+                WRMSG( HHC00922, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
                 packet_trace( (BYTE*) pCmdFrame, iLength, '>' );
             }
 
@@ -1016,8 +1018,13 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // only that we need to document via comments the purpose of
             // this test. What's it doing? Why ignore "initiator 1"? etc.
             // PLEASE EXPLAIN! -- Fish
-            if( pCmdFrame->bInitiator == 0x01 )
+            if (pCmdFrame->bInitiator == 0x01)
+            {
+                if (pLCSDEV->pLCSBLK->fDebug)
+                    // "%1d:%04X CTC: lcs command packet IGNORED (bInitiator == 0x01)"
+                    WRMSG( HHC00977, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
                 break;
+            }
 
             switch( pCmdFrame->bCmdCode )
             {
@@ -1071,6 +1078,12 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             case LCS_CMD_LISTLAN2:      // List LAN (another version)
             case LCS_CMD_TIMING:        // Timing request
             default:
+                if (pLCSDEV->pLCSBLK->fDebug)
+                {
+                    // "%1d:%04X CTC: executing command %s"
+                    MSGBUF( buf, "other (0x%2.2X)", pCmdFrame->bCmdCode );
+                    WRMSG( HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf );
+                }
                 LCS_DefaultCmdProc( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1690,6 +1703,8 @@ static void*  LCS_PortThread( void* arg)
     BYTE*       pMAC;
     BYTE        szBuff[2048];
     char        bReported = 0;
+    char        bStartReported = 0;
+    time_t      t1, t2;
 
     pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
@@ -1701,9 +1716,16 @@ static void*  LCS_PortThread( void* arg)
         {
             // Don't read unless/until port is enabled...
 
-            if (pLCSPORT->pLCSBLK->fDebug)
+            if (pLCSPORT->pLCSBLK->fDebug && !pLCSPORT->fPortStarted)
+            {
+                if (bStartReported)
+                    // "CTC: lcs device port %2.2X: read thread: port stopped"
+                    WRMSG( HHC00969, "D", pLCSPORT->bPort );
+
                 // "CTC: lcs device port %2.2X: read thread: waiting for start event"
                 WRMSG( HHC00967, "D", pLCSPORT->bPort );
+                bStartReported = 0;
+            }
 
             while (1
                 && !(pLCSPORT->fd < 0)
@@ -1720,9 +1742,12 @@ static void*  LCS_PortThread( void* arg)
                 );
             }
 
-            if (pLCSPORT->pLCSBLK->fDebug)
+            if (pLCSPORT->pLCSBLK->fDebug && !bStartReported)
+            {
                 // "CTC: lcs device port %2.2X: read thread: port started"
                 WRMSG( HHC00968, "D", pLCSPORT->bPort );
+                bStartReported = 1;
+            }
         }
         release_lock( &pLCSPORT->PortEventLock );
 
@@ -1905,17 +1930,21 @@ static void*  LCS_PortThread( void* arg)
             {
                 pMatchingLCSDEV = pPrimaryLCSDEV;
 
+#ifndef LCS_NO_950_952 // (HHC00950 and HHC00952 are rarely interesting)
                 if( pLCSPORT->pLCSBLK->fDebug )
                     // "CTC: lcs device port %2.2X: no match found, selecting %s %4.4X"
                     WRMSG( HHC00950, "D", pLCSPORT->bPort, "primary", pMatchingLCSDEV->sAddr );
+#endif // LCS_NO_950_952
             }
             else if( pSecondaryLCSDEV && pSecondaryLCSDEV->fDevStarted )
             {
                 pMatchingLCSDEV = pSecondaryLCSDEV;
 
+#ifndef LCS_NO_950_952 // (HHC00950 and HHC00952 are rarely interesting)
                 if( pLCSPORT->pLCSBLK->fDebug )
                     // "CTC: lcs device port %2.2X: no match found, selecting %s %4.4X"
                     WRMSG( HHC00950, "D", pLCSPORT->bPort, "secondary", pMatchingLCSDEV->sAddr );
+#endif // LCS_NO_950_952
             }
         }
 
@@ -1929,6 +1958,7 @@ static void*  LCS_PortThread( void* arg)
             continue;
         }
 
+#ifndef LCS_NO_950_952 // (HHC00950 and HHC00952 are rarely interesting)
         if( pLCSPORT->pLCSBLK->fDebug )
         {
             union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
@@ -1940,10 +1970,12 @@ static void*  LCS_PortThread( void* arg)
             // "CTC: lcs device port %2.2X: enqueing frame to device %4.4X %s"
             WRMSG( HHC00952, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
         }
+#endif // LCS_NO_950_952
 
         // Match was found.
         // Enqueue frame on buffer, if buffer is full, keep trying
 
+        time( &t1 );
         PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 enqueue", 0, iLength, 0 );
         while( LCS_EnqueueEthFrame( pMatchingLCSDEV, pLCSPORT->bPort, szBuff, iLength ) < 0
             && pLCSPORT->fd != -1 && !pLCSPORT->fCloseInProgress )
@@ -1958,14 +1990,18 @@ static void*  LCS_PortThread( void* arg)
             }
             if( pLCSPORT->pLCSBLK->fDebug )
             {
-                union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
-                char  str[40];
-
-                c.i = ntohl(pMatchingLCSDEV->lIPAddress);
-                MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
-
-                // "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
-                WRMSG( HHC00965, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
+                // Limit HHC00965 message rate to only once every few seconds...
+                time( &t2 );
+                if ((t2 - t1) >= 3)
+                {
+                    union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                    char  str[40];
+                    t1 = t2;
+                    c.i = ntohl(pMatchingLCSDEV->lIPAddress);
+                    MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+                    // "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
+                    WRMSG( HHC00965, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
+                }
             }
             PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq wait", 0, iLength, 0 );
             ASSERT( ENOBUFS == errno );
