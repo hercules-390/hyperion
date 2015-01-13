@@ -745,22 +745,22 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
-                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
+                DBGTRC(dev, "  PUK_TYPE_ENABLE (CM_ENABLE)\n");
                 rsp_bhr = process_cm_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
-                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
+                DBGTRC(dev, "  PUK_TYPE_SETUP (CM_SETUP)\n");
                 rsp_bhr = process_cm_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
-                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN (CM_TAKEDOWN)\n");
                 rsp_bhr = process_cm_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
-                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
+                DBGTRC(dev, "  PUK_TYPE_DISABLE (CM_DISABLE)\n");
                 rsp_bhr = process_cm_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
@@ -786,7 +786,7 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
-                DBGTRC(dev, "  PUK_TYPE_ENABLE\n");
+                DBGTRC(dev, "  PUK_TYPE_ENABLE (ULP_ENABLE)\n");
                 if (process_ulp_enable_extract( dev, req_th, req_rrh, req_puk ) != 0)
                 {
                     rsp_bhr = NULL;
@@ -800,22 +800,22 @@ U16 offph;
                 break;
 
             case PUK_TYPE_SETUP:
-                DBGTRC(dev, "  PUK_TYPE_SETUP\n");
+                DBGTRC(dev, "  PUK_TYPE_SETUP (ULP_SETUP)\n");
                 rsp_bhr = process_ulp_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_ACTIVE:
-                DBGTRC(dev, "  PUK_TYPE_ACTIVE\n");
+                DBGTRC(dev, "  PUK_TYPE_ACTIVE (ULP_ACTIVE)\n");
                 rsp_bhr = process_dm_act( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
-                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN\n");
+                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN (ULP_TAKEDOWN)\n");
                 rsp_bhr = process_ulp_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
-                DBGTRC(dev, "  PUK_TYPE_DISABLE\n");
+                DBGTRC(dev, "  PUK_TYPE_DISABLE (ULP_DISABLE)\n");
                 rsp_bhr = process_ulp_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
@@ -1077,23 +1077,34 @@ U16 offph;
             case IPA_CMD_SETIP:  /* 0xB1 */
                 DBGTRC(dev, "  IPA_CMD_SETIP\n");
                 {
-                BYTE *ip = (BYTE*)(ipa+1);
+                MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
                 U16  proto, retcode;
-                int rc;
+                int  rc;
+                U32  flags;
 
                     FETCH_HW(proto,ipa->proto);
                     retcode = IPA_RC_OK;
 
                     if (proto == IPA_PROTO_IPV4)
                     {
-                        char ipaddr[16] = {0};
-                        char ipmask[16] = {0};
+                      char ipaddr[16] = {0};
+                      char ipmask[16] = {0};
+
+                      FETCH_FW(flags,ipa_sip->data.ip4.flags);
+                      if (flags == IPA_SIP_DEFAULT)
+                      {
 
                         /* Save guest IPv4 address and netmask*/
-                        FETCH_FW( grp->hipaddr4, ip );
+                        FETCH_FW( grp->hipaddr4, ipa_sip->data.ip4.addr );
 
-                        MSGBUF(ipaddr,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
-                        MSGBUF(ipmask,"%d.%d.%d.%d",ip[4],ip[5],ip[6],ip[7]);
+                        MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
+                                                    ipa_sip->data.ip4.addr[1],
+                                                    ipa_sip->data.ip4.addr[2],
+                                                    ipa_sip->data.ip4.addr[3]);
+                        MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
+                                                    ipa_sip->data.ip4.mask[1],
+                                                    ipa_sip->data.ip4.mask[2],
+                                                    ipa_sip->data.ip4.mask[3]);
 
 #if defined(OPTION_W32_CTCI)
                         if (grp->ttipaddr)
@@ -1113,15 +1124,20 @@ U16 offph;
                                 "E", "TUNTAP_SetDestAddr() failed" );
                             retcode = IPA_RC_FFFF;
                         }
+                      }
                     }
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
-                        memcpy( grp->ipaddr6, ip, 16 );
+                      FETCH_FW(flags,ipa_sip->data.ip6.flags);
+                      if (flags == IPA_SIP_DEFAULT)
+                      {
+
+                        memcpy( grp->ipaddr6, ipa_sip->data.ip6.addr, 16 );
 
                         if(grp->ttipaddr6)
                             free(grp->ttipaddr6);
-                        hinet_ntop( AF_INET6, ip, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
+                        hinet_ntop( AF_INET6, ipa_sip->data.ip6.addr, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
 
 #if 0 // FIXME: How do we do this for IPv6?
       // Basically, we don't. TUNTAP_SetDestAddr issues an ioctl SIOCSIFDSTADDR
@@ -1138,6 +1154,7 @@ U16 offph;
                             retcode = IPA_RC_FFFF;
                         }
 #endif // (how do we do this for IPv6?)
+                      }
                     }
 #endif /*defined(ENABLE_IPV6)*/
 
@@ -1163,7 +1180,7 @@ U16 offph;
 
                     FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
-                    DBGTRC(dev, "  IPA_CMD_SETASSPARMS: %8.8x, %4.4x)\n",ano,cmd);
+                    DBGTRC(dev, "  IPA_CMD_SETASSPARMS: %8.8x, %4.4x\n",ano,cmd);
 
                     if (!(ano & grp->ipas)) {
                         STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
@@ -2380,6 +2397,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 OSA_GRP *grp;
+int groupsize = OSA_GROUP_SIZE;
 int grouped = 0;
 int i;
 
@@ -2396,7 +2414,7 @@ int i;
         dev->fd = -1;
         dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
-        if(!(grouped = group_device(dev,OSA_GROUP_SIZE)) && !dev->member)
+        if(!(grouped = group_device(dev,groupsize)) && !dev->member)
         {
             /* This code is executed for the first device in the group. */
             dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
@@ -2752,7 +2770,7 @@ int i;
             }
             else
             {
-                for (i = 0; i < OSA_GROUP_SIZE; i++)
+                for (i = 0; i < dev->group->members; i++)
                 {
                     dev->group->memdev[i]->pmcw.chpid[0] = chpid;
                 }
@@ -2762,7 +2780,7 @@ int i;
         /* Initialize each device's Full Link Address array */
         cua = dev->group->memdev[0];
         destlink = 0x000D; // ZZ FIXME: where should this come from?
-        for(i = 0; i < OSA_GROUP_SIZE; i++) {
+        for(i = 0; i < dev->group->members; i++) {
             dev->group->memdev[i]->fla[0] =
                 (destlink << 8) | (cua->devnum & 0x00FF);
         }
@@ -2795,7 +2813,7 @@ OSA_GRP *grp;
 
     grp = (OSA_GRP*)dev->group->grp_data;
 
-    if (dev->group->acount == OSA_GROUP_SIZE)
+    if (dev->group->acount == dev->group->members)
     {
         char ttifname[IFNAMSIZ+2];
 
@@ -2810,7 +2828,7 @@ OSA_GRP *grp;
         );
     }
 
-    if (dev->group->acount != OSA_GROUP_SIZE)
+    if (dev->group->acount != dev->group->members)
         strlcpy( incomplete, "*Incomplete ", sizeof( incomplete ));
 
     if (dev->scsw.flag2 & SCSW2_Q)
@@ -2843,7 +2861,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         int i, ttfd = grp->ttfd;
 
         PTT_QETH_TRACE( "b4 clos halt", 0,0,0 );
-        for (i=0; i < OSA_GROUP_SIZE; i++)
+        for (i=0; i < dev->group->members; i++)
         {
             if (QTYPE_READ == group->memdev[i]->qtype)
                 qeth_halt_read_device( group->memdev[i], grp );
@@ -3023,7 +3041,7 @@ U32 num;                                /* Number of bytes to move   */
     *residual = 0;
 
     /* Command reject if the device group has not been established */
-    if((dev->group->acount != OSA_GROUP_SIZE)
+    if((dev->group->acount != dev->group->members)
       && !(IS_CCW_SENSE(code) || IS_CCW_NOP(code) || (code == OSA_RCD)))
     {
         /* Set Intervention required sense, and unit check status */
@@ -3086,7 +3104,7 @@ U32 num;                                /* Number of bytes to move   */
             {
                 PTT_QETH_TRACE( "shut notify", dev->devnum,0,0 );
                 mpc_display_description( dev, "Shutdown Notify" );
-                MPC_DUMP_DATA( "END", iobuf, length, FROM_GUEST );
+                MPC_DUMP_DATA( "END", iobuf, datalen, FROM_GUEST );
             }
         }
         else
@@ -4209,6 +4227,9 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest to extract values.  */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_ENABLE request, irrespective of the number of    */
+/* data paths, which indicates whether the data paths will be using  */
+/* layer2 or layer3. A ULP_ENABLE response will be returned.         */
 static int process_ulp_enable_extract( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4238,6 +4259,9 @@ MPC_PUS *req_pus_0A;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest.                    */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_ENABLE request, irrespective of the number of    */
+/* data paths, which indicates whether the data paths will be using  */
+/* layer2 or layer3. A ULP_ENABLE response is returned.              */
 static OSA_BHR* process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4356,6 +4380,8 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_SETUP request from the guest.                     */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_SETUP request for each of the data paths.        */
+/* A ULP_CONFIRM response is returned.                               */
 static OSA_BHR* process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4397,6 +4423,9 @@ U16 uLength4;
     FETCH_HW( len_pus_0B, req_pus_0B->length);
 
     /* Copy the guests ULP Connection token from request PUS_TYPE_04. */
+    /* FIXME: The ULP Connection token is unique for each data path.  */
+    /* FIXME: If multiple data paths are ever supported, the token    */
+    /* FIXME: needs to be kept in a data path related block, not grp. */
     memcpy( grp->gtulpconn, req_pus_04->vc.pus_04.token, MPC_TOKEN_LENGTH );
 
     // Fix-up various lengths
@@ -4463,6 +4492,11 @@ U16 uLength4;
     memcpy( rsp_pus_04->vc.pus_04.token, grp->gtulpconn, MPC_TOKEN_LENGTH );
 
     // Prepare second MPC_PUS
+    /* FIXME: The ULP Connection tokens need to be unique for each data path. */
+    /* FIXME: If multiple data paths are ever supported, QTOKEN5 shouldn't    */
+    /* FIXME: be used. something unique is required. Something incorporating  */
+    /* FIXME: the data paths device address perhaps? It will also need to be  */
+    /* FIXME: kept in a data path related block, not grp.                     */
     STORE_HW( rsp_pus_08->length, SIZE_PUS_08 );
     rsp_pus_08->what = PUS_WHAT_04;
     rsp_pus_08->type = PUS_TYPE_08;
@@ -4483,8 +4517,10 @@ U16 uLength4;
 }
 
 /*-------------------------------------------------------------------*/
-/* Process the DM_ACT request from the guest.                        */
+/* Process the ULP_ACTIVE request from the guest.                    */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_ACTIVE request for each of the data paths.       */
+/* A ULP_ACTIVE response is returned.                                */
 static OSA_BHR* process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4570,6 +4606,9 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_TAKEDOWN request from the guest.                  */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_TAKEDOWN request for each of the data paths?     */
+/* There is no response. If there is only one data path there is     */
+/* often no ULP_TAKEDOWN request, just a ULP_DISABLE request.        */
 static OSA_BHR* process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4587,6 +4626,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* Process the ULP_DISABLE request from the guest.                   */
 /*-------------------------------------------------------------------*/
+/* There is one ULP_DISABLE request, irrespective of the number of   */
+/* data paths. There is no response.                                 */
 static OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;

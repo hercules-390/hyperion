@@ -66,7 +66,6 @@ struct _MPC_TH                     /* Transport Header               */
                                    /* contents that have been seen   */
                                    /* are 0x00E00000.                */
 #define MPC_TH_FIRST4  0x00E00000  /*                                */
-#define MPC_END_FIRST4 0x0000C000  /* Adapter shutdown/close?        */
 /*004*/  FWORD  seqnum;            /* Sequence number.               */
 /*008*/  FWORD  offrrh;            /* Offset from the start of the   */
                                    /* MPC_TH to the first (or only)  */
@@ -328,8 +327,12 @@ struct _MPC_PUS                    /*                                */
 #define SIZE_PUS_0A_B  0x0018      /* Size of MPC_PUS_0A             */
 
          struct _pus_0B {          /* PUS_0B contents                */
-/*004*/      BYTE   cua[2];        /*                                */
-/*006*/      BYTE   rdevaddr[2];   /*                                */
+                                   /* The contents match those in    */
+                                   /* one of the 4-byte structures   */
+                                   /* at the end of the MPC_IEA/IEAR */
+/*004*/      BYTE   ddev[2];       /* Data Device Number             */
+/*006*/      BYTE   ddcua;         /* Data Device Control Unit Addr  */
+/*007*/      BYTE   ddua;          /* Data Device Unit Address       */
          } pus_0B;                 /*                                */
 #define SIZE_PUS_0B  0x0008        /* Size of MPC_PUS_0B             */
 
@@ -356,8 +359,8 @@ typedef struct _MPC_PUS MPC_PUS, *PMPC_PUS;
 // CM_DISABLE           x
 //
 // ULP_ENABLE     x  x
-// ULP_SETUP         x     x  x  x
-// ULP_CONFIRM       x     x       x   x
+// ULP_SETUP         x     x  x  x              x
+// ULP_CONFIRM       x     x       x   x        x
 // ULP_TAKEDOWN            x
 // ULP_DISABLE          x
 //
@@ -402,7 +405,11 @@ typedef struct _MPC_IEA {
 /*012*/ FWORD   uclevel;        /* Microcode level                   */
 /*016*/ BYTE    dataset[8];     /* Name                              */
 /* The following 4-bytes are repeated for each data path */
-/*01E*/ struct {
+/*01E*/ struct {                /* The contents of one of these      */
+                                /* 4-byte structures matches the     */
+                                /* contents of the PUS_0B structure, */
+                                /* used in QETH PUK_TYPE_SETUP and   */
+                                /* PUK_TYPE_CONFIRM for a data path. */
 /*01E*/     HWORD   ddev;       /* Data Device Number                */
 /*020*/     BYTE    ddcua;      /* Data Device Control Unit Address  */
 /*021*/     BYTE    ddua;       /* Data Device Unit Address          */
@@ -410,6 +417,11 @@ typedef struct _MPC_IEA {
 /*var*/ } MPC_IEA;
 #define MPC_IEA_FIRST4 0x00008000  /*                                */
 
+#define MPC_END_FIRST4 0x0000C000  /* Adapter shutdown/close?        */
+/* 8-bytes received: those seen are 0000C000 80000000                */
+
+/* Are the first 8-bytes of an IEA and IEAR an XID0? They look very
+   similar to those used in PTP, see structure PTPHX0.               */
 
 /*-------------------------------------------------------------------*/
 /* Identification Exchange Activate Response                         */
@@ -692,23 +704,34 @@ typedef struct _MPC_IPA_SAS {
     } MPC_IPA_SAS;
 
 /*-------------------------------------------------------------------*/
-/* Set IP Address                                                    */
+/* Set or Delete IP Address                                          */
 /*-------------------------------------------------------------------*/
 typedef struct _MPC_IPA_SIP {
 /*000*/   union {
             struct {
 /*000*/       BYTE   addr[4];
-/*004*/       BYTE   mask[4];
-/*008*/       BYTE   prfx[4];
+/*004*/       BYTE   mask[4];   /* This field should be a subnet     */
+                                /* mask, but it often contains       */
+                                /* 0xFFFFFF00, irrespective of the   */
+                                /* guests subnet mask. Why?          */
+/*008*/       BYTE   flags[4];
             } ip4;
             struct {
 /*000*/       BYTE   addr[16];
-/*010*/       BYTE   mask[16];
-/*020*/       BYTE   prfx[4];
+/*010*/       BYTE   mask[16];  /* This field should be a subnet     */
+                                /* mask, but it often contains       */
+                                /* nulls. Why?                       */
+/*020*/       BYTE   flags[4];
             } ip6;
-          } u;
+          } data;
         } MPC_IPA_SIP;
 
+#define IPA_SIP_DEFAULT             0x00000000
+#define IPA_SIP_VIPA                0x00000001
+#define IPA_SIP_TAKEOVER            0x00000002
+#define IPA_DIP_ADDR_2_B_TAKEN_OVER 0x00000020
+#define IPA_DIP_VIPA                0x00000040
+#define IPA_DIP_ADDR_NEEDS_SETIP    0x00000080
 
 /*===================================================================*/
 /* Structures used by PTP devices                                    */
