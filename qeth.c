@@ -37,6 +37,71 @@
 /* where the guest can then use any other IP address in the          */
 /* 192.168.10 range                                                  */
 /*                                                                   */
+/*                                                                   */
+/* zLinux defines which three devices addresses are used for what    */
+/* purpose depending on on the distribution.                         */
+/* Debian, in a file named, for example, config-ccw-0.0.0800, in the */
+/* /etc/sysconfig/hardware directory, has the CCWGROUP_CHANS         */
+/* statement. An example CCWGROUP_CHANS statement is:-               */
+/*   CCWGROUP_CHANS=(0.0.0800 0.0.0801 0.0.0802)                     */
+/* Similarly, Fedora, in a file named, for example,                  */
+/* ifcfg-enccw0.0.0800, in the /etc/sysconfig/network-scripts        */
+/* directory, has the SUBCHANNELS statement. An example SUBCHANNELS  */
+/* statement is:-                                                    */
+/*   SUBCHANNELS="0.0.0800,0.0.0801,0.0.0802"                        */
+/* With the example SUBCHANNELS statement the first device address,  */
+/* i.e. 800, would be used for the read device, the second device    */
+/* address, i.e. 801, would be used for the write device, and the    */
+/* third device address, i.e. 802, would be used for the data        */
+/* device. However, if the SUBCHANNELS statement were specified as:- */
+/*   SUBCHANNELS="0.0.0802,0.0.0800,0.0.0801"                        */
+/* then device address 802 would be used for the read device, device */
+/* address 800 would be used for the write device, and device        */
+/* address 801 would be used for the data device.                    */
+/* (It's not clear whether the group of device addresses even needs  */
+/* to be consecutive?)                                               */
+/*                                                                   */
+/* z/VM defines which devices addresses are used for what purpose in */
+/* the 'DEVICE and LINK Statements for OSD Devices' (see 'z/VM:      */
+/* TCP/IP Planning and Customization'). A single device address      */
+/* specifies the first of three consecutive virtual device numbers   */
+/* to be grouped for the OSA-Express Adapter. TCP/IP uses the first  */
+/* device address for the data device, the second device address for */
+/* the read device, and the third device address for the write       */
+/* device.                                                           */
+/*                                                                   */
+/* z/OS defines which devices addresses are used for what purpose in */
+/* a VTAM 'Transport resource list major node' (a TRLE, see 'z/OS    */
+/* Communication Server: SNA Reource Definition Guide'). One read    */
+/* device address, one write device address, and up to 238 data      */
+/* device addresses must be specified. The read device address must  */
+/* be an even number, and the write device address must be an odd    */
+/* number that is one greater than the read device address. Each     */
+/* TCP/IP in the same logical partition instance that starts an      */
+/* OSA-Express in QDIO mode is assigned one of the data device       */
+/* addresses by VTAM. Each TCP/IP in the same logical partition      */
+/* instance that starts an OSA-Express network traffic analyzer      */
+/* (OSAENTA) trace is also assigned one of the DATAPATH channels by  */
+/* VTAM. A sufficient number of data device addresses must be coded  */
+/* for the number of concurrent instances that will be using an      */
+/* OSA-Express port. For example, if you wanted three instances of   */
+/* TCP/IP in the same logical partition, you could code the DATAPATH */
+/* operand in the TRLE as follows:                                   */
+/*   DATAPATH=(402,403,404), or DATAPATH=(402-404).                  */
+/*                                                                   */
+/* The OSA-Express Implementation Guide says:-                       */
+/* - Any OSD, OSX, or OSM CHPID (QDIO mode) requires at least three  */
+/* devices for each TCP/IP stack: read, write, and data path. For    */
+/* z/OS, only the first TCP/IP stack requires three devices. Any     */
+/* additional TCP/IP stack requires only one device (data path). If  */
+/* you define both IPv4 and IPv6 with INTERFACE statements, z/OS     */
+/* will use two data devices, one for each protocol.                 */
+/* - If you plan to use the OSA-Express Network Traffic Analyzer,    */
+/* you need one more data device, which is used to transmit the      */
+/* captured trace data to TCP/IP.                                    */
+/* - Any OSE CHPID requires two devices (read and write) for each    */
+/* TCP/IP. SNA requires one device.                                  */
+/*                                                                   */
 
 #include "hstdinc.h"
 
