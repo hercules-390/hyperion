@@ -12,11 +12,19 @@
                      Version 4.0 RELEASE NOTES
 
 
-* The new minimum supported Microsoft Windows platform is now Windows XP or
+* Minimum supported Windows platform is now Windows XP
+
+  The new minimum supported Microsoft Windows platform is now Windows XP or
   greater. Windows 98, Windows NT and Windows 2000 are no longer supported.
+  Support for Windows XP will likely be dropped in the very near future too
+  however, so all Hercules users are strongly encouraged to upgrade their
+  systems to at least Windows Vista. 64-bit Windows 7 Professional SP1
+  or greater is preferred.
 
 
-* The combination of NUMCPU and MAXCPU controls the behavior of how many
+* "MAXCPU" and "NUMCPU" statements
+
+  The combination of NUMCPU and MAXCPU controls the behavior of how many
   CPU engines will be configured online upon startup and how many can be
   configured online later. In previous versions this was controlled via
   the NUMCPU statement and the compile-time constant 'MAX_CPU_ENGINES'.
@@ -25,17 +33,64 @@
   value defaults to NUMCPU. If neither is specified it defaults to 1.
 
 
-* Most configuration file statements are now available as and processed as
-  panel commands. Most valid configuration file statement may now also be
-  entered as a panel command. Most panel commands however are allowed
-  as configuration file statements. See the documentation for details.
+* CMPSC Compression Call 2012 instruction implementation is now the default
 
-
-* The default implementation for the CMPSC Compression Call instruction is
+  The default implementation for the CMPSC Compression Call instruction is
   now the new cmpsc_2012 implementation. The previous legacy implementation
-  is now the alternate implementation implemented as a dynamically loadable
-  module called "altcmpsc.dll". Refer to the README.CMPSC document for more
-  information.
+  is now the alternate implementation implemented as an optional dynamically
+  loadable module called "altcmpsc.dll". Refer to the README.CMPSC document
+  for more information.
+
+
+* The sequence of certain system parameters may be important
+
+  The sequence of certain configuration file system parameter statements
+  may be important. Specifically, the ARCHLVL statement (previously called
+  ARCHMODE and defines the initial architectural mode of the system) should
+  generally precede (come before) any other ARCHLVL statement that enables
+  or disables a given architectural feature.
+
+  For example: on certain IBM operating systems the z/Architecture "ASN
+  and LX Reuse Facility" feature must be enabled or the system will not IPL.
+  The facility is enabled in Hercules via the ARCHLVL ENABLE ASN_LX_REUSE
+  configuration file statement, but since the facility is a z/Architecture-
+  only feature, your initial architecture must either be set to "z/Arch"
+  beforehand or else you need to specify the optional [archmode] parameter
+  on your ARCHLVL ENABLE ASN_LX_REUSE statement.
+
+  This means the ARCHLVL z/Arch< statement must usually come before your
+  ARCHLVL ENABLE ASN_LX_REUSE statement in your configuration file.
+  Otherwise the ASN and LX Reuse Facility would not be enabled.
+
+  The ARCHLVL statement is currently the only system parameter where the
+  sequence may matter. The order of all other system parameters does not
+  currently matter. This may change in the future however, so be sure to
+  always carefully read through the RELEASE NOTES (this document) with
+  each new release of Hercules.
+
+
+* More architecturally compliant Channel Subsystem implementation
+
+  Hercules 4.0 Hyperion's channel subsystem implementation now more closely
+  adheres to published and unpublished architectural specifications. It does
+  not precisely adhere to the complete specification but it does adhere much
+  more closely than ever before (and definitely more closely than the legacy
+  implementation still used in the older spinhawk 3.xx series of Hercules).
+
+  If you experience any anomalies in the behavior of your guest operating
+  system, verify that you are using architecurally valid/correct configuration
+  settings that your guest operating system expects. Pay particular attention
+  to your LPARNUM, CPUMODEL, CPUSERIAL, CPUVERID, CPUIDFMT, MODEL, PLANT
+  and MANUFACTURER values since they typically have a direct impact on how
+  certain guest operating systems behave.
+
+
+* Configuration file statements and panel commands handled identically
+
+  Most configuration file statements are now available as and processed as
+  panel commands. Most valid configuration file statements may now also be
+  entered as a panel command. Most panel commands are now also allowed as
+  configuration file statements. See the documentation for full details.
 
 
 -------------------------------------------------------------------------------
