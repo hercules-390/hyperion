@@ -149,18 +149,28 @@ int cpu;
     }
 
     /* Round requested storage size to architectural segment boundaries
+     *    ARCH_370  1   4K page
+     *    ARCH_390  256 4K pages (or 1M)
+     *    ARCH_900  256 4K oages (or 1M)
      */
     if (mainsize)
     {
-        /* All recorded storage sizes are maintained as full pages.
-         * That is, no partial pages are maintained or reported.
-         * Actual storage is obtained and maintained by 4K pages
-         * if 16M or less, 1M segments if greater than 16M.
-         */
+#if 0
         if (mainsize <= (16 << (SHIFT_MEGABYTE - 12)))
             storsize = MAX((sysblk.arch_mode <= ARCH_390) ? 1 : 2,
                            mainsize);
+            /* The side effect of this for values less than 256 is to establish
+             * zones with a memory size of zero megabytes.  Channel subsystem I/O
+             * (see MSCH instruction) drives I/O address checks via the memory size
+             * established in zones, not mainsize.  A zero megabyte zone memory
+             * size causes all channel subsystem I/O to fail with a program check
+             * channel status.
+             */
+#else
+        if (sysblk.arch_mode == ARCH_370)
+            storsize = MAX(1,mainsize);
         else
+#endif
             storsize = (mainsize + 255) & ~255ULL;
         mainsize = storsize;
     }
