@@ -194,26 +194,26 @@ struct  _PTPBLK
 #define HEANSWEREDME_STOP     0x10         // He answered me Stop
 #define WEARETERMINATED       0xF0         // Are we terminated?
 
-#define DEBUGPACKET           0x00000001   // Packet
+#define DBGPTPPACKET          0x00000001   // Packet
                                            // (i.e. the IP packets sent to
                                            // or received from the TUN device
                                            // in network byte order)
-#define DEBUGDATA             0x00000002   // Data
+#define DBGPTPDATA            0x00000002   // Data
                                            // (i.e. the messages presented
                                            // to or accepted from the CTC
                                            // devices in network byte order
-                                           // Note: a maximun of 256 bytes is
-                                           // displayed)
-#define DEBUGEXPAND           0x00000004   // Data expanded
+                                           // Note: a maximun of 256 bytes
+                                           // is displayed)
+#define DBGPTPEXPAND          0x00000004   // Data expanded
                                            // (i.e. the messages presented
                                            // to or accepted from the CTC
                                            // devices in network byte order
                                            // showing the MPC_TH etc.
                                            // Note: a maximun of 64 bytes
                                            // of data is displayed)
-#define DEBUGUPDOWN           0x00000010   // Connection up and down
-#define DEBUGCCW              0x00000020   // CCWs executed
-#define DEBUGCONFVALUE        0x00000080   // Configuration value
+#define DBGPTPUPDOWN          0x00000010   // Connection up and down
+#define DBGPTPCCW             0x00000020   // CCWs executed
+#define DBGPTPCONFVALUE       0x00000080   // Configuration value
                                            // (i.e. values specified on, or
                                            // derived from, the config stmt.
                                            // Note: only available from

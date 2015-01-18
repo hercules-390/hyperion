@@ -132,12 +132,12 @@ DLL_EXPORT void  mpc_display_description( DEVBLK* pDEVBLK, char* pDesc )
         if( pDEVBLK )
         {
             // HHC03983 "%1d:%04X %s: %s
-            WRMSG(HHC03983, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
+            WRMSG(HHC03983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, pDesc );
         }
         else
         {
             // HHC03984 "%s"
-            WRMSG(HHC03984, "I", pDesc );
+            WRMSG(HHC03984, "D", pDesc );
         }
     }
 
@@ -203,13 +203,13 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
         if( pDEVBLK )
         {
             // HHC03981 "%1d:%04X %s: %s: %s %s  %s"
-            WRMSG(HHC03981, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            WRMSG(HHC03981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  cWhat, print_line, print_ascii, print_ebcdic );
         }
         else
         {
             // HHC03982 "%s: %s %s  %s"
-            WRMSG(HHC03982, "I", cWhat, print_line, print_ascii, print_ebcdic );
+            WRMSG(HHC03982, "D", cWhat, print_line, print_ascii, print_ebcdic );
         }
     }
 

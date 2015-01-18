@@ -988,6 +988,15 @@
   "Display cpuid and STSI results presented to the SCP\n"
 
 #define qd_cmd_desc             "Query dasd"
+
+#define qeth_cmd_desc           "Enable/Disable QETH debugging"
+#define qeth_cmd_help           \
+                                \
+  "Format:  \"qeth  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]\".\n\n"  \
+  "Enables/disables debug tracing for the QETH device group\n"                   \
+  "identified by <devnum>, or for all QETH device groups if\n"                   \
+  "<devnum> is not specified or specified as 'ALL'.\n"
+
 #define qpfkeys_cmd_desc        "Display the current PF Key settings"
 #define qpid_cmd_desc           "Display Process ID of Hercules"
 #define qports_cmd_desc         "Display TCP/IP ports in use"
@@ -1550,6 +1559,7 @@ COMMAND( "psw",                     psw_cmd,                SYSCMDNOPER,        
 COMMAND( "ptp",                     ptp_cmd,                SYSCMDNOPER,        ptp_cmd_desc,           ptp_cmd_help        )
 COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
 COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            NULL                )
+COMMAND( "qeth",                    qeth_cmd,               SYSCMDNOPER,        qeth_cmd_desc,          qeth_cmd_help       )
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
 COMMAND( "r",                       r_cmd,                  SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )
 COMMAND( "resume",                  resume_cmd,             SYSCMDNOPER,        resume_cmd_desc,        NULL                )

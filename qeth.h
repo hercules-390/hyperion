@@ -157,7 +157,28 @@ typedef struct _OSA_GRP {
     int   promisc;              /* Adapter is in promiscuous mode    */
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
-    int   debug;                /* Adapter in IFF_DEBUG mode         */
+    u_int debug;                /* Debug mode                        */
+    u_int debugmask;            /* Debug mask                        */
+#define DBGQETHPACKET   0x00000001  /* Packet                        */
+                                    /* (i.e. the Ethernet frames     */
+                                    /* or IP packets sent to or      */
+                                    /* received from the TAP device  */
+                                    /* in network byte order)        */
+#define DBGQETHDATA     0x00000002  /* Data                          */
+                                    /* (i.e. the messages presented  */
+                                    /* to or accepted from the QETH  */
+                                    /* devices in network byte order */
+                                    /* Note: a maximun of 256 bytes  */
+                                    /* is displayed)                 */
+#define DBGQETHEXPAND   0x00000004  /* Data expanded                 */
+                                    /* (i.e. the messages presented  */
+                                    /* to or accepted from the QETH  */
+                                    /* devices in network byte order */
+                                    /* showing the MPC_TH etc.       */
+                                    /* Note: a maximun of 64 bytes   */
+                                    /* of data is displayed)         */
+#define DBGQETHUPDOWN   0x00000010  /* Connection up and down        */
+#define DBGQETHCCW      0x00000020  /* CCWs executed                 */
     int   l3;                   /* Adapter in layer 3 mode           */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
