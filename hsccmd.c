@@ -76,6 +76,7 @@
 #include "dasdtab.h"
 #include "ctcadpt.h"
 #include "ctc_ptp.h"
+#include "qeth.h"
 
 // (forward references, etc)
 
@@ -2265,7 +2266,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     onoff = ( CMD(argv[2],on,2) );
     if( onoff )
-        mask = DEBUGPACKET;
+        mask = DBGPTPPACKET;
     else
         mask = 0;
 
@@ -2372,133 +2373,408 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 int ptp_cmd( int argc, char *argv[], char *cmdline )
 {
     DEVBLK*  dev;
-    PTPATH*  pPTPATH;
     PTPBLK*  pPTPBLK;
     U16      lcss;
     U16      devnum;
     u_int    all;
     u_int    onoff;
     u_int    mask;
+    int      i;
+    u_int    j;
+    DEVGRP*  pDEVGRP;
+    DEVBLK*  pDEVBLK;
 
     UNREFERENCED( cmdline );
 
-    // Format:  "ptp  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]"
+    // Format:  "ptp  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
+    // Format:  "ptp  debug  off [ [ <devnum>|ALL ] ]"
 
-    if( argc < 3 )
-        goto ptp_cmd_duff;
+    if ( argc >= 2 && CMD(argv[1],debug,5) )
+    {
 
-    if( !CMD(argv[1],debug,5) )
-        goto ptp_cmd_duff;
-
-    if( CMD(argv[2],on,2) )
-    {
-        onoff = TRUE;
-        mask = DEBUGPACKET;
-    }
-    else if( CMD(argv[2],off,3) )
-    {
-        onoff = FALSE;
-        mask = 0;
-        if( argc > 4 )
-            goto ptp_cmd_duff;
-    }
-    else
-    {
-        goto ptp_cmd_duff;
-    }
-
-    all = TRUE;
-    if( argc >= 4 )
-    {
-        if( CMD(argv[3],ALL,3) )
+        if ( argc >= 3 )
         {
-            all = TRUE;
-        }
-        else if( parse_single_devnum( argv[3], &lcss, &devnum) == 0 )
-        {
-            all = FALSE;
+            if ( CMD(argv[2],on,2) )
+            {
+                onoff = TRUE;
+                mask = DBGPTPPACKET;
+            }
+            else if ( CMD(argv[2],off,3) )
+            {
+                onoff = FALSE;
+                mask = 0;
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
         }
         else
         {
-            goto ptp_cmd_duff;
-        }
-    }
-
-    if( argc >= 5 )
-    {
-        mask = atoi( argv[4] );                  /* One day all of           */
-        if( mask < 1 || mask > 255 )             /* this will change.        */
-            goto ptp_cmd_duff;                   /* Keywords (e.g. 'packet') */
-        if( argc > 5 )                           /* will checked for, and    */
-            goto ptp_cmd_duff;                   /* values OR'ed into mask.  */
-    }
-
-    if( all )
-    {
-        for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
-        {
-            if( dev->allocated &&
-                dev->devtype == 0x3088 &&
-                dev->ctctype == CTC_PTP )
-            {
-                pPTPATH = dev->dev_data;
-                pPTPBLK = pPTPATH->pPTPBLK;
-                pPTPBLK->fDebug = onoff;
-                pPTPBLK->uDebugMask = mask;
-            }
-        }
-
-        //    HHC02204 "%-14s set to %s"
-        WRMSG(HHC02204, "I", "PTP debug", onoff ? "on ALL" : "off ALL");
-    }
-    else
-    {
-        int i;
-        DEVGRP* pDEVGRP;
-        DEVBLK* pDEVBLK;
-
-        if (!(dev = find_device_by_devnum ( lcss, devnum )))
-        {
-            devnotfound_msg( lcss, devnum );
+            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
 
-        pDEVGRP = dev->group;
-
-        if( dev->ctctype == CTC_PTP )
+        all = TRUE;
+        if ( argc >= 4 )
         {
-            for( i=0; i < pDEVGRP->acount; i++ )
+            if ( CMD(argv[3],all,3) )
+            {
+                all = TRUE;
+            }
+            else if ( parse_single_devnum( argv[3], &lcss, &devnum) == 0 )
+            {
+                all = FALSE;
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+
+        if ( argc >= 5 )
+        {
+            if ( onoff == TRUE)
+            {
+                mask = 0;
+                j = 0;
+                for ( i = 4 ; i < argc ; i++ )
+                {
+                    if ( CMD(argv[i],packet,6) )
+                    {
+                        j = DBGPTPPACKET;
+                    }
+                    else if ( CMD(argv[i],data,4) )
+                    {
+                        j = DBGPTPDATA;
+                    }
+                    else if ( CMD(argv[i],expand,6) )
+                    {
+                        j = DBGPTPEXPAND;
+                    }
+                    else if ( CMD(argv[i],updown,6) )
+                    {
+                        j = DBGPTPUPDOWN;
+                    }
+                    else if ( CMD(argv[i],ccw,3) )
+                    {
+                        j = DBGPTPCCW;
+                    }
+                    else
+                    {
+                        j = atoi( argv[i] );
+                        if ( j < 1 || j > 255 )
+                        {
+                            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                            WRMSG( HHC02299, "E", argv[0] );
+                            return -1;
+                        }
+                    }
+                    mask |= j;
+                }
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+
+        if ( all )
+        {
+            for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+            {
+                if ( dev->allocated &&
+                     dev->devtype == 0x3088 &&
+                     dev->ctctype == CTC_PTP )
+                {
+                    pPTPBLK = dev->group->grp_data;
+                    pPTPBLK->fDebug = onoff;
+                    pPTPBLK->uDebugMask = mask;
+                }
+            }
+
+            // HHC02204 "%-14s set to %s"
+            WRMSG(HHC02204, "I", "PTP debug", onoff ? "on ALL" : "off ALL");
+        }
+        else
+        {
+            if ( !(dev = find_device_by_devnum( lcss, devnum )) )
+            {
+                devnotfound_msg( lcss, devnum );
+                return -1;
+            }
+
+            if ( !dev->allocated ||
+                 dev->devtype != 0x3088 ||
+                 dev->ctctype != CTC_PTP )
+            {
+                // HHC02209 "%1d:%04X device is not a '%s'"
+                WRMSG(HHC02209, "E", lcss, devnum, "PTP" );
+                return -1;
+            }
+
+            pDEVGRP = dev->group;
+
+            for ( i=0; i < pDEVGRP->acount; i++ )
             {
                 pDEVBLK = pDEVGRP->memdev[i];
-                pPTPATH = pDEVBLK->dev_data;
-                pPTPBLK = pPTPATH->pPTPBLK;
+                pPTPBLK = pDEVBLK->group->grp_data;
                 pPTPBLK->fDebug = onoff;
                 pPTPBLK->uDebugMask = mask;
+            }
+
+            {
+            char buf[128];
+            MSGBUF( buf, "%s for %s device %1d:%04X pair",
+                    onoff ? "on" : "off",
+                    "PTP",
+                    lcss, devnum );
+            // HHC02204 "%-14s set to %s"
+            WRMSG(HHC02204, "I", "PTP debug", buf);
+            }
+        }
+
+        return 0;
+    }
+
+    // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+    WRMSG( HHC02299, "E", argv[0] );
+    return -1;
+
+}
+
+
+/*-------------------------------------------------------------------*/
+/* qeth command - enable/disable QETH debugging                      */
+/*-------------------------------------------------------------------*/
+int qeth_cmd( int argc, char *argv[], char *cmdline )
+{
+    DEVBLK*  dev;
+    OSA_GRP* grp;
+    U16      lcss;
+    U16      devnum;
+    u_int    all;
+    u_int    onoff;
+    u_int    mask;
+    int      i;
+    u_int    j;
+    DEVGRP*  pDEVGRP;
+    DEVBLK*  pDEVBLK;
+
+    UNREFERENCED( cmdline );
+
+    // Format:  "qeth  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
+    // Format:  "qeth  debug  off [ [ <devnum>|ALL ] ]"
+
+    if ( argc >= 2 && CMD(argv[1],debug,5) )
+    {
+
+        if ( argc >= 3 )
+        {
+            if ( CMD(argv[2],on,2) )
+            {
+                onoff = TRUE;
+                mask = DBGQETHPACKET;
+            }
+            else if ( CMD(argv[2],off,3) )
+            {
+                onoff = FALSE;
+                mask = 0;
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
             }
         }
         else
         {
-            //    HHC02209 "%1d:%04X device is not a '%s'"
-            WRMSG(HHC02209, "E", lcss, devnum, "PTP" );
+            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
 
+        all = TRUE;
+        if ( argc >= 4 )
         {
-        char buf[128];
-        MSGBUF( buf, "%s for %s device %1d:%04X pair",
-                onoff ? "on" : "off",
-                "PTP",
-                lcss, devnum );
-        //    HHC02204 "%-14s set to %s"
-        WRMSG(HHC02204, "I", "PTP debug", buf);
+            if ( CMD(argv[3],all,3) )
+            {
+                all = TRUE;
+            }
+            else if ( parse_single_devnum( argv[3], &lcss, &devnum) == 0 )
+            {
+                all = FALSE;
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
         }
 
+        if ( argc >= 5 )
+        {
+            if ( onoff == TRUE)
+            {
+                mask = 0;
+                for ( i = 4 ; i < argc ; i++ )
+                {
+                    if ( CMD(argv[i],packet,6) )
+                    {
+                        j = DBGQETHPACKET;
+                    }
+                    else if ( CMD(argv[i],data,4) )
+                    {
+                        j = DBGQETHDATA;
+                    }
+                    else if ( CMD(argv[i],expand,6) )
+                    {
+                        j = DBGQETHEXPAND;
+                    }
+                    else if ( CMD(argv[i],updown,6) )
+                    {
+                        j = DBGQETHUPDOWN;
+                    }
+                    else if ( CMD(argv[i],ccw,3) )
+                    {
+                        j = DBGQETHCCW;
+                    }
+                    else
+                    {
+                        j = atoi( argv[i] );
+                        if ( j < 1 || j > 255 )
+                        {
+                            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                            WRMSG( HHC02299, "E", argv[0] );
+                            return -1;
+                        }
+                    }
+                    mask |= j;
+                }
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+
+        if ( all )
+        {
+            for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+            {
+                if ( dev->allocated &&
+                     dev->devtype == 0x1731 )
+                {
+                    grp = dev->group->grp_data;
+                    grp->debug = onoff;
+                    grp->debugmask = mask;
+                }
+            }
+
+            // HHC02204 "%-14s set to %s"
+            WRMSG(HHC02204, "I", "QETH debug", onoff ? "on ALL" : "off ALL");
+        }
+        else
+        {
+            if ( !(dev = find_device_by_devnum( lcss, devnum )) )
+            {
+                devnotfound_msg( lcss, devnum );
+                return -1;
+            }
+
+            if ( !dev->allocated ||
+                 dev->devtype != 0x1731 )
+            {
+                // HHC02209 "%1d:%04X device is not a '%s'"
+                WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
+                return -1;
+            }
+
+            pDEVGRP = dev->group;
+
+            for ( i=0; i < pDEVGRP->acount; i++ )
+            {
+                grp = dev->group->grp_data;
+                grp->debug = onoff;
+                    grp->debugmask = mask;
+            }
+
+            {
+            char buf[128];
+            MSGBUF( buf, "%s for %s device %1d:%04X pair",
+                    onoff ? "on" : "off",
+                    "QETH",
+                    lcss, devnum );
+            // HHC02204 "%-14s set to %s"
+            WRMSG(HHC02204, "I", "QETH debug", buf);
+            }
+        }
+
+        return 0;
     }
 
-    return 0;
+    // Format:  "qeth  group  <devnum>"
 
-ptp_cmd_duff:
-    //     HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+    else if ( argc >= 2 && CMD(argv[1],group,5) )
+    {
+
+        if ( argc == 3 )
+        {
+            if ( parse_single_devnum( argv[2], &lcss, &devnum) == 0 )
+            {
+                if ( !(dev = find_device_by_devnum( lcss, devnum )) )
+                {
+                    devnotfound_msg( lcss, devnum );
+                    return -1;
+                }
+
+                if ( !dev->allocated ||
+                     dev->devtype != 0x1731 )
+                {
+                    // HHC02209 "%1d:%04X device is not a '%s'"
+                    WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
+                    return -1;
+                }
+
+                pDEVGRP = dev->group;
+
+                for ( i=0; i < pDEVGRP->acount; i++ )
+                {
+                    pDEVBLK = pDEVGRP->memdev[i];
+                }
+
+                // HHC02204 "%-14s set to %s"
+                WRMSG(HHC02204, "I", "QETH group", "produce something useful, someday soon");
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+        else
+        {
+            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+
+        return 0;
+    }
+
+    // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
     WRMSG( HHC02299, "E", argv[0] );
     return -1;
 
