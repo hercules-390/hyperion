@@ -210,7 +210,7 @@
   int read_socket(int fd, char *ptr, int nbytes);
   int write_socket(int fd, const char *ptr, int nbytes);
 */
-  #define  close_socket(f)      closesocket(f)
+  #define  close_socket         w32_close_socket
   #define  hif_nametoindex      w32_if_nametoindex
   #define  hinet_ntop           w32_inet_ntop
   #define  hinet_pton           w32_inet_pton

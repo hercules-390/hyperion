@@ -581,11 +581,6 @@ int     dll_count;                      /* index into array          */
     }
 #endif
 
-    /* set default console keep alive values */
-    sysblk.kaidle = KEEPALIVE_IDLE_TIME;
-    sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
-    sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
-
 #if defined(_FEATURE_ECPSVM)
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
@@ -888,6 +883,84 @@ int     dll_count;                      /* index into array          */
         usleep(100000);
         return(1);
     }
+
+    /* Set default TCP keepalive values */
+
+#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+    WARNING("TCP keepalive headers not found; check configure.ac")
+    WARNING("TCP keepalive support will NOT be generated")
+
+    // "This build of Hercules does not support TCP keepalive"
+    WRMSG( HHC02321, "E" );
+
+#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+
+  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+    WARNING("This build of Hercules will only have basic TCP keepalive support")
+
+    // "This build of Hercules has only basic TCP keepalive support"
+    WRMSG( HHC02322, "W" );
+
+  #endif // defined( HAVE_BASIC_KEEPALIVE )
+    /*
+    **  Note: we need to try setting them to our desired values first
+    **  and then retrieve the set values afterwards to detect systems
+    **  which do not allow some values to be changed to ensure SYSBLK
+    **  gets initialized with proper working default values.
+    */
+    {
+        int rc, sfd, idle, intv, cnt;
+
+        /* Need temporary socket for setting/getting */
+        sfd = socket( AF_INET, SOCK_STREAM, 0 );
+        if (sfd < 0)
+        {
+            WRMSG( HHC02219, "E", "socket()", strerror( HSO_errno ));
+            idle = 0;
+            intv = 0;
+            cnt  = 0;
+        }
+        else
+        {
+            idle = KEEPALIVE_IDLE_TIME;
+            intv = KEEPALIVE_PROBE_INTERVAL;
+            cnt  = KEEPALIVE_PROBE_COUNT;
+
+            /* First, try setting the desired values */
+            rc = set_socket_keepalive( sfd, idle, intv, cnt );
+
+            if (rc < 0)
+            {
+                WRMSG( HHC02219, "E", "set_socket_keepalive()", strerror( HSO_errno ));
+                idle = 0;
+                intv = 0;
+                cnt  = 0;
+            }
+            else
+            {
+                /* Report partial success */
+                if (rc > 0)
+                {
+                    // "Not all TCP keepalive settings honored"
+                    WRMSG( HHC02320, "W" );
+
+                    /* Retrieve current values from system */
+                    if (get_socket_keepalive( sfd, &idle, &intv, &cnt ) < 0)
+                        WRMSG( HHC02219, "E", "get_socket_keepalive()", strerror( HSO_errno ));
+                }
+            }
+            close_socket( sfd );
+        }
+
+        /* Initialize SYSBLK with default values */
+        sysblk.kaidle = idle;
+        sysblk.kaintv = intv;
+        sysblk.kacnt  = cnt;
+    }
+
+#endif // KEEPALIVE
 
     /* Initialize runtime opcode tables */
     init_opcode_tables();

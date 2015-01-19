@@ -478,6 +478,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
     }
     WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
 }
+
 /*-------------------------------------------------------------------*/
 /* Handler utility routines                                          */
 /*-------------------------------------------------------------------*/
@@ -505,6 +506,7 @@ void commadpt_ring_init(COMMADPT_RING *ring,size_t sz,int trace)
             "allocated");
     }
 }
+
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Free a buffer ring                       */
 /*-------------------------------------------------------------------*/
@@ -528,6 +530,7 @@ static void commadpt_ring_terminate(COMMADPT_RING *ring,int trace)
     ring->havedata=0;
     ring->overflow=0;
 }
+
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Flush a buffer ring                      */
 /*-------------------------------------------------------------------*/
@@ -538,6 +541,7 @@ static void commadpt_ring_flush(COMMADPT_RING *ring)
     ring->havedata=0;
     ring->overflow=0;
 }
+
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Queue a byte in the ring                 */
 /*-------------------------------------------------------------------*/
@@ -554,6 +558,7 @@ inline static void commadpt_ring_push(COMMADPT_RING *ring,BYTE b)
     }
     ring->havedata=1;
 }
+
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Queue a byte array in the ring           */
 /*-------------------------------------------------------------------*/
@@ -565,6 +570,7 @@ inline static void commadpt_ring_pushbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
         commadpt_ring_push(ring,b[i]);
     }
 }
+
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Retrieve a byte from the ring            */
 /*-------------------------------------------------------------------*/
@@ -595,6 +601,7 @@ inline static size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
     }
     return i;
 }
+
 /*-------------------------------------------------------------------*/
 /* Free all private structures and buffers                           */
 /*-------------------------------------------------------------------*/
@@ -660,9 +667,11 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt->dev=dev;
     return 0;
 }
+
 /*-------------------------------------------------------------------*/
 /* Parsing utilities                                                 */
 /*-------------------------------------------------------------------*/
+
 /*-------------------------------------------------------------------*/
 /* commadpt_getport : returns a port number or -1                    */
 /*-------------------------------------------------------------------*/
@@ -682,6 +691,7 @@ static int commadpt_getport(char *txt)
     }
     return(pno);
 }
+
 /*-------------------------------------------------------------------*/
 /* commadpt_getaddr : set an in_addr_t if ok, else return -1         */
 /*-------------------------------------------------------------------*/
@@ -696,6 +706,7 @@ static int commadpt_getaddr(in_addr_t *ia,char *txt)
     memcpy(ia,he->h_addr_list[0],4);
     return(0);
 }
+
 /*-------------------------------------------------------------------*/
 /* commadpt_connout : make a tcp outgoing call                       */
 /* return values : 0 -> call succeeded or initiated                  */
@@ -743,6 +754,7 @@ static int commadpt_connout(COMMADPT *ca)
     ca->connect=1;
     return(0);
 }
+
 /*-------------------------------------------------------------------*/
 /* commadpt_initiate_userdial : interpret DIAL data and initiate call*/
 /* return values : 0 -> call succeeded or initiated                  */
@@ -1163,6 +1175,7 @@ int     rc;
         }
     }
 }
+
 /*-------------------------------------------------------------------*/
 /* Communication Thread - Set TimeOut                                */
 /*-------------------------------------------------------------------*/
@@ -1183,6 +1196,78 @@ static struct timeval *commadpt_setto(struct timeval *tv,int tmo)
         return(tv);
     }
     return(NULL);
+}
+
+/*-------------------------------------------------------------------*/
+/* Communication Thread - Set TCP Keepalive                          */
+/*-------------------------------------------------------------------*/
+static void SET_COMM_KEEPALIVE( int tempfd, COMMADPT* ca )
+{
+    if (ca->kaidle && ca->kaintv && ca->kacnt)
+    {
+#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+        UNREFERENCED( tempfd );
+
+        // "%1d:%04X COMM: This build of Hercules does not support TCP keepalive"
+        WRMSG( HHC01094, "E", SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
+
+#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+
+        int idle, intv, cnt;
+
+  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+        // "%1d:%04X COMM: This build of Hercules has only basic TCP keepalive support"
+        WRMSG( HHC01095, "W", SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
+
+  #else // defined( HAVE_FULL_KEEPALIVE )
+
+        int rc;
+
+        /* Try setting the values first */
+        rc = set_socket_keepalive( tempfd,
+            ca->kaidle, ca->kaintv, ca->kacnt );
+
+        if (rc < 0)
+        {
+            // "%1d:%04X COMM: error in function %s: %s"
+            WRMSG( HHC01000, "E",
+                SSID_TO_LCSS( ca->dev->ssid ), ca->devnum,
+                "socket()", strerror( HSO_errno ));
+            return;
+        }
+
+        /* Issue partial success warning if needed */
+        if (rc > 0)
+            // "%1d:%04X COMM: Not all TCP keepalive settings honored"
+            WRMSG( HHC01092, "W",
+                SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
+
+  #endif // defined( HAVE_FULL_KEEPALIVE )
+
+        /* Now see which values the system actually accepted */
+        if (get_socket_keepalive( tempfd, &idle, &intv, &cnt ) < 0)
+        {
+            // "%1d:%04X COMM: error in function %s: %s"
+            WRMSG( HHC01000, "E",
+                SSID_TO_LCSS( ca->dev->ssid ), ca->devnum,
+                "get_socket_keepalive()", strerror( HSO_errno ));
+            return;
+        }
+
+        /* Save values actually being used for later */
+        ca->kaidle = idle;
+        ca->kaintv = intv;
+        ca->kacnt  = cnt;
+
+        // "%1d:%04X COMM: Keepalive: (%d,%d,%d)"
+        WRMSG( HHC01093, "I",
+            SSID_TO_LCSS( ca->dev->ssid ), ca->devnum,
+            ca->kaidle, ca->kaintv, ca->kacnt );
+
+#endif // KEEPALIVE
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -1863,8 +1948,7 @@ static void *commadpt_thread(void *vca)
                         ca->connect=1;
 
                         /* dhd - Try to detect dropped connections */
-                        if (COMM_KEEPALIVE(ca))
-                            socket_keepalive( tempfd, ca->kaidle, ca->kaintv, ca->kacnt );
+                        SET_COMM_KEEPALIVE( tempfd, ca );
 
                         ca->sfd=tempfd;
                         signal_condition(&ca->ipc);
@@ -1880,8 +1964,7 @@ static void *commadpt_thread(void *vca)
                         ca->connect=1;
 
                         /* dhd - Try to detect dropped connections */
-                        if (COMM_KEEPALIVE(ca))
-                            socket_keepalive( tempfd, ca->kaidle, ca->kaintv, ca->kacnt );
+                        SET_COMM_KEEPALIVE( tempfd, ca );
 
                         ca->sfd=tempfd;
                         if (IS_ASYNC_LNCTL(ca)) {
@@ -1912,6 +1995,7 @@ static void *commadpt_thread(void *vca)
     release_lock(&ca->lock);
     return NULL;
 }
+
 /*-------------------------------------------------------------------*/
 /* Wakeup the comm thread                                            */
 /* Code : 0 -> Just wakeup the thread to redrive the select          */
@@ -1921,6 +2005,7 @@ static void commadpt_wakeup(COMMADPT *ca,BYTE code)
 {
     write_pipe(ca->pipe[1],&code,1);
 }
+
 /*-------------------------------------------------------------------*/
 /* Wait for a copndition from the thread                             */
 /* MUST HOLD the CA lock                                             */
@@ -1955,6 +2040,7 @@ static void commadpt_halt(DEVBLK *dev)
     dev->commadpt->haltprepare = 1; /* part of APL\360 2741 race cond I circumvention */
     release_lock(&dev->commadpt->lock);
 }
+
 /* The following 3 MSG functions ensure only 1 (one)  */
 /* hardcoded instance exist for the same numbered msg */
 /* that is issued on multiple situations              */
@@ -1975,6 +2061,7 @@ static void msg01009w(DEVBLK *dev,char *dialt,char *kw,char *kv)
     // "%1d:%04X COMM: RPORT parameter ignored"
     WRMSG(HHC01010, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
 }
+
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
 /*-------------------------------------------------------------------*/
@@ -2647,7 +2734,6 @@ static int commadpt_close_device ( DEVBLK *dev )
     }
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */

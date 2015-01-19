@@ -234,19 +234,21 @@
   "If 'cp' is specified, then code page is set to the specified page\n"         \
   "if the page is valid.\n"
 
-#define conkpalv_cmd_desc       "Display/alter console TCP keep-alive settings"
+#define conkpalv_cmd_desc       "Display/alter console TCP keepalive settings"
 #define conkpalv_cmd_help       \
                                 \
-  "Format: \"conkpalv (idle, intv, count)\" where 'idle', 'intv' and 'count'\n" \
-  "are the new values for the TCP keep-alive settings for console\n"            \
+  "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count'\n"   \
+  "are the new values for the TCP keepalive settings for console\n"             \
   "connections:\n"                                                              \
-  "- send probe when connection goes idle for 'idle' seconds\n"                 \
-  "- wait maximum of 'intv' seconds for a response to probe\n"                  \
-  "- disconnect after 'count' consecutive failed probes\n"                      \
+  "\n"                                                                          \
+  "   Begin probing after connection has been idle for 'idle' seconds\n"        \
+  "   wait for a maximum of 'intv' seconds for a probe response\n"              \
+  "   Close the connection once 'count' consecutive probes have failed\n"       \
+  "\n"                                                                          \
   "The format must be exactly as shown, with each value separated from\n"       \
-  "the next by a single comma, no intervening spaces between them,\n"           \
-  "surrounded by parenthesis. The command \"conkpalv\" without any operand\n"   \
-  "displays the current values.\n"
+  "the next by a single comma, no intervening spaces between them, and\n"       \
+  "surrounded within parenthesis. Enter the command without any operands\n"     \
+  "to display the current values.\n"
 
 #define count_cmd_desc          "Display/clear overall instruction count"
 #define cp_updt_cmd_desc        "Create/Modify user character conversion table"

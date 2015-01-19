@@ -89,9 +89,17 @@
   int socket_is_socket( int sfd );
 
   /* Set the SO_KEEPALIVE option and timeout values for a
-     socket connection to detect when client disconnects */
-  void socket_keepalive( int sfd, int idle_time, int probe_interval,
-                         int probe_count );
+     socket connection to detect when client disconnects.
+     Returns 0==success, +1==warning, -1==failure
+     (*) Warning failure means function only partially
+         succeeded (not all requested values were set)
+  */
+  int set_socket_keepalive( int sfd, int idle_time, int probe_interval,
+                            int probe_count );
+
+  /* Function to retrieve keepalive values. 0==success, -1=failure */
+  int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
+                            int* probe_count );
 
 #endif // !defined(_MSVC_)
 

@@ -410,6 +410,8 @@ AH_TEMPLATE( [ENABLE_OBJECT_REXX],      [Define to enable open object rexx suppo
 AH_TEMPLATE( [ENABLE_REGINA_REXX],      [Define to enable Regina Rexx support] )
 AH_TEMPLATE( [ENABLE_IPV6],             [Define to enable IPV6 support] )
 AH_TEMPLATE( [HAVE_HQA_H],              [Define to if header "hqa.h" exists in HQA dir] )
+AH_TEMPLATE( [HAVE_BASIC_KEEPALIVE],    [Define if 'SO_KEEPALIVE' or 'TCP_KEEPALIVE' symbols are available] )
+AH_TEMPLATE( [HAVE_FULL_KEEPALIVE],     [Define if 'TCP_KEEPIDLE', 'TCP_KEEPINTVL' and 'TCP_KEEPCNT' symbols are available ] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -485,48 +487,53 @@ AC_CACHE_SAVE()
 HC_CHECK_HQA_DIR()                # (Hercules Build Configuration QA Testing)
 
 #------------------------------------------------------------------------------
-#  PROGRAMMING NOTE: on Darwin sys/socket.h must be included before
+#  PROGRAMMING NOTE: on Darwin and *BSD sys/socket.h must be included before
 #  net/if.h, net/route.h, or netinet/in.h can be #included, and on OS X 10.3
 #  (but not 10.4) sys/types.h must be #included before sys/socket.h. Thus
 #  the below four header checks are treated specially. If we ever drop support
 #  for OS X 10.3, a lot of this cruft can be removed, not just here but
 #  anywhere we find ourselves manually including sys/types.h.
 
-#  PROGRAMMING NOTE: on *BSD sys/socket.h must be included before net/if.h,
-#  net/route.h, or netinet/in.h can be #included.
-
 AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no],
 [
     #include <sys/types.h>
-]   )
-AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
-[
-    #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
-    #endif
 ] )
 AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
-AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no],
+AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
+AC_CHECK_HEADERS( net/tcp.h,      [hc_cv_have_net_tcp_h=yes],      [hc_cv_have_net_tcp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+
 #------------------------------------------------------------------------------
 
 AC_CHECK_HEADERS( arpa/inet.h,    [hc_cv_have_arpa_inet_h=yes],    [hc_cv_have_arpa_inet_h=no]    )
@@ -536,44 +543,56 @@ AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_s
 #------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: On Linux struct in6_ifreq is defined in linux/ipv6.h.
 #  On other systems it may be defined in netinet6/in6_var.h or elsewhere.
+#
+#  in6_*.h files are strictly for library separation and should not normally
+#  be directly #included. This is enforced on FreeBSD and to a lesser degree
+#  on OS/X where you you can get away with it by #including netinet/in_var.h
+#  first.
 
-#  in6_*.h files are stricly for library separation.  They should not be included
-#  directly.  This is enforced on FreeBSD and OS/X.  On OS/X you can get away with netinet/in_var.h;
-#  in FreeBSD you have to do it by the book, but this works for OS/X too.
-
-AC_CHECK_HEADERS( linux/ipv6.h,       [hc_cv_have_linux_ipv6_h=yes],       [hc_cv_have_linux_ipv6_h=no] )
-# FreeBSD has this guy
+AC_CHECK_HEADERS( linux/ipv6.h,   [hc_cv_have_linux_ipv6_h=yes],   [hc_cv_have_linux_ipv6_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
 AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_in_var_h=yes],   [hc_cv_have_net_in_var_h=no],
 [
-    #include <net/if.h>
-    #include <net/if_var.h>
-] )
-AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no] )
-AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no])
-AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no])
-AC_CHECK_HEADERS( netinet/in_var.h,   [hc_cv_have_netinet_in_var_h=yes],   [hc_cv_have_netinet_in_var_h=no],
-[
-    #if HAVE_NET_IF_VAR_H
-    #include <net/if.h>
-    #include <net/if_var.h>
-    #if HAVE_NETINET_IN_H
-    #include <netinet/in.h>
-    #include <netinet/in_var.h>
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
+    #ifdef HAVE_NET_IF_H
+      #include <net/if.h>
     #endif
 ] )
-
-# Autoconf adds an include for file being tested at the end of the program, but that is OK,
-# as we've been good boys.  The duplicate include has no effect.
-AC_CHECK_HEADERS( netinet6/in6_var.h, [hc_cv_have_netinet6_in6_var_h=yes], [hc_cv_have_netinet6_in6_var_h=no],
+AC_CHECK_HEADERS( netinet/in_var.h,  [hc_cv_have_netinet_in_var_h=yes],  [hc_cv_have_netinet_in_var_h=no],
 [
-    #if HAVE_NET_IF_VAR_H
-    #include <net/if.h>
-    #include <net/if_var.h>
-    #if HAVE_NETINET_IN_H
-    #include <netinet/in.h>
-    #include <netinet/in_var.h>
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
+    #ifdef HAVE_NET_IF_VAR_H
+      #include <net/if.h>
+      #include <net/if_var.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_H
+      #include <netinet/in.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet6/in6_var.h,  [hc_cv_have_netinet6_in6_var_h=yes],  [hc_cv_have_netinet6_in6_var_h=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
+      #include <net/if.h>
+      #include <net/if_var.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_VAR_H
+      #include <netinet/in.h>
+      #include <netinet/in_var.h>
     #endif
 ] )
 
@@ -584,10 +603,11 @@ AC_CHECK_HEADERS( netinet6/in6_var.h, [hc_cv_have_netinet6_in6_var_h=yes], [hc_c
 AC_CHECK_HEADERS( sys/param.h,    [hc_cv_have_sys_param_h=yes],    [hc_cv_have_sys_param_h=no]    )
 AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_sys_mount_h=no],
 [
-    #if HAVE_SYS_PARAM_H
-    #include <sys/param.h>
+    #ifdef HAVE_SYS_PARAM_H
+      #include <sys/param.h>
     #endif
 ] )
+
 #------------------------------------------------------------------------------
 
 AC_CHECK_HEADERS( sys/mtio.h,     [hc_cv_have_sys_mtio_h=yes],     [hc_cv_have_sys_mtio_h=no]     )
@@ -653,8 +673,8 @@ AC_CHECK_DECLS( SIGBUS,               [hc_cv_have_sigbus=yes],              [hc_
 AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_cv_have_ifnamsiz=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_cv_have_login_name_max=no],      [#include <limits.h>] )
@@ -669,10 +689,62 @@ AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_
 AC_CHECK_DECLS( SIOCDELRT,            [hc_cv_have_siocdelrt=yes],           [hc_cv_have_siocdelrt=no],           [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCDIFADDR,          [hc_cv_have_siocdifaddr=yes],         [hc_cv_have_siocdifaddr=no],         [#include <linux/sockios.h>] )
 
-if test "$hc_cv_have_sys_mtio_h" == "yes"; then
+if test "$hc_cv_have_sys_mtio_h" = "yes"; then
     AC_CHECK_DECLS( MTEWARN,          [hc_cv_have_mtewarn=yes],             [hc_cv_have_mtewarn=no],             [#include <sys/mtio.h>] )
 else
     hc_cv_have_mtewarn=no
+fi
+
+AC_MSG_NOTICE( [Checking for TCP keepalive support...] )
+
+AC_CHECK_DECLS( SO_KEEPALIVE,         [hc_cv_have_basic_keepalive=yes],     [hc_cv_have_basic_keepalive=no],
+[
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+] )
+
+if test "$hc_cv_have_basic_keepalive" != "yes"; then
+  AC_CHECK_DECLS( TCP_KEEPALIVE,      [hc_cv_have_basic_keepalive=yes],     [hc_cv_have_basic_keepalive=no],
+  [
+      #include <sys/types.h>
+      #ifdef HAVE_SYS_SOCKET_H
+        #include <sys/socket.h>
+      #endif
+      #if defined(HAVE_NET_TCP_H)
+        #include <net/tcp.h>
+      #elif defined(HAVE_NETINET_TCP_H)
+        #include <netinet/tcp.h>
+      #endif
+  ] )
+fi
+
+if test "$hc_cv_have_basic_keepalive" != "yes"; then
+  hc_cv_have_full_keepalive=no
+else
+  AC_CHECK_DECLS( [ TCP_KEEPIDLE, TCP_KEEPINTVL, TCP_KEEPCNT ], [hc_cv_have_full_keepalive=yes], [hc_cv_have_full_keepalive=no],
+  [
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #if defined(HAVE_NET_TCP_H)
+      #include <net/tcp.h>
+    #elif defined(HAVE_NETINET_TCP_H)
+      #include <netinet/tcp.h>
+    #endif
+  ] )
+fi
+
+if test "$hc_cv_have_full_keepalive" = "yes"; then
+  AC_MSG_NOTICE( [TCP keepalive support...  FULL] )
+else
+  if test "$hc_cv_have_basic_keepalive" = "yes"; then
+     AC_MSG_NOTICE( [TCP keepalive support...  BASIC] )
+  else
+     AC_MSG_NOTICE( [TCP keepalive support...  NONE] )
+  fi
 fi
 
 AC_CACHE_SAVE()
@@ -687,46 +759,46 @@ AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]   
 AC_CHECK_TYPES( u_char,     [hc_cv_have_u_char=yes],     [hc_cv_have_u_char=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_TYPES( u_short,    [hc_cv_have_u_short=yes],    [hc_cv_have_u_short=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_TYPES( u_int,      [hc_cv_have_u_int=yes],      [hc_cv_have_u_int=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_TYPES( u_long,     [hc_cv_have_u_long=yes],     [hc_cv_have_u_long=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 AC_CHECK_TYPES( in_addr_t,  [hc_cv_have_in_addr_t=yes],  [hc_cv_have_in_addr_t=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
-    #if HAVE_NETINET_IN_H
-    #include <netinet/in.h>
+    #ifdef HAVE_NETINET_IN_H
+      #include <netinet/in.h>
     #endif
 ] )
 AC_CHECK_TYPES( socklen_t,  [hc_cv_have_socklen_t=yes],  [hc_cv_have_socklen_t=no],
 [
     #include <sys/types.h>
-    #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
     #endif
 ] )
 
@@ -840,10 +912,10 @@ AC_CACHE_CHECK([whether fdatasync is supported],[ac_cv_func_fdatasync_supported]
 #include <unistd.h>
     ]],[[
 #if !defined(HAVE_FDATASYNC)
-#error fdatasync is not defined on this platform
+  #error fdatasync is not defined on this platform
 #endif
 #if defined(_POSIX_SYNCHRONIZED_IO) && (_POSIX_SYNCHRONIZED_IO+0 < 0)
-#error fdatasync is not supported on this platform
+  #error fdatasync is not supported on this platform
 #endif
     ]])],
     [ac_cv_func_fdatasync_supported=yes],
@@ -863,55 +935,57 @@ AC_CHECK_MEMBERS( [struct sockaddr_in.sin_len],
                   [hc_cv_have_sockaddr_in_sin_len=yes ],
                   [hc_cv_have_sockaddr_in_sin_len=no  ],
 [
-#include <sys/types.h>
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_H
+      #include <netinet/in.h>
+    #endif
 ] )
 
 AC_CHECK_MEMBERS( [struct in_addr.s_addr],
                   [hc_cv_have_in_addr_s_addr=yes  ],
                   [hc_cv_have_in_addr_s_addr=no   ],
 [
-#include <sys/types.h>
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_H
+      #include <netinet/in.h>
+    #endif
 ] )
 
 # This test works for Linux and OS/X
+
 AC_CHECK_MEMBERS( [struct in6_ifreq.ifr6_addr],
                   [hc_cv_have_in6_ifreq_ifr6_addr=yes  ],
                   [hc_cv_have_in6_ifreq_ifr6_addr=no   ],
 [
-#ifdef HAVE_LINUX_IPV6_H
-#include <linux/ipv6.h>
-#endif
-#ifdef HAVE_NETINET6_IN6_VAR_H
-#include <netinet6/in6_var.h>
-#endif
+    #ifdef HAVE_LINUX_IPV6_H
+      #include <linux/ipv6.h>
+    #endif
+    #ifdef HAVE_NETINET6_IN6_VAR_H
+      #include <netinet6/in6_var.h>
+    #endif
 ] )
 
 # FreeBSD naming scheme
+
 AC_CHECK_MEMBERS( [struct in6_ifreq.ifr_ifru.ifru_flags],
                   [hc_cv_have_in6_ifreq_ifru_addr=yes  ],
                   [hc_cv_have_in6_ifreq_ifru_addr=no   ],
 [
-#ifdef HAVE_LINUX_IPV6_H
-#include <linux/ipv6.h>
-#endif
-#ifdef HAVE_NETINET6_IN6_VAR_H
-#include <net/if.h>
-#include <net/if_var.h>
-#include <netinet/in.h>
-#include <netinet/in_var.h> // Not the ipv6 file, please
-#endif
+    #ifdef HAVE_LINUX_IPV6_H
+      #include <linux/ipv6.h>
+    #endif
+    #ifdef HAVE_NETINET6_IN6_VAR_H
+      #include <net/if.h>
+      #include <net/if_var.h>
+      #include <netinet/in.h>
+      #include <netinet/in_var.h>  // Not the ipv6 file, please
+    #endif
 ] )
 
 AC_CHECK_MEMBERS( [struct sigaction.sa_sigaction],
@@ -940,7 +1014,7 @@ AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
     [#include <sys/types.h>]
 )
 
-if test "$hc_cv_have_sys_mtio_h" == "yes"; then
+if test "$hc_cv_have_sys_mtio_h" = "yes"; then
 
   AC_CHECK_MEMBERS( [struct mtget.mt_gstat],
                     [hc_cv_have_mtget_mt_gstat=yes  ],
@@ -1507,7 +1581,7 @@ AC_ARG_ENABLE( object-rexx,
         esac
     ],
     [
-     if test "$hc_cv_have_rexx_h" == "yes"; then
+     if test "$hc_cv_have_rexx_h" = "yes"; then
          hc_cv_ena_object_rexx=yes
      else
          hc_cv_ena_object_rexx=no
@@ -1531,8 +1605,8 @@ AC_ARG_ENABLE( regina-rexx,
         esac
     ],
     [
-     if test "$hc_cv_have_rexxsaa_h" == "yes" ||
-        test "$hc_cv_have_regina_rexxsaa_h" == "yes"; then
+     if test "$hc_cv_have_rexxsaa_h"        = "yes"  ||
+        test "$hc_cv_have_regina_rexxsaa_h" = "yes"; then
          hc_cv_ena_regina_rexx=yes
      else
          hc_cv_ena_regina_rexx=no
@@ -1738,21 +1812,20 @@ AC_ARG_ENABLE( capabilities,
     [hc_cv_opt_capabilities=hc_cv_have_sys_capability]
 )
 
-# only include libcap if needed
+# Only include libcap if needed and then force
+# disable capabilities support altogether if the
+# library or any required headers are missing.
+
 if test "$hc_cv_opt_capabilities" = "yes"; then
+
     AC_CHECK_LIB(cap,cap_set_proc)
-fi
-# Force disable capabilities support if library is missing
-if test "$ac_cv_lib_cap_cap_set_proc" = "no"; then
-  hc_cv_opt_capabilities="no"
-fi
-# Force disable capabilities support if sys/capability.h header is missing
-if test "$hc_cv_have_sys_capa_h" = "no"; then
-  hc_cv_opt_capabilities="no"
-fi
-# Force disable capabilities support if sys/prctl.h header is missing
-if test "$hc_cv_have_sys_prctl_h" = "no"; then
-  hc_cv_opt_capabilities="no"
+
+  if test $ac_cv_lib_cap_cap_set_proc = "no" ||
+     test $hc_cv_have_sys_capa_h      = "no" ||
+     test $hc_cv_have_sys_prctl_h     = "no"; then
+
+     hc_cv_opt_capabilities="no"
+  fi
 fi
 
 AC_ARG_ENABLE( custom,
@@ -1974,6 +2047,14 @@ if test "$hc_cv_is_apple"                          = "yes"  &&
     hc_error=yes
 fi
 
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_have_full_keepalive"  != "yes"  &&
+   test "$hc_cv_have_basic_keepalive" != "yes"; then
+
+   AC_MSG_WARN( [WARNING: Support missing for TCP keepalive] )
+fi
+
 ###############################################################################
 # If any errors have been detected, then abort the configure at this time
 ###############################################################################
@@ -2192,6 +2273,8 @@ test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILI
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_REGINA_REXX)
 test "$hc_cv_ena_ipv6"                    = "yes"  &&  AC_DEFINE(ENABLE_IPV6)
+test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
+test "$hc_cv_have_full_keepalive"         = "yes"  &&  AC_DEFINE(HAVE_FULL_KEEPALIVE)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

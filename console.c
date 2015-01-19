@@ -1855,7 +1855,7 @@ char                    *logoout;
         device_attention (dev, CSW_DE);
 
     /* Try to detect dropped connections */
-    socket_keepalive( csock, sysblk.kaidle, sysblk.kaintv, sysblk.kacnt );
+    set_socket_keepalive( csock, sysblk.kaidle, sysblk.kaintv, sysblk.kacnt );
 
     /* Signal connection thread to redrive its select loop */
     SIGNAL_CONSOLE_THREAD();

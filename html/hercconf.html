@@ -163,7 +163,7 @@ and how they are used.
     0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
 
     0023      <a href="#comline">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
-    00C3      <a href="#remtty">2703</a>     lport=32003 dial=IN tty=1
+    00C3      <a href="#remtty">2703</a>    lport=32003 dial=IN tty=1
 
 
 </pre></code>
@@ -450,19 +450,19 @@ and how they are used.
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
-    specifies the tn3270 console and telnet clients keep-alive option
+    specifies the tn3270 console and telnet clients keepalive option
     values that control automatic detection of disconnected tn3270/telnet
     client sessions.
     <p>
     <code><i>idle</i></code> &nbsp;specifies the number of seconds
-    of inactivity until the first keep-alive probe is
+    of inactivity until the first keepalive probe is
     sent (idle time until first probe, or probe frequency).
     <br><code><i>intv</i></code> &nbsp;
     specifies the interval in seconds between when successive
-    keep-alive packets are sent if no acknowledgement is received from
+    keepalive packets are sent if no acknowledgement is received from
     the previous one (i.e. the timeout value of the probes themselves).
     <br><code><i>count</i></code> &nbsp;specifies the number of unacknowledged
-    keep-alive packets sent before the connection is considered to have
+    keepalive packets sent before the connection is considered to have
     failed.
     <p>
     The default values are 3, 1, and 10. That is, send the initial probe
@@ -478,11 +478,11 @@ and how they are used.
     many minutes without any data being transmitted.
     If the TCP/IP <i>stack</i> at the other end of the connection --
     not your 3270 client itself -- fails to respond to the
-    internal keep-alive probe packets, then it means that the
+    internal keepalive probe packets, then it means that the
     TCP/IP stack is down or there has been a break in the
     connection. Thus, even if your 3270 client
     is completely idle, your system's TCP/IP stack itself should still respond
-    to the keep-alive probes sent by the TCP/IP stack at the Hercules end
+    to the keepalive probes sent by the TCP/IP stack at the Hercules end
     of the link. If it doesn't, then TCP/IP will terminate the tn3270/telnet
     session which will cause Hercules to disconnect the terminal.
     <p>

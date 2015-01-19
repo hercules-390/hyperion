@@ -2447,6 +2447,8 @@ int w32_get_stdin_char( char* pCharBuff, int wait_millisecs )
 #undef  fprintf     // (so we can call the actual Windows version if we need to)
 #undef  fclose      // (so we can call the actual Windows version if we need to)
 
+static void kasock_init();      // (forward reference)
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /*
             INITIALIZE / DE-INITIALIZE SOCKETS PACKAGE
@@ -2503,11 +2505,19 @@ DLL_EXPORT int socket_init ( void )
     WSADATA  sSocketPackageInfo;
     WORD     wVersionRequested    = MAKEWORD(1,1);
 
-    return
+    int rc =
     (
         WSAStartup( wVersionRequested, &sSocketPackageInfo ) == 0 ?
         0 : -1
     );
+
+    // PROGRAMMING NOTE: Hercules only ever calls this function
+    // ONE TIME very early on at startup in the impl function,
+    // so we use it to perform our own one-time initialization.
+
+    kasock_init();      // Initialize socket keepalive handling
+
+    return rc;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2560,6 +2570,240 @@ DLL_EXPORT long gethostid( void )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Socket keepalive structure   (to remember TCP keepalive settings per socket)
+
+struct KASOCK
+{
+    SOCKET          sock;       // Windows SOCKET
+    ULONG           time;       // Keepalive idle time in seconds
+    ULONG           intv;       // Keepalive probe interval in seconds
+    ULONG           cnt;        // Keepalive probe count
+    LIST_ENTRY      link;       // (just a link in the chain)
+};
+typedef struct KASOCK KASOCK;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Global variables
+
+static LIST_ENTRY        kasock_head = {0};     // Master KASOCK list anchor
+static CRITICAL_SECTION  kasock_lock = {0};     // Master KASOCK list lock
+
+static void lock_kasock_list()    { EnterCriticalSection( &kasock_lock ); }
+static void unlock_kasock_list()  { LeaveCriticalSection( &kasock_lock ); }
+
+static int  def_ka_time  = 0;   // (initialized by kasock_init)
+static int  def_ka_intv  = 0;   // (initialized by kasock_init)
+static int  def_ka_cnt   = 0;   // (initialized by kasock_init)
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Master one time KASOCK package initialization
+
+static void kasock_init()
+{
+    static BOOL bDidThis = FALSE;   // (we only need to do this once)
+    if (bDidThis) return;           // (we only need to do this once)
+    bDidThis = TRUE;                // (we only need to do this once)
+
+    InitializeCriticalSectionAndSpinCount( &kasock_lock, 4000 );
+    InitializeListHead( &kasock_head );
+
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/dd877220(v=vs.85).aspx
+
+    // The default settings when a TCP socket is initialized sets the
+    // keepalive timeout to 2 hours and the keepalive interval to 1 second.
+
+#define DEF_KA_TIME             ((2*60*60)*1000)    // 2 hours
+#define DEF_KA_INTV             (1*1000)            // 1 second
+
+    // The default system-wide value of the keepalive timeout
+    // is controllable through the KeepAliveTime registry setting
+    // which takes a value in milliseconds.
+
+#define KA_REGROOT    HKEY_LOCAL_MACHINE
+#define KA_REGKEY     "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
+#define REG_KA_TIME   "KeepAliveTime"
+
+    // The default system-wide value of the keepalive interval
+    // is controllable through the KeepAliveInterval registry setting
+    // which takes a value in milliseconds.
+
+#define REG_KA_INTV   "KeepAliveInterval"
+
+    // On Windows Vista and later, the number of keepalive probes
+    // (data retransmissions) is set to 10 and cannot be changed.
+
+#define DEF_KA_CNT              10                  // 10 probes
+
+    // On Windows Server 2003, Windows XP, and Windows 2000, the default
+    // setting for number of keepalive probes is 5.
+
+#define PREVISTA_DEF_KA_CNT     5                   // 5 probes
+
+    // The number of keepalive probes is controllable through the
+    // TcpMaxDataRetransmissions and PPTPTcpMaxDataRetransmissions
+    // registry settings.
+
+#define REG_KA_CNT1   "TcpMaxDataRetransmissions"
+#define REG_KA_CNT2   "PPTPTcpMaxDataRetransmissions"
+
+    // The number of keepalive probes is set to the larger of the two
+    // registry key values. If this number is 0, then keepalive probes
+    // are not sent. If this number is above 255, it is adjusted to 255.
+
+#define MAX_KA_CNT              255                 // maximum probes
+
+    {
+        OSVERSIONINFO  vi  = { sizeof( vi ), 0 };
+        BOOL    bPreVista  = FALSE;
+        DWORD   dwSize     = sizeof( DWORD );
+        LONG    lResult    = 0;
+        HKEY    hKey       = NULL;
+        DWORD   dwTime     = 0;
+        DWORD   dwIntv     = 0;
+        DWORD   dwCnt1     = 0;
+        DWORD   dwCnt2     = 0;
+
+        VERIFY( GetVersionEx( &vi ));
+        bPreVista = (vi.dwMajorVersion < 6);
+
+        lResult = RegOpenKeyEx( KA_REGROOT, KA_REGKEY, 0, KEY_QUERY_VALUE, &hKey );
+
+        if (ERROR_SUCCESS != lResult)
+            CRASH();
+
+        // keepalive timeout
+
+        lResult = RegQueryValueEx( hKey, REG_KA_TIME, NULL, NULL, (BYTE*) &dwTime, &dwSize );
+
+        if (ERROR_SUCCESS != lResult)
+        {
+            if (ERROR_FILE_NOT_FOUND != lResult)
+                CRASH();
+            dwTime = DEF_KA_TIME;
+        }
+
+        // keepalive interval
+
+        lResult = RegQueryValueEx( hKey, REG_KA_INTV, NULL, NULL, (BYTE*) &dwIntv, &dwSize );
+
+        if (ERROR_SUCCESS != lResult)
+        {
+            if (ERROR_FILE_NOT_FOUND != lResult)
+                CRASH();
+            dwIntv = DEF_KA_INTV;
+        }
+
+        // TcpMaxDataRetransmissions
+
+        lResult = RegQueryValueEx( hKey, REG_KA_CNT1, NULL, NULL, (BYTE*) &dwCnt1, &dwSize );
+
+        if (ERROR_SUCCESS != lResult)
+        {
+            if (ERROR_FILE_NOT_FOUND != lResult)
+                CRASH();
+            dwCnt1 = bPreVista ? PREVISTA_DEF_KA_CNT : DEF_KA_CNT;
+        }
+
+        // (round down to maximum allowed)
+
+        if (dwCnt1 > MAX_KA_CNT)
+            dwCnt1 = MAX_KA_CNT;
+
+        // PPTPTcpMaxDataRetransmissions
+
+        lResult = RegQueryValueEx( hKey, REG_KA_CNT2, NULL, NULL, (BYTE*) &dwCnt2, &dwSize );
+
+        if (ERROR_SUCCESS != lResult)
+        {
+            if (ERROR_FILE_NOT_FOUND != lResult)
+                CRASH();
+            dwCnt2 = bPreVista ? PREVISTA_DEF_KA_CNT : DEF_KA_CNT;
+        }
+
+        // (round down to maximum allowed)
+
+        if (dwCnt2 > MAX_KA_CNT)
+            dwCnt2 = MAX_KA_CNT;
+
+        RegCloseKey( hKey );
+
+        // Choose the greater of the two probe count values
+
+        if (dwCnt1 < dwCnt2)
+            dwCnt1 = dwCnt2;
+
+        // Save default values in number of whole seconds
+
+        def_ka_time  =  (int) ((dwTime + 500) / 1000);
+        def_ka_intv  =  (int) ((dwIntv + 500) / 1000);
+        def_ka_cnt   =  (int) (dwCnt1);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Return the KASOCK structure for a given SOCKET or NULL if not found
+
+static KASOCK* get_kasock( SOCKET sock )
+{
+    KASOCK*      pKASOCK;
+    LIST_ENTRY*  pListEntry;
+
+    lock_kasock_list();
+    pListEntry = kasock_head.Flink;         // (start with first entry)
+
+    while (pListEntry != &kasock_head)      // (while not at beginning)
+    {
+        pKASOCK = CONTAINING_RECORD( pListEntry, KASOCK, link );
+
+        if (pKASOCK->sock == sock)          // (is this the one?)
+        {
+            unlock_kasock_list();
+            return pKASOCK;                 // (yes, return it)
+        }
+
+        pListEntry = pListEntry->Flink;     // (next entry)
+    }
+
+    unlock_kasock_list();
+    return NULL;                            // (not found)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// malloc KASOCK entry for SOCKET and add it to the master KASOCK list
+
+static BOOL add_kasock( SOCKET sock )
+{
+    KASOCK* pKASOCK;
+    if (!(pKASOCK = (KASOCK*) malloc( sizeof( KASOCK )))) return FALSE;
+    pKASOCK->sock = sock;
+    pKASOCK->time = def_ka_time;
+    pKASOCK->intv = def_ka_intv;
+    pKASOCK->cnt  = def_ka_cnt;
+    InitializeListLink( &pKASOCK->link );
+    lock_kasock_list();
+    InsertListHead( &kasock_head, &pKASOCK->link );
+    unlock_kasock_list();
+    return TRUE;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Find KASOCK entry for SOCKET and remove from master KASOCK list and free if found
+
+static BOOL rem_kasock( SOCKET sock )
+{
+    KASOCK* pKASOCK;
+    lock_kasock_list();
+    if ((pKASOCK = get_kasock( sock )) != NULL)
+    {
+        RemoveListEntry( &pKASOCK->link );
+        free( pKASOCK );
+    }
+    unlock_kasock_list();
+    return pKASOCK ? TRUE : FALSE;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Create a socket
 
 DLL_EXPORT int w32_socket( int af, int type, int protocol )
 {
@@ -2619,15 +2863,28 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
     // and not asynchronous so the C runtime functions can successfully perform ReadFile
     // and WriteFile on them...
 
-    SOCKET sock = WSASocket( af, type, protocol, NULL, 0, 0 );
+    SOCKET sock;
 
-    if ( INVALID_SOCKET == sock )
+    sock = WSASocket( af, type, protocol, NULL, 0, 0 );
+
+    if (INVALID_SOCKET != sock)
+        VERIFY( add_kasock( sock ));
+    else
     {
         errno = WSAGetLastError();
         sock = (SOCKET) -1;
     }
 
-    return ( (int) sock );
+    return ((int) sock);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Close a socket
+
+DLL_EXPORT int w32_close_socket( int fd )
+{
+    rem_kasock( (SOCKET) fd );
+    return (closesocket( (SOCKET) fd ) == SOCKET_ERROR) ? -1 : 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2656,34 +2913,42 @@ DLL_EXPORT int socket_is_socket( int sfd )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Set the SO_KEEPALIVE option and timeout values for a
-// socket connection to detect when client disconnects */
+// Set the SO_KEEPALIVE option and timeout values for a socket connection to detect
+// when client disconnects. Returns 0==success, +1==warning(*), -1==failure.
+//
+// (*) Warning means function only partially succeeded (not all values were set)
 
-DLL_EXPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count )
+static int internal_set_socket_keepalive( int sfd,
+                                          int idle_time,
+                                          int probe_interval,
+                                          int probe_count,
+                                          U8  quiet )
 {
-    DWORD   dwBytesReturned;            // (not used)
-
-    struct tcp_keepalive  ka;
+    KASOCK* pKASOCK;
+    DWORD   dwBytesReturned;
+    struct tcp_keepalive ka;
 
     ka.onoff              = TRUE;
-    ka.keepalivetime      = idle_time       * 1000;
-    ka.keepaliveinterval  = probe_interval  * 1000;
-    UNREFERENCED(probe_count);
+    ka.keepalivetime      = idle_time       * 1000;  // (seconds to milliseconds)
+    ka.keepaliveinterval  = probe_interval  * 1000;  // (seconds to milliseconds)
 
     // It either works or it doesn't <shrug>
 
     // PROGRAMMING NOTE: the 'dwBytesReturned' value must apparently always be
     // specified in order for this call to work at all. If you don't specify it,
     // even though the call succeeds (does not return an error), the automatic
-    // keep-alive polling does not occur!
+    // keepalive polling does not occur.
+
+    // Also note that QUERYING the current SIO_KEEPALIVE_VALS is unsupported.
+    // See programming note further below in 'get_socket_keepalive' function.
 
     if (0 != WSAIoctl
     (
-        (SOCKET)sfd,                    // [in]  Descriptor identifying a socket
+        (SOCKET) sfd,                   // [in]  Descriptor identifying a socket
         SIO_KEEPALIVE_VALS,             // [in]  Control code of operation to perform
         &ka,                            // [in]  Pointer to the input buffer
-        sizeof(ka),                     // [in]  Size of the input buffer, in bytes
-        NULL,                           // [out] Pointer to the output buffer
+        sizeof( ka ),                   // [in]  Size of the input buffer, in bytes
+        NULL,                           // [in]  Pointer to the output buffer
         0,                              // [in]  Size of the output buffer, in bytes
         &dwBytesReturned,               // [out] Pointer to actual number of bytes of output
         NULL,                           // [in]  Pointer to a WSAOVERLAPPED structure
@@ -2693,11 +2958,62 @@ DLL_EXPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, in
                                         //       (ignored for nonoverlapped sockets)
     ))
     {
-        DWORD dwLastError = WSAGetLastError();
-        TRACE("*** WSAIoctl(SIO_KEEPALIVE_VALS) failed; rc %d: %s\n",
-            dwLastError, w32_strerror(dwLastError) );
-        ASSERT(1); // (in case we're debugging)
+        if (!quiet)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC02219, "E", "WSAIoctl( SIO_KEEPALIVE_VALS )", strerror( HSO_errno ));
+        }
+        return -1;  // (failure)
     }
+
+    // Save new values so 'get_socket_keepalive' can retrieve them if desired
+
+    if (!(pKASOCK = get_kasock( sfd )))
+        return -1;
+
+    pKASOCK->time = idle_time;
+    pKASOCK->intv = probe_interval;
+
+    // Probe count cannot be changed on Windows
+
+    return (probe_count == def_ka_cnt) ? 0 : +1;    // (complete success or partial success)
+}
+
+DLL_EXPORT int set_socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count )
+{
+    return internal_set_socket_keepalive( sfd, idle_time, probe_interval, probe_count, 0 );
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Function to retrieve keepalive values. 0==success, -1=failure
+
+DLL_EXPORT int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval, int* probe_count )
+{
+    // PROGRAMMING NOTE: querying the current SIO_KEEPALIVE_VALS is unsupported!
+    // According to the web page describing the SIO_KEEPALIVE_VALS control code,
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/dd877220(v=vs.85).aspx
+    // the output buffer parameter is not used and the size of the output buffer
+    // must be zero, or else you will get rc = WSAEFAULT (10014): "The system
+    // detected an invalid pointer address in attempting to use a pointer argument
+    // in a call"! Did you catch that? What's it's basically admitting to is they
+    // support SETTING keepalive values but not RETRIEVING them! So you can set
+    // new values for a given socket different from the default, but cannot learn
+    // what those values currently in use are somewhere else in your code! In my
+    // 20+ years of programming on Windows I've never heard of anything so fucking
+    // ridiculous! Anyway, that's the reason for all of the above KASOCK crap.
+
+    KASOCK* pKASOCK;
+
+    if (!socket_is_socket( sfd ))
+        return -1;
+
+    VERIFY((pKASOCK = get_kasock( sfd )) != NULL);
+
+    *idle_time      = pKASOCK->time;
+    *probe_interval = pKASOCK->intv;
+    *probe_count    = pKASOCK->cnt;
+
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

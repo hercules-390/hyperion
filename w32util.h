@@ -183,8 +183,14 @@ W32_DLL_IMPORT int socket_set_blocking_mode( int sfd, int blocking_mode );
 W32_DLL_IMPORT int socket_is_socket( int sfd );
 
 // Set the SO_KEEPALIVE option and timeout values for a
-// socket connection to detect when client disconnects */
-W32_DLL_IMPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count );
+// socket connection to detect when client disconnects.
+// Returns 0==success, +1==warning(*), -1==failure.
+// (*) Warning failure means function only partially
+//     succeeded (not all requested values were set)
+W32_DLL_IMPORT int set_socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count );
+
+// Function to retrieve keepalive values. 0==success, -1=failure
+W32_DLL_IMPORT int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval, int* probe_count );
 
 // Retrieve directory where process was loaded from...
 // (returns >0 == success, 0 == failure)
@@ -196,10 +202,11 @@ W32_DLL_IMPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD
 // Initialize Hercules HOSTINFO structure
 W32_DLL_IMPORT void w32_init_hostinfo( HOST_INFO* pHostInfo );
 
-W32_DLL_IMPORT int   w32_socket   ( int af, int type, int protocol );
-W32_DLL_IMPORT void  w32_FD_SET   ( int fd, fd_set* pSet );
-W32_DLL_IMPORT int   w32_FD_ISSET ( int fd, fd_set* pSet );
-W32_DLL_IMPORT int   w32_select   ( int nfds,
+W32_DLL_IMPORT int   w32_socket      ( int af, int type, int protocol );
+W32_DLL_IMPORT int   w32_close_socket( int fd );
+W32_DLL_IMPORT void  w32_FD_SET      ( int fd, fd_set* pSet );
+W32_DLL_IMPORT int   w32_FD_ISSET    ( int fd, fd_set* pSet );
+W32_DLL_IMPORT int   w32_select      ( int nfds,
                      fd_set* pReadSet,
                      fd_set* pWriteSet,
                      fd_set* pExceptSet,

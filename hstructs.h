@@ -577,10 +577,10 @@ struct SYSBLK {
 #define  JOINABLE  &sysblk.joinattr     /* (helper macro)            */
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
-                                        /* 3270 Console Keep-Alive:  */
-        int     kaidle;                 /* Keepalive idle seconds    */
-        int     kaintv;                 /* Keepalive probe interval  */
-        int     kacnt;                  /* Keepalive probe count     */
+                                        /* 3270 Console keepalive:   */
+        int     kaidle;                 /* keepalive idle seconds    */
+        int     kaintv;                 /* keepalive probe interval  */
+        int     kacnt;                  /* keepalive probe count     */
         LOCK    cnslpipe_lock;          /* signaled flag access lock */
         int     cnslpipe_flag;          /* 1 == already signaled     */
         int     cnslwpipe;              /* fd for sending signal     */

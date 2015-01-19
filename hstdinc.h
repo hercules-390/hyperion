@@ -113,8 +113,10 @@
 #ifdef HAVE_NETINET_IN_H
   #include <netinet/in.h>
 #endif
-#ifdef HAVE_NETINET_TCP_H
+#if defined( HAVE_NETINET_TCP_H )
   #include <netinet/tcp.h>
+#elif defined( HAVE_NET_TCP_H )
+  #include <net/tcp.h>
 #endif
 #ifdef HAVE_SYS_IOCTL_H
   #include <sys/ioctl.h>

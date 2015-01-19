@@ -130,6 +130,13 @@ static const char *build_info[] = {
     "Without External GUI support",
 #endif
 
+// (only report missing or partial keepalive support)
+#if !defined( HAVE_BASIC_KEEPALIVE ) &&  !defined( HAVE_FULL_KEEPALIVE )
+    "Without TCP keepalive support",
+#elif !defined( HAVE_FULL_KEEPALIVE )
+    "With    Basic TCP keepalive support",
+#endif
+
 #if defined(ENABLE_IPV6)
     "With    IPV6 support",
 #else

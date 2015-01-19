@@ -7902,39 +7902,120 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_HAO) */
 
 /*-------------------------------------------------------------------*/
-/* conkpalv - set console session TCP keep-alive values              */
+/* conkpalv - set console session TCP keepalive values               */
 /*-------------------------------------------------------------------*/
 int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 {
-    int idle, intv, cnt;
+#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
+    // "This build of Hercules does not support TCP keepalive"
+    WRMSG( HHC02321, "E" );
+    return -1;
+
+#elif defined( HAVE_BASIC_KEEPALIVE ) ||  defined( HAVE_FULL_KEEPALIVE )
+
+    char buf[40];
+    int rc, sfd, idle, intv, cnt;
+
+    /* Need a socket for setting/getting */
+    sfd = socket( AF_INET, SOCK_STREAM, 0 );
+
+    if (sfd < 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "socket()", strerror( HSO_errno ));
+        return -1;
+    }
+
+  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
+    // "This build of Hercules has only basic TCP keepalive support"
+    WRMSG( HHC02322, "W" );
+
+  #else // defined( HAVE_FULL_KEEPALIVE )
 
     UNREFERENCED( cmdline );
 
-    idle = sysblk.kaidle;
-    intv = sysblk.kaintv;
-    cnt  = sysblk.kacnt;
-
+    /* Validate and parse the arguments passed to us */
+    if (0
+        || !(argc == 2 || argc < 2)
+        ||  (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) != 0)
+    )
+    {
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
+        return -1;
+    }
+    /*
+    **  Set the requested values. Note since all sockets start out
+    **  with default values, we must also set the keepalive values
+    **  to our desired default values first (unless we are setting
+    **  new default values) before retrieving the values that will
+    **  actually be used (or are already in use) by the system.
+    */
     if (argc < 2)
     {
-        char buf[40];
-        MSGBUF( buf, "(%d,%d,%d)",idle,intv,cnt);
-        WRMSG(HHC02203, "I", "Keep-alive", buf);
+        /* Try using the existing default values */
+        idle = sysblk.kaidle;
+        intv = sysblk.kaintv;
+        cnt  = sysblk.kacnt;
     }
-    else
+
+    /* Set new or existing default keepalive values */
+    if ((rc = set_socket_keepalive( sfd, idle, intv, cnt )) < 0)
     {
-        if (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
-        {
-            sysblk.kaidle = idle;
-            sysblk.kaintv = intv;
-            sysblk.kacnt  = cnt;
-        }
-        else
-        {
-            WRMSG(HHC02205, "E", argv[2], "");
-            return -1;
-        }
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "set_socket_keepalive()", strerror( HSO_errno ));
+        close_socket( sfd );
+        return -1;
     }
-    return 0;
+    else if (rc > 0)
+    {
+        // "Not all TCP keepalive settings honored"
+        WRMSG( HHC02320, "W" );
+    }
+
+    /* Save what now should be the system's new default values */
+    sysblk.kaidle = idle;
+    sysblk.kaintv = intv;
+    sysblk.kacnt  = cnt;
+
+  #endif // defined( HAVE_FULL_KEEPALIVE )
+
+    /* Retrieve the system's current keepalive values */
+    if (get_socket_keepalive( sfd, &idle, &intv, &cnt ) < 0)
+    {
+        WRMSG( HHC02219, "E", "get_socket_keepalive()", strerror( HSO_errno ));
+        close_socket( sfd );
+        return -1;
+    }
+    close_socket( sfd );
+
+    /* Update SYSBLK with the values the system is actually using */
+    sysblk.kaidle = idle;
+    sysblk.kaintv = intv;
+    sysblk.kacnt  = cnt;
+
+    /* Now report the values that are actually being used */
+    MSGBUF( buf, "(%d,%d,%d)", sysblk.kaidle, sysblk.kaintv, sysblk.kacnt );
+
+    if (argc == 2)
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", "conkpalv", buf );
+    else
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", "conkpalv", buf );
+
+    return rc;
+
+#endif // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
 }
 
 #ifdef OPTION_CMDTGT

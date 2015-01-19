@@ -796,57 +796,144 @@ DLL_EXPORT int socket_is_socket( int sfd )
     struct stat st;
     return ( fstat( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
 }
-/* Set the SO_KEEPALIVE option and timeout values for a
-   socket connection to detect when client disconnects */
-void socket_keepalive( int sfd, int idle_time, int probe_interval,
-        int probe_count )
-{
-    int rc, optval = 1;
-    struct protoent * tcpproto = getprotobyname("TCP");
-    int l_tcp;
 
+/* Function to retrieve keepalive values. 0==success, -1=failure */
+int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
+                          int* probe_count )
+{
+    struct protoent*  tcpproto;
+    int        optval, l_tcp;
+    socklen_t  optlen = sizeof( optval );
+
+    /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
+    tcpproto = getprotobyname("TCP");
     if (!tcpproto)
     {
-       WRMSG(HHC02219, "E", "getprotobyname(\"TCP\")", strerror(errno));
-       fprintf(stderr, "Could not resolve protocol 'TCP'\n");
-       return;
+        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
+        return -1;
     }
-
     l_tcp = tcpproto->p_proto;
 
-    rc = setsockopt(sfd, l_tcp, SO_KEEPALIVE, &optval, sizeof(optval));
-    if (rc) WRMSG(HHC02219, "E", "setsockopt(SO_KEEPALIVE)", strerror(errno));
+    /* Default values */
+    *idle_time      = sysblk.kaidle;
+    *probe_interval = sysblk.kaintv;
+    *probe_count    = sysblk.kacnt;
 
-  #if defined(TCP_KEEPALIVE)
-    optval = idle_time;
-    rc = setsockopt(sfd, IPPROTO_TCP, TCP_KEEPALIVE, &optval, sizeof(optval));
-    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
-  #elif defined(TCP_KEEPIDLE)
-    optval = idle_time;
-    rc = setsockopt(sfd, l_tcp, TCP_KEEPIDLE, &optval, sizeof(optval));
-    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror(errno));
-  #else
-    UNREFERENCED(idle_time);
-  #endif
+#if defined( HAVE_FULL_KEEPALIVE )
+    /* Retrieve the actual values from the system */
+    if (getsockopt( sfd, l_tcp, TCP_KEEPIDLE,  &optval, &optlen ) >= 0) *idle_time      = optval;
+    if (getsockopt( sfd, l_tcp, TCP_KEEPINTVL, &optval, &optlen ) >= 0) *probe_interval = optval;
+    if (getsockopt( sfd, l_tcp, TCP_KEEPCNT,   &optval, &optlen ) >= 0) *probe_count    = optval;
+#endif // HAVE_FULL_KEEPALIVE
 
-  #if defined(TCP_KEEPINTVL)
-    optval = probe_interval;
-    rc = setsockopt(sfd, l_tcp, TCP_KEEPINTVL, &optval, sizeof(optval));
-    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror(errno));
-  #else
-    UNREFERENCED(probe_interval);
-  #endif
-
-  #if defined(TCP_KEEPCNT)
-    optval = probe_count;
-    rc = setsockopt(sfd, l_tcp, TCP_KEEPCNT, &optval, sizeof(optval));
-    if (rc) WRMSG(HHC02219, "E", "setsockopt(TCPKEEPCNT)", strerror(errno));
-  #else
-    UNREFERENCED(probe_count);
-  #endif
+    return 0;
 }
 
+/* Set the SO_KEEPALIVE option and timeout values for a
+   socket connection to detect when client disconnects.
+   Returns 0==success, +1==warning, -1==failure
+   (*) Warning failure means function only partially
+       succeeded (not all requested values were set)
+*/
+int set_socket_keepalive( int sfd,
+                          int idle_time,
+                          int probe_interval,
+                          int probe_count )
+{
+#if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_BASIC_KEEPALIVE )
+    UNREFERENCED( sfd );
+    UNREFERENCED( idle_time );
+    UNREFERENCED( probe_interval );
+    UNREFERENCED( probe_count );
+    return -1;
+#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
 
+    int idle, intv, cnt;
+    int rc, l_tcp, optval, succeeded = 0, tried = 0;
+    struct protoent * tcpproto;
+
+    /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
+    tcpproto = getprotobyname("TCP");
+    if (!tcpproto)
+    {
+        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
+        return -1;
+    }
+    l_tcp = tcpproto->p_proto;
+
+    optval = 1;
+  #if defined( HAVE_DECL_SO_KEEPALIVE ) && HAVE_DECL_SO_KEEPALIVE
+    tried++;
+    rc = setsockopt(sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
+    if (rc)
+    {
+        WRMSG( HHC02219, "E", "setsockopt(SO_KEEPALIVE)", strerror( HSO_errno ));
+        return -1;
+    }
+    else
+        succeeded++;
+  #endif
+
+    optval = idle_time;
+  #if defined( HAVE_DECL_TCP_KEEPALIVE ) && HAVE_DECL_TCP_KEEPALIVE
+    tried++;
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPALIVE, &optval, sizeof(optval));
+    if (rc)
+        WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror( HSO_errno ));
+    else
+        succeeded++;
+  #endif
+
+    optval = idle_time;
+  #if defined( HAVE_DECL_TCP_KEEPIDLE ) && HAVE_DECL_TCP_KEEPIDLE
+    tried++;
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPIDLE, &optval, sizeof(optval));
+    if (rc)
+        WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror( HSO_errno ));
+    else
+        succeeded++;
+  #endif
+
+    optval = probe_interval;
+  #if defined( HAVE_DECL_TCP_KEEPINTVL ) && HAVE_DECL_TCP_KEEPINTVL
+    tried++;
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPINTVL, &optval, sizeof(optval));
+    if (rc)
+        WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPINTVL)", strerror( HSO_errno ));
+    else
+        succeeded++;
+  #endif
+
+    optval = probe_count;
+  #if defined( HAVE_DECL_TCP_KEEPCNT ) && HAVE_DECL_TCP_KEEPCNT
+    tried++;
+    rc = setsockopt(sfd, l_tcp, TCP_KEEPCNT, &optval, sizeof(optval));
+    if (rc)
+        WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPCNT)", strerror( HSO_errno ));
+    else
+        succeeded++;
+  #endif
+
+    idle = idle_time;
+    intv = probe_interval;
+    cnt  = probe_count;
+
+    /* Retrieve values in use, ignoring any error */
+    get_socket_keepalive( sfd, &idle, &intv, & cnt );
+
+    /* Determine return code: did everything succeed and,
+       more importantly, were all of our values accepted?
+       (i.e. did they all "stick"?)
+    */
+    if (succeeded >= tried)
+        rc = (idle != idle_time || intv != probe_interval || cnt != probe_count) ? +1 : 0;
+    else
+        rc = (succeeded <= 0 ? -1 : +1);
+
+    return rc;
+
+#endif // KEEPALIVE
+}
 
 // Hercules low-level file open...
 DLL_EXPORT  int hopen( const char* path, int oflag, ... )

@@ -904,6 +904,10 @@ do { \
 #define HHC01084 "%1d:%04X COMM: set mode %s"
 #define HHC01090 "%1d:%04X COMM: client %s devtype %4.4X: connection reset"
 #define HHC01091 "%1d:%04X COMM: %s has an invalid GROUP name length or format; must be a valid luname or poolname"
+#define HHC01092 "%1d:%04X COMM: Not all TCP keepalive settings honored"
+#define HHC01093 "%1d:%04X COMM: Keepalive: (%d,%d,%d)"
+#define HHC01094 "%1d:%04X COMM: This build of Hercules does not support TCP keepalive"
+#define HHC01095 "%1d:%04X COMM: This build of Hercules has only basic TCP keepalive support"
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
@@ -1265,7 +1269,7 @@ do { \
 #define HHC02197 "Symbol name %s is reserved"
 /* 2198 moved to config.c                                            */
 #define HHC02199 "Symbol %-12s %s"
-// reserve 022xx for command processing */
+// reserve 02200 - 02369 for command processing */
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
 #define HHC02202 "Missing argument(s). Type 'help %s' for assistance."
@@ -1386,6 +1390,9 @@ do { \
 #define HHC02317 "%s bytes %s so far..."
 #define HHC02318 "Config file[%d] %s: processing paused for %d milliseconds..."
 #define HHC02319 "Config file[%d] %s: processing resumed..."
+#define HHC02320 "Not all TCP keepalive settings honored"
+#define HHC02321 "This build of Hercules does not support TCP keepalive"
+#define HHC02322 "This build of Hercules has only basic TCP keepalive support"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
