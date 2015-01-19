@@ -1134,7 +1134,7 @@ do { \
 #define HHC01607 "No help available yet for message %s"
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
 #define HHC01609 "No help available for mask %s"
-#define HHC01610 " (*)  More help available."
+#define HHC01610 " (*)  Enter \"help <command>\" for more info."
 
 /* ecpsvm.c */
 // reserve 017xx for ecps:vm support

@@ -47,12 +47,18 @@ Hercules Version 4: Installation and Operation</TITLE>
 <a name="instsource"></a>
 <h3>Building from source - Windows</h3>
 <ol>
-<li>Download the distribution file
-<a href="http://downloads.hercules-390.eu/hercules-3.10.zip">hercules-3.10.zip</a>
+<li>Download the
+<a href="https://github.com/hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
+from Github.
+<br><em>Note:</em> By downloading this file you agree to the terms
+    of the <a href="herclic.html">Q Public Licence</a>.
+<br />
+<br />
 <li>
-Hercules for Windows is built using the Microsoft Visual C (MSVC) compiler.
-Refer to file README.WIN64 for details.<br /> Fish also has instructions
-on his <b><a href="http://www.softdevlabs.com/hercules-msvc-build.html">MSVC Hercules Build Instructions</a></b> web page.
+Hercules for Windows is built using the Microsoft Visual C (MSVC) compiler.<br />
+Refer to file <a href="https://github.com/hercules-390/hyperion/blob/master/README.WIN64">README.WIN64</a> for details.
+Note: Fish also has instructions<br />
+on his <a href="http://www.softdevlabs.com/hercules-msvc-build.html">MSVC Hercules Build Instructions</a> web page.<br /><br />
 
 </ol>
 </p>
@@ -63,27 +69,34 @@ on his <b><a href="http://www.softdevlabs.com/hercules-msvc-build.html">MSVC Her
 <li>Install <b>Xcode</b> from the
 <a href="http://itunes.apple.com/app/xcode/id497799835">
 App Store</a>.
+<br />
+<br />
 <li>Install <b>Homebrew</b> using the procedure described
 at <a href="http://brew.sh/">http://brew.sh/</a>
-<li>Use these commands to install pre-requisite software:
+<br />
+<br />
+<li>Use these commands to install pre-requisite software:<br />
 <br><code>brew install autoconf</code>
 <br><code>brew install automake</code>
 <br><code>brew install gnu-sed</code>
 <br><code>automake --add-missing</code>
-<li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.
+<br />
+<br />
+<li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.<br /><br />
 </ol>
 
 <h3>Building from source - Linux and Mac OS X</h3>
 <ol>
-<li>Download the distribution file
-<a href="http://downloads.hercules-390.eu/hercules-3.10.tar.gz">hercules-3.10.tar.gz</a>
+<li>Download the
+<a href="https://github.com/hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
+from Github.
 <br><em>Note:</em> By downloading this file you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
-<p>
+<br />
+<br />
 <li>Use these commands to unzip the distribution file:
-<pre>tar xvzf ../hercules-3.10.tar.gz
-cd hercules-3.10</pre>
-
+<pre>unzip master.zip -d hyperion
+cd hyperion</pre>
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
 
@@ -101,107 +114,30 @@ required packages installed:
       <code>--enable-optimization=FLAGS</code>
 
 <p>For additional configuration options, run: <code>./configure
-          --help</code>
+          --help=short</code>
 
-<p><li>Build the executables: <p><code>make</code>
+<br />
+<li>Build the executables: <p><code>make</code>
 
-<p><li>Install the programs: as root: <p><code>make install</code>
+<p><li>(Optional) Install the programs: as root: <p><code>make install</code><br />
 </ol>
 
-<p>
 <em>Important:</em>
 You must use at least version 3.00 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
-compiler and other software levels.
+compiler and other software levels.<br /><br />
 
 <a name="instbinary"></a>
-<!--
-<h3>Installing pre-built RPMs:</h3>
-<ol>
-<li>Download the RPM file you want:
-<ul>
-<li><a href="http://downloads.hercules-390.eu/hercules-3.10.i686.rpm">hercules-3.10.i686.rpm</a>: 32-bit Intel
-<li><a href="http://downloads.hercules-390.eu/hercules-3.10.x86_64.rpm">hercules-3.10.x86_64.rpm</a>: 64-bit Intel
-</ul>
-<li>Install the RPM:
-<br><code>rpm -Uvh</code> <i>RPMfile</i>
-</ol>
-<p>
-This will leave the Hercules executables in /usr/bin and the dynamic
-libraries in /usr/lib and /usr/lib/hercules, where you can run them
-from anywhere. Sample configuration files will be placed in /etc/hercules,
-and the IPLable card deck for the ZZSA standalone utility will be placed in
-/var/share/hercules.
--->
-
-<!--
-<h3>Installing pre-built Debian packages:</h3>
-<p>
-Debian packages are available for "woody" and later releases.
-
-<ul>
-<li>Using apt: <code>apt-get install hercules</code>
-<li>Manually with dpkg:
-  <ol>
-    <li>Download a <a href="http://packages.debian.org/hercules">.deb
-        package</a>
-    <li><code>dpkg -i</code> <i>DEB</i>
-  </ol>
-</ul>
-</p>
--->
-
-<!--
-<h3>Installing on Gentoo Linux:</h3>
-<p>Hercules is installed like any other Gentoo package: do <code>emerge
---sync</code> if you haven't done it lately, then <code>emerge
-hercules</code>.</p>
-<p>Do not try to override the optimization flags automatically selected by
-<code>configure</code>. Hercules stresses the gcc optimizer, and will break
-in subtle ways if the wrong optimization settings are used.</p>
--->
-
-<h3>Installing on Mac OS X:</h3>
-
-<ol>
-<li>Download the compressed disk image: <a
-href="http://www.hercules-390.org/hercules-3.07-tiger.dmg">hercules-3.07-tiger.dmg</a>,
-<a href="http://www.hercules-390.org/hercules-3.07-leopard.dmg">hercules-3.07-leopard.dmg</a>,
-or <a href="http://www.hercules-390.org/hercules-3.07-snowleopard.dmg">hercules-3.07-snowleopard.dmg</a>.
-This package is a universal binary and requires the OS X version in the
-name, either 10.4 (Tiger), 10.5 (Leopard), 10.6 (Snow Leopard) or later. The
-Leopard and Snow Leopard versions include native 64-bit host support, while
-the Tiger version does not. The Tiger and Leopard versions will run on Intel
-or PowerPC Macs, while the Snow Leopard version will only run on Intel, as
-with Snow Leopard itself.
-<li>Mount the image by double-clicking on it in the Finder.
-Your web browser may have done that for you already.
-<li>Installation and use instructions are in the
-file <code>OS&nbsp;X&nbsp;ReadMe.rtf</code>.
-<li>If you want to use CTC networking on your Hercules system, you will need
-to install the supplied Tunnel driver.
-</ol>
-
 <h3>Installing pre-built binaries for Windows:</h3>
 <ol>
-<li>Download one of the following packages
-  <ul>
-  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w32.msi">
-  http://downloads.hercules-390.eu/hercules-3.10-w32.msi</a>
-  Windows 32-bit Installer package
-  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w64.msi">
-  http://downloads.hercules-390.eu/hercules-3.10-w64.msi</a>
-  Windows 64-bit Installer package
-  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w32.zip">
-  http://downloads.hercules-390.eu/hercules-3.10-w32.zip</a>
-  Windows 32-bit binaries
-  <li><a href="http://downloads.hercules-390.eu/hercules-3.10-w64.zip">
-  http://downloads.hercules-390.eu/hercules-3.10-w64.zip</a>
-  Windows 64-bit binaries
-  </ul>
-<li>You will probably also want to install
-<a href="http://www.softdevlabs.com/hercgui">Fish's Hercules GUI for Windows</a>.
+<li>Download one of the
+<a href="http://www.softdevlabs.com/hyperion.html#prebuilt">pre-built binaries</a>
+from <a href="http://www.softdevlabs.com">SoftDevLabs</a>.
+<br />
+<br />
+<li>(Optional) You might also want to install Fish's
+<a href="http://www.softdevlabs.com/hercgui">Hercules GUI for Windows</a>.<br /><br />
 </ol>
 
 <p><hr><a name="config"></a>
@@ -333,12 +269,6 @@ To scroll through the messages, use either the Page Up or Page Down keys,
 the Ctrl + Up Arrow or Ctrl + Down Arrow keys, or the Home or End and/or
 the Ctrl + Home or Ctrl + End keys.
 <p>
-Important messages are highlighted in a different color (usually red) and are
-prevented from being scrolled off the screen for two minutes. If Extended Cursor
-handling is available then important messages currently at the top of the screen
-can be removed early by moving the cursor to the line containing the message
-and then pressing enter.
-<p>
 Use the Insert key to switch between insert and overlay mode when typing in
 the command input area. Use the Home and End keys to move to the first or
 last character of the command you are typing, or the use the left/right arrow keys
@@ -353,7 +283,8 @@ area. Instead, single character "hot keys" are used to issue some of the more
 common functions such as starting or stopping the CPU. The hot-keys are those
 which are highlighted. Pressing the '?' key displays brief help information
 on how to use the semi-graphical panel.
-<p>
+<br /><br />
+
     <TABLE border=1 cellpadding=5 align="center" width="70%">
 
       <THEAD>
@@ -555,12 +486,12 @@ on how to use the semi-graphical panel.
       </TBODY>
     </TABLE>
 
-<p>
+<br /><br />
 The following additional keyboard functions are effective when the
 Hercules Extended Cursor Handling feature (OPTION_EXTCURS) is activated
 at compile time.
-At present, this feature is activated on the Windows platform only.
-<p>
+At present, this feature is activated on the Windows platform only:
+<br /><br />
     <TABLE border=1 cellpadding=5 align="center">
     <TABLE border=1 cellpadding=5 align="center" width="70%">
 
@@ -664,211 +595,214 @@ At present, this feature is activated on the Windows platform only.
     </TABLE>
 
 <p>
-<hr width="50%">
+
 
 <a name="commands">
 <h4>Panel commands</h4>
 <p>
 The following is what is displayed on the Hercules harware console (HMC)
 in response to the '?' command being entered. Please note that it may not
-be completely accurate or up-to-date. Please enter the '?' command for
+be completely accurate or up-to-date. Enter the '?' command for
 yourself for a more complete, accurate and up-to-date list of supported
-panel commands.
+panel commands:
 <p>
 <pre>
 
-     Command      Description
-     -------      -----------------------------------------------
-     !message     SCP priority messsage
-     #            Silent comment
-     *            Loud comment
-     .reply       SCP command
-     ?            alias for help
-     aea          Display AEA tables
-     aia          Display AIA fields
-     alrf         Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
-     ar           Display access registers
-     archlvl      Set Architecture Level
-     archmode     Alias for archlvl
-     asn_and_l    Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
-     attach       Configure device
-     auto_scsi    Command deprecated - Use "SCSIMOUNT"
-     autoinit     Display/Set automatic create empty tape file switch
-     automount    Display/Update allowable tape automount directories
-     b            Set breakpoint
-     b+           Set breakpoint
-     b-           Delete breakpoint
-     cache        Execute cache related commands
-     cachestat    Cache stats command
-     capping      Set/display capping value
-     cckd         cckd command
-     cd           Change directory
-     cf           Configure current CPU online or offline
-     cfall        Configure all CPU's online or offline
-     clocks       Display tod clkc and cpu timer
-     cmdlevel     Display/Set current command group
-     cmdlvl       (alias for cmdlevel)
-     cmdsep       Display/Set command line separator
-     cmdtgt       Specify the command target
-     cnslport     Set console port
-     codepage     Set/display code page conversion table
-     conkpalv     Display/alter console TCP keep-alive settings
-     cp_updt      Create/Modify user character conversion table
-     cpu          Define target cpu for panel display and commands
-     cpuidfmt     Set format 0/1 STIDP generation
-     cpumodel     Set CPU model number
-     cpuprio      Set/Display cpuprio parameter
-     cpuserial    Set CPU serial number
-     cpuverid     Set CPU verion number
-     cr           Display or alter control registers
-     cscript      Cancels a running script thread
-     ctc          Enable/Disable CTC debugging
-     define       Rename device
-     defstore     Define/Display main and expanded storage values
-     defsym       Define symbol
-     delsym       Delete a symbol
-     detach       Remove device
-     devinit      Reinitialize device
-     devlist      List device, device class, or all devices
-     devprio      Set/Display devprio parameter
-     devtmax      Display or set max device threads
-     diag8cmd     Set diag8 command option
-     dir          Displays a list of files and subdirs in a directory
-     ds           Display subchannel
-     ecps:vm      Command deprecated - Use "ECPSVM"
-     ecpsvm       ECPS:VM Commands
-     engines      Set engines parameter
-     evm          Command deprecated - Use "ECPSVM"
-     exit         (Synonym for 'quit')
-     ext          Generate external interrupt
-     fcb          Display the current FCB (if only the printer is given)
-     fpc          Display floating point control register
-     fpr          Display floating point registers
-     f{+/-}adr    Mark frames unusable/usable
-     g            Turn off instruction stepping and start all CPUs
-     gpr          Display or alter general purpose registers
-     hao          Hercules Automatic Operator
-     help         list all commands / command specific help
-     herc         Hercules command
-     herclogo     Read a new hercules logo file
-     hercprio     Set/Display hercprio parameter
-     hst          History of commands
-     http         Start/Stop/Modify/Display HTTP Server
-     httpport     Command deprecated - Use "HTTP PORT ..."
-     httproot     Command deprecated - Use "HTTP ROOT fn"
-     i            Generate I/O attention interrupt for device
-     iodelay      Display or set I/O delay value
-     ipending     Display pending interrupts
-     ipl          IPL Normal from device xxxx
-     iplc         IPL Clear from device xxxx
-     k            Display cckd internal trace
-     kd           Short form of 'msghld clear'
-     ldmod        Load a module
-     legacysen    Set legacysenseid setting
-     loadcore     Load a core image file
-     loadparm     Set IPL parameter
-     loadtext     Load a text deck file
-     log          Direct logger output
-     logopt       Set/Display logging options
-     lparname     Set LPAR name
-     lparnum      Set LPAR identification number
-     lsdep        List module dependencies
-     lsmod        List dynamic modules
-     mainsize     Define/Display mainsize parameter
-     manufactu    Set STSI manufacturer code
-     maxcpu       Set maxcpu parameter
-     maxrates     Display highest MIPS/SIOS rate or set interval
-     message      Display message on console a la VM
-     model        Set/Query STSI model code
-     modpath      Set module load path
-     mounted_t    Control tape initialization
-     msg          Alias for message
-     msghld       Display or set the timeout of held messages
-     msglevel     Display/Set current Message Display output
-     msglvl       Alias for msglevel
-     msgnoh       Similar to "message" but no header
-     mt           Control magnetic tape operation
-     numcpu       Set numcpu parameter
-     numvec       Set numvec parameter
-     ostailor     Tailor trace information for specific OS
-     panrate      Display or set rate at which console refreshes
-     pantitle     Display or set console title
-     pgmprdos     Set LPP license setting
-     pgmtrace     Trace program interrupts
-     plant        Set STSI plant code
-     pr           Display prefix register
-     pscp         Send prio message scp command
-     psw          Display or alter program status word
-     ptt          Set or display internal trace
-     pwd          Print working directory
-     qcpuid       Display cpuid
-     qd           Query dasd
-     qpfkeys      Display the current PF Key settings
-     qpid         Display Process ID of Hercules
-     qports       Display TCP/IP ports in use
-     qproc        Display processors type and utilization
-     qstor        Display main and expanded storage values
-     quiet        Toggle automatic refresh of panel display data
-     quit         Terminate the emulator
-     r            Display or alter real storage
-     restart      Generate restart interrupt
-     resume       Resume hercules
-     rmmod        Delete a module
-     s            Instruction stepping
-     s+           Instruction stepping on
-     s-           Turn off instruction stepping
-     s?           Instruction stepping query
-     savecore     Save a core image to file
-     sclproot     Set SCLP base directory
-     scp          Send scp command
-     scpecho      Set/Display option to echo to console and history of scp replys
-     scpimply     Set/Display option to pass non-hercules commands to the scp
-     script       Run a sequence of panel commands contained in a file
-     scsimount    Automatic SCSI tape mounts
-     sf+dev       Add shadow file
-     sf-dev       Delete shadow file
-     sfc          Compress shadow files
-     sfd          Display shadow file stats
-     sfk          Check shadow files
-     sh           Shell command
-     shcmdopt     Set diag8 sh option
-     showdvol1    Enable showing of dasd volsers in device list
-     shrd         shrd command
-     shrdport     Set shrdport value
-     sizeof       Display size of structures
-     srvprio      Set/Display srvprio parameter
-     ssd          Signal shutdown
-     start        Start CPU (or printer/punch device if argument given)
-     startall     Start all CPU's
-     stop         Stop CPU (or printer/punch device if argument given)
-     stopall      Stop all CPU's
-     store        Store CPU status at absolute zero
-     suspend      Suspend hercules
-     symptom      Alias for traceopt
-     syncio       Display syncio devices statistics
-     sysclear     System Clear Reset manual operation
-     sysepoch     Set sysepoch parameter
-     sysreset     System Reset manual operation
-     s{+/-}dev    Turn CCW stepping on/off
-     t            Instruction trace
-     t+           Instruction trace on
-     t-           Turn off instruction tracing
-     t?           Instruction trace query
-     timerint     Display or set timers update interval
-     tlb          Display TLB tables
-     toddrag      Display or set TOD clock drag factor
-     todprio      Set/Display todprio parameter
-     traceopt     Instruction trace display options
-     tt32         Control/query CTCI-WIN functionality
-     tzoffset     Set tzoffset parameter
-     t{+/-}CKD    Turn CKD_KEY tracing on/off
-     t{+/-}dev    Turn CCW tracing on/off
-     u            Disassemble storage
-     uptime       Display how long Hercules has been running
-     v            Display or alter virtual storage
-     version      Display version information
-     xpndsize     Define/Display xpndsize parameter
-     yroffset     Set yroffset parameter
+    Command      Description
+    -------      -----------------------------------------------
+    !message    *SCP priority message
+    #            Silent comment
+    $locate      Display sysblk, regs or hostinfo
+    $test       *Your custom command (*DANGEROUS!*)
+    $zapcmd     *Enable/disable command (*CAREFUL!*)
+    *            Loud comment
+    .reply      *SCP command
+    ?            alias for help
+    aea          Display AEA tables
+    aia          Display AIA fields
+    alrf         Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    ar           Display access registers
+    archlvl     *Set Architecture Level
+    archmode     Alias for archlvl
+    asn_and_l    Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    attach      *Configure device
+    auto_scsi   *Command deprecated - Use "SCSIMOUNT"
+    autoinit    *Display/Set automatic create empty tape file switch
+    automount   *Display/Update allowable tape automount directories
+    b           *Set breakpoint
+    b+           Set breakpoint
+    b-          *Delete breakpoint
+    cache       *Execute cache related commands
+    cachestat    Cache stats command
+    capping     *Set/display capping value
+    cckd        *cckd command
+    cf          *Configure current CPU online or offline
+    cfall        Configure all CPU's online or offline
+    clocks       Display tod clkc and cpu timer
+    cmdlevel    *Display/Set current command group
+    cmdlvl       (alias for cmdlevel)
+    cmdsep      *Display/Set command line separator
+    cmpscpad    *Set/display the CMPSC zero padding value.
+    cnslport     Set console port
+    codepage    *Set/display code page conversion table
+    conkpalv    *Display/alter console TCP keep-alive settings
+    cp_updt     *Create/Modify user character conversion table
+    cpu         *Define target cpu for panel display and commands
+    cpuidfmt     Set format BASIC/0/1 STIDP generation
+    cpumodel     Set CPU model number
+    cpuprio      Set/Display cpuprio parameter
+    cpuserial    Set CPU serial number
+    cpuverid     Set CPU verion number
+    cr          *Display or alter control registers
+    cscript     *Cancels a running script thread
+    ctc         *Enable/Disable CTC debugging
+    define      *Rename device
+    defstore    *Define/Display main and expanded storage values
+    defsym      *Define symbol
+    delsym      *Delete a symbol
+    detach       Remove device
+    devinit     *Reinitialize device
+    devlist     *List device, device class, or all devices
+    devprio      Set/Display devprio parameter
+    devtmax     *Display or set max device threads
+    diag8cmd     Set diag8 command option
+    ds           Display subchannel
+    dumpdev     *Specify bootstrap loader DUMP parameters
+    ecps:vm     *Command deprecated - Use "ECPSVM"
+    ecpsvm      *ECPS:VM Commands
+    engines      Set engines parameter
+    evm         *Command deprecated - Use "ECPSVM"
+    exec        *Execute a Rexx script
+    exit         (Synonym for 'quit')
+    ext          Generate external interrupt
+    fcb         *Display the current FCB (if only the printer is given)
+    fpc         *Display or alter floating point control register
+    fpr         *Display or alter floating point registers
+    f{+/-}adr    Mark frames unusable/usable
+    g            Turn off instruction stepping and start all CPUs
+    gpr         *Display or alter general purpose registers
+    hao         *Hercules Automatic Operator
+    help        *list all commands / command specific help
+    herclogo    *Read a new hercules logo file
+    hercprio     Set/Display hercprio parameter
+    hst         *History of commands
+    http        *Start/Stop/Modify/Display HTTP Server
+    httpport    *Command deprecated - Use "HTTP PORT ..."
+    httproot    *Command deprecated - Use "HTTP ROOT fn"
+    hwldr       *Specify boot loader filename
+    i            Generate I/O attention interrupt for device
+    iodelay     *Display or set I/O delay value
+    ipending     Display pending interrupts
+    ipl         *IPL from device or file
+    iplc        *Command deprecated - use IPL with clear option
+    k            Display cckd internal trace
+    ldmod       *Load a module
+    legacysen    Set legacysenseid setting
+    loadcore    *Load a core image file
+    loaddev     *Specify bootstrap loader IPL parameters
+    loadparm    *Set IPL parameter
+    loadtext    *Load a text deck file
+    locks       *Display internal locks list
+    log         *Direct logger output
+    logopt      *Set/Display logging options
+    lparname    *Set LPAR name
+    lparnum     *Set LPAR identification number
+    lsdep        List module dependencies
+    lsmod        List dynamic modules
+    mainsize    *Define/Display mainsize parameter
+    manufactu    Set STSI manufacturer code
+    maxcpu       Set maxcpu parameter
+    maxrates    *Display highest MIPS/SIOS rate or set interval
+    message     *Display message on console a la VM
+    model       *Set/Query STSI model code
+    modpath      Set module load path
+    mounted_t   *Control tape initialization
+    msg          Alias for message
+    msglevel    *Display/Set current Message Display output
+    msglvl       Alias for msglevel
+    msgnoh       Similar to "message" but no header
+    mt          *Control magnetic tape operation
+    numcpu       Set numcpu parameter
+    numvec       Set numvec parameter
+    ostailor    *Tailor trace information for specific OS
+    panrate     *Display or set rate at which console refreshes
+    pantitle    *Display or set console title
+    pgmprdos    *Set LPP license setting
+    pgmtrace    *Trace program interrupts
+    plant        Set STSI plant code
+    pr           Display prefix register
+    psw         *Display or alter program status word
+    ptp         *Enable/Disable PTP debugging
+    ptt         *Set or display internal trace
+    qcpuid      *Display cpuid
+    qd           Query dasd
+    qpfkeys      Display the current PF Key settings
+    qpid         Display Process ID of Hercules
+    qports       Display TCP/IP ports in use
+    qproc        Display processors type and utilization
+    qstor        Display main and expanded storage values
+    quiet       *Toggle automatic refresh of panel display data
+    quit        *Terminate the emulator
+    r           *Display or alter real storage
+    restart      Generate restart interrupt
+    resume       Resume hercules
+    rexx        *display Rexx interpreter settings
+    rmmod        Delete a module
+    s           *Instruction stepping
+    s+          *Instruction stepping on
+    s-           Turn off instruction stepping
+    s?          *Instruction stepping query
+    savecore    *Save a core image to file
+    sclproot    *Set SCLP base directory
+    scpecho     *Set/Display option to echo to console and history of scp replys
+    scpimply    *Set/Display option to pass non-hercules commands to the scp
+    script      *Run a sequence of panel commands contained in a file
+    scsimount   *Automatic SCSI tape mounts
+    sf+dev       Add shadow file
+    sf-dev       Delete shadow file
+    sfc          Compress shadow files
+    sfd          Display shadow file stats
+    sfk         *Check shadow files
+    sh          *Shell command
+    shcmdopt     Set diag8 sh option
+    shrd         shrd command
+    shrdport     Set shrdport value
+    sizeof       Display size of structures
+    srvprio      Set/Display srvprio parameter
+    ssd         *Signal shutdown
+    start       *Start CPU (or printer/punch device if argument given)
+    startall     Start all CPU's
+    stop        *Stop CPU (or printer/punch device if argument given)
+    stopall      Stop all CPU's
+    store        Store CPU status at absolute zero
+    suspend      Suspend hercules
+    symptom      Alias for traceopt
+    syncio       Display syncio devices statistics
+    sysclear    *System Clear Reset manual operation
+    sysepoch     Set sysepoch parameter
+    sysreset    *System Reset manual operation
+    s{+/-}dev    Turn CCW stepping on/off
+    t           *Instruction trace
+    t+          *Instruction trace on
+    t-           Turn off instruction tracing
+    t?          *Instruction trace query
+    timerint    *Display or set timers update interval
+    tlb          Display TLB tables
+    toddrag      Display or set TOD clock drag factor
+    todprio      Set/Display todprio parameter
+    traceopt    *Instruction trace display options
+    tt32        *Control/query CTCI-WIN functionality
+    tzoffset     Set tzoffset parameter
+    t{+/-}CKD    Turn CKD_KEY tracing on/off
+    t{+/-}dev    Turn CCW tracing on/off
+    u           *Disassemble storage
+    uptime       Display how long Hercules has been running
+    v           *Display or alter virtual storage
+    version      Display version information
+    xpndsize    *Define/Display xpndsize parameter
+    yroffset     Set yroffset parameter
+
+     (*)  Enter "<a href="#morehelp">help &lt;command&gt;</a>" for more info.
 
 </pre>
 <p>
@@ -897,15 +831,18 @@ There is also an alternate semi-graphical control panel.  Press Esc to
 switch between the command line format and the semi-graphical format.
 Press ? to obtain help in either control panel.
 <p>
-Some commands also offer additional help information regarding their syntax,
-etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
-this additional help information. (Note: not every command supports help)
-<p>
 When a command is prefixed with '-', the the command will not be redisplayed at
 the console. This can be used in scripts and is also used internally when commands
 are to be invoked without being redisplayed at the panel.
 
-<p>
+<br /><br />
+<a name="morehelp"></a>
+<b>Additional Command Help</b><br /><br />
+Some commands also offer additional help information regarding their syntax,
+etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
+this additional help information. (Note: not every command supports additional help)
+
+<br /><br />
 <hr width="50%">
 
 <a name="RCFILE">
@@ -938,7 +875,8 @@ a brief delay before reading and processing the next line in the file. The
 value <tt><i>nnn</i></tt> can be any number from 1 to 999 and specifies the
 number of seconds to delay before reading the next line. Creative use of the
 run-commands file can completely automate Hercules startup.
-<p>
+
+<br /><br />
 <hr width="50%">
 
 <a name="HAO">
@@ -1040,18 +978,21 @@ All defined rules are checked for a match each time Hercules issues a message.
 There is no way to specify "stop processing subsequent rules". If a message is
 issued that matches two or more rules, each associated command is then issued
 in sequence.
-<p>
 
-<p><hr><a name="support"></a>
+<br /><br />
+<hr><a name="support"></a>
 <h2>Technical Support</h2>
 
 <P>
 For technical support, please see our <a href="hercsupp.html">Technical Support</a> web page.
-</P>
 
-<p><center><hr width=15% noshade><p>
+<br /><br />
+<hr>
+<br />
+<center>
 <a href="index.html"><img src="images/back.gif" border=0 alt="back"></a>
 </center>
-<p class="lastupd">Last updated $Date$ $Revision$</p>
+<br />
+</center>
 </BODY>
 </HTML>

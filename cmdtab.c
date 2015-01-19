@@ -636,7 +636,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
             WRMSG( HHC01603, "I", "" );
             if (didlong)
             {
-                // " (*)  More help available."
+                // " (*)  Enter \"help <command>\" for more info."
                 WRMSG( HHC01610, "I" );
                 WRMSG( HHC01603, "I", "" );
             }
