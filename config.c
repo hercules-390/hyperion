@@ -1177,7 +1177,8 @@ int cpu;
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
 int attach_device (U16 lcss, U16 devnum, const char *type,
-                   int addargc, char *addargv[])
+                   int addargc, char *addargv[],
+                   int numconfdev)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int     rc;                             /* Return code               */
@@ -1229,6 +1230,9 @@ int     i;                              /* Loop index                */
     }
     else
         dev->argv = NULL;
+
+    /* Set the number of config statement device addresses */
+    dev->numconfdev = numconfdev;
 
     /* Call the device handler initialization function */
     rc = (int)(dev->hnd->init)(dev, addargc, addargv);
@@ -1960,6 +1964,7 @@ parse_and_attach_devices(const char *sdevnum,
         int         i;
         U16         devnum;
         int         rc;
+        int         numconfdev = 0;
 
 #if defined(ENABLE_SYSTEM_SYMBOLS)
         int         j;
@@ -1971,6 +1976,13 @@ parse_and_attach_devices(const char *sdevnum,
 
         if(devncount==0)
             return HERRDEVIDA; /* Invalid Device Address */
+
+        /* Calculate the number of config statement device addresses */
+        for (i=0;i<(int)devncount;i++)
+        {
+            da=dnd.da;
+            numconfdev = numconfdev + ((da[i].cuu2 - da[i].cuu1) + 1);
+        }
 
 #if defined(ENABLE_SYSTEM_SYMBOLS)
         newargv=malloc(MAX_ARGS*sizeof(char *));
@@ -2000,15 +2012,15 @@ parse_and_attach_devices(const char *sdevnum,
                {
                    orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
                }
-                /* Build the device configuration block */
-               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv);
+               /* Build the device configuration block */
+               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv, numconfdev);
                for(j=0;j<addargc;j++)
                {
                    free(orig_newargv[j]);
                }
 #else
-                /* Build the device configuration block (no syms) */
-               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, addargv);
+               /* Build the device configuration block (no syms) */
+               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, addargv, numconfdev);
 #endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
                if(rc!=0)

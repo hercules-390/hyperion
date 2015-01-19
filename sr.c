@@ -301,6 +301,7 @@ BYTE     psw[16];
             {
                 SR_WRITE_STRING(file, SR_DEV_ARGV, "");
             }
+        SR_WRITE_VALUE(file, SR_DEV_NUMCONFDEV, dev->numconfdev, sizeof(dev->numconfdev));
         SR_WRITE_STRING(file, SR_DEV_TYPNAME, dev->typname);
 
         /* Common device fields */
@@ -381,6 +382,7 @@ IOINT   *ioq = NULL;
 char     buf[SR_MAX_STRING_LENGTH+1];
 char     zeros[16];
 S64      dreg;
+int      numconfdev=0;
 
     UNREFERENCED(cmdline);
 
@@ -1104,6 +1106,10 @@ S64      dreg;
             devargx = 0;
             break;
 
+        case SR_DEV_NUMCONFDEV:
+            SR_READ_VALUE(file, len, &numconfdev, sizeof(numconfdev));
+            break;
+
         case SR_DEV_ARGV:
             SR_READ_STRING(file, buf, len);
             if (devargx < devargc) devargv[devargx++] = strdup(buf);
@@ -1114,11 +1120,13 @@ S64      dreg;
             dev = find_device_by_devnum(lcss,devnum);
             if (dev == NULL)
             {
-                if (attach_device (lcss, devnum, buf, devargc, devargv))
+                if (numconfdev == 0) numconfdev = 1;
+                if (attach_device (lcss, devnum, buf, devargc, devargv, numconfdev))
                 {
                     // "SR: %04X: device initialization failed"
                     WRMSG(HHC02015, "E", devnum);
                 }
+                numconfdev = 0;
             }
             else if (strcmp(dev->typname, buf))
             {

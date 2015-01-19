@@ -1037,6 +1037,9 @@ struct DEVBLK {                         /* Device configuration block*/
 
         int     argc;                   /* Init number arguments     */
         char    **argv;                 /* Init arguments            */
+        int     numconfdev;             /* The number of devices
+                                           specified on config stmt
+                                           or attach command         */
 
         /*  Storage accessible by device                             */
 
