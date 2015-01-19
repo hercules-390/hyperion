@@ -1234,7 +1234,7 @@ static void SET_COMM_KEEPALIVE( int tempfd, COMMADPT* ca )
             // "%1d:%04X COMM: error in function %s: %s"
             WRMSG( HHC01000, "E",
                 SSID_TO_LCSS( ca->dev->ssid ), ca->devnum,
-                "socket()", strerror( HSO_errno ));
+                "set_socket_keepalive()", strerror( HSO_errno ));
             return;
         }
 
