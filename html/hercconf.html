@@ -465,38 +465,45 @@ and how they are used.
     keepalive packets sent before the connection is considered to have
     failed.
     <p>
-    The default values are 3, 1, and 10. That is, send the initial probe
-    3 seconds after the line goes idle and then wait no more than one
-    second for it to be responded to. Do this 10 times before considering
-    the client as having died.
+    The default values for Windows are 3, 1, and 10. For non-Windows systems
+    it is 3, 1, and 9. That is, send the initial probe 3 seconds after the
+    connection goes idle and then wait no more than one second for it to be
+    responded to. If it is not responded to within one second, then send up
+    to 9 more probes (for a total of 10), each of which must also timeout
+    without being responded to before the client is considered as having
+    died and the connection thus automatically closed.
     <p>
     <i><b>Note:</b></i>
     This is a built-in feature of TCP/IP and allows detection of
     unresponsive TCP/IP <i>connections</i> and not idle clients.
     That is to say, your connection will <i>not</i> be terminated
     after 3 seconds of idle time. Your 3270 session can remain idle for
-    many minutes without any data being transmitted.
+    many minutes or hours or days without any data being transmitted.
     If the TCP/IP <i>stack</i> at the other end of the connection --
     not your 3270 client itself -- fails to respond to the
-    internal keepalive probe packets, then it means that the
-    TCP/IP stack is down or there has been a break in the
-    connection. Thus, even if your 3270 client
-    is completely idle, your system's TCP/IP stack itself should still respond
-    to the keepalive probes sent by the TCP/IP stack at the Hercules end
-    of the link. If it doesn't, then TCP/IP will terminate the tn3270/telnet
-    session which will cause Hercules to disconnect the terminal.
+    internal keepalive probe packets however, then it means that the
+    TCP/IP stack itself is down or there has been a physical break
+    in the connection.
+    <p>
+    Thus, even if your 3270 client is completely idle, your system's TCP/IP stack
+    itself should still respond to the keepalive probes sent by the TCP/IP stack
+    at the Hercules end of the link. If it doesn't, then TCP/IP will terminate
+    the tn3270/telnet session which will cause Hercules to disconnect the terminal.
     <p>
     The three values can also be modified on-demand via the <code>conkpalv</code>
-    panel command, which has the exact same syntax. Note that the
-    syntax is very unforgiving: no spaces are allowed anywhere within the
-    parentheses and each value must be separated from the other with a
-    single comma.
+    panel command, which has the exact same syntax. Note that the syntax is
+    very unforgiving: no spaces are allowed anywhere within the parentheses
+    and each value must be separated from the other with a single comma.
     <p>
-    <i><b>Note:</b></i>
-    On Windows platforms the <code><i>count</i></code> value is ignored and
-    cannot be changed from its default value of 10.
-    Also, some older platforms may ignore all of the values specified
-    and use platform default values instead.
+    <b>Please also note</b> that not all systems support being able to modify
+    all three values. That is, not all values may be able to be changed, and it
+    is system dependent which values you can change and which values you cannot.
+    On Windows for example, the <code><i>count</i></code> value is ignored
+    and cannot be changed from its default value of 10. Other systems may
+    ignore one or more or all three values and use platform defaults instead.
+    This is entirely system dependent. Check you system's documentation for details
+    regarding which values can be changed and which cannot as well as how to
+    adjust your system's default values.
     <p>
 
 <a name="CPUMODEL"></a>
