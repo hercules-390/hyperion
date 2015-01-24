@@ -100,21 +100,40 @@ cd hyperion</pre>
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
 
-<p><code>./util/bldlvlck</code>
+    <p><code>./util/bldlvlck</code>
+
+<p><li>Build the ./configure script (recommended):
+
+    <p><code>sh ./autogen.sh</code>
+
+    <p>
+    Most projects that are built from source do so from the official
+    distribution tarball which comes with its own pre-built ./configure
+    scipt. When you are building directly from the repository source
+    code however, you will need to create (or recreate) it yourself.
+    <p>
+    Also note you will need to re-run <code>autogen.sh</code> again
+    each time the "configure.ac" or "makefile.am" files change. This
+    means if you do a "git pull" to update your source with changes
+    that were recently made to the repository, you <i>may</i> need
+    to recreate your configure script again if either configure.ac
+    <i>or</i> makefile.am was updated.
+    <p>
+    Thus the safest cource of action is to <i>always</i> run autogen.sh
+    immediately before running ./configure. (see next step below)
 
 <p><li>Configure Hercules for your system:
 
-<p><code>./configure</code>
+    <p><code>./configure</code>
 
-<p>By default, the configure script will attempt to guess appropriate
-      compiler optimization flags for your system.  If its guesses
-      turn out to be wrong, you can disable all optimization by
-      passing the <code>--disable-optimization</code> option to
-      configure, or specify your own optimization flags with
-      <code>--enable-optimization=FLAGS</code>
-
-<p>For additional configuration options, run: <code>./configure
-          --help=short</code>
+    <p>
+    By default, the configure script will attempt to guess appropriate
+    compiler optimization flags for your system.  If its guesses
+    turn out to be wrong, you can disable all optimization by
+    passing the <code><nobr>--disable-optimization</nobr></code> option to
+    configure, or specify your own optimization flags with
+    <code><nobr>--enable-optimization=FLAGS</nobr></code>. For additional configuration
+    options, run: <code>./configure <nobr>--help=short</nobr></code>.
 
 <br />
 <li>Build the executables: <p><code>make</code>
