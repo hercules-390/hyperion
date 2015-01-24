@@ -2081,7 +2081,7 @@ do { \
 /* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument %s"
-#define HHC90012 "Pttrace: %s%s%s%s%s%s%s%s%s%s%s %s %s to %d %d"
+#define HHC90012 "Pttrace: %s %s %s %s to %d %d"
 #define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
 #define HHC90014 "lock %s was obtained by thread "TIDPAT" at %s"
 #define HHC90015 "Thread "TIDPAT" abandoned lock %s obtained on %s at %s"

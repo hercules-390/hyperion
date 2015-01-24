@@ -957,31 +957,40 @@
   "identified by <devnum>, or for all PTP device groups if\n"                    \
   "<devnum> is not specified or specified as 'ALL'.\n"
 
-#define ptt_cmd_desc            "Set or display internal trace"
+#define ptt_cmd_desc            "Activate or display internal trace table"
 #define ptt_cmd_help            \
                                 \
-  "Format: \"ptt [options] [nnn]\"\n"                                               \
-  "When specified with no operands, the ptt command displays the trace options\n"   \
-  "and the contents of the internal trace table.\n"                                 \
-  "When specified with operands, the ptt command sets the trace options and/or\n"   \
-  "specifies which events are to be traced. If the last operand is numeric, it\n"   \
-  "sets the size of the trace table and activates the trace.\n"                     \
-  "options:\n"                                                                      \
-  "  (no)control - control trace\n"                                                 \
-  "  (no)error   - error trace\n"                                                   \
-  "  (no)inter   - interlock failure trace\n"                                       \
-  "  (no)io      - io trace\n"                                                      \
-  "  (no)lock    - lock trace buffer\n"                                             \
-  "  (no)logger  - logger trace\n"                                                  \
-  "  (no)prog    - program interrupt trace\n"                                       \
-  "  (no)sie     - sie trace\n"                                                     \
-  "  (no)signal  - signaling trace\n"                                               \
-  "  (no)threads - thread trace\n"                                                  \
-  "  (no)timer   - timer trace\n"                                                   \
-  "  (no)tod     - timestamp trace entries\n"                                       \
-  "  (no)wrap    - wrap trace buffer\n"                                             \
-  "  to=nnn      - trace buffer display timeout\n"                                  \
-  "  nnn         - trace buffer size\n"
+  "Format: \"ptt [events] [options] [nnnnnn]\"\n"                                   \
+  "\n"                                                                              \
+  "When specified with no operands, the ptt command displays the active trace\n"    \
+  "parameters and the contents of the internal trace table.\n"                      \
+  "\n"                                                                              \
+  "When specified with operands, the ptt command defines the trace parameters\n"    \
+  "identifying which events are to be traced. When the last option is numeric,\n"   \
+  "it defines the size of the trace table itself and activates tracing.\n"          \
+  "\n"                                                                              \
+  "Events:    (should be specified first, before any options are specified)\n"      \
+  "\n"                                                                              \
+  "     (no)log          trace internal logger events\n"                            \
+  "     (no)tmr          trace internal timer events\n"                             \
+  "     (no)thr          trace internal threading events\n"                         \
+  "     (no)inf          trace instruction information events\n"                    \
+  "     (no)err          trace instruction error events\n"                          \
+  "     (no)pgm          trace program interrupt events\n"                          \
+  "     (no)csf          trace interlocked instruction type events\n"               \
+  "     (no)sie          trace SIE instruction events\n"                            \
+  "     (no)sig          trace SIGP instruction events\n"                           \
+  "     (no)io           trace I/O instruction events\n"                            \
+  "     (no)lcs          trace LCS timing events\n"                                 \
+  "     (no)qeth         trace QETH timing events\n"                                \
+  "\n"                                                                              \
+  "options:   (should be specified last, after any events are specified)\n"         \
+  "\n"                                                                              \
+  "     (no)lock         lock table before updating\n"                              \
+  "     (no)tod          timestamp table entries\n"                                 \
+  "     (no)wrap         wraparound trace table\n"                                  \
+  "     to=nnn           automatic display timeout  (number of seconds)\n"          \
+  "     nnnnnn           table size                 (number of entries)\n"
 
 #define pwd_cmd_desc            "Print working directory"
 #define qcpuid_cmd_desc         "Display cpuid"

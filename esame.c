@@ -989,7 +989,7 @@ U64     old;                            /* Old value                 */
     }
     else
     {
-        PTT(PTT_CL_CSF,"*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_CSF("*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
         /* Otherwise yield */
         regs->GR_G(r1) = CSWAP64(old);
@@ -4088,7 +4088,7 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
                be in the gcc 4.2.1 optimizer, as the code works when
                compiled with -O0. DO NOT REMOVE this until it's been found
                and fixed. -- JRM, 11 Feb 2010 */
-//            PTT(PTT_CL_INF,"LMG2KIN",p2,0,0);
+//            PTT_INF("LMG2KIN",p2,0,0);
             /* Addresses are double-word aligned */
             m >>= 3;
             for (i = 0; i < m; i++, p1++)
@@ -4927,7 +4927,7 @@ DEF_INST(perform_timing_facility_function)
             regs->psw.cc = 0;
             break;
         default:
-            PTT(PTT_CL_ERR,"*PTFF",regs->GR_L(0),regs->GR_L(1),regs->psw.IA_L);
+            PTT_ERR("*PTFF",regs->GR_L(0),regs->GR_L(1),regs->psw.IA_L);
             regs->psw.cc = 3;
     }
 }
@@ -4945,7 +4945,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 
     RRE(inst, regs, r1, unused);
 
-    PTT(PTT_CL_INF,"PTF",regs->GR_G(r1),0,regs->psw.IA_L);
+    PTT_INF("PTF",regs->GR_G(r1),0,regs->psw.IA_L);
 
     PRIV_CHECK(regs);
 
@@ -4955,7 +4955,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
        are not zeros */
     if (regs->GR_G(r1) & 0xFFFFFFFFFFFFFF00ULL)
     {
-        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+        PTT_ERR("*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
     }
 
@@ -4999,7 +4999,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 
     default:
         /* Undefined function code */
-        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+        PTT_ERR("*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
     }
 
@@ -5008,7 +5008,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
         regs->GR_G(r1) |= rc << 8;
 
     if (regs->psw.cc != 0)
-        PTT(PTT_CL_ERR,"*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
+        PTT_ERR("*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
 }
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
@@ -5540,7 +5540,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_INF,"STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+    PTT_INF("STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -5573,7 +5573,7 @@ int     cc;                             /* Condition code            */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    PTT(PTT_CL_INF,"STFLE",regs->GR_L(0),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
+    PTT_INF("STFLE",regs->GR_L(0),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Note: STFLE is NOT a privileged instruction (unlike STFL) */
 
@@ -5595,7 +5595,7 @@ int     cc;                             /* Condition code            */
     }
     else
     {
-        PTT(PTT_CL_ERR,"*STFLE", ndbl, sdbl, regs->psw.IA_L);
+        PTT_ERR("*STFLE", ndbl, sdbl, regs->psw.IA_L);
         cc = 3;
     }
 

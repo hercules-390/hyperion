@@ -1223,7 +1223,7 @@ U32     buflen;                         /* Length of data buffer     */
         ARCH_DEP(vstoreb) (0, bufadr, USE_REAL_ADDR, regs);
     }
 
-    PTT(PTT_CL_ERR,"*DIAG0B0",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+    PTT_ERR("*DIAG0B0",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     /* Return code 4 means no re-IPL information available */
     regs->GR_L(r2) = 4;
@@ -1298,7 +1298,7 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
     /* Return condition code 3 if device does not exist */
     if (!dev)
     {
-        PTT(PTT_CL_ERR,"*DIAG210",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*DIAG210",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         return 3;
     }
 
@@ -1679,7 +1679,7 @@ VADR    effective_addr2;                /* Effective address         */
     if( HDC3(debug_iucv, b2, effective_addr2, regs) )
         return;
 
-    PTT(PTT_CL_ERR,"*IUCV",b2,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*IUCV",b2,effective_addr2,regs->psw.IA_L);
 
     /* Set condition code to indicate IUCV not available */
     regs->psw.cc = 3;

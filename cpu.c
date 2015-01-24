@@ -402,7 +402,7 @@ static char *pgmintname[] = {
     if(regs->ghostregs)
         longjmp(regs->progjmp, pcode);
 
-    PTT(PTT_CL_PGM,"*PROG",pcode,(U32)(regs->TEA & 0xffffffff),regs->psw.IA_L);
+    PTT_PGM("*PROG",pcode,(U32)(regs->TEA & 0xffffffff),regs->psw.IA_L);
 
     /* program_interrupt() may be called with a shadow copy of the
        regs structure, realregs is the pointer to the real structure
@@ -979,7 +979,7 @@ static void ARCH_DEP(restart_interrupt) (REGS *regs)
 int     rc;                             /* Return code               */
 PSA    *psa;                            /* -> Prefixed storage area  */
 
-    PTT(PTT_CL_INF,"*RESTART",regs->cpuad,regs->cpustate,regs->psw.IA_L);
+    PTT_INF("*RESTART",regs->cpuad,regs->cpustate,regs->psw.IA_L);
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -1032,7 +1032,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     /* Exit if no interrupt was presented */
     if (icode == 0) return;
 
-    PTT(PTT_CL_IO,"*IOINT",ioid,ioparm,iointid);
+    PTT_IO("*IOINT",ioid,ioparm,iointid);
 
 #if defined(_FEATURE_IO_ASSIST)
     if(SIE_MODE(regs) && icode != SIE_NO_INTERCEPT)
@@ -1726,7 +1726,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     /* Switch architecture mode if appropriate */
     if(sysblk.arch_mode != regs->arch_mode)
     {
-        PTT(PTT_CL_INF,"*SETARCH",regs->arch_mode,sysblk.arch_mode,cpu);
+        PTT_INF("*SETARCH",regs->arch_mode,sysblk.arch_mode,cpu);
         regs->arch_mode = sysblk.arch_mode;
         oldregs = malloc_aligned(sizeof(REGS), 4096);
         if (oldregs)

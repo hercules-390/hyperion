@@ -2078,7 +2078,7 @@ U32     old;                            /* old value                 */
 
     if (regs->psw.cc == 1)
     {
-        PTT(PTT_CL_CSF,"*CS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
+        PTT_CSF("*CS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, CS1))
@@ -2142,7 +2142,7 @@ U64     old, new;                       /* old, new values           */
 
     if (regs->psw.cc == 1)
     {
-        PTT(PTT_CL_CSF,"*CDS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
+        PTT_CSF("*CDS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
 #if defined(_FEATURE_SIE)

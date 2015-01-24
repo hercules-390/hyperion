@@ -749,7 +749,7 @@ U32     old;                            /* old value                 */
     }
     else
     {
-        PTT(PTT_CL_CSF,"*CSP",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_CSF("*CSP",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
         /* Otherwise yield */
         regs->GR_L(r1) = CSWAP32(old);
@@ -794,7 +794,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_INF,"DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
+    PTT_INF("DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
 
     /* Process diagnose instruction */
     ARCH_DEP(diagnose_call) (effective_addr2, b2, r1, r3, regs);
@@ -5571,12 +5571,12 @@ static char *ordername[] = {
     /* Load the parameter from R1 (if R1 odd), or R1+1 (if even) */
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
-    PTT(PTT_CL_SIG,"SIGP",parm,cpad,order);
+    PTT_SIG("SIGP",parm,cpad,order);
 
     /* Return condition code 3 if target CPU does not exist */
     if (cpad >= sysblk.maxcpu)
     {
-        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
+        PTT_ERR("*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
         return;
     }
@@ -5587,7 +5587,7 @@ static char *ordername[] = {
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
      && cpad >= sysblk.hicpu)
     {
-        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
+        PTT_ERR("*SIGP",parm,cpad,order);
         regs->psw.cc = 3;
         return;
     }
@@ -6213,7 +6213,7 @@ static char *ordername[] = {
     RELEASE_INTLOCK(regs);
 
     if(status)
-        PTT(PTT_CL_ERR,"*SIGP",parm,cpad,order);
+        PTT_ERR("*SIGP",parm,cpad,order);
 
     /* If status is non-zero, load the status word into
        the R1 register and return condition code 1 */
@@ -6718,7 +6718,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_INF,"STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+    PTT_INF("STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 
 #if defined(DEBUG_STSI)
     logmsg("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",
@@ -6749,7 +6749,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
     )
     {
-        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+        PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=3 function code invalid\n");
 #endif /*DEBUG_STSI*/
@@ -6833,7 +6833,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
     )
     {
-        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+        PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 #ifdef DEBUG_STSI
         logmsg("control.c: STSI cc=3 selector codes invalid\n");
 #endif /*DEBUG_STSI*/
@@ -6895,7 +6895,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 break;
 
             default:
-                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+                PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
@@ -6945,13 +6945,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 break;
 
             default:
-                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+                PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
-            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+            PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
@@ -6961,7 +6961,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #if defined(_FEATURE_HYPERVISOR)
          if(!FACILITY_ENABLED(LOGICAL_PARTITION,regs))
          {
-             PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+             PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
              regs->psw.cc = 3;
              break;
          }
@@ -7016,13 +7016,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 break;
 
             default:
-                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+                PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
-            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+            PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
@@ -7134,20 +7134,20 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 break;
 
             default:
-                PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+                PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
                 regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
-            PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+            PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     default:
-        PTT(PTT_CL_ERR,"*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
+        PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
         regs->psw.cc = 3;
     } /* function code */
 

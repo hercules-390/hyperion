@@ -537,7 +537,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
     dev = sysblk.sysgdev;
     if (dev == NULL)
     {
-        PTT(PTT_CL_ERR,"*SERVC",(U32)cmdcode,(U32)sysg_len,0);
+        PTT_ERR("*SERVC",(U32)cmdcode,(U32)sysg_len,0);
 
         /* Set response code X'05F0' in SCCB header */
         sccb->reas = SCCB_REAS_IMPROPER_RSC;
@@ -580,7 +580,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         /* If unit check occured, set response code X'0040' */
         if (unitstat & CSW_UC)
         {
-            PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+            PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
 
             /* Set response code X'0040' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
@@ -654,7 +654,7 @@ U32             residual;               /* Residual data count       */
             /* Set response code X'0040' if unit check occurred */
             if (unitstat & CSW_UC)
             {
-                PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+                PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
 
                 /* Set response code X'0040' in SCCB header */
                 sccb->reas = SCCB_REAS_NONE;
@@ -665,7 +665,7 @@ U32             residual;               /* Residual data count       */
             /* Set response code X'75F0' if SCCB length exceeded */
             if (more)
             {
-                PTT(PTT_CL_ERR,"*SERVC",(U32)more,(U32)unitstat,residual);
+                PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
 
                 sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
                 sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
@@ -1156,7 +1156,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     SIE_INTERCEPT(regs);
 
-    PTT(PTT_CL_INF,"SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+    PTT_INF("SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
     /* R1 is SCLP command word */
     sclp_command = regs->GR_L(r1);
@@ -1635,7 +1635,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         default:
 
-            PTT(PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),evd_hdr->type);
+            PTT_ERR("*SERVC",regs->GR_L(r1),regs->GR_L(r2),evd_hdr->type);
 
             if( HDC3(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
                 break;
@@ -1725,7 +1725,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
         }
 
-        PTT(PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
         if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
             break;

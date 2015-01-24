@@ -646,7 +646,7 @@ char    fname[MAX_PATH];
 
 
     default:
-        PTT(PTT_CL_ERR,"*SERVC",(U32)scediov_bk->type,(U32)scediov_bk->flag1,scediov_bk->flag2);
+        PTT_ERR("*SERVC",(U32)scediov_bk->type,(U32)scediov_bk->flag1,scediov_bk->flag2);
         return FALSE;
 
     }
@@ -681,7 +681,7 @@ SCCB_SCEDIO_BK  *scedio_bk = (SCCB_SCEDIO_BK*) arg;
         break;
 
     default:
-        PTT(PTT_CL_ERR,"*SERVC",(U32)scedio_bk->flag0,(U32)scedio_bk->flag1,scedio_bk->flag3);
+        PTT_ERR("*SERVC",(U32)scedio_bk->flag0,(U32)scedio_bk->flag1,scedio_bk->flag3);
     }
 
 
@@ -760,7 +760,7 @@ static int scedio_pending;
                 evd_len += sizeof(SCCB_SCEDIOV_BK);
                 break;
             default:
-                PTT(PTT_CL_ERR,"*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
+                PTT_ERR("*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
             }
 
             /* Set length in event header */
@@ -810,7 +810,7 @@ static int scedio_pending;
             static_scedio_bk.io.v = *scediov_bk;
             break;
         default:
-            PTT(PTT_CL_ERR,"*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
+            PTT_ERR("*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
         }
 
         /* Create the scedio thread */

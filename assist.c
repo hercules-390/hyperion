@@ -75,7 +75,7 @@ VADR    effective_addr1,
 
     PRIV_CHECK(regs);
 
-    PTT(PTT_CL_ERR,"*E502 PGFIX",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E502 PGFIX",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE*/
 
 }
@@ -95,7 +95,7 @@ VADR    effective_addr1,
 
     PRIV_CHECK(regs);
 
-    PTT(PTT_CL_ERR,"*E503 SVCA",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E503 SVCA",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO ACTION IS TAKEN, THE SVC IS UNASSISTED
                   AND MVS WILL HAVE TO HANDLE THE SITUATION*/
 
@@ -492,7 +492,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E508 TRSVC",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E508 TRSVC",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }
@@ -515,7 +515,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E509 TRPGM",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E509 TRPGM",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }
@@ -538,7 +538,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E50A TRSRB",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E50A TRSRB",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }
@@ -561,7 +561,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E50B TRIO",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E50B TRIO",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }
@@ -584,7 +584,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E50C TRTSK",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E50C TRTSK",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }
@@ -607,7 +607,7 @@ VADR    effective_addr1,
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    PTT(PTT_CL_ERR,"*E50D TRRTN",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR("*E50D TRRTN",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
 
 }

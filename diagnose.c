@@ -433,7 +433,7 @@ U32   code;
     /* Diagnose 264: CP Communication                                */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        PTT(PTT_CL_ERR,"*DIAG264",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*DIAG264",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         regs->psw.cc = 0;
         break;
 
@@ -449,7 +449,7 @@ U32   code;
     /* Diagnose 274: Set Timezone Interrupt Flag                     */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        PTT(PTT_CL_ERR,"*DIAG274",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*DIAG274",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
         regs->psw.cc = 0;
         break;
 #endif /*FEATURE_EMULATE_VM*/
