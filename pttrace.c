@@ -351,6 +351,9 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
             pttto,
             pttracen
         );
+
+        if (str)
+            free( str );
     }
 
     return rc;
