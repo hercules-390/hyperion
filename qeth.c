@@ -605,62 +605,80 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 {
     int rc;
+    int flags;
 
     if (grp->enabled)
         return 0;
 
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_UP
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+    flags = ( 0
+            | IFF_UP
+            | IFF_MULTICAST
+            | IFF_BROADCAST
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+            | IFF_RUNNING
+#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
 #if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
+            | (grp->debug ? IFF_DEBUG : 0)
 #endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
+            | (grp->promisc ? IFF_PROMISC : 0)
+            );
+
+    rc = TUNTAP_SetFlags( grp->ttifname, flags );
+    if (rc != 0)
+    {
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
-    else
-    {
-        grp->enabled = 1;
-        qeth_report_using( dev, grp );
+        return rc;
     }
-    return rc;
+
+    grp->enabled = 1;
+    qeth_report_using( dev, grp );
+
+    return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Disable the TUNTAP interface  (clear IFF_UP flag)                 */
 /*-------------------------------------------------------------------*/
+/* Clearing the IFF_UP flag is only done on Windows, as, on *nix,    */
+/* clearing and then setting the IFF_UP flag causes interface        */
+/* IP addresses to be lost.                                          */
 static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
 {
-    int rc;
 
     if (!grp->enabled)
         return 0;
 
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 #if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
-        qeth_errnum_msg( dev, grp, rc,
-            "E", "qeth_disable_interface() failed" );
-    else
     {
-        grp->enabled = 0;
-        qeth_report_using( dev, grp );
+        int rc;
+        int flags;
+
+        flags = ( 0
+                | IFF_MULTICAST
+                | IFF_BROADCAST
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+                | IFF_RUNNING
+#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
+                | (grp->debug ? IFF_DEBUG : 0)
+                | (grp->promisc ? IFF_PROMISC : 0)
+                );
+
+        rc = TUNTAP_SetFlags( grp->ttifname, flags );
+        if (rc != 0)
+        {
+            qeth_errnum_msg( dev, grp, rc,
+                "E", "qeth_disable_interface() failed" );
+            return rc;
+        }
     }
-    return rc;
+#endif /*defined(OPTION_W32_CTCI)*/
+
+    grp->enabled = 0;
+    qeth_report_using( dev, grp );
+
+    return 0;
 }
 
 
@@ -2623,12 +2641,12 @@ int i;
         }
         else if (!strcasecmp("debug",argv[i]))
         {
-            grp->debug = 1;
+            grp->debug = TRUE;
             continue;
         }
         else if(!strcasecmp("nodebug",argv[i]))
         {
-            grp->debug = 0;
+            grp->debug = FALSE;
             continue;
         }
         else
