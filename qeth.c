@@ -2012,6 +2012,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     QRC qrc;
     OSA_HDR3 o3hdr;
     int sb = 0;     /* Start with Storage Block zero */
+    int   iPktVer;
+    char  cPktVer[8];
 
     do
     {
@@ -2026,21 +2028,15 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
 //      STORE_HW( o3hdr.frame_offset, ???? ); // TSO only?
 //      STORE_FW( o3hdr.token, ???? );
 
-        if (grp->ttipaddr6)
-        {
-            IP6FRM* ip6 = (IP6FRM*)dev->buf;
-            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
-            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
-                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
-                return QRC_EPKEOF; /* Not our packet */
-            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
-            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
-        }
-        else /* IPv4 */
+        /* Check the IP packet version. The first 4-bits of the     */
+        /* first byte of the IP header contains the version number. */
+        iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
+        if (iPktVer == 4)
         {
             U32 dstaddr;
             U16 checksum;
             IP4FRM* ip4 = (IP4FRM*)dev->buf;
+            strcpy( cPktVer, "IPv4" );
             FETCH_FW( dstaddr, &ip4->lDstIP );
             STORE_FW( &o3hdr.dest_addr[12], dstaddr );
             FETCH_HW( checksum, ip4->hwChecksum );
@@ -2049,6 +2045,22 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                 l3_cast_type_ipv4( dstaddr, grp )))
                 return QRC_EPKEOF; /* Not our packet */
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else if (iPktVer == 6)
+        {
+            IP6FRM* ip6 = (IP6FRM*)dev->buf;
+            strcpy( cPktVer, "IPv6" );
+            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
+            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
+            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else
+        {
+            /* Err... not IPv4 or IPv6! */
+            strcpy( cPktVer, "Unknown" );
         }
 
         /* Dump the packet just received */
@@ -2483,6 +2495,9 @@ OSA_GRP *grp;
 int groupsize = OSA_GROUP_SIZE;
 int grouped = 0;
 int i;
+
+//  if (dev->numconfdev > groupsize)
+//      groupsize = dev->numconfdev;
 
     if(!dev->group)
     {
