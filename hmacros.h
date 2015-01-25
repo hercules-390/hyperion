@@ -33,10 +33,10 @@
 
 #ifdef _MSVC_
   #define UNREACHABLE_CODE()        __assume(0)
-#elif defined(__FreeBSD__)
-  #define UNREACHABLE_CODE()
-#else // GCC presumed
+#elif defined(__GNUC__)
   #define UNREACHABLE_CODE()        __builtin_unreachable()
+#else
+  #define UNREACHABLE_CODE()
 #endif
 
 /*-------------------------------------------------------------------*/
