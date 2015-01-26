@@ -533,8 +533,8 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
     } /* end for(scount) (end of configuration file statement loop) */
 
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+
 rexx_done:
-#endif
 
 #if !defined( ENABLE_CONFIG_INCLUDE )
     /* close configuration file */
@@ -545,6 +545,9 @@ rexx_done:
         sysblk.msglvl = DEFAULT_MLVL;
 
     return errorcount;
+
+#endif // defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+
 } /* end function process_config */
 
 
