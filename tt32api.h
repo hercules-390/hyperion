@@ -42,7 +42,7 @@
 //  01/17/11    3.3.0   Added socketpair
 //  02/03/11    3.3.0   _O_TT32NOTIFY packet arrival notification option
 //  03/08/11    3.3.0   tuntap32_beg_write_multi, tuntap32_end_write_multi
-//  03/10/11    3.3.0   Add '_ex' entry-points for calc_checksum, 
+//  03/10/11    3.3.0   Add '_ex' entry-points for calc_checksum,
 //                      calc_inet_checksum and build_herc_iface_mac.
 //  02/21/13    3.3.0   Added #include for new "TT32if.h" header
 //
@@ -61,7 +61,7 @@
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
       #define  BASE_TUNTAP32_NAME  "TunTap64UD"
-    #else 
+    #else
       #define  BASE_TUNTAP32_NAME  "TunTap64U"
     #endif
   #else
@@ -75,7 +75,7 @@
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
       #define  BASE_TUNTAP32_NAME  "TunTap32UD"
-    #else 
+    #else
       #define  BASE_TUNTAP32_NAME  "TunTap32U"
     #endif
   #else

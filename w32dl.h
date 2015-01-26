@@ -16,7 +16,7 @@
         FreeLibrary((HMODULE)(_handle))
 #define dlerror() \
         ("(unknown)")
- 
+
 #endif /* _WIN32 */
 
 #endif /* _W32_DL_H */

@@ -27,7 +27,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
 
 char *filterarray;
 
-#ifdef SCANDIR_CONST_STRUCT_DIRENT 
+#ifdef SCANDIR_CONST_STRUCT_DIRENT
 int filter(const struct dirent *ent)
 #else
 int filter(      struct dirent *ent)

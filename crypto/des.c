@@ -193,7 +193,7 @@
 /*
  * Implementation details
  * ----------------------
- * 
+ *
  * If you look at the code in this module, you'll find it looks
  * nothing _like_ the above algorithm. Here I explain the
  * differences...
@@ -241,7 +241,7 @@
  *
  *       3322222222221111111111
  * bit   10987654321098765432109876543210
- * 
+ *
  * box0  XXXXX                          X
  * box1     XXXXXX
  * box2         XXXXXX
@@ -289,7 +289,7 @@
  * the bits with f=1,c=0 and the bits with f=0,c=1. This will cause
  * the bit fedcba to be in position cedfba - we've `swapped' bits c
  * and f in the position of each bit!
- * 
+ *
  * Better still, this transformation is easy. In the example above,
  * bits in L with c=0 are bits 0x0F0F0F0F, and those in R with c=1
  * are 0xF0F0F0F0. So we can do
@@ -302,7 +302,7 @@
  * Also, we can invert the bit at the top just by exchanging L and
  * R. So in a few swaps and a few of these bit operations we can
  * do:
- * 
+ *
  * Initially the position of bit fedcba is     fedcba
  * Swap L with R to make it                    Fedcba
  * Perform bitswap( 4,0x0F0F0F0F) to make it   cedFba

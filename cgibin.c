@@ -267,24 +267,24 @@ int     msgcount = 22;
             char* w = wrk_bufptr;
             int   n = 0;
             int   i = 0;
-            
+
             sav_wrk = wrk_bufptr;
 
             memset(wrk_bufptr, 0, num_bytes);
 
             while ( n < num_bytes )
             {
-                
+
                 if ( ( n + 5 ) < num_bytes && strncasecmp( &l[n], "<pnl", 4 ) == 0 )
                 {
                     for ( n+=4; n < num_bytes; n++ )
                         if ( l[n] == '>' ) break;
                     n++;
                 }
-                
+
                 w[i++] = l[n++];
             }
-            num_bytes = i;            
+            num_bytes = i;
 #else
             sav_wrk = wrk_bufptr;
             strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
@@ -1068,7 +1068,7 @@ int i,j;
         sprintf(cpuname,"cpu%d",i);
         if((cpustate = cgi_variable(webblk,cpuname)))
             sscanf(cpustate,"%d",&cpuonline);
-        
+
         OBTAIN_INTLOCK(NULL);
 
         switch(cpuonline) {

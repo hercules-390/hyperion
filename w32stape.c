@@ -1217,7 +1217,7 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwLogPos,
     // to the SCSI "READ POSITION" command's "first block location" value,
     // and the ABSOLUTE tape position appears to correspond to the SCSI
     // "last block location".
-    
+
     // Since what we want is what IBM calls the "Channel block ID" (which
     // itself appears to correspond to what the SCSI documentation refers
     // to as the "First block location"), then what we want here is what

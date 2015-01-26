@@ -5,7 +5,7 @@
 /* This file defines the architectural features which are included   */
 /* at compilation time for ESA/390 mode                              */
 /*-------------------------------------------------------------------*/
- 
+
 /* This file MUST NOT contain #undef statements */
 #if defined(OPTION_390_MODE)
 #define _ARCH_390_NAME "ESA/390"

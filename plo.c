@@ -837,8 +837,8 @@ VADR op4addr,
     op3 = ARCH_DEP(wfetch4)(effective_addr4 + 60, b4, regs);
     op5 = ARCH_DEP(wfetch4)(effective_addr4 + 92, b4, regs);
 
-    if(regs->GR_L(r1) == op2) 
-    { 
+    if(regs->GR_L(r1) == op2)
+    {
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 4-1,
@@ -1195,8 +1195,8 @@ VADR op4addr,
     op5 = ARCH_DEP(wfetch4)(effective_addr4 + 92, b4, regs);
     op7 = ARCH_DEP(wfetch4)(effective_addr4 + 124, b4, regs);
 
-    if(regs->GR_L(r1) == op2) 
-    { 
+    if(regs->GR_L(r1) == op2)
+    {
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 4-1,
             ACCTYPE_WRITE_SKP, regs);

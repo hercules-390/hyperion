@@ -338,7 +338,7 @@ int  i;
     SET_PSW_IA(regs);
 
     /* Set the Breaking Event Address Register */
-    SET_BEAR_REG(regs, regs->ip - 
+    SET_BEAR_REG(regs, regs->ip -
       (trap_is_trap4 ? 4 : likely(!regs->execflag) ? 2 : regs->exrl ? 6 : 4));
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
@@ -1365,7 +1365,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
         abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* For a call state entry only, if ASN-and-LX-reuse is installed and
-       active, load the SASTEIN (high word of CR3) from bytes 176-179,  
+       active, load the SASTEIN (high word of CR3) from bytes 176-179,
        and load the PASTEIN (high word of CR4) from bytes 180-183 */
     if ((lsed.uet & LSED_UET_ET) == LSED_UET_PC
         && ASN_AND_LX_REUSE_ENABLED(regs))

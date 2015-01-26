@@ -268,7 +268,7 @@ DEF_INST(legacy_cmpsc)
 
   RRE(inst, regs, r1, r2);
 
-#ifdef OPTION_CMPSC_DEBUG 
+#ifdef OPTION_CMPSC_DEBUG
   logmsg("CMPSC: compression call\n");
   logmsg(" r1      : GR%02d\n", r1);
   logmsg(" address : " F_VADR "\n", regs->GR(r1));
@@ -295,7 +295,7 @@ DEF_INST(legacy_cmpsc)
   /* Check for empty input */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    
+
 #ifdef OPTION_CMPSC_DEBUG
     logmsg(" Zero input, returning cc0\n");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
@@ -307,7 +307,7 @@ DEF_INST(legacy_cmpsc)
   /* Check for empty output */
   if(unlikely(!GR_A(r1 + 1, regs)))
   {
-    
+
 #ifdef OPTION_CMPSC_DEBUG
     logmsg(" Zero output, returning cc1\n");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
@@ -534,7 +534,7 @@ static void ARCH_DEP(cmpsc_compress)(int r1, int r2, REGS *regs, REGS *iregs)
           for(j = 0; j < 0x100; j++)
           {
             if(!(j % 16))
-              logmsg("\n         :");   
+              logmsg("\n         :");
             if(BIT_get(cc.searchadm, 0, j))
               logmsg("   ");
             else
@@ -543,7 +543,7 @@ static void ARCH_DEP(cmpsc_compress)(int r1, int r2, REGS *regs, REGS *iregs)
           logmsg("\n");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-          /* Registrate all discovered dead ends */ 
+          /* Registrate all discovered dead ends */
           for(j = 0; j < 0x100 / 8; j++)
             cc.deadadm[is][j] = ~cc.searchadm[0][j];
         }
@@ -642,7 +642,7 @@ static int ARCH_DEP(cmpsc_compress_single_is)(struct cc *cc)
       logmsg("\n");
 #endif /* #ifdef OPTION_CMPSC_DEBUG */
 
-      /* Registrate all discovered dead ends */ 
+      /* Registrate all discovered dead ends */
       for(i = 0; i < 0x100 / 8; i++)
         cc->deadadm[is][i] = ~cc->searchadm[0][i];
     }
@@ -1023,7 +1023,7 @@ static int ARCH_DEP(cmpsc_search_sd)(struct cc *cc, U16 *is)
       }
     }
 
-#ifdef OPTION_CMPSC_DEBUG    
+#ifdef OPTION_CMPSC_DEBUG
     else
     {
       logmsg("fetch_sd0: index %04X\n", CCE_cptr(cc->cce) + sd_ptr);
@@ -1904,7 +1904,7 @@ static int ARCH_DEP(cmpsc_vstore)(struct ec *ec, BYTE *buf, unsigned len)
           else
             logmsg(".");
         }
-      } 
+      }
       logmsg(" |\n");
     }
     memcpy(pbuf, buf, len);

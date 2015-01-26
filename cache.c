@@ -86,14 +86,14 @@ int cache_lookup (int ix, U64 key, int *oldest_entry)
 {
     int i,p;
 
-    if (oldest_entry) 
+    if (oldest_entry)
         *oldest_entry = -1;
-    if (cache_check_ix(ix)) 
+    if (cache_check_ix(ix))
         return -1;
     /* `p' is the preferred index */
     p = (int)(key % cacheblk[ix].nbr);
-    
-    if (cacheblk[ix].cache[p].key == key) 
+
+    if (cacheblk[ix].cache[p].key == key)
     {
         i = p;
         if (!cache_isempty(ix, i))
@@ -101,11 +101,11 @@ int cache_lookup (int ix, U64 key, int *oldest_entry)
             cacheblk[ix].fasthits++;
         }
     }
-    else 
+    else
     {
         if (cache_isbusy(ix, p) || cacheblk[ix].age - cacheblk[ix].cache[p].age < 20)
             p = -2;
-        for (i = 0; i < cacheblk[ix].nbr; i++) 
+        for (i = 0; i < cacheblk[ix].nbr; i++)
         {
             if (cacheblk[ix].cache[i].key == key) break;
             if (oldest_entry && !cache_isbusy(ix, i)
@@ -115,10 +115,10 @@ int cache_lookup (int ix, U64 key, int *oldest_entry)
     }
 
     if (i >= cacheblk[ix].nbr)
-    {   
+    {
         i = -1;
     }
-    else if ( i >= 0 && cache_isempty(ix, i) ) 
+    else if ( i >= 0 && cache_isempty(ix, i) )
     {
         if ( oldest_entry && *oldest_entry < 0 )
         {
@@ -134,9 +134,9 @@ int cache_lookup (int ix, U64 key, int *oldest_entry)
     {
         cacheblk[ix].misses++;
     }
-    if (i < 0 && oldest_entry && *oldest_entry < 0) 
+    if (i < 0 && oldest_entry && *oldest_entry < 0)
         cache_adjust(ix, 1);
-    else 
+    else
         cache_adjust(ix, 0);
     return i;
 }
@@ -181,7 +181,7 @@ int cache_wait(int ix)
 
     cacheblk[ix].waiters++; cacheblk[ix].waits++;
 
-#if FALSE 
+#if FALSE
     {
     struct timeval  now;
     struct timespec tm;
@@ -369,7 +369,7 @@ DLL_EXPORT int cachestats_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
 
     for (ix = 0; ix < CACHE_MAX_INDEX; ix++) {
-        if (cacheblk[ix].magic != CACHE_MAGIC) {          
+        if (cacheblk[ix].magic != CACHE_MAGIC) {
             MSGBUF(buf, "Cache[%d] ....... not created", ix);
             WRMSG(HHC02294, "I", buf);
             continue;

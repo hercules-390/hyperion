@@ -114,7 +114,7 @@
         } words;
         uint64_t quad;
       } value;
-      
+
       value.quad=x;
       __asm__("bswap %0" : "=r" (value.words.high) : "0" (value.words.high));
       __asm__("bswap %0" : "=r" (value.words.low) : "0" (value.words.low));

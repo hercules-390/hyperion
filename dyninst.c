@@ -20,13 +20,13 @@
 #if defined(_ARCHMODE2)
  #define  _GEN_ARCH _ARCHMODE2
  #include "dyninst.c"
-#endif 
+#endif
 
 #if defined(_ARCHMODE3)
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCHMODE3
  #include "dyninst.c"
-#endif 
+#endif
 
 typedef struct
 {
@@ -59,7 +59,7 @@ static void init_dyninst()
 {
   int i;
 
-  logmsg("\ndyninst is deprecated, use HDL_DEFINST to replace instructions\n"); 
+  logmsg("\ndyninst is deprecated, use HDL_DEFINST to replace instructions\n");
   logmsg("Please refer to README.HDL for details on the use of HDL_DEFINST\n\n");
 
   for(i = 0; i < MAXDYNINST; i++)
@@ -172,7 +172,7 @@ HDL_DEPENDENCY_SECTION;
   HDL_DEPENDENCY (REGS);
   HDL_DEPENDENCY (DEVBLK);
   HDL_DEPENDENCY (SYSBLK);
-} 
+}
 END_DEPENDENCY_SECTION
 
 

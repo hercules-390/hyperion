@@ -39,7 +39,7 @@ Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 
 #include <sys/types.h>      /* for size_t declaration */
 
-
+
 /* --- MACROS FOR PORTABILITY --- */
 
 
@@ -98,7 +98,7 @@ LT_BEGIN_C_DECLS
 #define LT_STRLEN(s)    (((s) && (s)[0]) ? strlen (s) : 0)
 
 
-
+
 /* --- WINDOWS SUPPORT --- */
 
 
@@ -155,7 +155,7 @@ LT_BEGIN_C_DECLS
 #endif
 
 
-
+
 /* --- DYNAMIC MODULE LOADING API --- */
 
 
@@ -190,7 +190,7 @@ LT_SCOPE    int     lt_dlisresident LT_PARAMS((lt_dlhandle handle));
 
 
 
-
+
 /* --- MUTEX LOCKING --- */
 
 
@@ -206,7 +206,7 @@ LT_SCOPE    int lt_dlmutex_register LT_PARAMS((lt_dlmutex_lock *lock,
 
 
 
-
+
 /* --- MEMORY HANDLING --- */
 
 
@@ -221,7 +221,7 @@ LT_SCOPE  void     (*lt_dlfree)     LT_PARAMS((lt_ptr ptr));
 
 
 
-
+
 /* --- PRELOADED MODULE SUPPORT --- */
 
 
@@ -243,7 +243,7 @@ LT_SCOPE    int lt_dlpreload_default
 
 
 
-
+
 /* --- MODULE INFORMATION --- */
 
 
@@ -272,7 +272,7 @@ LT_SCOPE    lt_ptr      lt_dlcaller_get_data  LT_PARAMS((lt_dlcaller_id key,
                         lt_dlhandle handle));
 
 
-
+
 /* --- USER MODULE LOADER API --- */
 
 
@@ -311,7 +311,7 @@ LT_SCOPE    int     lt_dlloader_remove  LT_PARAMS((
                         const char *loader_name));
 
 
-
+
 /* --- ERROR MESSAGE HANDLING --- */
 
 
@@ -355,7 +355,7 @@ LT_SCOPE    int lt_dlseterror   LT_PARAMS((int errorcode));
 
 
 
-
+
 /* --- SOURCE COMPATIBILITY WITH OLD LIBLTDL --- */
 
 

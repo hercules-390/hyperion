@@ -22,7 +22,7 @@ typedef struct {
 typedef struct {
     DESContext sched[3];
 } des3_context;
- 
+
 typedef BYTE CHAR8[8];
 
 void des_set_key(des_context *ctx, CHAR8 key);

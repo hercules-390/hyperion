@@ -146,7 +146,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 
 
 
-
+
 /* --- WINDOWS SUPPORT --- */
 
 
@@ -187,7 +187,7 @@ typedef struct _DIR
 
 #endif /* LT_USE_WINDOWS_DIRENT_EMULATION */
 
-
+
 /* --- MANIFEST CONSTANTS --- */
 
 
@@ -214,7 +214,7 @@ typedef struct _DIR
 
 
 
-
+
 /* --- MEMORY HANDLING --- */
 
 
@@ -264,7 +264,7 @@ LT_GLOBAL_DATA void   (*lt_dlfree)  LT_PARAMS((lt_ptr ptr))
     if ((p) != (q)) { if (p) lt_dlfree (p); (p) = (q); (q) = 0; }   \
                         } LT_STMT_END
 
-
+
 /* --- REPLACEMENT FUNCTIONS --- */
 
 
@@ -801,7 +801,7 @@ argz_stringify (argz, argz_len, sep)
 
 
 
-
+
 /* --- TYPE DEFINITIONS -- */
 
 
@@ -813,7 +813,7 @@ typedef struct {
 
 
 
-
+
 /* --- OPAQUE STRUCTURES DECLARED IN LTDL.H --- */
 
 
@@ -877,7 +877,7 @@ static  const char  sys_search_path[]   = LTDL_SYSSEARCHPATH;
 
 
 
-
+
 /* --- MUTEX LOCKING --- */
 
 
@@ -952,7 +952,7 @@ lt_dlmutex_register (lock, unlock, seterror, geterror)
 
 
 
-
+
 /* --- ERROR HANDLING --- */
 
 
@@ -1048,7 +1048,7 @@ lt_estrdup (str)
 
 
 
-
+
 /* --- DLOPEN() INTERFACE LOADER --- */
 
 
@@ -1169,7 +1169,7 @@ static struct lt_user_dlloader sys_dl =
 #endif /* HAVE_LIBDL */
 
 
-
+
 /* --- SHL_LOAD() INTERFACE LOADER --- */
 
 #if HAVE_SHL_LOAD
@@ -1303,7 +1303,7 @@ static struct lt_user_dlloader sys_shl = {
 
 
 
-
+
 /* --- LOADLIBRARY() INTERFACE LOADER --- */
 
 #ifdef __WINDOWS__
@@ -1442,7 +1442,7 @@ static struct lt_user_dlloader sys_wll = {
 
 
 
-
+
 /* --- LOAD_ADD_ON() INTERFACE LOADER --- */
 
 
@@ -1522,7 +1522,7 @@ static struct lt_user_dlloader sys_bedl = {
 
 
 
-
+
 /* --- DLD_LINK() INTERFACE LOADER --- */
 
 
@@ -1938,7 +1938,7 @@ static struct lt_user_dlloader sys_dyld =
 
 #endif /* HAVE_DYLD */
 
-
+
 /* --- DLPREOPEN() INTERFACE LOADER --- */
 
 
@@ -2136,7 +2136,7 @@ static struct lt_user_dlloader presym = {
 
 
 
-
+
 /* --- DYNAMIC MODULE LOADING --- */
 
 
@@ -4148,7 +4148,7 @@ lt_dlisresident (handle)
 
 
 
-
+
 /* --- MODULE INFORMATION --- */
 
 const lt_dlinfo *
@@ -4297,7 +4297,7 @@ lt_dlcaller_get_data  (key, handle)
 }
 
 
-
+
 /* --- USER MODULE LOADER API --- */
 
 

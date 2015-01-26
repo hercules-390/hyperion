@@ -544,7 +544,7 @@ char           *strtok_str = NULL;
             fprintf(stderr,
                 "\nHHC90000D DBG: %s device has %d heads/cylinder\n",
                 ckd->name, heads);
-    } 
+    }
 
 
     /*---------------------------------------------------------------*/

@@ -513,7 +513,7 @@ static void* hao_thread(void* dummy)
 
   UNREFERENCED(dummy);
 
-  /* Do not start HAO if no logger is active 
+  /* Do not start HAO if no logger is active
    * the next hao command will restart the thread
    */
   if(!logger_status())

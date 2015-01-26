@@ -32,7 +32,7 @@
 /* The following section defines the ESA/390 and
    z/Architecture defined features (and their related
    instructions) that are compatible and backported to
-   the S/370 architecture. The availability of the 
+   the S/370 architecture. The availability of the
    relevant instructions are enabled by the s37x loadable
    module */
 

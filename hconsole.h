@@ -12,12 +12,12 @@
 //-----------------------------------------------------------------------------
 //
 //                            VT100 User Guide
-// 
+//
 //                   Table 3-6 Cursor Control Key Codes
-// 
+//
 // Cursor Key   VT52       ANSI and Cursor Key Mode   ANSI and Cursor Key Mode
 //  (Arrow)     Mode       Reset    (Normal mode)     Set  (Application mode)
-// 
+//
 //   Up         ESC A      ESC [ A                    ESC O A
 //   Down       ESC B      ESC [ B                    ESC O B
 //   Right      ESC C      ESC [ C                    ESC O C
@@ -59,7 +59,7 @@
 #define KBD_PF10                "\x1B"")10"
 #define KBD_PF11                "\x1B"")11"
 #define KBD_PF12                "\x1B"")12"
-    
+
 #define KBD_PF13                "\x1B"")13"
 #define KBD_PF14                "\x1B"")14"
 #define KBD_PF15                "\x1B"")15"

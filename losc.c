@@ -23,8 +23,8 @@
 static char *licensed_os[] = {
       "MVS", /* Generic name for MVS, OS/390, z/OS       */
       "VM",  /* Generic name for VM, VM/XA, VM/ESA, z/VM */
-      "VSE", 
-      "TPF", 
+      "VSE",
+      "TPF",
       NULL };
 
 static int    os_licensed = 0;
@@ -42,7 +42,7 @@ char **lictype;
 int i;
 CPU_BITMAP mask;
 
-    if(check_done) 
+    if(check_done)
         return;
     else
         check_done = 1;

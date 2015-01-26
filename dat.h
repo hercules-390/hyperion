@@ -575,7 +575,7 @@ U16     eax;                            /* Authorization index       */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
     switch(arn) {
-      
+
     case USE_INST_SPACE:
         switch(regs->AEA_AR(USE_INST_SPACE)) {
 
@@ -592,8 +592,8 @@ U16     eax;                            /* Authorization index       */
         } /* end switch(regs->AEA_AR(USE_INST_SPACE)) */
 
         regs->dat.asd = regs->CR(regs->AEA_AR(USE_INST_SPACE));
-        break;      
-        
+        break;
+
     case USE_PRIMARY_SPACE:
         regs->dat.stid = TEA_ST_PRIMARY;
         regs->dat.asd = regs->CR(1);
@@ -850,7 +850,7 @@ U32     ptl;                            /* Page table length         */
     /* Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr)
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -1005,7 +1005,7 @@ U32     ptl;                            /* Page table length         */
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr)
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -1138,7 +1138,7 @@ U16     sx, px;                         /* Segment and page index,
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr) 
+        && !(regs->tlb.common[tlbix] && regs->dat.pvtaddr)
         && !(acctype & ACC_NOTLB) )
     {
         pte = regs->tlb.TLB_PTE(tlbix);
@@ -1398,7 +1398,7 @@ U16     sx, px;                         /* Segment and page index,
                entry indicates a common segment */
             if (regs->dat.pvtaddr && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
-        
+
 #if defined(FEATURE_ENHANCED_DAT_FACILITY)
             if(FACILITY_ENABLED(ENHANCED_DAT,regs)
               && (regs->CR_L(0) & CR0_ED)
@@ -2238,7 +2238,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
             /* Ensure that the private bit is percolated to the guest such that LAP is applied correctly */
             regs->dat.pvtaddr = regs->hostregs->dat.pvtaddr;
-            
+
             /* Build tlb entry of XC dataspace */
             regs->dat.asd = regs->hostregs->dat.asd ^ TLB_HOST_ASD;
             regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
@@ -2254,7 +2254,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         if(regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
             goto vabs_addr_excp;
-        /* Take into account SIE guests with a 2K page scheme 
+        /* Take into account SIE guests with a 2K page scheme
            because the SIE host may be operating with a 4K page
            system */
 #if defined(FEATURE_2K_STORAGE_KEYS)

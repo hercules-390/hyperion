@@ -825,7 +825,7 @@ HANDLE fthread_get_handle
 (
     fthread_t       dwThreadID             // Thread ID
 )
-{    
+{
     FTHREAD*      pFTHREAD = NULL;          // Local pointer storage
 
     if ( dwThreadID != 0 )
@@ -1789,7 +1789,7 @@ static int W2FPriority( int nPriority )
         case    THREAD_PRIORITY_TIME_CRITICAL:  return -20;
         case    THREAD_PRIORITY_HIGHEST:        return -15;
         case    THREAD_PRIORITY_ABOVE_NORMAL:   return  -8;
-        default:                                       
+        default:
         case    THREAD_PRIORITY_NORMAL:         return   0;
         case    THREAD_PRIORITY_BELOW_NORMAL:   return   8;
         case    THREAD_PRIORITY_LOWEST:         return  15;

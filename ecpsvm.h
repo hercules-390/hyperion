@@ -66,7 +66,7 @@ typedef struct _ECPSVM_MICBLOK
 #define MICLCTL2 0x01   /* VRSTBYPASS LCTL Sim */
     /* Bits define in MICEVMA3 */
 #define MICSKYMD 0x20   /* Unknown */
-#define MICISKE  0x10   /* PTLB Sim */ 
+#define MICISKE  0x10   /* PTLB Sim */
 #define MICRRBE  0x08   /* IPTE/TPRT Sim */
 #define MICSSKE  0x04   /* V Page Fault Sim */
     /* Bits defined in MICEVMA4 */

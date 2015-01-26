@@ -496,7 +496,7 @@ z900_ ## _name
     do {                                         \
     if( ITIMER_ACCESS((_addr), (_len)) )     \
             ARCH_DEP(fetch_int_timer) ((_regs)); \
-    } while(0) 
+    } while(0)
  #define ITIMER_SYNC(_addr, _len, _regs)         \
     do {                                         \
         if( ITIMER_ACCESS((_addr), (_len)) )     \

@@ -12,7 +12,7 @@
  * SHA-1 in C
  * By Steve Reid <steve@edmweb.com>
  * 100% Public Domain
- * 
+ *
  * Test Vectors (from FIPS PUB 180-1)
  * "abc"
  *   A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D
@@ -186,7 +186,7 @@ SHA1Final(unsigned char digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 
 /* Hashing-only function called by dyncrypt */
 
-void 
+void
 sha1_process(sha1_context *ctx, unsigned char data[64])
 {
     SHA1Transform(ctx->state, data);

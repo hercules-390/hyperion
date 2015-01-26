@@ -34,5 +34,5 @@ void SHA1Final(unsigned char digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context);
 
 /* Context structure definition for dyncrypt */
 typedef SHA1_CTX sha1_context;
- 
+
 #endif /* _SHA1_H_ */

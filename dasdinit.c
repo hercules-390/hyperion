@@ -314,10 +314,10 @@ argexit ( int code, char *pgm, char *m )
          char  buflfs[80];
 
             strncpy( buflfs,
-                    (sizeof(off_t) > 4) ? 
+                    (sizeof(off_t) > 4) ?
                     "            -lfs   build a large (uncompressed) dasd file (if supported)\n" : "",
                     sizeof( buflfs ) );
-            fprintf( stderr, MSG( HHC02448, "I", bufz, bufbz, buflfs ) ); 
+            fprintf( stderr, MSG( HHC02448, "I", bufz, bufbz, buflfs ) );
         }
         break;
     }

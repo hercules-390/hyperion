@@ -1088,7 +1088,7 @@ decContext      setmax;                 /* Working context           */
     /* Round decimal number to integer using current rounding mode */
     decNumberToIntegralValue(&p, b, pset);
 
-    /* If rounded value is less than zero then set invalid operation 
+    /* If rounded value is less than zero then set invalid operation
        and return zero result */
     if (decNumberIsNegative(&p))
     {
@@ -1184,7 +1184,7 @@ decContext      setmax;                 /* Working context           */
     /* Round decimal number to integer using current rounding mode */
     decNumberToIntegralValue(&p, b, pset);
 
-    /* If rounded value is less than zero then set invalid operation 
+    /* If rounded value is less than zero then set invalid operation
        and return zero result */
     if (decNumberIsNegative(&p))
     {
@@ -2458,7 +2458,7 @@ BYTE            dxc;                    /* Data exception code       */
 
 } /* end DEF_INST(convert_dfp_long_to_fix32_reg) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* B94B CLFXTR - Convert from DFP Ext Register to unsigned 32 [RRF]  */
 /*-------------------------------------------------------------------*/

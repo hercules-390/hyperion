@@ -62,7 +62,7 @@ DEVBLK *dev;                            /* -> device block           */
 
     /* Locate the device block for this subchannel */
 #if defined(FEATURE_QEBSM)
-    if(FACILITY_ENABLED(QEBSM, regs) 
+    if(FACILITY_ENABLED(QEBSM, regs)
       && (regs->GR_L(0) & SIGA_TOKEN))
         dev = find_device_by_subchan (TKN2IOID(regs->GR_G(1)));
     else

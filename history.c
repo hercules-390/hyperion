@@ -30,7 +30,7 @@ HISTORY *history_ptr;        /* points to last command retrieved by key press */
 HISTORY *backup;             /* used for backuping last removed command */
 
 /* these 2 are used in panel.c to see if there was history command requested and
-   returns that command */ 
+   returns that command */
 char *historyCmdLine;
 int history_requested = 0;
 
@@ -64,7 +64,7 @@ int history_add(char *cmdline) {
     backup = NULL;
   }
 
-  /* If last line is exactly the same as this line 
+  /* If last line is exactly the same as this line
      ignore and return to caller */
 
   if ( history_lines != NULL && !strcmp(cmdline,history_lines_end->cmdline) )
@@ -206,7 +206,7 @@ int history_next() {
   }
   if (history_ptr->next == NULL)
     history_ptr = history_lines;
-  else 
+  else
     history_ptr = history_ptr->next;
   copy_to_historyCmdLine(history_ptr->cmdline);
   return(0);
@@ -222,7 +222,7 @@ int history_prev() {
   }
   if (history_ptr->prev == NULL)
     history_ptr = history_lines_end;
-  else 
+  else
     history_ptr = history_ptr->prev;
   copy_to_historyCmdLine(history_ptr->cmdline);
   return(0);

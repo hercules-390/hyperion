@@ -177,7 +177,7 @@ BOOL tt32_loaddll()
     }
 
     // Now convert it to a full path...
-    
+
     // PROGRAMMING NOTE: It's important here to ensure that our end result is a path
     // with BACKWARD slashes in it and NOT forward slashes! LoadLibrary is one of the
     // few Win32 functions that cannot handle paths with forward slashes in it. For
@@ -213,7 +213,7 @@ BOOL tt32_loaddll()
             char str[MAX_TT32_DLLNAMELEN + 32];
             DWORD dwLastError = GetLastError();
             LeaveCriticalSection(&g_tt32_lock);
-            sprintf(str, "LoadLibraryEx(%s)", g_tt32_dllname); 
+            sprintf(str, "LoadLibraryEx(%s)", g_tt32_dllname);
             WRMSG ( HHC00161, "E", str, (int)dwLastError, strerror(dwLastError) );
             return FALSE;
         }

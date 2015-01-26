@@ -29,7 +29,7 @@
 
 #if defined(FEATURE_VECTOR_FACILITY)
 
-/* The vector save area must be aligned on a boundary 8 times the 
+/* The vector save area must be aligned on a boundary 8 times the
    section size, however VM stores at 4 times the section size.
    I do not know if the book or VM is wrong.                     *JJ */
 #define VSA_ALIGN       4
@@ -45,7 +45,7 @@ U32     n, n1;
     RRE(inst, regs, unused1, unused2);
 
     VOP_CHECK(regs);
-        
+
     /* Extract vector count (number of active bits in vmr) */
     n = VECTOR_COUNT(regs);
 
@@ -59,7 +59,7 @@ U32     n, n1;
     /* Preset condition code according to first bit */
     regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
-    /* Check VMR bit to be equal to the first, 
+    /* Check VMR bit to be equal to the first,
        exit with cc1 if an unequal bit found */
     for(n1 = 1; n1 < n; n1++)
         if((regs->psw.cc == 0) != (VMR_SET(n1, regs) == 0))
@@ -87,12 +87,12 @@ U32     n, n1, n2;
     n = VECTOR_COUNT(regs);
 
     /* Bytes - 1 */
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     /* Complement VMR */
     for(n2 = 0; n2 <= n1; n2++)
         regs->vf->vmr[n2] ^= 0xFF;
-    
+
     /* zeroize remainder */
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
@@ -122,7 +122,7 @@ U32     n, n1;
         regs->psw.cc = 0;
         return;
     }
-    
+
     /* Preset condition code according to first bit */
     regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
@@ -169,11 +169,11 @@ U32     n, n1;
         regs->psw.cc = 0;
         return;
     }
-    
+
     /* Preset condition code according to first bit */
     regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
-    /* Check VMR bit to be equal to the first, 
+    /* Check VMR bit to be equal to the first,
        Count all ones, set cc1 if a bit is unequal */
     regs->GR_L(gr1) = 0;
     for(n1 = 0; n1 < n; n1++)
@@ -236,7 +236,7 @@ U64     d;
     RRE(inst, regs, gr1, unused2);
 
     VOP_CHECK(regs);
-        
+
     ODD_CHECK(gr1, regs);
 
     /* n contrains the current save area address */
@@ -263,7 +263,7 @@ U64     d;
         for(; n1 < VECTOR_SECTION_SIZE; n1++)
         {
             /* Fetch vr pair from central storage */
-            d = ARCH_DEP(vfetch8)(n, gr1, regs);    
+            d = ARCH_DEP(vfetch8)(n, gr1, regs);
             regs->vf->vr[n2][n1] = d >> 32;
             regs->vf->vr[n2+1][n1] = d;
 
@@ -290,7 +290,7 @@ U64     d;
         regs->psw.cc = 0;
     }
 
-    /* Set 2 if vr 14 is restored, 0 if not restored, 
+    /* Set 2 if vr 14 is restored, 0 if not restored,
        3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
@@ -340,7 +340,7 @@ U64     d;
             /* Store vr pair in savearea */
             d = ((U64)regs->vf->vr[n2][n1] << 32)
               | regs->vf->vr[n2+1][n1];
-            ARCH_DEP(vstore8)(d, n, gr1, regs);    
+            ARCH_DEP(vstore8)(d, n, gr1, regs);
 
             /* Update element number */
             n1++;
@@ -367,7 +367,7 @@ U64     d;
         regs->psw.cc = 0;
     }
 
-    /* Set 2 if vr 14 is restored, 0 if not restored, 
+    /* Set 2 if vr 14 is restored, 0 if not restored,
        3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
@@ -415,7 +415,7 @@ U64     d;
             /* Store vr pair in savearea */
             d = ((U64)regs->vf->vr[n2][n1] << 32)
               | regs->vf->vr[n2+1][n1];
-            ARCH_DEP(vstore8)(d, n, gr1, regs);    
+            ARCH_DEP(vstore8)(d, n, gr1, regs);
 
             /* Update element number */
             n1++;
@@ -439,7 +439,7 @@ U64     d;
         regs->psw.cc = 0;
     }
 
-    /* Set 2 if vr 14 is restored, 0 if not restored, 
+    /* Set 2 if vr 14 is restored, 0 if not restored,
        3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
@@ -464,7 +464,7 @@ U32     n, n1;
 
     /* Extract vector count (number of active bits in vmr) */
     n = VECTOR_COUNT(regs);
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, n1,
         regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
@@ -493,7 +493,7 @@ U32     n, n1, n2;
     n = VECTOR_COUNT(regs);
 
     /* Number of bytes - 1 */
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, n1,
         regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
@@ -527,7 +527,7 @@ U32     n;
 
     ARCH_DEP(vstorec)(regs->vf->vmr, n >> 3,
             regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
-    
+
 }
 
 
@@ -548,7 +548,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n = VECTOR_COUNT(regs);
 
     /* Number of bytes - 1 */
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
         regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
@@ -556,7 +556,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     /* And VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
         regs->vf->vmr[n2] &= workvmr[n2];
-    
+
     /* zeroize remainder */
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
@@ -582,7 +582,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n = VECTOR_COUNT(regs);
 
     /* Number of bytes - 1 */
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
         regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
@@ -590,7 +590,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     /* OR VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
         regs->vf->vmr[n2] |= workvmr[n2];
-    
+
     /* zeroize remainder */
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
@@ -616,7 +616,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n = VECTOR_COUNT(regs);
 
     /* Number of bytes - 1 */
-    n1 = n >> 3; 
+    n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
         regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
@@ -624,7 +624,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     /* OR VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
         regs->vf->vmr[n2] ^= workvmr[n2];
-    
+
     /* zeroize remainder */
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
@@ -648,7 +648,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
     ARCH_DEP(vstore8)(regs->vf->vsr, effective_addr2, b2, regs);
-    
+
 }
 
 
@@ -666,7 +666,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     ARCH_DEP(vstorec)(regs->vf->vmr, sizeof(regs->vf->vmr) - 1,
         effective_addr2, b2, regs);
-    
+
 }
 
 
@@ -693,10 +693,10 @@ U64     d;
        vector count not greater then section size and
        vector interruption index not greater then section size */
     if((d & VSR_RESV)
-        || ((d & VSR_VCT) >> 32) > VECTOR_SECTION_SIZE 
+        || ((d & VSR_VCT) >> 32) > VECTOR_SECTION_SIZE
         || ((d & VSR_VIX) >> 16) >= VECTOR_SECTION_SIZE)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    
+
     /* In problem state the change bit are set corresponding
        the inuse bits */
     if(PROBSTATE(&regs->psw))
@@ -737,7 +737,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, sizeof(regs->vf->vmr) - 1,
         effective_addr2, b2, regs);
-    
+
 }
 
 
@@ -757,14 +757,14 @@ U32     n;
     regs->psw.cc = ((S32)effective_addr2 == 0) ? 0 :
                    ((S32)effective_addr2 < 0) ? 1 :
                    ((S32)effective_addr2 > VECTOR_SECTION_SIZE) ? 2 : 3;
-           
+
     n = (S32)effective_addr2 < 0 ? 0 :
-        (S32)effective_addr2 > VECTOR_SECTION_SIZE ? 
+        (S32)effective_addr2 > VECTOR_SECTION_SIZE ?
                  VECTOR_SECTION_SIZE : (S32)effective_addr2;
 
     regs->vf->vsr &= ~VSR_VCT;
     regs->vf->vsr |= (U64)n << 32;
-    
+
 }
 
 
@@ -785,7 +785,7 @@ U32     n, n1, n2;
     regs->vf->vsr &= ~VSR_VIX;
 
     /* Clear vr's identified in the bit mask
-       n1 contains the vr number   
+       n1 contains the vr number
        n2 contains the bitmask identifying the vr number
        n contains the element number */
     for(n1 = 0, n2 = 0x80; n1 <= 14; n1 += 2, n2 >>= 1)
@@ -838,14 +838,14 @@ U32     n;
     regs->psw.cc = ((S32)effective_addr2 == 0) ? 0 :
                    ((S32)effective_addr2 < 0) ? 1 :
                    ((S32)effective_addr2 < VECTOR_COUNT(regs)) ? 2 : 3;
-           
+
     n = (S32)effective_addr2 < 0 ? 0 :
-        (S32)effective_addr2 > VECTOR_SECTION_SIZE ? 
+        (S32)effective_addr2 > VECTOR_SECTION_SIZE ?
                  VECTOR_SECTION_SIZE : (S32)effective_addr2;
 
     regs->vf->vsr &= ~VSR_VIX;
     regs->vf->vsr |= (U64)n << 16;
-    
+
 }
 
 
@@ -866,7 +866,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Store the section size and partial sum number */
     ARCH_DEP(vstore4)(VECTOR_SECTION_SIZE << 16 | VECTOR_PARTIAL_SUM_NUMBER,
                                   effective_addr2, b2, regs);
-    
+
 }
 
 
@@ -892,7 +892,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(_FEATURE_SIE)*/
 
     ARCH_DEP(vstore8)(regs->vf->vac, effective_addr2, b2, regs);
-    
+
 }
 
 
@@ -918,7 +918,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(_FEATURE_SIE)*/
 
     regs->vf->vac = ARCH_DEP(vfetch8)(effective_addr2, b2, regs) & VAC_MASK;
-    
+
 }
 
 

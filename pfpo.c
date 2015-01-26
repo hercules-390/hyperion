@@ -6,7 +6,7 @@
 /*   Hercules.                                                       */
 
 /*              (c) Copyright Bernard van der Helm, 2009-2011        */
-/*              Noordwijkerhout, The Netherlands                     */ 
+/*              Noordwijkerhout, The Netherlands                     */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */
@@ -420,7 +420,7 @@ void DFPextGet(FLOAT *f, U64 h, U64 l)
   else
     f->fpclass = CLASS_NORMAL;
 }
- 
+
 /*-------------------------------------------------------------------*/
 /* Hexadecimal floating point routines                               */
 /*-------------------------------------------------------------------*/

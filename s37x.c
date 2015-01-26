@@ -50,7 +50,7 @@ struct  s37x_inst_table_header {
 #define INST37X_TABLE_START(_tbn) \
 static struct s37x_inst_table_entry s37x_table_ ## _tbn[] = {
 
-/* INST37X 
+/* INST37X
    The instruction itself. 1st parm is function address
    2nd parm is opcode or opcode extension */
 
@@ -66,7 +66,7 @@ static struct s37x_inst_table_entry s37x_table_ ## _tbn[] = {
 static struct s37x_inst_table_header s37x_inst_table_header_ ## _tbn = { \
     s37x_table_ ## _tbn, \
     0x ## _tbn };
-    
+
 /* INST37X_INSERT_TABLE_START
    The table of opcode tables */
 #define INST37X_INSERT_TABLE_START \
@@ -81,7 +81,7 @@ static struct s37x_inst_table_header *s37x_table_table[] = {
     NULL };
 
 /* STRUCTURE :
-   s37x_table_table is a NULL terminated  array of pointers to 
+   s37x_table_table is a NULL terminated  array of pointers to
         s37x_inst_table_header structures
 
    Each s37x_inst_table_header (called s37x_inst_table_header_XX)
@@ -98,7 +98,7 @@ static struct s37x_inst_table_header *s37x_table_table[] = {
        function address for the new instruction function */
 
 
-    
+
 /**********************************************************/
 /* The actual instruction tables                          */
 /**********************************************************/

@@ -71,7 +71,7 @@ char           *strtok_str = NULL;
     MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD list program" ) );
     display_version (stderr, msgbuf+10, FALSE);
 
-    if (argc < 2) 
+    if (argc < 2)
     {
         fprintf( stderr, MSG( HHC02463, "I", pgm, "" ) );
         exit(2);
@@ -134,14 +134,14 @@ int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
 
         ptr = cif->trkbuf + CKDDASD_TRKHDR_SIZE;
 
-        while (!end_of_track(ptr)) 
+        while (!end_of_track(ptr))
         {
             char dsname[45];
 
             CKDDASD_RECHDR *rechdr = (CKDDASD_RECHDR*)ptr;
             int kl = rechdr->klen;
             int dl = (rechdr->dlen[0] << 8) | rechdr->dlen[1];
-            
+
             make_asciiz(dsname, sizeof(dsname), ptr + CKDDASD_RECHDR_SIZE, kl);
 
             dsname[44] = '\0';
@@ -178,7 +178,7 @@ int do_ls_cif(CIFBLK *cif)
     rc = read_block(cif, 0, 0, 3, 0, 0, &vol1data, &rlen);
     if (rc < 0)
         return -1;
-    if (rc > 0) 
+    if (rc > 0)
     {
         fprintf( stderr, MSG( HHC02471, "E", "VOL1" ) );
         return -1;
@@ -192,7 +192,7 @@ int do_ls_cif(CIFBLK *cif)
     rc = read_block(cif, cyl, head, rec, (void *)&f4dscb, &klen, 0, 0);
     if (rc < 0)
         return -1;
-    if (rc > 0) 
+    if (rc > 0)
     {
         fprintf( stderr, MSG( HHC02471, "E", "Format 4 DSCB" ) );
         return -1;

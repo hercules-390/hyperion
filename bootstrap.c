@@ -479,7 +479,7 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
         if ( bSuccess )
         {
             _tprintf( _T("\nDump \"%ls\" created.\n\n"
-                         "Please forward the dump to the Hercules team for analysis.\n\n"), 
+                         "Please forward the dump to the Hercules team for analysis.\n\n"),
                          g_wszDumpPath );
         }
         else

@@ -11,8 +11,8 @@
 /*-------------------------------------------------------------------*/
 /*  DIAGNOSE X'F18' Capability Parameter Block (CPB)                 */
 /*-------------------------------------------------------------------*/
-typedef struct _CPB 
-    {   
+typedef struct _CPB
+    {
         BYTE    ipv6;         /* IPv6 Native Mode Socket Types       */
         BYTE    ipv4;         /* IPv4 Native Mode Socket Types       */
         BYTE    resources;    /* Resources and Modes Supported       */
@@ -53,14 +53,14 @@ typedef struct _CPB
 /*       file operations.  It is always accessed directly from       */
 /*       guest storage by the DIAGNOSE to maintain state for restart.*/
 /*       Each of the elements of the array correspond to a guest     */
-/*       register originally used by NFILE and TCPIP to manage state */ 
+/*       register originally used by NFILE and TCPIP to manage state */
 /*       and access guest parameters supplied in registers. This     */
 /*       design allows a program converting from NFILE or TCPIP      */
 /*       usage to simply use the CMPB as a register save area.       */
 
-typedef struct _CMPB 
-    {   
-        FWORD ps_regs[16];     /* Pseudo registers */                     
+typedef struct _CMPB
+    {
+        FWORD ps_regs[16];     /* Pseudo registers */
     } CMPB;
 
 
