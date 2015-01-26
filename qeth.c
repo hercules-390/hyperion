@@ -605,62 +605,80 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 {
     int rc;
+    int flags;
 
     if (grp->enabled)
         return 0;
 
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_UP
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
+    flags = ( 0
+            | IFF_UP
+            | IFF_MULTICAST
+            | IFF_BROADCAST
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+            | IFF_RUNNING
+#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
 #if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
+            | (grp->debug ? IFF_DEBUG : 0)
 #endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
+            | (grp->promisc ? IFF_PROMISC : 0)
+            );
+
+    rc = TUNTAP_SetFlags( grp->ttifname, flags );
+    if (rc != 0)
+    {
         qeth_errnum_msg( dev, grp, rc,
             "E", "qeth_enable_interface() failed" );
-    else
-    {
-        grp->enabled = 1;
-        qeth_report_using( dev, grp );
+        return rc;
     }
-    return rc;
+
+    grp->enabled = 1;
+    qeth_report_using( dev, grp );
+
+    return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Disable the TUNTAP interface  (clear IFF_UP flag)                 */
 /*-------------------------------------------------------------------*/
+/* Clearing the IFF_UP flag is only done on Windows, as, on *nix,    */
+/* clearing and then setting the IFF_UP flag causes interface        */
+/* IP addresses to be lost.                                          */
 static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
 {
-    int rc;
 
     if (!grp->enabled)
         return 0;
 
-    if ((rc = TUNTAP_SetFlags( grp->ttifname, 0
-        | IFF_MULTICAST
-        | IFF_BROADCAST
-#if defined( TUNTAP_IFF_RUNNING_NEEDED )
-        | IFF_RUNNING
-#endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 #if defined(OPTION_W32_CTCI)
-        | (grp->debug ? IFF_DEBUG : 0)
-#endif /*defined(OPTION_W32_CTCI)*/
-        | (grp->promisc ? IFF_PROMISC : 0)
-    )) != 0)
-        qeth_errnum_msg( dev, grp, rc,
-            "E", "qeth_disable_interface() failed" );
-    else
     {
-        grp->enabled = 0;
-        qeth_report_using( dev, grp );
+        int rc;
+        int flags;
+
+        flags = ( 0
+                | IFF_MULTICAST
+                | IFF_BROADCAST
+#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+                | IFF_RUNNING
+#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
+                | (grp->debug ? IFF_DEBUG : 0)
+                | (grp->promisc ? IFF_PROMISC : 0)
+                );
+
+        rc = TUNTAP_SetFlags( grp->ttifname, flags );
+        if (rc != 0)
+        {
+            qeth_errnum_msg( dev, grp, rc,
+                "E", "qeth_disable_interface() failed" );
+            return rc;
+        }
     }
-    return rc;
+#endif /*defined(OPTION_W32_CTCI)*/
+
+    grp->enabled = 0;
+    qeth_report_using( dev, grp );
+
+    return 0;
 }
 
 
@@ -1994,6 +2012,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     QRC qrc;
     OSA_HDR3 o3hdr;
     int sb = 0;     /* Start with Storage Block zero */
+    int   iPktVer;
+    char  cPktVer[8];
 
     do
     {
@@ -2008,21 +2028,15 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
 //      STORE_HW( o3hdr.frame_offset, ???? ); // TSO only?
 //      STORE_FW( o3hdr.token, ???? );
 
-        if (grp->ttipaddr6)
-        {
-            IP6FRM* ip6 = (IP6FRM*)dev->buf;
-            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
-            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
-                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
-                return QRC_EPKEOF; /* Not our packet */
-            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
-            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
-        }
-        else /* IPv4 */
+        /* Check the IP packet version. The first 4-bits of the     */
+        /* first byte of the IP header contains the version number. */
+        iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
+        if (iPktVer == 4)
         {
             U32 dstaddr;
             U16 checksum;
             IP4FRM* ip4 = (IP4FRM*)dev->buf;
+            strcpy( cPktVer, "IPv4" );
             FETCH_FW( dstaddr, &ip4->lDstIP );
             STORE_FW( &o3hdr.dest_addr[12], dstaddr );
             FETCH_HW( checksum, ip4->hwChecksum );
@@ -2031,6 +2045,22 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                 l3_cast_type_ipv4( dstaddr, grp )))
                 return QRC_EPKEOF; /* Not our packet */
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else if (iPktVer == 6)
+        {
+            IP6FRM* ip6 = (IP6FRM*)dev->buf;
+            strcpy( cPktVer, "IPv6" );
+            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
+            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
+                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
+                return QRC_EPKEOF; /* Not our packet */
+            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
+            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else
+        {
+            /* Err... not IPv4 or IPv6! */
+            strcpy( cPktVer, "Unknown" );
         }
 
         /* Dump the packet just received */
@@ -2466,6 +2496,9 @@ int groupsize = OSA_GROUP_SIZE;
 int grouped = 0;
 int i;
 
+//  if (dev->numconfdev > groupsize)
+//      groupsize = dev->numconfdev;
+
     if(!dev->group)
     {
         /* This code is executed for each device in the group. */
@@ -2623,12 +2656,12 @@ int i;
         }
         else if (!strcasecmp("debug",argv[i]))
         {
-            grp->debug = 1;
+            grp->debug = TRUE;
             continue;
         }
         else if(!strcasecmp("nodebug",argv[i]))
         {
-            grp->debug = 0;
+            grp->debug = FALSE;
             continue;
         }
         else
