@@ -291,6 +291,63 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* QA Scenario 16:         Without Object Rexx                       */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 16  // Without Object Rexx
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 16\n"
+
+  #undef  OBJECT_REXX_HDR_DIR
+  #undef  OBJECT_REXX_HEADER1
+  #undef  OBJECT_REXX_HEADER2
+  #undef  ENABLE_OBJECT_REXX
+  #undef  HAVE_REXX_H
+  #undef  HAVE_OOREXXAPI_H
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 17:         Without Regina Rexx                       */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 17  // Without Regina Rexx
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 17\n"
+
+  #undef  REGINA_REXX_HDR_DIR
+  #undef  REGINA_REXX_HEADER1
+  #undef  ENABLE_REGINA_REXX
+  #undef  HAVE_REXXSAA_H
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/* QA Scenario 18:         Without Object Rexx, Without Regina Rexx  */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 18  // Without Object Rexx, Without Regina Rexx
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 18\n"
+
+  #undef  OBJECT_REXX_HDR_DIR
+  #undef  OBJECT_REXX_HEADER1
+  #undef  OBJECT_REXX_HEADER2
+  #undef  ENABLE_OBJECT_REXX
+  #undef  HAVE_REXX_H
+  #undef  HAVE_OOREXXAPI_H
+
+  #undef  REGINA_REXX_HDR_DIR
+  #undef  REGINA_REXX_HEADER1
+  #undef  ENABLE_REGINA_REXX
+  #undef  HAVE_REXXSAA_H
+
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
 
