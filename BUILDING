@@ -113,10 +113,18 @@ Here's the entire build process step-by-step:
 
 
     To build Herc, first switch to the directory where the source files
-    are and then configure the build process by entering the following
-    command:
+    are:
 
-        ./configure
+        cd hercules
+
+    If you are building directly from repository source, it is a good
+    habit to always recreate the configure script each time you build:
+
+        sh ./autogen.sh
+
+    configure your build options by entering the following command:
+
+        ./configure  ...
 
     (Note: you may or may not wish to enter additional parameters
     to the configure command. See further below)
