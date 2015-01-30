@@ -643,6 +643,7 @@ EXTRA_DIST = autoconf/config.rpath \
              README.HAO            \
              README.HDL            \
              README.HERCLOGO       \
+             README.HQA            \
              README.HRAF           \
              README.IOARCH         \
              README.ISSUES         \

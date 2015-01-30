@@ -446,6 +446,7 @@
     <None Include="decNumber\readme.txt" />
     <None Include="hercules.ico" />
     <None Include="README.HRAF" />
+    <None Include="README.HQA" />
     <None Include="_TODO.txt" />
     <None Include="CHANGES" />
     <None Include="README.ISSUES" />
