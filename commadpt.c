@@ -1205,25 +1205,28 @@ static void SET_COMM_KEEPALIVE( int tempfd, COMMADPT* ca )
 {
     if (ca->kaidle && ca->kaintv && ca->kacnt)
     {
-#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+#if !defined( HAVE_BASIC_KEEPALIVE )
 
         UNREFERENCED( tempfd );
 
         // "%1d:%04X COMM: This build of Hercules does not support TCP keepalive"
         WRMSG( HHC01094, "E", SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
 
-#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+#else // basic, partial or full: must attempt setting keepalive
 
-        int idle, intv, cnt;
+        int rc, idle, intv, cnt;
 
-  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+  #if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_PARTIAL_KEEPALIVE )
 
         // "%1d:%04X COMM: This build of Hercules has only basic TCP keepalive support"
         WRMSG( HHC01095, "W", SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
 
-  #else // defined( HAVE_FULL_KEEPALIVE )
+  #elif !defined( HAVE_FULL_KEEPALIVE )
 
-        int rc;
+        // "%1d:%04X COMM: This build of Hercules has only partial TCP keepalive support"
+        WRMSG( HHC01096, "W", SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
+
+  #endif // (basic or partial)
 
         /* Try setting the values first */
         rc = set_socket_keepalive( tempfd,
@@ -1243,8 +1246,6 @@ static void SET_COMM_KEEPALIVE( int tempfd, COMMADPT* ca )
             // "%1d:%04X COMM: Not all TCP keepalive settings honored"
             WRMSG( HHC01092, "W",
                 SSID_TO_LCSS( ca->dev->ssid ), ca->devnum );
-
-  #endif // defined( HAVE_FULL_KEEPALIVE )
 
         /* Now see which values the system actually accepted */
         if (get_socket_keepalive( tempfd, &idle, &intv, &cnt ) < 0)
@@ -1266,7 +1267,7 @@ static void SET_COMM_KEEPALIVE( int tempfd, COMMADPT* ca )
             SSID_TO_LCSS( ca->dev->ssid ), ca->devnum,
             ca->kaidle, ca->kaintv, ca->kacnt );
 
-#endif // KEEPALIVE
+#endif // (KEEPALIVE)
     }
 }
 

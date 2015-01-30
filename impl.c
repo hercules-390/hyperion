@@ -886,24 +886,29 @@ int     dll_count;                      /* index into array          */
 
     /* Set default TCP keepalive values */
 
-#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+#if !defined( HAVE_BASIC_KEEPALIVE )
 
     WARNING("TCP keepalive headers not found; check configure.ac")
     WARNING("TCP keepalive support will NOT be generated")
-
     // "This build of Hercules does not support TCP keepalive"
     WRMSG( HHC02321, "E" );
 
-#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+#else // basic, partial or full: must attempt setting keepalive
 
-  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+  #if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_PARTIAL_KEEPALIVE )
 
     WARNING("This build of Hercules will only have basic TCP keepalive support")
-
     // "This build of Hercules has only basic TCP keepalive support"
     WRMSG( HHC02322, "W" );
 
-  #endif // defined( HAVE_BASIC_KEEPALIVE )
+  #elif !defined( HAVE_FULL_KEEPALIVE )
+
+    WARNING("This build of Hercules will only have partial TCP keepalive support")
+    // "This build of Hercules has only partial TCP keepalive support"
+    WRMSG( HHC02323, "W" );
+
+  #endif // (basic or partial)
+
     /*
     **  Note: we need to try setting them to our desired values first
     **  and then retrieve the set values afterwards to detect systems
@@ -945,11 +950,15 @@ int     dll_count;                      /* index into array          */
                 {
                     // "Not all TCP keepalive settings honored"
                     WRMSG( HHC02320, "W" );
-
-                    /* Retrieve current values from system */
-                    if (get_socket_keepalive( sfd, &idle, &intv, &cnt ) < 0)
-                        WRMSG( HHC02219, "E", "get_socket_keepalive()", strerror( HSO_errno ));
                 }
+
+                sysblk.kaidle = idle;
+                sysblk.kaintv = intv;
+                sysblk.kacnt  = cnt;
+
+                /* Retrieve current values from system */
+                if (get_socket_keepalive( sfd, &idle, &intv, &cnt ) < 0)
+                    WRMSG( HHC02219, "E", "get_socket_keepalive()", strerror( HSO_errno ));
             }
             close_socket( sfd );
         }
@@ -960,7 +969,7 @@ int     dll_count;                      /* index into array          */
         sysblk.kacnt  = cnt;
     }
 
-#endif // KEEPALIVE
+#endif // (KEEPALIVE)
 
     /* Initialize runtime opcode tables */
     init_opcode_tables();

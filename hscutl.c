@@ -797,38 +797,6 @@ DLL_EXPORT int socket_is_socket( int sfd )
     return ( fstat( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
 }
 
-/* Function to retrieve keepalive values. 0==success, -1=failure */
-int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
-                          int* probe_count )
-{
-    struct protoent*  tcpproto;
-    int        optval, l_tcp;
-    socklen_t  optlen = sizeof( optval );
-
-    /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
-    tcpproto = getprotobyname("TCP");
-    if (!tcpproto)
-    {
-        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
-        return -1;
-    }
-    l_tcp = tcpproto->p_proto;
-
-    /* Default values */
-    *idle_time      = sysblk.kaidle;
-    *probe_interval = sysblk.kaintv;
-    *probe_count    = sysblk.kacnt;
-
-#if defined( HAVE_FULL_KEEPALIVE )
-    /* Retrieve the actual values from the system */
-    if (getsockopt( sfd, l_tcp, TCP_KEEPIDLE,  &optval, &optlen ) >= 0) *idle_time      = optval;
-    if (getsockopt( sfd, l_tcp, TCP_KEEPINTVL, &optval, &optlen ) >= 0) *probe_interval = optval;
-    if (getsockopt( sfd, l_tcp, TCP_KEEPCNT,   &optval, &optlen ) >= 0) *probe_count    = optval;
-#endif // HAVE_FULL_KEEPALIVE
-
-    return 0;
-}
-
 /* Set the SO_KEEPALIVE option and timeout values for a
    socket connection to detect when client disconnects.
    Returns 0==success, +1==warning, -1==failure
@@ -840,13 +808,16 @@ int set_socket_keepalive( int sfd,
                           int probe_interval,
                           int probe_count )
 {
-#if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_BASIC_KEEPALIVE )
+#if !defined( HAVE_BASIC_KEEPALIVE )
+
     UNREFERENCED( sfd );
     UNREFERENCED( idle_time );
     UNREFERENCED( probe_interval );
     UNREFERENCED( probe_count );
+    errno = EOPNOTSUPP;
     return -1;
-#else // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+
+#else // basic, partial or full: must attempt setting keepalive
 
     int idle, intv, cnt;
     int rc, l_tcp, optval, succeeded = 0, tried = 0;
@@ -881,8 +852,17 @@ int set_socket_keepalive( int sfd,
     if (rc)
         WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPALIVE)", strerror( HSO_errno ));
     else
+    {
         succeeded++;
+        idle = idle_time;
+    }
   #endif
+
+    /* Only try setting individual keepalive values if full or partial
+       keepalive is supported. Otherwise if we have only basic keepalive
+       then don't bother even trying
+    */
+#if defined( HAVE_FULL_KEEPALIVE ) || defined( HAVE_PARTIAL_KEEPALIVE )
 
     optval = idle_time;
   #if defined( HAVE_DECL_TCP_KEEPIDLE ) && HAVE_DECL_TCP_KEEPIDLE
@@ -891,7 +871,10 @@ int set_socket_keepalive( int sfd,
     if (rc)
         WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPIDLE)", strerror( HSO_errno ));
     else
+    {
         succeeded++;
+        idle = idle_time;
+    }
   #endif
 
     optval = probe_interval;
@@ -901,7 +884,10 @@ int set_socket_keepalive( int sfd,
     if (rc)
         WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPINTVL)", strerror( HSO_errno ));
     else
+    {
         succeeded++;
+        intv = probe_interval;
+    }
   #endif
 
     optval = probe_count;
@@ -911,19 +897,20 @@ int set_socket_keepalive( int sfd,
     if (rc)
         WRMSG( HHC02219, "E", "setsockopt(TCP_KEEPCNT)", strerror( HSO_errno ));
     else
+    {
         succeeded++;
+        cnt  = probe_count;
+    }
   #endif
 
-    idle = idle_time;
-    intv = probe_interval;
-    cnt  = probe_count;
+#endif // defined( HAVE_FULL_KEEPALIVE ) || defined( HAVE_PARTIAL_KEEPALIVE )
 
     /* Retrieve values in use, ignoring any error */
     get_socket_keepalive( sfd, &idle, &intv, & cnt );
 
     /* Determine return code: did everything succeed and,
        more importantly, were all of our values accepted?
-       (i.e. did they all "stick"?)
+       Did the values we tried setting (if any) "stick"?
     */
     if (succeeded >= tried)
         rc = (idle != idle_time || intv != probe_interval || cnt != probe_count) ? +1 : 0;
@@ -932,7 +919,49 @@ int set_socket_keepalive( int sfd,
 
     return rc;
 
-#endif // KEEPALIVE
+#endif // (KEEPALIVE)
+}
+
+/* Function to retrieve keepalive values. 0==success, -1=failure */
+int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
+                          int* probe_count )
+{
+#if defined( HAVE_FULL_KEEPALIVE ) || defined( HAVE_PARTIAL_KEEPALIVE )
+    struct protoent*  tcpproto;
+    int        optval, l_tcp;
+    socklen_t  optlen = sizeof( optval );
+
+    /* Retrieve TCP protocol value (mostly for FreeBSD portability) */
+    tcpproto = getprotobyname("TCP");
+    if (!tcpproto)
+    {
+        WRMSG( HHC02219, "E", "getprotobyname(\"TCP\")", strerror( HSO_errno ));
+        return -1;
+    }
+    l_tcp = tcpproto->p_proto;
+#else
+    UNREFERENCED( sfd );
+#endif // HAVE_FULL_KEEPALIVE || HAVE_PARTIAL_KEEPALIVE
+
+    /* Default values */
+    *idle_time      = sysblk.kaidle;
+    *probe_interval = sysblk.kaintv;
+    *probe_count    = sysblk.kacnt;
+
+#if defined( HAVE_FULL_KEEPALIVE ) || defined( HAVE_PARTIAL_KEEPALIVE )
+    /* Retrieve the actual values from the system */
+  #if defined( HAVE_DECL_TCP_KEEPIDLE ) && HAVE_DECL_TCP_KEEPIDLE
+    if (getsockopt( sfd, l_tcp, TCP_KEEPIDLE,  &optval, &optlen ) >= 0) *idle_time      = optval;
+  #endif
+  #if defined( HAVE_DECL_TCP_KEEPINTVL ) && HAVE_DECL_TCP_KEEPINTVL
+    if (getsockopt( sfd, l_tcp, TCP_KEEPINTVL, &optval, &optlen ) >= 0) *probe_interval = optval;
+  #endif
+  #if defined( HAVE_DECL_TCP_KEEPCNT ) && HAVE_DECL_TCP_KEEPCNT
+    if (getsockopt( sfd, l_tcp, TCP_KEEPCNT,   &optval, &optlen ) >= 0) *probe_count    = optval;
+  #endif
+#endif // HAVE_FULL_KEEPALIVE || HAVE_PARTIAL_KEEPALIVE
+
+    return 0;
 }
 
 // Hercules low-level file open...

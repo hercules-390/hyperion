@@ -2924,6 +2924,46 @@ static int internal_set_socket_keepalive( int sfd,
                                           int probe_count,
                                           U8  quiet )
 {
+#if !defined( HAVE_BASIC_KEEPALIVE )
+
+    // Not basic support == No TCP keepalive support at all
+
+    if (!quiet)
+    {
+        WSASetLastError( EOPNOTSUPP );
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "internal_set_socket_keepalive()", strerror( HSO_errno ));
+    }
+    WSASetLastError( EOPNOTSUPP );
+    return -1;
+
+#elif !defined( HAVE_PARTIAL_KEEPALIVE )
+
+    // Not partial support == only Basic TCP keepalive support
+
+    BOOL  bOptVal  = TRUE;
+    int   nOptLen  = sizeof( bOptVal );
+
+    if (setsockopt( (SOCKET) sfd, SOL_SOCKET, SO_KEEPALIVE, (char*) &bOptVal, nOptLen ) == SOCKET_ERROR)
+    {
+        if (!quiet)
+        {
+            int lasterror = WSAGetLastError();
+            // "Error in function %s: %s"
+            WRMSG( HHC02219, "E", "internal_set_socket_keepalive()", strerror( HSO_errno ));
+            WSASetLastError( lasterror );
+        }
+        return -1;
+    }
+
+    return idle_time      != def_ka_time ? +1 :
+           probe_interval != def_ka_intv ? +1 :
+           probe_count    != def_ka_cnt  ? +1 : 0;
+
+#else
+
+    // Partial or Full TCP keepalive support
+
     KASOCK* pKASOCK;
     DWORD   dwBytesReturned;
     struct tcp_keepalive ka;
@@ -2960,8 +3000,10 @@ static int internal_set_socket_keepalive( int sfd,
     {
         if (!quiet)
         {
+            int lasterror = WSAGetLastError();
             // "Error in function %s: %s"
             WRMSG( HHC02219, "E", "WSAIoctl( SIO_KEEPALIVE_VALS )", strerror( HSO_errno ));
+            WSASetLastError( lasterror );
         }
         return -1;  // (failure)
     }
@@ -2969,14 +3011,16 @@ static int internal_set_socket_keepalive( int sfd,
     // Save new values so 'get_socket_keepalive' can retrieve them if desired
 
     if (!(pKASOCK = get_kasock( sfd )))
-        return -1;
+        CRASH(); // (should NEVER occur!)
 
     pKASOCK->time = idle_time;
     pKASOCK->intv = probe_interval;
 
     // Probe count cannot be changed on Windows
 
-    return (probe_count == def_ka_cnt) ? 0 : +1;    // (complete success or partial success)
+    return (probe_count != def_ka_cnt) ? +1 : 0;  // (partial or complete success)
+
+#endif // (KEEPALIVE)
 }
 
 DLL_EXPORT int set_socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count )

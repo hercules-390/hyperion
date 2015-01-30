@@ -410,8 +410,9 @@ AH_TEMPLATE( [ENABLE_OBJECT_REXX],      [Define to enable open object rexx suppo
 AH_TEMPLATE( [ENABLE_REGINA_REXX],      [Define to enable Regina Rexx support] )
 AH_TEMPLATE( [ENABLE_IPV6],             [Define to enable IPV6 support] )
 AH_TEMPLATE( [HAVE_HQA_H],              [Define to if header "hqa.h" exists in HQA dir] )
-AH_TEMPLATE( [HAVE_BASIC_KEEPALIVE],    [Define if 'SO_KEEPALIVE' or 'TCP_KEEPALIVE' symbols are available] )
-AH_TEMPLATE( [HAVE_FULL_KEEPALIVE],     [Define if 'TCP_KEEPIDLE', 'TCP_KEEPINTVL' and 'TCP_KEEPCNT' symbols are available ] )
+AH_TEMPLATE( [HAVE_FULL_KEEPALIVE],     [Define if symbols 'TCP_KEEPIDLE', 'TCP_KEEPINTVL' and 'TCP_KEEPCNT' are ALL available ] )
+AH_TEMPLATE( [HAVE_PARTIAL_KEEPALIVE],  [Define if symbol  'TCP_KEEPIDLE', 'TCP_KEEPINTVL' or 'TCP_KEEPCNT' is available ] )
+AH_TEMPLATE( [HAVE_BASIC_KEEPALIVE],    [Define if symbol  'SO_KEEPALIVE' or 'TCP_KEEPALIVE' is available] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -695,9 +696,13 @@ else
     hc_cv_have_mtewarn=no
 fi
 
+#------------------------------------------------------------------------------
+#                  Check for TCP Keepalive support
+#------------------------------------------------------------------------------
+
 AC_MSG_NOTICE( [Checking for TCP keepalive support...] )
 
-AC_CHECK_DECLS( SO_KEEPALIVE,         [hc_cv_have_basic_keepalive=yes],     [hc_cv_have_basic_keepalive=no],
+AC_CHECK_DECLS( SO_KEEPALIVE, [hc_cv_have_basic_keepalive=yes], [hc_cv_have_basic_keepalive=no],
 [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H
@@ -706,7 +711,7 @@ AC_CHECK_DECLS( SO_KEEPALIVE,         [hc_cv_have_basic_keepalive=yes],     [hc_
 ] )
 
 if test "$hc_cv_have_basic_keepalive" != "yes"; then
-  AC_CHECK_DECLS( TCP_KEEPALIVE,      [hc_cv_have_basic_keepalive=yes],     [hc_cv_have_basic_keepalive=no],
+  AC_CHECK_DECLS( TCP_KEEPALIVE, [hc_cv_have_basic_keepalive=yes], [hc_cv_have_basic_keepalive=no],
   [
       #include <sys/types.h>
       #ifdef HAVE_SYS_SOCKET_H
@@ -721,9 +726,10 @@ if test "$hc_cv_have_basic_keepalive" != "yes"; then
 fi
 
 if test "$hc_cv_have_basic_keepalive" != "yes"; then
+  hc_cv_have_partial_keepalive=no
   hc_cv_have_full_keepalive=no
 else
-  AC_CHECK_DECLS( [ TCP_KEEPIDLE, TCP_KEEPINTVL, TCP_KEEPCNT ], [hc_cv_have_full_keepalive=yes], [hc_cv_have_full_keepalive=no],
+  AC_CHECK_DECLS( TCP_KEEPIDLE, [hc_cv_have_tcp_keepidle=yes], [hc_cv_have_tcp_keepidle=no],
   [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H
@@ -735,16 +741,55 @@ else
       #include <netinet/tcp.h>
     #endif
   ] )
+  AC_CHECK_DECLS( TCP_KEEPINTVL, [hc_cv_have_tcp_keepintvl=yes], [hc_cv_have_tcp_keepintvl=no],
+  [
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #if defined(HAVE_NET_TCP_H)
+      #include <net/tcp.h>
+    #elif defined(HAVE_NETINET_TCP_H)
+      #include <netinet/tcp.h>
+    #endif
+  ] )
+  AC_CHECK_DECLS( TCP_KEEPCNT, [hc_cv_have_tcp_keepcnt=yes], [hc_cv_have_tcp_keepcnt=no],
+  [
+    #include <sys/types.h>
+    #ifdef HAVE_SYS_SOCKET_H
+      #include <sys/socket.h>
+    #endif
+    #if defined(HAVE_NET_TCP_H)
+      #include <net/tcp.h>
+    #elif defined(HAVE_NETINET_TCP_H)
+      #include <netinet/tcp.h>
+    #endif
+  ] )
+  if test "$hc_cv_have_tcp_keepidle"  = "yes" &&
+     test "$hc_cv_have_tcp_keepintvl" = "yes" &&
+     test "$hc_cv_have_tcp_keepcnt"   = "yes"; then
+     hc_cv_have_full_keepalive=yes
+     hc_cv_have_partial_keepalive=yes
+  else
+    hc_cv_have_full_keepalive=no
+    if test "$hc_cv_have_tcp_keepidle"  = "yes" ||
+       test "$hc_cv_have_tcp_keepintvl" = "yes" ||
+       test "$hc_cv_have_tcp_keepcnt"   = "yes"; then
+       hc_cv_have_partial_keepalive=yes
+    else
+       hc_cv_have_partial_keepalive=no
+    fi
+  fi
 fi
 
 if test "$hc_cv_have_full_keepalive" = "yes"; then
   AC_MSG_NOTICE( [TCP keepalive support...  FULL] )
+elif test "$hc_cv_have_partial_keepalive" = "yes"; then
+  AC_MSG_NOTICE( [TCP keepalive support...  PARTIAL] )
+elif test "$hc_cv_have_basic_keepalive" = "yes"; then
+  AC_MSG_NOTICE( [TCP keepalive support...  BASIC] )
 else
-  if test "$hc_cv_have_basic_keepalive" = "yes"; then
-     AC_MSG_NOTICE( [TCP keepalive support...  BASIC] )
-  else
-     AC_MSG_NOTICE( [TCP keepalive support...  NONE] )
-  fi
+  AC_MSG_NOTICE( [TCP keepalive support...  NONE] )
 fi
 
 AC_CACHE_SAVE()
@@ -2273,8 +2318,9 @@ test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILI
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_REGINA_REXX)
 test "$hc_cv_ena_ipv6"                    = "yes"  &&  AC_DEFINE(ENABLE_IPV6)
-test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
 test "$hc_cv_have_full_keepalive"         = "yes"  &&  AC_DEFINE(HAVE_FULL_KEEPALIVE)
+test "$hc_cv_have_partial_keepalive"      = "yes"  &&  AC_DEFINE(HAVE_PARTIAL_KEEPALIVE)
+test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

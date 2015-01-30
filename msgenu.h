@@ -908,6 +908,7 @@ do { \
 #define HHC01093 "%1d:%04X COMM: Keepalive: (%d,%d,%d)"
 #define HHC01094 "%1d:%04X COMM: This build of Hercules does not support TCP keepalive"
 #define HHC01095 "%1d:%04X COMM: This build of Hercules has only basic TCP keepalive support"
+#define HHC01096 "%1d:%04X COMM: This build of Hercules has only partial TCP keepalive support"
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
@@ -1393,6 +1394,7 @@ do { \
 #define HHC02320 "Not all TCP keepalive settings honored"
 #define HHC02321 "This build of Hercules does not support TCP keepalive"
 #define HHC02322 "This build of Hercules has only basic TCP keepalive support"
+#define HHC02323 "This build of Hercules has only partial TCP keepalive support"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

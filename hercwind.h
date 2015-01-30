@@ -212,9 +212,12 @@ typedef u_int32_t           in_addr_t;
 #define CLOCK_REALTIME_ALARM            8
 #define CLOCK_BOOTTIME_ALARM            9
 
-#if !defined( HQA_KEEPALIVE )   // (if hqa.h isn't defining these for us)
+#if !defined( HQA_SCENARIO ) || HQA_SCENARIO < 19 || HQA_SCENARIO > 22
+
+  #undef  HAVE_FULL_KEEPALIVE
+  #define HAVE_PARTIAL_KEEPALIVE
   #define HAVE_BASIC_KEEPALIVE
-  #define HAVE_FULL_KEEPALIVE
-#endif
+
+#endif // (!TCP keepalive HQA_SCENARIO)
 
 #endif /*!defined(_HERCWIND_H)*/

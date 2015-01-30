@@ -147,6 +147,16 @@
   #error ENABLE_BUILTIN_SYMBOLS requires ENABLE_SYMBOLS_SYMBOLS
 #endif
 
+#if defined( HAVE_FULL_KEEPALIVE )
+  #if !defined( HAVE_PARTIAL_KEEPALIVE ) || !defined( HAVE_BASIC_KEEPALIVE )
+    #error Cannot have full TCP keepalive without partial and basic as well
+  #endif
+#elif defined( HAVE_PARTIAL_KEEPALIVE )
+  #if !defined( HAVE_BASIC_KEEPALIVE )
+    #error Cannot have partial TCP keepalive without basic as well
+  #endif
+#endif
+
 #if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
   #error OPTION_MSGHLD requires OPTION_MSGCLR
 #endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)

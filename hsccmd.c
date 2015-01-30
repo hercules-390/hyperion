@@ -7906,7 +7906,7 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 {
-#if !defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
+#if !defined( HAVE_BASIC_KEEPALIVE )
 
     UNREFERENCED( argc );
     UNREFERENCED( argv );
@@ -7916,32 +7916,24 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     WRMSG( HHC02321, "E" );
     return -1;
 
-#elif defined( HAVE_BASIC_KEEPALIVE ) ||  defined( HAVE_FULL_KEEPALIVE )
+#else // basic, partial or full: must attempt setting keepalive
 
     char buf[40];
     int rc, sfd, idle, intv, cnt;
 
-    /* Need a socket for setting/getting */
-    sfd = socket( AF_INET, SOCK_STREAM, 0 );
-
-    if (sfd < 0)
-    {
-        // "Error in function %s: %s"
-        WRMSG( HHC02219, "E", "socket()", strerror( HSO_errno ));
-        return -1;
-    }
-
-  #if defined( HAVE_BASIC_KEEPALIVE ) && !defined( HAVE_FULL_KEEPALIVE )
-
-    UNREFERENCED( argv );
     UNREFERENCED( cmdline );
+
+  #if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_PARTIAL_KEEPALIVE )
 
     // "This build of Hercules has only basic TCP keepalive support"
     WRMSG( HHC02322, "W" );
 
-  #else // defined( HAVE_FULL_KEEPALIVE )
+  #elif !defined( HAVE_FULL_KEEPALIVE )
 
-    UNREFERENCED( cmdline );
+    // "This build of Hercules has only partial TCP keepalive support"
+    WRMSG( HHC02323, "W" );
+
+  #endif // (basic or partial)
 
     /* Validate and parse the arguments passed to us */
     if (0
@@ -7953,6 +7945,17 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
         WRMSG( HHC02205, "E", argv[1], "" );
         return -1;
     }
+
+    /* Need a socket for setting/getting */
+    sfd = socket( AF_INET, SOCK_STREAM, 0 );
+
+    if (sfd < 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "socket()", strerror( HSO_errno ));
+        return -1;
+    }
+
     /*
     **  Set the requested values. Note since all sockets start out
     **  with default values, we must also set the keepalive values
@@ -7982,13 +7985,6 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
         WRMSG( HHC02320, "W" );
     }
 
-    /* Save what now should be the system's new default values */
-    sysblk.kaidle = idle;
-    sysblk.kaintv = intv;
-    sysblk.kacnt  = cnt;
-
-  #endif // defined( HAVE_FULL_KEEPALIVE )
-
     /* Retrieve the system's current keepalive values */
     if (get_socket_keepalive( sfd, &idle, &intv, &cnt ) < 0)
     {
@@ -8015,7 +8011,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 
     return rc;
 
-#endif // defined( HAVE_BASIC_KEEPALIVE ) || defined( HAVE_FULL_KEEPALIVE )
+#endif // (KEEPALIVE)
 }
 
 #ifdef OPTION_CMDTGT

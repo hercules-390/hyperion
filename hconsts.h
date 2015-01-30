@@ -208,27 +208,22 @@
 /*-------------------------------------------------------------------*/
 /* Default console tn3270/telnet session TCP keepalive values        */
 /*-------------------------------------------------------------------*/
-#ifdef _MSVC_
-// On Windows Vista and later the default probe count is 10 and
-// cannot be changed via setsockopt (only via registry entry).
-// On Windows pre-Vista it defaults to 5 probes and can't be
-// changed via setsockopt (only via registry entry). Refer to
-// function "kasock_init()" in module w32util.c for details.
+#if !defined( HAVE_BASIC_KEEPALIVE )
+/* No TCP keepalive support at all */
+#define  KEEPALIVE_IDLE_TIME        0   /* Idle time to first probe  */
+#define  KEEPALIVE_PROBE_INTERVAL   0   /* Probe timeout value       */
+#define  KEEPALIVE_PROBE_COUNT      0   /* Max probe timeouts        */
+#elif !defined( HAVE_PARTIAL_KEEPALIVE )
+/* Basic TCP keepalive support */
+#define  KEEPALIVE_IDLE_TIME        7200/* Idle time to first probe  */
+#define  KEEPALIVE_PROBE_INTERVAL   1   /* Probe timeout value       */
+#define  KEEPALIVE_PROBE_COUNT      10  /* Max probe timeouts        */
+#else
+/* Partial or Full TCP keepalive support */
 #define  KEEPALIVE_IDLE_TIME        3   /* Idle time to first probe  */
 #define  KEEPALIVE_PROBE_INTERVAL   1   /* Probe timeout value       */
 #define  KEEPALIVE_PROBE_COUNT      10  /* Max probe timeouts        */
-#else // *nix
-// I'm not sure if this is true for all *nix'es, but I know that it
-// is for my CentOS 6.4 system: the probe count defaults to '9' and
-// apparently cannot be changed via setsockopt. Attempts to change
-// it via setsockopt return "succeess" (rc==0), but the value isn't
-// actually changed. The value you requested is not honored. A call
-// to getsockopt always returns '9'. Other *nix'es may use different
-// values or behave differently.
-#define  KEEPALIVE_IDLE_TIME        3   /* Idle time to first probe  */
-#define  KEEPALIVE_PROBE_INTERVAL   1   /* Probe timeout value       */
-#define  KEEPALIVE_PROBE_COUNT      9   /* Max probe timeouts        */
-#endif
+#endif // (KEEPALIVE)
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous Hercules-related constants...                       */
