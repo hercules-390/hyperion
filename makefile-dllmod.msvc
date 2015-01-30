@@ -76,6 +76,6 @@ $(X)$(DYNMOD).dll: $(O)$(DYNMOD).res $(DYNOBJ) $(O)hengine.lib $(O)hutil.lib $(O
     $(linkdll)
 
 {$(DYNDIR)}.c{$(OBJDIR)}.obj::
-    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+    $(cc) $(cdebug) $(cflags) $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
 !ENDIF

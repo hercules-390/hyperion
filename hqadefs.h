@@ -9,7 +9,7 @@
 #define _HQADEFS_H_
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 0:          Reserved for normal builds                */
+/*  HQA Scenario    0      Reserved for normal builds                */
 /*-------------------------------------------------------------------*/
 
 #if !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
@@ -19,13 +19,13 @@
 #else
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 1:          System/370 support only                   */
+/*  HQA Scenario    1      System/370 support only                   */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 1   // System/370 support only
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 1\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 1\n"
 
   #define OPTION_370_MODE
   #define NO_390_MODE
@@ -34,13 +34,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 2:          ESA/390 support only                      */
+/*  HQA Scenario    2      ESA/390 support only                      */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 2   // ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 2\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 2\n"
 
   #define NO_370_MODE
   #define OPTION_390_MODE
@@ -49,13 +49,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 3:          System/370 and ESA/390 support only       */
+/*  HQA Scenario    3      System/370 and ESA/390 support only       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 3   // System/370 and ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 3\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 3\n"
 
   #define OPTION_370_MODE
   #define OPTION_390_MODE
@@ -64,13 +64,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 4:          zArchitecure and ESA/390 support only     */
+/*  HQA Scenario    4      zArchitecure and ESA/390 support only     */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 4   // zArchitecure and ESA/390 support only
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 4\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 4\n"
 
   #define NO_370_MODE
   #define OPTION_390_MODE
@@ -79,13 +79,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 5:          Windows, fthreads                        */
+/*  HQA Scenario    5      Windows, fthreads                         */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 5   // Windows, fthreads
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 5\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 5\n"
 
   #if !defined(_MSVC_)
     #error Selected HQA scenario is for MSVC only
@@ -96,13 +96,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 6:          Windows, Posix threads                    */
+/*  HQA Scenario    6      Windows, Posix threads                    */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 6   // Windows, Posix threads
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 6\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 6\n"
 
   #if defined(_MSVC_)
     #error Selected HQA scenario is not supported for MSVC builds
@@ -116,13 +116,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 7:          Vista, fthreads                           */
+/*  HQA Scenario    7      Vista, fthreads                           */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 7   // Vista, fthreads
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 7\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 7\n"
 
   #if !defined(_MSVC_)
     #error Selected HQA scenario is for MSVC only
@@ -145,13 +145,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 8:          Vista, Posix threads                      */
+/*  HQA Scenario    8      Vista, Posix threads                      */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 8   // Vista, Posix threads
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 8\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 8\n"
 
   #if defined(_MSVC_)
     #error Selected HQA scenario is not supported for MSVC builds
@@ -177,13 +177,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 9:          INLINE == forced inline                   */
+/*  HQA Scenario    9      INLINE == forced inline                   */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 9   // INLINE == forced inline
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 9\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 9\n"
 
   #undef    INLINE
   #if defined(__GNUC__)
@@ -197,13 +197,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 10:         INLINE == inline (just a suggestion)      */
+/*  HQA Scenario    10     INLINE == inline (just a suggestion)      */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 10  // INLINE == inline (just a suggestion)
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 10\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 10\n"
 
   #undef    INLINE
   #if defined(__GNUC__)
@@ -217,13 +217,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 11:         INLINE == null (compiler decides on own)  */
+/*  HQA Scenario    11     INLINE == null (compiler decides on own)  */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 11  // INLINE == null (compiler decides on own)
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 11\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 11\n"
 
   #undef  INLINE
   #define INLINE            /* nothing */
@@ -231,13 +231,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 12:         With Shared Devices, With Syncio          */
+/*  HQA Scenario    12     With Shared Devices, With Syncio          */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 12  // With Shared Devices, With Syncio
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 12\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 12\n"
 
   #define OPTION_SHARED_DEVICES
   #undef  OPTION_NO_SHARED_DEVICES
@@ -246,13 +246,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 13:         Without Shared Devices, With Syncio       */
+/*  HQA Scenario    13     Without Shared Devices, With Syncio       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 13  // Without Shared Devices, With Syncio
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 13\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 13\n"
 
   #undef  OPTION_SHARED_DEVICES
   #define OPTION_NO_SHARED_DEVICES
@@ -261,13 +261,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 14:         With Shared Devices, Without Syncio       */
+/*  HQA Scenario    14     With Shared Devices, Without Syncio       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 14  // With Shared Devices, Without Syncio
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 14\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 14\n"
 
   #define OPTION_SHARED_DEVICES
   #undef  OPTION_NO_SHARED_DEVICES
@@ -276,13 +276,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 15:         Without Shared Devices, Without Syncio    */
+/*  HQA Scenario    15     Without Shared Devices, Without Syncio    */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 15  // Without Shared Devices, Without Syncio
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 15\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 15\n"
 
   #undef  OPTION_SHARED_DEVICES
   #define OPTION_NO_SHARED_DEVICES
@@ -291,13 +291,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 16:         Without Object Rexx                       */
+/*  HQA Scenario    16     Without Object Rexx                       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 16  // Without Object Rexx
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 16\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 16\n"
 
   #undef  OBJECT_REXX_HDR_DIR
   #undef  OBJECT_REXX_HEADER1
@@ -309,13 +309,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 17:         Without Regina Rexx                       */
+/*  HQA Scenario    17     Without Regina Rexx                       */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 17  // Without Regina Rexx
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 17\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 17\n"
 
   #undef  REGINA_REXX_HDR_DIR
   #undef  REGINA_REXX_HEADER1
@@ -325,13 +325,13 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* QA Scenario 18:         Without Object Rexx, Without Regina Rexx  */
+/*  HQA Scenario    18     Without Object Rexx, Without Regina Rexx  */
 /*-------------------------------------------------------------------*/
 
 #if HQA_SCENARIO == 18  // Without Object Rexx, Without Regina Rexx
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n          QA Scenario 18\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 18\n"
 
   #undef  OBJECT_REXX_HDR_DIR
   #undef  OBJECT_REXX_HEADER1
@@ -344,6 +344,119 @@
   #undef  REGINA_REXX_HEADER1
   #undef  ENABLE_REGINA_REXX
   #undef  HAVE_REXXSAA_H
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    19     Without TCP keepalive support             */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 19  // Without TCP keepalive support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 19\n"
+
+  #undef  HAVE_BASIC_KEEPALIVE
+  #undef  HAVE_PARTIAL_KEEPALIVE
+  #undef  HAVE_FULL_KEEPALIVE
+  #undef  HAVE_DECL_SO_KEEPALIVE
+  #undef  HAVE_DECL_TCP_KEEPALIVE
+  #undef  HAVE_DECL_TCP_KEEPIDLE
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #undef  HAVE_DECL_TCP_KEEPCNT
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    20     With Basic TCP keepalive support          */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 20  // With Basic TCP keepalive support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 20\n"
+
+  #undef  HAVE_BASIC_KEEPALIVE
+  #undef  HAVE_PARTIAL_KEEPALIVE
+  #undef  HAVE_FULL_KEEPALIVE
+//#undef  HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#undef  HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #undef  HAVE_DECL_TCP_KEEPIDLE
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #undef  HAVE_DECL_TCP_KEEPCNT
+
+// (we must presume this system has AT LEAST Basic support)
+
+  #define HAVE_BASIC_KEEPALIVE      1
+  #undef  HAVE_PARTIAL_KEEPALIVE
+  #undef  HAVE_FULL_KEEPALIVE
+//#undef  HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#undef  HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #undef  HAVE_DECL_TCP_KEEPIDLE
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #undef  HAVE_DECL_TCP_KEEPCNT
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    21     With Partial TCP keepalive support        */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 21  // With Partial TCP keepalive support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 21\n"
+
+  #undef  HAVE_BASIC_KEEPALIVE
+  #undef  HAVE_PARTIAL_KEEPALIVE
+  #undef  HAVE_FULL_KEEPALIVE
+//#undef  HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#undef  HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #undef  HAVE_DECL_TCP_KEEPIDLE
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #undef  HAVE_DECL_TCP_KEEPCNT
+
+  // (we must presume this system has AT LEAST partial support)
+
+  #define HAVE_BASIC_KEEPALIVE      1
+  #define HAVE_PARTIAL_KEEPALIVE    1
+  #undef  HAVE_FULL_KEEPALIVE
+//#define HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#define HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #define HAVE_DECL_TCP_KEEPIDLE    1
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #define HAVE_DECL_TCP_KEEPCNT     1
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    22     With Full TCP keepalive support            */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 22  // With Full TCP keepalive support
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 22\n"
+
+  #undef  HAVE_BASIC_KEEPALIVE
+  #undef  HAVE_PARTIAL_KEEPALIVE
+  #undef  HAVE_FULL_KEEPALIVE
+//#undef  HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#undef  HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #undef  HAVE_DECL_TCP_KEEPIDLE
+  #undef  HAVE_DECL_TCP_KEEPINTVL
+  #undef  HAVE_DECL_TCP_KEEPCNT
+
+  // (we must presume this system has full support BY DEFAULT)
+
+  #define HAVE_BASIC_KEEPALIVE      1
+  #define HAVE_PARTIAL_KEEPALIVE    1
+  #define HAVE_FULL_KEEPALIVE       1
+//#define HAVE_DECL_SO_KEEPALIVE    // (use whichever this system uses)
+//#define HAVE_DECL_TCP_KEEPALIVE   // (use whichever this system uses)
+  #define HAVE_DECL_TCP_KEEPIDLE    1
+  #define HAVE_DECL_TCP_KEEPINTVL   1
+  #define HAVE_DECL_TCP_KEEPCNT     1
 
 #endif
 

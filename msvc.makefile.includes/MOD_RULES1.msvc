@@ -16,7 +16,7 @@ $(O)build_pch.pch: build_pch.c
 
 !IFNDEF NOCRYPTO
 {crypto}.c{$(OBJDIR)}.obj::
-    $(cc) $(cdebug) $(cflags) /Icrypto /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+    $(cc) $(cdebug) $(cflags) /Icrypto /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
 !ENDIF
 
@@ -24,10 +24,10 @@ $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
 $(O)dfp.obj: dfp.c
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
+    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
 
 $(O)pfpo.obj: pfpo.c
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" pfpo.c
+    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" pfpo.c
 
 $(O)decNumber.res: decNumber\decNumber.rc
     $(rc) $(rcflags) $(rcvars) -i decNumber -fo $(O)decNumber.res decNumber\decNumber.rc

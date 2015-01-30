@@ -2,7 +2,10 @@
 /*              Architecture-dependent macro definitions             */
 
 #ifdef HAVE_CONFIG_H
-  #include <config.h> // Hercules build configuration options/settings
+  #ifndef    _CONFIG_H
+  #define    _CONFIG_H
+    #include <config.h>         /* Hercules build configuration      */
+  #endif /*  _CONFIG_H*/
 #endif
 
 #if !defined(FEATCHK_CHECK_DONE)

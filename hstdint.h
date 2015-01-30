@@ -18,7 +18,10 @@
 #define _HSTDINT_H
 
 #ifdef HAVE_CONFIG_H
-  #include <config.h>           /* Hercules build configuration      */
+  #ifndef    _CONFIG_H
+  #define    _CONFIG_H
+    #include <config.h>         /* Hercules build configuration      */
+  #endif /*  _CONFIG_H*/
 #endif
 
 #if defined(_MSVC_)

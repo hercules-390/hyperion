@@ -91,3 +91,9 @@ cflags = $(cflags) /favor:AMD64
 # Increase the sockets set size limit/default to be the
 # same value as used on most non-Windows platforms (1024)
 cflags  = $(cflags)  /D FD_SETSIZE=1024
+
+# Define a "Use precompiled header" compiler options string macro.
+# We define it as an namke string macro to make it easier for HQA
+# to remove the option if desired by setting it to an empty string.
+
+use_pch_opt = /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h"

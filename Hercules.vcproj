@@ -1700,6 +1700,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.HQA"
+						>
+					</File>
+					<File
 						RelativePath=".\README.HRAF"
 						>
 					</File>

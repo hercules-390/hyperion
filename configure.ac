@@ -2367,7 +2367,9 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
     AC_SUBST(HERCIFC_GROUPNAME)
 fi
 
-AC_SUBST(HQA_INC,$hc_cv_hqa_inc)
+HQA_INC="$hc_cv_hqa_inc"
+
+AC_SUBST(HQA_INC)
 
 AC_CACHE_SAVE()
 
