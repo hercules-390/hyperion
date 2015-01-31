@@ -206,6 +206,7 @@
 
 #ifdef _MSVC_
   #define  socket               w32_socket
+  #define  accept               w32_accept
 /* Now defined in hsocket.h
   int read_socket(int fd, char *ptr, int nbytes);
   int write_socket(int fd, const char *ptr, int nbytes);

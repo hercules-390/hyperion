@@ -1530,7 +1530,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
 /* NEW CLIENT CONNECTION THREAD                                      */
 /*-------------------------------------------------------------------*/
 static void*
-connect_client (void *csockp)
+connect_client (void* pArg)
 {
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
@@ -1556,7 +1556,7 @@ char                    *logoout;
 
     logobfr=NULL;
     /* Load the socket address from the thread parameter */
-    csock = *(int*)csockp;
+    csock = (int)(ptrdiff_t)pArg;
 
     /* Obtain the client's IP address */
     namelen = sizeof(client);
@@ -2189,7 +2189,7 @@ BYTE                   unitstat;        /* Status after receive data */
 
             /* Create a thread to complete the client connection */
             rc = create_thread (&tidneg, DETACHED,
-                        connect_client, &csock, "connect_client");
+                        connect_client, (void*)csock, "connect_client");
             if (rc)
             {
                 WRMSG(HHC00102, "E", strerror(errno));

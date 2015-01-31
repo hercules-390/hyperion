@@ -2879,6 +2879,26 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Accept connection on listening socket
+
+DLL_EXPORT int w32_accept( int lsock, struct sockaddr* addr, int* addrlen )
+{
+    SOCKET sock;
+
+    sock = WSAAccept( (SOCKET) lsock, addr, addrlen, NULL, 0 );
+
+    if (INVALID_SOCKET != sock)
+        VERIFY( add_kasock( sock ));
+    else
+    {
+        errno = WSAGetLastError();
+        sock = (SOCKET) -1;
+    }
+
+    return ((int) sock);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Close a socket
 
 DLL_EXPORT int w32_close_socket( int fd )

@@ -203,6 +203,7 @@ W32_DLL_IMPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD
 W32_DLL_IMPORT void w32_init_hostinfo( HOST_INFO* pHostInfo );
 
 W32_DLL_IMPORT int   w32_socket      ( int af, int type, int protocol );
+W32_DLL_IMPORT int   w32_accept      ( int lsock, struct sockaddr* addr, int* addrlen );
 W32_DLL_IMPORT int   w32_close_socket( int fd );
 W32_DLL_IMPORT void  w32_FD_SET      ( int fd, fd_set* pSet );
 W32_DLL_IMPORT int   w32_FD_ISSET    ( int fd, fd_set* pSet );
