@@ -2189,7 +2189,7 @@ BYTE                   unitstat;        /* Status after receive data */
 
             /* Create a thread to complete the client connection */
             rc = create_thread (&tidneg, DETACHED,
-                        connect_client, (void*)csock, "connect_client");
+                        connect_client, (void*)(intptr_t)csock, "connect_client");
             if (rc)
             {
                 WRMSG(HHC00102, "E", strerror(errno));
