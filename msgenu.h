@@ -811,6 +811,7 @@ do { \
 #define HHC00975 "%1d:%04X CTC: invalid %s length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
 #define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == 0x01)"
+#define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
 
 // range 00980 - 00989 available
 // range 00990 - 00999 available
@@ -2083,7 +2084,7 @@ do { \
 /* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument %s"
-#define HHC90012 "Pttrace: %s %s %s %s to %d %d"
+#define HHC90012 "Pttrace: %s %s %s %s to=%d %d"
 #define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
 #define HHC90014 "lock %s was obtained by thread "TIDPAT" at %s"
 #define HHC90015 "Thread "TIDPAT" abandoned lock %s obtained on %s at %s"

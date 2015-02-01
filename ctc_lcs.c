@@ -17,21 +17,45 @@
 #include "opcode.h"
 #include "herc_getopt.h"
 
+
+
+//#define FISHFIX
+
+
+
+//-----------------------------------------------------------------------------
+//  DEBUGGING: use 'ENABLE_TRACING_STMTS' to activate the compile-time
+//  "TRACE" and "VERIFY" debug macros. Use 'NO_LCS_OPTIMIZE' to disable
+//  compiler optimization for this module (to make setting breakpoints
+//  and stepping through code more reliable).
+//
+//  Use the "-d" device statement option (or the "ctc debug on" panel
+//  command) to activate logmsg debugging (verbose debug log messages).
+//
+//  Use the 'ptt {lcs1|lcs2}' panel command to activate debug tracing
+//  via the PTT facility.
+//-----------------------------------------------------------------------------
+
 //#define  ENABLE_TRACING_STMTS   1       // (Fish: DEBUGGING)
 //#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 //#define  NO_LCS_OPTIMIZE                // (Fish: DEBUGGING) (MSVC only)
-//#define  LCS_TIMING_DEBUG               // (Fish: DEBUG speed/timing)
 #define  LCS_NO_950_952                 // (Fish: DEBUGGING: HHC00950 and HHC00952 are rarely interesting)
 
 #if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-#if defined( LCS_TIMING_DEBUG )
-  #define PTT_LCS_TIMING_DEBUG      PTT
-#else
-  #define PTT_LCS_TIMING_DEBUG      __noop
-#endif
+// PROGRAMMING NOTE: in addition to normal logmsg debugging (i.e. the "-d"
+// device statement option which activates the displaying of log messages)
+// we also support debugging via the PTT facility to help with debugging
+// otherwise hard to find race conditions. PTT tracing is always enabled,
+// but is never activated except by demand via the 'ptt' panel command.
+
+#undef  PTT_TIMING
+#define PTT_TIMING      PTT_LCS1        // LCS Timing Debug
+#undef  PTT_DEBUG
+#define PTT_DEBUG       PTT_LCS2        // LCS General Debugging (including
+                                        // LCS device lock and event tracing)
 
 //-----------------------------------------------------------------------------
 /* CCW Codes 0x03 & 0xC3 are immediate commands */
@@ -71,11 +95,11 @@ static void     LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame );
 
 static void*    LCS_PortThread( void* arg /*PLCSPORT pLCSPORT */ );
 
-static int      LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
-                                     BYTE*   pData,   size_t iSize );
+static void     LCS_EnqueueEthFrame     ( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, size_t iSize );
+static int      LCS_DoEnqueueEthFrame   ( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, size_t iSize );
 
-static int      LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply,
-                                                        size_t     iSize );
+static void     LCS_EnqueueReplyFrame   ( PLCSDEV pLCSDEV, LCSCMDHDR* pReply, size_t iSize );
+static int      LCS_DoEnqueueReplyFrame ( PLCSDEV pLCSDEV, LCSCMDHDR* pReply, size_t iSize );
 
 static int      BuildOAT( char* pszOATName, PLCSBLK pLCSBLK );
 static char*    ReadOAT( char* pszOATName, FILE* fp, char* pszBuff );
@@ -92,16 +116,9 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     memcpy( &(reply), (pCmdFrame), sizeof( LCSCMDHDR ));    \
     STORE_HW( (reply).bLCSCmdHdr.hwReturnCode, 0x0000 )
 
-#define ENQUEUE_REPLY_FRAME( pLCSDEV, reply )                               \
-                                                                            \
-    while                                                                   \
-    (1                                                                      \
-        && LCS_EnqueueReplyFrame( (pLCSDEV), (PLCSCMDHDR) &(reply),         \
-                                                    sizeof( reply )) != 0   \
-        &&  (pLCSDEV)->pLCSBLK->Port[(pLCSDEV)->bPort].fd != -1             \
-        && !(pLCSDEV)->pLCSBLK->Port[(pLCSDEV)->bPort].fCloseInProgress     \
-    )                                                                       \
-        usleep( CTC_DELAY_USECS )
+#define ENQUEUE_REPLY_FRAME( pLCSDEV, reply )               \
+                                                            \
+    LCS_EnqueueReplyFrame( (pLCSDEV), (LCSCMDHDR*) &(reply), sizeof( reply ))
 
 // ====================================================================
 //                    find_group_device
@@ -633,9 +650,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 
     pLCSPORT->icDevices--;
 
+    PTT_DEBUG( "CLOSE: ENTRY      ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
     // Is this the last device on the port?
     if( !pLCSPORT->icDevices )
     {
+        PTT_DEBUG( "CLOSE: is last    ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
         // PROGRAMMING NOTE: there's currently no way to interrupt
         // the "LCS_PortThread"s TUNTAP_Read of the adapter. Thus
         // we must simply wait for LCS_PortThread to eventually
@@ -659,19 +680,29 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         if( pLCSPORT->fd >= 0 )
         {
             TID tid = pLCSPORT->tid;
+            PTT_DEBUG( "CLOSE: closing... ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+            PTT_DEBUG( "GET  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             obtain_lock( &pLCSPORT->PortEventLock );
+            PTT_DEBUG( "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             {
                 if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
                     // "%1d:%04X CTC: lcs triggering port %2.2X event"
                     WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
+                PTT_DEBUG( "CLOSING started=NO", 000, pDEVBLK->devnum, pLCSPORT->bPort );
                 pLCSPORT->fPortStarted = 0;
+                PTT_DEBUG( "SET  closeInProg  ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
                 pLCSPORT->fCloseInProgress = 1;
+                PTT_DEBUG( "SIG  PortEvent    ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
                 signal_condition( &pLCSPORT->PortEvent );
             }
+            PTT_DEBUG( "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             release_lock( &pLCSPORT->PortEventLock );
+            PTT_DEBUG( "signal_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             signal_thread( tid, SIGUSR2 );
+            PTT_DEBUG( "join_thread       ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             join_thread( tid, NULL );
+            PTT_DEBUG( "detach_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             detach_thread( tid );
         }
 
@@ -679,7 +710,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             pLCSDEV->pDEVBLK[0]->fd = -1;
         if( pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0 )
             pLCSDEV->pDEVBLK[1]->fd = -1;
+
+        PTT_DEBUG( "CLOSE: closed     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     }
+    else
+        PTT_DEBUG( "CLOSE: not last   ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
+    PTT_DEBUG( "CLOSE: cleaning up", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     // Housekeeping
     if( pLCSDEV->pDEVBLK[0] == pDEVBLK )
@@ -728,6 +765,8 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     }
 
     pDEVBLK->dev_data = NULL;
+
+    PTT_DEBUG( "CLOSE: EXIT       ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     return 0;
 }
@@ -785,14 +824,19 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
     // probably should if real LCS devices do (I was unable
     // to determine whether they do or not). -- Fish
 
+    PTT_DEBUG( "READ: ENTRY       ", 000, pDEVBLK->devnum, -1 );
+
     for (;;)
     {
         // Wait for some LCS Frames to arrive in our buffer...
 
+        PTT_DEBUG( "GET  DevDataLock  ", 000, pDEVBLK->devnum, -1 );
         obtain_lock( &pLCSDEV->DevDataLock );
+        PTT_DEBUG( "GOT  DevDataLock  ", 000, pDEVBLK->devnum, -1 );
 
         if( !( pLCSDEV->fDataPending || pLCSDEV->fReplyPending ) )
         {
+            PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, -1 );
             release_lock( &pLCSDEV->DevDataLock );
 
             // Wait 5 seconds then check for channel conditions
@@ -802,13 +846,18 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
             waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
             waittime.tv_nsec = now.tv_usec * 1000;
 
+            PTT_DEBUG( "GET  DevEventLock ", 000, pDEVBLK->devnum, -1 );
             obtain_lock( &pLCSDEV->DevEventLock );
+            PTT_DEBUG( "GOT  DevEventLock ", 000, pDEVBLK->devnum, -1 );
 
+            PTT_DEBUG( "WAIT DevEventLock ", 000, pDEVBLK->devnum, -1 );
             rc = timed_wait_condition( &pLCSDEV->DevEvent,
                                        &pLCSDEV->DevEventLock,
                                        &waittime );
 
+            PTT_DEBUG( "WOKE DevEventLock ", 000, pDEVBLK->devnum, -1 );
             release_lock( &pLCSDEV->DevEventLock );
+            PTT_DEBUG( "REL  DevEventLock ", 000, pDEVBLK->devnum, -1 );
 
             // If we didn't receive any, keep waiting...
 
@@ -831,8 +880,12 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
             // We received some LCS Frames...
 
+            PTT_DEBUG( "GET  DevEventLock ", 000, pDEVBLK->devnum, -1 );
             obtain_lock( &pLCSDEV->DevDataLock );
+            PTT_DEBUG( "GOT  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         }
+
+        PTT_DEBUG( "READ using buffer ", 000, pDEVBLK->devnum, -1 );
 
         // Point to the end of all buffered LCS Frames...
         // (where the next Frame *would* go if there was one)
@@ -908,14 +961,18 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
         // to determine whether real LCS devices support data-
         // chaining or not, but if they do we should fix this).
 
+        PTT_DEBUG( "READ empty buffer ", 000, pDEVBLK->devnum, -1 );
         pLCSDEV->iFrameOffset  = 0;
         pLCSDEV->fReplyPending = 0;
         pLCSDEV->fDataPending  = 0;
 
+        PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, -1 );
         release_lock( &pLCSDEV->DevDataLock );
 
         break;
     }
+
+    PTT_DEBUG( "READ: EXIT        ", 000, pDEVBLK->devnum, -1 );
 }
 
 // ====================================================================
@@ -927,17 +984,17 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 static void  LCS_BegMWrite( DEVBLK* pDEVBLK )
 {
     if (((LCSDEV*)pDEVBLK->dev_data)->pLCSBLK->fNoMultiWrite) return;
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 begmw", 0, 0, 0 );
+    PTT_TIMING( "b4 begmw", 0, 0, 0 );
     TUNTAP_BegMWrite( pDEVBLK->fd, CTC_FRAME_BUFFER_SIZE );
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af begmw", 0, 0, 0);
+    PTT_TIMING( "af begmw", 0, 0, 0);
 }
 
 static void  LCS_EndMWrite( DEVBLK* pDEVBLK, int nEthBytes, int nEthFrames )
 {
     if (((LCSDEV*)pDEVBLK->dev_data)->pLCSBLK->fNoMultiWrite) return;
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 endmw", 0, nEthBytes, nEthFrames );
+    PTT_TIMING( "b4 endmw", 0, nEthBytes, nEthFrames );
     TUNTAP_EndMWrite( pDEVBLK->fd );
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af endmw", 0, nEthBytes, nEthFrames );
+    PTT_TIMING( "af endmw", 0, nEthBytes, nEthFrames );
 }
 
 #else // !defined( OPTION_W32_CTCI )
@@ -980,7 +1037,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
 
     // Process each frame in the buffer...
 
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "beg write", 0, 0, 0 );
+    PTT_DEBUG( "WRIT ENTRY        ", 000, pDEVBLK->devnum, -1 );
+    PTT_TIMING( "beg write", 0, 0, 0 );
     LCS_BegMWrite( pDEVBLK ); // (performance)
 
     while( 1 )
@@ -1006,6 +1064,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
 
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
+            PTT_DEBUG( "WRIT: Cmd frame   ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
+
             // Trace received command frame...
             if( pLCSDEV->pLCSBLK->fDebug )
             {
@@ -1020,6 +1080,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // PLEASE EXPLAIN! -- Fish
             if (pCmdFrame->bInitiator == 0x01)
             {
+                PTT_DEBUG( "CMD initiator 0x01", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if (pLCSDEV->pLCSBLK->fDebug)
                     // "%1d:%04X CTC: lcs command packet IGNORED (bInitiator == 0x01)"
                     WRMSG( HHC00977, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
@@ -1031,36 +1092,42 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 //  HHC00933  =  "%1d:%04X CTC: executing command %s"
 
             case LCS_CMD_STARTUP:       // Start Host
+                PTT_DEBUG( "CMD=StartUp       ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "startup");
                 LCS_Startup( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_SHUTDOWN:      // Shutdown Host
+                PTT_DEBUG( "CMD=Shutdown      ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "shutdown");
                 LCS_Shutdown( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STRTLAN:       // Start LAN
+                PTT_DEBUG( "CMD=Start LAN     ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "start lan");
                 LCS_StartLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_STOPLAN:       // Stop  LAN
+                PTT_DEBUG( "CMD=Stop  LAN     ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "stop lan");
                 LCS_StopLan( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
+                PTT_DEBUG( "CMD=Query IPAssist", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "query IP assist");
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
+                PTT_DEBUG( "CMD=LAN Statistics", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if( pLCSDEV->pLCSBLK->fDebug )
                     WRMSG(HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "lan statistics");
                 LCS_LanStats( pLCSDEV, pCmdFrame );
@@ -1078,6 +1145,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             case LCS_CMD_LISTLAN2:      // List LAN (another version)
             case LCS_CMD_TIMING:        // Timing request
             default:
+                PTT_DEBUG( "*CMD=Unsupported! ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                 if (pLCSDEV->pLCSBLK->fDebug)
                 {
                     // "%1d:%04X CTC: executing command %s"
@@ -1095,6 +1163,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
         case LCS_FRMTYP_FDDI:   // FDDI
         case LCS_FRMTYP_AUTO:   // auto-detect
 
+            PTT_DEBUG( "WRIT: Eth frame   ", 000, pDEVBLK->devnum, -1 );
+
             pLCSEthFrame = (PLCSETHFRM)pLCSHDR;
             pEthFrame    = (PETHFRM)pLCSEthFrame->bData;
             iEthLen      = iLength - sizeof(LCSETHFRM);
@@ -1110,11 +1180,12 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // Write the Ethernet frame to the TAP device
             nEthBytes += iEthLen;
             nEthFrames++;
-            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 write", 0, iEthLen, 1 );
+            PTT_DEBUG( "WRIT: writing...  ", 000, pDEVBLK->devnum, -1 );
+            PTT_TIMING( "b4 write", 0, iEthLen, 1 );
             if( TUNTAP_Write( pDEVBLK->fd,
                               (BYTE*)pEthFrame, iEthLen ) != iEthLen )
             {
-                PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*WRITE ERR", 0, iEthLen, 1 );
+                PTT_TIMING( "*WRITE ERR", 0, iEthLen, 1 );
                 // "%1d:%04X CTC: error writing to file %s: %s"
                 WRMSG( HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
@@ -1122,19 +1193,22 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
                 LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
+                PTT_DEBUG( "WRIT ENTRY        ", 000, pDEVBLK->devnum, -1 );
                 return;
             }
-            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af write", 0, iEthLen, 1 );
+            PTT_TIMING( "af write", 0, iEthLen, 1 );
             break;
 
         default:
+            PTT_DEBUG( "*WRIT Unsupp frame", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
             // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
             WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
             ASSERT( FALSE );
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
             LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
-            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "end write",  0, 0, 0 );
+            PTT_TIMING( "end write",  0, 0, 0 );
+            PTT_DEBUG( "WRIT EXIT         ", 000, pDEVBLK->devnum, -1 );
             return;
 
         } // end switch( LCS Frame type )
@@ -1146,18 +1220,28 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     *pResidual = 0;
     *pUnitStat = CSW_CE | CSW_DE;
 
+    PTT_DEBUG( "WRIT if reply pend", 000, pDEVBLK->devnum, -1 );
     if( pLCSDEV->fReplyPending )
     {
+        PTT_DEBUG( "WRIT reply IS pend", 000, pDEVBLK->devnum, -1 );
+
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             // "%1d:%04X CTC: lcs triggering device event"
             WRMSG( HHC00938, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
 
+        PTT_DEBUG( "GET  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         obtain_lock( &pLCSDEV->DevEventLock );
+        PTT_DEBUG( "GOT  DevEventLock ", 000, pDEVBLK->devnum, -1 );
+
+        PTT_DEBUG( "SIG  DevEvent     ", 000, pDEVBLK->devnum, -1 );
         signal_condition( &pLCSDEV->DevEvent );
+
+        PTT_DEBUG( "REL  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         release_lock( &pLCSDEV->DevEventLock );
     }
 
-    PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "end write",  0, 0, 0 );
+    PTT_TIMING( "end write",  0, 0, 0 );
+    PTT_DEBUG( "WRIT EXIT         ", 000, pDEVBLK->devnum, -1 );
 }
 
 #if 0
@@ -1325,17 +1409,24 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif // OPTION_TUNTAP_DELADD_ROUTES
     int         nIFFlags;
     DEVBLK*     pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
+#if defined( FISHFIX )
+    U8          fStartPending = 0;
+#endif
 
     INIT_REPLY_FRAME( reply, pCmdFrame );
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
     // Serialize access to eliminate ioctl errors
+    PTT_DEBUG( "GET  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     obtain_lock( &pLCSPORT->PortDataLock );
+    PTT_DEBUG( "GOT  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     // Configure the TAP interface if used
+    PTT_DEBUG( "STRTLAN if started", pLCSPORT->fPortStarted, pDEVBLK->devnum, pLCSPORT->bPort );
     if( pLCSPORT->fUsed && pLCSPORT->fPortCreated && !pLCSPORT->fPortStarted )
     {
+        PTT_DEBUG( "STRTLAN started=NO", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         nIFFlags =              // Interface flags
             0
             | IFF_UP            // (interface is being enabled)
@@ -1376,17 +1467,36 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
+#if !defined( FISHFIX )
+
         if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
             // "%1d:%04X CTC: lcs triggering port %2.2X event"
             WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
+        PTT_DEBUG( "GET  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         obtain_lock( &pLCSPORT->PortEventLock );
+        PTT_DEBUG( "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
+        PTT_DEBUG( "STRTLAN started=on", 1, pDEVBLK->devnum, pLCSPORT->bPort );
         pLCSPORT->fPortStarted = 1;
+
+        PTT_DEBUG( "SIG  PortEvent    ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         signal_condition( &pLCSPORT->PortEvent );
+
+        PTT_DEBUG( "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         release_lock( &pLCSPORT->PortEventLock );
+
+        PTT_DEBUG( "STRTLAN pause 250 ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         usleep( 250*1000 );
+
+#else // defined( FISHFIX )
+
+        fStartPending = 1;
+
+#endif // defined( FISHFIX )
     }
 
+    PTT_DEBUG( "REL  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     release_lock( &pLCSPORT->PortDataLock );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
@@ -1408,6 +1518,33 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );
+
+#if defined( FISHFIX )
+
+    if (fStartPending)
+    {
+        if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+            // "%1d:%04X CTC: lcs triggering port %2.2X event"
+            WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
+
+        PTT_DEBUG( "GET  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+        obtain_lock( &pLCSPORT->PortEventLock );
+        PTT_DEBUG( "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
+        PTT_DEBUG( "STRTLAN started=on", 1, pDEVBLK->devnum, pLCSPORT->bPort );
+        pLCSPORT->fPortStarted = 1;
+
+        PTT_DEBUG( "SIG  PortEvent    ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+        signal_condition( &pLCSPORT->PortEvent );
+
+        PTT_DEBUG( "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+        release_lock( &pLCSPORT->PortEventLock );
+
+        PTT_DEBUG( "STRTLAN pause 250 ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+        usleep( 250*1000 );
+    }
+
+#endif // defined( FISHFIX )
 }
 
 // ====================================================================
@@ -1425,20 +1562,32 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     INIT_REPLY_FRAME( reply, pCmdFrame );
 
-    pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
-    pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
+    pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
+    pDEVBLK  =  pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
 
     // Serialize access to eliminate ioctl errors
+    PTT_DEBUG( "GET  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     obtain_lock( &pLCSPORT->PortDataLock );
+    PTT_DEBUG( "GOT  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         // "%1d:%04X CTC: lcs triggering port %2.2X event"
         WRMSG( HHC00966, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSPORT->bPort );
 
+    PTT_DEBUG( "GET  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     obtain_lock( &pLCSPORT->PortEventLock );
+    PTT_DEBUG( "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
+
+    PTT_DEBUG( "STOPLAN started=NO", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     pLCSPORT->fPortStarted = 0;
+
+    PTT_DEBUG( "SIG  PortEvent    ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     signal_condition( &pLCSPORT->PortEvent );
+
+    PTT_DEBUG( "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     release_lock( &pLCSPORT->PortEventLock );
+
+    PTT_DEBUG( "STOPLAN pause 250 ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     usleep( 250*1000 );
 
     // Disable the interface by turning off the IFF_UP flag...
@@ -1483,6 +1632,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     }
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
+    PTT_DEBUG( "REL  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     release_lock( &pLCSPORT->PortDataLock );
 
     // FIXME: Really need to iterate through the devices and close
@@ -1704,7 +1854,6 @@ static void*  LCS_PortThread( void* arg)
     BYTE        szBuff[2048];
     char        bReported = 0;
     char        bStartReported = 0;
-    time_t      t1, t2;
 
     pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
@@ -1712,7 +1861,9 @@ static void*  LCS_PortThread( void* arg)
 
     for (;;)
     {
+        PTT_DEBUG( "GET  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         obtain_lock( &pLCSPORT->PortEventLock );
+        PTT_DEBUG( "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         {
             // Don't read unless/until port is enabled...
 
@@ -1727,12 +1878,20 @@ static void*  LCS_PortThread( void* arg)
                 bStartReported = 0;
             }
 
-            while (1
-                && !(pLCSPORT->fd < 0)
-                && !pLCSPORT->fCloseInProgress
-                && !pLCSPORT->fPortStarted
-            )
+            while (1)
             {
+                PTT_DEBUG( "PORTHRD if started", pLCSPORT->fPortStarted, pDEVBLK->devnum, pLCSPORT->bPort );
+                if (0
+                    || (pLCSPORT->fd < 0)
+                    || pLCSPORT->fCloseInProgress
+                    || pLCSPORT->fPortStarted
+                )
+                {
+                    PTT_DEBUG( "PORTHRD is started", pLCSPORT->fPortStarted, pDEVBLK->devnum, pLCSPORT->bPort );
+                    break;
+                }
+
+                PTT_DEBUG( "WAIT PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
                 timed_wait_condition_relative_usecs
                 (
                     &pLCSPORT->PortEvent,       // ptr to condition to wait on
@@ -1740,6 +1899,7 @@ static void*  LCS_PortThread( void* arg)
                     250*1000,                   // max #of microseconds to wait
                     NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
                 );
+                PTT_DEBUG( "WOKE PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             }
 
             if (pLCSPORT->pLCSBLK->fDebug && !bStartReported)
@@ -1749,6 +1909,7 @@ static void*  LCS_PortThread( void* arg)
                 bStartReported = 1;
             }
         }
+        PTT_DEBUG( "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
         release_lock( &pLCSPORT->PortEventLock );
 
         // Exit when told...
@@ -1757,9 +1918,9 @@ static void*  LCS_PortThread( void* arg)
             break;
 
         // Read an IP packet from the TAP device
-        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 tt read", 0, 0, 0 );
+        PTT_TIMING( "b4 tt read", 0, 0, 0 );
         iLength = TUNTAP_Read( pLCSPORT->fd, szBuff, sizeof( szBuff ) );
-        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af tt read", 0, 0, iLength );
+        PTT_TIMING( "af tt read", 0, 0, iLength );
 
         if( iLength == 0 )      // (probably EINTR; ignore)
             continue;
@@ -1972,43 +2133,13 @@ static void*  LCS_PortThread( void* arg)
         }
 #endif // LCS_NO_950_952
 
-        // Match was found.
-        // Enqueue frame on buffer, if buffer is full, keep trying
+        // Match was found. Enqueue frame on buffer.
 
-        time( &t1 );
-        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "b4 enqueue", 0, iLength, 0 );
-        while( LCS_EnqueueEthFrame( pMatchingLCSDEV, pLCSPORT->bPort, szBuff, iLength ) < 0
-            && pLCSPORT->fd != -1 && !pLCSPORT->fCloseInProgress )
-        {
-            if (EMSGSIZE == errno)
-            {
-                if( pLCSPORT->pLCSBLK->fDebug )
-                    // "CTC: lcs device port %2.2X: packet frame too big, dropped"
-                    WRMSG( HHC00953, "W", pLCSPORT->bPort );
-                PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq drop", 0, iLength, 0 );
-                break;
-            }
-            if( pLCSPORT->pLCSBLK->fDebug )
-            {
-                // Limit HHC00965 message rate to only once every few seconds...
-                time( &t2 );
-                if ((t2 - t1) >= 3)
-                {
-                    union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
-                    char  str[40];
-                    t1 = t2;
-                    c.i = ntohl(pMatchingLCSDEV->lIPAddress);
-                    MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
-                    // "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
-                    WRMSG( HHC00965, "D", pLCSPORT->bPort, pMatchingLCSDEV->sAddr, str );
-                }
-            }
-            PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "*enq wait", 0, iLength, 0 );
-            ASSERT( ENOBUFS == errno );
-            usleep( CTC_DELAY_USECS );
-        }
-        PTT_LCS_TIMING_DEBUG( PTT_CL_INF, "af enqueue", 0, iLength, 0 );
+        LCS_EnqueueEthFrame( pMatchingLCSDEV, pLCSPORT->bPort, szBuff, iLength );
+
     } // end for(;;)
+
+    PTT_DEBUG( "PORTHRD Closing...", pLCSPORT->fPortStarted, pDEVBLK->devnum, pLCSPORT->bPort );
 
     // We must do the close since we were the one doing the i/o...
 
@@ -2033,6 +2164,7 @@ static void*  LCS_PortThread( void* arg)
     pLCSPORT->fUsed        = 0;
     pLCSPORT->fLocalMAC    = 0;
     pLCSPORT->fPortCreated = 0;
+    PTT_DEBUG( "PORTHRD started=NO", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     pLCSPORT->fPortStarted = 0;
     pLCSPORT->fRouteAdded  = 0;
     pLCSPORT->fd           = -1;
@@ -2043,6 +2175,78 @@ static void*  LCS_PortThread( void* arg)
 
 // ====================================================================
 //                       LCS_EnqueueEthFrame
+// ====================================================================
+//
+// Places the provided ethernet frame in the next available frame
+// slot in the adapter buffer. If buffer is full, keep trying.
+// The LCS device data lock must NOT be held when called!
+//
+// --------------------------------------------------------------------
+
+static void LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, size_t iSize )
+{
+    time_t    t1, t2;
+    PLCSPORT  pLCSPORT;
+    DEVBLK*   pDEVBLK;
+
+    pLCSPORT = &pLCSDEV->pLCSBLK->Port[ bPort ];
+    pDEVBLK  = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+
+    PTT_DEBUG( "ENQ EthFrame ENTRY", 000, pDEVBLK->devnum, bPort );
+
+    time( &t1 );
+
+    PTT_TIMING( "b4 enqueue", 0, iSize, 0 );
+
+    // While port open, not close in progress, and frame buffer full...
+
+    while (1
+        &&  pLCSPORT->fd != -1
+        && !pLCSPORT->fCloseInProgress
+        && LCS_DoEnqueueEthFrame( pLCSDEV, bPort, pData, iSize ) < 0
+    )
+    {
+        if (EMSGSIZE == errno)
+        {
+            // "CTC: lcs device port %2.2X: packet frame too big, dropped"
+            WRMSG( HHC00953, "W", bPort );
+            PTT_TIMING( "*enq drop", 0, iSize, 0 );
+            break;
+        }
+
+        if (pLCSDEV->pLCSBLK->fDebug)
+        {
+            // Limit message rate to only once every few seconds...
+
+            time( &t2 );
+
+            if ((t2 - t1) >= 3)     // (only once every 3 seconds)
+            {
+                union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                char  str[40];
+
+                t1 = t2;
+
+                c.i = ntohl( pLCSDEV->lIPAddress );
+                MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+
+                // "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
+                WRMSG( HHC00965, "D", bPort, pLCSDEV->sAddr, str );
+            }
+        }
+        PTT_TIMING( "*enq wait", 0, iSize, 0 );
+
+        // Wait for LCS_Read to empty the buffer...
+
+        ASSERT( ENOBUFS == errno );
+        usleep( CTC_DELAY_USECS );
+    }
+    PTT_TIMING( "af enqueue", 0, iSize, 0 );
+    PTT_DEBUG( "ENQ EthFrame EXIT ", 000, pDEVBLK->devnum, bPort );
+}
+
+// ====================================================================
+//                       LCS_DoEnqueueEthFrame
 // ====================================================================
 //
 // Places the provided ethernet frame in the next available frame
@@ -2057,21 +2261,28 @@ static void*  LCS_PortThread( void* arg)
 // -1 == Failure; errno = ENOBUFS:  No buffer space available
 //                        EMSGSIZE: Message too long
 //
+// The LCS device data lock must NOT be held when called!
+//
 // --------------------------------------------------------------------
 
-static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
-                                 BYTE*   pData,   size_t iSize )
+static int  LCS_DoEnqueueEthFrame( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, size_t iSize )
 {
     PLCSETHFRM  pLCSEthFrame;
+    DEVBLK*     pDEVBLK;
+
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
     // Will frame NEVER fit into buffer??
     if( iSize > MAX_LCS_ETH_FRAME_SIZE( pLCSDEV ) || iSize > 9000 )
     {
+        PTT_DEBUG( "*DoENQEth EMSGSIZE", 000, pDEVBLK->devnum, bPort );
         errno = EMSGSIZE;   // Message too long
         return -1;          // (-1==failure)
     }
 
+    PTT_DEBUG( "GET  DevDataLock  ", 000, pDEVBLK->devnum, bPort );
     obtain_lock( &pLCSDEV->DevDataLock );
+    PTT_DEBUG( "GOT  DevDataLock  ", 000, pDEVBLK->devnum, bPort );
 
     // Ensure we dont overflow the buffer
     if( ( pLCSDEV->iFrameOffset +                   // Current buffer Offset
@@ -2080,6 +2291,8 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
           sizeof(pLCSEthFrame->bLCSHdr.hwOffset) )  // Size of Frame terminator
         > pLCSDEV->iMaxFrameBufferSize )            // Size of Frame buffer
     {
+        PTT_DEBUG( "*DoENQEth ENOBUFS ", 000, pDEVBLK->devnum, bPort );
+        PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, bPort );
         release_lock( &pLCSDEV->DevDataLock );
         errno = ENOBUFS;    // No buffer space available
         return -1;          // (-1==failure)
@@ -2103,13 +2316,19 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
     memcpy( pLCSEthFrame->bData, pData, iSize );
 
     // Tell "LCS_Read" function that data is available for reading
+    PTT_DEBUG( "SET  DataPending  ", 1, pDEVBLK->devnum, bPort );
     pLCSDEV->fDataPending = 1;
 
+    PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, bPort );
     release_lock( &pLCSDEV->DevDataLock );
 
     // (wake up "LCS_Read" function)
+    PTT_DEBUG( "GET  DevEventLock ", 000, pDEVBLK->devnum, bPort );
     obtain_lock( &pLCSDEV->DevEventLock );
+    PTT_DEBUG( "GOT  DevEventLock ", 000, pDEVBLK->devnum, bPort );
+    PTT_DEBUG( "SIG  DevEvent     ", 000, pDEVBLK->devnum, bPort );
     signal_condition( &pLCSDEV->DevEvent );
+    PTT_DEBUG( "REL  DevEventLock ", 000, pDEVBLK->devnum, bPort );
     release_lock( &pLCSDEV->DevEventLock );
 
     return 0;       // (success)
@@ -2119,19 +2338,91 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
 //                       LCS_EnqueueReplyFrame
 // ====================================================================
 //
-// Copy a pre-built LCS Command Frame reply frame of iSize bytes
-// to the next available frame slot. Returns 0 on success, -1 and
-// errno set to ENOBUFS on failure (no room (yet) in o/p buffer).
-// The LCS device lock must NOT be held when called.
+// Copy a pre-built LCS Command Frame reply frame into the
+// next available frame slot. Keep trying if buffer is full.
+// The LCS device data lock must NOT be held when called!
 //
 // --------------------------------------------------------------------
 
-static int  LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply,
-                                                    size_t     iSize )
+static void LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iSize )
+{
+    PLCSPORT  pLCSPORT;
+    DEVBLK*   pDEVBLK;
+
+    BYTE      bPort;
+    time_t    t1, t2;
+
+    bPort = pLCSDEV->bPort;
+    pLCSPORT = &pLCSDEV->pLCSBLK->Port[ bPort ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+
+
+    PTT_DEBUG( "ENQ RepFrame ENTRY", pReply->bCmdCode, pDEVBLK->devnum, bPort );
+
+    time( &t1 );
+
+    PTT_TIMING( "b4 repNQ", 0, iSize, 0 );
+
+    // While port open, not close in progress, and frame buffer full...
+
+    while (1
+        &&  pLCSPORT->fd != -1
+        && !pLCSPORT->fCloseInProgress
+        && LCS_DoEnqueueReplyFrame( pLCSDEV, pReply, iSize ) < 0
+    )
+    {
+        if (pLCSDEV->pLCSBLK->fDebug)
+        {
+            // Limit message rate to only once every few seconds...
+
+            time( &t2 );
+
+            if ((t2 - t1) >= 3)     // (only once every 3 seconds)
+            {
+                union converter { struct { unsigned char a, b, c, d; } b; U32 i; } c;
+                char  str[40];
+
+                t1 = t2;
+
+                c.i = ntohl( pLCSDEV->lIPAddress );
+                MSGBUF( str, "%8.08X %d.%d.%d.%d", c.i, c.b.d, c.b.c, c.b.b, c.b.a );
+
+                // "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
+                WRMSG( HHC00978, "D", bPort, pLCSDEV->sAddr, str );
+            }
+        }
+        PTT_TIMING( "*repNQ wait", 0, iSize, 0 );
+
+        // Wait for LCS_Read to empty the buffer...
+
+        ASSERT( ENOBUFS == errno );
+        usleep( CTC_DELAY_USECS );
+    }
+    PTT_TIMING( "af repNQ", 0, iSize, 0 );
+    PTT_DEBUG( "ENQ RepFrame EXIT ", pReply->bCmdCode, pDEVBLK->devnum, bPort );
+}
+
+// ====================================================================
+//                       LCS_DoEnqueueReplyFrame
+// ====================================================================
+//
+// Copy a pre-built LCS Command Frame reply frame of iSize bytes
+// to the next available frame slot. Returns 0 on success, -1 and
+// errno set to ENOBUFS on failure (no room (yet) in o/p buffer).
+// The LCS device data lock must NOT be held when called!
+//
+// --------------------------------------------------------------------
+
+static int  LCS_DoEnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iSize )
 {
     PLCSCMDHDR  pReplyCmdFrame;
+    DEVBLK*     pDEVBLK;
 
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+
+    PTT_DEBUG( "GET  DevDataLock  ", 000, pDEVBLK->devnum, pLCSDEV->bPort );
     obtain_lock( &pLCSDEV->DevDataLock );
+    PTT_DEBUG( "GOT  DevDataLock  ", 000, pDEVBLK->devnum, pLCSDEV->bPort );
 
     // Ensure we dont overflow the buffer
     if( ( pLCSDEV->iFrameOffset +           // Current buffer Offset
@@ -2139,6 +2430,8 @@ static int  LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply,
           sizeof(pReply->bLCSHdr.hwOffset)) // Size of Frame terminator
         > pLCSDEV->iMaxFrameBufferSize )    // Size of Frame buffer
     {
+        PTT_DEBUG( "*DoENQRep ENOBUFS ", 000, pDEVBLK->devnum, pLCSDEV->bPort );
+        PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, pLCSDEV->bPort );
         release_lock( &pLCSDEV->DevDataLock );
         errno = ENOBUFS;                    // No buffer space available
         return -1;                          // (-1==failure)
@@ -2158,8 +2451,10 @@ static int  LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply,
     STORE_HW( pReplyCmdFrame->bLCSHdr.hwOffset, pLCSDEV->iFrameOffset );
 
     // Mark reply pending
+    PTT_DEBUG( "SET  ReplyPending ", 1, pDEVBLK->devnum, pLCSDEV->bPort );
     pLCSDEV->fReplyPending = 1;
 
+    PTT_DEBUG( "REL  DevDataLock  ", 000, pDEVBLK->devnum, pLCSDEV->bPort );
     release_lock( &pLCSDEV->DevDataLock );
 
     return 0;   // success

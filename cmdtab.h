@@ -960,9 +960,9 @@
 #define ptt_cmd_desc            "Activate or display internal trace table"
 #define ptt_cmd_help            \
                                 \
-  "Format: \"ptt [events] [options] [nnnnnn]\"\n"                                   \
+  "Format: \"ptt [?] [events] [options] [nnnnnn]\"\n"                               \
   "\n"                                                                              \
-  "When specified with no operands, the ptt command displays the active trace\n"    \
+  "When specified with no operands, the ptt command displays the defined trace\n"   \
   "parameters and the contents of the internal trace table.\n"                      \
   "\n"                                                                              \
   "When specified with operands, the ptt command defines the trace parameters\n"    \
@@ -981,11 +981,12 @@
   "     (no)sie          trace SIE instruction events\n"                            \
   "     (no)sig          trace SIGP instruction events\n"                           \
   "     (no)io           trace I/O instruction events\n"                            \
-  "     (no)lcs          trace LCS timing events\n"                                 \
-  "     (no)qeth         trace QETH timing events\n"                                \
+  "     (no)lcs1         trace LCS timing events\n"                                 \
+  "     (no)lcs2         trace LCS general debugging events\n"                      \
   "\n"                                                                              \
   "options:   (should be specified last, after any events are specified)\n"         \
   "\n"                                                                              \
+  "     ?                show currently defined trace parameters\n"                 \
   "     (no)lock         lock table before updating\n"                              \
   "     (no)tod          timestamp table entries\n"                                 \
   "     (no)wrap         wraparound trace table\n"                                  \

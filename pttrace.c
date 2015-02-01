@@ -40,6 +40,7 @@ struct PTTCL
     const char*     name;               /* Trace class name. Should  */
                                         /* not start with chars "no" */
     U64             trcl;               /* Trace class               */
+    int             alias;              /* 0: favored name, 1: alias */
 };
 typedef struct PTTCL PTTCL;
 
@@ -64,27 +65,29 @@ PTTCL      pttcltab[] =                 /* trace class names table   */
     /*  NOTE!  keywords "lock", "tod" and "wrap" are reserved        */
     /*         and must not be used for PTT trace class names!       */
 
-    { "log"     , PTT_CL_LOG   },       /* Logger records            */
-    { "tmr"     , PTT_CL_TMR   },       /* Timer/Clock records       */
-    { "thr"     , PTT_CL_THR   },       /* Thread records            */
-    { "inf"     , PTT_CL_INF   },       /* Instruction info          */
-    { "err"     , PTT_CL_ERR   },       /* Instruction error/unsupp  */
-    { "pgm"     , PTT_CL_PGM   },       /* Program interrupt         */
-    { "csf"     , PTT_CL_CSF   },       /* Compare & Swap Failure    */
-    { "sie"     , PTT_CL_SIE   },       /* Interpretive Execution    */
-    { "sig"     , PTT_CL_SIG   },       /* SIGP signalling           */
-    { "io"      , PTT_CL_IO    },       /* IO                        */
-    { "lcs"     , PTT_CL_LCS   },       /* LCS Timing Debug          */
-    { "qeth"    , PTT_CL_QETH  },       /* QETH Timing Debug         */
+    { "log"     , PTT_CL_LOG  , 0 },    /* Logger records            */
+    { "tmr"     , PTT_CL_TMR  , 0 },    /* Timer/Clock records       */
+    { "thr"     , PTT_CL_THR  , 0 },    /* Thread records            */
+    { "inf"     , PTT_CL_INF  , 0 },    /* Instruction info          */
+    { "err"     , PTT_CL_ERR  , 0 },    /* Instruction error/unsupp  */
+    { "pgm"     , PTT_CL_PGM  , 0 },    /* Program interrupt         */
+    { "csf"     , PTT_CL_CSF  , 0 },    /* Compare & Swap Failure    */
+    { "sie"     , PTT_CL_SIE  , 0 },    /* Interpretive Execution    */
+    { "sig"     , PTT_CL_SIG  , 0 },    /* SIGP signalling           */
+    { "io"      , PTT_CL_IO   , 0 },    /* IO                        */
+    { "lcs1"    , PTT_CL_LCS1 , 0 },    /* LCS Timing Debug          */
+    { "lcs2"    , PTT_CL_LCS2 , 0 },    /* LCS General Debugging     */
 
-    { "logger"  , PTT_CL_LOG   },       /* alias for 'log'           */
-    { "timer"   , PTT_CL_TMR   },       /* alias for 'tmr'           */
-    { "threads" , PTT_CL_THR   },       /* alias for 'thr'           */
-    { "control" , PTT_CL_INF   },       /* alias for 'inf'           */
-    { "error"   , PTT_CL_ERR   },       /* alias for 'err'           */
-    { "prog"    , PTT_CL_PGM   },       /* alias for 'pgm'           */
-    { "inter"   , PTT_CL_CSF   },       /* alias for 'csf'           */
-    { "signal"  , PTT_CL_SIG   },       /* alias for 'sig'           */
+    /* The following aliases are defined for backward compatibility  */
+
+    { "logger"  , PTT_CL_LOG  , 1 },    /* alias for 'log'           */
+    { "timer"   , PTT_CL_TMR  , 1 },    /* alias for 'tmr'           */
+    { "threads" , PTT_CL_THR  , 1 },    /* alias for 'thr'           */
+    { "control" , PTT_CL_INF  , 1 },    /* alias for 'inf'           */
+    { "error"   , PTT_CL_ERR  , 1 },    /* alias for 'err'           */
+    { "prog"    , PTT_CL_PGM  , 1 },    /* alias for 'pgm'           */
+    { "inter"   , PTT_CL_CSF  , 1 },    /* alias for 'csf'           */
+    { "signal"  , PTT_CL_SIG  , 1 },    /* alias for 'sig'           */
 };
 
 /*-------------------------------------------------------------------*/
@@ -150,7 +153,7 @@ static char* pttcl_all( U64 trcl, char** ppStr )
     if ((*ppStr = malloc( bufsz )) != NULL)
     {
         **ppStr = 0; /* start with empty string */
-        for (i=0; i < _countof( pttcltab ); i++)
+        for (i=0; i < _countof( pttcltab ) && !pttcltab[i].alias; i++)
         {
             if (!(trcl & pttcltab[i].trcl))
                 continue;
@@ -164,6 +167,33 @@ static char* pttcl_all( U64 trcl, char** ppStr )
         }
     }
     return *ppStr;
+}
+
+/*-------------------------------------------------------------------*/
+/* Show the currently defined trace parameters                       */
+/*-------------------------------------------------------------------*/
+static void ptt_showparms()
+{
+    char* str = NULL;   /* PTT trace classes that are active. */
+
+    /* Build string identifying trace classes that are active */
+    pttcl_all( pttclass, &str );
+
+    if (str)
+    {
+        // "Pttrace: %s %s %s %s to=%d %d"
+        WRMSG
+        (
+            HHC90012, "I",
+            str,
+            pttnolock ? "nolock" : "lock",
+            pttnotod  ? "notod"  : "tod",
+            pttnowrap ? "nowrap" : "wrap",
+            pttto,
+            pttracen
+        );
+        free( str );
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -190,7 +220,10 @@ static void* ptt_timeout( void* arg )
     /* Print the trace table automatically */
     if (hthread_equal( thread_id(), ptttotid ))
     {
-        ptt_pthread_print();
+        /* Show the parameters both before and after the table dump */
+        ptt_showparms();
+        if (ptt_pthread_print() > 0)
+            ptt_showparms();
         pttto = 0;
         ptttotid = 0;
     }
@@ -218,6 +251,8 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
 
     if (argc > 1)
     {
+        int showparms = 0;
+
         /* process arguments; last arg can be trace table size */
         for (--argc, argv++; argc; --argc, ++argv)
         {
@@ -238,6 +273,10 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
                 continue;
             }
             /* Check if other valid PTT command argument */
+            else if (strcasecmp("?", argv[0]) == 0)
+            {
+                showparms = 1;
+            }
             else if (strcasecmp("lock", argv[0]) == 0)
             {
                 pttnolock = 0;
@@ -328,32 +367,20 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
                 WRMSG(HHC00102, "E", strerror(rc));
             hthread_mutex_unlock (&ptttolock);
         }
+
+        if (showparms)
+            ptt_showparms();
     }
-    else /* No arguments. Dump table and/or show active settings. */
+    else /* No arguments. Dump the table. */
     {
-        char* str = NULL;   /* PTT trace classes that are active. */
-
-        /* Dump table when tracing active (number of entries > 0) */
+        /* Dump table when tracing is active (number of entries > 0) */
         if (pttracen)
-            rc = ptt_pthread_print();
-
-        /* Build string identifying trace classes that are active */
-        pttcl_all( pttclass, &str );
-
-        // "Pttrace: %s %s %s %s to %d %d"
-        WRMSG
-        (
-            HHC90012, "I",
-            str,
-            pttnolock ? "nolock" : "lock",
-            pttnotod  ? "notod"  : "tod",
-            pttnowrap ? "nowrap" : "wrap",
-            pttto,
-            pttracen
-        );
-
-        if (str)
-            free( str );
+        {
+            /* Show parameters both before and after the table dump  */
+            ptt_showparms();
+            if (ptt_pthread_print() > 0)
+                ptt_showparms();
+        }
     }
 
     return rc;
@@ -449,7 +476,8 @@ int i, n;
 }
 
 /*-------------------------------------------------------------------*/
-/* Function to print all PTT_TRACE table entries                     */
+/* Function to print all PTT_TRACE table entries.                    */
+/* Return code is the  #of table entries printed.                    */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int ptt_pthread_print ()
 {
