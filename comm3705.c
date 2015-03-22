@@ -1608,7 +1608,8 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "LINE";
+    BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
+
     snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%" I64_FMT "u]",
         dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
