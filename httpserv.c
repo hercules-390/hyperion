@@ -286,7 +286,7 @@ static char *http_unescape(char *buffer)
 
         *pointer = (highnibble<<4) | lownibble;
 
-        memcpy(pointer+1, pointer+3, strlen(pointer+3)+1);
+        memmove(pointer+1, pointer+3, strlen(pointer+3)+1);
 
         pointer++;
     }
