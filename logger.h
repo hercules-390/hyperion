@@ -46,7 +46,12 @@ extern int logger_syslogfd[2];
 #endif
 
 /* Logging functions in logmsg.c */
-LOG_DLL_IMPORT void logmsg(char *,...);
+LOG_DLL_IMPORT void logmsg(char *,...)
+#if defined (__GNUC__)
+   __attribute__ ((format (printf, 1, 2)))
+#endif
+;
+
 #if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
 /* Constants used by 'writemsg()' function in logmsg.c */
 #define  MLVL_DEBUG_FILE_FIELD_WIDTH  10
