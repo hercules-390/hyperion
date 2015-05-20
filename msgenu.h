@@ -1911,6 +1911,7 @@ do { \
 #define HHC03975 "%1d:%04X %s: incorrect number of parameters"
 #define HHC03976 "%1d:%04X %s: option %s value %s invalid"
 #define HHC03978 "%1d:%04X %s: option %s unknown or specified incorrectly"
+#define HHC03979 "%1d:%04X %s: unknown option specified, or specified incorrectly"
 #define HHC03981 "%1d:%04X %s: %s: %s %s  %s"
 #define HHC03982 "%s: %s %s  %s"
 #define HHC03983 "%1d:%04X %s: %s"

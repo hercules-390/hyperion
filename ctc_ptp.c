@@ -2879,9 +2879,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             break;
 #endif /* defined(OPTION_W32_CTCI) */
 
-        default:
-            // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
-            WRMSG(HHC03978, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, (char)c );
+        default:  /* Note: the variable c has a value that makes default: equivalent to case '?': */
+            // HHC03979 "%1d:%04X %s: unknown option specified, or specified incorrectly"
+            WRMSG(HHC03979, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
             return -1;
         }
 
