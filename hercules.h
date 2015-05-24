@@ -19,10 +19,17 @@
   #ifdef _MSVC_
     #define  ATTR_REGPARM(n)   __fastcall
   #else /* GCC presumed */
-    #define  ATTR_REGPARM(n)   __attribute__  (( regparm(n) ))
+    #define  ATTR_REGPARM(n)   __attribute__ (( regparm( n )))
   #endif
 #else
   #define  ATTR_REGPARM(n)   /* nothing */
+#endif
+
+#if defined(HAVE_ATTR_PRINTF)
+  /* GCC presumed */
+  #define  ATTR_PRINTF(f,v)    __attribute__ (( format( printf, f, v )))
+#else
+  #define  ATTR_PRINTF(f,v)  /* nothing */
 #endif
 
 // -------------------------------------------------------------------

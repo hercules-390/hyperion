@@ -273,7 +273,7 @@ int   wRexxMode = 0;
                     }
                     else
                     {
-                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDSYSPATH]);
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDSYSPATH]);
                         return -1;
                     }
                 }
@@ -301,7 +301,7 @@ int   wRexxMode = 0;
                     }
                     else
                     {
-                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDRESOLVER]);
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDRESOLVER]);
                         return -1;
                     }
                 }
@@ -320,7 +320,7 @@ int   wRexxMode = 0;
                         wMsgLevl = (int) strtoul(argv[iarg],&nxt,10);
                         if (errno != 0 || nxt == ptr || *nxt != 0 || ( wMsgLevl < 0 || wMsgLevl > 9 ) )
                         {
-                            WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDMSGLEVL]);
+                            WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDMSGLEVL]);
                             return -1;
                         }
                     }
@@ -331,7 +331,7 @@ int   wRexxMode = 0;
                 {
                     if ( strlen(argv[iarg]) > 9 )
                     {
-                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDMSGPREF]);
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDMSGPREF]);
                         return -1;
                     }
                     wMsgPref = strdup(argv[iarg]);
@@ -342,7 +342,7 @@ int   wRexxMode = 0;
                 {
                     if ( strlen(argv[iarg]) > 9 )
                     {
-                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDERRPREF]);
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDERRPREF]);
                         return -1;
                     }
                     wErrPref = strdup(argv[iarg]);
@@ -361,7 +361,7 @@ int   wRexxMode = 0;
                     }
                     else
                     {
-                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], strlen(argv[iarg]), ARGSDESC[_NEEDMODE]);
+                        WRMSG( HHC17510, "W", RexxPackage, argv[iarg], (int)strlen(argv[iarg]), ARGSDESC[_NEEDMODE]);
                         return -1;
                     }
                 }

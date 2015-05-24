@@ -1110,7 +1110,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         for (i=0; i < (int) crwcount; i++)
         {
             crw = *(crwarray + i);
-            //     HHC00886 "CRW 0x%08.8X: %s"
+            //     HHC00886 "CRW 0x%8.8X: %s"
             WRMSG( HHC00886, "I", crw, FormatCRW( crw, buf, sizeof(buf) ));
         }
         free( crwarray );

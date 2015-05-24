@@ -46,19 +46,15 @@ extern int logger_syslogfd[2];
 #endif
 
 /* Logging functions in logmsg.c */
-LOG_DLL_IMPORT void logmsg(char *,...)
-#if defined (__GNUC__)
-   __attribute__ ((format (printf, 1, 2)))
-#endif
-;
+LOG_DLL_IMPORT void logmsg(char *,...) ATTR_PRINTF(1,2);
 
 #if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
 /* Constants used by 'writemsg()' function in logmsg.c */
 #define  MLVL_DEBUG_FILE_FIELD_WIDTH  10
 #define  MLVL_DEBUG_LINE_FIELD_WIDTH  5
 #define  MLVL_DEBUG_PRINTF_PATTERN "%-" QSTR( MLVL_DEBUG_FILE_FIELD_WIDTH ) "." QSTR( MLVL_DEBUG_FILE_FIELD_WIDTH ) "s %" QSTR( MLVL_DEBUG_LINE_FIELD_WIDTH ) "d "
-LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...);
-LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...);
+LOG_DLL_IMPORT void writemsg(const char *file, int line, const char *function, int grp, int lvl, char *color, char *msg, ...) ATTR_PRINTF(7,8);
+LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...) ATTR_PRINTF(2,3);
 #else /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/
 #define  writemsg(_file, _line, _function, _grp, _lvl, _color, ...) logmsg( __VA_ARGS__ );
 #define logdevtr( _dev, ... ) \

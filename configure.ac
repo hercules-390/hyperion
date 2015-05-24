@@ -381,6 +381,7 @@ AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated 
 AH_TEMPLATE( [HOST_ARCH],               [Define as quoted 'target_cpu' value = target host CPU architecture] )
 AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
 AH_TEMPLATE( [C99_FLEXIBLE_ARRAYS],     [Define if your gcc properly supports C99 flexible arrays] )
+AH_TEMPLATE( [HAVE_ATTR_PRINTF],        [Define if your gcc properly supports __attribute__((format(printf,n,n)))] )
 AH_TEMPLATE( [HAVE_ATTR_REGPARM],       [Define if your gcc properly supports __attribute__((regparm(n)))] )
 AH_TEMPLATE( [NO_ASM_BYTESWAP],         [Define to disable assembler routines for byte swapping] )
 AH_TEMPLATE( [NO_IEEE_SUPPORT],         [Define to disable IEEE floating point support] )
@@ -1195,6 +1196,34 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
 #----------------------------------------------#
 
 HC_C99_FLEXIBLE_ARRAYS()
+
+#----------------------------------------------------------------#
+#  Check if GCC supports '__attribute__ ((format(printf,n,n)))'  #
+#----------------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether '__attribute__ ((format(printf,n,n)))' is supported],
+
+        [hc_cv_attr_printf_supported],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    void logmsg(char*,...) __attribute__ ((format(printf,1,2)));
+                ],
+                [hc_cv_attr_printf_supported=yes],
+                [hc_cv_attr_printf_supported=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_attr_printf_supported=no
+fi
 
 #--------------------------------------------------------#
 #  Check if GCC supports '__attribute__ ((regparm(n)))'  #
@@ -2330,6 +2359,11 @@ if test $hc_cv_have_sa_sigaction != yes ||
 
     AC_DEFINE(NO_SIGABEND_HANDLER)
 
+fi
+
+if test "$hc_cv_attr_printf_supported" = "yes"; then
+
+    AC_DEFINE(HAVE_ATTR_PRINTF)
 fi
 
 if test "$hc_cv_regparm_attr_supported" = "yes"  &&

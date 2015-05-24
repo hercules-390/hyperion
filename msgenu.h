@@ -726,7 +726,7 @@ do { \
 #define HHC00883 "Channel Report queue: (NULL)"
 #define HHC00884 "Channel Report queue: (empty)"
 #define HHC00885 "Channel Report queue:"
-#define HHC00886 "CRW 0x%08.8X: %s"
+#define HHC00886 "CRW 0x%8.8X: %s"
 
 #define HHC00890 "Facility(%-20s) %sabled"
 #define HHC00891 "Facility name not found"
@@ -1985,7 +1985,7 @@ do { \
 #define HHC05017 "%1d:%04X CTCE: Halt or Clear Recognized"
 #define HHC05018 "%1d:%04X CTCE: Read thread started for %s (bufsize=%d,%d)"
 #define HHC05020 "%1d:%04X CTCE: Zero length read from %s"
-#define HHC05021 "%1d:%04X CTCE: %d MB received in %d packets"
+#define HHC05021 "%1d:%04X CTCE: %lld MB received in %lld packets"
 #define HHC05022 "%1d:%04X CTCE: bufsize parameter %d is too small; increase at least to %d"
 #define HHC05023 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X l=%4.4X k=%8.8X"
 #define HHC05024 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X: wait RC=%d"
