@@ -1200,8 +1200,7 @@ static void  LCS_Shutdown( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 //                       UpdatePortStarted
 // ====================================================================
 
-static void  UpdatePortStarted( int bStarted, DEVBLK* pDEVBLK,
-                                PLCSDEV pLCSDEV, PLCSPORT pLCSPORT )
+static void  UpdatePortStarted( int bStarted, DEVBLK* pDEVBLK, PLCSPORT pLCSPORT )
 {
     PTT_DEBUG(        "GET  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     obtain_lock( &pLCSPORT->PortDataLock );
@@ -1338,7 +1337,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );
 
     if (fStartPending)
-        UpdatePortStarted( TRUE, pDEVBLK, pLCSDEV, pLCSPORT );
+        UpdatePortStarted( TRUE, pDEVBLK, pLCSPORT );
 }
 
 // ====================================================================
@@ -1411,7 +1410,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // are no longer flowing, tell the LCS_PortThread to stop trying
     // to read from the tuntap device (adapter).
 
-    UpdatePortStarted( FALSE, pDEVBLK, pLCSDEV, pLCSPORT );
+    UpdatePortStarted( FALSE, pDEVBLK, pLCSPORT );
 
     // Now that we've stopped new packets from being added to our
     // frame buffer we can now finally enqueue our reply frame
