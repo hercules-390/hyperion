@@ -225,7 +225,12 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #if defined(_MSVC_)
   #define TIDPAT            "%lld"      /* TID printf pattern        */
 #else
-  #define TIDPAT            "%llx"      /* TID printf pattern        */
+    /* Non-Windows: typedef unsigned long int pthread_t; */
+  #if defined(SIZEOF_LONG) && SIZEOF_LONG >= 8
+    #define TIDPAT          "%llx"      /* TID printf pattern        */
+  #else
+    #define TIDPAT          "%lx"       /* TID printf pattern        */
+  #endif
 #endif
 #if !defined(EOWNERDEAD)
   /* PROGRAMMING NOTE: we use a purposely large value to try and
