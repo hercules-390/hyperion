@@ -214,7 +214,7 @@ HUT_DLL_IMPORT int timed_wait_condition_relative_usecs
 );
 
 /* Read/write to socket functions */
-HUT_DLL_IMPORT int hprintf(int s,char *fmt,...);
+HUT_DLL_IMPORT int hprintf(int s,char *fmt,...) ATTR_PRINTF(2,3);
 HUT_DLL_IMPORT int hwrite(int s,const char *,size_t);
 HUT_DLL_IMPORT int hgetc(int s);
 HUT_DLL_IMPORT char *hgets(char *b,size_t c,int s);

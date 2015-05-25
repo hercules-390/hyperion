@@ -540,7 +540,7 @@ CCDU_DLL_IMPORT void    cckd_swapend2 (char *);
 CCDU_DLL_IMPORT int     cckd_endian ();
 CCDU_DLL_IMPORT int     cckd_comp (DEVBLK *);
 CCDU_DLL_IMPORT int     cckd_chkdsk (DEVBLK *, int);
-CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...);
+CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...) ATTR_PRINTF(3,4);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);

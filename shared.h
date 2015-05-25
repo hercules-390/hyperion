@@ -502,7 +502,7 @@ static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
 static void   *serverConnect (void *psock);
-static void    shrdtrc (DEVBLK *dev, char *msg, ...);
+static void    shrdtrc (DEVBLK *dev, char *msg, ...) ATTR_PRINTF(2,3);
 #endif /* _SHARED_C_ */
 
 #endif /* _HERCULES_SHARED_H */

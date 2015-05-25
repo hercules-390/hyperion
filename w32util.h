@@ -222,7 +222,7 @@ W32_DLL_IMPORT int      w32_inet_pton ( int af, const char* src, void* dst );
 
 W32_DLL_IMPORT FILE*  w32_fdopen ( int their_fd, const char* their_mode );
 W32_DLL_IMPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE* stream );
-W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... );
+W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... ) ATTR_PRINTF(2,3);
 W32_DLL_IMPORT int    w32_fclose ( FILE* stream );
 W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, int wait_millisecs );
 W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteToChildStdinFD );
