@@ -822,6 +822,7 @@ static REGS  *copy_regs (REGS *regs)
     /* Perform partial copy and clear the TLB */
     memcpy(newregs, regs, sysblk.regs_copy_len);
     memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+    newregs->tlbID = 1;
     newregs->ghostregs = 1;
     newregs->hostregs = newregs;
     newregs->guestregs = NULL;
@@ -834,6 +835,7 @@ static REGS  *copy_regs (REGS *regs)
         hostregs = newregs + 1;
         memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
         memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+        hostregs->tlbID = 1;
         hostregs->ghostregs = 1;
         hostregs->hostregs = hostregs;
         hostregs->guestregs = newregs;
