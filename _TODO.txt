@@ -10,6 +10,12 @@
 
 -------------------------------------------------------------------------------
 
+  Examine all instances of "#if 0" and "if 1" and determine which should
+  stay and which should go. For those that should be kept, add comments
+  documenting the rationale for keeping it.
+
+-------------------------------------------------------------------------------
+
   *BUG*:  FIX PORTABILITY ISSUES that have crept in over time.
 
   Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
