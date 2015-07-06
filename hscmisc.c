@@ -2201,11 +2201,18 @@ char    buf[512];                       /* Message buffer            */
 char    type;                           /* optional addr-space type  */
 size_t  totamt;                         /* Total amount to be dumped */
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    /* We require only one operand */
+    if (argc != 1)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return;
+    }
 
     /* Parse optional address-space prefix */
-    opnd = cmdline+1;
+    opnd = argv[0];
     type = toupper( *opnd );
 
     if (1
