@@ -207,7 +207,7 @@ asn_asx_tran_excp:
 _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
                                                int atemask, REGS *regs)
 {
-U32     ato;                            /* Authority table origin    */
+RADR    ato;                            /* Authority table origin    */
 int     atl;                            /* Authority table length    */
 BYTE    ate;                            /* Authority table entry     */
 
