@@ -93,6 +93,7 @@ DLL_EXPORT void   *cckd_sf_remove(void *data);
 DLL_EXPORT void   *cckd_sf_comp(void *data);
 DLL_EXPORT void   *cckd_sf_chk(void *data);
 DLL_EXPORT void   *cckd_sf_stats(void *data);
+DLL_EXPORT void    cckd_sf_parse_sfn( DEVBLK* dev, char* sfn );
 #ifdef OPTION_SYNCIO
 int     cckd_disable_syncio(DEVBLK *dev);
 #endif // OPTION_SYNCIO
@@ -3607,6 +3608,42 @@ char *cckd_sf_name (DEVBLK *dev, int sfx)
     return dev->dasdsfn;
 
 } /* end function cckd_sf_name */
+
+/*-------------------------------------------------------------------*/
+/* Parse the shadow file name option                                 */
+/*-------------------------------------------------------------------*/
+void cckd_sf_parse_sfn( DEVBLK* dev, char* sfn )
+{
+    char pathname[MAX_PATH];
+    if ('\"' == sfn[0]) sfn++;
+    hostpath(pathname, sfn, sizeof(pathname));
+    dev->dasdsfn = strdup(pathname);
+    if (dev->dasdsfn)
+    {
+        /*
+        **         Set the pointer to the suffix character
+        **
+        ** The shadow file name should have spot where the shadow file
+        ** number will be set.  This is either the character preceding
+        ** the last period after the last slash (i.e. the last character
+        ** of the filename, immediately before the file extension), or
+        ** the very last character of the filename itself if the file
+        ** extension was not specified.
+        */
+        char* fn;
+        if ((fn = strrchr( dev->dasdsfn, PATHSEPC )) != NULL)
+            fn++;
+        else
+            fn = dev->dasdsfn;
+
+        dev->dasdsfx = strrchr( fn, '.' );  /* Find last period */
+
+        if (dev->dasdsfx == NULL)
+            dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
+
+        dev->dasdsfx--;     /* Shadow file number will go here */
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /* Initialize shadow files                                           */

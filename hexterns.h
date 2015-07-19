@@ -528,6 +528,7 @@ CCKD_DLL_IMPORT void   *cckd_sf_comp (void *);
 CCKD_DLL_IMPORT void   *cckd_sf_chk (void *);
 CCKD_DLL_IMPORT int     cckd_command(char *, int);
 CCKD_DLL_IMPORT void    cckd_print_itrace ();
+CCKD_DLL_IMPORT void    cckd_sf_parse_sfn( DEVBLK* dev, char* sfn );
 
 /* Functions in module cckdutil.c */
 CCDU_DLL_IMPORT int     cckd_swapend (DEVBLK *);

@@ -228,7 +228,6 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 char           *kw = NULL;              /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
-char            pathname[MAX_PATH];     /* file path in host format  */
 char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
@@ -339,20 +338,8 @@ char           *strtok_str = NULL;      /* save last position        */
         if (strlen (argv[i]) > 3 &&
             memcmp ("sf=", argv[i], 3) == 0)
         {
-            if ('\"' == argv[i][3]) argv[i]++;
-            hostpath(pathname, argv[i]+3, sizeof(pathname));
-            dev->dasdsfn = strdup(pathname);
-            if (dev->dasdsfn)
-            {
-                /* Set the pointer to the suffix character */
-                dev->dasdsfx = strrchr (dev->dasdsfn, PATHSEPC);
-                if (dev->dasdsfx == NULL)
-                    dev->dasdsfx = dev->dasdsfn + 1;
-                dev->dasdsfx = strchr (dev->dasdsfx, '.');
-                if (dev->dasdsfx == NULL)
-                    dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
-                dev->dasdsfx--;
-            }
+            /* Parse the shadow file name parameter */
+            cckd_sf_parse_sfn( dev, argv[i]+3 );
             continue;
         }
         if (strlen (argv[i]) > 3
