@@ -16,11 +16,14 @@ processor and device layout.  It is roughly equivalent to the IOCDS on
 a real System/390.  The configuration file is an ASCII text file.
 <h3>Example configuration file</h3>
 <p>
-Please note that the below example configuration file should not
-be considered a good example of what an actual configuration file
-looks like. It is only meant to illustrate what some
-of the supported configuration file statements look like
-and how they are used.
+<i>
+<blockquote>
+    <b>Please note</b> that the below example configuration file should
+    <u>not</u> be considered a good example of how an actual configuration
+    file should look! It is only meant to illustrate what some of the supported
+    configuration file statements look like and how they are used.
+</blockquote>
+</i>
 <p><br>
 <center>
 <table border=1><tr><td>
@@ -36,8 +39,8 @@ and how they are used.
     #                       <a href="#system_parameters">SYSTEM PARAMETERS</a>
     #------------------------------------------------------------------
 
-    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                            (deprecated)
-    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                                     (deprecated)
+    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated)
+    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
@@ -62,8 +65,8 @@ and how they are used.
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    <a href="#HTTPPORT">##HTTPPORT</a>   8081 NOAUTH                                        (deprecated)
-    <a href="#HTTPROOT">##HTTPROOT</a>   /usr/local/share/hercules/                         (deprecated)
+    <a href="#HTTPPORT">##HTTPPORT</a>   8081 NOAUTH                              (deprecated)
+    <a href="#HTTPROOT">##HTTPROOT</a>   /usr/local/share/hercules/               (deprecated)
 
     <a href="#HTTPPORT">HTTP</a>       port 8081 NOAUTH
     <a href="#HTTPROOT">HTTP</a>       root /usr/local/share/hercules/
@@ -134,6 +137,8 @@ and how they are used.
 
     0000      <a href="#SYSG">SYSG</a>    SYSGCONS
 
+    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>
+
     0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
     0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
     0122      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvswk1.122
@@ -162,8 +167,9 @@ and how they are used.
 
     0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
 
-    0023      <a href="#comline">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
-    00C3      <a href="#remtty">2703</a>    lport=32003 dial=IN tty=1
+    0020      <a href="#2703">2703</a>    lport=32003 dial=IN lnctl=tele2 uctrans=yes term=tty skip=88C9DF iskip=0A
+    0023      <a href="#2703">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
+    0045      <a href="#2703">2703</a>    lport=32003 dial=IN lnctl=ibm1 term=2741 skip=5EDE code=ebcd
 
 
 </pre></code>
@@ -2023,12 +2029,7 @@ and how they are used.
             </tr>
 
             <tr><td>2703</td>
-                <td><a href="#comline">Communication Line</a></td>
-                <td>TCP Socket</td>
-            </tr>
-
-            <tr><td>2703</td>
-                <td><a href="#remtty">Remote Teletype</a></td>
+                <td><a href="#2703">Communication Line</a>, <a href="#2703">Remote Teletype</a>, etc.</td>
                 <td>TCP Socket</td>
             </tr>
 
@@ -3470,7 +3471,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dt>[<code>-x</code>/<code>--if</code>] <code><em>ifname</em></code>
                 <dd><p>
                     specifies the interface name of a TUN interface that is
-                    already configured. 
+                    already configured.
                     <p>
                     Specify no host names or IP addresses or other arguments as
                     the information is already configured into the interface.
@@ -3666,7 +3667,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         emulates an OSA Express card running in QDIO mode.
         Both layer-2 and layer-3 are currently supported.
 
-       
+
         <dl> <!-- begin QETH parms -->
 
         <dt>Optional for *nix:
@@ -3861,6 +3862,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin (CKD) additional DASD arguments -->
 
+<a name="shadow"></a>
     <dt><code>sf=<em>shadow-file-name</em></code>
     <dd><p>
         A shadow file contains all the changes made to the emulated dasd since
@@ -4076,15 +4078,16 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
 <hr width="50%"><p>
 
-<a name="comline"></a>
+<a name="2703"></a>
 <dt><em>Communication Line - BSC</em>
 <dd><p>
-    ( Preliminary 2703 BSC Support )
+    (Preliminary 2703 BSC Support)
     <p>
 
     Describes a BSC emulation line entry to either link 2 Hercules engines
     or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
-    program interfacing to a real BSC line.
+    program interfacing to a real BSC line. The line emulates a point-to-point
+    BSC link. There is no point-to-multipoint handling.
     <p>
 
     The communication is emulated over a TCP connection. All bytes are
@@ -4094,14 +4097,12 @@ ROUTE  00  172.021.003.032  255.255.255.224
     on the DIAL option selected.
     <p>
 
-    The line emulates a point-to-point BSC link. There is no point-to-multipoint handling.
-    <p>
-
     The following options define the line emulation behaviour:
     <p>
 
     <dl> <!-- begin Communication Adapter parms -->
 
+<a name="dial"></a>
     <dt><code>DIAL=IN &#124; OUT &#124; INOUT &#124; NO</code>
     <dd><p>
         Specifies call direction (if any). If <code>DIAL=NO</code> is specified, the
@@ -4114,7 +4115,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         the DIAL CCW is rejected.
         <p>
 
-    <dt><code>lhost=<em>hostname</em> &#124; <em>ip address</em> &#124; *</code>
+    <dt><code>LHOST=<em>hostname</em> &#124; <em>ip address</em> &#124; *</code>
     <dd><p>
         Specifies which IP address to listen on. This also conditions the network
         interface from which incoming calls will be accepted. Specifying '*' means
@@ -4123,14 +4124,14 @@ ROUTE  00  172.021.003.032  255.255.255.224
         IP address when <code>DIAL=OUT</code> is specified has no effect.
         <p>
 
-    <dt><code>lport=<em>service name</em> &#124; <em>port number</em></code>
+    <dt><code>LPORT=<em>service name</em> &#124; <em>port number</em></code>
     <dd><p>
         Specifies the TCP port for which to listen to incoming TCP calls. This
         value is mandatory for <code>DIAL=IN&#124;INOUT&#124;NO</code>. It is ignored for <code>DIAL=OUT</code>.
         <p>
 
-    <dt><code>rhost=<em>hostname</em> &#124; <em>ip address</em></code>
-    <dt><code>rport=<em>service name</em> &#124; <em>port number</em></code>
+    <dt><code>RHOST=<em>hostname</em> &#124; <em>ip address</em></code>
+    <dt><code>RPORT=<em>service name</em> &#124; <em>port number</em></code>
     <dd><p>
         Specifies the remote host and port to which to direct a TCP connection on a
         DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <code>DIAL=NO</code>
@@ -4145,21 +4146,21 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin Communication Adapter tuning options -->
 
-    <dt><code>rto=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
+    <dt><code>RTO=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating a read on a timeout, when
         no read termination control character is received. Specifying 0 means the READ ends
         immediately. -1 specifies there is no timeout.
         <p>
 
-    <dt><code>pto=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
+    <dt><code>PTO=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating a POLL on a timeout, when
         no ACK or NACK sequence is received. Specifying 0 means the POLL ends
         immediately. -1 specifies there is no timeout.
         <p>
 
-    <dt><code>eto=0 &#124; -1 &#124; <em>nnn</em> &#124; 10000</code>
+    <dt><code>ETO=0 &#124; -1 &#124; <em>nnn</em> &#124; 10000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating an ENABLE operation on a timeout.
         the timeout applies when <code>DIAL=NO&#124;IN&#124;INOUT</code> is specified, the outgoing TCP call
@@ -4170,39 +4171,142 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     </dl> <!-- end Communication Adapter tuning options -->
 
-<a name="remtty"></a>
 <dt><em>Communication Line - TTY</em>
 <dd><p>
-    ( Preliminary 2703 TELE2 TTY Support )
+    (Preliminary 2703 TELE2 TTY Support)
     <p>
-
-    Describes a 2703 Telegraph Terminal Control Type II (TTY 33/35) stop/start line, providing access to the Host OS via a standard TELNET client.
-
+    Describes a 2703 Telegraph Terminal Control Type II (TTY 33/35) stop/start line,
+    providing access to the Host OS via a standard TELNET client. To the host OS
+    the line emulates an asynchronous TELE2 connection.  The communication is
+    emulated over a TELNET connection.
     <p>
-    To the host OS the line emulates an asynchronous TELE2 connection.  The communication is emulated over a TELNET connection.
-    <p>
-
     The following options define the line emulation behaviour:
     <p>
 
     <dl> <!-- begin Communication Adapter parms -->
 
-    <dt><code>lport=<em>port number</em></code>
+    <dt><code>LPORT=<em>port number</em></code>
     <dd><p>
         Specifies the TCPIP port to listen on for incoming TCP calls.
         <p>
 
-    <dt><code>dial=IN</code>
+    <dt><code>DIAL=IN</code>
     <dd><p>
         Specifies that this line is for in-bound calls. Required.
         <p>
 
-    <dt><code>tty=1</code>
+    <dt><code>TERM=TTY</code>
     <dd><p>
         Specifies that this definition is for a TTY port. Required
         <p>
 
     </dl> <!-- end Communication Adapter parms -->
+
+<dt><em>Additional 2703 Communication Line options</em>
+<dd><p>
+    The following are some additional options that may also be specified
+    for 2703 devices:
+    <p>
+
+    <dl> <!-- begin Addtional 2703 options -->
+
+    <dt><code>APPEND=<em>hh..</em>.</code>
+    <dt><code>PREPEND=<em>hh...</em></code>
+    <dd><p>
+        Specifies up to four bytes (in S/370 channel format, not ASCII)
+        to be prepended or appended to input line data received
+        from terminals before they are sent to the guest OS. Typical use is to
+        add Circle D and C around each input transmission (2741's for APL\360).
+        <p>
+
+    <dt><code>BINARY=NO &#124; YES</code>
+    <dd><p>
+        Negotiate to telnet binary mode if TERM=RXVT4APL.
+        <p>
+
+    <dt><code>BS=DUMB</code>
+    <dt><code>BREAK=DUMB</code>
+    <dd><p>
+        Backspace and break key handling option.
+        <p>
+        When using windows telnet it is recommended
+        to always use BS=DUMB and BREAK=DUMB.
+        <p>
+
+    <dt><code>CODE=EBCD &#124; CORR &#124; NONE</code>
+    <dd><p>
+        Specify code=ebcd for EBCD, code=corr for correspondence code,
+        or code=none to disable all translation.  The code= option applies to
+        2741 mode only.
+        <p>
+
+    <dt><code>CRLF=YES &#124; NO</code>
+    <dd><p>
+        Option to map 2741 NL to TTY CRLF sequence.
+        <p>
+
+    <dt><code>CRLF2CR=YES &#124; NO</code>
+    <dd><p>
+        Remove LF that immediately follow CR.
+        <p>
+
+    <dt><code>EOL=<em>hh</em></code>
+    <dd><p>
+        Specifies the ASCII byte value that, when received, marks the
+        end of the input line. The default is EOL=0D.
+        <p>
+
+    <dt><code>ISKIP=<em>hh...</em></code>
+    <dd><p>
+        Specifies up to four ASCII bytes that are to be suppressed
+        during input processing.
+        <p>
+
+    <dt><code>KA=NO &#124; <em>(idle,intv,count)</em></code>
+    <dd><p>
+        Defines the TCP/IP keepalive settings for this line's connections.
+        Refer the the <a href="#CONKPALV">CONKPALV</a> statement for details.
+        <p>
+
+    <dt><code>LNCTL=TELE2 &#124; IBM1 &#124; BSC</code>
+    <dd><p>
+        Specifies the type of communications line being defined.
+        <p>
+        For asynchronous communications lines specify LNCTL=TELE2 if TERM=TTY
+        or LNCTL=IBM1 if TERM=2741. For binary synchronous (BSC) lines
+        specify LNCTL=BSC.
+        <p>
+
+    <dt><code>SKIP=<em>hh...</em></code>
+    <dd><p>
+        Specifies "garbage" code points (either byte-reversed ASCII for
+        TERM=TTY or correspondence code/EBCD for TERM=2741) that are to be
+        suppressed in output processing, thereby allowing distinct lists
+        to be used for different terminal types.
+        <p>
+
+    <dt><code>SENDCR=NO &#124; YES</code>
+    <dd><p>
+        Send CR back to terminal when input line received.
+        <p>
+
+    <dt><code>SWITCHED=IN &#124; OUT &#124; INOUT &#124; NO</code>
+    <dd><p>
+        (this is just a synonym for the <a href="#DIAL">DIAL</a> option.)
+        <p>
+
+    <dt><code>TERM=TTY &#124; 2741 &#124; RXVT4APL</code>
+    <dd><p>
+        Specifies the terminal type. Use RXVT4APL for 8-bit and character
+        translation in 2741 mode.
+        <p>
+
+    <dt><code>UCTRANS=YES &#124; NO</code>
+    <dd><p>
+        Enable automatic translation to uppercase.
+        <p>
+
+    </dl> <!-- end Addtional 2703 options -->
 
 
 </dl> <!-- end Arguments for each device type -->
