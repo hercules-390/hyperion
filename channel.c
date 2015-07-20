@@ -1105,7 +1105,10 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         if(dev->hnd->halt!=NULL)                /* @ISW */
         {                                       /* @ISW */
             dev->hnd->halt(dev);                /* @ISW */
-            cc=0;                               /* @ISW */
+            psa = (PSA_3XX*)( regs->mainstor + regs->PX );
+            psa->csw[4] = 0;    /*  Store partial CSW   */
+            psa->csw[5] = 0;
+            cc = 1;             /*  CC1 == CSW stored   */
         }                                       /* @ISW */
         else
         {
