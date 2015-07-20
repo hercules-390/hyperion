@@ -394,7 +394,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_370][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "en", _ARCH_370_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_370_NAME );
             }
 #endif
 #if defined(_390)
@@ -403,7 +403,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_390][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "en", _ARCH_390_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_390_NAME );
             }
 #endif
 #if defined(_900)
@@ -412,7 +412,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_900][fbyte] |= fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "en", _ARCH_900_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_900_NAME );
             }
 #endif
     }
@@ -424,7 +424,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "dis", _ARCH_370_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_370_NAME );
             }
 #endif
 #if defined(_390)
@@ -433,7 +433,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "dis", _ARCH_390_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_390_NAME );
             }
 #endif
 #if defined(_900)
@@ -442,7 +442,7 @@ int fbyte, fbit;
             {
                 sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", get_facname(bitno), "dis", _ARCH_900_NAME));
+                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_900_NAME );
             }
 #endif
     }
@@ -457,7 +457,7 @@ int fbyte, fbit;
 
     if( !(facility->supported & mode) )
     {
-        logmsg(MSG(HHC00896, "E", facility->name));
+        WRMSG( HHC00896, "E", facility->name );
         return;
     }
 
@@ -470,7 +470,7 @@ int fbyte, fbit;
                 sysblk.facility_list[ARCH_370][fbyte] |= fbit;
 
             if(MLVL(VERBOSE))
-                logmsg(MSG(HHC00898, "I", facility->name, "en", _ARCH_370_NAME));
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
         }
         else
         {
@@ -480,7 +480,7 @@ int fbyte, fbit;
                     sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
 
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", facility->name, "dis", _ARCH_370_NAME));
+                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME );
             }
         }
     }
@@ -494,7 +494,7 @@ int fbyte, fbit;
                 sysblk.facility_list[ARCH_390][fbyte] |= fbit;
 
             if(MLVL(VERBOSE))
-                logmsg(MSG(HHC00898, "I", facility->name, "en", _ARCH_390_NAME));
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
         }
         else
         {
@@ -505,7 +505,7 @@ int fbyte, fbit;
             }
 
             if(MLVL(VERBOSE))
-                logmsg(MSG(HHC00898, "I", facility->name, "dis", _ARCH_390_NAME));
+                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
         }
     }
 #endif
@@ -518,7 +518,7 @@ int fbyte, fbit;
                 sysblk.facility_list[ARCH_900][fbyte] |= fbit;
 
             if(MLVL(VERBOSE))
-                logmsg(MSG(HHC00898, "I", facility->name, "en", _ARCH_900_NAME));
+                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME );
         }
         else
         {
@@ -528,7 +528,7 @@ int fbyte, fbit;
                     sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
 
                 if(MLVL(VERBOSE))
-                    logmsg(MSG(HHC00898, "I", facility->name, "dis", _ARCH_900_NAME));
+                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
             }
         }
     }
@@ -594,7 +594,7 @@ BYTE als =
 
     if(argc < 3)
     {
-        logmsg(MSG(HHC00892, "E"));
+        WRMSG( HHC00892, "E" );
         return 0;
     }
 
@@ -602,7 +602,7 @@ BYTE als =
     {
         if(!(ab = get_archtab(argv[3])))
         {
-            logmsg(MSG(HHC00895, "E", argv[3]));
+            WRMSG( HHC00895, "E", argv[3] );
             return 0;
         }
         als = arch2als[ab->archmode];
@@ -617,7 +617,7 @@ BYTE als =
       && bitno >= 0 && bitno <= STFL_HMAX)
         force_facbit(bitno,enable,als);
     else
-        logmsg(MSG(HHC00893, "E", argv[2]));
+        WRMSG( HHC00893, "E", argv[2] );
 
     return 0;
 }
@@ -647,13 +647,13 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg(MSG(HHC02203, "I", "archmode", get_arch_mode_string(NULL)));
+        WRMSG( HHC02203, "I", "archmode", get_arch_mode_string(NULL) );
         return 0;
     }
 
     if ( argc > 4 )
     {
-        logmsg(MSG(HHC02299, "E", argv[0]));
+        WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
@@ -664,7 +664,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
         if ( argc > 3 )
         {
-            logmsg(MSG(HHC02299, "E", argv[0]));
+            WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
 
@@ -678,9 +678,9 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
             if( argc < 3 || CMD(argv[2],all,3) || !strcasecmp( argv[2], tb->name ) )
             {
                 fcnt++;
-                logmsg(MSG(HHC00890, "I", tb->name,
+                WRMSG( HHC00890, "I", tb->name,
                        sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
-                        ? "En" : "Dis"));
+                        ? "En" : "Dis" );
             }
         }
 
@@ -698,9 +698,9 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
                 fbyte = bitno / 8;
                 fbit = 0x80 >> (bitno % 8);
-                logmsg(MSG(HHC00890, "I", get_facname(bitno),
+                WRMSG( HHC00890, "I", get_facname(bitno),
                        sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
-                        ? "En" : "Dis"));
+                        ? "En" : "Dis" );
             }
             else
             {
@@ -720,7 +720,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
             if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
             {
                 RELEASE_INTLOCK(NULL);
-                logmsg(MSG(HHC02253, "E"));
+                WRMSG( HHC02253, "E" );
                 return HERRCPUONL;
             }
     RELEASE_INTLOCK(NULL);
@@ -728,7 +728,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     if(!set_archlvl(argv[1]))
         if(update_archlvl(argc, argv))
         {
-            logmsg(MSG(HHC02205, "E", argv[1], ""));
+            WRMSG( HHC02205, "E", argv[1], "" );
             return -1;
         }
 
@@ -741,7 +741,7 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     if ( argc == 2 )
     {
         if ( MLVL(VERBOSE) )
-            logmsg(MSG(HHC02204, "I", "archmode", get_arch_mode_string(NULL)));
+            WRMSG( HHC02204, "I", "archmode", get_arch_mode_string(NULL) );
     }
 
     return 0;

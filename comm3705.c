@@ -318,135 +318,6 @@ packet_trace( BYTE* pAddr, int iLen )
 #endif
 
 
-#if 0
-static struct sockaddr_in * get_inet_socket(char *host_serv)
-{
-char *host = NULL;
-char *serv;
-struct sockaddr_in *sin;
-
-    if((serv = strchr(host_serv,':')))
-    {
-        *serv++ = '\0';
-        if(*host_serv)
-            host = host_serv;
-    }
-    else
-        serv = host_serv;
-
-    if(!(sin = malloc(sizeof(struct sockaddr_in))))
-        return sin;
-
-    sin->sin_family = AF_INET;
-
-    if(host)
-    {
-    struct hostent *hostent;
-
-        hostent = gethostbyname(host);
-
-        if(!hostent)
-        {
-            WRMSG(HHC01016, "I", "IP address", host);
-            free(sin);
-            return NULL;
-        }
-
-        memcpy(&sin->sin_addr,*hostent->h_addr_list,sizeof(sin->sin_addr));
-    }
-    else
-        sin->sin_addr.s_addr = INADDR_ANY;
-
-    if(serv)
-    {
-        if(!isdigit(*serv))
-        {
-        struct servent *servent;
-
-            servent = getservbyname(serv, "tcp");
-
-            if(!servent)
-            {
-                WRMSG(HHC01016, "I", "port number", host);
-                free(sin);
-                return NULL;
-            }
-
-            sin->sin_port = servent->s_port;
-        }
-        else
-            sin->sin_port = htons(atoi(serv));
-
-    }
-    else
-    {
-        WRMSG(HHC01017, "E", host_serv);
-        free(sin);
-        return NULL;
-    }
-
-    return sin;
-
-}
-
-#endif
-#if FALSE
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO REMOVE ANY IAC SEQUENCES FROM THE DATA STREAM       */
-/* Returns the new length after deleting IAC commands                */
-/*-------------------------------------------------------------------*/
-static int
-remove_iac (BYTE *buf, int len)
-{
-int     m, n, c;
-
-    for (m=0, n=0; m < len; ) {
-        /* Interpret IAC commands */
-        if (buf[m] == IAC) {
-            /* Treat IAC in last byte of buffer as IAC NOP */
-            c = (++m < len)? buf[m++] : NOP;
-            /* Process IAC command */
-            switch (c) {
-            case IAC: /* Insert single IAC in buffer */
-                buf[n++] = IAC;
-                break;
-            case BRK: /* Set ATTN indicator */
-                break;
-            case IP: /* Set SYSREQ indicator */
-                break;
-            case WILL: /* Skip option negotiation command */
-            case WONT:
-            case DO:
-            case DONT:
-                m++;
-                break;
-            case SB: /* Skip until IAC SE sequence found */
-                for (; m < len; m++) {
-                    if (buf[m] != IAC) continue;
-                    if (++m >= len) break;
-                    if (buf[m] == SE) { m++; break; }
-                } /* end for */
-            default: /* Ignore NOP or unknown command */
-                break;
-            } /* end switch(c) */
-        } else {
-            /* Copy data bytes */
-            if (n < m) buf[n] = buf[m];
-            m++; n++;
-        }
-    } /* end for */
-
-    if (n < m) {
-        TNSDEBUG3("console: DBG001: %d IAC bytes removed, newlen=%d\n",
-                m-n, n);
-        packet_trace (buf, n);
-    }
-
-    return n;
-
-} /* end function remove_iac */
-#endif
-
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO DOUBLE UP ANY IAC BYTES IN THE DATA STREAM          */
 /* Returns the new length after inserting extra IAC bytes            */
@@ -581,27 +452,34 @@ expect (int csock, BYTE *expected, int len, char *caption)
 {
 int     rc;                             /* Return code               */
 BYTE    buf[512];                       /* Receive buffer            */
-#if 1
-/* TCP/IP for MVS returns the server sequence rather then
-   the client sequence during bin negotiation    19/06/00 Jan Jaeger */
-static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
-static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
-#endif
+
+#if defined( OPTION_MVS_TELNET_WORKAROUND )
+
+  /* TCP/IP for MVS returns the server sequence rather then the
+     client sequence during bin negotiation.   Jan Jaeger, 19/06/00  */
+
+  static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
+  static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
+
+#endif // defined( OPTION_MVS_TELNET_WORKAROUND )
 
     UNREFERENCED(caption);
 
     rc = recv_packet (csock, buf, len, 0);
     if (rc < 0)
         return -1;
-#if 1
-    /* TCP/IP FOR MVS DOES NOT COMPLY TO RFC 1576 THIS IS A BYPASS */
-    if(memcmp(buf, expected, len) != 0
-      && !(len == sizeof(will_bin)
-          && memcmp(expected, will_bin, len) == 0
-          && memcmp(buf, do_bin, len) == 0) )
+
+#if defined( OPTION_MVS_TELNET_WORKAROUND )
+    /* BYPASS TCP/IP FOR MVS WHICH DOES NOT COMPLY TO RFC1576 */
+    if (1
+        && memcmp(buf, expected, len) != 0
+        && !(len == sizeof(will_bin)
+        && memcmp(expected, will_bin, len) == 0
+        && memcmp(buf, do_bin, len) == 0)
+    )
 #else
     if (memcmp(buf, expected, len) != 0)
-#endif
+#endif // defined( OPTION_MVS_TELNET_WORKAROUND )
     {
         TNSDEBUG2("console: DBG006: Expected %s\n", caption);
         return -1;

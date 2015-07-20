@@ -403,7 +403,6 @@ DLL_EXPORT int sched_yield ( void )
 
 DLL_EXPORT char* strtok_r ( char* s, const char* sep, char** lasts )
 {
-    UNREFERENCED( lasts );
     return strtok_s( s, sep, lasts );
 }
 
@@ -4617,7 +4616,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     {
         char msgbuf[MAX_PATH * 2];
         MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) );
-        logmsg(MSG(HHC90000, "D", msgbuf));
+        WRMSG( HHC90000, "D", msgbuf );
     }
     return fh;
 }

@@ -986,44 +986,8 @@ int main(int argc,char **argv)
 {
     int             rc;
     struct options  opts;
-    char           *pgmname;                /* prog name in host format  */
-    char           *pgm;                    /* less any extension (.ext) */
-    char            msgbuf[512];            /* message build work area   */
-    char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "VM/CMS VMFPLC2 Utility" ) );
-    display_version (stderr, msgbuf+10, FALSE);
-
+    INITIALIZE_UTILITY( UTILITY_NAME, "VM/CMS VMFPLC2 Utility", NULL );
 
     if(parse_parms(argc,argv,&opts)!=0)
     {

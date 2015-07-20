@@ -818,24 +818,14 @@
 #define msglevel_cmd_desc       "Display/Set current Message Display output"
 #define msglevel_cmd_help       \
                                 \
-  "Format: msglevel [on|off|text|time|debug|nodebug|verbose|terse|{device}]\n"   \
-  "  on      Normal message display\n"                                           \
-  "  off     No messages are displayed\n"                                        \
-  "  text    Text portion only of message is display\n"                          \
-  "  time    Timestamp is prefixed to message\n"                                 \
-  "  debug   Messages prefixed with source and linenumber\n"                     \
-  "  nodebug Turn off debug\n"                                                   \
-  "  tape    Tape related messages\n"                                            \
-  "  dasd    DASD related messages\n"                                            \
-  "  comm    Communications related messages\n"                                  \
-  "  ur      Unit Record related messages\n"                                     \
-  "  scsi    SCSI related messages\n"                                            \
-  "  ctca    CTCA, LCS related messages\n"                                       \
-  "  graf    Graphics (3270) related messages\n"                                 \
-  "  thread  Threading related messages\n"                                       \
-  "  channel Channel related messages\n"                                         \
-  "  verbose Display messages during configuration file processing\n"            \
-  "  terse   Turn off verbose"
+  "Format:  msglevel  [verbose|terse|debug|nodebug|emsgloc|noemsgloc]\n"         \
+  "\n"                                                                           \
+  "   verbose     Display messages during configuration file processing\n"       \
+  "   terse       Do not display configuration file processing messages\n"       \
+  "   debug       Prefix messages with filename and line number\n"               \
+  "   nodebug     Display messages normally\n"                                   \
+  "   emsgloc     Show where error messages originated\n"                        \
+  "   noemsgloc   Do not show where error messages originated\n"
 
 #define msglvl_cmd_desc         "Alias for msglevel"
 #define msgnoh_cmd_desc         "Similar to \"message\" but no header"
@@ -1710,12 +1700,6 @@ COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       
 COMMAND( "ls",                      ls_cmd,                 SYSCMDNDIAG8,       ls_cmd_desc,            NULL                )
 #endif
 #endif
-#if defined( OPTION_CMDTGT )
-COMMAND( "cmdtgt",                  cmdtgt_cmd,             SYSCMD,             cmdtgt_cmd_desc,        cmdtgt_cmd_help     )
-COMMAND( "herc",                    herc_cmd,               SYSCMD,             herc_cmd_desc,          herc_cmd_help       )
-COMMAND( "pscp",                    prioscp_cmd,            SYSCMD,             pscp_cmd_desc,          pscp_cmd_help       )
-COMMAND( "scp",                     scp_cmd,                SYSCMD,             scp_cmd_desc,           scp_cmd_help        )
-#endif
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
 CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
@@ -1758,10 +1742,6 @@ COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       
 #endif
 #if defined( OPTION_MIPS_COUNTING )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
-#endif
-#if defined( OPTION_MSGHLD )
-COMMAND( "kd",                      msghld_cmd,             SYSCMD,             kd_cmd_desc,            NULL                )
-COMMAND( "msghld",                  msghld_cmd,             SYSCMD,             msghld_cmd_desc,        msghld_cmd_help     )
 #endif
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )

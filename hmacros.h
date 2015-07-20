@@ -591,65 +591,8 @@ typedef int CMPFUNC(const void*, const void*);
 /*      Perform standard utility initialization                      */
 /*-------------------------------------------------------------------*/
 
-#if !defined(EXTERNALGUI)
-  #define INITIALIZE_EXTERNAL_GUI()
-#else
-  #define INITIALIZE_EXTERNAL_GUI() \
-  do { \
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) { \
-        extgui = 1; \
-        argv[argc-1] = NULL; \
-        argc--; \
-        setvbuf(stderr, NULL, _IONBF, 0); \
-        setvbuf(stdout, NULL, _IONBF, 0); \
-    } \
-  } while (0)
-#endif
-
-#if defined(OPTION_MSGLCK)
- #define INIT_MSGLCK initialize_lock (&sysblk.msglock);
-#else
- #define INIT_MSGLCK
-#endif
-
-#if defined(OPTION_CONFIG_SYMBOLS)
-#define INIT_UTILMSGLVL \
-    do \
-    { \
-        char *msglvl = (char *)get_symbol( "HERCULES_UTIL_MSGLVL" );\
-        if ( msglvl != NULL ) \
-        { \
-            sysblk.emsg = EMSG_ON; \
-            if ( strcasestr(msglvl, "all") ) \
-                sysblk.msglvl |= MLVL_ANY; \
-            if ( strcasestr(msglvl, "debug") ) \
-                sysblk.msglvl |= MLVL_DEBUG | MLVL_DEVICES; \
-            if ( strcasestr(msglvl, "verbose") )\
-                sysblk.msglvl |= MLVL_VERBOSE; \
-            if ( strcasestr(msglvl, "tape") ) \
-                sysblk.msglvl |= MLVL_TAPE; \
-            if ( strcasestr(msglvl, "dasd") ) \
-                sysblk.msglvl |= MLVL_DASD; \
-            if ( strcasestr(msglvl, "time") ) \
-                sysblk.emsg |= EMSG_TS; \
-        } \
-    } while (0)
-#else
-#define INIT_UTILMSGLVL
-#endif
-
-#define INITIALIZE_UTILITY(name) \
-  do { \
-    SET_THREAD_NAME(name); \
-    INITIALIZE_EXTERNAL_GUI(); \
-    memset (&sysblk, 0, sizeof(SYSBLK)); \
-    INIT_MSGLCK \
-    initialize_detach_attr (DETACHED); \
-    initialize_join_attr   (JOINABLE); \
-    set_codepage(NULL); \
-    init_hostinfo( &hostinfo ); \
-    INIT_UTILMSGLVL; \
-  } while (0)
+#define INITIALIZE_UTILITY( def, desc, pgm )  \
+    argc = initialize_utility( argc, argv, def, desc, pgm )
 
 /*-------------------------------------------------------------------*/
 /*      Assign name to thread           (debugging aid)              */

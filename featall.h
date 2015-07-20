@@ -84,6 +84,7 @@
 
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
+#define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
 
 #if defined(OPTION_SYNCIO) && defined(OPTION_NOSYNCIO)
   #error Either OPTION_SYNCIO or OPTION_NOSYNCIO must be specified, not both
@@ -102,13 +103,6 @@
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
-#if 0
-#define OPTION_CMDTGT                   /* the cmdtgt command        */
-#define OPTION_MSGCLR                   /* Colored messages          */
-#define OPTION_MSGHLD                   /* Sticky messages           */
-#define OPTION_MSGLCK                   /* Lock during msg write     */
-#endif
-
 #if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
 #define NO_SCP_MSG_PREFIX               /* Prefix scp msg with HHC*  */
 #endif
@@ -121,11 +115,6 @@
 
 #if !defined(OPTION_SHUTDOWN_CONFIRMATION) && !defined(NO_SHUTDOWN_CONFIRMATION)
 #define  NO_SHUTDOWN_CONFIRMATION       /* Confirm quit and ssd cmds */
-#endif
-
-#if !defined(OPTION_LOCK_CONFIG_FILE) && !defined(NO_LOCK_CONFIG_FILE)
-#define  NO_LOCK_CONFIG_FILE            /* Keep Configuration file
-                                           locked during execution   */
 #endif
 
 #define OPTION_OPTINST                  /* Optimized instructions    */
@@ -156,10 +145,6 @@
     #error Cannot have partial TCP keepalive without basic as well
   #endif
 #endif
-
-#if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
-  #error OPTION_MSGHLD requires OPTION_MSGCLR
-#endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
 
 #if (CKD_MAXFILES > 35)
   #error CKD_MAXFILES can not exceed design limit of 35

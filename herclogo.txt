@@ -55,4 +55,4 @@ $(SUBCHAN)
            HHH          HHH
            HHH          HHH     My PC thinks it's a MAINFRAME
 
-           Copyright (c) 1999-2011 Roger Bowler, Jan Jaeger, and others
+           Copyright (c) 1999-2015 Roger Bowler, Jan Jaeger, and others

@@ -12,10 +12,11 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 
-int syntax ();
+#define UTILITY_NAME    "cckdcomp"
+
+int syntax( const char* pgm );
 
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone compress                            */
@@ -23,6 +24,7 @@ int syntax ();
 
 int main (int argc, char *argv[])
 {
+char           *pgm;                    /* less any extension (.ext) */
 int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 int             level=-1;               /* Level for chkdsk          */
@@ -31,7 +33,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY("cckdcomp");
+    INITIALIZE_UTILITY( UTILITY_NAME, "Hercules cckd compress program", &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
@@ -43,21 +45,17 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             case '0':
             case '1':
             case '2':
-            case '3':  if (argv[0][2] != '\0') return syntax ();
+            case '3':  if (argv[0][2] != '\0') return syntax( pgm );
                        level = (argv[0][1] & 0xf);
                        break;
-            case 'f':  if (argv[0][2] != '\0') return syntax ();
+            case 'f':  if (argv[0][2] != '\0') return syntax( pgm );
                        force = 1;
                        break;
-            case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version
-                         (stderr, "Hercules cckd compress program", FALSE);
-                       return 0;
-            default:   return syntax ();
+            default:   return syntax( pgm );
         }
     }
 
-    if (argc < 1) return syntax ();
+    if (argc < 1) return syntax( pgm );
 
     for (i = 0; i < argc; i++)
     {
@@ -69,8 +67,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "open()", strerror(errno)));
+            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "open()", strerror( errno ));
             continue;
         }
 
@@ -79,21 +77,21 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         {
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
-                fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "lseek()", (U64)CCKD_DEVHDR_POS, strerror(errno)));
+                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "lseek()", (U64)CCKD_DEVHDR_POS, strerror( errno ));
                 close (dev->fd);
                 continue;
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
-                fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
+                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
                 close (dev->fd);
                 continue;
             }
             if (cdevhdr.options & CCKD_OPENED)
             {
-                fprintf(stdout, MSG(HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+                FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
                 close (dev->fd);
                 continue;
             }
@@ -102,7 +100,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
         {
-            fprintf(stdout, MSG(HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+            FWRMSG( stderr, HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
             close (dev->fd);
             continue;
         }
@@ -121,20 +119,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 /* print syntax                                                      */
 /*-------------------------------------------------------------------*/
 
-int syntax()
+int syntax( const char* pgm )
 {
-    fprintf (stderr, "\ncckdcomp [-v] [-f] [-level] file1 [file2 ... ]\n"
-                "\n"
-                "          -v      display version and exit\n"
-                "\n"
-                "          -f      force check even if OPENED bit is on\n"
-                "\n"
-                "        chkdsk level is a digit 0 - 3:\n"
-                "          -0  --  minimal checking\n"
-                "          -1  --  normal  checking\n"
-                "          -2  --  intermediate checking\n"
-                "          -3  --  maximal checking\n"
-                "         default  0\n"
-                "\n");
+    WRMSG( HHC02497, "I", pgm );
     return -1;
 }

@@ -15,576 +15,208 @@
 
 #define  BFR_CHUNKSIZE    (256)
 
-/******************************************/
-/* UTILITY MACRO BFR_VSNPRINTF            */
-/* Original design by Fish                */
-/* Modified by Jay Maynard                */
-/* Further modification by Ivan Warren    */
-/*                                        */
-/* Purpose : set 'bfr' to contain         */
-/*  a C string based on a message format  */
-/*  and a va_list of args.                */
-/*  bfr must be free()d when over with    */
-/*  this macro can ONLY be used from the  */
-/*  topmost variable arg function         */
-/*  that is the va_list cannot be passed  */
-/*  as a parameter from another function  */
-/*  since va_xxx functions behavio(u)r    */
-/*  seems to be undefined in those cases  */
-/* char *bfr; must be originally defined  */
-/* int siz;    must be defined and cont-  */
-/*             ain a start size           */
-/* va_list vl; must be defined and init-  */
-/*             ialised with va_start      */
-/* char *msg; is the message format       */
-/* int    rc; to contain final size       */
-/******************************************/
+/*-------------------------------------------------------------------*/
+/*                Helper macro "BFR_VSNPRINTF"                       */
+/*-------------------------------------------------------------------*/
+/* Original design by Fish                                           */
+/* Modified by Jay Maynard                                           */
+/* Further modification by Ivan Warren                               */
+/*                                                                   */
+/* Purpose:                                                          */
+/*                                                                   */
+/*  set 'bfr' to contain a C string based on a message format        */
+/*  and va_list of args. NOTE: 'bfr' must be free()d when done.      */
+/*                                                                   */
+/*  This macro can ONLY be used from the top-most variable arg       */
+/*  function. That is, the va_list cannot be passed as a parameter   */
+/*  from another function since va_xxx functions behavio(u)r seems   */
+/*  to be undefined in those cases.                                  */
+/*                                                                   */
+/* Local variables referenced:                                       */
+/*                                                                   */
+/*  char*    bfr;     must be originally defined                     */
+/*  int      siz;     must be defined and contain a start size       */
+/*  va_list  vl;      must be defined and initialised with va_start  */
+/*  char*    fmt;     is the message format                          */
+/*  int       rc;     will contain final size                        */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 #if defined(_MSVC_)
-#define  BFR_VSNPRINTF()                      \
-        bfr=(char *)calloc(1,siz);            \
-        rc=-1;                                \
-        while(bfr&&rc<0)                      \
-        {                                     \
-            va_start(vl,msg);                 \
-            rc=_vsnprintf_s(bfr,siz,siz-1,msg,vl);     \
-            va_end(vl);                       \
-            if(rc>=0 && rc<siz)               \
-                break;                        \
-            rc=-1;                            \
-            siz+=BFR_CHUNKSIZE;               \
-            if ( siz > 65536 ) break;         \
-            bfr=realloc(bfr,siz);             \
-        }                                     \
-        if ( bfr != NULL && strlen(bfr) == 0 && strlen(msg) != 0 )            \
-        {                                     \
-            free(bfr);                        \
-            bfr = strdup(msg);                \
-        }                                     \
-        else                                  \
-        {                                     \
-            if ( bfr != NULL )                \
-            {                                 \
-                char *p = strdup( bfr );      \
-                free( bfr );                  \
-                bfr = p;                      \
-            }                                 \
-        }                                     \
+
+//  PROGRAMMING NOTE: the only difference between the MSVC version
+//  and *nix version of the below "BFR_VSNPRINTF" macro is the MSVC
+//  version uses "vsnprintf_s" and the *nix version uses "vsnprintf".
+
+#define  BFR_VSNPRINTF()                                            \
+                                                                    \
+        bfr = (char*) calloc( 1, siz );                             \
+        rc = -1;                                                    \
+                                                                    \
+        while (bfr && rc < 0)                                       \
+        {                                                           \
+            rc = _vsnprintf_s( bfr, siz, siz-1, fmt, vl );          \
+                                                                    \
+            if (rc >= 0 && rc < siz)                                \
+                break;                                              \
+                                                                    \
+            rc = -1;                                                \
+            siz += BFR_CHUNKSIZE;                                   \
+                                                                    \
+            if (siz > 65536)                                        \
+                break;                                              \
+                                                                    \
+            bfr = realloc( bfr, siz );                              \
+        }                                                           \
+                                                                    \
+        if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
+        {                                                           \
+            free( bfr );                                            \
+            bfr = strdup( fmt );                                    \
+        }                                                           \
+        else                                                        \
+        {                                                           \
+            if (bfr != NULL)                                        \
+            {                                                       \
+                char* p = strdup( bfr );                            \
+                free( bfr );                                        \
+                bfr = p;                                            \
+            }                                                       \
+        }                                                           \
         ASSERT(bfr)
 #else
-#define  BFR_VSNPRINTF()                      \
-        bfr=(char*)calloc(1,siz);             \
-        rc=-1;                                \
-        while(bfr&&rc<0)                      \
-        {                                     \
-            va_start(vl,msg);                 \
-            rc=vsnprintf(bfr,siz,msg,vl);     \
-            va_end(vl);                       \
-            if(rc>=0 && rc<siz) break;        \
-            rc=-1;                            \
-            siz+=BFR_CHUNKSIZE;               \
-            if ( siz > 65536 ) break;         \
-            bfr=realloc(bfr,siz);             \
-        }                                     \
-        if ( bfr != NULL && strlen(bfr) == 0 && strlen(msg) != 0 )            \
-        {                                     \
-            free(bfr);                        \
-            bfr = strdup(msg);                \
-        }                                     \
-        else                                  \
-        {                                     \
-            if ( bfr != NULL )                \
-            {                                 \
-                char *p = strdup( bfr );      \
-                free( bfr );                  \
-                bfr = p;                      \
-            }                                 \
-        }                                     \
+
+//  PROGRAMMING NOTE: the only difference between the *nix version
+//  and MSVC version of the below "BFR_VSNPRINTF" macro is the *nix
+//  version uses "vsnprintf" and the MSVC version uses "vsnprintf_s".
+
+#define  BFR_VSNPRINTF()                                            \
+                                                                    \
+        bfr = (char*) calloc( 1, siz );                             \
+        rc = -1;                                                    \
+                                                                    \
+        while (bfr && rc < 0)                                       \
+        {                                                           \
+            rc = vsnprintf( bfr, siz, fmt, vl );                    \
+                                                                    \
+            if (rc >= 0 && rc < siz)                                \
+                break;                                              \
+                                                                    \
+            rc = -1;                                                \
+            siz += BFR_CHUNKSIZE;                                   \
+                                                                    \
+            if (siz > 65536)                                        \
+                break;                                              \
+                                                                    \
+            bfr = realloc( bfr, siz );                              \
+        }                                                           \
+                                                                    \
+        if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
+        {                                                           \
+            free( bfr );                                            \
+            bfr = strdup( fmt );                                    \
+        }                                                           \
+        else                                                        \
+        {                                                           \
+            if (bfr != NULL)                                        \
+            {                                                       \
+                char* p = strdup( bfr );                            \
+                free( bfr );                                        \
+                bfr = p;                                            \
+            }                                                       \
+        }                                                           \
         ASSERT(bfr)
 #endif
-static LOCK log_route_lock;
 
-#define MAX_LOG_ROUTES MAX_CPU_ENGINES+4
-typedef struct _LOG_ROUTES
+/*-------------------------------------------------------------------*/
+/*            log message capturing routing functions                */
+/*-------------------------------------------------------------------*/
+
+struct LOG_ROUTES
 {
-    TID t;
-    LOG_WRITER *w;
-    LOG_CLOSER *c;
-    void *u;
-} LOG_ROUTES;
+    TID          t;     // thread id
+    LOG_WRITER  *w;     // ptr to log routing writer func
+    LOG_CLOSER  *c;     // ptr to log routing closer func
+    void        *u;     // user context passed to each func
+};
+typedef struct LOG_ROUTES   LOG_ROUTES;
 
-LOG_ROUTES log_routes[MAX_LOG_ROUTES];
+#define MAX_LOG_ROUTES (MAX_CPU_ENGINES + 4)
+LOG_ROUTES  log_routes[ MAX_LOG_ROUTES ];
 
-static int log_route_inited=0;
+static LOCK  log_route_lock;
+static int   log_route_inited = 0;
 
-static void log_route_init(void)
+static void log_route_init()
 {
     int i;
-    if(log_route_inited)
-    {
+
+    if (log_route_inited)
         return;
-    }
-    initialize_lock(&log_route_lock);
-    for(i=0;i<MAX_LOG_ROUTES;i++)
+
+    initialize_lock( &log_route_lock );
+
+    for (i=0; i < MAX_LOG_ROUTES; i++)
     {
-        log_routes[i].t=0;
-        log_routes[i].w=NULL;
-        log_routes[i].c=NULL;
-        log_routes[i].u=NULL;
+        log_routes[i].t  =  0;
+        log_routes[i].w  =  NULL;
+        log_routes[i].c  =  NULL;
+        log_routes[i].u  =  NULL;
     }
-    log_route_inited=1;
-    return;
+
+    log_route_inited = 1;
 }
-/* LOG Routing functions */
-static int log_route_search(TID t)
+
+static int log_route_search( TID t )
 {
-    int i;
-    for(i=0;i<MAX_LOG_ROUTES;i++)
+    int  i;
+    for (i=0; i < MAX_LOG_ROUTES; i++)
     {
-        if(equal_threads(log_routes[i].t,t))
+        if (equal_threads( log_routes[i].t, t ))
         {
-            if(t==0)
-            {
-                log_routes[i].t=(TID)1;
-            }
-            return(i);
+            if (t == 0)
+                log_routes[i].t = (TID) 1;
+
+            return (i);
         }
     }
-    return(-1);
+    return (-1);
 }
 
 /* Open a log redirection Driver route on a per-thread basis         */
 /* Up to 16 concurent threads may have an alternate logging route    */
 /* opened                                                            */
-DLL_EXPORT int log_open(LOG_WRITER *lw,LOG_CLOSER *lc,void *uw)
+static int log_open( LOG_WRITER* lw, LOG_CLOSER* lc, void* uw )
 {
     int slot;
-    log_route_init();
-    obtain_lock(&log_route_lock);
-    slot=log_route_search((TID)0);
-    if(slot<0)
-    {
-        release_lock(&log_route_lock);
-        return(-1);
-    }
-    log_routes[slot].t=thread_id();
-    log_routes[slot].w=lw;
-    log_routes[slot].c=lc;
-    log_routes[slot].u=uw;
-    release_lock(&log_route_lock);
-    return(0);
-}
-
-DLL_EXPORT void log_close(void)
-{
-    int slot;
-    log_route_init();
-    obtain_lock(&log_route_lock);
-    slot=log_route_search(thread_id());
-    if(slot<0)
-    {
-        release_lock(&log_route_lock);
-        return;
-    }
-    log_routes[slot].c(log_routes[slot].u);
-    log_routes[slot].t=0;
-    log_routes[slot].w=NULL;
-    log_routes[slot].c=NULL;
-    log_routes[slot].u=NULL;
-    release_lock(&log_route_lock);
-    return;
-}
-
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-DLL_EXPORT void writemsg(const char *srcfile, int line, const char* function,
-                         int grp, int lvl, char *color, char *msg, ...)
-{
-    char   *bfr     =   NULL;
-    char   *msgbuf  =   NULL;
-    int     rc      =   1;
-    int     errmsg  =   FALSE;
-    int     siz     =   1024;
-    char    file[FILENAME_MAX];
-    char    prefix[64];
-    va_list vl;
-
-    bfr = strdup(srcfile);
-    strlcpy(file, basename(bfr), sizeof(file));
-    free(bfr);
-    bfr = NULL;
-
-    memset(prefix, 0, sizeof(prefix));
-
-#ifdef OPTION_MSGLCK
-    if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-        WRGMSG_ON;
-#endif
-
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-
-    BFR_VSNPRINTF();
-
-    if (!bfr)
-    {
-#ifdef OPTION_MSGLCK
-        if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-            WRGMSG_OFF;
-#endif
-        return;
-    }
-
-    if ( strlen(bfr) > 10 && SNCMP(bfr,"HHC",3) && (bfr[8] == 'S' || bfr[8] == 'E' || bfr[8] == 'W') )
-        errmsg = TRUE;
-
-#if defined( OPTION_MSGCLR )
-    if ( !strlen(color) )
-    {
-        if ( errmsg )
-            color = "<pnl,color(lightred,black),keep>";
-        else
-            color = "";
-    }
-#else
-    color = "";
-#endif // defined( OPTION_MSGCLR )
-
-    if ( lvl & MLVL_DEBUG )
-    {
-#if defined( OPTION_MSGCLR )
-        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init && !sysblk.daemon_mode)
-            MSGBUF(prefix, "%s" MLVL_DEBUG_PRINTF_PATTERN, color, file, line);
-        else
-#endif
-            MSGBUF(prefix, MLVL_DEBUG_PRINTF_PATTERN, file, line);
-    }
-    else
-    {
-#if defined( OPTION_MSGCLR )
-        if (strlen(color) > 0 && !sysblk.shutdown && sysblk.panel_init && !sysblk.daemon_mode)
-        {
-            MSGBUF(prefix, "%s", color );
-        }
-#endif // defined( OPTION_MSGCLR )
-    }
-
-    if(bfr)
-    {
-        size_t l = strlen(prefix)+strlen(bfr)+256;
-        msgbuf = calloc(1,l);
-        if (msgbuf)
-        {
-            if ( strlen(bfr) > 10 && SNCMP(bfr, "HHC", 3) )
-                snprintf( msgbuf, l-1, "%s%s", prefix, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-            else
-                snprintf( msgbuf, l-1, "%s%s", prefix, bfr );
-            log_write( 0, msgbuf );
-            free(msgbuf);
-        }
-        free(bfr);
-    }
-
-    if ( errmsg && !MLVL(DEBUG) )
-        logmsg("HHC00007" "I" " " HHC00007 "\n", function, file, line);
-
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-
-#ifdef OPTION_MSGLCK
-    if(!sysblk.msggrp || (sysblk.msggrp && !grp))
-        WRGMSG_OFF;
-#endif
-
-    log_wakeup(NULL);
-}
-#endif /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
-
-/*-------------------------------------------------------------------*/
-/* Log message: Normal routing (panel or buffer, as appropriate)     */
-/* was logmsg; replaced with macro logmsg                            */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void logmsg(char *msg,...)
-{
-    char   *bfr =   NULL;
-    int     rc;
-    int     siz =   1024;
-    va_list vl;
-
-#ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-#endif
-    BFR_VSNPRINTF();
-    if ( bfr )
-    {
-        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
-            log_write( 0, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-        else
-            log_write( 0, bfr );
-    }
-#ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-#endif
-    if ( bfr )
-    {
-        free(bfr);
-    }
-}
-
-// BHe I want to remove these functions for simplification
-#if 0
-/*-------------------------------------------------------------------*/
-/* Log message: Panel only (no logmsg routing)                       */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void logmsgp(char *msg,...)
-{
-    char *bfr=NULL;
-    char *ptr;
-    int rc;
-    int siz=1024;
-    va_list vl;
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    BFR_VSNPRINTF();
-    if(bfr)
-    {
-        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
-            log_write( 1, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-        else
-            log_write( 1, bfr );
-    }
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    if(bfr)
-    {
-        free(bfr);
-    }
-}
-
-/*-------------------------------------------------------------------*/
-/* Log message: Both panel and logmsg routing                        */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void logmsgb(char *msg,...)
-{
-    char *bfr=NULL;
-    char *ptr;
-    int rc;
-    int siz=1024;
-    va_list vl;
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    BFR_VSNPRINTF();
-    if(bfr)
-    {
-        if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
-            log_write( 2, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-        else
-            log_write( 2, bfr );
-    }
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    if(bfr)
-    {
-        free(bfr);
-    }
-}
-#endif
-
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-/*-------------------------------------------------------------------*/
-/* Log message: Device trace                                         */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
-{
-    char    *bfr=NULL;
-    int     rc;
-    int     siz=1024;
-    va_list vl;
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    if(dev->ccwtrace||dev->ccwstep)
-    {
-        BFR_VSNPRINTF();
-        if(bfr)
-        {
-            if ( !strncmp(bfr, "HHC", 3) && strlen(bfr) > 10 )
-                log_write( 2, ( sysblk.emsg & EMSG_TEXT ) ? &bfr[10] : bfr );
-            else
-                log_write( 2, bfr );
-        }
-    }
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    if(bfr)
-    {
-        free(bfr);
-    }
-} /* end function logdevtr */
-#endif /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
-
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-/* panel : 0 - No, 1 - Only, 2 - Also */
-DLL_EXPORT void log_write(int panel,char *msg)
-{
-/* (log_write function proper starts here) */
-    int     slot;
-    char   *ptr;
-    size_t  pl;
-    char   *pszMSG;
-    char   *pLeft, *pRight;
-    int     nLeft;
-
-    if ( msg == NULL || strlen(msg) == 0 )
-        return;
-
-    pLeft = msg;
-    nLeft = (int)strlen(msg);
-
-#if defined( OPTION_MSGCLR )
-    /* strip color part of message */
-    /* Remove "<pnl,..." color string if it exists */
-    if ( 1
-        && nLeft > 5
-        && strncasecmp( pLeft, "<pnl", 4 ) == 0
-        && (pLeft = memchr( pLeft+4, '>', nLeft-4 )) != NULL
-       )
-    {
-        pLeft++;
-        nLeft -= (int)(pLeft - (char*)msg);
-    }
-#endif // defined( OPTION_MSGCLR )
-
-    // Route logmsg to stdout if the logpipe has not been initialised
-    if(!logger_syslogfd[LOG_WRITE])
-    {
-        printf( "%s", pLeft );
-        return;
-    }
-
-    pl = strlen(msg) * 2;
-    ptr = malloc( pl );
-
-    ASSERT( ptr != NULL );
-
-    if ( ptr == NULL )
-        pszMSG = msg;
-    else
-    {
-        struct timeval  now;
-        time_t          tt;
-        char            hhmmss[10];
-
-        gettimeofday( &now, NULL ); tt = now.tv_sec;
-        strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
-
-            ptr[0] = '\0';
-        if ( sysblk.emsg & EMSG_TS && !SNCMP( msg, "<pnl", 4 ) )
-        {
-            strlcpy( ptr, hhmmss, pl);
-            strlcat( ptr, msg,    pl);
-            pszMSG = ptr;
-        }
-        else if ( sysblk.emsg & EMSG_TS && SNCMP( msg, "<pnl", 4 ) )
-        {
-            pRight = strchr( msg, '>' );
-            pRight++;
-            if ( strlen(pRight) > 10 && ( SNCMP(pRight, "HHC", 3) || SNCMP(&pRight[17], "HHC", 3) ) )
-            {
-                memset(ptr, 0, sizeof(ptr));
-                strlcpy( ptr, msg, (pRight-msg)+1 );
-                strlcat( ptr, hhmmss, pl );
-                strlcat( ptr, pRight, pl );
-                pszMSG = ptr;
-            }
-            else
-                pszMSG = msg;
-        }
-        else
-            pszMSG = msg;
-    }
 
     log_route_init();
 
-    if ( panel == 1 )
+    obtain_lock( &log_route_lock );
     {
-        write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
-    }
-    else
-    {
-        obtain_lock(&log_route_lock);
-        slot = log_route_search(thread_id());
-        release_lock(&log_route_lock);
+        slot = log_route_search( (TID) 0 );
 
-        if ( panel == 2 )
+        if (slot < 0)
         {
-            write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
-            if (nLeft && slot >= 0)
-            {
-                log_routes[slot].w(log_routes[slot].u,pLeft);
-            }
+            release_lock( &log_route_lock );
+            return (-1);
         }
-        else if ( slot < 0 )
-        {
-            write_pipe( logger_syslogfd[LOG_WRITE], pszMSG, strlen(pszMSG) );
-        }
-        else
-        {
-            if (nLeft)
-            {
-                log_routes[slot].w(log_routes[slot].u,pLeft);
-            }
-        }
-    }
 
-    if ( ptr != NULL ) free(ptr);
-    return;
+        log_routes[slot].t  =  thread_id();
+        log_routes[slot].w  =  lw;
+        log_routes[slot].c  =  lc;
+        log_routes[slot].u  =  uw;
+    }
+    release_lock( &log_route_lock );
+    return (0);
 }
-#else /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
-/* panel : 0 - No, 1 - Only, 2 - Also */
-DLL_EXPORT void log_write(int panel,char *msg)
-{
 
-/* (log_write function proper starts here) */
-    int slot;
-    log_route_init();
-    if(panel==1)
-    {
-        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
-        return;
-    }
-    obtain_lock(&log_route_lock);
-    slot=log_route_search(thread_id());
-    release_lock(&log_route_lock);
-    if(slot<0 || panel>0)
-    {
-        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
-        if(slot<0)
-            return;
-    }
-    log_routes[slot].w(log_routes[slot].u,msg);
-    return;
-}
-#endif /*defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)*/
-
-/* capture log output routine series */
-/* log_capture is a sample of how to */
-/* use log rerouting.                */
-/* log_capture takes 2 args :        */
-/*   a ptr to a function taking 1 parm */
-/*   the function parm               */
 struct log_capture_data
 {
-    char *obfr;
-    size_t sz;
+    char*   obfr;       // ptr to captured message buffer
+    size_t  sz;         // size of captured message buffer
 };
 
-DLL_EXPORT void log_capture_writer(void *vcd,char *msg)
+static void log_capture_writer(void *vcd,char *msg)
 {
     struct log_capture_data *cd;
     if(!vcd||!msg)return;
@@ -603,11 +235,47 @@ DLL_EXPORT void log_capture_writer(void *vcd,char *msg)
     strlcat(cd->obfr,msg,cd->sz);
     return;
 }
-DLL_EXPORT void log_capture_closer(void *vcd)
+
+static void log_close()
+{
+    int slot;
+
+    log_route_init();
+
+    obtain_lock( &log_route_lock );
+    {
+        slot = log_route_search( thread_id() );
+
+        if (slot < 0)
+        {
+            release_lock( &log_route_lock );
+            return;
+        }
+
+        // Call the Log Routing closer function
+        log_routes[slot].c( log_routes[slot].u );
+
+        log_routes[slot].t  =  0;
+        log_routes[slot].w  =  NULL;
+        log_routes[slot].c  =  NULL;
+        log_routes[slot].u  =  NULL;
+    }
+    release_lock( &log_route_lock );
+}
+
+static void log_capture_closer(void *vcd)
 {
     UNREFERENCED(vcd);
     return;
 }
+
+/*-------------------------------------------------------------------*/
+/*                log message capturing functions                    */
+/*-------------------------------------------------------------------*/
+/* Capture log output routines. log_capture is a sample of how to    */
+/* use log rerouting. log_capture takes 2 arguments: a ptr to the    */
+/* capture function that takes 1 parameter and the parameter itself  */
+/*-------------------------------------------------------------------*/
 
 DLL_EXPORT char *log_capture(CAPTUREFUNC *func,void *p)
 {
@@ -631,22 +299,246 @@ DLL_EXPORT int log_capture_rc(CAPTUREFUNC *func,char *p,char **resp)
     return rc;
 }
 
-#if defined( OPTION_MSGCLR )
 /*-------------------------------------------------------------------*/
-/* Skip past "<pnl ...>" message prefix...                           */
-/* Input:                                                            */
-/*    ppsz      pointer to char* pointing to message                 */
-/* Output:                                                           */
-/*    ppsz      updated *ppsz --> msg following <pnl prefix          */
-/* Returns:     new strlen of message (strlen of updated *ppsz)      */
+/*                     writemsg functions                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int skippnlpfx(const char** ppsz)
+/* The writemsg function is the primary 'WRMSG' macro function that  */
+/* is responsible for formatting messages. Messages, once formatted  */
+/* are then handed off to the log_write function to be eventually    */
+/* displayed to the user or captured or both. (Refer to log_write)   */
+/*                                                                   */
+/* If the 'debug' MSGLVL option is enabled, formatted messages will  */
+/* be prefixed with the source filename and line number where they   */
+/* originated from.                                                  */
+/*-------------------------------------------------------------------*/
+
+static void vfwritemsg( FILE* f, const char* filename, int line, const char* func, const char* fmt, va_list vl )
 {
-    if (strncasecmp( *ppsz, "<pnl,", 5 ) == 0)
+    char     prefix[ 32 ]  =  {0};
+    char*    bfr           =  NULL;
+    int      rc            =  1;
+    int      siz           =  1024;
+    char*    msgbuf;
+    size_t   msglen, bufsiz;
+
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush( f );
+  #endif
+
+    // Format just the message part, without the filename and line number
+
+    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
+    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+        return;       // then there's nothing more we can do.
+
+    bufsiz = msglen = strlen( bfr ) + 2;
+
+    // Prefix message with filename and line number, if requested
+
+    if (MLVL( DEBUG ))
     {
-        char* p = strchr( (*ppsz)+5, '>' );
-        if (p) *ppsz = ++p;
+        char wrk[ 32 ];
+        char *nl, *newbfr, *left, *right;
+        size_t newsiz, pfxsiz, leftsize, rightsiz;
+
+        MSGBUF( wrk, "%s(%d)", TRIMLOC( filename ), line );
+        MSGBUF( prefix, "%-17.17s ", wrk );
+
+        pfxsiz = strlen( prefix );
+
+        // Special handling for multi-line messages: insert the
+        // debug prefix (prefix) before each line except the first
+        // (which is is handled automatically further below)
+
+        for (nl = strchr( bfr, '\n' ); nl && nl[1]; nl = strchr( nl, '\n' ))
+        {
+            left = bfr;
+            right = nl+1;
+
+            leftsize = ((nl+1) - bfr);
+            rightsiz = bufsiz - leftsize;
+
+            newsiz = bufsiz + pfxsiz;
+            newbfr = malloc( newsiz );
+
+            memcpy( newbfr, left, leftsize );
+            memcpy( newbfr + leftsize, prefix, pfxsiz );
+            memcpy( newbfr + leftsize + pfxsiz, right, rightsiz );
+
+            free( bfr );
+            bfr = newbfr;
+            bufsiz = newsiz;
+            nl = bfr + leftsize + pfxsiz;
+        }
+
+        bufsiz += pfxsiz;
     }
-    return (int)strlen( *ppsz );
+
+    msgbuf = calloc( 1, bufsiz );
+
+    if (msgbuf)
+    {
+        snprintf( msgbuf, bufsiz-1, "%s%s\n", prefix, bfr );
+        flog_write( f, 0, msgbuf );
+        free( msgbuf );
+    }
+
+    // Show them where the error message came from, if requested
+
+    if (1
+        &&  MLVL( EMSGLOC )
+        && !MLVL( DEBUG )
+        && msglen > 10
+        && strncasecmp( bfr, "HHC", 3 ) == 0
+        && (0
+            || 'S' == bfr[8]
+            || 'E' == bfr[8]
+            || 'W' == bfr[8]
+           )
+    )
+    {
+        // "Previous message from function '%s' at %s(%d)"
+        FWRMSG( f, HHC00007, "I", func, TRIMLOC( filename ), line );
+    }
+
+    free( bfr );
+
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush( f );
+  #endif
+
+    log_wakeup( NULL );
 }
-#endif /*defined( OPTION_MSGCLR )*/
+
+DLL_EXPORT void writemsg( const char* filename, int line, const char* func, const char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+    vfwritemsg( stdout, filename, line, func, fmt, vl );
+}
+
+DLL_EXPORT void fwritemsg( FILE* f, const char* filename, int line, const char* func, const char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+    vfwritemsg( f, filename, line, func, fmt, vl );
+}
+
+/*-------------------------------------------------------------------*/
+/*                     log_write functions                           */
+/*-------------------------------------------------------------------*/
+/* The "log_write" function is the function responsible for either   */
+/* sending a formatted message through the Hercules logger facilty   */
+/* pipe (handled by logger.c) to panel.c for display to the user,    */
+/* or for printing the message directly to the terminal screen (in   */
+/* the case of utilities).                                           */
+/*                                                                   */
+/* 'msg' is the formatted message to be displayed. 'panel' tells     */
+/* where the message should be sent: the value '1' (normal) sends    */
+/* the message through the logger facility pipe only (for display    */
+/* to the user via panel.c). Messages written using panel=1 can      */
+/* never be captured. (See log message capturing functions further   */
+/* above). using panel=2 allows a message to be displayed to the     */
+/* user AND be captured as well. (It's sent through the logger pipe  */
+/* to panel.c AND is captured too.) The value '0' is used when you   */
+/* ONLY want to silently capture a message WITHOUT displaying it to  */
+/* the user. Such messages are NEVER sent through the logger pipe    */
+/* and thus never reach panel.c                                      */
+/*                                                                   */
+/* SUMMARY: panel=0: capture only, 1=panel only, 2=panel and capture */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
+{
+    int slot;
+
+    log_route_init();
+
+    if (panel == 1)     /* Display message only; NEVER capture */
+    {
+        /* Send message through logger facility pipe to panel.c,
+           or display it directly to the terminal via fprintf
+           if this is a utility message
+        */
+        if (stdout == f && logger_syslogfd[ LOG_WRITE ])
+            write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ));
+        else
+            fprintf( f, "%s", msg );
+
+        return;   /* panel=1: NEVER capture; return immediately */
+    }
+
+    /* Retrieve message capture routing slot */
+    obtain_lock( &log_route_lock );
+    {
+        slot = log_route_search( thread_id() );
+    }
+    release_lock( &log_route_lock );
+
+    if (slot < 0 || panel > 0) /* Capture only or display & capture */
+    {
+        /* (same as above but allow message to be captured as well) */
+        if (stdout == f && logger_syslogfd[ LOG_WRITE ])
+            write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ));
+        else
+            fprintf( f, "%s", msg );
+
+        if (slot < 0)
+            return;
+    }
+
+    /* Allow message to be captured */
+    log_routes[ slot ].w( log_routes[slot].u, msg );
+}
+
+DLL_EXPORT void log_write( int panel, char *msg )
+{
+    flog_write( stdout, panel, msg );
+}
+
+/*-------------------------------------------------------------------*/
+/* logmsg functions: normal panel or buffer routing as appropriate.  */
+/*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: these functions should NOT really ever be used  */
+/* in a production environment. They only still exist because they   */
+/* are easier to use than our 'WRMSG' macro. "logmsg" is a drop-in   */
+/* replacement for "printf" and should only be used for debugging    */
+/* while developing new code. Production code should use "WRMSG".    */
+/*-------------------------------------------------------------------*/
+static void vflogmsg( FILE* f, char* fmt, va_list vl )
+{
+    char    *bfr =   NULL;
+    int      rc;
+    int      siz =   1024;
+
+#ifdef NEED_LOGMSG_FFLUSH
+    fflush(f);
+#endif
+
+    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
+    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+        return;       // then there's nothing more we can do.
+
+    if (bfr)
+        flog_write( f, 0, bfr );
+
+#ifdef NEED_LOGMSG_FFLUSH
+    fflush(f);
+#endif
+
+    if (bfr)
+        free( bfr );
+}
+
+DLL_EXPORT void flogmsg( FILE* f, char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+    vflogmsg( f, fmt, vl );
+}
+
+DLL_EXPORT void logmsg( char* fmt, ... )
+{
+    va_list   vl;
+    va_start( vl, fmt );
+    vflogmsg( stdout, fmt, vl );
+}

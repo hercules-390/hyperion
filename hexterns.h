@@ -455,7 +455,7 @@ void get_mpfactors(BYTE *dest);
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT void system_cleanup(void);
 
-typedef void (*LOGCALLBACK)(const char *,size_t);
+typedef void (*LOGCALLBACK)( const char*, size_t );
 typedef void *(*COMMANDHANDLER)(void *);
 
 IMPL_DLL_IMPORT int impl(int,char **);
@@ -546,7 +546,7 @@ CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...) ATTR_PRINTF(3,4);
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
 void do_shutdown();
-int display_regs (REGS *regs, char *buf, int buflen, char *hdr);
+int display_gregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
 int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_aregs (REGS *regs, char *buf, int buflen, char *hdr);

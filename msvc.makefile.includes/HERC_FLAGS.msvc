@@ -63,6 +63,12 @@ ldebug = $(ldebug) /MANIFEST
 cflags = $(cflags:-W4=-W3)
 cflags = $(cflags:/W4=/W3)
 
+# Convert the following warnings into errors
+# C4101 "'identifier' : unreferenced local variable"
+# C4102 "'label' : unreferenced label"
+cflags = $(cflags) /we4101
+cflags = $(cflags) /we4102
+
 # D9035: option 'Wp64' has been deprecated and will be removed in a future release.
 cflags = $(cflags:-Wp64=)
 cflags = $(cflags:/Wp64=)

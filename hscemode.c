@@ -415,9 +415,9 @@ char buf[384];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    display_aregs (regs, buf, sizeof(buf), "HHC02272I ");
-    WRMSG(HHC02272, "I", "Access registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
+    display_aregs( regs, buf, sizeof(buf), "HHC02272I " );
+    WRMSG(   HHC02272, "I", "Access registers" );
+    LOGMSG( "%s", buf );
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1252,9 +1252,9 @@ char buf[512];
             regs->GR_L(reg_num) = (U32) reg_value;
     }
 
-    display_regs (regs, buf, sizeof(buf), "HHC02269I ");
-    WRMSG(HHC02269, "I", "General purpose registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
+    display_gregs( regs, buf, sizeof(buf), "HHC02269I " );
+    WRMSG(   HHC02269, "I", "General purpose registers" );
+    LOGMSG( "%s", buf );
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1317,12 +1317,9 @@ char buf[512];
         regs->fpr[reg_num+1] = (U32) (reg_value & 0xFFFFFFFFULL);
     }
 
-    /* Format registers display into buffer 'buf' */
-    display_fregs (regs, buf, sizeof(buf), "HHC02270I ");
-
-    /* Now display the formatted 'buf' text */
-    WRMSG(HHC02270, "I", "Floating point registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
+    display_fregs( regs, buf, sizeof(buf), "HHC02270I " );
+    WRMSG(   HHC02270, "I", "Floating point registers" );
+    LOGMSG( "%s", buf );
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1425,9 +1422,9 @@ char buf[512];
             regs->CR_G(cr_num) = (U32)cr_value;
     }
 
-    display_cregs (regs, buf, sizeof(buf), "HHC02271I ");
-    WRMSG(HHC02271, "I", "Control registers");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
+    display_cregs( regs, buf, sizeof(buf), "HHC02271I " );
+    WRMSG(   HHC02271, "I", "Control registers" );
+    LOGMSG( "%s", buf );
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

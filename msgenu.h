@@ -12,83 +12,82 @@
 /* the various components of the Hercules mainframe emulator.        */
 /*-------------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------
-Message principles:
+/*
 -----------------------------------------------------------------------
-HHCnnnnns Message text
+                        Message principles
+-----------------------------------------------------------------------
+
+HHCnnnnns message-text...
+
+  HHC     'HHC' is the standard prefix for all Hercules messages.
+  nnnnn   Five numeric digit code that unifies the Hercules message.
+  s       The capital letter that denotes the severity.
+  ' '     One space character between the message prefix and Text.
 
 -----------------------------------------------------------------------
-Prefix principles
+                        Severity principles
 -----------------------------------------------------------------------
-HHC:   'HHC' is the standard prefix for all Hercules messages.
-nnnnn: Five numeric digit code that unifies the Hercules message.
-s:     The capital letter that denotes the severity.
-' ':   One space character between the message prefix and Text.
+
+  S   Severe error. Hercules cannot continue.
+  E   Error. Hercules continues.
+  W   Warning message.
+  I   Informatonal message.
+  A   Action. Hercules needs input.
+  D   Debugging message.
 
 -----------------------------------------------------------------------
-Severity principles
+                         Text principles
 -----------------------------------------------------------------------
-S: Severe error, this could terminate Hercules.
-E: Error, hercules continues.
-W: Warning message.
-I: Informatonal message.
-A: Action, Hercules needs input.
-D: Debug message.
 
------------------------------------------------------------------------
-Text principles
------------------------------------------------------------------------
 Text:
-1. The text is written in lower characters and starts with a
-   capital and does not end with a '.', '!' or something else.
-2. Added strings are rounded with apostrophes to delimiter it from
-   the text and to see the start and endpoint of the string.
+
+  1. The text is written in lower characters and starts with a
+     capital and does not end with a '.', '!' or something else.
+
+  2. Added strings are rounded with apostrophes to distinguish it
+     from the text and to see the start and endpoint of the string.
 
 Examples:
-"HHC01234I This is a correct message"
-"HHC12345E This is wrong!"
-"HHC23456E THIS IS ALSO WRONG"
-"HHC34567E Do not end with a dot or something else!"
+
+  HHC01234I This is a correct message
+  HHC12345E This is wrong!
+  HHC23456E THIS IS ALSO WRONG
+  HHC34567E Do not end with a dot or something else.
 
 -----------------------------------------------------------------------
-Message format principles:
+                    Message format principles
 -----------------------------------------------------------------------
-Device:     "%1d:%04X", lcssnum, devnum
-Processor:  "%s%02X", PTYPSTR(procnum), procnum
-32bit reg:  "%08X", r32
-64bit reg:  "%016X", r64 (in 64bit mode)
-64bit reg:  "--------%08X", r32 (under SIE in 32 bit)
-64bit psw:  "%016X", psw64
-64bit psw:  "%016X ----------------", psw32 (under SIE in 32 bit)
-128bit psw: "%016X %016X", psw64h, psw64l
-Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
-Strings:    "%s", ""
+
+  Device:     "%1d:%04X", lcssnum, devnum
+  Processor:  "%s%02X", PTYPSTR(procnum), procnum
+  32bit reg:  "%08X", r32
+  64bit reg:  "%016X", r64 (in 64bit mode)
+  64bit reg:  "--------%08X", r32 (under SIE in 32 bit)
+  64bit psw:  "%016X", psw64
+  64bit psw:  "%016X ----------------", psw32 (under SIE in 32 bit)
+  128bit psw: "%016X %016X", psw64h, psw64l
+  Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
+  Strings:    "%s", ""
+
 -----------------------------------------------------------------------
-#define _DEBUG/DEBUG and the MLVL(DEBUG) flag (i.e. MLVL_DEBUG)
------------------------------------------------------------------------
-If DEBUG is defined, either by #define or configure '--enable-debug'
-then sysblk.msglvl has the MLVL_DEBUG flag enabled by default causing
-the writemsg function to prefix all messages with the sourcefile and
-lineno where it issued from ("cpu.c 123 HABC1234I This is a message").
-Otherwise normal message formatting occurs. This default behavior can
-always be manually overridden at any time via the "msglevel" command.
----------------------------------------------------------------------*/
+*/
 
-/* Use these macro's */
-/* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required for compat-
-                     ibility with gcc/MSVC compilers and must not be removed */
+/*-------------------------------------------------------------------*/
+/*                      PRIMARY MESAGE MACROS                        */
+/*-------------------------------------------------------------------*/
+/*
+** PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required
+** for compatibility with gcc/MSVC compilers and mustn't be removed.
+*/
+#if defined(DEBUG_MSGS) || (!defined(_MSVC_) && (defined(_DEBUG) || defined(DEBUG)))
 
-#define MSGBUF( _buf, ... )           snprintf(_buf, sizeof(_buf), ## __VA_ARGS__ )
-#define MSG(   id, s, ... )           #id s" " id "\n", ## __VA_ARGS__
-#define MSG_C( id, s, ... )           #id s" " id  "",  ## __VA_ARGS__
-#define HMSG(  id         )           #id "x " id
+  /*
+  ** DO NOT REMOVE - This code is used to verify our MSGBUF and WRMSG
+  ** related macros (which use 'printf' type functions) are using the
+  ** right printf pattern and data type (which the gcc compiler checks).
+  */
 
-
-/* DO NOT REMOVE - This code is used to verify various printf type functions have the
- * correct arguments and data types
- */
-#if defined(DEBUG_MSGS) || ( !defined(_MSVC_) && ( defined(_DEBUG) || defined(DEBUG) ) )
-#define WRMSG(id, s, ...) \
+  #define WRMSG( id, s, ... ) \
     do { \
          char *_msgbuf = (char *)malloc((size_t)32768); \
          char *_buf; \
@@ -99,27 +98,12 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _buf ); \
+         fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
          free(_buf); \
     } \
     while(0)
 
-#define WRMSG_C(id, s, ...) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", _buf ); \
-         free(_buf); \
-    } while(0)
-
-#define WRCMSG(color, id, s, ...) \
+  #define FWRMSG( f, id, s, ... ) \
     do { \
          char *_msgbuf = (char *)malloc((size_t)32768); \
          char *_buf; \
@@ -130,138 +114,114 @@ always be manually overridden at any time via the "msglevel" command.
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _buf ); \
-         free(_buf); \
-    } while(0)
-
-#define WRCMSG_C(color, id, s, ...) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, "%s", _buf ); \
-         free(_buf); \
-    } while(0)
-
-/* grouped messages */
-#define WRGMSG(id, s, ...) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", "%s", _buf ); \
+         fwritemsg( f, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
          free(_buf); \
     } \
     while(0)
 
-#define WRGMSG_C(id, s, ...) \
+  #define LOGMSG( s, ... ) \
     do { \
          char *_msgbuf = (char *)malloc((size_t)32768); \
          char *_buf; \
          int _rc = 0; \
          ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "", ## __VA_ARGS__); \
+         _rc =  snprintf( _msgbuf, 32767, s, ## __VA_ARGS__); \
          ASSERT( _rc != -1 ); \
          _buf = strdup( _msgbuf ); \
          free(_msgbuf); \
          ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", "%s", _buf ); \
+         fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
          free(_buf); \
-    } while(0)
-
-#define WRGCMSG(color, id, s, ...) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, "%s", _buf ); \
-         free(_buf); \
-    } while(0)
-
-#define WRGCMSG_C(color, id, s, ...) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, "%s", _buf ); \
-         free(_buf); \
-    } while(0)
-#else
-#if !defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)
-#define WRMSG(id, s, ...)            logmsg( _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          logmsg( _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)    logmsg( _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  logmsg( _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGMSG(id, s, ...)           logmsg( _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGMSG_C(id, s, ...)         logmsg( _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGCMSG(color, id, s, ...)   logmsg( _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGCMSG_C(color, id, s, ...) logmsg( _(#id s " " id ""), ## __VA_ARGS__)
-#else /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/
-#define WRMSG(id, s, ...)            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRMSG_C(id, s, ...)          writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRCMSG(color, id, s, ...)    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRCMSG_C(color, id, s, ...)  writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
-
-/* grouped messages */
-#define WRGMSG(id, s, ...)           writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGMSG_C(id, s, ...)         writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), "", _(#id s " " id ""), ## __VA_ARGS__)
-#define WRGCMSG(color, id, s, ...)   writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id "\n"), ## __VA_ARGS__)
-#define WRGCMSG_C(color, id, s, ...) writemsg(__FILE__, __LINE__, __FUNCTION__, 1, MLVL(ANY), color, _(#id s " " id ""), ## __VA_ARGS__)
-#endif
-#endif /*!defined(OPTION_MSGCLR) && !defined(OPTION_MSGHLD)*/
-
-#ifdef OPTION_MSGLCK
-#define WRGMSG_ON \
-do { \
-  int have_lock = 0, try_lock = 10; \
-  while(!have_lock) \
-  { \
-    obtain_lock(&sysblk.msglock); \
-    if(!sysblk.msggrp) \
-        have_lock = sysblk.msggrp = 1; \
-    release_lock(&sysblk.msglock); \
-    if(have_lock) \
-        break; \
-    if(--try_lock) \
-      usleep(100); \
-    else \
-    { \
-      /* WRMSG(HHC00016, "E"); */ \
-      fprintf(stdout, MSG(HHC00016, "E")); \
-      break; \
     } \
-  } \
-} while (0)
-#define WRGMSG_OFF                   do { sysblk.msggrp = 0; } while (0)
+    while(0)
+
+  #define FLOGMSG( f, s, ... ) \
+    do { \
+         char *_msgbuf = (char *)malloc((size_t)32768); \
+         char *_buf; \
+         int _rc = 0; \
+         ASSERT( _msgbuf != NULL); \
+         _rc =  snprintf( _msgbuf, 32767, s, ## __VA_ARGS__); \
+         ASSERT( _rc != -1 ); \
+         _buf = strdup( _msgbuf ); \
+         free(_msgbuf); \
+         ASSERT( _buf != NULL ); \
+         fwritemsg( f, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
+         free(_buf); \
+    } \
+    while(0)
+
+#else // !DEBUG_MSGS
+
+  #define  WRMSG(     id, s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
+  #define FWRMSG(  f, id, s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
+  #define  LOGMSG(        s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
+  #define FLOGMSG( f,     s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
+
+#endif // DEBUG_MSGS ...
+
+/*-------------------------------------------------------------------*/
+/*                     Message helper macros                         */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Use MSGBUF in situations where you would normally use snprintf:   */
+/*                                                                   */
+/*    #define HHC99999 "Table entry %d: %s"                          */
+/*                                                                   */
+/*    char buf[128];                                                 */
+/*                                                                   */
+/*    if (tab.type == str)                                           */
+/*        MSGBUF( buf, "type = str, val = %s", tab.strval );         */
+/*    else                                                           */
+/*        MSGBUF( buf, "type = int, val = %d", tab.intval );         */
+/*    WRMSG( HHC99999, "D", i, buf );                                */
+/*                                                                   */
+/*                                                                   */
+/*             Writing multiple messages as a group                  */
+/*            --------------------------------------                 */
+/*                                                                   */
+/* To write multiple messages as a group, format your messages into  */
+/* a work buffer using the MSGBUF and MSG/MSG_C macros. The first    */
+/* message formatted should be formatted WITHOUT a message number,   */
+/* but all other messages following it SHOULD. The last message      */
+/* should NOT end with a newline (i.e. use the 'MSG_C' macro).       */
+/*                                                                   */
+/* Then simply issue your message using the WRMSG macro specifying   */
+/* the message number for the first message. The format should be    */
+/* defined with as many "%s" as you have mesages. This will prefix   */
+/* the first message with the desired message number and terminate   */
+/* the last message with a newline, and then write the entire group  */
+/* in one fell swoop.                                                */
+/*                                                                   */
+/* For example:                                                      */
+/*                                                                   */
+/*    #define HHC00001 "%s%s%s%s" // message group                   */
+/*    #define HHC00002 "Message 2: var1: %d, var2: %s"               */
+/*    #define HHC00003 "Message 3: var1: %d, var2: %s"               */
+/*    #define HHC00009 "Last message: var1: %d, var2: %s"            */
+/*                                                                   */
+/*    char msg1[80], msg2[80], msg3[80, msg4[80];                    */
+/*    MSGBUF( msg1, "Message 1: var1: %d, var2: %s", 12, "34" );     */
+/*    MSGBUF( msg2, MSG( HHC00002, "I", 12, "34" ));                 */
+/*    MSGBUF( msg3, MSG( HHC00003, "I", 12, "34" ));                 */
+/*    MSGBUF( msg4, MSG_C( HHC00009, "I", 12, "34" ));               */
+/*    WRMSG( HHC00001, "I", msg1, msg2, msg3, msg4 );                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#define MSGBUF( _buf, ... )     snprintf(_buf, sizeof(_buf), ## __VA_ARGS__ )
+#define MSG( id, s, ... )       #id s " "  id "\n", ## __VA_ARGS__
+#define MSG_C( id, s, ... )     #id s " "  id  "",  ## __VA_ARGS__
+#define HMSG( id )              #id   "x " id "\n"
+#if defined( EXTERNALGUI )
+  #define EXTGUIMSG( ... )      do { if (extgui) fprintf( stderr, ## __VA_ARGS__ ); } while (0)
 #else
-#define WRGMSG_OFF
-#define WRGMSG_ON
+  #define EXTGUIMSG( ... )
 #endif
 
+/*-------------------------------------------------------------------*/
+/*                       HERCULES MESSAGES                           */
+/*-------------------------------------------------------------------*/
 
 /* Hercules messages */
 #define HHC00001 "%s"
@@ -270,7 +230,7 @@ do { \
 #define HHC00004 "Control program identification: type %s, name %s, sysplex %s, level %"I64_FMT"X"
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface %s"
-#define HHC00007 "Previous message from function %s() at %s[%d]"
+#define HHC00007 "Previous message from function '%s' at %s(%d)"
 #define HHC00008 "%s%s"
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
@@ -728,7 +688,7 @@ do { \
 #define HHC00885 "Channel Report queue:"
 #define HHC00886 "CRW 0x%8.8X: %s"
 
-#define HHC00890 "Facility(%-20s) %sabled"
+#define HHC00890 "Facility( %-20s ) %sabled"
 #define HHC00891 "Facility name not found"
 #define HHC00892 "Facility name not specified"
 #define HHC00893 "Facility(%s) does not exist"
@@ -1339,34 +1299,34 @@ do { \
 #define HHC02264 "Script %d: file %s processing ended"
 #define HHC02265 "Script %d: file %s aborted due to previous conditions"
 #define HHC02266 "Confirm command by entering %s again within %d seconds"
-#define HHC02267 "%s"
-#define HHC02268 "%s"
-#define HHC02269 "%s"
-#define HHC02270 "%s"
-#define HHC02271 "%s"
-#define HHC02272 "%s"
+#define HHC02267 "%s" // (trace instr: Real address is not valid)
+#define HHC02268 "%s" // (ds - display subchannel command)
+#define HHC02269 "%s" // General purpose registers
+#define HHC02270 "%s" // Floating point registers
+#define HHC02271 "%s" // Control registers
+#define HHC02272 "%s" // Access registers
 #define HHC02273 "Index %2d: %s"
-#define HHC02274 "%s"
+#define HHC02274 "%s" // 'clocks' command
 #define HHC02275 "SCSI auto-mount: %s"
 #define HHC02276 "Floating point control register: %08"I32_FMT"X"
 #define HHC02277 "Prefix register: %s"
 #define HHC02278 "Program status word: %s"
-#define HHC02279 "%s"
-#define HHC02280 "%s"
-#define HHC02281 "%s"
-#define HHC02282 "%s"
-#define HHC02283 "%s"
-#define HHC02284 "%s"
+#define HHC02279 "%s" // devlist command
+#define HHC02280 "%s" // qd command
+#define HHC02281 "%s" // pgmtrace_cmd
+#define HHC02282 "%s" // aea_cmd
+#define HHC02283 "%s" // aia_cmd
+#define HHC02284 "%s" // tlb_cmd
 #define HHC02285 "Counted %5u %s events"
 #define HHC02286 "Average instructions / SIE invocation: %5u"
 #define HHC02287 "No SIE performance data"
 #define HHC02288 "Commands are sent to %s"
-#define HHC02289 "%s"
-#define HHC02290 "%s"
-#define HHC02291 "%s"
-#define HHC02292 "%s"
-#define HHC02293 "%s"
-#define HHC02294 "%s"
+#define HHC02289 "%s" // disasm_stor
+#define HHC02290 "%s" // dump_real_page
+#define HHC02291 "%s" // dump_real_page
+#define HHC02292 "%s" // icount_cmd
+#define HHC02293 "%s" // history.c: command history
+#define HHC02294 "%s" // cachestats_cmd
 #define HHC02295 "CP group capping rate is %d MIPS"
 #define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
 #define HHC02297 "MIP capping is not enabled"
@@ -1396,6 +1356,9 @@ do { \
 #define HHC02321 "This build of Hercules does not support TCP keepalive"
 #define HHC02322 "This build of Hercules has only basic TCP keepalive support"
 #define HHC02323 "This build of Hercules has only partial TCP keepalive support"
+#define HHC02324 "%s"     // (instruction tracing)
+#define HHC02325 "%s%s"   // (instruction tracing: instr fetch error)
+#define HHC02326 "%s"     // (instruction tracing: storage line)
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
@@ -1431,11 +1394,11 @@ do { \
        "            -r     replace existing output file\n" \
        "            -q     suppress progress messages%s"
 
-#define HHC02411 "Usage: %s [-v] [-f] [-level] [-ro] file1 [file2 ...]\n" \
+#define HHC02411 "Usage: %s [-f] [-level] [-ro] file1 [file2 ...]\n" \
        "          options:\n" \
-       "            -v      display version and exit\n" \
        "\n" \
        "            -f      force check even if OPENED bit is on\n" \
+       "            -ro     open file readonly, no repairs\n" \
        "\n" \
        "        level is a digit 0 - 4:\n" \
        "            -0  --  minimal checking (hdr, chdr, l1tab, l2tabs)\n" \
@@ -1443,8 +1406,8 @@ do { \
        "            -2  --  extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
        "            -3  --  maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
        "            -4  --  recover everything without using meta-data\n" \
-       "\n" \
-       "            -ro     open file readonly, no repairs"
+       "\n"
+
 #define HHC02412 "Error in function %s: %s"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
 #define HHC02414 "Input file is already in CKD format, use dasdcopy"
@@ -1468,7 +1431,6 @@ do { \
        "            ifile  input ckd dasd file\n" \
        "            ofile  output compressed ckd dasd file\n" \
        "          options:\n" \
-       "            -v     display program version and quit\n" \
        "            -h     display this help and quit\n" \
        "            -q     quiet mode, don't display status\n" \
        "            -r     replace the output file if it exists\n" \
@@ -1484,7 +1446,6 @@ do { \
        "                   (optional)\n" \
        "            ofile  output ckd dasd file\n" \
        "          options:\n" \
-       "            -v     display program version and quit\n" \
        "            -h     display this help and quit\n" \
        "            -q     quiet mode, don't display status\n" \
        "            -r     replace the output file if it exists\n" \
@@ -1496,7 +1457,6 @@ do { \
        "            ifile  input fba dasd file\n" \
        "            ofile  output compressed fba dasd file\n" \
        "          options:\n" \
-       "            -v     display program version and quit\n" \
        "            -h     display this help and quit\n" \
        "            -q     quiet mode, don't display status\n" \
        "            -r     replace the output file if it exists\n" \
@@ -1511,7 +1471,6 @@ do { \
        "                   (optional)\n" \
        "            ofile  output fba dasd file\n" \
        "          options:\n" \
-       "            -v     display program version and quit\n" \
        "            -h     display this help and quit\n" \
        "            -q     quiet mode, don't display status\n" \
        "            -r     replace the output file if it exists\n" \
@@ -1523,7 +1482,6 @@ do { \
        "            sfile  input shadow file [optional]\n" \
        "            ofile  output dasd file\n" \
        "          options:\n" \
-       "            -v     display program version and quit\n" \
        "            -h     display this help and quit\n" \
        "            -q     quiet mode, don't display status\n" \
        "            -r     replace the output file if it exists\n" \
@@ -1544,7 +1502,6 @@ do { \
 #define HHC02448 "Usage: dasdinit [-options] filename devtype[-model] [volser] [size]\n" \
        "          Builds an empty dasd image file\n" \
        "          options:\n" \
-       "            -v     display version info and help\n" \
        "%s" \
        "%s" \
        "            -0     build compressed dasd image file with no compression\n" \
@@ -1612,9 +1569,7 @@ do { \
 #define HHC02492 "Option %s specified"
 #define HHC02493 "Filename %s specified for %s"
 #define HHC02494 "Requested number of extents %d exceeds maximum %d; utility ends"
-#define HHC02495 "Usage: %s [-v] [-f] [-n] file1 [file2 ...]\n" \
-       "\n" \
-       "          -v      display version and exit\n" \
+#define HHC02495 "Usage: %s [-f] [-n] file1 [file2 ...]\n" \
        "\n" \
        "          -f      force check even if OPENED bit is on\n" \
        "\n" \
@@ -1638,7 +1593,16 @@ do { \
        "          outfile  name of DASD image file to be created\n" \
        "\n" \
        "          n        msglevel 'n' is a digit 0 - 5 re: output verbosity"
-
+#define HHC02497 "Usage: %s [-f] [-level] file1 [file2 ... ]\n" \
+       "\n" \
+       "          -f      force check even if OPENED bit is on\n" \
+       "\n" \
+       "        chkdsk level is a digit 0 - 3:\n" \
+       "          -0  --  minimal checking\n" \
+       "          -1  --  normal  checking\n" \
+       "          -2  --  intermediate checking\n" \
+       "          -3  --  maximal checking\n" \
+       "         default  0"
 
 #define HHC02499 "Hercules utility %s - %s;"
 
@@ -1742,7 +1706,6 @@ do { \
 // reserve 026xx for utilites
 #define HHC02600 "Usage: %s [options] file-name\n" \
        "\n" \
-       "          -v      display version and exit\n" \
        "          -d      display DEVHDR and exit\n" \
        "          -c      display CDEVHDR and exit\n" \
        "          -1      display L1TAB (numeric one)\n" \
@@ -1790,10 +1753,10 @@ do { \
 #define HHC02721 "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
 #define HHC02722 "Tape Label: %s"
 #define HHC02723 "File No. %u: Block %u"
-#define HHC02724 "Successful completion\n" \
-       "          Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n" \
-       "          Bytes written: %"I64_FMT"d (%3.1f MB)"
-#define HHC02725 "Usage: %s infilename outfilename"
+#define HHC02724 "Successful completion"
+#define HHC02725 "Usage: %s infilename outfilename [nnn] [outfilename [nnn]] ...\n\n" \
+                 "nnn specifies how many tapemark-separated files to copy to the\n" \
+                 "specified outfilename. If nnn is not given 32767 is used instead."
 #define HHC02726 "Usage: %s filename"
 #define HHC02727 "Usage: %s [-f n] infilename outfilename"
 #define HHC02728 "Usage: %s [options] hetfile outfile fileno [recfm lrecl blksize]\n" \
@@ -1827,6 +1790,9 @@ do { \
        "                -s   strict AWSTAPE specification (chunksize=4096,no compression)\n" \
        "                -v   verbose (debug) information\n" \
        "                -z   use ZLIB compression\n"
+#define HHC02731 "          (tapemark)"
+#define HHC02732 "Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u"
+#define HHC02733 "Bytes written: %"I64_FMT"d (%3.1f MB)"
 
 #define HHC02738 "%s"
 #define HHC02739 "Usage: %s [options] infile outtmplt\n" \
@@ -1835,7 +1801,6 @@ do { \
        "                -j  Join file pieces\n" \
        "                -s  Split file into pieces\n" \
        "                -h  display usage summary"
-
 #define HHC02740 "File %s: writing output file"
 #define HHC02741 "File %s: Error, incomplete %s header"
 #define HHC02742 "File %s: Error, incomplete final data block: expected %d bytes, read %d"
@@ -1851,6 +1816,22 @@ do { \
 #define HHC02755 "HET: Setting option %s to %s"
 #define HHC02756 "HET: HETLIB reported error %s files; %s"
 #define HHC02757 "HET: %s"
+#define HHC02758 \
+    "Usage: %s [options] filename\n\n" \
+    "Options:\n" \
+    "  -a  print all label and file information (default: on)\n" \
+    "  -bn print 'n' bytes per file; -b implies -s\n" \
+    "  -d  print only dataset information (default: off)\n" \
+    "  -f  print only file information (default: off)\n" \
+    "  -h  display usage summary\n" \
+    "  -l  print only label information (default: off)\n" \
+    "  -s  print dump of each data file (SLANAL format) (default: off)\n" \
+    "  -t  print TAPEMAP-compatible format output (default: off)\n"
+#define HHC02759 \
+    "Usage: %s filename\n"
+#define HHC02760 "%s"
+#define HHC02761 "DCB Attributes used:  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d"
+
 
 #define HHC02800 "%1d:%04X %s complete"
 #define HHC02801 "%1d:%04X %s failed; %s"
@@ -1930,30 +1911,17 @@ do { \
 
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
-#define HHC04101 "%s Statistics:\n" \
-       "          \n" \
-       "          Size of Kernel Hold Buffer:      %5luK\n" \
-       "          Size of DLL I/O Buffer:          %5luK\n" \
-       "          Maximum DLL I/O Bytes Received:  %5luK\n" \
-       "          \n" \
-       "          %12" I64_FMT "d  Total Write Calls\n" \
-       "          %12" I64_FMT "d  Total Write I/Os\n" \
-       "          %12" I64_FMT "d  Packets To All Zeroes MAC Written\n" \
-       "          %12" I64_FMT "d  Total Packets Written\n" \
-       "          %12" I64_FMT "d  Total Bytes Written\n" \
-       "          \n" \
-       "          %12" I64_FMT "d  Total Read Calls\n" \
-       "          %12" I64_FMT "d  Total Read I/Os\n" \
-       "          %12" I64_FMT "d  Internally Handled ARP Packets\n" \
-       "          %12" I64_FMT "d  Packets From Ourself\n" \
-       "          %12" I64_FMT "d  Total Ignored Packets\n" \
-       "          %12" I64_FMT "d  Packets To All Zeroes MAC Read\n" \
-       "          %12" I64_FMT "d  Total Packets Read\n" \
-       "          %12" I64_FMT "d  Total Bytes Read\n\n"
+#define HHC04101 "%s Statistics:"
 #define HHC04102 "One of the GetProcAddress calls failed"
-#define HHC04109 "%s"
-#define HHC04110 "Maximum device threads (devtmax) of %d exceeded by %d"
-#define HHC04111 "%1d:%04X Function %s failed: [%02d] %s"
+#define HHC04103 "  %s%5luK"
+#define HHC04104 "  %12" I64_FMT "d  %s"
+//efine HHC04105 (available)
+//efine HHC04106 (available)
+//efine HHC04107 (available)
+//efine HHC04108 (available)
+//efine HHC04109 (available)
+//efine HHC04110 (available)
+//efine HHC04111 (available)
 #define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
 
 // range 04200 - 04299 available
@@ -2184,7 +2152,16 @@ do { \
 #define HHC90364 "   zp    : %s"
 #define HHC90365 "dead_end : %02X %02X %s"
 
-// range 90400 - 90499 available
+/* cckddiag.c */
+#define HHC90400 "MAKBUF() malloc %s buffer of %d bytes at %p"
+#define HHC90401 "READPOS seeking %d (0x%8.8X)"
+#define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
+#define HHC90403 "SHOWTRK Compressed track header and data"
+#define HHC90404 "SHOWTRK Decompressed track header and data"
+#define HHC90405 "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d"
+#define HHC90406 "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d"
+#define HHC90407 "%s device has %d heads/cylinder"
+
 // range 90500 - 90599 available
 // range 90600 - 90699 available
 // range 90700 - 90799 available

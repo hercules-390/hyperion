@@ -1219,11 +1219,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* READ_SCP_INFO is only valid for processor type CP */
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
         {
-#ifdef OPTION_MSGCLR
-            WRCMSG("<pnl,color(lightred,black)>", HHC00005, "W");
-#else
             WRMSG(HHC00005, "W");
-#endif
             goto docheckstop;
             /*
              * Replace the following 2 lines with
@@ -1557,32 +1553,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                                 guest_to_host(event_msg[i]) : 0x20;
                         }
                         message[i] = '\0';
-#ifdef OPTION_MSGCLR
-                        if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
-                        {
-                          if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
-    #ifdef OPTION_SCP_MSG_PREFIX
-                            WRCMSG("<pnl,color(lightyellow,black),keep>", HHC00001, "I", message);
-                          else
-                            WRCMSG("<pnl,color(green,black)>", HHC00001, "I", message);
-                        }
-                        else
-                          WRCMSG("<pnl,color(lightred,black),keep>", HHC00001, "I", message);
-    #else
-                            logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
-                          else
-                            logmsg("<pnl,color(green,black)>%s\n", message);
-                        }
-                        else
-                          logmsg("<pnl,color(lightred,black),keep>%s\n", message);
-    #endif /* OPTION_SCP_MSG_PREFIX */
-#else
     #ifdef OPTION_SCP_MSG_PREFIX
                         WRMSG(HHC00001, "I", message);
     #else
                         logmsg("%s\n",message);
     #endif /* OPTION_SCP_MSG_PREFIX */
-#endif
                     }
                 }
                 mcd_len -= obj_len;

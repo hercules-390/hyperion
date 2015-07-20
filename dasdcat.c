@@ -47,53 +47,18 @@ int process_dirblk  (CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 
 int main(int argc, char **argv)
 {
- char           *pgmname;                /* prog name in host format  */
  char           *pgm;                    /* less any extension (.ext) */
- char            msgbuf[512];            /* message build work area   */
  int             rc = 0;
  CIFBLK         *cif = 0;
  char           *fn;
  char           *sfn;
- char           *strtok_str = NULL;
 
-
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgm );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD cat program" ) );
-    display_version (stderr, msgbuf+10, FALSE);
-
+    INITIALIZE_UTILITY( UTILITY_NAME, "DASD cat program", &pgm );
 
     if (argc < 2)
     {
-        fprintf( stderr, MSG( HHC02405, "I", pgm ) );
+        // "Usage: dasdcat..."
+        WRMSG( HHC02405, "I", pgm );
         exit(2);
     }
 
@@ -120,7 +85,8 @@ int main(int argc, char **argv)
          }
          cif = open_ckd_image(fn, sfn, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL);
          if (!cif)
-             fprintf(stderr, MSG(HHC02403, "E", *argv));
+             // "Failed opening %s"
+             FWRMSG( stderr, HHC02403, "E", *argv );
      }
      else
      {
@@ -145,7 +111,8 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 {
     if (len % 80 != 0)
     {
-        fprintf(stderr, MSG(HHC02404, "E", len));
+        // "Can't make 80 column card images from block length %d"
+        FWRMSG( stderr, HHC02404, "E", len );
         return -1;
     }
 
@@ -235,7 +202,8 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
     dirrem = (dirblk[0] << 8) | dirblk[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        fprintf(stderr, MSG(HHC02400, "E"));
+        // "Directory block byte count is invalid"
+        FWRMSG( stderr, HHC02400, "E" );
         return -1;
     }
 
@@ -306,9 +274,7 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
      U32 cyl;
      U8  head;
      U16 len;
-#ifdef EXTERNALGUI
-        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
-#endif /*EXTERNALGUI*/
+        EXTGUIMSG( "CTRK=%d\n", trk );
         rc = convert_tt(trk, noext, extent, cif->heads, &cyl, &head);
         if (rc < 0)
             return -1;
@@ -347,7 +313,8 @@ int do_cat_nonpds(CIFBLK *cif, DSXTENT *extent, int noext,
     UNREFERENCED(extent);
     UNREFERENCED(noext);
     UNREFERENCED(optflags);
-    fprintf(stderr, MSG(HHC02401, "E"));
+    // "Non-PDS-members not yet supported"
+    FWRMSG( stderr, HHC02401, "E" );
     return -1;
 }
 
@@ -385,7 +352,8 @@ int do_cat(CIFBLK *cif, char *file)
                 char buf[2];
                 buf[0] = *p;
                 buf[1] = 0;
-                fprintf(stderr, MSG(HHC02402, "E", "dataset name", buf));
+                // "Unknown option %s value %s"
+                FWRMSG( stderr, HHC02402, "E", "dataset name", buf );
             }
         }
     }
@@ -407,7 +375,7 @@ int do_cat(CIFBLK *cif, char *file)
         return -1;
 
 #ifdef EXTERNALGUI
- /* Calculate ending relative track */
+    /* Calculate ending relative track */
     if (extgui)
     {
         int bcyl;  /* Extent begin cylinder     */
@@ -425,7 +393,7 @@ int do_cat(CIFBLK *cif, char *file)
             etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
             trks += (((ecyl*cif->heads)+etrk)-((bcyl*cif->heads)+btrk))+1;
         }
-    fprintf(stderr,"ETRK=%d\n",trks-1);
+        EXTGUIMSG( "ETRK=%d\n", trks-1 );
     }
 #endif /*EXTERNALGUI*/
 

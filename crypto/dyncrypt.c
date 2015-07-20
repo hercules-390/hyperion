@@ -115,8 +115,7 @@
   int j; \
   \
   buf[0] = 0; \
-  WRGMSG_ON; \
-  WRGMSG(HHC90109, "D", s, ""); \
+  WRMSG(HHC90109, "D", s, ""); \
   for(i = 0; i < (y); i++) \
   { \
     for(j = 0; j < (x); j++) \
@@ -131,10 +130,9 @@
     } \
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " |"); \
     buf[sizeof(buf)-1] = '\0'; \
-    WRGMSG(HHC90110, "D", buf); \
+    WRMSG(HHC90110, "D", buf); \
     buf[0] = 0; \
   } \
-  WRGMSG_OFF; \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -3947,18 +3945,16 @@ DEF_INST(compute_intermediate_message_digest)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KIMD_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KIMD_DEBUG */
 
   /* Check special conditions */
@@ -4051,18 +4047,16 @@ DEF_INST(compute_last_message_digest)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KLMD_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KLMD: compute last message digest");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KLMD: compute last message digest");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KLMD_DEBUG */
 
   /* Check special conditions */
@@ -4143,18 +4137,16 @@ DEF_INST(cipher_message)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KM_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KM: cipher message");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KM: cipher message");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KM_DEBUG */
 
   /* Check special conditions */
@@ -4279,16 +4271,14 @@ DEF_INST(compute_message_authentication_code)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMAC_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KMAC: compute message authentication code");
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KMAC: compute message authentication code");
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KMAC_DEBUG */
 
   /* Check special conditions */
@@ -4379,18 +4369,16 @@ DEF_INST(cipher_message_with_chaining)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMC_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KMC: cipher message with chaining");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KMC: cipher message with chaining");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
   /* Check special conditions */
@@ -4514,18 +4502,16 @@ DEF_INST(cipher_message_with_counter)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMCTR_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KMCTR: cipher message with counter");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90101, "D", 3, r3);
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KMCTR: cipher message with counter");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90101, "D", 3, r3);
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KMCTR_DEBUG */
 
   /* Check special conditions */
@@ -4606,19 +4592,17 @@ DEF_INST(cipher_message_with_cipher_feedback)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMF_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90112, "D", GR0_lcfb(regs));
-  WRGMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90112, "D", GR0_lcfb(regs));
+  WRMSG(HHC90107, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KMF_DEBUG */
 
   /* Check special conditions */
@@ -4699,17 +4683,15 @@ DEF_INST(cipher_message_with_output_feedback)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_KMO_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "KMO: cipher message with output feedback");
-  WRGMSG(HHC90101, "D", 1, r1);
-  WRGMSG(HHC90102, "D", regs->GR(r1));
-  WRGMSG(HHC90101, "D", 2, r2);
-  WRGMSG(HHC90102, "D", regs->GR(r2));
-  WRGMSG(HHC90103, "D", regs->GR(r2 + 1));
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "KMO: cipher message with output feedback");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_KMO_DEBUG */
 
   /* Check special conditions */
@@ -4785,12 +4767,10 @@ DEF_INST(perform_cryptographic_computation)
   else if (msa > 4) msa = 4;
 
 #ifdef OPTION_PCC_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "PCC: perform cryptographic computation");
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "PCC: perform cryptographic computation");
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
   switch(GR0_fc(regs))
@@ -4861,13 +4841,11 @@ DEF_INST(perform_cryptographic_key_management_operation)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
 #ifdef OPTION_PCKMO_DEBUG
-  WRGMSG_ON;
-  WRGMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
-  WRGMSG(HHC90104, "D", 0, regs->GR(0));
-  WRGMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
-  WRGMSG(HHC90106, "D", GR0_fc(regs));
-  WRGMSG(HHC90104, "D", 1, regs->GR(1));
-  WRGMSG_OFF;
+  WRMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
 #endif /* #ifdef OPTION_PCKMO_DEBUG */
 
   /* Privileged operation */
@@ -4962,7 +4940,7 @@ END_INSTRUCTION_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-  WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2011 by Bernard van der Helm"); // Copyright notice
+  WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2015 by Bernard van der Helm"); // Copyright notice
   WRMSG(HHC00151, "I", "Message Security Assist"); // Feature notice
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
   WRMSG(HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice

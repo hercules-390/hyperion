@@ -16,16 +16,14 @@
 
 #define UTILITY_NAME    "cckdcdsk"
 
-int syntax (char *pgm);
+int syntax( const char* pgm );
 
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone chkdsk                              */
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 int             level=1;                /* Chkdsk level checking     */
@@ -34,40 +32,8 @@ int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
-char           *strtok_str = NULL;      /* last token position       */
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgm );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD CCKD image verification" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "DASD CCKD image verification", &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
@@ -80,24 +46,21 @@ char           *strtok_str = NULL;      /* last token position       */
             case '1':
             case '2':
             case '3':
-            case '4':  if (argv[0][2] != '\0') return syntax (pgm);
+            case '4':  if (argv[0][2] != '\0') return syntax( pgm );
                        level = (argv[0][1] & 0xf);
                        break;
-            case 'f':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'f':  if (argv[0][2] != '\0') return syntax( pgm );
                        force = 1;
                        break;
             case 'r':  if (argv[0][2] == 'o' && argv[0][3] == '\0')
                            ro = 1;
-                       else return syntax (pgm);
+                       else return syntax( pgm );
                        break;
-            case 'v':  if (argv[0][2] != '\0') return syntax (pgm);
-                       display_version (stderr, msgbuf+10, FALSE);
-                       return 0;
-            default:   return syntax (pgm);
+            default:   return syntax( pgm );
         }
     }
 
-    if (argc < 1) return syntax (pgm);
+    if (argc < 1) return syntax( pgm );
 
     for (i = 0; i < argc; i++)
     {
@@ -109,8 +72,8 @@ char           *strtok_str = NULL;      /* last token position       */
         dev->fd = HOPEN (dev->filename, ro ? O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
-            fprintf(stderr, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "open()", strerror(errno)));
+            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    "open()", strerror( errno ));
             continue;
         }
 
@@ -119,21 +82,21 @@ char           *strtok_str = NULL;      /* last token position       */
         {
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
-                fprintf(stderr, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "lseek()", (U64)CCKD_DEVHDR_POS, strerror(errno)));
+                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "lseek()", (U64)CCKD_DEVHDR_POS, strerror( errno ));
                 close (dev->fd);
                 continue;
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
-                fprintf(stderr, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror(errno) : "incomplete"));
+                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
                 close (dev->fd);
                 continue;
             }
             if (cdevhdr.options & CCKD_OPENED)
             {
-                fprintf(stderr, MSG(HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+                FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
                 close (dev->fd);
                 continue;
             }
@@ -150,8 +113,8 @@ char           *strtok_str = NULL;      /* last token position       */
 /*-------------------------------------------------------------------*/
 /* print syntax                                                      */
 /*-------------------------------------------------------------------*/
-int syntax(char *pgm)
+int syntax( const char* pgm )
 {
-    fprintf (stderr, MSG( HHC02411, "E", pgm ) );
+    WRMSG( HHC02411, "I", pgm );
     return -1;
 }

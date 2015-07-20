@@ -60,7 +60,7 @@
 
 #define UTILITY_NAME    "dasdinit"
 
-static void argexit ( int code, char *pgm, char *m );
+static void argexit ( int code, char *m );
 
 
 /*-------------------------------------------------------------------*/
@@ -68,9 +68,7 @@ static void argexit ( int code, char *pgm, char *m );
 /*-------------------------------------------------------------------*/
 int main ( int argc, char *argv[] )
 {
-char           *pgmname;                /* prog name in host format  */
-char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
+char   *pgm;                            /* less any extension (.ext) */
 int     altcylflag = 0;                 /* Alternate cylinders flag  */
 int     rawflag = 0;                    /* Raw format flag           */
 int     volsize_argnum = 4;             /* argc value of size option */
@@ -92,41 +90,12 @@ FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 int     rc;                             /* Return code               */
-char   *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
+    INITIALIZE_UTILITY( UTILITY_NAME, "DASD image file creation program", &pgm );
 
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-
-    /* Display program identification and help */
+    /* Display help if needed or requested */
     if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))
-        argexit(-1, pgm, NULL);
+        argexit(-1, NULL);
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)
@@ -153,24 +122,24 @@ char   *strtok_str = NULL;
             flagECmode = 0;
         else if (strcmp("m", &argv[1][1]) == 0)
             flagMachinecheck = 1;
-        else argexit(0, pgm, argv[1]);
+        else argexit(0, argv[1]);
     }
 
     /* Check remaining number of arguments */
     if (argc < (rawflag ? 3 : 4) || argc > (rawflag ? 4 : 5))
-        argexit(5, pgm, NULL);
+        argexit(5, NULL);
 
     /* The first argument is the file name */
     if (argv[1] == NULL || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(fname)-1)
-        argexit(1, pgm, argv[1]);
+        argexit(1, argv[1]);
 
     strcpy (fname, argv[1]);
 
     /* The second argument is the device type.
        Model number may also be specified */
     if (argv[2] == NULL)
-        argexit(2, pgm, argv[2]);
+        argexit(2, argv[2]);
     ckd = dasd_lookup (DASD_CKDDEV, argv[2], 0, 0);
     if (ckd != NULL)
     {
@@ -196,7 +165,7 @@ char   *strtok_str = NULL;
 
     if (!type)
         /* Specified model not found */
-        argexit(2, pgm, argv[2]);
+        argexit(2, argv[2]);
 
     /* If -r option specified, then there is not volume serial
        argument and volume size argument is actually argument
@@ -210,7 +179,7 @@ char   *strtok_str = NULL;
         /* The third argument is the volume serial number */
         if (argv[3] == NULL || strlen(argv[3]) == 0
             || strlen(argv[3]) > sizeof(volser)-1)
-            argexit(3, pgm, argv[3]);
+            argexit(3, argv[3]);
 
         strcpy (volser, argv[3]);
         string_to_upper (volser);
@@ -220,25 +189,21 @@ char   *strtok_str = NULL;
     if (argc > volsize_argnum)
     {
         if (argc > (volsize_argnum+1))
-            argexit(5, pgm, NULL);
+            argexit(5, NULL);
 
         if (!argv[volsize_argnum] || strlen(argv[volsize_argnum]) == 0
             || sscanf(argv[volsize_argnum], "%u%c", &size, &c) != 1)
-            argexit(4, pgm, argv[volsize_argnum]);
+            argexit(4, argv[volsize_argnum]);
 
         altcylflag = 0;
     }
 
     /* `-linux' only supported for 3390 device type */
     if (nullfmt == CKDDASD_NULLTRK_FMT2 && devtype != 0x3390)
-        argexit(6, pgm, NULL);
+        argexit(6, NULL);
 
     if (altcylflag)
         size += altsize;
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD image file creation program" ) );
-    display_version (stderr, msgbuf+10, FALSE);
 
     /* Create the device */
     if (type == 'C')
@@ -251,9 +216,11 @@ char   *strtok_str = NULL;
     /* Display completion message */
     if (rc == 0)
     {
-        fprintf (stderr, MSG(HHC02423, "I"));
+        // "DASD operation completed"
+        WRMSG( HHC02423, "I" );
     } else {
-        fprintf (stderr, MSG(HHC02449, "I"));
+        // "DASD operation failed"
+        FWRMSG( stderr, HHC02449, "E" );
     }
 
     return rc;
@@ -264,42 +231,33 @@ char   *strtok_str = NULL;
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
 static void
-argexit ( int code, char *pgm, char *m )
+argexit ( int code, char *m )
 {
-    char msgbuf[512];
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD image file creation program" ) );
+    // HHC02445: "Invalid, unsupported or missing %s: %s"
 
     switch (code) {
     case 0:
-        fprintf (stderr, MSG(HHC02445, "E", "option",
-                 m ? m : "(null)"));
+        FWRMSG( stderr, HHC02445, "E", "option",      m ? m : "(null)" );
         break;
     case 1:
-        fprintf (stderr, MSG(HHC02445, "E", "filename",
-                 m ? m : "(null)"));
+        FWRMSG( stderr, HHC02445, "E", "filename",    m ? m : "(null)" );
         break;
     case 2:
-        fprintf (stderr, MSG(HHC02445, "E", "device type",
-                 m ? m : "(null)"));
+        FWRMSG( stderr, HHC02445, "E", "device type", m ? m : "(null)" );
         break;
     case 3:
-        fprintf (stderr, MSG(HHC02445, "E", "volser",
-                 m ? m : "(null)"));
+        FWRMSG( stderr, HHC02445, "E", "volser",      m ? m : "(null)" );
         break;
     case 4:
-        fprintf (stderr, MSG(HHC02445, "E", "size",
-                 m ? m : "(null)"));
+        FWRMSG( stderr, HHC02445, "E", "size",        m ? m : "(null)" );
         break;
     case 5:
-        fprintf (stderr, MSG(HHC02446, "E"));
+        FWRMSG( stderr, HHC02446, "E" );
         break;
     case 6:
-        fprintf (stderr, MSG(HHC02447, "E"));
+        FWRMSG( stderr, HHC02447, "E" );
         break;
     default:
-        display_version (stderr, msgbuf+10, FALSE);
         {
 #ifdef HAVE_LIBZ
          char *bufz = "            -z     build compressed dasd image file using zlib\n";
@@ -317,7 +275,9 @@ argexit ( int code, char *pgm, char *m )
                     (sizeof(off_t) > 4) ?
                     "            -lfs   build a large (uncompressed) dasd file (if supported)\n" : "",
                     sizeof( buflfs ) );
-            fprintf( stderr, MSG( HHC02448, "I", bufz, bufbz, buflfs ) );
+
+            // HHC02448 "Usage: dasdinit ...."
+            WRMSG( HHC02448, "I", bufz, bufbz, buflfs );
         }
         break;
     }

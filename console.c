@@ -341,7 +341,6 @@ BYTE print_chars[17];
 #endif
 
 
-#if 1
 static struct sockaddr_in * get_inet_socket(const char *host_serv)
 {
 char *host = NULL;
@@ -421,7 +420,6 @@ char *h_serv;
 
 }
 
-#endif
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO REMOVE ANY IAC SEQUENCES FROM THE DATA STREAM       */
 /* Returns the new length after deleting IAC commands                */
@@ -612,27 +610,34 @@ expect (int csock, BYTE *expected, int len, char *caption)
 {
 int     rc;                             /* Return code               */
 BYTE    buf[512];                       /* Receive buffer            */
-#if 1
-/* TCP/IP for MVS returns the server sequence rather then
-   the client sequence during bin negotiation    19/06/00 Jan Jaeger */
-static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
-static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
-#endif
+
+#if defined( OPTION_MVS_TELNET_WORKAROUND )
+
+  /* TCP/IP for MVS returns the server sequence rather then the
+     client sequence during bin negotiation.   Jan Jaeger, 19/06/00  */
+
+  static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
+  static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
+
+#endif // defined( OPTION_MVS_TELNET_WORKAROUND )
 
     UNREFERENCED(caption);
 
     rc = recv_packet (csock, buf, len, 0);
-    if (rc < 0) return -1;
+    if (rc < 0)
+        return -1;
 
-#if 1
-        /* TCP/IP FOR MVS DOES NOT COMPLY TO RFC 1576 THIS IS A BYPASS */
-        if(memcmp(buf, expected, len) != 0
-          && !(len == sizeof(will_bin)
-              && memcmp(expected, will_bin, len) == 0
-              && memcmp(buf, do_bin, len) == 0) )
+#if defined( OPTION_MVS_TELNET_WORKAROUND )
+    /* BYPASS TCP/IP FOR MVS WHICH DOES NOT COMPLY TO RFC1576 */
+    if (1
+        && memcmp(buf, expected, len) != 0
+        && !(len == sizeof(will_bin)
+        && memcmp(expected, will_bin, len) == 0
+        && memcmp(buf, do_bin, len) == 0)
+    )
 #else
     if (memcmp(buf, expected, len) != 0)
-#endif
+#endif // defined( OPTION_MVS_TELNET_WORKAROUND )
     {
         TNSDEBUG2("console: DBG006: Expected %s\n", caption);
         return -1;
@@ -3710,6 +3715,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
+                        // "%1d:%04X COMM: enter console input"
                         MSG(HHC01026, "A", SSID_TO_LCSS(dev->ssid), dev->devnum));
                 dev->buf[dev->bufsize-1] = '\0';
                 len = (int)strlen((char *)dev->buf);

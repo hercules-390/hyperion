@@ -516,7 +516,7 @@ static void* hao_thread(void* dummy)
   /* Do not start HAO if no logger is active
    * the next hao command will restart the thread
    */
-  if(!logger_status())
+  if(!logger_isactive())
   {
     haotid = 0;
     return NULL;
@@ -524,7 +524,6 @@ static void* hao_thread(void* dummy)
 
   WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), "Hercules Automatic Operator");
 
-  /* Wait for panel thread to engage */
   /* Do until shutdown */
   while(!sysblk.shutdown && msgamt >= 0)
   {
@@ -574,34 +573,9 @@ static void* hao_thread(void* dummy)
 /*---------------------------------------------------------------------------*/
 static int hao_ignoremsg(char *msg)
 {
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-  static int debuglen = 0;
-  char* nocolor = msg;
-#endif
   int msglen;
 
-#if defined( OPTION_MSGCLR )
-  /* Get past color string if there is one */
-  if (!(msglen = skippnlpfx( &nocolor )))       /* Skip past <pnl pfx  */
-      return TRUE;                              /* Ignore if now empty */
-  if (nocolor > msg)                            /* Color prefix found? */
-    memmove( msg, nocolor, msglen+1 );          /* Remove color prefix */
-#else /* defined( OPTION_MSGCLR ) */
   msglen = strlen(msg);
-#endif /* defined( OPTION_MSGCLR ) */
-
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-  if (!debuglen)
-  {
-    char prefix[64] = {0};
-    MSGBUF( prefix, MLVL_DEBUG_PRINTF_PATTERN, "foo", 999 );
-    debuglen = (int)strlen( prefix );
-  }
-
-  /* Get past debug prefix if msglevel DEBUG is active */
-  if (MLVL( DEBUG ) && msglen >= debuglen)
-    memmove( msg, msg + debuglen, (msglen -= debuglen)+1 );
-#endif
 
   /* Ignore our own messages (HHC0007xx, HHC0008xx and HHC0009xx
      are reserved so that hao.c can recognize its own messages) */

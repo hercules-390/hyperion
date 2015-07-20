@@ -31,9 +31,10 @@
 || Prints usage information
 */
 static void
-usage( char *name )
+usage( char *pgm )
 {
-    WRMSG( HHC02729, "I", name );
+    // "Usage: %s ...
+    WRMSG( HHC02729, "I", pgm );
 }
 
 /*
@@ -53,9 +54,7 @@ int i;
 int
 main( int argc, char *argv[] )
 {
-    char           *pgmname;                /* prog name in host format  */
     char           *pgm;                    /* less any extension (.ext) */
-    char            msgbuf[512];            /* message build work area   */
     int             rc;
     SLLABEL         lab;
     HETB           *hetb;                   /* used for aws and het tapes*/
@@ -67,41 +66,8 @@ main( int argc, char *argv[] )
     char           *o_filename;
     char           *o_owner;
     char           *o_volser;
-    char           *strtok_str = NULL;
 
-
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "HET IEHINITT " ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "HET IEHINITT", &pgm );
 
     hetb = NULL;
     fetb = NULL;
@@ -202,7 +168,8 @@ main( int argc, char *argv[] )
         rc = fet_open( &fetb, o_filename, FETOPEN_CREATE );
         if ( rc < 0 )
         {
-            WRMSG( HHC00075, "E", "fet_open()", fet_error( rc ) );
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC00075, "E", "fet_open()", fet_error( rc ) );
             goto exit;
         }
 
@@ -212,14 +179,16 @@ main( int argc, char *argv[] )
         rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
         if( rc < 0 )
         {
-            WRMSG( HHC00075, "E", "het_open()", het_error( rc ) );
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC00075, "E", "het_open()", het_error( rc ) );
             goto exit;
         }
 
         rc = het_cntl( hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
         if( rc < 0 )
         {
-            WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -229,7 +198,8 @@ main( int argc, char *argv[] )
         rc = sl_vol1( &lab, o_volser, o_owner );
         if( rc < 0 )
         {
-            WRMSG( HHC00075, "E", "sl_vol1()", sl_error( rc ) );
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC00075, "E", "sl_vol1()", sl_error( rc ) );
             goto exit;
         }
 
@@ -240,16 +210,17 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                WRMSG( HHC00075, "E", "fet_write() for VOL1", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_write() for VOL1", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_write() for VOL1", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_write() for VOL1", het_error( rc ) );
             goto exit;
         }
 
         rc = sl_hdr1( &lab, SL_INITDSN, NULL, 0, 0, NULL, 0 );
         if( rc < 0 )
         {
-            WRMSG( HHC00075, "E", "sl_hdr1()", sl_error( rc ) );
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC00075, "E", "sl_hdr1()", sl_error( rc ) );
             goto exit;
         }
 
@@ -260,9 +231,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                WRMSG( HHC00075, "E", "fet_write() for HDR1", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_write() for HDR1", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_write() for HDR1", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_write() for HDR1", het_error( rc ) );
             goto exit;
         }
 
@@ -276,9 +247,9 @@ main( int argc, char *argv[] )
         if( rc < 0 )
         {
             if ( o_faketape )
-                WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_tapemark()", het_error( rc ) );
             goto exit;
         }
     }
@@ -290,9 +261,9 @@ main( int argc, char *argv[] )
     if( rc < 0 )
     {
         if ( o_faketape )
-            WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
         else
-            WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "het_tapemark()", het_error( rc ) );
         goto exit;
     }
 

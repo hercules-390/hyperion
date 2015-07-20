@@ -236,7 +236,7 @@ int cpu;
             sysblk.main_clear = 0;
             MSGBUF( buf, "configure_storage(%s)",
                     fmt_memsize_KB((U64)mainsize << 2) );
-            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
+            WRMSG( HHC01430, "S", buf, strerror(errno) );
             return -1;
         }
 
@@ -392,7 +392,7 @@ int  cpu;
             sysblk.xpnd_clear = 0;
             MSGBUF( buf, "configure_xstorage(%s)",
                     fmt_memsize_MB((U64)xpndsize));
-            logmsg(MSG(HHC01430, "S", buf, strerror(errno)));
+            WRMSG( HHC01430, "S", buf, strerror(errno) );
             return -1;
         }
 

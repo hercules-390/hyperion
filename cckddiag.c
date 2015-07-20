@@ -1,5 +1,5 @@
 /* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2012                */
-/*       CCKD diagnostic tool                                        */
+/*              Hercules CCKD diagnostic tool                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -51,20 +51,27 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*-------------------------------------------------------------------*/
 int syntax(char *pgm)
 {
-    fprintf (stderr, MSG( HHC02600, "I", pgm ) );
+    // "Usage: %s ...
+    WRMSG( HHC02600, "I", pgm );
     return -1;
 }
 
 /*-------------------------------------------------------------------*/
 /* snap - display msg, dump data                                     */
 /*-------------------------------------------------------------------*/
-/* Newline appended to message                                       */
-void snap(char *msg, void *data, int len) {
-    if (msg != NULL)
-        fprintf(stderr, "%s\n", msg);
+/* Message preceded with newline                                     */
+void snap(int comp, void *data, int len) {
+    printf("\n");
+    if (comp)
+        // "SHOWTRK Compressed track header and data"
+        WRMSG( HHC90403, "I" );
+    else
+        // "SHOWTRK Decompressed track header and data"
+        WRMSG( HHC90404, "I" );
     data_dump(data, len);
     if (pausesnap) {
-        fprintf(stderr, MSG( HHC02601, "I" ) );
+        // "Press enter to continue"
+        WRMSG( HHC02601, "A" );
         (void)getc(stdin);
     }
 }
@@ -88,12 +95,14 @@ void *makbuf(int len, char *label) {
 
     p = malloc(len);
     if (p == NULL) {
-        fprintf(stderr, MSG(HHC02602, "E", label, len, "malloc()" ) );
+        // "From %s: Storage allocation of size %d using %s failed"
+        FWRMSG( stderr, HHC02602, "E", label, len, "malloc()" );
         clean();
         exit(4);
     }
-    if (debug) fprintf(stderr, "\nHHC90000D DBG: MAKBUF() malloc %s buffer of %d bytes at %p\n",
-               label, len, p);
+    if (debug)
+        // "MAKBUF() malloc %s buffer of %d bytes at %p"
+        WRMSG( HHC90400, "D", label, len, p);
     return p;
 }
 
@@ -108,19 +117,20 @@ int readpos(
             unsigned int len      /* length of data to read          */
             ) {
     if (debug)
-        fprintf(stderr, "\nHHC90000D DBG: READPOS seeking %d (0x%8.8X)\n",
-                        (int)offset, (unsigned int)offset);
+        // "READPOS seeking %d (0x%8.8X)"
+        WRMSG( HHC90401, "D", (int) offset, (unsigned int) offset );
     if (lseek(fd, offset, SEEK_SET) < 0) {
-        fprintf(stderr, MSG( HHC02603, "E", "READPOS", (unsigned int) offset, strerror(errno) ) );
+        // "In %s: lseek() to pos 0x%08x error: %s"
+        FWRMSG( stderr, HHC02603, "E", "READPOS", (unsigned int) offset, strerror( errno ));
         clean();
         exit (1);
     }
     if (debug)
-        fprintf(stderr,
-                "HHC90000D DBG: READPOS reading buf addr %p length %d (0x%X)\n",
-                buf, len, len);
+        // "READPOS reading buf addr %p length %d (0x%X)"
+        WRMSG( HHC90402, "D", buf, len, len);
     if (read(fd, buf, len) < (ssize_t)len) {
-        fprintf(stderr, MSG( HHC02604, "E", "READPOS", strerror(errno) ) );
+        // "In %s: read() error: %s"
+        FWRMSG( stderr, HHC02604, "E", "READPOS", strerror( errno ));
         clean();
         exit (2);
     }
@@ -230,7 +240,8 @@ BYTE    *past;
     r  = rh->rec;
     kl = rh->klen;
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
-    fprintf(stderr, MSG( HHC02605, "I", trk, cc, cc, hh, hh, r, r, kl, dl ) );
+    // "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
+    WRMSG( HHC02605, "I", trk, cc, cc, hh, hh, r, r, kl, dl );
     past = (BYTE *)rh + sizeof(CKDDASD_RECHDR);
     return past;
 }
@@ -241,7 +252,8 @@ BYTE    *past;
 BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int xop) {
 
     if (rh->klen && xop) {
-        fprintf(stderr, MSG( HHC02606, "I", trk, rh->rec, rh->rec, rh->klen ) );
+        // "Track %d rec[%02X/%d] kl[%d]"
+        WRMSG( HHC02606, "I", trk, rh->rec, rh->rec, rh->klen );
         data_dump(buf, rh->klen);
     }
     return (BYTE *)buf + rh->klen;          /* skip past KEY field */
@@ -255,7 +267,8 @@ int     dl;
 
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
     if (dl && xop) {
-        fprintf(stderr, MSG( HHC02607, "I", trk, rh->rec, rh->rec, dl ) );
+        // "Track %d rec[%02X/%d] dl[%d]"
+        WRMSG( HHC02607, "I", trk, rh->rec, rh->rec, dl );
         data_dump(buf, dl);
     }
     return buf + dl;                        /* skip past DATA field */
@@ -278,7 +291,7 @@ BYTE            *bufp;
 int             len;
 
     if (debug)
-       snap("\nHHC90000D DBG: SHOWTRK Compressed track header and data", buf, imglen);
+       snap( 1, buf, imglen);
     len = decomptrk(
               (BYTE *)buf,        /* input buffer address            */
               imglen,             /* input buffer length             */
@@ -289,12 +302,13 @@ int             len;
               msg                 /* addr of message buffer          */
               );
     if (debug)
-       snap("\nHHC90000D DBG: SHOWTRK Decompressed track header and data", buf2, len);
+       snap( 0, buf2, len );
     bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
     while (bufp < &buf2[sizeof(buf2)]) {
         rh = (CKDDASD_RECHDR *)bufp;
         if (memcmp((BYTE *)rh, &eighthexFF, 8) == 0) {
-            fprintf(stderr, MSG( HHC02608, "I" ) );
+            // "End of track"
+            WRMSG( HHC02608, "I" );
             break;
         }
         bufp = show_ckd_count(rh, trk);
@@ -325,16 +339,14 @@ char               *p;
             for (v = 0; isxdigit(*s); ++s)
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug)
-                fprintf(stderr,
-                        "HHC90000D DBG: OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d\n",
-                        p, (U64)v, (U64)v);
+                // "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d"
+                WRMSG( HHC90405, "D", p, (U64) v, (U64) v );
             return v;
         } else {                                 /* decimal input */
             v = (off_t) atoll(s);
             if (debug)
-                fprintf(stderr,
-                        "HHC90000D DBG: OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n",
-                        p, (U64)v, (U64)v);
+                // "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d"
+                WRMSG( HHC90406, "D", p, (U64) v, (U64) v );
             return v;
         }
 }
@@ -344,9 +356,7 @@ char               *p;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 int             cckd_diag_rc = 0;       /* Program return code       */
 char           *fn;                     /* File name                 */
 
@@ -382,40 +392,8 @@ int             heads=0;                /* Heads per cylinder        */
 off_t           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "CCKD diagnostic program" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "CCKD diagnostic program", &pgm );
 
     /* parse the arguments */
     argc--;
@@ -541,9 +519,8 @@ char           *strtok_str = NULL;
               | ((U32)(devhdr.heads[1]) << 8)
               | (U32)(devhdr.heads[0]);
         if (debug)
-            fprintf(stderr,
-                "\nHHC90000D DBG: %s device has %d heads/cylinder\n",
-                ckd->name, heads);
+            // "%s device has %d heads/cylinder"
+            WRMSG( HHC90407, "D", ckd->name, heads);
     }
 
 
@@ -667,4 +644,3 @@ char           *strtok_str = NULL;
     clean();
     return cckd_diag_rc;
 }
-

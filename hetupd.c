@@ -61,50 +61,6 @@ static off_t prevpos = 0;
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 #endif /*EXTERNALGUI*/
 
-/*-------------------------------------------------------------------*/
-/*  Define logmsg for WRMSG common macro use in local utility        */
-/*-------------------------------------------------------------------*/
-#define logmsg(_msg,...) _logmsg((_msg), ## __VA_ARGS__)
-void _logmsg(char *msg,...)
-{
-    char   *bfr =   NULL;
-    int     rc;
-    int     siz =   1024;
-    va_list vl;
-
-    bfr = (char *)calloc(1, siz);
-    rc = -1;
-    while (bfr != NULL && rc < 0)
-    {
-        va_start(vl, msg);
-#if defined(_MSVC_)
-        rc = _vsnprintf_s(bfr, siz, siz-1, msg, vl);
-#else
-        rc = vsnprintf(bfr, siz, msg, vl);
-#endif
-        va_end(vl);
-        if (rc >= 0 && rc < siz)
-            break;
-        rc = -1;
-        siz += 1024;
-        if (siz > 65536)
-            break;
-        bfr = realloc(bfr, siz);
-    }
-    if (bfr != NULL)
-    {
-        if (strlen(bfr) == 0)
-        {
-            if (strlen(msg) != 0)
-                fputs(msg, stdout);
-        }
-        else
-            fputs(bfr, stdout);
-        free(bfr);
-    }
-}
-
-
 /*
 || Prints usage information
 */
@@ -116,6 +72,7 @@ usage( char *name )
 #else
     char *bufbz = "";
 #endif
+    // "Usage: %s ...
     WRMSG( HHC02730, "I", name, bufbz );
 }
 
@@ -148,12 +105,14 @@ closetapes( int rc )
             rc = remove( o_sname );
             if ( rc < 0 )
             {
+                // "File %s: Error removing file - manual intervention required"
                 WRMSG( HHC02745, "I", o_sname );
             }
             else
             {
                 rc = rename( o_dname, o_sname );
                 if ( rc < 0 )
+                    // "File %s: Error renaming file to %s - manual intervention required"
                     WRMSG( HHC02744, "I", o_dname, o_sname );
             }
         }
@@ -161,6 +120,7 @@ closetapes( int rc )
         {
             rc = remove( o_dname );
             if ( rc < 0 )
+                // "File %s: Error removing file - manual intervention required"
                 WRMSG( HHC02745, "I", o_dname );
         }
     }
@@ -190,7 +150,7 @@ copytape( void )
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
-                fprintf( stderr, "IPOS=%" I64_FMT "d\n", (U64)curpos );
+                EXTGUIMSG( "IPOS=%" I64_FMT "d\n", (U64)curpos );
             }
         }
 #endif /*EXTERNALGUI*/
@@ -213,10 +173,11 @@ copytape( void )
                 rc = het_tapemark( d_hetb );
             if( rc < 0 )
             {
+                // "Error in function %s: %s"
                 if ( o_faketape )
-                    WRMSG( HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
+                    FWRMSG( stderr, HHC00075, "E", "fet_tapemark()", fet_error( rc ) );
                 else
-                    WRMSG( HHC00075, "E", "het_tapemark()", het_error( rc ) );
+                    FWRMSG( stderr, HHC00075, "E", "het_tapemark()", het_error( rc ) );
                 break;
             }
             continue;
@@ -224,10 +185,11 @@ copytape( void )
 
         if( rc < 0 )
         {
+            // "Error in function %s: %s"
             if ( i_faketape )
-                WRMSG( HHC00075, "E", "fet_read()", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_read()", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_read()", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_read()", het_error( rc ) );
             break;
         }
 
@@ -237,10 +199,11 @@ copytape( void )
             rc = het_write( d_hetb, buf, rc );
         if( rc < 0 )
         {
+            // "Error in function %s: %s"
             if ( o_faketape )
-                WRMSG( HHC00075, "E", "fet_write()", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_write()", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_write()", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_write()", het_error( rc ) );
             break;
         }
     }
@@ -270,7 +233,8 @@ opentapes( void )
     {
         dorename = FALSE;
         if ( o_verbose )
-            WRMSG( HHC02720, "E", o_sname, rc, het_error( rc ) );
+            // "File %s: Error opening: errno=%d: %s"
+            FWRMSG( stderr, HHC02720, "E", o_sname, rc, het_error( rc ) );
         goto exit;
     }
 
@@ -288,20 +252,23 @@ opentapes( void )
     {
         dorename = FALSE;
         if ( o_verbose )
-            WRMSG( HHC02720, "E", o_dname, rc, het_error( rc ) );
+            // "File %s: Error opening: errno=%d: %s"
+            FWRMSG( stderr, HHC02720, "E", o_dname, rc, het_error( rc ) );
         goto exit;
     }
 
     if ( !i_faketape )
     {
         if ( o_verbose )
-            WRMSG( HHC02755, "I", "decompress", yesno( o_decompress ) );
+            // "HET: Setting option %s to %s"
+            FWRMSG( stderr, HHC02755, "I", "decompress", yesno( o_decompress ) );
 
         rc = het_cntl( s_hetb, HETCNTL_SET | HETCNTL_DECOMPRESS, o_decompress );
         if( rc < 0 )
         {
             if ( o_verbose )
-                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -309,13 +276,15 @@ opentapes( void )
     if ( !o_faketape )
     {
         if ( o_verbose )
+            // "HET: Setting option %s to %s"
             WRMSG( HHC02755, "I", "compress", yesno( o_compress ) );
 
         rc = het_cntl( d_hetb, HETCNTL_SET | HETCNTL_COMPRESS, o_compress );
         if( rc < 0 )
         {
             if ( o_verbose )
-                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -323,6 +292,7 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_method );
+            // "HET: Setting option %s to %s"
             WRMSG( HHC02755, "I", "method", msgbuf );
         }
 
@@ -330,7 +300,8 @@ opentapes( void )
         if( rc < 0 )
         {
             if ( o_verbose )
-                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -338,6 +309,7 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_level );
+            // "HET: Setting option %s to %s"
             WRMSG( HHC02755, "I", "level", msgbuf );
         }
 
@@ -345,7 +317,8 @@ opentapes( void )
         if( rc < 0 )
         {
             if ( o_verbose )
-                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
 
@@ -353,6 +326,7 @@ opentapes( void )
         {
             char msgbuf[16];
             MSGBUF( msgbuf, "%d", o_chunksize );
+            // "HET: Setting option %s to %s"
             WRMSG( HHC02755, "I", "chunksize", msgbuf );
         }
 
@@ -360,7 +334,8 @@ opentapes( void )
         if( rc < 0 )
         {
             if ( o_verbose )
-                WRMSG( HHC00075, "E", "het_cntl()", het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", "het_cntl()", het_error( rc ) );
             goto exit;
         }
     }
@@ -368,6 +343,8 @@ opentapes( void )
     if( o_verbose )
     {
         char msgbuf[128];
+
+        // HHC02757 = "HET: %s"
 
         MSGBUF( msgbuf, "Source             : %s", o_sname );
         WRMSG( HHC02757, "I", msgbuf );
@@ -400,45 +377,11 @@ exit:
 int
 main( int argc, char *argv[] )
 {
-    char           *pgmname;                /* prog name in host format  */
-    char           *pgm;                    /* less any extension (.ext) */
-    char            msgbuf[512];            /* message build work area   */
-    char            toname[ MAX_PATH ];
-    int             rc;
-    char           *strtok_str = NULL;
+    char  *pgm;                    /* less any extension (.ext) */
+    char   toname[ MAX_PATH ];
+    int    rc;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "HET Copy/Update" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "HET Copy/Update", &pgm );
 
     while( TRUE )
     {
@@ -534,14 +477,16 @@ main( int argc, char *argv[] )
     rc = opentapes();
     if( rc < 0 )
     {
-        WRMSG( HHC02756, "E", "opening", het_error( rc ) );
+        // "HET: HETLIB reported error %s files; %s"
+        FWRMSG( stderr, HHC02756, "E", "opening", het_error( rc ) );
     }
     else
     {
         rc = copytape();
         if( rc < 0 )
         {
-            WRMSG( HHC02756, "E", "copying", het_error( rc ) );
+            // "HET: HETLIB reported error %s files; %s"
+            FWRMSG( stderr, HHC02756, "E", "copying", het_error( rc ) );
         }
     }
 

@@ -858,25 +858,6 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
         return;
     }
 
-#if 0
-    // Notes: It appears that TurboLinux has gotten sloppy in their
-    //        ways. They are now giving us buffer sizes that are
-    //        greater than the CCW count, but the segment size
-    //        is within the count.
-    // Check that the frame offset is valid
-    if( sOffset < sizeof( CTCIHDR ) || sOffset > sCount )
-    {
-        logmsg( _("CTC101W %4.4X: Write buffer contains invalid "
-                  "frame offset %u\n"),
-                pDEVBLK->devnum, sOffset );
-
-        pDEVBLK->sense[0] = SENSE_CR;
-        *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
-        return;
-    }
-#endif
-
     // Adjust the residual byte count
     *pResidual -= sizeof( CTCIHDR );
 

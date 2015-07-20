@@ -16,59 +16,38 @@
 /* INTERFACE FEATURE.                           */
 /************************************************/
 
-#if 1 // fish test: we SHOULD be doing it this way! Why aren't we?!
-
-  #include "hstdinc.h"
-  #include "hercules.h"
-
-#else
-
-  #ifdef _MSVC_
-  #include <windows.h>
-  #include <conio.h>
-  #endif
-  #ifdef HAVE_CONFIG_H
-    #include <config.h> // Hercules build configuration options/settings
-  #endif
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <string.h>
-  #include <sys/mman.h>
-
-#endif
+#include "hstdinc.h"
+#include "hercules.h"
 #include "hextapi.h"
 
 /**********************************************/
 /* The following function is the LOG callback */
 /* function. It gets called by the engine     */
 /* whenever a log message needs to be         */
-/* displayed. This function may therefore be  */
-/* invoked from a separate thread             */
-/*                                            */
-/* This simple version simply writes to STDOUT*/
+/* displayed. This function therefore         */
+/* might be invoked from a separate thread    */
 /**********************************************/
 
-#ifdef _MSVC_
-static HANDLE hLogCallbackThread = NULL;
-#endif
+int hercules_has_exited = 0;
 
-void mywrite(const char *a,size_t b)
+void log_callback( const char* msg, size_t msglen )
 {
-#ifdef _MSVC_
-    if (!hLogCallbackThread)
-        hLogCallbackThread = OpenThread(
-            SYNCHRONIZE, FALSE,
-            GetCurrentThreadId());
-#endif
+    UNREFERENCED( msg );
 
-    fflush(stdout);
-    fwrite(a,b,1,stdout);
-    fflush(stdout);
+    if (!msglen)
+    {
+        hercules_has_exited = 1;
+        return;
+    }
+
+    fflush( stdout );
+    fflush( stderr );
 }
 
-
-int main(int ac,char **av)
+int main( int argc, char* argv[] )
 {
+    int rc;
+
     /*****************************************/
     /* COMMANDHANDLER is the function type   */
     /* of the engine's panel command handler */
@@ -77,8 +56,9 @@ int main(int ac,char **av)
     /* redirected the initial engine function*/
     /*****************************************/
 
-    COMMANDHANDLER  ch;
-    char *str,*bfr;
+    COMMANDHANDLER  process_command;
+
+    char *cmdbuf, *cmd;
 
 #if defined( OPTION_DYNAMIC_LOAD ) && defined( HDL_USE_LIBTOOL )
     /* LTDL Preloaded symbols for HDL using libtool */
@@ -86,49 +66,40 @@ int main(int ac,char **av)
 #endif
 
     /******************************************/
-    /* Register the 'mywrite' function as the */
-    /* log callback routine                   */
+    /* Register the 'log_callback' function   */
+    /* as the log message callback routine    */
     /******************************************/
-    registerLogCallback(mywrite);
+    registerLogCallback( log_callback );
 
     /******************************************/
     /* Initialize the HERCULE Engine          */
     /******************************************/
-    impl(ac,av);
-
-    /******************************************/
-    /* Get the command handler function       */
-    /* This MUST be done after IML            */
-    /******************************************/
-    ch=getCommandHandler();
-
-    /******************************************/
-    /* Read STDIN and pass to Command Handler */
-    /******************************************/
-    bfr=(char *)malloc(1024);
-    while
-    (
-#ifdef _MSVC_
-        !hLogCallbackThread ||
-        WaitForSingleObject(hLogCallbackThread,0)
-            != WAIT_OBJECT_0
-#else
-        1
-#endif
-    )
+    if ((rc = impl( argc, argv )) == 0)
     {
-#ifdef _MSVC_
-        if (!kbhit()) Sleep(50); else
-#endif
-        if ((str=fgets(bfr,1024,stdin)))
-        {
-            str[strlen(str)-1]=0;
-            ch(str);
-        }
-    }
-#ifdef _MSVC_
-    CloseHandle(hLogCallbackThread);
-#endif
-    UNREACHABLE_CODE();
-}
+        /******************************************/
+        /* Get the command handler function       */
+        /* This MUST be done after IML            */
+        /******************************************/
+        process_command = getCommandHandler();
 
+        /******************************************/
+        /* Read STDIN and pass to Command Handler */
+        /******************************************/
+#define CMDBUFSIZ  1024
+        cmdbuf = (char*) malloc( CMDBUFSIZ );
+
+        do
+        {
+            if ((cmd = fgets( cmdbuf, CMDBUFSIZ, stdin )))
+            {
+                /* (remove newline) */
+                cmd[ strlen( cmd ) - 1 ] = 0;
+
+                process_command( cmd );
+            }
+        }
+        while (!hercules_has_exited);
+    }
+
+    return rc;
+}

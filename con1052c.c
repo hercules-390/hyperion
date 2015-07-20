@@ -217,20 +217,14 @@ BYTE    c;                              /* Print character           */
                 char * t = strchr(str, '\n');
 
                 if (t) *t++ = 0;
-#ifdef OPTION_MSGCLR
-                #define CLR "<pnl,color(green,black)>"
-#else
-                #define CLR ""
-#endif
 
 #ifdef OPTION_SCP_MSG_PREFIX
-                WRCMSG (CLR, HHC00001, "I", str);
+                WRMSG (HHC00001, "I", str);
 #else /*!OPTION_SCP_MSG_PREFIX*/
-                logmsg (CLR "%s%s", str, (t ? "\n" : ""));
+                logmsg ("%s%s", str, (t ? "\n" : ""));
 #endif /*OPTION_SCP_MSG_PREFIX*/
                 str = t;
             }
-
         }
 
         /* Return normal status */
@@ -254,7 +248,8 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                WRCMSG ("<pnl,color(lightyellow,black)>", HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                // "Enter input for console %1d:%04X"
+                WRMSG( HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum );
 
             obtain_lock(&dev->lock);
             dev->kbwaiters++;
@@ -291,7 +286,7 @@ BYTE    c;                              /* Print character           */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        WRCMSG ("<pnl,color(lightred,black)>", HHC00009, "I");
+        WRMSG( HHC00009, "I" );
     /*
         *residual = 0;
     */
@@ -394,8 +389,7 @@ int  i;
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
-            WRCMSG ("<pnl,color(lightyellow,black)>", HHC00008, "I",
-                        dev->filename, cmd+strlen(dev->filename) );
+            WRMSG( HHC00008, "I", dev->filename, cmd+strlen(dev->filename) );
             for(i = 0; i < dev->bufsize && input[i] != '\0'; i++)
                 dev->buf[i] = isprint(input[i]) ? host_to_guest(input[i]) : SPACE;
             dev->keybdrem = dev->buflen = i;

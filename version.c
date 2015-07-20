@@ -278,15 +278,11 @@ DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
     return ( sizeof(build_info) / sizeof(build_info[0]) );
 }
 
-
 /*-------------------------------------------------------------------*/
-/* Display version and copyright                                     */
+/* Display version, copyright and build date                         */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int httpfd)
+DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 {
-    unsigned int i;
-    const char** ppszBldInfoStr = NULL;
-
 #if defined(EXTERNALGUI)
     /* If external gui being used, set stdout & stderr streams
        to unbuffered so we don't have to flush them all the time
@@ -299,85 +295,84 @@ DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int h
     }
 #endif /*EXTERNALGUI*/
 
-        /* Log version */
+    /* Log version */
 
-    if ( f != stdout )
-        if(httpfd<0)
-            fprintf (f, MSG(HHC01413, "I", prog, VERSION));
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01413, "I", prog, VERSION ));
         else
-            hprintf (httpfd, MSG(HHC01413, "I", prog, VERSION));
+            fprintf( f, MSG( HHC01413, "I", prog, VERSION ));
     else
-        WRMSG (HHC01413, "I", prog, VERSION);
+        WRMSG( HHC01413, "I", prog, VERSION );
 
     /* Log Copyright */
 
-    if ( f != stdout )
-        if(httpfd<0)
-            fprintf (f, MSG(HHC01414, "I", HERCULES_COPYRIGHT));
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
         else
-            hprintf (httpfd, MSG(HHC01414, "I", HERCULES_COPYRIGHT));
+            fprintf( f, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
     else
-        WRMSG (HHC01414, "I", HERCULES_COPYRIGHT);
+        WRMSG( HHC01414, "I", HERCULES_COPYRIGHT );
 
-    /* If we're being verbose, display the rest of the info */
-    if (verbose)
-    {
-        /* Log build date/time */
+    /* Log build date/time */
 
-        if ( f != stdout )
-            if(httpfd<0)
-                fprintf (f, MSG(HHC01415, "I", __DATE__, __TIME__));
-            else
-                hprintf (httpfd, MSG(HHC01415, "I", __DATE__, __TIME__));
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01415, "I", __DATE__, __TIME__ ));
         else
-            WRMSG (HHC01415, "I", __DATE__, __TIME__);
-
-        /* Log "unusual" build options */
-
-        if ( f != stdout )
-            if(httpfd<0)
-                fprintf (f, MSG(HHC01416, "I"));
-            else
-                hprintf (httpfd, MSG(HHC01416, "I"));
-        else
-            WRMSG (HHC01416, "I");
-
-        if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
-        {
-            if ( f != stdout )
-                if(httpfd<0)
-                    fprintf (f, MSG(HHC01417, "I", "(none)"));
-                else
-                    hprintf (httpfd, MSG(HHC01417, "I", "(none)"));
-            else
-                WRMSG (HHC01417, "I", "(none)");
-        }
-        else
-        {
-            for(; i; i--, ppszBldInfoStr++ )
-            {
-                if ( f != stdout )
-                    if(httpfd<0)
-                        fprintf (f, MSG(HHC01417, "I", *ppszBldInfoStr));
-                    else
-                        hprintf (httpfd, MSG(HHC01417, "I", *ppszBldInfoStr));
-                else
-                    WRMSG (HHC01417, "I", *ppszBldInfoStr);
-            }
-        }
-
-        if(f != stdout)
-            if(httpfd<0)
-                display_hostinfo( &hostinfo, f, -1 );
-            else
-                display_hostinfo( &hostinfo, (FILE *)-1,httpfd );
-        else
-            display_hostinfo( &hostinfo, f, -1 );
-    }
+            fprintf( f, MSG( HHC01415, "I", __DATE__, __TIME__ ));
+    else
+        WRMSG( HHC01415, "I", __DATE__, __TIME__ );
 
 } /* end function display_version */
 
-DLL_EXPORT void display_version(FILE *f,char *prog,const char verbose)
+/*-------------------------------------------------------------------*/
+/* Display build options                                             */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void display_build_options( FILE* f, int httpfd )
 {
-    display_version_2(f,prog,verbose,-1);
-}
+    unsigned int i;
+    const char** ppszBldInfoStr = NULL;
+
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01416, "I" ));
+        else
+            fprintf( f, MSG( HHC01416, "I" ));
+    else
+        WRMSG( HHC01416, "I" );
+
+    if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
+    {
+        if (f != stdout)
+            if (httpfd)
+                hprintf( httpfd, MSG( HHC01417, "I", "(none)" ));
+            else
+                fprintf( f, MSG( HHC01417, "I", "(none)" ));
+        else
+            WRMSG( HHC01417, "I", "(none)" );
+    }
+    else
+    {
+        for(; i; i--, ppszBldInfoStr++ )
+        {
+            if (f != stdout)
+                if (httpfd)
+                    hprintf( httpfd, MSG( HHC01417, "I", *ppszBldInfoStr ));
+                else
+                    fprintf( f, MSG( HHC01417, "I", *ppszBldInfoStr ));
+            else
+                WRMSG( HHC01417, "I", *ppszBldInfoStr );
+        }
+    }
+
+    if (f != stdout)
+        if (httpfd)
+            display_hostinfo( &hostinfo, NULL, httpfd );
+        else
+            display_hostinfo( &hostinfo, f, 0 );
+    else
+        display_hostinfo( &hostinfo, f, 0 );
+
+} /* end function display_build_options */

@@ -24,8 +24,6 @@
 #include "esa390io.h"
 #include "hexdumpe.h"
 
-#define  DISPLAY_INSTRUCTION_OPERANDS
-
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
 
@@ -119,6 +117,7 @@ static void cancel_wait_sigq()
 */
 static void do_shutdown_now()
 {
+    // "Begin Hercules shutdown"
     WRMSG(HHC01420, "I");
 
     ASSERT( !sysblk.shutfini );  // (sanity check)
@@ -138,13 +137,13 @@ static void do_shutdown_now()
         }
     }
 
-//#if defined(_MSVC_)
-    WRMSG(HHC01423, "I");
+    // "Calling termination routines"
+    WRMSG( HHC01423, "I" );
 
     hdl_shut();
 
-    WRMSG(HHC01424, "I");
-//#endif
+    // "All termination routines complete"
+    fprintf( stdout, MSG( HHC01424, "I" ));
 
     /*
     logmsg("Terminating threads\n");
@@ -154,9 +153,13 @@ static void do_shutdown_now()
     logmsg("Threads terminations complete\n");
     */
 
-    WRMSG(HHC01425, "I");
+    // "Hercules shutdown complete"
+    fprintf( stdout, MSG( HHC01425, "I" ));
 
     sysblk.shutfini = TRUE;    // (shutdown is now complete)
+
+    // "Hercules terminated"
+    fprintf( stdout, MSG( HHC01412, "I" ));
 
     //                     PROGRAMMING NOTE
 
@@ -182,13 +185,7 @@ static void do_shutdown_now()
 #ifdef _MSVC_
         socket_deinit();
 #endif
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( sysblk.emsg & EMSG_TEXT )
-            fprintf(stdout, HHC01412);
-        else
-#endif
-            fprintf(stdout, MSG(HHC01412, "I"));
-        fflush(stdout);
+        fflush( stdout );
         exit(0);
     }
 }
@@ -240,7 +237,7 @@ TID tid;
 /* NOTE : 32 bit regs are displayed 4 by 4, while 64 bit regs are    */
 /*        displayed 2 by 2. Change the modulo if to change this      */
 /*        behaviour.                                                 */
-/* These routines are intended to be invoked by display_regs,        */
+/* These routines are intended to be invoked by display_gregs,       */
 /* display_cregs and display_aregs                                   */
 /* Ivan Warren 2005/11/07                                            */
 /*-------------------------------------------------------------------*/
@@ -316,7 +313,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
 /*-------------------------------------------------------------------*/
 /* Display registers for the instruction display                     */
 /*-------------------------------------------------------------------*/
-int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen, char *hdr)
+int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen )
 {
     int len=0;
 
@@ -327,7 +324,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
                 || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
            )))
     {
-        len += display_regs (regs, buf + len, buflen - len - 1, hdr);
+        len += display_gregs (regs, buf + len, buflen - len - 1, "HHC02269I " );
         if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
@@ -335,7 +332,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
-        len += display_cregs (regs, buf + len, buflen - len - 1, hdr);
+        len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
         if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
@@ -343,7 +340,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
-        len += display_aregs (regs, buf + len, buflen - len - 1, hdr);
+        len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
         if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
@@ -358,7 +355,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
         || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
        )
     {
-        len += display_fregs (regs, buf + len, buflen - len - 1, hdr);
+        len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
         if (sysblk.showregsfirst)
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
@@ -368,7 +365,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
-int display_regs (REGS *regs, char *buf, int buflen, char *hdr)
+int display_gregs (REGS *regs, char *buf, int buflen, char *hdr)
 {
     int i;
     U32 gprs[16];
@@ -397,7 +394,7 @@ int display_regs (REGS *regs, char *buf, int buflen, char *hdr)
     }
 #endif
 
-} /* end function display_regs */
+} /* end function display_gregs */
 
 
 /*-------------------------------------------------------------------*/
@@ -2352,15 +2349,17 @@ void ARCH_DEP(display_inst) (REGS *iregs, BYTE *inst)
 QWORD   qword;                          /* Doubleword work area      */
 BYTE    opcode;                         /* Instruction operation code*/
 int     ilc;                            /* Instruction length        */
-#ifdef DISPLAY_INSTRUCTION_OPERANDS
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
 U16     xcode = 0;                      /* Exception code            */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
-#endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 char    buf[2048];                      /* Message buffer            */
 char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
 REGS   *regs;                           /* Copied regs               */
+char    psw_inst_msg[160] = {0};
+char    op1_stor_msg[128] = {0};
+char    op2_stor_msg[128] = {0};
+char    regs_msg_buf[4*512] = {0};
 
     /* Ensure storage exists to attempt the display */
     if (iregs->mainlim == 0)
@@ -2369,15 +2368,8 @@ REGS   *regs;                           /* Copied regs               */
         return;
     }
 
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-    if ( !(sysblk.emsg & EMSG_TEXT) )
-        n = snprintf(buf, sizeof(buf)-1, "HHC02267I ");
-    else
-#endif
-    {
-        n = 0;
-        buf[0] = '\0';
-    }
+    n = 0;
+    buf[0] = '\0';
 
     if (iregs->ghostregs)
         regs = iregs;
@@ -2389,26 +2381,18 @@ REGS   *regs;                           /* Copied regs               */
         n += snprintf (buf + n, sizeof(buf)-n-1, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
-#if 0
-#if _GEN_ARCH == 370
-    n += snprintf (buf + n, sizeof(buf)-n-1, "S/370 ");
-#elif _GEN_ARCH == 390
-    n += snprintf (buf + n, sizeof(buf)-n-1, "ESA/390 ");
-#else
-    n += snprintf (buf + n, sizeof(buf)-n-1, "z/Arch ");
-#endif
-#endif
-
     /* Display the PSW */
     memset (qword, 0, sizeof(qword));
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
         n += snprintf (buf + n, sizeof(buf)-n-1, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+
     n += snprintf (buf + n, sizeof(buf)-n-1,
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
+
   #if defined(FEATURE_ESAME)
     n += snprintf (buf + n, sizeof(buf)-n-1,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
@@ -2419,18 +2403,17 @@ REGS   *regs;                           /* Copied regs               */
     /* Exit if instruction is not valid */
     if (inst == NULL)
     {
-        n += snprintf(buf + n, sizeof(buf)-n-1, "Instruction fetch error\n");
-
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "HHC02267I ");
-        else
-#endif
-            n += display_regs (regs, buf + n, sizeof(buf)-n-1, "");
-
+        size_t len;
+        MSGBUF( psw_inst_msg, "%s Instruction fetch error\n", buf );
+        display_gregs( regs, regs_msg_buf, sizeof(regs_msg_buf)-1, "HHC02269I " );
+        /* Remove extra trailng newline from regs_msg_buf */
+        len = strlen(regs_msg_buf);
+        if (len)
+            regs_msg_buf[len-1] = 0;
+        // "%s%s" // (instruction fetch error + regs)
+        WRMSG( HHC02325, "E", psw_inst_msg, regs_msg_buf );
         if (!iregs->ghostregs)
             free_aligned( regs );
-        writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
         return;
     }
 
@@ -2438,26 +2421,16 @@ REGS   *regs;                           /* Copied regs               */
     opcode = inst[0];
     ilc = ILC(opcode);
 
-    /* Show registers associated with the instruction */
-    if (sysblk.showregsfirst)
-    {
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
-        else
-#endif
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
-    }
-
-    /* Display the instruction */
+    /* Format instruction line */
     n += snprintf (buf + n, sizeof(buf)-n-1, "INST=%2.2X%2.2X", inst[0], inst[1]);
     if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[2], inst[3]);
     if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[4], inst[5]);
     n += snprintf (buf + n, sizeof(buf)-n-1, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
     n += DISASM_INSTRUCTION(inst, buf + n);
-    n += snprintf (buf + n, sizeof(buf)-n-1, "\n");
+    MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
-#ifdef DISPLAY_INSTRUCTION_OPERANDS
+    n = 0;
+    buf[0] = '\0';
 
     /* Process the first storage operand */
     if (ilc > 2
@@ -2549,14 +2522,21 @@ REGS   *regs;                           /* Copied regs               */
         b1 = 0;
     }
 
-    /* Display storage at first storage operand location */
+    /* Format storage at first storage operand location */
     if (b1 >= 0)
     {
+        n = 0;
+        buf2[0] = '\0';
+
+        if (sysblk.cpus > 1)
+            n += snprintf(buf2, sizeof(buf2)-1, "%s%02X: ",
+                          PTYPSTR(regs->cpuad), regs->cpuad );
+
         if(REAL_MODE(&regs->psw))
-            ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), USE_REAL_ADDR,
+            ARCH_DEP(display_virt) (regs, addr1, buf2+n, sizeof(buf2)-n-1, USE_REAL_ADDR,
                                                 ACCTYPE_READ, "", &xcode);
         else
-            ARCH_DEP(display_virt) (regs, addr1, buf2, sizeof(buf2), b1,
+            ARCH_DEP(display_virt) (regs, addr1, buf2+n, sizeof(buf2)-n-1, b1,
                                 (opcode == 0x44
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f))
@@ -2564,63 +2544,55 @@ REGS   *regs;                           /* Copied regs               */
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"", &xcode);
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
-#endif
 
-        if ( sysblk.cpus > 1 )
-        {
-            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ",
-                          PTYPSTR(regs->cpuad), regs->cpuad );
-        }
-        n += snprintf(buf+n, sizeof(buf)-n-1, "%s\n", buf2);
+        MSGBUF( op1_stor_msg, MSG( HHC02326, "I", buf2 ));
     }
 
-    /* Display storage at second storage operand location */
+    /* Format storage at second storage operand location */
     if (b2 >= 0)
     {
-        if(
-            (REAL_MODE(&regs->psw)
+        n = 0;
+        buf2[0] = '\0';
+
+        if (sysblk.cpus > 1)
+            n += snprintf(buf2, sizeof(buf2)-1, "%s%02X: ",
+                          PTYPSTR(regs->cpuad), regs->cpuad );
+        if (0
+            || (REAL_MODE(&regs->psw)
             || (opcode == 0xB2 && inst[1] == 0x4B) /*LURA*/
             || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
-            || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
-            ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), USE_REAL_ADDR,
-                                                ACCTYPE_READ, "", &xcode);
+            || (opcode == 0xB9 && inst[1] == 0x25)) /*STURG*/
+        )
+            ARCH_DEP(display_virt) (regs, addr2, buf2+n, sizeof(buf2)-n-1, USE_REAL_ADDR,
+                                    ACCTYPE_READ, "", &xcode);
         else
-            ARCH_DEP(display_virt) (regs, addr2, buf2, sizeof(buf2), b2,
-                                        ACCTYPE_READ, "", &xcode);
+            ARCH_DEP(display_virt) (regs, addr2, buf2+n, sizeof(buf2)-n-1, b2,
+                                    ACCTYPE_READ, "", &xcode);
 
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += snprintf(buf+n, sizeof(buf)-n-1, "HHC02267I ");
-#endif
-
-        if ( sysblk.cpus > 1 )
-        {
-            n += snprintf(buf + n, sizeof(buf)-n-1, "%s%02X: ",
-                          PTYPSTR(regs->cpuad), regs->cpuad );
-        }
-        n += snprintf(buf + n, sizeof(buf)-n-1, "%s\n", buf2);
+        MSGBUF( op2_stor_msg, MSG( HHC02326, "I", buf2 ));
     }
 
-#endif /*DISPLAY_INSTRUCTION_OPERANDS*/
+    /* Format registers associated with the instruction */
+    if (!sysblk.showregsnone)
+        display_inst_regs (regs, inst, opcode, regs_msg_buf, sizeof(regs_msg_buf)-1);
 
-    /* Show registers associated with the instruction */
-    if (!sysblk.showregsfirst && !sysblk.showregsnone)
+    /* Now display all instruction tracing messages all at once */
+    if (sysblk.showregsfirst)
     {
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        if ( !(sysblk.emsg & EMSG_TEXT) )
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "HHC02267I ");
-        else
-#endif
-            n += display_inst_regs (regs, inst, opcode, buf + n, sizeof(buf)-n, "");
+        /* Remove extra trailng newline from regs_msg_buf */
+        size_t len = strlen(regs_msg_buf);
+        if (len)
+            regs_msg_buf[len-1] = 0;
+        writemsg( __FILE__, __LINE__, __FUNCTION__, "%s%s%s%s",
+            regs_msg_buf, psw_inst_msg, op1_stor_msg, op2_stor_msg );
     }
+    else
+        writemsg( __FILE__, __LINE__, __FUNCTION__, "%s%s%s%s",
+            psw_inst_msg, op1_stor_msg, op2_stor_msg, regs_msg_buf );
 
     if (!iregs->ghostregs)
         free_aligned( regs );
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
 
 } /* end function display_inst */
 

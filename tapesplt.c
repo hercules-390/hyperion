@@ -40,9 +40,7 @@ long  prevpos = 0;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
@@ -62,40 +60,8 @@ int             files2copy;             /* Current # files to copy   */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape split" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "split AWS tape into pieces", &pgm );
 
     /* The only argument is the tape image file name */
     if (argc > 3 && argv[1] != NULL)
@@ -104,7 +70,8 @@ char           *strtok_str = NULL;
     }
     else
     {
-        printf( MSG( HHC02725, "I", pgm ) );
+        // "Usage: %s ...
+        WRMSG( HHC02725, "I", pgm );
         exit (1);
     }
 
@@ -113,7 +80,8 @@ char           *strtok_str = NULL;
     infd = HOPEN (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
-        printf( MSG( HHC02715, "E", infilename, errno, strerror(errno) ) );
+        // "Tape %s: Error opening: errno=%d: %s"
+        FWRMSG( stderr, HHC02715, "E", infilename, errno, strerror( errno ));
         exit (2);
     }
 
@@ -128,14 +96,16 @@ char           *strtok_str = NULL;
     for (outfilenum = 2; outfilenum < argc; outfilenum += 2)
     {
         outfilename = argv[outfilenum];
-        printf ( MSG( HHC02740, "I", outfilename ) );
+        // "File %s: writing output file"
+        WRMSG( HHC02740, "I", outfilename );
         hostpath(pathname, outfilename, sizeof(pathname));
         outfd = HOPEN (pathname, O_WRONLY | O_CREAT | O_BINARY,
                         S_IRUSR | S_IWUSR | S_IRGRP);
 
         if (outfd < 0)
         {
-            printf ( MSG (HHC02715, "E", outfilename, errno, strerror(errno) ) );
+            // "Tape %s: Error opening: errno=%d: %s"
+            FWRMSG( stderr, HHC02715, "E", outfilename, errno, strerror( errno ));
             exit (3);
         }
 
@@ -156,14 +126,16 @@ char           *strtok_str = NULL;
             len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));
             if (len < 0)
             {
-                printf( MSG( HHC02707, "E", infilename, "AWSTAPE", len, errno, strerror(errno) ) );
+                // "File %s: Error reading %s header: rc=%d, errno=%d: %s"
+                FWRMSG( stderr, HHC02707, "E", infilename, "AWSTAPE", len, errno, strerror( errno ));
                 exit (4);
             }
 
             /* Did we finish too soon? */
             if ((len > 0) && (len < (int)sizeof(AWSTAPE_BLKHDR)))
             {
-                printf( MSG( HHC02741, "E", infilename, "AWSTAPE" ) );
+                // "File %s: Error, incomplete %s header"
+                FWRMSG( stderr, HHC02741, "E", infilename, "AWSTAPE" );
                 exit(5);
             }
 
@@ -175,7 +147,7 @@ char           *strtok_str = NULL;
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%ld\n", curpos );
+                    EXTGUIMSG( "IPOS=%ld\n", curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -183,7 +155,8 @@ char           *strtok_str = NULL;
             /* Check for end of tape. */
             if (len == 0)
             {
-                printf( MSG( HHC02704, "I" ) );
+                // "End of tape"
+                WRMSG( HHC02704, "I" );
                 break;
             }
 
@@ -191,7 +164,8 @@ char           *strtok_str = NULL;
             rc = write(outfd, buf, sizeof(AWSTAPE_BLKHDR));
             if (rc < (int)sizeof(AWSTAPE_BLKHDR))
             {
-                printf( MSG( HHC02711, "E", outfilename, "AWSTAPE", rc, errno, strerror(errno) ) );
+                // "File %s: Error writing %s header: rc=%d, errno=%d: %s"
+                FWRMSG( stderr, HHC02711, "E", outfilename, "AWSTAPE", rc, errno, strerror( errno ));
                 exit(6);
             }
 
@@ -203,7 +177,8 @@ char           *strtok_str = NULL;
             {
                 /* Print summary of current file */
                 if (blkcount)
-                    printf( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
+                    // "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+                    WRMSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount );
 
                 /* Reset counters for next file */
                 fileno++;
@@ -230,21 +205,24 @@ char           *strtok_str = NULL;
                 len = read (infd, buf, curblkl);
                 if (len < 0)
                 {
-                    printf ( MSG( HHC02709, "E", infilename, "AWSTAPE", rc, errno, strerror(errno) ) );
+                    // "File %s: Error reading %s data block: rc=%d, errno=%d: %s"
+                    FWRMSG( stderr, HHC02709, "E", infilename, "AWSTAPE", rc, errno, strerror( errno ));
                     exit (7);
                 }
 
                 /* Did we finish too soon? */
                 if ((len > 0) && (len < curblkl))
                 {
-                    printf (MSG( HHC02742, "E", infilename, curblkl, len ) );
+                    // "File %s: Error, incomplete final data block: expected %d bytes, read %d"
+                    FWRMSG( stderr, HHC02742, "E", infilename, curblkl, len );
                     exit(8);
                 }
 
                 /* Check for end of tape */
                 if (len == 0)
                 {
-                    printf ( MSG( HHC02743, "E", infilename, "AWSTAPE" ) );
+                    // "File %s: Error, %s header block without data"
+                    FWRMSG( stderr, HHC02743, "E", infilename, "AWSTAPE" );
                     exit(9);
                 }
 
@@ -256,7 +234,7 @@ char           *strtok_str = NULL;
                     if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                     {
                         prevpos = curpos;
-                        fprintf( stderr, "IPOS=%ld\n", curpos );
+                        EXTGUIMSG( "IPOS=%ld\n", curpos );
                     }
                 }
 #endif /*EXTERNALGUI*/
@@ -265,7 +243,8 @@ char           *strtok_str = NULL;
                 rc = write(outfd, buf, len);
                 if (rc < len)
                 {
-                    printf ( MSG( HHC02712, "E", outfilename, "AWSTAPE", rc, errno, strerror(errno) ) );
+                    // "File %s: Error writing %s data block: rc=%d, errno=%d: %s"
+                    FWRMSG( stderr, HHC02712, "E", outfilename, "AWSTAPE", rc, errno, strerror( errno ));
                     exit(10);
                 }
 
@@ -279,7 +258,8 @@ char           *strtok_str = NULL;
                     for (i=0; i < 80; i++)
                         labelrec[i] = guest_to_host(buf[i]);
                     labelrec[i] = '\0';
-                    printf ( MSG( HHC02722, "I", labelrec ) );
+                    // "Tape Label: %s"
+                    WRMSG( HHC02722, "I", labelrec );
                 }
 
             } /* end if(tapemark) */

@@ -58,10 +58,10 @@
 #define HDL_VERS_HERCULES VERSION
 #define HDL_SIZE_HERCULES sizeof(VERSION)
 
-VER_DLL_IMPORT void display_version(FILE *f, char *prog, const char verbose);
-VER_DLL_IMPORT void display_version_2(FILE *f, char *prog, const char verbose,int httpfd);
-VER_DLL_IMPORT int get_buildinfo_strings(const char*** pppszBldInfoStr);
+VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );
+VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
+VER_DLL_IMPORT int get_buildinfo_strings  ( const char*** pppszBldInfoStr );
 
 #define HERCULES_COPYRIGHT \
-       "(c) Copyright 1999-2013 by Roger Bowler, Jan Jaeger, and others"
+       "(c) Copyright 1999-2015 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_

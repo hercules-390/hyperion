@@ -312,18 +312,21 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
 /*-------------------------------------------------------------------*/
 /* Display host system information on the indicated stream           */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE *f, int httpfd )
+DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE* f, int httpfd )
 {
     char host_info_str[256]; init_hostinfo( pHostInfo );
+
     get_hostinfo_str(pHostInfo, host_info_str, sizeof(host_info_str));
-    if(httpfd<0)
-    {
-        if (!f) f = stdout; if (f != stdout)
-             fprintf(f, MSG(HHC01417, "I", host_info_str));
-        else WRMSG(HHC01417, "I", host_info_str);
-    }
+
+    if (httpfd)
+        hprintf( httpfd, MSG( HHC01417, "I", host_info_str ));
     else
     {
-        hprintf(httpfd, MSG(HHC01417, "I", host_info_str));
+        if (!f)
+            f = stdout;
+        if (f == stdout)
+            WRMSG( HHC01417, "I", host_info_str );
+        else
+             fprintf( f, MSG( HHC01417, "I", host_info_str ));
     }
 }

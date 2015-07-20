@@ -2760,13 +2760,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             pszStatement = NULL;
         }
 
-#if defined(OPTION_CONFIG_SYMBOLS)
-        // Make a copy of the OAT statement with symbols resolved
-        pszStatement = resolve_symbol_string( szBuff );
-#else
         // Make a copy of the OAT statement
         pszStatement = strdup( szBuff );
-#endif
 
         sPort        = 0;
         bMode        = 0;

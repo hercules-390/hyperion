@@ -20,6 +20,14 @@
 #include "devtype.h"
 #include "opcode.h"
 
+//#define DEBUG_FREESPACE
+
+#ifdef DEBUG_FREESPACE
+  #define CCKD_CHK_SPACE(_dev)      cckd_chk_space(_dev)
+#else
+  #define CCKD_CHK_SPACE(_dev)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
@@ -1920,13 +1928,13 @@ int cckd_writer_scan (int *o, int ix, int i, void *data)
     return 0;
 }
 
+#ifdef DEBUG_FREESPACE
 /*-------------------------------------------------------------------*/
 /* Debug routine for checking the free space array                   */
 /*-------------------------------------------------------------------*/
 
 void cckd_chk_space(DEVBLK *dev)
 {
-#if 1
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx;                    /* Shadow file index         */
 int             err = 0, n = 0, i, p;
@@ -1993,8 +2001,8 @@ off_t           fpos;
         }
         cckd_print_itrace();
     }
-#endif
 } /* end function cckd_chk_space */
+#endif // DEBUG_FREESPACE
 
 /*-------------------------------------------------------------------*/
 /* Get file space                                                    */
@@ -2160,7 +2168,7 @@ int             fsize = size;           /* Free space size           */
 
     if (!cckd->free) cckd_read_fsp (dev);
 
-//  cckd_chk_space(dev);
+    CCKD_CHK_SPACE(dev);
 
     /* Scan free space chain */
     ppos = -1;
@@ -2235,7 +2243,7 @@ int             fsize = size;           /* Free space size           */
     if (!pending && (U32)fsize > cckd->cdevhdr[sfx].free_largest)
         cckd->cdevhdr[sfx].free_largest = (U32)fsize;
 
-//  cckd_chk_space(dev);
+    CCKD_CHK_SPACE(dev);
 
 } /* end function cckd_rel_space */
 
@@ -2257,7 +2265,7 @@ U32             ppos, pos;              /* Free space offsets        */
     /* Make sure the free space chain is built */
     if (!cckd->free) cckd_read_fsp (dev);
 
-//  cckd_chk_space(dev);
+    CCKD_CHK_SPACE(dev);
 
     if (cckd->cdevhdr[sfx].free_number == 0 || cckd->cdevhdr[sfx].free == 0)
     {
@@ -2349,7 +2357,7 @@ U32             ppos, pos;              /* Free space offsets        */
 
     } /* Release space at end of the file */
 
-//  cckd_chk_space(dev);
+    CCKD_CHK_SPACE(dev);
 
 } /* end function cckd_flush_space */
 
@@ -3661,7 +3669,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* return if no shadow files */
     if (dev->dasdsfn == NULL) return 0;
 
-#if 1
     /* Check for shadow file name collision */
     for (i = 1; i <= CCKD_MAX_SF && dev->dasdsfn != NULL; i++)
     {
@@ -3684,7 +3691,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             }
         }
     }
-#endif
 
     /* open all existing shadow files */
     for (cckd->sfn = 1; cckd->sfn <= CCKD_MAX_SF; cckd->sfn++)

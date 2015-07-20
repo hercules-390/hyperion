@@ -551,19 +551,11 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
                      mytm->tm_sec,
                      (strlen(lparname)!=0)? lparname: "HERCULES",
                      msgtxt );
-#if defined(OPTION_MSGCLR)
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "<pnl,color(white,black)>", "%s", msgbuf );
-#else
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", msgbuf );
-#endif
+            LOGMSG( "%s", msgbuf );
         }
         else
         {
-#if defined(OPTION_MSGCLR)
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "<pnl,color(white,black)>", "%s\n", msgtxt );
-#else
-            writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s\n", msgtxt );
-#endif
+            LOGMSG( "%s\n", msgtxt );
         }
     }
     return 0;
@@ -648,6 +640,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
             {
                 WRMSG( HHC00069, "I", j > 1 ? "are" : "is",
                     j, j > 1 ? "s" : "" );
+                // "Confirm command by entering %s again within %d seconds"
                 WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
                 time( &sysblk.shutquittime );
             }
@@ -784,6 +777,7 @@ int log_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if ( argc > 2 )
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
@@ -797,8 +791,10 @@ int log_cmd(int argc, char *argv[], char *cmdline)
     else
     {
         if ( strlen( log_dsphrdcpy() ) == 0 )
+            // "Logger: log switched off"
             WRMSG( HHC02106, "I" );
         else
+            // "Logger: log to %s"
             WRMSG( HHC02105, "I", log_dsphrdcpy() );
     }
 
@@ -981,7 +977,10 @@ int rc = 0;
         rc = -1;
     }
     else
-        display_version( stdout, "Hercules", TRUE );
+    {
+        display_version( stdout, 0, "Hercules" );
+        display_build_options( stdout, 0 );
+    }
 
     return rc;
 }
@@ -4357,64 +4356,6 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-#ifdef OPTION_MSGHLD
-/*-------------------------------------------------------------------*/
-/* msghld command - display or set rate at which console refreshes   */
-/*-------------------------------------------------------------------*/
-int msghld_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-
-    if ( CMD(argv[0],kd,2) )
-    {
-        if ( argc != 1 )
-        {
-            WRMSG( HHC02299, "E", argv[0] );
-            return 0;
-        }
-        expire_kept_msgs(TRUE);
-        WRMSG(HHC02226, "I");
-        return 0;
-    }
-    else if ( argc == 2 )
-    {
-        if ( CMD(argv[1],info,4) )
-        {
-            char buf[40];
-            MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
-            WRMSG(HHC02203, "I", "message hold time", buf);
-            return 0;
-        }
-        else if ( CMD(argv[1],clear,5) )
-        {
-            expire_kept_msgs(TRUE);
-            WRMSG(HHC02226, "I");
-            return 0;
-        }
-        else
-        {
-            int new_timeout;
-
-            if ( sscanf(argv[1], "%d", &new_timeout) && new_timeout >= 0 )
-            {
-                char buf[40];
-                sysblk.keep_timeout_secs = new_timeout;
-                MSGBUF( buf, "%d seconds", sysblk.keep_timeout_secs);
-                WRMSG(HHC02204, "I", "message hold time", buf);
-                return 0;
-            }
-            else
-            {
-                WRMSG(HHC02205, "E", argv[1], "");
-                return 0;
-            }
-        }
-    }
-    WRMSG(HHC02202, "E", argv[0] );
-    return 0;
-}
-#endif // OPTION_MSGHLD
-
 /*-------------------------------------------------------------------*/
 /* shell command                                                     */
 /*-------------------------------------------------------------------*/
@@ -6274,7 +6215,7 @@ char buf[4096];
     }
 
     display_subchannel (dev, buf, sizeof(buf), "HHC02268I ");
-    writemsg(__FILE__, __LINE__, __FUNCTION__, 0, MLVL(ANY), "", "%s", buf);
+    LOGMSG( "%s", buf );
 
     return 0;
 }
@@ -7561,6 +7502,7 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
         time( &end );
         if ( difftime( end, sysblk.SSD_time ) > sysblk.quitmout )
         {
+            // "Confirm command by entering %s again within %d seconds"
             WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
             time( &sysblk.SSD_time );
         }
@@ -8014,108 +7956,6 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 #endif // (KEEPALIVE)
 }
 
-#ifdef OPTION_CMDTGT
-/*-------------------------------------------------------------------*/
-/* cmdtgt - Specify the command target                               */
-/*-------------------------------------------------------------------*/
-int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
-{
-  UNREFERENCED(cmdline);
-
-  if (argc == 1)
-  {
-    // "Missing argument(s). Type 'help %s' for assistance."
-    WRMSG(HHC02202, "E", argv[0] );
-    return -1;
-  }
-
-  if (argc == 2)
-  {
-    if      (CMD( argv[1], herc, 4 )) sysblk.cmdtgt = CMDTGT_HERC;
-    else if (CMD( argv[1], scp,  3 )) sysblk.cmdtgt = CMDTGT_SCP;
-    else if (CMD( argv[1], pscp, 4 )) sysblk.cmdtgt = CMDTGT_PSCP;
-    else if (CMD( argv[1], ?,    1 )) /* (query) */
-      ; /* (nop) */
-    else
-    {
-      // "Invalid argument '%s'%s"
-      WRMSG(HHC02205, "I", argv[1], "");
-      return 0;
-    }
-  }
-
-  if (argc > 2)
-  {
-    // "Invalid argument '%s'%s"
-    WRMSG(HHC02205, "I", argv[2], "");
-    return 0;
-  }
-
-  // HHC02288: "Commands are sent to '%s'"
-
-  switch(sysblk.cmdtgt)
-  {
-    case CMDTGT_HERC:   /* Hercules */
-    {
-      WRMSG( HHC02288, "I", "herc" );
-      break;
-    }
-    case CMDTGT_SCP:    /* Guest O/S */
-    {
-      WRMSG( HHC02288, "I", "scp" );
-      break;
-    }
-    case CMDTGT_PSCP:   /* Priority SCP */
-    {
-      WRMSG( HHC02288, "I", "pscp" );
-      break;
-    }
-  }
-  return 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* scp - Send scp command in any mode                                */
-/*-------------------------------------------------------------------*/
-int scp_cmd(int argc, char *argv[], char *cmdline)
-{
-  int rc;
-  UNREFERENCED(argv);
-  if (argc == 1)
-    rc = scp_command(" ", 0, TRUE);          // echo command
-  else
-    rc = scp_command(&cmdline[4], 0, TRUE);  // echo command
-  return rc;
-}
-
-/*-------------------------------------------------------------------*/
-/* pscp - Send a priority message in any mode                        */
-/*-------------------------------------------------------------------*/
-int prioscp_cmd(int argc, char *argv[], char *cmdline)
-{
-  int rc;
-  UNREFERENCED(argv);
-  if (argc == 1)
-    rc = scp_command(" ", 1, TRUE);
-  else
-    rc = scp_command(&cmdline[5], 1, TRUE);
-  return rc;
-}
-
-/*-------------------------------------------------------------------*/
-/* herc - Send a Hercules command in any mode                        */
-/*-------------------------------------------------------------------*/
-int herc_cmd(int argc, char *argv[], char *cmdline)
-{
-  UNREFERENCED(argv);
-  if (argc == 1)
-    HercCmdLine(" ");
-  else
-    HercCmdLine(&cmdline[5]);
-  return 0;
-}
-#endif // OPTION_CMDTGT
-
 /*-------------------------------------------------------------------*/
 /* cache command                                                     */
 /*-------------------------------------------------------------------*/
@@ -8162,11 +8002,11 @@ int cache_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* msglevel command                                                  */
 /*-------------------------------------------------------------------*/
-int msglevel_cmd(int argc, char *argv[], char *cmdline)
+int msglevel_cmd( int argc, char* argv[], char* cmdline )
 {
-    char msgbuf[81];
+    char msgbuf[64] = {0};
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     if ( argc < 1 )
     {
@@ -8176,174 +8016,72 @@ int msglevel_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 1 )
     {
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        int emsg    = sysblk.emsg;
-#endif
-        int msglvl  = sysblk.msglvl;
-        int i;
+        char upperarg[16];
+        int  msglvl = sysblk.msglvl;
+        int  i;
 
-        for ( i=1; i<argc; i++ )
+        for (i=1; i < argc; i++)
         {
-            char check[16];
-            strnupper(check, argv[i], sizeof(check));
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-            if ( strabbrev("ON", check, 2) )
-            {
-                emsg |= EMSG_ON;
-                emsg &= ~EMSG_TEXT;
-                emsg &= ~EMSG_TS;
-            }
-            else if ( strabbrev("OFF", check, 2) )
-            {
-                emsg &= ~EMSG_ON;
-                emsg &= ~EMSG_TEXT;
-                emsg &= ~EMSG_TS;
-            }
-            else if ( strabbrev("TEXT", check, 3) )
-            {
-                emsg |= EMSG_TEXT + EMSG_ON;
-                emsg &= ~EMSG_TS;
-            }
-            else if ( strabbrev("TIMESTAMP", check, 2) )
-            {
-                emsg |= EMSG_TS + EMSG_ON;
-                emsg &= ~EMSG_TEXT;
-            }
-            else
-#endif
-            if ( strabbrev("TERSE", check, 3) || strabbrev("+TERSE", check, 4) || strabbrev("-VERBOSE", check, 2) )
-            {
-                msglvl &= ~MLVL_VERBOSE;
-            }
-            else if ( strabbrev("VERBOSE", check, 1) || strabbrev("+VERBOSE", check, 2) || strabbrev("-TERSE", check, 4) )
-            {
+            strnupper( upperarg, argv[i], sizeof( upperarg ));
+
+            if (0
+                || strabbrev(  "VERBOSE", upperarg, 1 )
+                || strabbrev( "+VERBOSE", upperarg, 2 )
+                || strabbrev( "-TERSE",   upperarg, 2 )
+            )
                 msglvl |= MLVL_VERBOSE;
-            }
-            else if ( strabbrev("NODEBUG", check, 7) || strabbrev("-DEBUG", check, 6) )
-            {
-                msglvl &= ~MLVL_DEBUG;
-            }
-            else if ( strabbrev("DEBUG", check, 5) || strabbrev("+DEBUG", check, 6) )
-            {
+            else
+            if (0
+                || strabbrev(  "TERSE",   upperarg, 1 )
+                || strabbrev( "+TERSE",   upperarg, 2 )
+                || strabbrev( "-VERBOSE", upperarg, 2 )
+            )
+                msglvl &= ~MLVL_VERBOSE;
+            else
+            if (0
+                || strabbrev(    "DEBUG", upperarg, 1 )
+                || strabbrev(   "+DEBUG", upperarg, 2 )
+                || strabbrev( "-NODEBUG", upperarg, 2 )
+            )
                 msglvl |= MLVL_DEBUG;
-            }
-            else if ( strabbrev("NOTHREADS", check, 5) || strabbrev("-THREADS", check, 4) )
-            {
-                msglvl &= ~MLVL_THREADS;
-            }
-            else if ( strabbrev("THREADS", check, 3) || strabbrev("+THREADS", check, 4) )
-            {
-                msglvl |= MLVL_THREADS;
-            }
-            else if ( strabbrev("NOCHANNEL", check, 6) || strabbrev("-CHANNEL", check, 5) )
-            {
-                msglvl &= ~MLVL_CHANNEL;
-            }
-            else if ( strabbrev("CHANNEL", check, 4) || strabbrev("+CHANNEL", check, 5) )
-            {
-                msglvl |= MLVL_CHANNEL;
-            }
-            else if ( strabbrev("NOSCSI", check, 6) || strabbrev("-SCSI", check, 5) )
-            {
-                msglvl &= ~MLVL_SCSI;
-            }
-            else if ( strabbrev("SCSI", check, 4) || strabbrev("+SCSI", check, 5) )
-            {
-                msglvl |= MLVL_TAPE;
-            }
-            else if ( strabbrev("NOGRAF", check, 6) || strabbrev("-GRAF", check, 5) )
-            {
-                msglvl &= ~MLVL_GRAF;
-            }
-            else if ( strabbrev("GRAF", check, 4) || strabbrev("+GRAF", check, 5) )
-            {
-                msglvl |= MLVL_GRAF;
-            }
-            else if ( strabbrev("NOCTCA", check, 6) || strabbrev("-CTCA", check, 5) )
-            {
-                msglvl &= ~MLVL_CTCA;
-            }
-            else if ( strabbrev("CTCA", check, 4) || strabbrev("+CTCA", check, 5) )
-            {
-                msglvl |= MLVL_CTCA;
-            }
-            else if ( strabbrev("NOTAPE", check, 6) || strabbrev("-TAPE", check, 5) )
-            {
-                msglvl &= ~MLVL_TAPE;
-            }
-            else if ( strabbrev("TAPE", check, 4) || strabbrev("+TAPE", check, 5) )
-            {
-                msglvl |= MLVL_TAPE;
-            }
-            else if ( strabbrev("NODASD", check, 6) || strabbrev("-DASD", check, 5) )
-            {
-                msglvl &= ~MLVL_DASD;
-            }
-            else if ( strabbrev("DASD", check, 4) || strabbrev("+DASD", check, 5) )
-            {
-                msglvl |= MLVL_DASD;
-            }
-            else if ( strabbrev("NOUR", check, 4) || strabbrev("-UR", check, 3) )
-            {
-                msglvl &= ~MLVL_UR;
-            }
-            else if ( strabbrev("UR", check, 2) || strabbrev("+UR", check, 3) )
-            {
-                msglvl |= MLVL_UR;
-            }
-            else if ( strabbrev("NOCOMM", check, 6) || strabbrev("-COMM", check, 5) )
-            {
-                msglvl &= ~MLVL_COMM;
-            }
-            else if ( strabbrev("COMM", check, 4) || strabbrev("+COMM", check, 5) )
-            {
-                msglvl |= MLVL_COMM;
-            }
+            else
+            if (0
+                || strabbrev(  "NODEBUG", upperarg, 1 )
+                || strabbrev( "+NODEBUG", upperarg, 1 )
+                || strabbrev(   "-DEBUG", upperarg, 2 )
+            )
+                msglvl &= ~MLVL_DEBUG;
+            else
+            if (0
+                || strabbrev(    "EMSGLOC", upperarg, 1 )
+                || strabbrev(   "+EMSGLOC", upperarg, 2 )
+                || strabbrev( "-NOEMSGLOC", upperarg, 2 )
+            )
+                msglvl |= MLVL_EMSGLOC;
+            else
+            if (0
+                || strabbrev(  "NOEMSGLOC", upperarg, 1 )
+                || strabbrev( "+NOEMSGLOC", upperarg, 2 )
+                || strabbrev(   "-EMSGLOC", upperarg, 2 )
+            )
+                msglvl &= ~MLVL_EMSGLOC;
             else
             {
                 WRMSG( HHC02205, "E", argv[i], "" );
                 return -1;
             }
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-        sysblk.emsg = emsg;
-#endif
-        sysblk.msglvl = msglvl;
+            sysblk.msglvl = msglvl;
         }
     }
 
-    msgbuf[0] = 0x00;
+    if (MLVL( VERBOSE )) strlcat( msgbuf, " verbose",   sizeof( msgbuf ));
+    else                 strlcat( msgbuf, " terse",     sizeof( msgbuf ));
+    if (MLVL( DEBUG   )) strlcat( msgbuf, " debug",     sizeof( msgbuf ));
+    else                 strlcat( msgbuf, " nodebug",   sizeof( msgbuf ));
+    if (MLVL( EMSGLOC )) strlcat( msgbuf, " emsgloc",   sizeof( msgbuf ));
+    else                 strlcat( msgbuf, " noemsgloc", sizeof( msgbuf ));
 
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-    if ( sysblk.emsg & EMSG_TS )
-        strlcat(msgbuf, "timestamp ",sizeof(msgbuf));
-
-    if ( sysblk.emsg & EMSG_TEXT )
-        strlcat(msgbuf, "text ",sizeof(msgbuf));
-    else if ( sysblk.emsg & EMSG_ON )
-        strlcat(msgbuf, "on ",sizeof(msgbuf));
-#endif
-
-    if (MLVL( VERBOSE )) strlcat( msgbuf, "verbose ", sizeof( msgbuf ));
-    else                 strlcat( msgbuf, "terse ",   sizeof( msgbuf ));
-    if (MLVL( DEBUG   )) strlcat( msgbuf, "debug ",   sizeof( msgbuf ));
-    else                 strlcat( msgbuf, "nodebug ", sizeof( msgbuf ));
-    if (MLVL( TAPE    )) strlcat( msgbuf, "tape ",    sizeof( msgbuf ));
-    if (MLVL( DASD    )) strlcat( msgbuf, "dasd ",    sizeof( msgbuf ));
-    if (MLVL( UR      )) strlcat( msgbuf, "ur ",      sizeof( msgbuf ));
-    if (MLVL( COMM    )) strlcat( msgbuf, "comm ",    sizeof( msgbuf ));
-    if (MLVL( CTCA    )) strlcat( msgbuf, "ctca ",    sizeof( msgbuf ));
-    if (MLVL( GRAF    )) strlcat( msgbuf, "graf ",    sizeof( msgbuf ));
-    if (MLVL( SCSI    )) strlcat( msgbuf, "scsi ",    sizeof( msgbuf ));
-    if (MLVL( THREADS )) strlcat( msgbuf, "threads ", sizeof( msgbuf ));
-    if (MLVL( CHANNEL )) strlcat( msgbuf, "channel ", sizeof( msgbuf ));
-
-    if ( strlen(msgbuf) > 0 && msgbuf[(int)strlen(msgbuf) - 1] == ' ' )
-        msgbuf[(int)strlen(msgbuf) - 1] = '\0';
-
-    if ( strlen(msgbuf) == 0 )
-        WRMSG( HHC17012, "I", "off" );
-    else
-        WRMSG( HHC17012, "I", msgbuf );
+    WRMSG( HHC17012, "I", &msgbuf[1] );
 
     return 0;
 }

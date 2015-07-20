@@ -104,9 +104,7 @@ static void convert_ckd (int lfs, IFD ifd, char *ifname, int itrklen,
 /*-------------------------------------------------------------------*/
 int main ( int argc, char *argv[] )
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 IFD             ifd;                    /* Input file descriptor     */
 int             repl = 0;               /* 1=replace existing file   */
 int             quiet = 0;              /* 1=suppress progress msgs  */
@@ -120,40 +118,8 @@ char            ifname[256];            /* Input file name           */
 char            ofname[256];            /* Output file name          */
 BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 int             lfs = 0;                /* 1 = Build large file      */
-char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgm );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD CKD image conversion" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "DASD CKD image conversion", &pgm );
 
     /* Process the options in the argument list */
     for (; argc > 1; argc--, argv++)
@@ -201,7 +167,8 @@ char           *strtok_str = NULL;
     case 0x3390: heads = 15; maxdlen = 56664; break;
     case 0x9345: heads = 15; maxdlen = 46456; break;
     default:
-        fprintf (stderr, MSG(HHC02416, "E", devtype));
+        // "Unknown device type %04X"
+        FWRMSG( stderr, HHC02416, "E", devtype );
         EXIT(3);
     } /* end switch(devtype) */
 
@@ -214,7 +181,8 @@ char           *strtok_str = NULL;
     IFCLOS (ifd);
 
     /* Display completion message */
-    fprintf (stderr, MSG(HHC02423, "I"));
+    // "DASD operation completed"
+    WRMSG( HHC02423, "I" );
 
     return 0;
 
@@ -238,11 +206,12 @@ static void delayed_exit (int exit_code)
 static void
 argexit ( int code, char *pgm )
 {
+    // "Usage: %s ...
     if (sizeof(off_t) > 4)
-        fprintf( stderr, MSG(HHC02410, "I", pgm,
-                "\n            -lfs   build one large output file"));
+        WRMSG( HHC02410, "I", pgm,
+                "\n            -lfs   build one large output file" );
     else
-        fprintf( stderr, MSG(HHC02410, "I", pgm, "" ));
+        WRMSG( HHC02410, "I", pgm, "" );
 
     EXIT(code);
 } /* end function argexit */
@@ -271,10 +240,11 @@ int     len = 0;                        /* Number of bytes read      */
         if (rc == 0) break;
         if (rc < 0)
         {
+            // "Error in function %s: %s"
 #if defined(HAVE_LIBZ)
-            fprintf (stderr, MSG(HHC02412, "E", "gzread()", strerror(errno)));
+            FWRMSG( stderr, HHC02412, "E", "gzread()", strerror( errno ));
 #else
-            fprintf (stderr, MSG(HHC02412, "E", "read()", strerror(errno)));
+            FWRMSG( stderr, HHC02412, "E", "read()", strerror( errno ));
 #endif
             EXIT(3);
         }
@@ -283,10 +253,11 @@ int     len = 0;                        /* Number of bytes read      */
 
     if (len < reqlen)
     {
+        // "Error in function %s: %s"
 #if defined(HAVE_LIBZ)
-        fprintf (stderr, MSG(HHC02412, "E", "gzread()", "unexpected end of file"));
+        FWRMSG( stderr, HHC02412, "E", "gzread()", "unexpected end of file" );
 #else
-        fprintf (stderr, MSG(HHC02412, "E", "read()", "unexpected end of file"));
+        FWRMSG( stderr, HHC02412, "E", "read()", "unexpected end of file" );
 #endif
         EXIT(3);
     }
@@ -436,7 +407,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     if (ifd == NULL)
     {
-        fprintf (stderr, MSG(HHC02412, "E", "gzopen()", strerror(errno)));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", "gzopen()", strerror( errno ));
         EXIT(3);
     }
   #else /*!defined(HAVE_LIBZ)*/
@@ -448,7 +420,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
         if (ifd < 0)
         {
-            fprintf (stderr, MSG(HHC02412, "E", "open()", strerror(errno)));
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC02412, "E", "open()", strerror( errno ));
             EXIT(3);
         }
     }
@@ -462,7 +435,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Reject input if compressed and we lack gzip support */
     if (memcmp(h30trkhdr.devcode, gz_magic_id, sizeof(gz_magic_id)) == 0)
     {
-        fprintf (stderr, MSG(HHC02413, "E"));
+        // "Dasdconv is compiled without compress support and input is compressed"
+        FWRMSG( stderr, HHC02413, "E" );
         EXIT(3);
     }
   #endif /*!defined(HAVE_LIBZ)*/
@@ -470,7 +444,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Reject input if it is already in CKD or CCKD format */
     if (memcmp((BYTE*)&h30trkhdr, ckd_ident, sizeof(ckd_ident)) == 0)
     {
-        fprintf (stderr, MSG(HHC02414, "I"));
+        // "Input file is already in CKD format, use dasdcopy"
+        WRMSG( HHC02414, "I" );
         EXIT(3);
     }
 
@@ -496,7 +471,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     case 0x14: dt=0x9345; cyls=1454; alts=14; break;    /* 9345-1    */
     case 0x15: dt=0x9345; cyls=2170; alts=14; break;    /* 9345-2    */
     default:
-        fprintf (stderr, MSG(HHC02415, "E", code));
+        // "Unknown device type %04X at offset 00000000 in input file"
+        FWRMSG( stderr, HHC02415, "E", code );
         EXIT(3);
     } /* end switch(code) */
 
@@ -511,7 +487,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     case 0x3390: itrklen = 0xE400; break;
     case 0x9345: itrklen = 0xBC00; break;
     default:
-        fprintf (stderr, MSG(HHC02416, "E", dt));
+        // "Unknown device type %04X"
+        FWRMSG( stderr, HHC02416, "E", dt );
         EXIT(3);
     } /* end switch(dt) */
 
@@ -521,7 +498,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         char buf[40];
         MSGBUF( buf, "malloc(%u)", itrklen);
-        fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", buf, strerror( errno ));
         EXIT(3);
     }
 
@@ -640,7 +618,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     if (ofd < 0)
     {
-        fprintf (stderr, MSG(HHC02412, "E", "open()", strerror(errno)));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", "open()", strerror( errno ));
         EXIT(8);
     }
 
@@ -664,7 +643,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = write (ofd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc < CKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, MSG(HHC02412, "E", "write()", errno ? strerror(errno) : "incomplete"));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", "write()", errno ? strerror(errno) : "incomplete" );
         EXIT(1);
     }
 
@@ -674,11 +654,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Display progress message every 10 cylinders */
         if ((cyl % 10) == 0)
         {
-#ifdef EXTERNALGUI
-            if (extgui)
-                fprintf (stderr, "CYL=%u\n", cyl);
-            else
-#endif /*EXTERNALGUI*/
+            EXTGUIMSG( "CYL=%u\n", cyl );
             if (quiet == 0)
                 fprintf (stderr, "Writing cylinder %u\r", cyl);
         }
@@ -703,9 +679,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             FETCH_HW (ihh, ith->head);
             if (ihc != cyl || ihh != head)
             {
-                fprintf (stderr, MSG(HHC02417, "E", offset));
-                fprintf (stderr, MSG(HHC02418, "E",
-                        cyl, head, ihc, ihh));
+                // "Invalid track header at offset %08X"
+                FWRMSG( stderr, HHC02417, "E", offset );
+                // "Expected CCHH %04X%04X, found CCHH %04X%04X"
+                FWRMSG( stderr, HHC02418, "E", cyl, head, ihc, ihh );
                 EXIT(8);
             }
 
@@ -735,9 +712,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 /* Error if invalid record header detected */
                 if (rc > 1)
                 {
-                    fprintf (stderr, MSG(HHC02419, "E",
+                    // "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset %08X in file %s"
+                    FWRMSG( stderr, HHC02419, "E",
                             rc, (unsigned int)(iptr-itrkbuf), cyl, head,
-                            offset, ifname));
+                            offset, ifname );
                     EXIT(9);
                 }
 
@@ -771,8 +749,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             rc = write (ofd, obuf, trksize);
             if (rc < 0 || (U32)rc < trksize)
             {
-                fprintf (stderr, MSG(HHC02412, "E", "write()",
-                        errno ? strerror(errno) : "incomplete"));
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC02412, "E", "write()",
+                        errno ? strerror(errno) : "incomplete" );
                 EXIT(1);
             }
 
@@ -784,13 +763,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = close (ofd);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC02412, "E", "close()", strerror(errno)));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", "close()", strerror( errno ));
         EXIT(10);
     }
 
     /* Display completion message */
-    fprintf (stderr, MSG(HHC02420, "I",
-            cyl - start, ofname));
+    // "%u cylinders succesfully written to file %s"
+    WRMSG( HHC02420, "I", cyl - start, ofname );
 
 } /* end function convert_ckd_file */
 
@@ -861,8 +841,9 @@ U32             trksize;                /* AWSCKD image track length */
     /* Check for valid number of cylinders */
     if (volcyls < mincyls || volcyls > maxcyls)
     {
-        fprintf (stderr, MSG(HHC02421, "E",
-                volcyls, mincyls, maxcyls));
+        // "Cylinder count %u is outside range %u-%u"
+        FWRMSG( stderr, HHC02421, "E",
+                volcyls, mincyls, maxcyls );
         EXIT(4);
     }
 
@@ -872,17 +853,16 @@ U32             trksize;                /* AWSCKD image track length */
     {
         char buf[40];
         MSGBUF( buf, "malloc(%u)", trksize);
-        fprintf (stderr, MSG(HHC02412, "E", buf, strerror(errno)));
+        // "Error in function %s: %s"
+        FWRMSG( stderr, HHC02412, "E", buf, strerror( errno ));
         EXIT(6);
     }
 
     /* Display progress message */
-    fprintf (stderr, MSG(HHC02422, "I",
-            devtype, volser, volcyls, heads, trksize));
-#ifdef EXTERNALGUI
-    if (extgui)
-        fprintf (stderr, "CYLS=%u\n", volcyls);
-#endif /*EXTERNALGUI*/
+    // "Converting %04X volume %s: %u cyls, %u trks/cyl, %u bytes/trk"
+    WRMSG( HHC02422, "I", devtype, volser, volcyls, heads, trksize );
+
+    EXTGUIMSG( "CYLS=%u\n", volcyls );
 
     /* Copy the unsuffixed AWSCKD image file name */
     strcpy (sfname, ofname);

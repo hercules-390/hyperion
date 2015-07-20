@@ -37,7 +37,7 @@
 #define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 #define FBA_BLKS_PER_GRP        120     /* Blocks per group          */
 
-int syntax (char *);
+int syntax( const char* pgm );
 void status (int, int);
 int nulltrk(BYTE *, int, int, int);
 
@@ -54,7 +54,6 @@ int nulltrk(BYTE *, int, int, int);
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
 int             ckddasd=-1;             /* 1=CKD  0=FBA              */
 int             rc;                     /* Return code               */
@@ -75,40 +74,11 @@ CKDDEV         *ckd=NULL;               /* -> CKD device table entry */
 FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
-char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, "DASD copy/convert", &pgm );
 
     if (strcasecmp(pgm, "ckd2cckd") == 0)
     {
@@ -135,15 +105,9 @@ char           *strtok_str = NULL;
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if (argv[0][0] != '-') break;
-        if (strcmp(argv[0], "-v") == 0)
+        if (strcmp(argv[0], "-h") == 0)
         {
-            MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "DASD copy/convert" ) );
-            display_version (stderr, msgbuf+10, FALSE);
-            return 0;
-        }
-        else if (strcmp(argv[0], "-h") == 0)
-        {
-            syntax(pgm);
+            syntax( pgm );
             return 0;
         }
         else if (strcmp(argv[0], "-q") == 0
@@ -165,14 +129,14 @@ char           *strtok_str = NULL;
                || strcmp(argv[0], "-cyls") == 0) && cyls < 0)
         {
             if (argc < 2 || (cyls = atoi(argv[1])) < 0)
-                return syntax(pgm);
+                return syntax( pgm );
             argc--; argv++;
         }
         else if ((strcmp(argv[0], "-blk") == 0
                || strcmp(argv[0], "-blks") == 0) && blks < 0)
         {
             if (argc < 2 || (blks = atoi(argv[1])) < 0)
-                return syntax(pgm);
+                return syntax( pgm );
             argc--; argv++;
         }
         else if (strcmp(argv[0], "-a") == 0
@@ -183,7 +147,7 @@ char           *strtok_str = NULL;
             lfs = 1;
         else if (out == 0 && strcmp(argv[0], "-o") == 0)
         {
-            if (argc < 2 || out != 0) return syntax(pgm);
+            if (argc < 2 || out != 0) return syntax( pgm );
             if (strcasecmp(argv[1], "ckd") == 0)
                 out = CKD;
             else if (strcasecmp(argv[1], "cckd") == 0)
@@ -193,23 +157,23 @@ char           *strtok_str = NULL;
             else if (strcasecmp(argv[1], "cfba") == 0)
                 out = CFBA;
             else
-                return syntax(pgm);
+                return syntax( pgm );
             argc--; argv++;
         }
         else
-            return syntax(pgm);
+            return syntax( pgm );
     }
 
     /* Get the file names:
        input-file [sf=shadow-file] output-file   */
-    if (argc < 2 || argc > 3) return syntax(pgm);
+    if (argc < 2 || argc > 3) return syntax( pgm );
     ifile = argv[0];
     if (argc < 3)
         ofile = argv[1];
     else
     {
         if (strlen(argv[1]) < 4 || memcmp(argv[1], "sf=", 3))
-            return syntax(pgm);
+            return syntax( pgm );
         sfile = argv[1];
         ofile = argv[2];
     }
@@ -222,13 +186,15 @@ char           *strtok_str = NULL;
         fd = HOPEN (pathname, O_RDONLY|O_BINARY);
         if (fd < 0)
         {
-            fprintf (stderr, MSG(HHC02412, "E", "open()", strerror(errno)));
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC02412, "E", "open()", strerror(errno) );
             return -1;
         }
         rc = read (fd, buf, 8);
         if (rc < 8)
         {
-            fprintf (stderr, MSG(HHC02412, "E", "read()", strerror(errno)));
+            // "Error in function %s: %s"
+            FWRMSG( stderr, HHC02412, "E", "read()", strerror(errno) );
             return -1;
         }
         if (memcmp(buf, "CKD_P370", 8) == 0)
@@ -271,14 +237,14 @@ char           *strtok_str = NULL;
 #endif
 
     /* Perform sanity checks on the options */
-    if ((in & CKDMASK) && !(out & CKDMASK)) return syntax(pgm);
-    if ((in & FBAMASK) && !(out & FBAMASK)) return syntax(pgm);
-    if (sfile && !(in & COMPMASK))          return syntax(pgm);
-    if (comp != 255 && !(out & COMPMASK))   return syntax(pgm);
-    if (lfs && (out & COMPMASK))            return syntax(pgm);
-    if (cyls >= 0 && !(in & CKDMASK))       return syntax(pgm);
-    if (blks >= 0 && !(in & FBAMASK))       return syntax(pgm);
-    if (!(in & CKDMASK) && alt)             return syntax(pgm);
+    if ((in & CKDMASK) && !(out & CKDMASK)) return syntax( pgm );
+    if ((in & FBAMASK) && !(out & FBAMASK)) return syntax( pgm );
+    if (sfile && !(in & COMPMASK))          return syntax( pgm );
+    if (comp != 255 && !(out & COMPMASK))   return syntax( pgm );
+    if (lfs && (out & COMPMASK))            return syntax( pgm );
+    if (cyls >= 0 && !(in & CKDMASK))       return syntax( pgm );
+    if (blks >= 0 && !(in & FBAMASK))       return syntax( pgm );
+    if (!(in & CKDMASK) && alt)             return syntax( pgm );
 
     /* Set the type of processing (ckd or fba) */
     ckddasd = (in & CKDMASK);
@@ -290,7 +256,8 @@ char           *strtok_str = NULL;
         icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
     if (icif == NULL)
     {
-        fprintf (stderr, MSG(HHC02403, "E", ifile));
+        // "Failed opening %s"
+        FWRMSG( stderr, HHC02403, "E", ifile );
         return -1;
     }
     idev = &icif->devblk;
@@ -304,8 +271,9 @@ char           *strtok_str = NULL;
         ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, 0);
         if (ckd == NULL)
         {
-            fprintf (stderr, MSG(HHC02430, "E",
-                     idev->devtype, cyls));
+            // "CKD lookup failed: device type %04X cyls %d"
+            FWRMSG( stderr, HHC02430, "E",
+                     idev->devtype, cyls );
             close_image_file (icif);
             return -1;
         }
@@ -322,7 +290,8 @@ char           *strtok_str = NULL;
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, 0);
         if (fba == NULL)
         {
-            fprintf (stderr, MSG(HHC02431, "E", blks));
+            // "FBA lookup failed: blks %d"
+            FWRMSG( stderr, HHC02431, "E", blks );
             close_image_file (icif);
             return -1;
         }
@@ -343,7 +312,8 @@ char           *strtok_str = NULL;
                         blks, "", comp, lfs, 1+r, 0);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC02432, "E", ofile));
+        // "Failed creating %s"
+        FWRMSG( stderr, HHC02432, "E", ofile );
         close_image_file (icif);
         return -1;
     }
@@ -355,20 +325,24 @@ char           *strtok_str = NULL;
         ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, IMAGE_OPEN_DASDCOPY);
     if (ocif == NULL)
     {
-        fprintf (stderr, MSG(HHC02403, "E", ofile));
+        // "Failed opening %s"
+        FWRMSG( stderr, HHC02403, "E", ofile );
         close_image_file (icif);
         return -1;
     }
     odev = &ocif->devblk;
 
+    /* Notify GUI of total #of tracks or blocks being copied... */
+    EXTGUIMSG( "TRKS=%d\n", n );
+
     /* Copy the files */
-#ifdef EXTERNALGUI
-    if (extgui)
-        /* Notify GUI of total #of tracks or blocks being copied... */
-        fprintf (stderr, "TRKS=%d\n", n);
-    else
-#endif /*EXTERNALGUI*/
-    if (!quiet) printf ("  %3d%% %7d of %d", 0, 0, n);
+
+#if defined( EXTERNALGUI )
+    if (!extgui)
+#endif
+        if (!quiet)
+            printf ( "  %3d%% %7d of %d", 0, 0, n );
+
     for (i = 0; i < n; i++)
     {
         /* Read a track or block */
@@ -392,16 +366,20 @@ char           *strtok_str = NULL;
         }
         if (rc < 0)
         {
-            fprintf (stderr, MSG(HHC02433, "E",
+            // "Read error on file %s: %s %d stat=%2.2X, null %s substituted"
+            FWRMSG( stderr, HHC02433, "E",
                      ifile, ckddasd ? "track" : "block", i, unitstat,
-                     ckddasd ? "track" : "block"));
+                     ckddasd ? "track" : "block" );
             if (ckddasd)
                 nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             else
                 memset (idev->buf, 0, FBA_BLKGRP_SIZE);
             if (!quiet)
             {
-                printf (_("  %3d%% %7d of %d"), 0, 0, n);
+#if defined( EXTERNALGUI )
+                if (!extgui)
+#endif
+                    printf ( "  %3d%% %7d of %d", 0, 0, n );
                 status (i, n);
             }
         }
@@ -430,8 +408,9 @@ char           *strtok_str = NULL;
         }
         if (rc < 0)
         {
-            fprintf (stderr, MSG(HHC02434, "E",
-                     ofile, ckddasd ? "track" : "block", i, unitstat));
+            // "Write error on file %s: %s %d stat=%2.2X"
+            FWRMSG( stderr, HHC02434, "E",
+                     ofile, ckddasd ? "track" : "block", i, unitstat );
             close_image_file(icif); close_image_file(ocif);
             return -1;
         }
@@ -441,8 +420,15 @@ char           *strtok_str = NULL;
     }
 
     close_image_file(icif); close_image_file(ocif);
-    if (!quiet) printf (_("\r"));
-    printf (MSG(HHC02423, "I"));
+
+#if defined( EXTERNALGUI )
+    if (!extgui)
+#endif
+        if (!quiet)
+            printf (_("\r"));
+
+    // "DASD operation completed"
+    WRMSG( HHC02423, "I" );
     return 0;
 }
 
@@ -524,7 +510,7 @@ BYTE           *pos;                    /* -> Next position in buffer*/
 /*-------------------------------------------------------------------*/
 /* Display command syntax                                            */
 /*-------------------------------------------------------------------*/
-int syntax (char *pgm)
+int syntax( const char* pgm )
 {
     char usage[8192];
     char buflfs[64];
@@ -543,20 +529,28 @@ int syntax (char *pgm)
             (sizeof(off_t) > 4) ?
                 "            -lfs   create single large output file\n" : "",
             sizeof( buflfs));
-    MSGBUF( usage, MSG_C( HHC02499, "I", pgm, "DASD copy/convert" ) );
-    display_version (stderr, usage+10, FALSE);
 
     if (strcasecmp(pgm, "ckd2cckd") == 0)
+        // "Usage: ckd2cckd ...
         MSGBUF( usage ,MSG( HHC02435, "I", bufz, bufbz ) );
+
     else if (strcasecmp(pgm, "cckd2ckd") == 0)
+        // "Usage: cckd2ckd ...
         MSGBUF( usage ,MSG( HHC02436, "I", buflfs ) );
+
     else if (strcasecmp(pgm, "fba2cfba") == 0)
+        // "Usage: fba2cfba ...
         MSGBUF( usage ,MSG( HHC02437, "I", bufz, bufbz ) );
+
     else if (strcasecmp(pgm, "cfba2fba") == 0)
+        // "Usage: cfba2fba ...
         MSGBUF( usage ,MSG( HHC02438, "I", buflfs ) );
+
     else
+        // "Usage: %s ...
         MSGBUF( usage ,MSG( HHC02439, "I", pgm, bufz, bufbz, buflfs ) );
-    printf ("%s", usage);
+
+    fprintf( stdout, "%s", usage );
     return -1;
 } /* end function syntax */
 
@@ -565,16 +559,21 @@ int syntax (char *pgm)
 /*-------------------------------------------------------------------*/
 void status (int i, int n)
 {
-static char indic[] = "|/-\\";
-
 #ifdef EXTERNALGUI
     if (extgui)
     {
-        if (i % 100) return;
-        fprintf (stderr, "TRK=%d\n", i);
+        UNREFERENCED( n );
+        if (i % 100)
+            return;
+        EXTGUIMSG( "TRK=%d\n", i );
         return;
     }
+    else
 #endif /*EXTERNALGUI*/
-//  if (i % 101 != 1) return;
-    printf ("\r%c %3d%% %7d", indic[i%4], (int)((i*100.0)/n), i);
+    {
+        static char indic[] = "|/-\\";
+//      if (i % 101 != 1)
+//          return;
+        printf ("\r%c %3d%% %7d", indic[i%4], (int)((i*100.0)/n), i);
+    }
 } /* end function status */

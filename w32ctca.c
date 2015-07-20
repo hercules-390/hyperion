@@ -111,11 +111,21 @@ error:
 
 void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    // Remove all trailing whitespace to conform to Hercules logmsg format.
-    char* p = strdup( debug_string );
-    char* nl = p + strlen( p );
-    while (--nl > p && isspace(*nl)) *nl = 0;
-    WRMSG ( HHC90000, "D", p );
+    char *p,  *p2;
+    char *nl, *nl2;
+
+    // Write each line separately so it looks nice
+    for (p2 = p = strdup( debug_string );
+        *p2 && (nl2 = nl = strchr( p2, '\n' )); p2 = nl+1)
+    {
+        // Remove trailing whitespace to conform to Hercules logmsg format.
+        for (; nl2 >= p2 && isspace(*nl2); --nl2)
+            *nl2 = 0;
+        if (*p2)
+            // "DBG: %s"
+            WRMSG ( HHC90000, "D", p2 );
+    }
+
     free(p);
 }
 
@@ -370,55 +380,55 @@ int  display_tt32_stats( int fd )
     {
         // New version 3.3 stats
 
-        WRMSG (HHC04101, "I"
-            ,g_tt32_dllname
+        // "%s Statistics:"
+        WRMSG( HHC04101, "I", g_tt32_dllname );
 
-            ,(stats.dwKernelBuffSize   + 1023) / 1024
-            ,(stats.dwReadBuffSize     + 1023) / 1024
-            ,(stats.dwMaxBytesReceived + 1023) / 1024
+        // "          %s%5luK"
+        WRMSG( HHC04103, "I", "Size of Kernel Hold Buffer:      ", (stats.dwKernelBuffSize   + 1023) / 1024 );
+        WRMSG( HHC04103, "I", "Size of DLL I/O Buffer:          ", (stats.dwReadBuffSize     + 1023) / 1024 );
+        WRMSG( HHC04103, "I", "Maximum DLL I/O Bytes Received:  ", (stats.dwMaxBytesReceived + 1023) / 1024 );
 
-            ,stats.n64WriteCalls
-            ,stats.n64WriteIOs
-            ,stats.n64ZeroMACPacketsWritten
-            ,stats.n64PacketsWritten
-            ,stats.n64BytesWritten
-
-            ,stats.n64ReadCalls
-            ,stats.n64ReadIOs
-            ,stats.n64InternalPackets
-            ,stats.n64OwnPacketsIgnored
-            ,stats.n64IgnoredPackets
-            ,stats.n64ZeroMACPacketsRead
-            ,stats.n64PacketsRead
-            ,stats.n64BytesRead
-        );
+        // "          %12" I64_FMT "d  %s"
+        WRMSG( HHC04104, "I", stats.n64WriteCalls,             "Total Write Calls" );
+        WRMSG( HHC04104, "I", stats.n64WriteIOs,               "Total Write I/Os" );
+        WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsWritten,  "Packets To All Zeroes MAC Written" );
+        WRMSG( HHC04104, "I", stats.n64PacketsWritten,         "Total Packets Written" );
+        WRMSG( HHC04104, "I", stats.n64BytesWritten,           "Total Bytes Written" );
+        WRMSG( HHC04104, "I", stats.n64ReadCalls,              "Total Read Calls" );
+        WRMSG( HHC04104, "I", stats.n64ReadIOs,                "Total Read I/Os" );
+        WRMSG( HHC04104, "I", stats.n64InternalPackets,        "Internally Handled ARP Packets" );
+        WRMSG( HHC04104, "I", stats.n64OwnPacketsIgnored,      "Packets From Ourself" );
+        WRMSG( HHC04104, "I", stats.n64IgnoredPackets,         "Total Ignored Packets" );
+        WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsRead,     "Packets To All Zeroes MAC Read" );
+        WRMSG( HHC04104, "I", stats.n64PacketsRead,            "Total Packets Read" );
+        WRMSG( HHC04104, "I", stats.n64BytesRead,              "Total Bytes Read" );
     }
     else
     {
         // Old pre version 3.3 stats
 
-        WRMSG (HHC04101, "I"
-            ,g_tt32_dllname
+        // "%s Statistics:"
+        WRMSG( HHC04101, "I", g_tt32_dllname );
 
-            ,(stats.dwKernelBuffSize   + 1023) / 1024
-            ,(stats.dwReadBuffSize     + 1023) / 1024
-            ,(stats.dwMaxBytesReceived + 1023) / 1024
+        // "  %s%5luK"
+        WRMSG( HHC04103, "I", "Size of Kernel Hold Buffer:      ", (stats.dwKernelBuffSize   + 1023) / 1024 );
+        WRMSG( HHC04103, "I", "Size of DLL I/O Buffer:          ", (stats.dwReadBuffSize     + 1023) / 1024 );
+        WRMSG( HHC04103, "I", "Maximum DLL I/O Bytes Received:  ", (stats.dwMaxBytesReceived + 1023) / 1024 );
 
-            ,stats.n64WriteCalls
-            ,stats.n64WriteIOs
-            ,-1                         // indicate n/a
-            ,stats.n64PacketsWritten
-            ,stats.n64BytesWritten
-
-            ,stats.n64ReadCalls
-            ,stats.n64ReadIOs
-            ,stats.n64InternalPackets
-            ,-1                         // indicate n/a
-            ,stats.n64IgnoredPackets
-            ,-1                         // indicate n/a
-            ,stats.n64PacketsRead
-            ,stats.n64BytesRead
-        );
+        // "  %12" I64_FMT "d  %s"
+        WRMSG( HHC04104, "I", stats.n64WriteCalls,             "Total Write Calls" );
+        WRMSG( HHC04104, "I", stats.n64WriteIOs,               "Total Write I/Os" );
+//      WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsWritten,  "Packets To All Zeroes MAC Written" );
+        WRMSG( HHC04104, "I", stats.n64PacketsWritten,         "Total Packets Written" );
+        WRMSG( HHC04104, "I", stats.n64BytesWritten,           "Total Bytes Written" );
+        WRMSG( HHC04104, "I", stats.n64ReadCalls,              "Total Read Calls" );
+        WRMSG( HHC04104, "I", stats.n64ReadIOs,                "Total Read I/Os" );
+        WRMSG( HHC04104, "I", stats.n64InternalPackets,        "Internally Handled ARP Packets" );
+//      WRMSG( HHC04104, "I", stats.n64OwnPacketsIgnored,      "Packets From Ourself" );
+        WRMSG( HHC04104, "I", stats.n64IgnoredPackets,         "Total Ignored Packets" );
+//      WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsRead,     "Packets To All Zeroes MAC Read" );
+        WRMSG( HHC04104, "I", stats.n64PacketsRead,            "Total Packets Read" );
+        WRMSG( HHC04104, "I", stats.n64BytesRead,              "Total Bytes Read" );
     }
 
     return 0;

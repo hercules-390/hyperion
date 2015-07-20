@@ -41,9 +41,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
 char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i=0;                    /* Arument index             */
 U16             len;                    /* Record length             */
@@ -59,46 +57,13 @@ DSXTENT         extent[16];             /* Extent descriptor array   */
 BYTE           *blkptr;                 /* -> PDS directory block    */
 BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
-char           *strtok_str = NULL;
 
-
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "PDS unload" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME,  "PDS unload", &pgm );
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)
     {
-        fprintf( stderr, MSG( HHC02463, "I", pgm, " pdsname [ascii]" ) );
+        FWRMSG( stderr, HHC02463, "I", pgm, " pdsname [ascii]" );
         return -1;
     }
 
@@ -124,8 +89,8 @@ char           *strtok_str = NULL;
             asciiflag = 1;
         else
         {
-            fprintf( stderr, MSG( HHC02465, "E", argv[3+i] ) );
-            fprintf( stderr, MSG( HHC02463, "I", argv[0], " pdsname [ascii]" ) );
+            FWRMSG( stderr, HHC02465, "E", argv[3+i] );
+            FWRMSG( stderr, HHC02463, "I", argv[0], " pdsname [ascii]" );
             return -1;
         }
     }
@@ -159,7 +124,7 @@ char           *strtok_str = NULL;
             trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
         }
 
-        fprintf(stderr,"ETRK=%d\n",trks-1);
+        EXTGUIMSG( "ETRK=%d\n", trks-1 );
     }
 #endif /*EXTERNALGUI*/
 
@@ -170,16 +135,14 @@ char           *strtok_str = NULL;
     /* Read the directory */
     while (1)
     {
-#ifdef EXTERNALGUI
-        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
-#endif /*EXTERNALGUI*/
+        EXTGUIMSG( "CTRK=%d\n", trk );
 
         /* Convert relative track to cylinder and head */
         rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
         if (rc < 0) return -1;
 
         /* Read a directory block */
-        fprintf (stderr, MSG( HHC02466, "I", cyl, head, rec ) );
+        WRMSG( HHC02466, "I", cyl, head, rec );
 
         rc = read_block (cif, cyl, head, rec,
                         NULL, NULL, &blkptr, &len);
@@ -209,7 +172,7 @@ char           *strtok_str = NULL;
 
     } /* end while */
 
-    fprintf (stderr, MSG( HHC02467, "I" ) );
+    WRMSG( HHC02467, "I" );
 
     /* Close the CKD image file and exit */
     rc = close_ckd_image (cif);
@@ -256,7 +219,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     ofp = fopen (pathname, (asciiflag? "w" : "wb"));
     if (ofp == NULL)
     {
-        fprintf (stderr, MSG( HHC02468, "E", ofname, "fopen", strerror(errno) ) );
+        FWRMSG( stderr, HHC02468, "E", ofname, "fopen", strerror( errno ));
         return -1;
     }
 
@@ -264,7 +227,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     trk = (ttr[0] << 8) | ttr[1];
     rec = ttr[2];
 
-    fprintf (stderr, MSG( HHC02469, "I", memname, trk, rec ) );
+    WRMSG( HHC02469, "I", memname, trk, rec );
 
     /* Read the member */
     while (1)
@@ -295,7 +258,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
         /* Check length of data block */
         if (len % 80 != 0)
         {
-            fprintf (stderr, MSG( HHC02470, "E", len, cyl, head, rec ) );
+            FWRMSG( stderr, HHC02470, "E", len, cyl, head, rec );
             return -1;
         }
 
@@ -314,8 +277,8 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 
             if (ferror(ofp))
             {
-                fprintf (stderr, MSG( HHC02468, "E",
-                                      ofname, "fwrite", strerror(errno) ) );
+                FWRMSG( stderr, HHC02468, "E",
+                    ofname, "fwrite", strerror( errno ));
                 return -1;
             }
         } /* end for(offset) */
@@ -357,7 +320,7 @@ char            memname[9];             /* Member name (ASCIIZ)      */
     dirrem = (dirptr[0] << 8) | dirptr[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        fprintf (stderr, MSG( HHC02400, "E" ) );
+        FWRMSG( stderr, HHC02400, "E" );
         return -1;
     }
 

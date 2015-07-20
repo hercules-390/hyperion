@@ -22,6 +22,7 @@
 #include "scsitape.h"
 
 #define UTILITY_NAME    "tapecopy"
+char* pgm;
 
 /*-------------------------------------------------------------------*/
 /* (if no SCSI tape support generated, do nothing)                   */
@@ -32,7 +33,8 @@ int main (int argc, char *argv[])
 {
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    printf( MSG( HHC02700, "I" ) );
+    // "SCSI tapes are not supported with this build"
+    FWRMSG( stderr, HHC02700, "E" );
     return 0;
 }
 #else
@@ -125,7 +127,8 @@ char           *filenameout;            /* -> Output AWS file name   */
 static void delayed_exit (int exit_code)
 {
     if (RC_SUCCESS != exit_code)
-        printf( MSG( HHC02701, "E" ) );
+        // "Abnormal termination"
+        FWRMSG( stderr, HHC02701, "E" );
 
     /* Delay exiting is to give the system
      * time to display the error message. */
@@ -139,89 +142,87 @@ static void delayed_exit (int exit_code)
 /*-------------------------------------------------------------------*/
 static void print_status (char *devname, long stat)
 {
-    char msgbuf[256];
-
-    MSGBUF( msgbuf, MSG( HHC02702, "I", devname, stat,
-        (GMT_EOF    ( stat )) ? " EOF" : "",
-        (GMT_BOT    ( stat )) ? " BOT" : "",
-        (GMT_EOT    ( stat )) ? " EOT" : "",
+    // "Tape %s: Status %8.8lX%s%s%s%s%s%s%s%s%s%s%s"
+    WRMSG( HHC02702, "I", devname, stat,
+        (GMT_EOF    ( stat )) ? " EOF"     : "",
+        (GMT_BOT    ( stat )) ? " BOT"     : "",
+        (GMT_EOT    ( stat )) ? " EOT"     : "",
         (GMT_SM     ( stat )) ? " SETMARK" : "",
-        (GMT_EOD    ( stat )) ? " EOD" : "",
-        (GMT_WR_PROT( stat )) ? " WRPROT" : "",
-        (GMT_ONLINE ( stat )) ? " ONLINE" : "",
-        (GMT_D_6250 ( stat )) ? " 6250" : "",
-        (GMT_D_1600 ( stat )) ? " 1600" : "",
-        (GMT_D_800  ( stat )) ? " 800" : "",
-        (GMT_DR_OPEN( stat )) ? " NOTAPE" : "" ) );
-
-    printf ("%s", msgbuf);
+        (GMT_EOD    ( stat )) ? " EOD"     : "",
+        (GMT_WR_PROT( stat )) ? " WRPROT"  : "",
+        (GMT_ONLINE ( stat )) ? " ONLINE"  : "",
+        (GMT_D_6250 ( stat )) ? " 6250"    : "",
+        (GMT_D_1600 ( stat )) ? " 1600"    : "",
+        (GMT_D_800  ( stat )) ? " 800"     : "",
+        (GMT_DR_OPEN( stat )) ? " NOTAPE"  : ""  );
 
 } /* end function print_status */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to print usage message                                 */
 /*-------------------------------------------------------------------*/
-static void print_usage (void)
+static int print_usage()
 {
-    printf
-    ( _(
-        "\n"
+    char usage[4096];
+
+#if defined( _MSVC_ )
+    char* devname = "/dev\" or \"\\\\.\\Tape";
+#else
+    char* devname = "/dev";
+#endif
+
+    MSGBUF( usage,
+
 //       1...5...10...15...20...25...30...35...40...45...50...55...60...65...70...75...80
-        "Copies a SCSI tape to or from an AWSTAPE disk file.\n\n"
-
-        "Tapecopy reads a SCSI tape and outputs an AWSTAPE file representation\n"
-        "of the tape, or else reads an AWSTAPE file and creates an identical copy\n"
-        "of its contents on a tape mounted on a SCSI tape drive.\n\n"
-
         "Usage:\n\n"
 
-        "   tapecopy  [tapedrive] [awsfile] or\n"
-        "   tapecopy  [awsfile] [tapedrive]\n\n"
+        "   %s  [tapedrive] [awsfile] or\n"
+        "   %s  [awsfile] [tapedrive]\n\n"
 
         "Where:\n\n"
 
         "   tapedrive    specifies the device filename of the SCSI tape drive.\n"
-        "                Must begin with /dev%s to be recognized.\n"
-        "   awsfile      specifies the filename of the AWSTAPE disk file.\n\n"
+        "                Must begin with \"%s\" to be recognized.\n"
+        "   awsfile      specifies the filename of the AWS emulated tape file.\n\n"
 
         "The first filename is the input; the second is the output.\n\n"
 
         "If the input file is a SCSI tape, it is read and processed until physical EOD\n"
         "(end-of-data) is reached (i.e. it does not stop whenever multiple tapemarks or\n"
         "filemarks are read; it continues processing until the SCSI tape drive says\n"
-        "there is no more data on the tape). The resulting AWSTAPE output disk file,\n"
+        "there is no more data on the tape). The resulting AWS eumulated tape O/P file,\n"
         "when specified for the filename on a Hercules tape device configuration\n"
         "statement, can then be used instead in order for the Hercules guest O/S to\n"
         "read the exact same data without having to have a SCSI tape drive physically\n"
         "attached to the host system. This allows you to easily transfer SCSI tape data\n"
-        "to other systems that may not have SCSI tape drives attached to them.\n\n"
+        "to other systems that may not have SCSI tape drives attached to them by simply\n"
+        "using the AWS emulated tape file instead, or allows systems without SCSI tape\n"
+        "drives to create tape output (in the form of an AWS tape file) which can then\n"
+        "be copied to a SCSI tape (via %s) by a system which DOES have one.\n\n"
 
         "The possible return codes and their meaning are:\n\n"
 
         "   %2d           Successful completion.\n"
         "   %2d           Invalid arguments or no arguments given.\n"
         "   %2d           Unable to open SCSI tape drive device file.\n"
-        "   %2d           Unable to open AWSTAPE disk file.\n"
+        "   %2d           Unable to open AWS emulated tape file.\n"
         "   %2d           Unrecoverable I/O error setting variable length block\n"
         "                processing for SCSI tape device.\n"
         "   %2d           Unrecoverable I/O error rewinding SCSI tape device.\n"
         "   %2d           Unrecoverable I/O error obtaining status of SCSI device.\n"
         "   %2d           Unrecoverable I/O error reading block header\n"
-        "                from AWSTAPE disk file.\n"
+        "                from AWS emulated tape file.\n"
         "   %2d           Unrecoverable I/O error reading data block.\n"
-        "   %2d           AWSTAPE block size too large.\n"
+        "   %2d           AWS emulated tape block size too large.\n"
         "   %2d           Unrecoverable I/O error writing tapemark.\n"
         "   %2d           Unrecoverable I/O error writing block header\n"
-        "                to AWSTAPE disk file.\n"
+        "                to AWS emulated tape file.\n"
         "   %2d           Unrecoverable I/O error writing data block.\n"
-        "\n"
-        )
 
-#if defined(_MSVC_)
-        ," or \\\\.\\Tape"
-#else
-        ,""
-#endif
+        ,pgm
+        ,pgm
+        ,devname
+        ,pgm
         ,RC_SUCCESS
         ,RC_ERROR_BAD_ARGUMENTS
         ,RC_ERROR_OPENING_SCSI_DEVICE
@@ -239,6 +240,10 @@ static void print_usage (void)
 
         ,RC_ERROR_WRITING_DATA
     );
+
+    WRMSG( HHC02760, "I", usage );
+
+    return RC_ERROR_BAD_ARGUMENTS;
 
 } /* end function print_usage */
 
@@ -265,7 +270,8 @@ int rc;                                 /* Return code               */
         )
             return +1;
 
-        printf ( MSG( HHC02703, "E", devname, rc, errno, strerror(errno) ) );
+        // "Tape %s: Error reading status: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02703, "E", devname, rc, errno, strerror( errno ));
         return -1;
     }
 
@@ -293,11 +299,13 @@ int read_scsi_tape (int devfd, void *buf, size_t bufsize, struct mtget* mtget)
         rc = obtain_status (devnamein, devfd, mtget);
         if (rc == +1)
         {
-            printf ( MSG( HHC02704, "I" ) );
+            // "End of tape"
+            WRMSG( HHC02704, "I" );
             errno = save_errno;
             return(-1);
         }
-        printf ( MSG( HHC02705, "E", devnamein, errno, strerror(errno) ) );
+        // "Tape %s: Error reading tape: errno=%d: %s"
+        FWRMSG( stderr, HHC02705, "E", devnamein, errno, strerror( errno ));
         EXIT( RC_ERROR_READING_DATA );
     }
 
@@ -322,12 +330,15 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         rc = read (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
         if (rc == 0)
         {
-            printf ( MSG( HHC02706, "I", filenamein, "AWSTAPE" ) );
+            // "File %s: End of %s input"
+            WRMSG( HHC02706, "I", filenamein, "AWS emulated tape" );
             return (-1);
         }
         if (rc < (int)sizeof(AWSTAPE_BLKHDR))
         {
-            printf ( MSG( HHC02707, "E", filenamein, "AWSTAPE", rc, errno, strerror(errno) ) );
+            // "File %s: Error reading %s header: rc=%d, errno=%d: %s"
+            FWRMSG( stderr, HHC02707, "E", filenamein, "AWS eumulated tape file",
+                rc, errno, strerror( errno ));
             EXIT( RC_ERROR_READING_AWS_HEADER );
         } /* end if(rc) */
 
@@ -342,7 +353,9 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         /* Check maximum block length */
         if ((count_read + blksize) > bufsize)
         {
-            printf ( MSG( HHC02708, "E", filenamein, "AWSTAPE", count_read+blksize, (int)bufsize) );
+            // "File %s: Block too large for %s tape: block size=%d, maximum=%d"
+            FWRMSG( stderr, HHC02708, "E", filenamein, "AWS emulated",
+                count_read+blksize, (int)bufsize );
             EXIT( RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE );
         } /* end if(count) */
 
@@ -350,7 +363,9 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         rc = read (diskfd, bufptr, blksize);
         if (rc < (int)blksize)
         {
-            printf ( MSG( HHC02709, "E", filenamein, "AWSTAPE", rc, errno, strerror(errno) ) );
+            // "File %s: Error reading %s data block: rc=%d, errno=%d: %s"
+            FWRMSG( stderr, HHC02709, "E", filenamein, "AWS emulated tape",
+                rc, errno, strerror( errno ));
             EXIT( RC_ERROR_READING_DATA );
         } /* end if(rc) */
 
@@ -374,7 +389,9 @@ int write_scsi_tape (int devfd, void *buf, size_t len)
     rc = write_tape (devfd, buf, len);
     if (rc < (int)len)
     {
-        printf ( MSG( HHC02710, "E", devnameout, rc, errno, strerror(errno) ) );
+        // "Tape %s: Error writing data block: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02710, "E", devnameout,
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
@@ -389,7 +406,7 @@ int write_scsi_tape (int devfd, void *buf, size_t len)
 /*-------------------------------------------------------------------*/
 int write_aws_disk (int diskfd, void *buf, size_t len)
 {
-    AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+    AWSTAPE_BLKHDR  awshdr;             /* AWSTAPE block header      */
     int             rc;
 
     /* Build the block header */
@@ -407,7 +424,9 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
     rc = write (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        printf ( MSG( HHC02711, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
+        // "File %s: Error writing %s header: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02711, "E", filenameout, "AWS emulated tape file",
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK );
     } /* end if(rc) */
 
@@ -421,7 +440,9 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
 #endif
     if (rc < (int)len)
     {
-        printf ( MSG( HHC02712, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
+        // "File %s: Error writing %s data block: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02712, "E", filenameout, "AWS emulated tape",
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
@@ -435,7 +456,7 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
 /*-------------------------------------------------------------------*/
 int write_tapemark_scsi_tape (int devfd)
 {
-    struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
+    struct mtop     opblk;              /* Area for MTIOCTOP ioctl   */
     int             rc;
 
     opblk.mt_op = MTWEOF;
@@ -443,7 +464,9 @@ int write_tapemark_scsi_tape (int devfd)
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf ( MSG( HHC02713, "E", devnameout, rc, errno, strerror(errno) ) );
+        // "Tape %s: Error writing tapemark: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02713, "E", devnameout,
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_WRITING_TAPEMARK );
     }
     return(rc);
@@ -455,7 +478,7 @@ int write_tapemark_scsi_tape (int devfd)
 /*-------------------------------------------------------------------*/
 int write_tapemark_aws_disk (int diskfd)
 {
-    AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+    AWSTAPE_BLKHDR  awshdr;             /* AWSTAPE block header      */
     int             rc;
 
     /* Build block header for tape mark */
@@ -470,8 +493,10 @@ int write_tapemark_aws_disk (int diskfd)
     rc = write (diskfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        printf ( MSG( HHC02714, "E", filenameout, "AWSTAPE", rc, errno, strerror(errno) ) );
-       EXIT( RC_ERROR_WRITING_TAPEMARK );
+        // "File %s: Error writing %s tapemark: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02714, "E", filenameout, "AWS emulated",
+            rc, errno, strerror( errno ));
+        EXIT( RC_ERROR_WRITING_TAPEMARK );
     } /* end if(rc) */
 
     bytes_written += rc;
@@ -483,9 +508,6 @@ int write_tapemark_aws_disk (int diskfd)
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-char           *pgmname;                /* prog name in host format  */
-char           *pgm;                    /* less any extension (.ext) */
-char            msgbuf[512];            /* message build work area   */
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             devfd;                  /* Tape file descriptor      */
@@ -502,55 +524,18 @@ int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
 char            pathname[MAX_PATH];     /* file name in host format  */
 struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
-char           *strtok_str = NULL;
-
-#if defined(EXTERNALGUI)
+#if defined( EXTERNALGUI )
 struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 #endif /*defined(EXTERNALGUI)*/
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "tape copy" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "copy SCSI tape to/from AWS tape file", &pgm );
 
     /* The first argument is the input file name
        (either AWS disk file or SCSI tape device)
     */
     if ((argc < 2) || (argv[1] == NULL))
-    {
-        print_usage();
-        EXIT( RC_ERROR_BAD_ARGUMENTS );
-        UNREACHABLE_CODE();
-    }
+        EXIT( print_usage());
 
     if (0
         || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "/dev/",   5 ) == 0 )
@@ -592,17 +577,11 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         }
     }
     else
-    {
-        print_usage();
-        EXIT( RC_ERROR_BAD_ARGUMENTS );
-    }
+        EXIT( print_usage());
 
     /* Check input arguments and disallow tape-to-tape or disk-to-disk copy */
     if ((!devnamein && !devnameout) || (!filenamein && !filenameout))
-    {
-        print_usage();
-        EXIT( RC_ERROR_BAD_ARGUMENTS );
-    }
+        EXIT( print_usage());
 
     /* Open the SCSI tape device */
     if (devnamein)
@@ -617,7 +596,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     }
     if (devfd < 0)
     {
-        printf ( MSG( HHC02715, "E", (devnamein ? devnamein : devnameout), errno, strerror(errno) ) );
+        // "Tape %s: Error opening: errno=%d: %s"
+        FWRMSG( stderr, HHC02715, "E", (devnamein ? devnamein : devnameout),
+            errno, strerror( errno ));
         EXIT( RC_ERROR_OPENING_SCSI_DEVICE );
     }
 
@@ -629,7 +610,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf ( MSG( HHC02716, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
+        // "Tape %s: Error setting attributes: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02716, "E", (devnamein ? devnamein : devnameout),
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
     }
 
@@ -641,7 +624,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf ( MSG( HHC02717, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
+        // "Tape %s: Error rewinding: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02717, "E", (devnamein ? devnamein : devnameout),
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
@@ -664,7 +649,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         else
             MSGBUF( msgbuf, " code: 0x%lX", mtget.mt_type);
 
-        printf ( MSG( HHC02718, "I", (devnamein ? devnamein : devnameout), msgbuf ) );
+        // "Tape %s: Device type%s"
+        WRMSG( HHC02718, "I", (devnamein ? devnamein : devnameout), msgbuf );
     }
 
     density = (mtget.mt_dsreg & MT_ST_DENSITY_MASK)
@@ -681,7 +667,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         else
             MSGBUF( msgbuf, " code: 0x%lX", density );
 
-        printf ( MSG( HHC02719, "I", (devnamein ? devnamein : devnameout), msgbuf ) );
+        // "Tape %s: Device density%s"
+        WRMSG( HHC02719, "I", (devnamein ? devnamein : devnameout), msgbuf );
     }
 
     if (mtget.mt_gstat != 0)
@@ -701,7 +688,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     }
     if (diskfd < 0)
     {
-        printf ( MSG( HHC02720, "E", (filenamein ? filenamein : filenameout), errno, strerror(errno) ) );
+        // "File %s: Error opening: errno=%d: %s"
+        FWRMSG( stderr, HHC02720, "E", (filenamein ? filenamein : filenameout),
+            errno, strerror( errno ));
         EXIT( RC_ERROR_OPENING_AWS_FILE );
     }
 
@@ -729,7 +718,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         {
             // The seg# portion the SCSI tape physical
             // block-id number values ranges from 1 to 95...
-            fprintf( stderr, "BLKS=%d\n", 95 );
+            EXTGUIMSG( "BLKS=%d\n", 95 );
         }
         else
         {
@@ -739,7 +728,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             // presume the last block on the tape is block# 0x003FFFFF
             // (just to keep things simple).
 
-            fprintf( stderr, "BLKS=%d\n", 0x003FFFFF );
+            EXTGUIMSG( "BLKS=%d\n", 0x003FFFFF );
         }
 
         // Init time of last issued progress message
@@ -762,9 +751,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
                 if ( ioctl_tape( devfd, MTIOCPOS, (char*)&mtpos ) == 0 )
                 {
                     if (!is3590)
-                        fprintf( stderr, "BLK=%ld\n", (mtpos.mt_blkno >> 24) & 0x0000007F );
+                        EXTGUIMSG( "BLK=%ld\n", (mtpos.mt_blkno >> 24) & 0x0000007F );
                     else
-                        fprintf( stderr, "BLK=%ld\n", mtpos.mt_blkno );
+                        EXTGUIMSG( "BLK=%ld\n", mtpos.mt_blkno );
                 }
             }
         }
@@ -798,7 +787,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             {
                 ASSERT( file_bytes ); // (sanity check)
 
-                printf ( MSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount ) );
+                // "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+                WRMSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount );
             }
             else
             {
@@ -807,8 +797,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
             /* Show the 'tapemark' AFTER the above file summary since
                that's the actual physical sequence of events; i.e. the
-               file data came first THEN it was followed by a tapemark */
-            printf(_("          (tapemark)\n"));  // (align past HHCmsg#)
+               file data came first THEN it was followed by a tapemark
+            */
+            WRMSG( HHC02731, "I" );     // "(tapemark)"
 
             /* Reset counters for next file */
             if (blkcount)
@@ -843,7 +834,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             for (i=0; i < 80; i++)
                 labelrec[i] = guest_to_host(buf[i]);
             labelrec[i] = '\0';
-            printf ( MSG( HHC02722, "I", labelrec ) );
+            // "Tape Label: %s"
+            WRMSG( HHC02722, "I", labelrec );
         }
         else
         {
@@ -852,7 +844,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 #if defined(EXTERNALGUI)
             if ( !extgui )
 #endif
-                printf( MSG_C( HHC02723, "I", fileno, blkcount ) );
+                // "File No. %u: Block %u"
+                WRMSG( HHC02723, "I", fileno, blkcount );
                 printf("\r");
         }
 
@@ -866,17 +859,21 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     /* Print run totals, close files, and exit... */
 
-    printf
-    (
-        MSG( HHC02724, "I"
-        ,           bytes_read
-        ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
-        ,totalblks
-        ,totalblks ? (int)bytes_read/totalblks : -1
-        ,           bytes_written
-        ,(double) ( bytes_written + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
-        )
-    );
+    // "Successful completion"
+    WRMSG( HHC02724, "I" );
+
+    // "Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u"
+    WRMSG( HHC02732, "I",
+        bytes_read,
+        (double) (bytes_read + HALF_MEGABYTE) / (double) ONE_MEGABYTE,
+        totalblks,
+        totalblks ? (int) bytes_read/totalblks : -1 );
+
+    // "Bytes written: %"I64_FMT"d (%3.1f MB)"
+    WRMSG( HHC02733, "I",
+        bytes_written,
+        (double) (bytes_written + HALF_MEGABYTE) / (double) ONE_MEGABYTE );
+
     close (diskfd);
 
     /* Rewind the tape back to the beginning again before exiting */
@@ -888,7 +885,9 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     if (rc < 0)
     {
-        printf ( MSG( HHC02717, "E", (devnamein ? devnamein : devnameout), rc, errno, strerror(errno) ) );
+        // "Tape %s: Error rewinding: rc=%d, errno=%d: %s"
+        FWRMSG( stderr, HHC02717, "E", (devnamein ? devnamein : devnameout),
+            rc, errno, strerror( errno ));
         EXIT( RC_ERROR_REWINDING_SCSI );
     }
 

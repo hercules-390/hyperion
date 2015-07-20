@@ -274,4 +274,12 @@ HUT_DLL_IMPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz );
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT char *fmt_memsize_rounded( const U64 memsize, char* buf, const size_t bufsz );
 
+/*-------------------------------------------------------------------*/
+/* Standard Utility Initialization                                   */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int initialize_utility( int argc, char* argv[],
+                                       char*  defpgm,
+                                       char*  desc,
+                                       char** pgm );
+
 #endif /* __HSCUTL_H__ */

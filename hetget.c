@@ -198,11 +198,8 @@ merge( SLLABEL *lab )
     /*
     || Print DCB attributes
     */
-    printf( "DCB Attributes used:\n" );
-    printf( "  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d\n",
-        valfm[ i ].recfm,
-        opts.lrecl,
-        opts.blksize );
+    // "DCB Attributes used:  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d"
+    WRMSG( HHC02761, "I", valfm[ i ].recfm, opts.lrecl, opts.blksize );
 
     return;
 }
@@ -393,10 +390,11 @@ get_sl( SLLABEL *lab )
     }
     else
     {
+        // "Error in function %s: %s"
         if ( opts.faketape )
-            WRMSG( HHC00075, "E", "fet_read()", fet_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "fet_read()", fet_error( rc ) );
         else
-            WRMSG( HHC00075, "E", "het_read()", het_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "het_read()", het_error( rc ) );
     }
 
     return( -1 );
@@ -442,7 +440,8 @@ getfile( FILE *outf )
                 MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'",
                     opts.faketape ? "f" : "h",
                     opts.fileno );
-                WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
         }
@@ -455,7 +454,8 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_isvol( &lab, 1 ) )
         {
-            WRMSG( HHC02753, "E", "VOL1" );
+            // "%s label missing"
+            FWRMSG( stderr, HHC02753, "E", "VOL1" );
             return( -1 );
         }
 
@@ -482,7 +482,8 @@ getfile( FILE *outf )
                 MSGBUF( msgbuf, "%set_fsf() while positioning to file '%d'",
                     opts.faketape ? "f" : "h",
                     opts.fileno );
-                WRMSG( HHC00075, "E", msgbuf, het_error( rc ) );
+                // "Error in function %s: %s"
+                FWRMSG( stderr, HHC00075, "E", msgbuf, het_error( rc ) );
                 return( rc );
             }
         }
@@ -493,7 +494,8 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 1 ) )
         {
-            WRMSG( HHC02753, "E", "HDR1" );
+            // "%s label missing"
+            FWRMSG( stderr, HHC02753, "E", "HDR1" );
             return( -1 );
         }
 
@@ -501,7 +503,8 @@ getfile( FILE *outf )
         || Make the label more managable
         */
         sl_fmtlab( &fmt, &lab );
-        WRMSG( HHC02754, "E", fmt.slds1.dsid );
+        // "File Info:  DSN=%-17.17s"
+        WRMSG( HHC02754, "I", fmt.slds1.dsid );
 
         /*
         || Get the HDR2 label.
@@ -509,7 +512,8 @@ getfile( FILE *outf )
         rc = get_sl( &lab );
         if( rc < 0 || !sl_ishdr( &lab, 2 ) )
         {
-            WRMSG( HHC02753, "E", "HDR2" );
+            // "%s label missing"
+            FWRMSG( stderr, HHC02753, "E", "HDR2" );
             return( -1 );
         }
 
@@ -527,10 +531,11 @@ getfile( FILE *outf )
             rc = het_fsf( opts.hetb );
         if( rc < 0 )
         {
+            // "Error in function %s: %s"
             if ( opts.faketape )
-                WRMSG( HHC00075, "E", "fet_fsf()", fet_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "fet_fsf()", fet_error( rc ) );
             else
-                WRMSG( HHC00075, "E", "het_fsf()", het_error( rc ) );
+                FWRMSG( stderr, HHC00075, "E", "het_fsf()", het_error( rc ) );
             return( rc );
         }
     }
@@ -557,7 +562,7 @@ getfile( FILE *outf )
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%" I64_FMT "d\n", (U64)curpos );
+                    EXTGUIMSG( "IPOS=%" I64_FMT "d\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -627,7 +632,7 @@ getfile( FILE *outf )
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%" I64_FMT "d\n", (U64)curpos );
+                    EXTGUIMSG( "IPOS=%" I64_FMT "d\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -645,9 +650,10 @@ getfile( FILE *outf )
 || Prints usage information
 */
 void
-usage( char *name )
+usage( char *pgm )
 {
-    printf( MSG( HHC02728, "I", name ) );
+    // "Usage: %s ...
+    WRMSG( HHC02728, "I", pgm );
 }
 
 /*
@@ -656,47 +662,13 @@ usage( char *name )
 int
 main( int argc, char *argv[] )
 {
-    char           *pgmname;                /* prog name in host format  */
     char           *pgm;                    /* less any extension (.ext) */
-    char            msgbuf[512];            /* message build work area   */
     FILE           *outf;
     int             rc;
     int             i;
     char            pathname[MAX_PATH];
-    char           *strtok_str = NULL;
 
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            pgmname = strdup( UTILITY_NAME );
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy( path, argv[0], sizeof( path ) );
-#endif
-            pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy( path, argv[0], sizeof(path) );
-#endif
-        }
-    }
-    else
-    {
-        pgmname = strdup( UTILITY_NAME );
-    }
-
-    pgm = strtok_r( strdup(pgmname), ".", &strtok_str);
-    INITIALIZE_UTILITY( pgmname );
-
-    /* Display the program identification message */
-    MSGBUF( msgbuf, MSG_C( HHC02499, "I", pgm, "Extract Files from AWS, HET or FAKETAPE" ) );
-    display_version (stderr, msgbuf+10, FALSE);
+    INITIALIZE_UTILITY( UTILITY_NAME, "Extract Files from AWS, HET or FAKETAPE", &pgm );
 
     /*
     || Process option switches
@@ -751,7 +723,8 @@ main( int argc, char *argv[] )
     if(argc < 3)
     {
         if ( argc > 1 )
-            WRMSG( HHC02446, "E" );
+            // "Invalid number of arguments"
+            FWRMSG( stderr, HHC02446, "E" );
         usage( pgm );
         exit( 1 );
     }
@@ -774,7 +747,8 @@ main( int argc, char *argv[] )
     {
         char msgbuf[20];
         MSGBUF( msgbuf, "%d", opts.fileno );
-        WRMSG( HHC02205, "E", msgbuf, "; file number must be within the range of 1 to 9999" );
+        // "Invalid argument %s%s"
+        FWRMSG( stderr, HHC02205, "S", msgbuf, "; file number must be within the range of 1 to 9999" );
         exit( 1 );
     }
 
@@ -785,7 +759,8 @@ main( int argc, char *argv[] )
     {
         if( argc != 6 )
         {
-            WRMSG( HHC02750, "E" );
+            // "DCB attributes required for NL tape"
+            FWRMSG( stderr, HHC02750, "S" );
             exit( 1 );
         }
     }
@@ -830,6 +805,7 @@ main( int argc, char *argv[] )
             /*
             || Dump out the valid RECFMs
             */
+            // "Valid record formats are:"
             MSGBUF( msgbuf, MSG( HHC02751, "I" ) );
             for( i = 0 ; i < (int)VALFMCNT ; i++ )
             {
@@ -838,6 +814,7 @@ main( int argc, char *argv[] )
                 if( ( ( i + 1 ) % 3 ) == 0 )
                 {
                     strlcat( msgbuf2, msgbuf3, sizeof(msgbuf2) );
+                    // "%s"
                     MSGBUF( msgbuf4, MSG( HHC02752, "I", msgbuf2 ) );
                     strlcat( msgbuf, msgbuf4, sizeof(msgbuf) );
                     msgbuf2[0] = 0;
@@ -862,7 +839,8 @@ main( int argc, char *argv[] )
         opts.blksize = atoi( argv[ optind + 5 ] );
         if( opts.blksize == 0 )
         {
-            WRMSG( HHC02205, "E", "0", "; block size can't be zero" );
+            // "Invalid argument %s%s"
+            FWRMSG( stderr, HHC02205, "S", "0", "; block size can't be zero" );
             exit( 1 );
         }
     }
@@ -907,10 +885,11 @@ main( int argc, char *argv[] )
     }
     else
     {
+        // "Error in function %s: %s"
         if ( opts.faketape )
-            WRMSG( HHC00075, "E", "fet_open()", fet_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "fet_open()", fet_error( rc ) );
         else
-            WRMSG( HHC00075, "E", "het_open()", het_error( rc ) );
+            FWRMSG( stderr, HHC00075, "E", "het_open()", het_error( rc ) );
     }
 
     /*

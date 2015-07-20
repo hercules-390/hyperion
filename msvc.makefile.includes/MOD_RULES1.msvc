@@ -38,9 +38,6 @@ $(O)decNumber.res: decNumber\decNumber.rc
 $(O)getopt.obj: getopt.c
     $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" getopt.c
 
-$(O)herclin.obj: herclin.c
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" herclin.c
-
 $(O)SoftFloat.obj: SoftFloat.c
     $(cc) $(cdebug) $(cflags)             /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" SoftFloat.c
 

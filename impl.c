@@ -33,14 +33,14 @@
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
 
-static LOGCALLBACK  log_callback=NULL;
+static LOGCALLBACK  log_callback = NULL;
 
 /*-------------------------------------------------------------------*/
 /* Register a LOG callback                                           */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void registerLogCallback(LOGCALLBACK lcb)
+DLL_EXPORT void registerLogCallback( LOGCALLBACK cb )
 {
-    log_callback=lcb;
+    log_callback = cb;
 }
 
 /*-------------------------------------------------------------------*/
@@ -262,24 +262,26 @@ int i;
 }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-void *log_do_callback(void *dummy)
+void* log_do_callback( void* dummy )
 {
-    char *msgbuf;
-    int msgcnt = -1,msgnum;
-    UNREFERENCED(dummy);
-    while(msgcnt)
-    {
-        if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
-        {
-            log_callback(msgbuf,msgcnt);
-        }
-    }
-    return(NULL);
+    char* msgbuf;
+    int   msglen;
+    int   msgidx = -1;
+
+    UNREFERENCED( dummy );
+
+    while ((msglen = log_read( &msgbuf, &msgidx, LOG_BLOCK )))
+        log_callback( msgbuf, msglen );
+
+    /* Let them know logger thread has ended */
+    log_callback( NULL, 0 );
+
+    return (NULL);
 }
 
-DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
+DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 {
-    return(panel_command);
+    return (panel_command);
 }
 
 /*-------------------------------------------------------------------*/
@@ -332,18 +334,8 @@ char    pathname[MAX_PATH];             /* (work)                    */
 DLL_EXPORT int impl(int argc, char *argv[])
 {
 char   *cfgfile;                        /* -> Configuration filename */
-char    pathname[MAX_PATH];             /* work area for filenames   */
-#if defined ( OPTION_LOCK_CONFIG_FILE )
-int     fd_cfg = -1;                    /* fd for config file        */
-#if !defined ( _MSVC_ )
-struct  flock  fl_cfg;                  /* file lock for conf file   */
-#endif
-#endif
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
-char   *msgbuf;                         /*                           */
-int     msgnum;                         /*                           */
-int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 int     rc;
@@ -501,11 +493,6 @@ int     dll_count;                      /* index into array          */
     /* default for system dasd cache is on */
     sysblk.dasdcache = TRUE;
 
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-    /* set default error message display (emsg) */
-    sysblk.emsg = EMSG_ON;
-#endif
-
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* set default quit timeout value (also ssd) */
     sysblk.quitmout = QUITTIME_PERIOD;
@@ -599,11 +586,6 @@ int     dll_count;                      /* index into array          */
     sysblk.shrdport = 0;
 #endif
 
-#ifdef OPTION_MSGHLD
-    /* Set the default timeout value */
-    sysblk.keep_timeout_secs = 120;
-#endif
-
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     /* setup defaults for CONFIG symbols  */
     {
@@ -640,10 +622,6 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
-#if defined(OPTION_CMDSER)
-    initialize_lock      (&sysblk.cmdlock);
-    initialize_condition (&sysblk.cmdcond);
-#endif /*defined(OPTION_CMDSER)*/
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     /* Initialize the wrapping key registers lock */
@@ -702,7 +680,8 @@ int     dll_count;                      /* index into array          */
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version (stdout, "Hercules", TRUE);
+    display_version       ( stdout, 0, "Hercules" );
+    display_build_options ( stdout, 0 );
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -1100,42 +1079,6 @@ int     dll_count;                      /* index into array          */
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-    if(cfgfile)
-    {
-        /* attempt to get lock on config file */
-        hostpath(pathname, cfgfile, sizeof(pathname));
-
-#if defined( OPTION_LOCK_CONFIG_FILE )
-
-        /* Test that we can get a read the file */
-
-        if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
-        {
-            if ( errno == EACCES )
-            {
-                WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
-                delayed_exit(-1);
-                return(1);
-            }
-        }
-        else
-        {
-            if ( lseek(fd_cfg, 0L, 2) < 0 )
-            {
-                if ( errno == EACCES )
-                {
-                    WRMSG( HHC01453, "S", cfgfile, strerror( errno ) );
-                    delayed_exit(-1);
-                    return(1);
-                }
-            }
-            close( fd_cfg );
-        }
-
-        /* File was not lock, therefore we can proceed */
-#endif // OPTION_LOCK_CONFIG_FILE
-    }
-
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
 
@@ -1150,17 +1093,6 @@ int     dll_count;                      /* index into array          */
         return(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
-
-    if(log_callback)
-    {
-        // 'herclin' called us. IT'S in charge. Create its requested
-        // logmsg intercept callback function and return back to it.
-        rc = create_thread(&logcbtid,DETACHED,
-                      log_do_callback,NULL,"log_do_callback");
-        if (rc)
-            WRMSG(HHC00102, "E", strerror(rc));
-        return(0);
-    }
 
     hdl_adsc("release_config", release_config, NULL);
 
@@ -1177,111 +1109,78 @@ int     dll_count;                      /* index into array          */
     if (rc)
         WRMSG(HHC00102, "E", strerror(rc));
 
-
-#if defined( OPTION_LOCK_CONFIG_FILE )
-    if(cfgfile)
+    if (log_callback)
     {
-        if ( ( fd_cfg = HOPEN( pathname, O_RDONLY, S_IRUSR | S_IRGRP ) ) < 0 )
-        {
-            WRMSG( HHC01432, "S", pathname, "open()", strerror( errno ) );
-            delayed_exit(-1);
-            return(1);
-        }
-        else
-        {
-#if defined( _MSVC_ )
-            if( ( rc = _locking( fd_cfg, _LK_NBRLCK, 1L ) ) < 0 )
-            {
-                int rc = errno;
-                WRMSG( HHC01454, "S", pathname, "_locking()", strerror( errno ) );
-                delayed_exit(-1);
-                return(1);
-            }
-#else
-            fl_cfg.l_type = F_RDLCK;
-            fl_cfg.l_whence = SEEK_SET;
-            fl_cfg.l_start = 0;
-            fl_cfg.l_len = 1;
+        // 'herclin' called us. IT iS in charge. Create its requested
+        // logmsg intercept callback function and return back to it.
+        rc = create_thread( &logcbtid, DETACHED,
+                      log_do_callback, NULL, "log_do_callback" );
+        if (rc)
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
 
-            if ( fcntl(fd_cfg, F_SETLK, &fl_cfg) == -1 )
-            {
-                if (errno == EACCES || errno == EAGAIN)
-                {
-                    WRMSG( HHC01432, "S", pathname, "fcntl()", strerror( errno ) );
-                    delayed_exit(-1);
-                    return(1);
-                }
-            }
-#endif
-        }
+        return (rc);
     }
-#endif // OPTION_LOCK_CONFIG_FILE
-
-    //---------------------------------------------------------------
-    // The below functions will not return until Hercules is shutdown
-    //---------------------------------------------------------------
 
     /* Activate the control panel */
-    if(!sysblk.daemon_mode)
-        panel_display ();
+    if (!sysblk.daemon_mode)
+        panel_display();  /* Returns only AFTER Hercules is shutdown */
     else
     {
 #if defined(OPTION_DYNAMIC_LOAD)
-        if(daemon_task)
-            daemon_task ();
+        if (daemon_task)
+            daemon_task();/* Returns only AFTER Hercules is shutdown */
         else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         {
+            char   *msgbuf;
+            int     msgidx;
+            int     msglen;
+
             /* Tell RC file and HAO threads they may now proceed */
             sysblk.panel_init = 1;
 
+            /*
+            **  PROGRAMMING NOTE: when Hercules is run in true daemon
+            **  mode, the below loop is NEVER broken out of. Instead,
+            **  the "do_shutdown_now" function calls 'exit' to return
+            **  control back to the operating system once Hercules is
+            **  completely shutdown.
+            */
+
             /* Retrieve messages from logger and write to stderr */
             while (1)
-                if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
-                    if(isatty(STDERR_FILENO))
-                        fwrite(msgbuf,msgcnt,1,stderr);
+                if ((msglen = log_read( &msgbuf, &msgidx, LOG_BLOCK )))
+                    if (isatty( STDERR_FILENO ))
+                        fwrite( msgbuf, msglen, 1, stderr );
         }
     }
 
-    //  -----------------------------------------------------
-    //      *** Hercules has been shutdown (PAST tense) ***
-    //  -----------------------------------------------------
-
-#if defined( OPTION_LOCK_CONFIG_FILE )
-    if(cfgfile)
-        close( fd_cfg );            // release config file lock
-#endif //    OPTION_LOCK_CONFIG_FILE
-
+    /*
+    **  PROGRAMMING NOTE: the following code is only ever reached
+    **  if Hercules is run in normal panel mode -OR- when it is run
+    **  under the control of an external GUI (i.e. daemon_task).
+    */
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
 #ifdef _MSVC_
-    SetConsoleCtrlHandler(console_ctrl_handler, FALSE);
+    SetConsoleCtrlHandler( console_ctrl_handler, FALSE );
     socket_deinit();
 #endif
-#if defined(OPTION_MSGCLR) || defined(OPTION_MSGHLD)
-    if ( sysblk.emsg & EMSG_TEXT )
-        fprintf(stdout, HHC01412 );
-    else
-#endif
-        fprintf(stdout, MSG(HHC01412, "I"));
-    fflush(stdout);
-    usleep(10000);
-    return 0;
+    fflush( stdout );
+    usleep( 10000 );
+    return 0; /* return back to bootstrap.c */
 } /* end function impl */
 
 
 /*-------------------------------------------------------------------*/
 /* System cleanup                                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void system_cleanup (void)
+DLL_EXPORT void system_cleanup()
 {
     /*
         Currently only called by hdlmain,c's HDL_FINAL_SECTION
         after the main 'hercules' module has been unloaded, but
         that could change at some time in the future.
-
-        The above and below logmsg's are commented out since this
-        function currently doesn't do anything yet. Once it DOES
-        something, they should be uncommented.
     */
 }

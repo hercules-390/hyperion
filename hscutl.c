@@ -1294,3 +1294,107 @@ DLL_EXPORT char *fmt_memsize_rounded( const U64 memsize, char* buf, const size_t
     strlcpy( buf, fmt_mem, bufsz );
     return buf;
 }
+
+/*-------------------------------------------------------------------*/
+/*                Standard Utility Initialization                    */
+/*-------------------------------------------------------------------*/
+/* Performs standard utility initialization as follows: determines   */
+/* the program name (i.e. just the name without the .ext) from the   */
+/* passed argv[0] or default name value, displays the program name,  */
+/* description, version, copyright and build date values, tells the  */
+/* debugger what name to assign to the main thread (Windows only),   */
+/* initializes the global 'extgui' flag, initializes SYSBLK "detach" */
+/* and "join" create_thread attributes (the remainder of SYSBLK is   */
+/* set to low values), initializes the translation codepage to the   */
+/* system default, and lastly, intitializes the HOSTINFO structure.  */
+/* (but it doesn't necessarily do all that in that order of course)  */
+/*                                                                   */
+/* The program name (without .ext) is optionally returned in *pgm    */
+/* which must be freed by the caller when it is no longer needed.    */
+/* Pass NULL for 'pgm' if you don't care to know your own name.      */
+/*                                                                   */
+/* The return value is the new argc value which may not be the same  */
+/* as the value that was passed due to external gui initialization.  */
+/*-------------------------------------------------------------------*/
+
+int initialize_utility( int argc, char* argv[],
+                        char*  defpgm,
+                        char*  desc,
+                        char** pgm )
+{
+    char*  exename;                     /* Executable name with .ext */        
+    char*  nameonly;                    /* Exename without any .ext  */
+    char*  strtok_str;                  /* Work (strtok_r context)   */
+    char   namedesc[256];               /* Message build work area   */
+
+#if defined(EXTERNALGUI)
+
+    /* If the last argument is "EXTERNALGUI" it means we're running
+       under the control of an external GUI. Utilities need to know
+       this so they can react differently than in command-line mode. */
+    if (argc >= 1 && strncmp( argv[argc-1], "EXTERNALGUI", 11 ) == 0)
+    {
+        extgui = 1;   /* Tell utility to send progress msgs to GUI */
+
+        /* Remove the "EXTERNALGUI" argument from the command-line */
+        argv[argc-1] = NULL;
+        argc--;
+
+        /* Set stdout & stderr streams to unbuffered so we don't have
+           to flush them all the time in order to ensure consistent
+           sequence of log messages. */
+        setvbuf( stderr, NULL, _IONBF, 0 );
+        setvbuf( stdout, NULL, _IONBF, 0 );
+    }
+#endif // defined(EXTERNALGUI)
+
+    if (argc < 1)
+        exename = strdup( defpgm );
+    else
+    {
+        if (strlen( argv[0] ) == 0)
+            exename = strdup( defpgm );
+        else
+        {
+            char path[ MAX_PATH ];
+#if defined( _MSVC_ )
+            GetModuleFileName( NULL, path, MAX_PATH );
+#else
+            strncpy( path, argv[0], sizeof( path ) );
+#endif
+            exename = strdup( basename( path ));
+        }
+    }
+
+    /* Initialize a bunch of other stuff... */
+
+    SET_THREAD_NAME( exename );
+
+    memset( &sysblk, 0, sizeof( SYSBLK ));
+
+    initialize_detach_attr( DETACHED );
+    initialize_join_attr( JOINABLE );
+
+    set_codepage( NULL );
+    init_hostinfo( &hostinfo );
+
+    strtok_str = NULL;
+    nameonly = strtok_r( exename, ".", &strtok_str );
+
+    /* PROGRAMMING NOTE: we cannot free "exename" until we're
+       done using "nameonly" since nameonly now points to it! */
+
+    if (pgm)
+        *pgm = strdup( nameonly );
+
+    /* Format the program identification message */
+    MSGBUF( namedesc, MSG_C( HHC02499, "I", nameonly, desc ) );
+
+    /* Now it's safe to discard exename */
+    free( exename );
+
+    /* Display version, copyright, and build date */
+    display_version( stderr, 0, namedesc+10 );
+
+    return argc;
+}

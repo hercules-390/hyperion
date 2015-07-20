@@ -1600,7 +1600,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             int minlen = 0;
             int rej = 0;
 
-            /* (because i hate typing) BHe: Shame on you ;-) */
+            /* (because i hate typing) */
 #define  _HHC00205E(_file,_reason) \
             { \
                 WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \

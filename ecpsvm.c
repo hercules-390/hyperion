@@ -1126,7 +1126,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_PSW_IA(regs);
         /* Dispatch..... */
         MSGBUF(buf, "DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs));
-        display_regs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
+        display_gregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
         strlcat(buf, "\n", sizeof(buf));
         display_cregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D ");
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
