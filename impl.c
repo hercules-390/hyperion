@@ -683,6 +683,15 @@ int     dll_count;                      /* index into array          */
     display_version       ( stdout, 0, "Hercules" );
     display_build_options ( stdout, 0 );
 
+    /* Report whether Hercules is running in "elevated" mode or not */
+#if defined( _MSVC_ ) // (remove this test once non-Windows version of "is_elevated()" is coded)
+    // HHC00018 "Hercules is %srunning in elevated mode"
+    if (is_elevated())
+        WRMSG (HHC00018, "I", "" );
+    else
+        WRMSG (HHC00018, "W", "NOT " );
+#endif // defined( _MSVC_ )
+
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {

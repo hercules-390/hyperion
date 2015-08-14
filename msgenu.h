@@ -248,6 +248,7 @@ Examples:
        "HHC00017I     %s\n" \
        "HHC00017I Action:\n" \
        "HHC00017I     %s"
+#define HHC00018 "Hercules is %srunning in elevated mode"
 
 // reserve 20-39 for file related
 

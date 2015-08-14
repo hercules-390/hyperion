@@ -4621,4 +4621,26 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     return fh;
 }
 
+// Determine whether process is running "elevated" or not.
+// (returns 1==true running elevated, 0==false otherwise)
+DLL_EXPORT  int is_elevated()
+{
+    BOOL fRet = FALSE;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken ))
+    {
+        TOKEN_ELEVATION Elevation;
+        DWORD cbSize = sizeof( TOKEN_ELEVATION );
+
+        if (GetTokenInformation( hToken, TokenElevation, &Elevation, sizeof( Elevation ), &cbSize ))
+            fRet = Elevation.TokenIsElevated;
+    }
+
+    if (hToken)
+        CloseHandle( hToken );
+
+    return fRet;
+}
+
 #endif // defined( _MSVC_ )

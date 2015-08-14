@@ -101,6 +101,10 @@
   int get_socket_keepalive( int sfd, int* idle_time, int* probe_interval,
                             int* probe_count );
 
+  /* Determine whether process is running "elevated" or not */
+  /* (returns 1==true running elevated, 0==false otherwise) */
+  int is_elevated();
+
 #endif // !defined(_MSVC_)
 
 /*********************************************************************/

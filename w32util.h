@@ -23,6 +23,12 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Determine whether process is running "elevated" or not.
+// (returns 1==true running elevated, 0==false otherwise)
+
+W32_DLL_IMPORT  int is_elevated();
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Translates a Win32 '[WSA]GetLastError()' value into a 'errno' value (if possible
 // and/or if needed) that can then be used in the below 'w32_strerror' string function...
 
