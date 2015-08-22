@@ -52,6 +52,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CPUVERID">CPUVERID</a>   FD
     <a href="#LPARNAME">LPARNAME</a>   HERCULES
     <a href="#LPARNUM">LPARNUM</a>    21
+    <a href="#CPUIDFMT">CPUIDFMT</a>   1
     <a href="#MODEL">MODEL</a>      EMULATOR
     <a href="#PLANT">PLANT</a>      ZZ
     <a href="#MANUFACTURER">MANUFACTURER</a> HRC
@@ -196,7 +197,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ARCHLVL"></a>
 <dt><code>ARCHLVL &nbsp; S/370 &#124; ESA/390 &#124; ESAME &#124; <u>z/Arch</u></code>
 <dd><p>
-    specifies the initial architecture mode:<p>
+    Specifies the initial architecture mode:<p>
     <ul compact>
     <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
     <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
@@ -225,7 +226,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ARCHLVL_FACILITY"></a>
 <dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archmode]</em></code>
 <dd><p>
-    specifies a particular STFLE facility to be enabled or disabled, or a query of the current settings.
+    Specifies a particular STFLE facility to be enabled or disabled, or a query of the current settings.
     Use <code>QUERY ALL</code> to obtain a list of valid <code><em>facility</em></code> &nbsp;names
     that may be used for the given archmode.
    <p>
@@ -247,7 +248,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ASN_AND_LX_REUSE"></a>
 <dt><code>ASN_AND_LX_REUSE &nbsp; <u>DISABLE</u> &#124; ENABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
 <dd><p>
-    specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
+    Specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
     or enabled. The default is disabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
     to <code>ENABLE</code> &nbsp;if the operating system supports
@@ -269,7 +270,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="AUTOMOUNT"></a>
 <dt><code>AUTOMOUNT &nbsp; <em>[&plusmn;]directory</em></code>
 <dd><p>
-    specifies the host system directory where the guest is allowed
+    Specifies the host system directory where the guest is allowed
     or not allowed to automatically load virtual tape volumes from.
     Prefix allowable directories with a '+' plus sign and unallowable
     directories with a '-' minus sign. The default prefix if neither is
@@ -335,7 +336,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CODEPAGE"></a>
 <dt><code>CODEPAGE &nbsp; <em>mapping</em></code>
 <dd><p>
-    specifies the codepage conversion mapping table used for ASCII/EBCDIC translation.
+    Specifies the codepage conversion mapping table used for ASCII/EBCDIC translation.
     <p>
 
     <code>default</code> specifies traditional Hercules codepage mapping.
@@ -445,7 +446,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CNSLPORT"></a>
 <dt><code>CNSLPORT &nbsp; <i>nnnn</i></code>
 <dd><p>
-    specifies the port number (in decimal) to which tn3270 and
+    Specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect.
     <p>
 
@@ -456,7 +457,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
-    specifies the tn3270 console and telnet clients keepalive option
+    Specifies the tn3270 console and telnet clients keepalive option
     values that control automatic detection of disconnected tn3270/telnet
     client sessions.
     <p>
@@ -512,10 +513,17 @@ a real System/390.  The configuration file is an ASCII text file.
     adjust your system's default values.
     <p>
 
+<a name="CPUIDFMT"></a>
+<dt><code>CPUIDFMT &nbsp; 0 &#124; 1</code>
+<dd><p>
+    Specifies the format of the CPU ID the STIDP instruction should store.
+    Refer to the <a href="#LPARNUM">LPARNUM</a> statement for more information.
+    <p>
+
 <a name="CPUMODEL"></a>
 <dt><code>CPUMODEL &nbsp; <em>xxxx</em></code>
 <dd><p>
-    specifies the 4 hexadecimal digit CPU machine type number
+    Specifies the 4 hexadecimal digit CPU machine type number
     stored by the STIDP instruction
     <i>Note: Prior to ESA/390 this was known as the CPU model number</i>
     <p>
@@ -523,7 +531,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CPUPRIO"></a>
 <dt><code>CPUPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the priority of the CPU thread.  Default is a nice value
+    Specifies the priority of the CPU thread.  Default is a nice value
     of 15, which means a low priority such that I/O can be scheduled and
     completed in favour of CPU cycles being burned. On Multi-CPU
     systems, a real CPU can be "dedicated" to Hercules, by giving the
@@ -540,7 +548,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CPUSERIAL"></a>
 <dt><code>CPUSERIAL &nbsp; <em>xxxxxx</em></code>
 <dd><p>
-    specifies the 6 hexadecimal digit CPU serial number stored by the
+    Specifies the 6 hexadecimal digit CPU serial number stored by the
     STIDP instruction. In BASIC mode, the high-order digit may be
     replaced with the processor number when MAXCPU > 1; in LPAR mode,
     the two high-order digits are replaced with either the LPAR number
@@ -552,7 +560,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CPUVERID"></a>
 <dt><code>CPUVERID &nbsp; <em>xx</em></code>
 <dd><p>
-    specifies the 2 hexadecimal digit CPU version code
+    Specifies the 2 hexadecimal digit CPU version code
     stored by the STIDP instruction.
     The default version code is FD when ARCHLVL S/370 or ARCHLVL ESA/390
     is specified.  For the z/Architecture mode, the version code is always
@@ -581,7 +589,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="DEVPRIO"></a>
 <dt><code>DEVPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the priority of the device threads.  The default value is 8.
+    Specifies the priority of the device threads.  The default value is 8.
     See <a href="#thread_priorities">"Thread Priorities"</a>
     below for more information.
     <p>
@@ -593,7 +601,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="DEVTMAX"></a>
 <dt><code>DEVTMAX &nbsp; -1 &#124; 0 &#124; <em>nnn</em></code>
 <dd><p>
-    specifies the maximum number of device threads allowed.
+    Specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
     created to service each I/O request to a device. Once the I/O request is
     complete, the thread exits. Subsequent I/O to the same device will cause
@@ -655,7 +663,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ECPSVM"></a>
 <dt><code>ECPSVM &nbsp; YES &#124; NO &#124; LEVEL <em>nn</em></code>
 <dd><p>
-    specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
+    Specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
     support is to be enabled. If <code>YES</code> is specified, then the support
     level reported to the operating system is <code>20</code>. The purpose of
     ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
@@ -676,7 +684,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ENGINES"></a>
 <dt><code>ENGINES &nbsp; [<em>nn</em>*]<u>CP</u>&#124;IL&#124;AP&#124;IP[,...]</code>
 <dd><p>
-    specifies the type of engine for each installed processor.
+    Specifies the type of engine for each installed processor.
     The default engine type is CP.
     <p>
     <em>nn</em>* is an optional repeat count.
@@ -703,7 +711,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="HERCPRIO"></a>
 <dt><code>HERCPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the process priority for Hercules.  The default is 0.
+    Specifies the process priority for Hercules.  The default is 0.
     See <a href="#process_priorities">"Process Priorities"</a>
     below for more information.
     <p>
@@ -711,7 +719,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="HTTPPORT"></a>
 <dt><code>HTTP PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
 <dd><p>
-    specifies the port number (in decimal) on which the HTTP server
+    Specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
     or within the range 1024 - 65535 inclusive. The server is not start until a subsequent
     <code><a href="#HTTPSTRT">HTTP START</a></code> statement is found.
@@ -727,7 +735,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="HTTPROOT"></a>
 <dt><code>HTTP ROOT &nbsp; <em>directory</em></code>
 <dd><p>
-    specifies the root directory where the HTTP server's files reside.
+    Specifies the root directory where the HTTP server's files reside.
     If not specified, the default value for Win32 builds of Hercules is the
     directory where the Hercules executable itself is executing out of, and for
     non-Win32 builds it is the directory specified as the default package
@@ -741,7 +749,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="HTTPSTRT"></a>
 <dt><code>HTTP START</code>
 <dd><p>
-    starts the HTTP server. (Note: The server is no longer started by default.)
+    Starts the HTTP server. (Note: The server is no longer started by default.)
     <p>
 
 <a name="IGNORE"></a>
@@ -770,7 +778,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="IODELAY"></a>
 <dt><code>IODELAY &nbsp; <em>usec</em></code>
 <dd><p>
-    specifies the amount of time (in microseconds) to wait after
+    Specifies the amount of time (in microseconds) to wait after
     an I/O interrupt is ready to be set pending.  This value can also be
     set using the Hercules console.  The purpose of this parameter is to
     bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
@@ -786,7 +794,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LDMOD"></a>
 <dt><code>LDMOD &nbsp; <em>module list</em></code>
 <dd><p>
-    specifies additional modules that are to be loaded by the Hercules dynamic loader.
+    Specifies additional modules that are to be loaded by the Hercules dynamic loader.
     The default search order is with the hercules directory in the default DLL search
     path. Most systems also support absolute filenames (ie names starting with '/'
     or '.') in which case the default search path is not taken.
@@ -797,7 +805,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LEGACYSENSEID"></a>
 <dt><code>LEGACYSENSEID &nbsp; <u>OFF</u> &#124; <u>DISABLE</u> &#124; ON &#124; ENABLE</code>
 <dd><p>
-    specifies whether the SENSE ID CCW (X'E4') will be honored for
+    Specifies whether the SENSE ID CCW (X'E4') will be honored for
     the devices that originally didn't support that feature. This
     includes (but may not be limited to) 3410 and 3420 tape drives,
     2311 and 2314 direct access storage devices,
@@ -822,14 +830,14 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LOADPARM"></a>
 <dt><code>LOADPARM &nbsp; <em>xxxxxxxx</em></code>
 <dd><p>
-    specifies the eight-character IPL parameter which is used
+    Specifies the eight-character IPL parameter which is used
     by some operating systems to select system parameters.
     <p>
 
 <a name="LOGOPT"></a>
 <dt><code>LOGOPT &nbsp; <u>TIMESTAMP</u> &#124; NOTIMESTAMP</code>
 <dd><p>
-    sets Hercules log options. TIMESTAMP causes messages to the log
+    Sets Hercules log options. TIMESTAMP causes messages to the log
     to be time stamped.  NOTIMESTAMP prevents time stamping of log
     messages.    TIMESTAMP and NOTIMESTAMP may be abbreviated as
     TIME and NOTIME respectively.  The current resolution of the
@@ -841,21 +849,24 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LPARNAME"></a>
 <dt><code>LPARNAME &nbsp; <em>name</em></code>
 <dd><p>
-    specifies the LPAR name returned by DIAG X'204'.  The default is
+    Specifies the LPAR name returned by DIAG X'204'.  The default is
     <code>HERCULES</code>.
     <p>
 
 <a name="LPARNUM"></a>
 <dt><code>LPARNUM &nbsp; <em>xx</em> &#124; BASIC</code>
 <dd><p>
-    specifies the one- or two-digit hexadecimal LPAR identification
-    number stored by the STIDP instruction, or BASIC. If a one-digit
-    number from 1 to F (hexadecimal) is specified, then STIDP stores a
-    format-0 CPU ID unless a subsequent CPUIDFMT 1 statement is
-    specified. If zero or a a two-digit hexadecimal number, except 10
-    (hexadecimal), is specified, then STIDP stores a format-1 CPU ID.
-    For LPARNUM 10, the current CPUIDFMT is not changed. If LPARNUM is
-    BASIC, then STIDP stores a basic-mode CPU ID.
+    Specifies the one- or two-digit hexadecimal LPAR identification
+    number stored by the STIDP instruction, or BASIC.
+    <p>
+    If a one-digit number from 1 to F (hexadecimal) is specified,
+    then STIDP stores a format-0 CPU ID unless a subsequent
+    <a href="#CPUIDFMT">CPUIDFMT 1</a> statement is specified.
+    If zero or a two-digit hexadecimal number (except 10 hexadecimal)
+    is specified, then STIDP stores a format-1 CPU ID. For LPARNUM
+    10 the current <a href="#CPUIDFMT">CPUIDFMT</a> is not changed.
+    If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
+    <p>
     The default is LPARNUM 1 with a format-0 CPU ID.
     <p>
 
@@ -868,7 +879,7 @@ a real System/390.  The configuration file is an ASCII text file.
                           <em>nnn</em>P &#124;
                           <em>nnn</em>E</code>
 <dd><p>
-    specifies the main storage size in megabytes, where
+    Specifies the main storage size in megabytes, where
     <code><em>nnnn</em></code> &nbsp;is a decimal number. Or,
     <code><em>nnnM</em></code> &nbsp;where <code><em>M</em></code>&nbsp;
     is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
@@ -906,14 +917,14 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MANUFACTURER"></a>
 <dt><code>MANUFACTURER &nbsp; <em>name</em></code>
 <dd><p>
-    specifies the MANUFACTURER name returned the STSI instruction.  The default is
+    Specifies the MANUFACTURER name returned the STSI instruction.  The default is
     <code>HRC</code>.
     <p>
 
 <a name="MAXCPU"></a>
 <dt><code>MAXCPU &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the number of installed processor engines.
+    Specifies the number of installed processor engines.
     The <a href="#NUMCPU">NUMCPU</a> statement specifies the number of
     engines which will be configured online at startup time.
     All processors are CP engines unless otherwise specified by the
@@ -953,7 +964,7 @@ a real System/390.  The configuration file is an ASCII text file.
     [ <em>temp_capacity_model</em> ]
     </code>
 <dd><p>
-    specifies the MODEL names returned by the STSI instruction.
+    Specifies the MODEL names returned by the STSI instruction.
     <p>
     If two operands are supplied, the first is the hardware model name (CPC
     ND model) and the second is the capacity model name (CPC SI model).
@@ -968,7 +979,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MODPATH"></a>
 <dt><code>MODPATH &nbsp; <em>path</em></code>
 <dd><p>
-    specifies the path where dynamic modules are loaded from. When a modpath
+    Specifies the path where dynamic modules are loaded from. When a modpath
     statement is specified, the path on the modpath statement is searched before
     the default path is searched. When a relative path is specified is interpreted
     as a relative path within the default search path, if an absolute path is
@@ -981,7 +992,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MOUNTED_TAPE_REINIT"></a>
 <dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; DISABLE &#124; <u>ALLOW</u> &#124; <u>ENABLE</u> </code>
 <dd><p>
-    specifies whether reinitialization of tape drive devices (via the
+    Specifies whether reinitialization of tape drive devices (via the
     <code>devinit</code> command, in order to mount a new tape) should
     be allowed if there is already a tape mounted on the drive.
     <p>
@@ -1009,7 +1020,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="NUMCPU"></a>
 <dt><code>NUMCPU &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the number of emulated processor engines
+    Specifies the number of emulated processor engines
     which will be configured online at startup time.
     NUMCPU cannot exceed the value of <a href="#MAXCPU">MAXCPU</a>.
     If NUMCPU is less than <a href="#MAXCPU">MAXCPU</a>
@@ -1030,7 +1041,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="NUMVEC"></a>
 <dt><code>NUMVEC &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the number of emulated vector facilities. Default is one per
+    Specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.
     <p>
 
@@ -1038,7 +1049,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124;
     VM &#124; VSE &#124; z/VSE &#124; LINUX &#124; OpenSolaris &#124; QUIET &#124; NULL</code>
 <dd><p>
-    specifies the intended operating system.  The effect of this
+    Specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
     which are considered normal in the specified environment.
@@ -1061,7 +1072,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PANRATE"></a>
 <dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code>
 <dd><p>
-    specifies the panel refresh rate, in milliseconds between refreshes. SLOW
+    Specifies the panel refresh rate, in milliseconds between refreshes. SLOW
     is the same as 500, and FAST is the same as 50. A value less than the
     Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
     5000, will be rejected. SLOW is the default.
@@ -1070,7 +1081,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PANTITLE"></a>
 <dt><code>PANTITLE &nbsp; <em>"title-string"</em></code>
 <dd><p>
-    specifies an optional console window title-bar string to be used
+    Specifies an optional console window title-bar string to be used
     in place of the default supplied by the windowing system. If the value
     contains any blanks it must be enclosed within double-quotes.
     <p>
@@ -1089,7 +1100,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PGMPRDOS"></a>
 <dt><code>PGMPRDOS &nbsp; <u>RESTRICTED</u> &#124; LICENSED</code>
 <dd><p>
-    specifies whether or not Hercules will run licensed program product ESA
+    Specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems. If <code>RESTRICTED</code> is
     specified, Hercules will stop all CPUs when a licensed program product
     operating system is detected.  Specify
@@ -1115,14 +1126,14 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PLANT"></a>
 <dt><code>PLANT &nbsp; <em>name</em></code>
 <dd><p>
-    specifies the PLANT name returned by the STSI instruction.  The default is
+    Specifies the PLANT name returned by the STSI instruction.  The default is
     <code>ZZ</code>.
     <p>
 
 <a name="SCSIMOUNT"></a>
 <dt><code>SCSIMOUNT &nbsp; <u>NO</u> &#124; YES &#124; <em>nn</em></code>
 <dd><p>
-    specifies whether automatic detection of SCSI tape mounts are to be
+    Specifies whether automatic detection of SCSI tape mounts are to be
     enabled or not.
     <p>
     Specifying <code>NO</code> or 0 seconds (the default) indicates
@@ -1189,7 +1200,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="SHRDPORT"></a>
 <dt><code>SHRDPORT &nbsp; <em>nnnn</em></code>
 <dd><p>
-    specifies the port number (in decimal) on which the <a href="shared.html">Shared Device server</a>
+    Specifies the port number (in decimal) on which the <a href="shared.html">Shared Device server</a>
     will listen.  Specifying SHRDPORT will allow other Hercules instances
     to access devices on this instance.  (Currently only DASD devices may
     be shared).  By default, the other Hercules instances (clients) will
@@ -1203,7 +1214,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="SRVPRIO"></a>
 <dt><code>SRVPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the priority of the server threads.  The default value is 4.
+    Specifies the priority of the server threads.  The default value is 4.
     See <a href="#thread_priorities">"Thread Priorities"</a>
     below for more information.
     <p>
@@ -1215,7 +1226,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="SYSEPOCH"></a>
 <dt><code>SYSEPOCH &nbsp; <em>yyyy</em> [&plusmn;<em>years</em>]</code>
 <dd><p>
-    specifies the base date for the TOD clock.  Use the default value
+    Specifies the base date for the TOD clock.  Use the default value
     (<code>1900</code>) for all systems except OS/360. Use <code>1960</code>
     for OS/360.  Values other than these were formerly used to offset the
     TOD clock by a number of years to move the date before the year 2000 for
@@ -1232,7 +1243,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TIMERINT"></a>
 <dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
 <dd><p>
-    specifies the internal timers update interval, in microseconds.  This
+    Specifies the internal timers update interval, in microseconds.  This
     parameter specifies how frequently Hercules's internal timers-update thread
     updates the TOD Clock, CPU Timer, and other architectural related
     clock/timer values.  The default interval is 50 microseconds, which
@@ -1255,7 +1266,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TODDRAG"></a>
 <dt><code>TODDRAG &nbsp; <em>n.nn</em></code>
 <dd><p>
-    specifies the TOD clock drag factor.  This parameter can be used
+    Specifies the TOD clock drag factor.  This parameter can be used
     to slow down or speed up the TOD clock by a factor of <em>nn</em>.
     A significant slowdown can improve the performance of some operating
     systems which consume significant amounts of CPU time processing
@@ -1268,7 +1279,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TODPRIO"></a>
 <dt><code>TODPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the priority of the TOD Clock and timer thread.  The
+    Specifies the priority of the TOD Clock and timer thread.  The
     default value is -20.  See
     <a href="#thread_priorities">"Thread Priorities"</a>
     below for more information.
@@ -1281,7 +1292,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TRACEOPT"></a>
 <dt><code>TRACEOPT &nbsp; <u>TRADITIONAL</u> &#124; REGSFIRST &#124; NOREGS</code>
 <dd><p>
-    sets the Hercules instruction tracing display option.
+    Sets the Hercules instruction tracing display option.
     <code>TRADITIONAL</code> (the default), displays the registers following
     the instruction about to be executed such that pressing enter (to execute
     the displayed instruction) then shows the next instruction to be executed
@@ -1303,7 +1314,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TZOFFSET"></a>
 <dt><code>TZOFFSET &nbsp; &plusmn;<em>hhmm</em></code>
 <dd><p>
-    specifies the hours and minutes by which the TOD clock will
+    Specifies the hours and minutes by which the TOD clock will
     be offset from the current system time.  For GMT, use the
     default value (0000).  For timezones west of Greenwich, specify
     a negative value (example: <code>-0500</code> for US Eastern Standard
@@ -1321,7 +1332,7 @@ a real System/390.  The configuration file is an ASCII text file.
                           <em>nnn</em>P &#124;
                           <em>nnn</em>E</code>
 <dd><p>
-    specifies the expanded storage size in megabytes, where
+    Specifies the expanded storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number. Or,
     <code><em>nnnM</em></code> &nbsp;where <code><em>M</em></code>&nbsp;
     is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
@@ -1348,7 +1359,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="YROFFSET"></a>
 <dt><code>YROFFSET &nbsp; &plusmn;<em>years</em></code>
 <dd><p>
-    specifies a number of years to offset the TOD clock from the actual
+    Specifies a number of years to offset the TOD clock from the actual
     date. Positive numbers will move the clock forward in time, while
     negative numbers will move it backward. A common value for
     non-Y2K-compliant operating systems is <code>YROFFSET -28</code>, which
@@ -2240,7 +2251,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <dl>
     <dt><code>sockdev</code>
     <dd><p>
-        indicates the card reader is a socket device wherein the
+        Indicates the card reader is a socket device wherein the
         filename is actually a socket specification instead of a
         device filename.  When used, there must only be one filename
         specified in the form: <code>port</code> or <code>host:port</code>
@@ -2254,7 +2265,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>eof</code>
     <dd><p>
-        specifies that unit exception status is presented after
+        Specifies that unit exception status is presented after
         reading the last card in the file. This option is persistent, and
         will remain in effect until the reader is reinitialized with the
         <code>intrq</code> option.
@@ -2262,7 +2273,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>intrq</code>
     <dd><p>
-        specifies that unit check status with intervention required
+        Specifies that unit check status with intervention required
         sense bytes is presented after reading the last card
         in the file. This option is persistent, and will remain in
         effect until the reader is reinitialized with the <code>eof</code>
@@ -2271,7 +2282,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>multifile</code>
     <dd><p>
-        specifies, when multiple input files are entered, to
+        Specifies, when multiple input files are entered, to
         automatically open the next input file and continue reading
         whenever EOF is encountered on a given file. If not specified,
         then reading stops once EOF is reached on a given file and
@@ -2281,13 +2292,13 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>ebcdic</code>
     <dd><p>
-        specifies that the file contains fixed length 80-byte EBCDIC
+        Specifies that the file contains fixed length 80-byte EBCDIC
         records with no line-end delimiters.
         <p>
 
     <dt><code>ascii</code>
     <dd><p>
-        specifies that the file contains variable length lines of
+        Specifies that the file contains variable length lines of
         ASCII characters delimited by LF (line feed) sequences or CRLF
         (carraige return line feed) sequences at the end of each line.
         <p>
@@ -2301,14 +2312,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>trunc</code>
     <dd><p>
-        specifies, for ASCII files, that lines longer than 80
+        Specifies, for ASCII files, that lines longer than 80
         characters are truncated instead of producing a unit check
         error.
         <p>
 
     <dt><code>autopad</code>
     <dd><p>
-        specifies, for EBCDIC files, that the file is automatically
+        Specifies, for EBCDIC files, that the file is automatically
         padded to a multiple of 80 bytes if necessary.
         <p>
 
@@ -2329,7 +2340,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <dl>
     <dt><code>ascii</code>
     <dd><p>
-        specifies that the file will be written as variable length
+        Specifies that the file will be written as variable length
         lines of ASCII characters delimited by line feeds or
         carriage return line feed sequences at the end of each line.
         Trailing blanks are removed from each line.
@@ -2340,7 +2351,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>crlf</code>
     <dd><p>
-        specifies, for ASCII files, that carriage return line feed
+        Specifies, for ASCII files, that carriage return line feed
         sequences are written at the end of each line.
         If the <code>crlf</code> argument is not specified, then
         line-feeds only are written at the end of each line.
@@ -2348,7 +2359,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>noclear</code>
     <dd><p>
-        specifies that the output file will not be cleared to zero
+        Specifies that the output file will not be cleared to zero
         bytes when it is opened.
         If the <code>noclear</code> argument is not specified, then
         any previous content of the file is destroyed when the file
@@ -2380,7 +2391,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <dl>
     <dt><code>sockdev</code>
     <dd><p>
-        indicates the line printer is a socket device wherein the
+        Indicates the line printer is a socket device wherein the
         filename is actually a socket specification instead of a
         device filename.  When used, there must only be one filename
         specified in the form: <code>port</code> or <code>host:port</code>.
@@ -2394,7 +2405,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>crlf</code>
     <dd><p>
-        specifies, for ASCII files, that carriage return line feed
+        Specifies, for ASCII files, that carriage return line feed
         sequences are written at the end of each line.
         If the <code>crlf</code> argument is not specified, then
         line-feeds only are written at the end of each line.
@@ -2402,7 +2413,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>noclear</code>
     <dd><p>
-        specifies that the output file will not be cleared to zero
+        Specifies that the output file will not be cleared to zero
         bytes when it is opened.
         If the <code>noclear</code> argument is not specified, then
         any previous content of the file is destroyed when the file
@@ -2411,14 +2422,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>fcbcheck</code>
     <dd><p>
-        specifies that an attempt to skip to a FCB channel for which no
+        Specifies that an attempt to skip to a FCB channel for which no
         line number has been set will cause the command to be rejected
         with a unit check. This is the default.
         <p>
 
     <dt><code>nofcbcheck</code>
     <dd><p>
-        specifies that an attempt to skip to a FCB channel for which no
+        Specifies that an attempt to skip to a FCB channel for which no
         line number has been set will cause the next line of output to be
         printed on the next line on the printer output. The opposite,
         <code>fcbcheck</code>, is the default.
@@ -2426,14 +2437,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>rawcc</code>
     <dd><p>
-        specifies that printer output CCWs are not to be interpreted, but
+        Specifies that printer output CCWs are not to be interpreted, but
         simply dumped in hex to the printer output file. This is useful for
         debugging. Default is to interpret printer CCWs normally.
         <p>
 
     <dt><code>fcb=</code>
     <dd><p>
-        specifies an initial FCB image to use for this printer. The argument
+        Specifies an initial FCB image to use for this printer. The argument
         must be exactly 26 digits long, and consist of digits from 0 to 9.
         The first pair of digits specifies the number of lines on a printed
         page. It is followed by 12 pairs of digits which specify, for FCB
@@ -2992,7 +3003,7 @@ a real System/390.  The configuration file is an ASCII text file.
             <dl>
                 <dt><code><em>ifname</em></code>
                 <dd><p>
-                    specifies the interface name of an
+                    Specifies the interface name of an
                     interface that is already configured.
                     The flag <code>--if</code> may optionally be specified
                     before the name.
@@ -3010,13 +3021,13 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code><em>guestip</em></code>
                 <dd><p>
-                    specifies the IP address of the guest operating system
+                    Specifies the IP address of the guest operating system
                     running under Hercules.
                     <p>
 
                 <dt><code><em>hostip</em></code>
                 <dd><p>
-                    specifies the IP address of the host (Linux or Windows) side
+                    Specifies the IP address of the host (Linux or Windows) side
                     of the point-to-point link. This may or may not be the same
                     as your system's regular IP address. For Windows, if the
                     host system is configured with DHCP, this should instead be
@@ -3067,7 +3078,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
                 <dd><p>
-                    specifies the name of the tunnel device to use.
+                    Specifies the name of the tunnel device to use.
                     <p>
                     The default
                     for Linux is <code>/dev/net/tun</code>
@@ -3096,7 +3107,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
                 <dd><p>
-                    specifies the name of the network interface to use.
+                    Specifies the name of the network interface to use.
                     <p>
                     There is no default for this argument as the kernel
                     assigns an interface name if none is provided.
@@ -3104,7 +3115,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
                 <dd><p>
-                    specifies that debugging output is to be produced on the
+                    Specifies that debugging output is to be produced on the
                     Hercules control panel. This should normally be left
                     unspecified.
                     <p>
@@ -3135,13 +3146,13 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <dt><code><em>lport</em></code>
         <dd><p>
-            specifies the local TCP port. This is the TCP port that
+            Specifies the local TCP port. This is the TCP port that
             Hercules will listen on for this CTCA.
             <p>
 
         <dt><code><em>rhost</em></code>
         <dd><p>
-            specifies the remote host. This is the name or IP address
+            Specifies the remote host. This is the name or IP address
             of the remote system that Hercules is running on, not the
             name or IP address of the OS running on that copy of
             Hercules.
@@ -3149,14 +3160,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <dt><code><em>rport</em></code>
         <dd><p>
-            specifies the remote TCP port. The rport parameter on this
+            Specifies the remote TCP port. The rport parameter on this
             system must match the lport parameter on the remote system,
             and vice versa.
             <p>
 
         <dt><code><em>bufsize</em></code>
         <dd><p>
-            specifies the buffer size for the link. If this link is used
+            Specifies the buffer size for the link. If this link is used
             for IP traffic, this parameter should be more than the MTU
             of the interface definition in the OS.
             <p>
@@ -3373,7 +3384,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>PRI &#124; SEC &#124; NO</code>
                 <dd><p>
-                    specifies where a packet with an unknown IP
+                    Specifies where a packet with an unknown IP
                     address is forwarded to. PRI is the primary
                     default entry, SEC specifies the entry to use
                     when the primary is not available, and NO
@@ -3382,7 +3393,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code><em>nnn.nnn.nnn.nnn</code></em>
                 <dd><p>
-                    specifies the home IP address
+                    Specifies the home IP address
 
             </dl> <!-- (end INDENT) -->
             </dl> <!-- end IP Mode parms -->
@@ -3470,7 +3481,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <dl> <!-- begin Required for *nix preconfigured -->
                 <dt>[<code>-x</code>/<code>--if</code>] <code><em>ifname</em></code>
                 <dd><p>
-                    specifies the interface name of a TUN interface that is
+                    Specifies the interface name of a TUN interface that is
                     already configured.
                     <p>
                     Specify no host names or IP addresses or other arguments as
@@ -3484,25 +3495,25 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <dl> <!-- begin Required for both *nix not preconfigured and Windows -->
                 <dt><code><em>guest1</em></code>
                 <dd><p>
-                    specifies the host name or IP address of the guest
+                    Specifies the host name or IP address of the guest
                     operating system running under Hercules.
                     <p>
 
                 <dt><code><em>host1</em></code>
                 <dd><p>
-                    specifies the host name or IP address of the host
+                    Specifies the host name or IP address of the host
                     (Linux or Windows) side of the point-to-point link.
                     <p>
 
                 <dt><code><em>guest2</em></code>
                 <dd><p>
-                    specifies the host name or IP address of the guest
+                    Specifies the host name or IP address of the guest
                     operating system running under Hercules.
                     <p>
 
                 <dt><code><em>host2</em></code>
                 <dd><p>
-                    specifies the host name or IP address of the host
+                    Specifies the host name or IP address of the host
                     (Linux or Windows) side of the point-to-point link.
                     <p>
 
@@ -3566,7 +3577,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
                 <dd><p>
-                    specifies the name of the TUN interface to use.
+                    Specifies the name of the TUN interface to use.
                     There is no default for <code><em>name</em></code>.
                     <p>
 
@@ -3613,7 +3624,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
                 <dd><p>
-                    specifies the name of the tunnel device to use.
+                    Specifies the name of the tunnel device to use.
                     <p>
                     The default
                     for Linux is <code>/dev/net/tun</code>
@@ -3635,19 +3646,19 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>-4</code> &nbsp;&nbsp; or &nbsp; <code>--inet</code>
                 <dd><p>
-                    indicates that when a host name is specified for
+                    Indicates that when a host name is specified for
                     <code><em>guest1</em></code>, the host name must
                     resolve to an IPv4 address.
 
                 <dt><code>-6</code> &nbsp;&nbsp; or &nbsp; <code>--inet6</code>
                 <dd><p>
-                    indicates that when a host name is specified for
+                    Indicates that when a host name is specified for
                     <code><em>guest1</em></code>, the host name must
                     resolve to an IPv6 address.
 
                 <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
                 <dd><p>
-                    specifies that debugging output is to be produced on the
+                    Specifies that debugging output is to be produced on the
                     Hercules control panel. This should normally be left
                     unspecified.
                     <p>
@@ -3677,7 +3688,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>ifname &nbsp;<em>interface</em></code>
                 <dd><p>
-                    specifies the interface name of a host interface
+                    Specifies the interface name of a host interface
                     that is already configured (e.g. <code>tun</code>,
                     <code>tun0</code>, etc). &nbsp;(*nix only)
                     <p>
@@ -3693,7 +3704,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
-                    specifies the name of the host tunnel device to use.
+                    Specifies the name of the host tunnel device to use.
                     <p>
                     The default for Linux is
                     <code>/dev/net/tun</code>
@@ -3711,7 +3722,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dt><code>ipaddr &nbsp;<em>address</em></code>
                 <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
                 <dd><p>
-                    specifies the IPv4 address to be assigned to your virtual OSA Express card.
+                    Specifies the IPv4 address to be assigned to your virtual OSA Express card.
                     The address can be optionally followed by a prefix size
                     expressed in CIDR notation, e.g. <code>192.168.1.1/24</code>.
                     For IPv4 the prefix size can have a value from 0 to 32.
@@ -3722,7 +3733,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>netmask &nbsp;<em>mask</em></code>
                 <dd><p>
-                    specifies the subnet mask to be used with your OSA card.
+                    Specifies the subnet mask to be used with your OSA card.
                     The <code>netmask</code> option may only be specified when
                     the subnet mask is not already defined via the optional
                     prefix size parameter of the <code>ipaddr</code> option.
@@ -3731,7 +3742,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dt><code>ipaddr6 &nbsp;<em>address</em></code>
                 <dt><code>ipaddr6 &nbsp;<em>address/prefix</em></code>
                 <dd><p>
-                    specifies the IPv6 address to be assigned to your OSA card.
+                    Specifies the IPv6 address to be assigned to your OSA card.
                     The address can be optionally followed by the prefix size
                     expressed in CIDR notation, e.g.
                     <code>2001:db8:3003:1::543:210f/48</code>.
@@ -3742,7 +3753,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>hwaddr &nbsp;<em>MAC</em></code>
                 <dd><p>
-                    specifies the MAC address to be assigned to your OSA card.
+                    Specifies the MAC address to be assigned to your OSA card.
                     If not specified then one will be internally generated
                     in the range 02:00:5E:80:00:00 - 02:00:5E:FF:FF:FF using
                     the low order 23 bits of the IPv4 address. For example,
@@ -3752,7 +3763,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>mtu &nbsp;<em>bytes</em></code>
                 <dd><p>
-                    specifies the Maximum Transmission Unit to be used.
+                    Specifies the Maximum Transmission Unit to be used.
                     The maximum transmission unit (MTU) is the largest
                     packet size, measured in bytes, that can be transmitted
                     over a network.
@@ -3760,7 +3771,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>chpid &nbsp;<em>id</em></code>
                 <dd><p>
-                    specified the channel path identifier to be used
+                    Specifies the channel path identifier to be used
                     with the device. This is mostly a cosmetic value
                     but certain guest operating systems such as z/OS
                     might require it to operate correctly.
@@ -3768,7 +3779,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dt><code>debug</code>
                 <dd><p>
-                    enables debug logging for the device. When logging is
+                    Enables debug logging for the device. When logging is
                     enabled the Hercules driver logs extra progress and
                     status messages used to help debug an incorrectly
                     functioning driver.
@@ -3890,7 +3901,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>[no]syncio</code>
     <dd><p>
-        syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
+        Syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
         wherein guest i/o requests are completed "synchronously" during the
         actual emulated execution of the SIO/SSCH (start-i/o / start subchannel)
         instruction rather than being deferred and executed asynchronously in
@@ -3923,7 +3934,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>readonly</code>
     <dd><p>
-        readonly returns "write inhibited" sense when a write is attempted.
+        Readonly returns "write inhibited" sense when a write is attempted.
         Note that not all of the sense bits may be getting set absolutely
         correctly however. (Some people have reported getting different
         error messages under Hercules than a real machine, but it really
@@ -3935,7 +3946,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>fakewrite</code>
     <dd><p>
-        fakewrite is a kludge for the readonly sense problem mentioned above.
+        Fakewrite is a kludge for the readonly sense problem mentioned above.
         Here the disk is not intended to be updated (MVS updates the DSCB
         last referenced field for a readonly file) and any writes appear to
         be successful even though nothing actually gets written.
@@ -4007,7 +4018,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code><em>origin</em></code>
     <dd><p>
-        specifies the relative block number within the DASD image
+        Specifies the relative block number within the DASD image
         file at which the minidisk begins.  The number must be less
         than the number of blocks in the file.  The default origin
         is zero.
@@ -4015,7 +4026,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code><em>numblks</em></code>
     <dd><p>
-        specifies the number of 512-byte blocks in the minidisk.
+        Specifies the number of 512-byte blocks in the minidisk.
         This number must not exceed the number of blocks in the file
         minus the origin.
         If omitted, or if specified as an asterisk, then the minidisk
@@ -4062,7 +4073,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>[no]syncio</code>
     <dd><p>
-        syncio enables possible 'synchronous' i/o and is explained in detail in
+        Syncio enables possible 'synchronous' i/o and is explained in detail in
         the preceding CKD dasd section. Note however that syncio is currently
         disabled by default for FBA dasd due to an as yet unresolved problem
         and must therefore be specifically enabled if you wish to use it for FBA
@@ -4292,7 +4303,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>SWITCHED=IN &#124; OUT &#124; INOUT &#124; NO</code>
     <dd><p>
-        (this is just a synonym for the <a href="#DIAL">DIAL</a> option.)
+        Switched is just a synonym for the <a href="#DIAL">DIAL</a> option.
         <p>
 
     <dt><code>TERM=TTY &#124; 2741 &#124; RXVT4APL</code>

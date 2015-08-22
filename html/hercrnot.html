@@ -32,13 +32,15 @@ Hercules Release Notes and Known Issues</TITLE>
   <dt>"MAXCPU" and "NUMCPU" statements
   <dd>
   <p>
-    The combination of NUMCPU and MAXCPU controls the behavior of how many
+    The combination of <a href="hercconf.html#NUMCPU">NUMCPU</a> and
+    <a href="hercconf.html#MAXCPU">MAXCPU</a> controls the behavior of how many
     CPU engines will be configured online upon startup and how many can be
     configured online later. In previous versions this was controlled via
     the NUMCPU statement and the compile-time constant 'MAX_CPU_ENGINES'.
     </p><p>
-    For compatibility with previous versions if MAXCPU is not specified its
-    value defaults to NUMCPU. If neither is specified it defaults to 1.
+    For compatibility with previous versions of Hercules, if MAXCPU is
+    not specified its value defaults to NUMCPU. If neither is specified
+    it defaults to 1.
   </p>
 
   <dt>New and improved CMPSC Compression Call 2012 instruction implementation is now the default
@@ -47,8 +49,9 @@ Hercules Release Notes and Known Issues</TITLE>
     The default implementation for the CMPSC Compression Call instruction is
     now the new cmpsc_2012 implementation. The previous legacy implementation
     is now the alternate implementation implemented as an optional dynamically
-    loadable module called "altcmpsc.dll". Refer to the README.CMPSC document
-    for more information.
+    loadable module called "altcmpsc.dll". Refer to the
+    <a href="https://github.com/hercules-390/hyperion/blob/master/README.CMPSC">README.CMPSC</a>
+    document of the source code distribution for more information.
   </p>
 
   <dt>The sequence of certain system parameters may be important
@@ -98,9 +101,20 @@ Hercules Release Notes and Known Issues</TITLE>
   <p>
     If you experience any anomalies in the behavior of your guest operating
     system, verify that you are using architecurally valid/correct configuration
-    settings that your guest operating system expects. Pay particular attention
-    to your LPARNUM, CPUMODEL, CPUSERIAL, CPUVERID, CPUIDFMT, MODEL, PLANT
-    and MANUFACTURER values since they typically have a direct impact on how
+    settings that your guest operating system expects.
+  </p>
+  <p>
+    Pay <i><u>particular</u></i> attention to your
+    <a href="hercconf.html#LPARNUM">LPARNUM</a>,
+    <a href="hercconf.html#CPUIDFMT">CPUIDFMT</a>,
+    <a href="hercconf.html#CPUMODEL">CPUMODEL</a>,
+    <a href="hercconf.html#CPUSERIAL">CPUSERIAL</a>,
+    <a href="hercconf.html#CPUVERID">CPUVERID</a>,
+    <a href="hercconf.html#MODEL">MODEL</a>,
+    <a href="hercconf.html#PLANT">PLANT</a>
+    and
+    <a href="hercconf.html#MANUFACTURER">MANUFACTURER</a>
+    values since they typically have a direct impact on how
     certain guest operating systems behave.
   </p>
 
@@ -111,6 +125,32 @@ Hercules Release Notes and Known Issues</TITLE>
     panel commands. Most valid configuration file statements may now also be
     entered as a panel command. Most panel commands are now also allowed as
     configuration file statements. See the documentation for full details.
+  </p>
+
+  <dt>Integrated Rexx support
+  <dd>
+  <p>
+    Rexx support was first added to Hercules by Jan Jaeger in 2010
+    and has been gradually enhanced over the years by both Enrico Sorichetti
+    and Jan Jaeger as well as a few other people too.
+  </p>
+  <p>
+    If you have <a href="http://www.rexxla.org">Rexx</a> installed on your
+    host and Hercules is built with the rexx build option, then rexx scripts
+    can be run from directly within the Hercules environment (i.e. directly
+    from the Hercules HMC command line) via Hercules's "exec" command.
+  </p>
+  <p>
+    Rexx scripts, when run within Hercules via the 'exec' command, can
+    Address the HERCULES enviroment allowing you to issue Hercules commands
+    and retrieve the results via the builtin 'awscmd' rexx function call.
+  </p>
+  <p>
+    For more information please refer to the
+    <a href="https://github.com/hercules-390/hyperion/blob/master/README.REXX">README.REXX</a>
+    document and the
+    <a href="https://github.com/hercules-390/hyperion/tree/master/scripts">sample scripts</a>
+    included in the 'scripts' subdirectory of the source code distribution.
   </p>
 </dl>
 
