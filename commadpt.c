@@ -545,7 +545,7 @@ static void commadpt_ring_flush(COMMADPT_RING *ring)
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Queue a byte in the ring                 */
 /*-------------------------------------------------------------------*/
-inline static void commadpt_ring_push(COMMADPT_RING *ring,BYTE b)
+static inline void commadpt_ring_push(COMMADPT_RING *ring,BYTE b)
 {
     ring->bfr[ring->hi++]=b;
     if(ring->hi>=ring->sz)
@@ -562,7 +562,7 @@ inline static void commadpt_ring_push(COMMADPT_RING *ring,BYTE b)
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Queue a byte array in the ring           */
 /*-------------------------------------------------------------------*/
-inline static void commadpt_ring_pushbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
+static inline void commadpt_ring_pushbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 {
     size_t i;
     for(i=0;i<sz;i++)
@@ -574,7 +574,7 @@ inline static void commadpt_ring_pushbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Retrieve a byte from the ring            */
 /*-------------------------------------------------------------------*/
-inline static BYTE commadpt_ring_pop(COMMADPT_RING *ring)
+static inline BYTE commadpt_ring_pop(COMMADPT_RING *ring)
 {
     register BYTE b;
     b=ring->bfr[ring->lo++];
@@ -592,7 +592,7 @@ inline static BYTE commadpt_ring_pop(COMMADPT_RING *ring)
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Retrive a byte array from the ring       */
 /*-------------------------------------------------------------------*/
-inline static size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
+static inline size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 {
     size_t i;
     for(i=0;i<sz && ring->havedata;i++)

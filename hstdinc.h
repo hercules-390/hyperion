@@ -68,6 +68,7 @@
   #include <libgen.h>
 #endif
 
+#include <stddef.h>             // (ptrdiff_t, size_t, offsetof, etc)
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
