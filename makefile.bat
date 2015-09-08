@@ -733,7 +733,6 @@
   set "modified_str="
 
   for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| find /i "Revision:"') do set "V4=%%b"
-  if defined V4 goto :set_VERSION_do_set
   goto :set_VERSION_do_set
 
   :: ---------------------------------------------------------------
@@ -766,8 +765,27 @@
   set "modified_str=-g%modified_str:~0,7%"
   %call_git% diff-index --quiet HEAD
   if %errorlevel% NEQ 0 set "modified_str=%modified_str%-modified"
-  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc -l`) do set "V4=%%a"
-  if defined V4 goto :set_VERSION_do_set
+
+  call :fullpath "wc.exe"
+  if "%fullpath%" == "" goto :no_wc
+
+  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc.exe -l`) do set "V4=%%a"
+  goto :set_VERSION_do_set
+
+:no_wc
+
+  :: PROGRAMMING NOTE: MS batch "for /f" always skips blank lines.
+  :: Thus we use --pretty=format:"x" rather than --pretty=format:""
+  :: so each output line is non-empty so "for /f" can count them.
+
+  %git% log --pretty=format:"x" > "%temp%\temp.txt"
+  if exist "%temp%\wcl.cmd" del "%temp%\wcl.cmd"
+  echo @echo off                                            >> "%temp%\wcl.cmd"
+  echo set /a "V4=0"                                        >> "%temp%\wcl.cmd"
+  echo for /f "tokens=*" %%%%a in (%%~1) do set /a "V4+=1"  >> "%temp%\wcl.cmd"
+  call "%temp%\wcl.cmd" "%temp%\temp.txt"
+  del "%temp%\wcl.cmd"
+  del "%temp%\temp.txt"
   goto :set_VERSION_do_set
 
 :set_VERSION_try_XXX
