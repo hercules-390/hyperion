@@ -271,7 +271,7 @@ argexit ( int code, char *m )
 #endif
          char  buflfs[80];
 
-            strncpy( buflfs,
+            strlcpy( buflfs,
                     (sizeof(off_t) > 4) ?
                     "            -lfs   build a large (uncompressed) dasd file (if supported)\n" : "",
                     sizeof( buflfs ) );

@@ -27,11 +27,6 @@
 /*  set 'bfr' to contain a C string based on a message format        */
 /*  and va_list of args. NOTE: 'bfr' must be free()d when done.      */
 /*                                                                   */
-/*  This macro can ONLY be used from the top-most variable arg       */
-/*  function. That is, the va_list cannot be passed as a parameter   */
-/*  from another function since va_xxx functions behavio(u)r seems   */
-/*  to be undefined in those cases.                                  */
-/*                                                                   */
 /* Local variables referenced:                                       */
 /*                                                                   */
 /*  char*    bfr;     must be originally defined                     */
@@ -48,6 +43,11 @@
 //  version uses "vsnprintf_s" and the *nix version uses "vsnprintf".
 
 #define  BFR_VSNPRINTF()                                            \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        va_list  original_vl;                                       \
+        va_copy( original_vl, vl );                                 \
                                                                     \
         bfr = (char*) calloc( 1, siz );                             \
         rc = -1;                                                    \
@@ -66,6 +66,7 @@
                 break;                                              \
                                                                     \
             bfr = realloc( bfr, siz );                              \
+            va_copy( vl, original_vl );                             \
         }                                                           \
                                                                     \
         if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
@@ -82,7 +83,10 @@
                 bfr = p;                                            \
             }                                                       \
         }                                                           \
-        ASSERT(bfr)
+        ASSERT(bfr);                                                \
+    }                                                               \
+    while (0)
+
 #else
 
 //  PROGRAMMING NOTE: the only difference between the *nix version
@@ -90,6 +94,11 @@
 //  version uses "vsnprintf" and the MSVC version uses "vsnprintf_s".
 
 #define  BFR_VSNPRINTF()                                            \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        va_list  original_vl;                                       \
+        va_copy( original_vl, vl );                                 \
                                                                     \
         bfr = (char*) calloc( 1, siz );                             \
         rc = -1;                                                    \
@@ -108,6 +117,7 @@
                 break;                                              \
                                                                     \
             bfr = realloc( bfr, siz );                              \
+            va_copy( vl, original_vl );                             \
         }                                                           \
                                                                     \
         if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
@@ -124,7 +134,10 @@
                 bfr = p;                                            \
             }                                                       \
         }                                                           \
-        ASSERT(bfr)
+        ASSERT(bfr);                                                \
+    }                                                               \
+    while (0)
+
 #endif
 
 /*-------------------------------------------------------------------*/

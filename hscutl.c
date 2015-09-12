@@ -1373,7 +1373,7 @@ int initialize_utility( int argc, char* argv[],
 #if defined( _MSVC_ )
             GetModuleFileName( NULL, path, MAX_PATH );
 #else
-            strncpy( path, argv[0], sizeof( path ) );
+            strlcpy( path, argv[0], sizeof( path ) );
 #endif
             exename = strdup( basename( path ));
         }
@@ -1392,7 +1392,8 @@ int initialize_utility( int argc, char* argv[],
     init_hostinfo( &hostinfo );
 
     strtok_str = NULL;
-    nameonly = strtok_r( exename, ".", &strtok_str );
+    if (!(nameonly = strtok_r( exename, ".", &strtok_str )))
+        nameonly = exename;
 
     /* PROGRAMMING NOTE: we cannot free "exename" until we're
        done using "nameonly" since nameonly now points to it! */
