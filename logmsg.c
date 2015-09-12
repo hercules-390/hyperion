@@ -531,15 +531,13 @@ static void vflogmsg( FILE* f, char* fmt, va_list vl )
     if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
         return;       // then there's nothing more we can do.
 
-    if (bfr)
-        flog_write( f, 0, bfr );
+    flog_write( f, 0, bfr );
 
 #ifdef NEED_LOGMSG_FFLUSH
     fflush(f);
 #endif
 
-    if (bfr)
-        free( bfr );
+    free( bfr );
 }
 
 DLL_EXPORT void flogmsg( FILE* f, char* fmt, ... )
