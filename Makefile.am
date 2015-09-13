@@ -623,7 +623,6 @@ EXTRA_DIST = autoconf/config.rpath \
              scripts/cmpsc.rexx    \
              util/CMPSC.txt        \
              hercules.cnf          \
-             cckdfix.c             \
              license_dyn76.txt     \
              COPYRIGHT             \
              BUILDING              \
@@ -694,12 +693,19 @@ EXTRA_DIST = autoconf/config.rpath \
              Hercules.dsw          \
              Hercules.vcproj       \
              Hercules.sln          \
-             hercver.rc            \
+             hercver.rc2           \
+             hercules.rc           \
+             hercules.ico          \
+             hercdasd.rc           \
+             hercdasd.ico          \
+             hercmisc.rc           \
+             hercmisc.ico          \
+             herctape.rc           \
+             herctape.ico          \
              build_pch.c           \
              conspawn.c            \
              getopt.c              \
              herclogo.txt          \
-             hercules.ico          \
              targetver.h
 
 #

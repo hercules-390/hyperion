@@ -150,9 +150,6 @@
     <ClCompile Include="cckddiag.c">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="cckdfix.c">
-      <Filter>Source Files\Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="cckdswap.c">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
@@ -647,7 +644,19 @@
     <None Include="decNumber\readme.txt">
       <Filter>Source Files\Hercules\decNumber</Filter>
     </None>
+    <None Include="hercver.rc2">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </None>
     <None Include="hercules.ico">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </None>
+    <None Include="hercdasd.ico">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </None>
+    <None Include="herctape.ico">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </None>
+    <None Include="hercmisc.ico">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
     </None>
     <None Include="_TODO.txt">
@@ -1602,7 +1611,16 @@
     <ResourceCompile Include="decNumber\decNumber.rc">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="hercver.rc">
+    <ResourceCompile Include="hercules.rc">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="hercdasd.rc">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="herctape.rc">
+      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="hercmisc.rc">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

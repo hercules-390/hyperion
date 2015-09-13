@@ -253,10 +253,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\cckdfix.c"
-						>
-					</File>
-					<File
 						RelativePath=".\cckdswap.c"
 						>
 					</File>
@@ -294,10 +290,6 @@
 					</File>
 					<File
 						RelativePath=".\dasdseq.c"
-						>
-					</File>
-					<File
-						RelativePath=".\dmap2hrc.c"
 						>
 					</File>
 				</Filter>
@@ -342,6 +334,10 @@
 					>
 					<File
 						RelativePath=".\conspawn.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dmap2hrc.c"
 						>
 					</File>
 					<File
@@ -1618,11 +1614,39 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath=".\hercdasd.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\hercdasd.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\hercmisc.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\hercmisc.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\herctape.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\herctape.rc"
+				>
+			</File>
+			<File
 				RelativePath=".\hercules.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\hercver.rc"
+				RelativePath=".\hercules.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\hercver.rc2"
 				>
 			</File>
 		</Filter>
@@ -2156,6 +2180,10 @@
 						</File>
 						<File
 							RelativePath=".\Hercules.vcxproj.filters"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2010.sln"
 							>
 						</File>
 					</Filter>

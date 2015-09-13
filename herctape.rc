@@ -1,0 +1,18 @@
+/* HERCTAPE.RC  (C) Copyright "Fish" (David B. Trout), 2009-2015     */
+/*      Defines the Hercules tape utilities resource information     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html)                      */
+/*   as modifications to Hercules.                                   */
+
+/*********************************************************************/
+
+#include "hercver.rc2"       /* Product version resource information */
+
+/*********************************************************************/
+/* Icon with lowest ID value placed first to ensure the              */
+/* application icon remains consistent on all systems.               */
+
+001 ICON DISCARDABLE "herctape.ico"
+
+/*********************************************************************/

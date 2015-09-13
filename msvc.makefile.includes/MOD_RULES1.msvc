@@ -8,8 +8,17 @@
 #
 # ***************************************************************************
 
-$(O)hercver.res: hercver.rc
-    $(rc) $(rcflags) $(rcvars) -fo $(O)hercver.res hercver.rc
+$(O)hercules.res: hercules.rc hercver.rc2
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercules.res hercules.rc
+
+$(O)hercdasd.res: hercdasd.rc hercver.rc2
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercdasd.res hercdasd.rc
+
+$(O)herctape.res: herctape.rc hercver.rc2
+    $(rc) $(rcflags) $(rcvars) -fo $(O)herctape.res herctape.rc
+
+$(O)hercmisc.res: hercmisc.rc hercver.rc2
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercmisc.res hercmisc.rc
 
 $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yc"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**

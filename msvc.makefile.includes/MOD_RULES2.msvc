@@ -1,14 +1,12 @@
-# ***************************************************************************
+# *****************************************************************************
 #     MOD_RULES2.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
-# --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
-# --------------------------------------------------------------------------
+#     (C) Copyright Roger Bowler, 2005-2015
 #
-#  Individual hercules modules build rules...
+#     Individual hercules modules build rules...
 #
-# ***************************************************************************
+# *****************************************************************************
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
 $(O)altcmpsc.lib:   $(X)altcmpsc.dll
@@ -25,84 +23,104 @@ $(O)hengine.lib:    $(X)hengine.dll
 
 $(O)hsys.lib:       $(X)hsys.dll
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Individual DLLs are dependent their own code as well as the
 # export libraries from other DLLs that they're dependent on..
 
-$(X)hsys.dll:    $(hsys_OBJ)                                                   $(O)hercver.res
+$(X)hsys.dll:     $(hsys_OBJ) \
+                                               $(O)hercules.res
     $(linkdll)
 
-$(X)hutil.dll:   $(hutil_OBJ)   $(O)hsys.lib                                   $(O)hercver.res
+$(X)hutil.dll:    $(hutil_OBJ) \
+                                 $(O)hsys.lib  $(O)hercules.res
     $(linkdll)
 
-$(X)htape.dll:   $(htape_OBJ)   $(O)hsys.lib           $(O)hutil.lib           $(O)hercver.res
+$(X)hdasd.dll:    $(hdasd_OBJ) \
+                  $(O)hutil.lib  $(O)hsys.lib  $(O)hercules.res
     $(linkdll)
 
-$(X)hdasd.dll:   $(hdasd_OBJ)   $(O)hsys.lib           $(O)hutil.lib           $(O)hercver.res
+$(X)htape.dll:    $(htape_OBJ) \
+                  $(O)hutil.lib  $(O)hsys.lib  $(O)hercules.res
     $(linkdll)
 
-$(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib \
-                 $(O)htape.lib $(O)decNumber.lib $(O)hercver.res
+$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)decNumber.lib \
+                  $(O)hutil.lib  $(O)hsys.lib  $(O)hercules.res
     $(linkdll)
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Device modules
 
-$(X)hdt2703.dll: $(O)commadpt.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdteq.dll:    $(O)hdteq.obj \
+                  $(O)hengine.lib $(O)hutil.lib              $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3705.dll: $(O)comm3705.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt2703.dll:  $(O)commadpt.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3088.dll: $(ctc_OBJ) $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3705.dll:  $(O)comm3705.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3420.dll: $(hdt3420_OBJ) $(O)hengine.lib $(O)htape.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3420.dll:  $(hdt3420_OBJ) $(O)htape.lib \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt1403.dll: $(O)printer.obj $(O)sockdev.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3505.dll:  $(O)cardrdr.obj $(O)sockdev.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3505.dll: $(O)cardrdr.obj $(O)sockdev.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt1403.dll:  $(O)printer.obj $(O)sockdev.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3525.dll: $(O)cardpch.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3525.dll:  $(O)cardpch.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt3270.dll: $(O)console.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3270.dll:  $(O)console.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdt1052c.dll: $(O)con1052c.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt1052c.dll: $(O)con1052c.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdtqeth.dll: $(O)qeth.obj $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3088.dll:  $(ctc_OBJ) $(tuntap_OBJ) \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdtptp.dll: $(O)ctc_ptp.obj $(tuntap_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdtqeth.dll:  $(O)qeth.obj $(tuntap_OBJ) \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
+$(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)hdtzfcp.dll: $(O)zfcp.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdtzfcp.dll:  $(O)zfcp.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)dyngui.dll: $(O)dyngui.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)dyngui.dll:   $(O)dyngui.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)dyninst.dll: $(O)dyninst.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)dyninst.dll:  $(O)dyninst.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-$(X)s37x.dll: $(O)s37xmod.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)s37x.dll:     $(O)s37xmod.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Additional loadable modules
 
 !IFNDEF NOCRYPTO
 crypto: $(X)dyncrypt.dll
 
-$(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercules.res
     $(linkdll)
 
 !ENDIF
@@ -110,72 +128,72 @@ $(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O
 $(X)decNumber.dll: $(decNumber_OBJ) $(O)decNumber.res
     $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) /def:decNumber\decNumber.def -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
 
-$(X)altcmpsc.dll: $(altcmpsc_OBJ) $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)altcmpsc.dll: $(altcmpsc_OBJ) $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)hercules.res
     $(linkdll)
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Main product executables
 
-$(X)hercules.exe: $(O)bootstrap.obj $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)hercules.exe: $(O)bootstrap.obj $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercules.res
     $(linkexe)
 
-$(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercules.res
     $(linkexe)
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # System utilities
 
-$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercmisc.res
 
-$(X)conspawn.exe: $(O)$(@B).obj                                          $(O)hercver.res
+$(X)conspawn.exe: $(O)$(@B).obj                                          $(O)hercmisc.res
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Dasd utilities
 
-$(X)cckdcdsk.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)cckdcdsk.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)cckdcomp.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)cckdcomp.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)cckddiag.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)cckddiag.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)cckdswap.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)cckdswap.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdcat.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdisup.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdload.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdisup.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdls.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdload.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdcat.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdls.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdpdsu.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdpdsu.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-$(X)dasdseq.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dasdseq.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Tape utilities
 
-$(X)hetget.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)hetget.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)hetinit.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)hetinit.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)hetmap.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)hetmap.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)hetupd.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)hetupd.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)tapecopy.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)tapecopy.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)vmfplc2.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)vmfplc2.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule

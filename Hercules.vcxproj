@@ -255,7 +255,6 @@
     <ClCompile Include="cckdcdsk.c" />
     <ClCompile Include="cckdcomp.c" />
     <ClCompile Include="cckddiag.c" />
-    <ClCompile Include="cckdfix.c" />
     <ClCompile Include="cckdswap.c" />
     <ClCompile Include="cmpsctst.c" />
     <ClCompile Include="cmpsctst_cmpsc.c" />
@@ -434,13 +433,19 @@
     <None Include="decNumber\ICU-license.html" />
     <None Include="decNumber\Makefile.am" />
     <None Include="decNumber\readme.txt" />
+    <None Include="hercver.rc2" />
     <None Include="hercules.ico" />
+    <None Include="hercdasd.ico" />
+    <None Include="herctape.ico" />
+    <None Include="hercmisc.ico" />
     <None Include="README.HRAF" />
+    <None Include="README.HQA" />
     <None Include="_TODO.txt" />
     <None Include="CHANGES" />
     <None Include="README.ISSUES" />
     <None Include="RELEASE.NOTES" />
     <None Include="README.AIX" />
+    <None Include="README.CMPSC" />
     <None Include="README.COMMADPT" />
     <None Include="README.DYNMOD" />
     <None Include="README.ECPSVM" />
@@ -754,7 +759,10 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc" />
-    <ResourceCompile Include="hercver.rc" />
+    <ResourceCompile Include="hercules.rc" />
+    <ResourceCompile Include="hercdasd.rc" />
+    <ResourceCompile Include="herctape.rc" />
+    <ResourceCompile Include="hercmisc.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

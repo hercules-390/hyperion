@@ -1,47 +1,43 @@
-/* HERCVER.RC   (c) Copyright "Fish" (David B. Trout), 2009-2011     */
-/*      Defines the Windows resources to be linked into the product  */
+/* HERCVER.RC2  (C) Copyright "Fish" (David B. Trout), 2009-2015     */
+/*      Defines the Hercules product version resource information    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html)                      */
 /*   as modifications to Hercules.                                   */
 
-/////////////////////////////////////////////////////////////////////////////////////////
+/*********************************************************************/
 
 #ifdef APSTUDIO_INVOKED
   #error This file is not editable by Microsoft Visual C++
 #endif
 
-/////////////////////////////////////////////////////////////////////////////////////////
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
+/*********************************************************************/
 
-001 ICON DISCARDABLE "hercules.ico"
+#include <winver.h>                 /* Need VFT_APP constant, etc    */ 
+#include "ccfixme.h"                /* Need the "QSTR" macro, etc    */
 
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#include <winver.h>
-#include "ccfixme.h"            /* need "QSTR" macro */
+/*********************************************************************/
 
 #ifndef NONE
-#define NONE 0x0L
+#define NONE            0x0L
 #endif
 
 #define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
-#define HERCULES_COPYRIGHT        "(c) Copyright 1999-2014"
+#define HERCULES_COPYRIGHT        "(C) Copyright 1999-2015"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
-#define HERCULES_PRODUCT_URL      "https://groups.yahoo.com/groups/hercules-390"
+#define HERCULES_PRODUCT_URL      "http://hercules-390.github.io/html"
 #define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"
 
 #if defined(PRERELEASE)
-#define ISPRERELEASE VS_FF_PRERELEASE
+#define ISPRERELEASE    VS_FF_PRERELEASE
 #else
-#define ISPRERELEASE NONE
+#define ISPRERELEASE    NONE
 #endif
 
 #if !defined(VERSION)
 #if defined(V1) && defined(V2) && defined(V3) & defined(V4)
-#define VER V1##.##V2##.##V3##.##V4
-#define VERSION QSTR(VER)
+#define VER             V1##.##V2##.##V3##.##V4
+#define VERSION         QSTR(VER)
 #endif
 #endif
 
@@ -49,21 +45,21 @@
   #error VERSION not defined properly
 #endif
 
-/////////////////////////////////////////////////////////////////////////////////////////
+/*********************************************************************/
 
 1 VERSIONINFO
 
-FILEVERSION     V1, V2, V3, V4
-PRODUCTVERSION  V1, V2, V3, V4
+FILEVERSION             V1, V2, V3, V4
+PRODUCTVERSION          V1, V2, V3, V4
 
-FILEOS          VOS_NT_WINDOWS32
-FILETYPE        VFT_UNKNOWN
+FILEOS                  VOS_NT_WINDOWS32
+FILETYPE                VFT_APP
 #if defined(DEBUG) || defined(_DEBUG)
-FILEFLAGS       ISPRERELEASE | VS_FF_SPECIALBUILD | VS_FF_DEBUG
+FILEFLAGS               ISPRERELEASE | VS_FF_SPECIALBUILD | VS_FF_DEBUG
 #else
-FILEFLAGS       ISPRERELEASE | VS_FF_SPECIALBUILD
+FILEFLAGS               ISPRERELEASE | VS_FF_SPECIALBUILD
 #endif
-FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGSMASK           VS_FFI_FILEFLAGSMASK
 
 {
   BLOCK "StringFileInfo"
@@ -87,21 +83,21 @@ FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
       VALUE "Hercules Version", VERSION                 "\0"
 
 #if defined(PRERELEASE)
-#define PRE "PRERELEASE "
+#define PRE             "PRERELEASE "
 #else
 #define PRE
 #endif
 
 #if defined(_WIN64)
-#define ARCH "64-bit "
+#define ARCH            "64-bit "
 #else
-#define ARCH "32-bit "
+#define ARCH            "32-bit "
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG)
-#define CFG "DEBUG "
+#define CFG             "DEBUG "
 #else
-#define CFG "RETAIL "
+#define CFG             "RETAIL "
 #endif
 
       VALUE "SpecialBuild",    PRE ARCH CFG "version"  "\0"
@@ -110,8 +106,9 @@ FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
   }
   BLOCK "VarFileInfo"
   {
-    VALUE "Translation", 0x409, 1200    // 0x409 (1033) == U.S. English, 1200 (0x4B0) == UNICODE
+    /* 0x409 (1033) == U.S. English, 1200 (0x4B0) == UNICODE */
+    VALUE "Translation", 0x409, 1200
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
+/*********************************************************************/
