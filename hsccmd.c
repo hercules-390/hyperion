@@ -5833,6 +5833,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
                         }
                         else
                             bTooMany = 1;           // (no more room)
+                        break;                      // (we found our device)
                     }
                 }
             }
@@ -5890,41 +5891,46 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         dev = *pDevBlkPtr;                  // --> DEVBLK
 
         /* Display sense-id */
-        for (j = 0; j < dev->numdevid; j++)
+        if (dev->numdevid)
         {
-            if (j == 0)
-                len = MSGBUF( buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            else if (j%16 == 0)
+            for (j = 0; j < dev->numdevid; j++)
             {
-                WRMSG(HHC02280, "I", buf);
-                len = sprintf(buf, "             %2.2X ", (int) j);
+                if (j == 0)
+                    len = MSGBUF( buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                else if (j%16 == 0)
+                {
+                    WRMSG(HHC02280, "I", buf);
+                    len = sprintf(buf, "             %2.2X ", (int) j);
+                }
+                if (j%4 == 0)
+                    len += sprintf(buf + len, " ");
+                len += sprintf(buf + len, "%2.2X", dev->devid[j]);
             }
-            if (j%4 == 0)
-                len += sprintf(buf + len, " ");
-            len += sprintf(buf + len, "%2.2X", dev->devid[j]);
+            WRMSG(HHC02280, "I", buf);
         }
-        WRMSG(HHC02280, "I", buf);
 
         /* Display device characteristics */
-        for (j = 0; j < dev->numdevchar; j++)
+        if (dev->numdevchar)
         {
-            if (j == 0)
-                len = MSGBUF( buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            else if (j%16 == 0)
+            for (j = 0; j < dev->numdevchar; j++)
             {
-                WRMSG(HHC02280, "I", buf);
-                len = sprintf(buf, "             %2.2X ", (int) j);
+                if (j == 0)
+                    len = MSGBUF( buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                else if (j%16 == 0)
+                {
+                    WRMSG(HHC02280, "I", buf);
+                    len = sprintf(buf, "             %2.2X ", (int) j);
+                }
+                if (j%4 == 0)
+                    len += sprintf(buf + len, " ");
+                len += sprintf(buf + len, "%2.2X", dev->devchar[j]);
             }
-            if (j%4 == 0)
-                len += sprintf(buf + len, " ");
-            len += sprintf(buf + len, "%2.2X", dev->devchar[j]);
+            WRMSG(HHC02280, "I", buf);
         }
-        WRMSG(HHC02280, "I", buf);
 
         /* Display configuration data */
-        if (dev->rcd)
+        if (dev->rcd && (num = dev->rcd( dev, iobuf, 256 )) > 0)
         {
-            num = dev->rcd( dev, iobuf, 256 );
             cbuf[16]=0;
             for (j = 0; j < num; j++)
             {
@@ -5946,9 +5952,8 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         }
 
         /* If dasd, display subsystem status */
-        if (dev->ckdcyls)
+        if (dev->ckdcyls && (num = dasd_build_ckd_subsys_status(dev, iobuf, 44)) > 0)
         {
-            num = dasd_build_ckd_subsys_status(dev, iobuf, 44);
             for (j = 0; j < num; j++)
             {
                 if (j == 0)
