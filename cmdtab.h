@@ -299,6 +299,7 @@
   "in your multiprocessor configuration which you wish all panel commands\n"    \
   "to apply to. If command text follows the cpu address, the command will\n"    \
   "execute on cpu xx and the target cpu will not be permanently changed.\n"     \
+  "\n"                                                                          \
   "For example, entering 'cpu 1F' followed by \"gpr\" will change the\n"        \
   "target cpu for the panel display and commands and then display the\n"        \
   "general purpose registers for cpu 31 of your configuration. Entering\n"      \
@@ -1326,17 +1327,20 @@
 #define start_cmd_desc          "Start CPU (or printer/punch device if argument given)"
 #define start_cmd_help          \
                                 \
-  "Entering the 'start' command by itself simply starts a stopped\n"             \
-  "CPU, whereas 'start <devn>' presses the virtual start button on\n"            \
-  "printer/punch device <devn>.\n"
+  "Entering the 'start' command by itself starts the target cpu if it\n"         \
+  "is currently stopped. Entering the 'start <devn>' command will press\n"       \
+  "the specified printer or punch device's virtual start button. Use the\n"      \
+  "'cpu' command beforehand to choose which processor you wish to start.\n"
 
 #define startall_cmd_desc       "Start all CPU's"
 #define stop_cmd_desc           "Stop CPU (or printer/punch device if argument given)"
 #define stop_cmd_help           \
                                 \
-  "Entering the 'stop' command by itself simply stops a running\n"               \
-  "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"              \
-  "printer/punch device <devn>, usually causing an INTREQ.\n"
+  "Entering the 'stop' command by itself stops the target cpu if it is\n"        \
+  "currently running. Entering the 'stop <devn>' command will press the\n"       \
+  "specified printer or punch device's virtual stop button, usually causing\n"   \
+  "an INTREQ (Intervention Required) status. Use the 'cpu' command before\n"     \
+  "issuing the stop command to choose which processor you wish to stop.\n"
 
 #define stopall_cmd_desc        "Stop all CPU's"
 #define store_cmd_desc          "Store CPU status at absolute zero"
