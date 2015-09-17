@@ -1637,23 +1637,6 @@ DLL_EXPORT REGS *devregs(DEVBLK *dev)
 }
 #endif // OPTION_SYNCIO
 
-
-/*-------------------------------------------------------------------*/
-/* Internal device parsing structures                                */
-/*-------------------------------------------------------------------*/
-typedef struct _DEVARRAY
-{
-    U16 cuu1;
-    U16 cuu2;
-} DEVARRAY;
-
-typedef struct _DEVNUMSDESC
-{
-    BYTE lcss;
-    DEVARRAY *da;
-} DEVNUMSDESC;
-
-
 /*-------------------------------------------------------------------*/
 /* Function to Parse a LCSS specification in a device number spec    */
 /* Syntax : [lcss:]Anything...                                       */

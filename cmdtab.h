@@ -990,7 +990,14 @@
                                 \
   "Display cpuid and STSI results presented to the SCP\n"
 
-#define qd_cmd_desc             "Query dasd"
+#define qd_cmd_desc             "Query device information"
+#define qd_cmd_help             \
+                                \
+  "Format: \"qd [devnum(s)] | [devclass]\" where 'devnum(s)' is either\n"        \
+  "a single device number or a multiple device number specification\n"           \
+  "in the same format as used for configuration file device statements,\n"       \
+  "and 'devclass' is either CHAN, CON, CTCA, DASD, DSP, FCP, LINE, OSA,\n"       \
+  "PCH, PRT, RDR or TAPE. When no argument is given all devices are shown.\n"
 
 #define qeth_cmd_desc           "Enable/Disable QETH debugging"
 #define qeth_cmd_help           \
@@ -1564,7 +1571,7 @@ COMMAND( "pr",                      pr_cmd,                 SYSCMDNOPER,        
 COMMAND( "psw",                     psw_cmd,                SYSCMDNOPER,        psw_cmd_desc,           psw_cmd_help        )
 COMMAND( "ptp",                     ptp_cmd,                SYSCMDNOPER,        ptp_cmd_desc,           ptp_cmd_help        )
 COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
-COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            NULL                )
+COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            qd_cmd_help         )
 COMMAND( "qeth",                    qeth_cmd,               SYSCMDNOPER,        qeth_cmd_desc,          qeth_cmd_help       )
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
 COMMAND( "r",                       r_cmd,                  SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )

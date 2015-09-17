@@ -5720,57 +5720,140 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
-/* qd command - query dasd                                           */
+/* qd command - query device information                             */
 /*-------------------------------------------------------------------*/
 int qd_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
     DEVBLK** pDevBlkPtr;
     DEVBLK** orig_pDevBlkPtrs;
+    size_t   devncount = 0;
     size_t   nDevCount, i, j, num;
     int      bTooMany = 0;
-    U16      lcss;
-    U16      ssid=0;
-    U16      devnum;
-    int      single_devnum = 0;
+    int      len = 0;
+    U16      ssid = 0;
     BYTE     iobuf[256];
     BYTE     cbuf[17];
     char     buf[128];
-    int      len=0;
 
-    UNREFERENCED(cmdline);
+    DEVNUMSDESC  dnd;
+    char*        qdclass = NULL;
+    char*        devclass = NULL;
 
-    if (argc >= 2)
+    UNREFERENCED( cmdline );
+
+    if (argc > 2)
     {
-        single_devnum = 1;
-
-        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)
-            return -1;
-        if (!(dev = find_device_by_devnum (lcss, devnum)))
-        {
-            devnotfound_msg(lcss, devnum);
-            return -1;
-        }
-        ssid = LCSS_TO_SSID(lcss);
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
     }
+
+    // Allocate work area
 
     if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
+        // "Error in function %s: %s"
         MSGBUF( buf, "malloc(%d)", (int)(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES) );
-        WRMSG(HHC02219, "E", buf, strerror(errno) );
+        WRMSG( HHC02219, "E", buf, strerror( errno ));
         return -1;
     }
 
     nDevCount = 0;
     pDevBlkPtr = orig_pDevBlkPtrs;
 
-    for (dev = sysblk.firstdev; dev && nDevCount <= MAX_DEVLIST_DEVICES; dev = dev->nextdev)
+    if (argc == 2)
     {
-        if (dev->allocated)  // (valid device?)
+        if ((0
+            || strcasecmp( argv[1], "CHAN" ) == 0
+            || strcasecmp( argv[1], "CON"  ) == 0
+            || strcasecmp( argv[1], "CTCA" ) == 0
+            || strcasecmp( argv[1], "DASD" ) == 0
+            || strcasecmp( argv[1], "DSP"  ) == 0
+            || strcasecmp( argv[1], "FCP"  ) == 0
+            || strcasecmp( argv[1], "LINE" ) == 0
+            || strcasecmp( argv[1], "OSA"  ) == 0
+            || strcasecmp( argv[1], "PCH"  ) == 0
+            || strcasecmp( argv[1], "PRT"  ) == 0
+            || strcasecmp( argv[1], "RDR"  ) == 0
+            || strcasecmp( argv[1], "TAPE" ) == 0
+        ))
         {
-            if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
-                continue;
-            if (!dev->ckdcyls)
+            qdclass = argv[1];
+
+            // Gather requested devices by class
+
+            for (dev = sysblk.firstdev; dev && !bTooMany; dev = dev->nextdev)
+            {
+                if (!dev->allocated)
+                    continue;
+
+                (dev->hnd->query)( dev, &devclass, 0, NULL );
+
+                if (strcasecmp( devclass, qdclass ) != 0)
+                    continue;
+
+                if (nDevCount < MAX_DEVLIST_DEVICES)
+                {
+                    *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
+                    nDevCount++;            // (count array entries)
+                    pDevBlkPtr++;           // (bump to next entry)
+                }
+                else
+                {
+                    bTooMany = 1;           // (no more room)
+                    break;                  // (no more room)
+                }
+            }
+        }
+        else if ((devncount = parse_devnums( argv[1], &dnd )) > 0)
+        {
+            ssid = LCSS_TO_SSID( dnd.lcss );
+
+            // Gather requested devices by devnum(s)
+
+            for (dev = sysblk.firstdev; dev && !bTooMany; dev = dev->nextdev)
+            {
+                if (!dev->allocated)
+                    continue;
+
+                for (i=0; i < devncount && !bTooMany; i++)
+                {
+                    if (1
+                        && dev->ssid == ssid
+                        && dev->devnum >= dnd.da[i].cuu1
+                        && dev->devnum <= dnd.da[i].cuu2
+                    )
+                    {
+                        if (nDevCount < MAX_DEVLIST_DEVICES)
+                        {
+                            *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
+                            nDevCount++;            // (count array entries)
+                            pDevBlkPtr++;           // (bump to next entry)
+                        }
+                        else
+                            bTooMany = 1;           // (no more room)
+                    }
+                }
+            }
+
+            free( dnd.da );
+        }
+        else
+        {
+            // "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            free( orig_pDevBlkPtrs );
+            return -1;
+        }
+    }
+    else
+    {
+        // Gather *ALL* devices
+
+        for (dev = sysblk.firstdev; dev && !bTooMany; dev = dev->nextdev)
+        {
+            if (!dev->allocated)
                 continue;
 
             if (nDevCount < MAX_DEVLIST_DEVICES)
@@ -5778,9 +5861,6 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
                 *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
                 nDevCount++;            // (count array entries)
                 pDevBlkPtr++;           // (bump to next entry)
-
-                if (single_devnum)
-                    break;
             }
             else
             {
@@ -5790,15 +5870,17 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    if (nDevCount == 0)
+    if (!nDevCount)
     {
-        WRMSG(HHC02312, "W");
+        // "Empty list"
+        WRMSG( HHC02312, "W" );
+        free( orig_pDevBlkPtrs );
         return 0;
     }
 
     // Sort the DEVBLK pointers into ascending sequence by device number.
 
-    qsort(orig_pDevBlkPtrs, nDevCount, sizeof(DEVBLK*), SortDevBlkPtrsAscendingByDevnum);
+    qsort( orig_pDevBlkPtrs, nDevCount, sizeof(DEVBLK*), SortDevBlkPtrsAscendingByDevnum );
 
     // Now use our sorted array of DEVBLK pointers
     // to display our sorted list of devices...
@@ -5840,56 +5922,60 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02280, "I", buf);
 
         /* Display configuration data */
-        dasd_build_ckd_config_data (dev, iobuf, 256);
-        cbuf[16]=0;
-        for (j = 0; j < 256; j++)
+        if (dev->rcd)
         {
-            if (j == 0)
-                len = sprintf(buf, "%1d:%04X RCD   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            else if (j%16 == 0)
+            num = dev->rcd( dev, iobuf, 256 );
+            cbuf[16]=0;
+            for (j = 0; j < num; j++)
             {
-                len += sprintf(buf + len, " |%s|", cbuf);
-                WRMSG(HHC02280, "I", buf);
-                len = sprintf(buf, "             %2.2X ", (int) j);
+                if (j == 0)
+                    len = sprintf(buf, "%1d:%04X RCD   00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                else if (j%16 == 0)
+                {
+                    len += sprintf(buf + len, " |%s|", cbuf);
+                    WRMSG(HHC02280, "I", buf);
+                    len = sprintf(buf, "             %2.2X ", (int) j);
+                }
+                if (j%4 == 0)
+                    len += sprintf(buf + len, " ");
+                len += sprintf(buf + len, "%2.2X", iobuf[j]);
+                cbuf[j%16] = isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
             }
-            if (j%4 == 0)
-                len += sprintf(buf + len, " ");
-            len += sprintf(buf + len, "%2.2X", iobuf[j]);
-            cbuf[j%16] = isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
+            len += sprintf(buf + len, " |%s|", cbuf);
+            WRMSG(HHC02280, "I", buf);
         }
-        len += sprintf(buf + len, " |%s|", cbuf);
-        WRMSG(HHC02280, "I", buf);
 
-        /* Display subsystem status */
-        num = dasd_build_ckd_subsys_status(dev, iobuf, 44);
-        for (j = 0; j < num; j++)
+        /* If dasd, display subsystem status */
+        if (dev->ckdcyls)
         {
-            if (j == 0)
-                len = sprintf(buf, "%1d:%04X SNSS  00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            else if (j%16 == 0)
+            num = dasd_build_ckd_subsys_status(dev, iobuf, 44);
+            for (j = 0; j < num; j++)
             {
-                WRMSG(HHC02280, "I", buf);
-                len = sprintf(buf, "             %2.2X ", (int) j);
+                if (j == 0)
+                    len = sprintf(buf, "%1d:%04X SNSS  00 ", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                else if (j%16 == 0)
+                {
+                    WRMSG(HHC02280, "I", buf);
+                    len = sprintf(buf, "             %2.2X ", (int) j);
+                }
+                if (j%4 == 0)
+                    len += sprintf(buf + len, " ");
+                len += sprintf(buf + len, "%2.2X", iobuf[j]);
             }
-            if (j%4 == 0)
-                len += sprintf(buf + len, " ");
-            len += sprintf(buf + len, "%2.2X", iobuf[j]);
+            WRMSG(HHC02280, "I", buf);
         }
-        WRMSG(HHC02280, "I", buf);
     }
 
-    free ( orig_pDevBlkPtrs );
+    free( orig_pDevBlkPtrs );
 
     if (bTooMany)
     {
-        WRMSG(HHC02237, "W",MAX_DEVLIST_DEVICES);
-
+        // "Not all devices shown (max %d)"
+        WRMSG( HHC02237, "W", MAX_DEVLIST_DEVICES );
         return -1;      // (treat as error)
     }
 
     return 0;
-#undef myssid
-#undef CONFIG_DATA_SIZE
 }
 
 

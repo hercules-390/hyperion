@@ -500,6 +500,148 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 };
 
 /*-------------------------------------------------------------------*/
+/* static template/prototype configuration data                      */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*             GA32-0127 IBM 3490E Hardware Reference                */
+/*                                                                   */
+/* Read Configuration Data (X'FA')                                   */
+/*                                                                   */
+/* A Read Configuration Data command causes 160 bytes of data to     */
+/* be transferred from the control unit to the channel.  The data    */
+/* transferred by this command is referred to as a configuration     */
+/* record and is associated with the addressed device-path pair.     */
+/* The configuration record from each device-path pair provides the  */
+/* host with identifiers of node elements internal to the subsystem. */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static const BYTE cfgdata[] =       // (prototype data)
+{
+// ---------------- Device NED ---------------------------------------------------
+0xCC,                               // 0:      NED code
+0x01,                               // 1:      Type  (X'01' = I/O Device)
+0x02,                               // 2:      Class (X'02' = Magnetic Tape)
+0x00,                               // 3:      (Reserved)
+0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 4-9:    Type  ('003490')
+0xC3,0xF1,0xF0,                     // 10-12:  Model ('C10')
+0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
+0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+0x00, 0x00,                         // 30-31: Tag (x'000n', n = Logical Drive Address)
+// ---------------- Control Unit NED ---------------------------------------------
+0xC4,                               // 32:     NED code
+0x02,                               // 33:     Type  (X'02' = Control Unit)
+0x00,                               // 34:     Class (X'00' = Undefined)
+0x00,                               // 35:     (Reserved)
+0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 36-41:  Type  ('003490')
+0xC3,0xF1,0xF0,                     // 42-44:  Model ('C10')
+0xC8,0xD9,0xC3,                     // 45-47:  Manufacturer ('HRC' = Hercules)
+0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+0x00, 0x00,                         // 62-63:  Tag (x'0000')
+// ---------------- Library NED --------------------------------------------------
+0x00,                               // 64:     NED code   (x'00' = Not Used)
+0x00,                               // 65:     Type
+0x00,                               // 66:     Class
+0x00,                               // 67:     (Reserved)
+0x00,0x00,0x00,0x00,0x00,0x00,      // 68-73:  Type
+0x00,0x00,0x00,                     // 74-76:  Model
+0x00,0x00,0x00,                     // 77-79:  Manufacturer
+0x00,0x00,                          // 80-81:  Plant of Manufacture
+0x00,0x00,0x00,0x00,0x00,0x00,      // 82-93:  Sequence Number
+0x00,0x00,0x00,0x00,0x00,0x00,      //
+0x00, 0x00,                         // 94-95:  Tag
+// ---------------- Token NED ---------------------------------------------------
+0xEC,                               // 96:       NED code
+0x00,                               // 97:       Type  (X'00' = Unspecified)
+0x00,                               // 98:       Class (X'00' = Undefined)
+0x00,                               // 99:       (Reserved)
+0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 100-105:  Type  ('003490')
+0xC3,0xF1,0xF0,                     // 106-108:  Model ('C10')
+0xC8,0xD9,0xC3,                     // 109-111:  Manufacturer ('HRC' = Hercules)
+0xE9,0xE9,                          // 112-113:  Plant of Manufacture ('ZZ' = Herc)
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 114-125:  Sequence Number
+0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+0x00, 0x00,                         // 126-127:  Tag (x'0000')
+// ---------------- General NEQ --------------------------------------------------
+0x80,                               // 128:      NED code
+0x80,                               // 129:      Record Selector:
+                                    //           x'80' = Control Unit 0
+                                    //           x'81' = Control Unit 1
+0x00,0x80,                          // 130-131:  Interface Id:
+                                    //           x'0080' = CU Channel Adapter A
+                                    //           x'0040' = CU Channel Adapter B
+0x00,                               // 132:      Device-Dependent Timeout
+0x00,0x00,0x00,                     // 133-135:  (Reserved)
+0x00,                               // 136:      Extended Information:
+                                    //           x'00' for Logical Drive Addresses 0-7
+                                    //           x'01' for Logical Drive Addresses 8-F
+0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 137-159:  (Reserved)
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,
+};
+
+CASSERT( sizeof(cfgdata) == 160, tapedev_c );
+
+/*-------------------------------------------------------------------*/
+/* Read Configuration Data function                                  */
+/*-------------------------------------------------------------------*/
+static int tape_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
+{
+    int   copylen;
+    BYTE  work[ sizeof( cfgdata ) ];
+
+    /* Copy prototype Configuration Data to work area */
+    memcpy( work, cfgdata, sizeof( work ));
+
+    /* Fixup values for this particular device/type...  NOTE: we
+       only fixup the Device and Control Unit NEDs here. The Token
+       NED's type/model values come from the Device NED's values.
+    */
+    if (0x3480 == dev->devtype)
+    {
+        memcpy (&work[7],  "\xF4\xF8",     2);      // '48'
+        memcpy (&work[39], "\xF4\xF8",     2);      // '48'
+
+        memcpy (&work[10], "\xC4\xF3\xF1", 3);      // 'D31'
+        memcpy (&work[42], "\xC4\xF3\xF1", 3);      // 'D31'
+    }
+    else if (0x3490 == dev->devtype)
+    {
+//      memcpy (&work[7],  "\xF4\xF9",     2);      // '49'
+//      memcpy (&work[39], "\xF4\xF9",     2);      // '49'
+
+//      memcpy (&work[10], "\xC3\xF1\xF0", 3);      // 'C10'
+//      memcpy (&work[42], "\xC3\xF1\xF0", 3);      // 'C10'
+    }
+    else if (0x3590 == dev->devtype)
+    {
+        memcpy (&work[7],  "\xF5\xF9",     2);      // '59'
+        memcpy (&work[39], "\xF5\xF9",     2);      // '59'
+
+        memcpy (&work[10], "\xC2\xF1\xC1", 3);      // 'B1A'
+        memcpy (&work[42], "\xC1\xF5\xF0", 3);      // 'A50'
+    }
+
+    memcpy (&work[100], &work[4], 9);       // (set Token NED Type/Model from Device NED)
+
+    work[31] |= (dev->devnum & 0x0F);       // (set Logical Drive Address)
+
+    if ((dev->devnum & 0x0F) > 7)
+        work[136] = 0x01;                   // (set Extended Information)
+
+    /* Finally, copy the work area into the caller's buffer */
+    copylen = bufsz < sizeof( work ) ? bufsz : sizeof( work );
+    memcpy( buffer, work, copylen );
+
+    /* Return to them the number of bytes we provided */
+    return copylen;
+}
+
+/*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
 static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
@@ -507,6 +649,8 @@ static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 int             rc;
 DEVINITTAB*     pDevInitTab;
 int             attn = 0;
+
+    dev->rcd = &tape_read_configuration_data;
 
     /* Set flag so attention will be raised for re-init */
     if(dev->devtype)

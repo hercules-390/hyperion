@@ -231,6 +231,8 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 char            filename[FILENAME_MAX]; /* work area for display     */
 char           *strtok_str = NULL;      /* save last position        */
 
+    dev->rcd = &dasd_build_ckd_config_data;
+
     /* For re-initialisation, close the existing file, if any */
     if (dev->fd >= 0)
         (dev->hnd->close)(dev);
@@ -5974,7 +5976,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Build the configuration data area */
-        num = dasd_build_ckd_config_data (dev, iobuf, count);
+        num = dev->rcd( dev, iobuf, count );
 
         /* Calculate residual byte count */
         *residual = count < num ? 0 : count - num;

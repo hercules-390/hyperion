@@ -240,4 +240,9 @@ typedef int   DEVSR  (DEVBLK *dev, void *file);
 
 typedef BYTE *DEVIM;                    /* Immediate CCW Codes Table */
 
+/*-------------------------------------------------------------------*/
+/* Read Configuration Data function                                  */
+/*-------------------------------------------------------------------*/
+typedef int   DEVRCD  (DEVBLK *dev, BYTE *buffer, int bufsz);
+
 #endif // _HTYPES_H_

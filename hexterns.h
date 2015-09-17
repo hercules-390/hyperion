@@ -304,6 +304,19 @@ int  configure_shrdport(U16 shrdport);
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
 int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
+struct DEVARRAY
+{
+    U16 cuu1;
+    U16 cuu2;
+};
+typedef struct DEVARRAY DEVARRAY;
+struct DEVNUMSDESC
+{
+    BYTE lcss;
+    DEVARRAY *da;
+};
+typedef struct DEVNUMSDESC DEVNUMSDESC;
+CONF_DLL_IMPORT size_t parse_devnums(const char *spec,DEVNUMSDESC *dd);
 CONF_DLL_IMPORT int readlogo(char *fn);
 CONF_DLL_IMPORT void clearlogo(void);
 CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );

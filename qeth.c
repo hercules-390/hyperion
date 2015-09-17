@@ -2485,6 +2485,45 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     }
 }
 
+/*-------------------------------------------------------------------*/
+/* Read Configuration Data function                                  */
+/*-------------------------------------------------------------------*/
+static int qeth_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
+{
+    int   copylen;
+    BYTE  work[ sizeof( configuration_data ) ];
+
+    NED *dev_ned = (NED*)&work[0];  /* Device NED is first       */
+    NED *ctl_ned = dev_ned + 1;     /* Control Unit NED is next  */
+    NED *tkn_ned = ctl_ned + 1;     /* Token NED is last NED     */
+    NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
+    DEVBLK *cua;                    /* Our Control Unit device   */
+
+    /* Copy configuration data from tempate */
+    memcpy (work, configuration_data, sizeof( work ));
+
+    /* The first device in the group is the control unit */
+    cua = dev->group->memdev[0];
+
+    /* Insert the Channel Path ID (CHPID) into all of the NEDs */
+    dev_ned->tag[0] = dev->pmcw.chpid[0];
+    ctl_ned->tag[0] = cua->pmcw.chpid[0];
+    tkn_ned->tag[0] = cua->pmcw.chpid[0];
+
+    /* Insert the device's device number into its device NED. */
+    dev_ned->tag[1] = dev->devnum & 0xFF;
+
+    /* Insert the control unit address into the General NEQ */
+    gen_neq->iid[0] = cua->pmcw.chpid[0];
+    gen_neq->iid[1] = cua->devnum & 0xFF;
+
+    /* Finally, copy the work area into the caller's buffer */
+    copylen = bufsz < sizeof( work ) ? bufsz : sizeof( work );
+    memcpy( buffer, work, copylen );
+
+    /* Return to them the number of bytes we provided */
+    return copylen;
+}
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -2502,6 +2541,7 @@ int i;
     if(!dev->group)
     {
         /* This code is executed for each device in the group. */
+        dev->rcd = &qeth_read_configuration_data;
         dev->numsense = 32;
         memset (dev->sense, 0, sizeof(dev->sense));
         dev->numdevid = sizeof(sense_id_bytes);
@@ -3445,30 +3485,8 @@ U32 num;                                /* Number of bytes to move   */
     /* READ CONFIGURATION DATA                                       */
     /*---------------------------------------------------------------*/
     {
-        U32 len = sizeof(configuration_data);
-        NED *dev_ned = (NED*)iobuf;     /* Device NED is first       */
-        NED *ctl_ned = dev_ned + 1;     /* Control Unit NED is next  */
-        NED *tkn_ned = ctl_ned + 1;     /* Token NED is last NED     */
-        NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
-        DEVBLK *cua;                    /* Our Control Unit device   */
-
-        /* Copy configuration data from tempate */
-        memcpy (iobuf, configuration_data, len);
-
-        /* The first device in the group is the control unit */
-        cua = dev->group->memdev[0];
-
-        /* Insert the Channel Path ID (CHPID) into all of the NEDs */
-        dev_ned->tag[0] = dev->pmcw.chpid[0];
-        ctl_ned->tag[0] = cua->pmcw.chpid[0];
-        tkn_ned->tag[0] = cua->pmcw.chpid[0];
-
-        /* Insert the device's device number into its device NED. */
-        dev_ned->tag[1] = dev->devnum & 0xFF;
-
-        /* Insert the control unit address into the General NEQ */
-        gen_neq->iid[0] = cua->pmcw.chpid[0];
-        gen_neq->iid[1] = cua->devnum & 0xFF;
+        /* Build the configuration data area */
+        U32 len = dev->rcd (dev, iobuf, count);
 
         /* Calculate residual byte count */
         num = (count < len ? count : len);

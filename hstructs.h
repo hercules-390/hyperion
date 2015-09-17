@@ -1084,6 +1084,8 @@ struct DEVBLK {                         /* Device configuration block*/
             BYTE *data;
         }       iobuf;
 
+        DEVRCD  *rcd;                   /* Read Configuration Data   */
+
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
         int     reserved1;              /* ---(ensure alignment)---- */
