@@ -634,7 +634,7 @@ static int tape_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
         work[136] = 0x01;                   // (set Extended Information)
 
     /* Finally, copy the work area into the caller's buffer */
-    copylen = bufsz < sizeof( work ) ? bufsz : sizeof( work );
+    copylen = bufsz < (int) sizeof( work ) ? bufsz : (int) sizeof( work );
     memcpy( buffer, work, copylen );
 
     /* Return to them the number of bytes we provided */

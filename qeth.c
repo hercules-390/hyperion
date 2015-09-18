@@ -2518,7 +2518,7 @@ static int qeth_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
     gen_neq->iid[1] = cua->devnum & 0xFF;
 
     /* Finally, copy the work area into the caller's buffer */
-    copylen = bufsz < sizeof( work ) ? bufsz : sizeof( work );
+    copylen = bufsz < (int) sizeof( work ) ? bufsz : (int) sizeof( work );
     memcpy( buffer, work, copylen );
 
     /* Return to them the number of bytes we provided */
