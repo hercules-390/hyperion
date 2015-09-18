@@ -1794,7 +1794,7 @@ parse_single_devnum_silent(const char *spec,
 /* NOTE : caller should free the array returned in da if the return  */
 /*        value is not 0                                             */
 /*-------------------------------------------------------------------*/
-static size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
+DLL_EXPORT size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
 {
     size_t gcount;      /* Group count                     */
     size_t i;           /* Index runner                    */
