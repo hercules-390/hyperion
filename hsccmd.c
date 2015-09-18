@@ -5091,14 +5091,12 @@ BYTE    c;
         if ( (n == 2 || n == 1)
              && sscanf(argv[1], "%hx%c", &lparnum, &c) == 1)
         {
-            if (ARCH_370 == sysblk.arch_mode)
+            if (ARCH_370 == sysblk.arch_mode &&
+                (!lparnum || lparnum > 16))
             {
-                if (n == 2 || !lparnum || lparnum > 15)
-                {
-                    // "Invalid argument %s%s"
-                    WRMSG( HHC02205, "E", argv[1], ": must be 1 to F (hex) for System/370" );
-                    return -1;
-                }
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1], ": must be 1 to 10 (hex) for ARCHMODE S370" );
+                return -1;
             }
 
             /* Obtain INTLOCK */
