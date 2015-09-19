@@ -5,19 +5,12 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (C) 2013, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2013-2015, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //      tt32if.h    --  declarations for inquiring about network interfaces
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Change History:
-//
-//  02/21/07    3.3.0   Fish    Created.
-//  02/21/07    3.3.0   Fish    Tweaked for inclusion into CTCI-WIN and Hercules.
-//
-//////////////////////////////////////////////////////////////////////////////////////////
 //
 //  http://www.musl-libc.org/
 //  http://git.musl-libc.org/cgit/musl/plain/COPYRIGHT
@@ -74,10 +67,6 @@ extern "C" {
 #endif
 
 //---------------------------------------------------------------------------------------
-
-#ifndef IF_NAMESIZE
-#define IF_NAMESIZE 16
-#endif
 
 struct if_nameindex
 {
@@ -163,7 +152,7 @@ struct ifmap {
 #define IFHWADDRLEN     6
 #endif
 #ifndef IFNAMSIZ
-#define IFNAMSIZ        IF_NAMESIZE
+#define IFNAMSIZ        16
 #endif
 
 struct ifreq {

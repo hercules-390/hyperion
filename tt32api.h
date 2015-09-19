@@ -5,7 +5,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (C) 2002-2013, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2002-2015, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //  TT32API.h  --  TunTap32 DLL exported functions interface
@@ -20,33 +20,6 @@
 //    any type of app that can access a DLL: VB, C/C++, PowerBuilder, etc.
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Change History:
-//
-//  12/22/01    1.0.0   Created.
-//  07/20/02    2.0.0   JAP: LCS modifications/enhancements.
-//  07/02/03    2.0.2   use std 'uint32_t' type instead of Win32 DWORD
-//  06/16/04    2.1.0   'ex' variant functions to pass errno value.
-//  11/01/03    3.1.0   TT32MINMTU, TT32MAXMTU, TT32DEFMTU
-//  11/03/03    3.1.0   TT32_MAX_MULTICAST_LIST_ENTRIES
-//  12/31/03    3.1.0   support for deprecated functions dropped/deleted.
-//  02/05/06    3.1.0   New exported function: 'tuntap32_build_herc_iface_mac'
-//  02/14/06    3.1.0   Added #defines for TUNTAP32_DLLNAME
-//  04/14/06    3.1.0   Added 'tuntap32_calc_checksum' function
-//  07/02/06    3.1.2   Added #defines for min/max/def buffer sizes
-//  08/09/06    3.1.6   Added 'tuntap32_calc_checksum' function
-//  mm/dd/07    3.2.0   VS2005 + x64 + WinPCap 4.0
-//  11/06/08    3.3.0   VS2008 + auto-link pragma.
-//  11/06/08    3.3.0   Additional counters...
-//  05/18/10    3.3.0   Additional zero MAC address counters...
-//  01/17/11    3.3.0   Added socketpair
-//  02/03/11    3.3.0   _O_TT32NOTIFY packet arrival notification option
-//  03/08/11    3.3.0   tuntap32_beg_write_multi, tuntap32_end_write_multi
-//  03/10/11    3.3.0   Add '_ex' entry-points for calc_checksum,
-//                      calc_inet_checksum and build_herc_iface_mac.
-//  02/21/13    3.3.0   Added #include for new "TT32if.h" header
-//
-//////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _TT32API_H_
 #define _TT32API_H_
@@ -57,32 +30,34 @@
 //                            TunTap32.dll name
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#define  TUNTAP_APPNAME      "TunTap"
+
 #if defined(_WIN64)
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
-      #define  BASE_TUNTAP32_NAME  "TunTap64UD"
-    #else
-      #define  BASE_TUNTAP32_NAME  "TunTap64U"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64UD"
+    #else 
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64U"
     #endif
   #else
     #if defined(_DEBUG) || defined(DEBUG)
-      #define  BASE_TUNTAP32_NAME  "TunTap64D"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64D"
     #else
-      #define  BASE_TUNTAP32_NAME  "TunTap64"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64"
     #endif
   #endif
 #else
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
-      #define  BASE_TUNTAP32_NAME  "TunTap32UD"
-    #else
-      #define  BASE_TUNTAP32_NAME  "TunTap32U"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32UD"
+    #else 
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32U"
     #endif
   #else
     #if defined(_DEBUG) || defined(DEBUG)
-      #define  BASE_TUNTAP32_NAME  "TunTap32D"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32D"
     #else
-      #define  BASE_TUNTAP32_NAME  "TunTap32"
+      #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32"
     #endif
   #endif
 #endif
