@@ -93,13 +93,13 @@ BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-    ITIMER_SYNC(effective_addr1,1,regs);
+    ITIMER_SYNC(effective_addr1, 0, regs);
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* OR byte with immediate operand, setting condition code */
-    regs->psw.cc = ((*dest |= i2) != 0);
-    ITIMER_UPDATE(effective_addr1,1,regs);
+    regs->psw.cc = (__atomic_or_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
+    ITIMER_UPDATE(effective_addr1, 0, regs);
 }
 
 

@@ -6652,21 +6652,19 @@ DEF_INST(and_immediate_y)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE    *dest;                          /* Result byte address       */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    ITIMER_SYNC(effective_addr1, 0, regs);
 
-    /* AND with immediate operand */
-    rbyte &= i2;
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+    /* AND byte with immediate operand, setting condition code */
+    regs->psw.cc = (__atomic_and_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
 
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(and_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -7034,21 +7032,19 @@ DEF_INST(exclusive_or_immediate_y)
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE    *dest;                          /* Result byte address       */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    ITIMER_SYNC(effective_addr1, 0, regs);
 
-    /* XOR with immediate operand */
-    rbyte ^= i2;
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+    /* XOR byte with immediate operand, setting condition code */
+    regs->psw.cc = (__atomic_xor_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
 
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(exclusive_or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -7404,21 +7400,20 @@ DEF_INST(or_immediate_y)
 BYTE    i2;                             /* Immediate operand byte    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE    *dest;                          /* Result byte address       */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    ITIMER_SYNC(effective_addr1, 0, regs);
 
-    /* OR with immediate operand */
-    rbyte |= i2;
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+    /* OR byte with immediate operand, setting condition code */
+    regs->psw.cc = (__atomic_or_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
 
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    ITIMER_UPDATE(effective_addr1,0,regs);
+
 
 } /* end DEF_INST(or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
