@@ -11,52 +11,67 @@ ni start 0                                                              00020000
 go_ni ds 0d                                                             00110000
  sr 0,0 Store one dword                                                 00120000
  stfle facilities                                                       00130000
- la 0,8                                                                 00140000
- la 1,1                                                                 00150000
- la 2,nibytes                                                           00160000
-loop ds 0h                                                              00170000
- ex 1,inst_ni                                                           00180000
- ex 1,inst_niy                                                          00190000
- ex 1,inst_oi                                                           00200000
- ex 1,inst_oiy                                                          00210000
- ex 1,inst_xi                                                           00220000
- ex 1,inst_xiy                                                          00230000
- la 2,1(,2)                                                             00240000
- sll 1,1                                                                00250000
- bct 0,loop                                                             00260000
- nc facilities,fmask  Select bit 52                                     00270000
- lpswe stop                                                             00280000
- drop 0                                                                 00290000
- using nibytes,2                                                        00300000
-inst_ni ni nibytes,0                                                    00310000
-inst_niy ni niybytes,0                                                  00320000
-inst_oi oi oibytes,0                                                    00330000
-inst_oiy oi oiybytes,0                                                  00340000
-inst_xi xi xibytes,0                                                    00350000
-inst_xiy xi xiybytes,0                                                  00360000
-stop ds 0d                                                              00370000
- dc x'0002000180000000'                                                 00380000
- dc ad(0)                                                               00390000
- org ni+x'800' To specific address                                      00400000
-nibytes dc 8x'ff'                                                       00410000
-niybytes dc 8x'ff'                                                      00420000
-oibytes dc 8x'00'                                                       00430000
-oiybytes dc 8x'00'                                                      00440000
-xibytes dc 8x'ff'                                                       00450000
-xiybytes dc 8x'ff'                                                      00460000
-facilities ds d                                                         00470000
-fmask dc (52/8)x'00',x'08',x'00'                                        00480000
- punch '* *Compare'                                                     00490000
- punch '* r 800.10'                                                     00500000
- punch '* *Want               01020408 10204080 01020408 10204080'      00510000
- punch '* *Compare'                                                     00520000
- punch '* r 810.10'                                                     00530000
- punch '* *Want               01020408 10204080 01020408 10204080'      00540000
- punch '* *Compare'                                                     00550000
- punch '* r 820.10'                                                     00560000
- PUNCH '* *Want               FEFDFBF7 EFDFBF7F FEFDFBF7 EFDFBF7F'      00570000
- punch '* *Compare'                                                     00580000
- punch '* r 830.8'                                                      00590000
- PUNCH '* *Want               00000000 00000800'                        00600000
- punch '* *Done'                                                        00610000
- end                                                                    00620000
+ mvc faclist,facilities Save for display                                00140000
+ la 0,8                                                                 00150000
+ la 1,1                                                                 00160000
+ la 2,nibytes                                                           00170000
+loop ds 0h                                                              00180000
+ ex 1,inst_ni                                                           00190000
+ ex 1,inst_niy                                                          00200000
+ ex 1,inst_oi                                                           00210000
+ ex 1,inst_oiy                                                          00220000
+ ex 1,inst_xi                                                           00230000
+ ex 1,inst_xiy                                                          00240000
+ la 2,1(,2)                                                             00250000
+ sll 1,1                                                                00260000
+ bct 0,loop                                                             00270000
+ nc facilities,fmask  Select bit 52                                     00280000
+ lpswe stop                                                             00290000
+ drop 0                                                                 00300000
+ using nibytes,2                                                        00310000
+inst_ni ni nibytes,0                                                    00320000
+inst_niy niy niybytes,0                                                 00330000
+inst_oi oi oibytes,0                                                    00340000
+inst_oiy oiy oiybytes,0                                                 00350000
+inst_xi xi xibytes,0                                                    00360000
+inst_xiy xiy xiybytes,0                                                 00370000
+stop ds 0d                                                              00380000
+ dc x'0002000180000000'                                                 00390000
+ dc ad(0)                                                               00400000
+ org ni+x'800' To specific address                                      00410000
+ punch '* *Compare'                                                     00420000
+ punch '* r 800.8'                                                      00430000
+ punch '* *Want               01020408 10204080'                        00440000
+nibytes dc 8x'ff'                                                       00450000
+ punch '* *Compare'                                                     00460000
+ punch '* r 808.8'                                                      00470000
+ punch '* *Want               01020408 10204080'                        00480000
+oibytes dc 8x'00'                                                       00490000
+ punch '* *Compare'                                                     00500000
+ punch '* r 810.8'                                                      00510000
+ PUNCH '* *Want               FEFDFBF7 EFDFBF7F'                        00520000
+xibytes dc 8x'ff'                                                       00530000
+ org ni+x'880' To specific address                                      00540000
+facilities ds d                                                         00550000
+faclist ds d Original                                                   00560000
+fmask dc (52/8)x'00',x'08',x'00'                                        00570000
+ org ni+x'2000' To be sure long displacement is used                    00580000
+niybytes dc 8x'ff'                                                      00590000
+ punch '* *Compare'                                                     00600000
+ punch '* r 2000.8'                                                     00610000
+ punch '* *Want               01020408 10204080'                        00620000
+oiybytes dc 8x'00'                                                      00630000
+ punch '* *Compare'                                                     00640000
+ punch '* r 2008.8'                                                     00650000
+ punch '* *Want               01020408 10204080'                        00660000
+xiybytes dc 8x'ff'                                                      00670000
+ punch '* *Compare'                                                     00680000
+ punch '* r 2010.8'                                                     00690000
+ PUNCH '* *Want               FEFDFBF7 EFDFBF7F'                        00700000
+ punch '* *Compare'                                                     00710000
+ punch '* r 880.8'                                                      00720000
+ PUNCH '* *Want               00000000 00000800'                        00730000
+ punch '* * First doubleword of facilities list'                        00740000
+ punch '* r 888.8'                                                      00750000
+ punch '* *Done'                                                        00760000
+ end                                                                    00770000

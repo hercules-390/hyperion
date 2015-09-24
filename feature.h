@@ -830,4 +830,12 @@ do { \
  #define PER_SB(_regs,_addr)
 #endif /*!defined(FEATURE_PER)*/
 
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_2)
+   /* The compiler does not support these  functions                 */
+   #define __atomic_and_fetch(d, op, f) (*d &= op)
+   #define __atomic_or_fetch(d, op, f) (*d |= op)
+   #define __atomic_xor_fetch(d, op, f) (*d ^= op)
+#endif
+
+
 /* end of FEATURES.H */

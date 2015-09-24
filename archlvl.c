@@ -235,7 +235,11 @@ FACILITY(MSA_EXTENSION_3,  Z390,         NONE,      Z390,          ALS3)
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
 FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
 #endif
-FACILITY(INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS2 | ALS3)
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_2)
+/* Until the windows compiler supports the C++11 atomics             */
+/* Note that this facility is avilable in ESA mode too (SIE)         */
+FACILITY(INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1 | ALS2 | ALS3)
+#endif
 
 /* The Following entries are not part of STFL(E) but do indicate the availability of facilities */
 FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)

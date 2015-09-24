@@ -81,6 +81,10 @@
 #define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERLOCKED_ACCESS_FACILITY                     /*810*/
+#if !defined(_MSVC_)
+   /* MSVC does not support the atomic_and_fetch etc.                */
+   #define FEATURE_INTERLOCKED_ACCESS_FACILITY_2
+#endif
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST
 #define FEATURE_IPTE_RANGE_FACILITY                             /*810*/
