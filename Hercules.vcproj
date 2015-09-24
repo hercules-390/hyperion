@@ -2832,6 +2832,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\logicimm.assemble"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\logicimm.tst"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\loop.txt"
 						>
 					</File>
