@@ -76,6 +76,8 @@ int main( int argc, char* argv[] )
     /******************************************/
     if ((rc = impl( argc, argv )) == 0)
     {
+        sysblk.panel_init = 1;
+
         /******************************************/
         /* Get the command handler function       */
         /* This MUST be done after IML            */
@@ -99,6 +101,8 @@ int main( int argc, char* argv[] )
             }
         }
         while (!hercules_has_exited);
+
+        sysblk.panel_init = 0;
     }
 
     return rc;
