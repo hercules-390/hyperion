@@ -1848,7 +1848,7 @@ int     stid;                           /* Segment table indication  */
 /*                                                                   */
 /* Message number HHC02290 used if real == 1, otherwise HHC02291.    */
 /* raddr must be page aligned. offset must be < pagesize. amt must   */
-/* be <= pagesize - offset. Results printed directly via logmsg.     */
+/* be <= pagesize - offset. Results printed directly via WRMSG.      */
 /* Returns 0 on success, -1 = error otherwise.                       */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
@@ -1927,7 +1927,19 @@ static int ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
     }
 
     /* Display the dump and free the buffer hexdump malloc'ed for us */
-    logmsg( "%s", dumpbuf );
+
+    /* Note: due to WRMSG requirements for multi-line messages, the
+       first line should not have a message number. Thus we skip past
+       it via +1 for "I" in message number +1 for blank following it.
+       We also remove the last newline since WRMSG does that for us. */
+
+    *(dumpbuf + strlen( dumpbuf ) - 1) = 0; /* (remove last newline) */
+
+    if (real)
+        WRMSG( HHC02290, "I", dumpbuf + strlen( msgnum ) + 1 + 1 );
+    else
+        WRMSG( HHC02291, "I", dumpbuf + strlen( msgnum ) + 1 + 1 );
+
     free( dumpbuf );
     return 0;
 
