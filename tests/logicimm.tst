@@ -1,8 +1,6 @@
-logopt notime 
 sysclear 
 archmode z 
-ostailor null 
-*Testcase logicimm assembled 24 Sep 2015 12:03:36 by BLDHTC EXEC 
+*Testcase logicimm assembled 26 Sep 2015 12:41:34 by BLDHTC EXEC 
 r    1A0=00000001800000000000000000000200
 r    1D0=0002000180000000FFFFFFFFDEADDEAD
 r    200=1B00B2B00880D2070888088041000008
