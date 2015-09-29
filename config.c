@@ -1738,12 +1738,26 @@ parse_single_devnum__INTERNAL(const char *spec,
     rc=strtoul(r,&strptr,16);
     if(rc<0 || rc>0xffff || *strptr!=0)
     {
-        if(verbose)
+        int err = 1;
+
+        /* Maybe it's just a statement comment? */
+        if (rc >= 0 && rc <= 0xffff && *strptr != 0)
         {
-            WRMSG(HHC01470,"E","device address specification",*strptr);
+            while (*strptr == ' ') strptr++;
+            /* End of statement or start of comment? */
+            if (*strptr == 0 || *strptr == '#')
+                err = 0;  /* Then not an error! */
         }
-        free(r);
-        return -1;
+
+        if (err)
+        {
+            if(verbose)
+            {
+                WRMSG(HHC01470,"E","device address specification",*strptr);
+            }
+            free(r);
+            return -1;
+        }
     }
     *p_devnum=rc;
     *p_lcss=lcss;
