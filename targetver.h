@@ -62,13 +62,30 @@
 **  "Using the Windows Headers"
 **  http://msdn.microsoft.com/en-us/library/windows/desktop/aa383745(v=vs.85).aspx
 */
-
+/*
+**   PROGRAMMING NOTE: normally _WIN32_WINNT should already have
+**   been defined by 'Win32.mak' based on the 'APPVER' value that
+**   our 'VERSION.msvc' makefile fragment defines (see "TargetVer"
+**   in file 'VERSION.msvc'), so the below will normally never be
+**   invoked. Should we update to a build system that doesn't use
+**   win32.mak however, then the below values *will* be required.
+*/
 #ifndef   _WIN32_WINNT
-  #define _WIN32_WINNT      0x0502      /* WinXP SP2 Server 2003 SP1 */
-  #define WINVER            0x0502      /* WinXP SP2 Server 2003 SP1 */
-  #define NTDDI_VERSION     0x05020100  /* WinXP SP2 Server 2003 SP1 */
+  #define _WIN32_WINNT      0x0502      /* XP 64-bit or Server 2003  */
+  #define WINVER            0x0502      /* XP 64-bit or Server 2003  */
+  #define NTDDI_VERSION     0x05020100  /* XP 64-bit or Server 2003  */
   #define _WIN32_IE         0x0603      /* IE 6.0 SP2                */
 #endif
+
+/* Report _WIN32_WINNT value being used and thus our target platform */
+
+#define FQ( _s )        #_s
+#define FQSTR( _s )     FQ( _s )
+#pragma message( "Target platform = _WIN32_WINNT " FQSTR(_WIN32_WINNT))
+#undef  FQ
+#undef  FQSTR
+
+/* Need to #include SDKDDKVer.h with later versions of Visual Studio */
 
 #if _MSC_VER >= VS2010                  /* If VS2010 or greater,     */
   #include <SDKDDKVer.h>                /* then need this header     */

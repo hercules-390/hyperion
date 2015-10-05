@@ -87,37 +87,30 @@ VERSION = \"$(VERSION)\"
 
 !MESSAGE
 
-#  The following logic determines the minimum version of Windows on which
-#  the application can run. The minimum version depends on both the target
-#  architecture and the version of Visual Studio used for the build. The
-#  APPVER and TARGETOS variables are set as required by Win32.Mak (SDK)
+###############################################################################
+#
+#                                TargetVer
+#
+#  The following defines determines the minimum Windows platform on which
+#  the application can run. Set APPVER and TARGETOS as needed and win32.mak
+#  will then define '_WIN32_WINNT' and other values accordingly.
+#
+#  Note that Hercules no longer supports Win9x or any version of Windows NT
+#  equal to or less than 32-bit Windows XP (64-bit Windows XP x64 is still
+#  supported) or any version of Visual Studio less than Visual Studio 2005.
+#
+#  The Hercules minimum supported Windows platform is now 64-bit Windows XP
+#  or Windows Server 2003 or greater, and Visual Studio 2008 or greater is
+#  required to build Hercules (MSVC 9.0 or greater).
+#
+###############################################################################
 
-# 
-#  32 bit : 
-#      VS < 9 : Win NT 4 & Win 9X (APPVER 4.0, TARGETOS BOTH)
-#      VS >= 9 : Win 2K (APPVER 5.0, TARGETOS WINNT)
-#  64 bit :
-#      Win 2K3 (APPVER 5.02, TARGETOS WINNT)
-# 
+# VS <  9.0 : unsupported
+# VS >= 9.0 : required (VS2008 or greater)
 
-
-!IF ("$(CPU)" == "AMD64")
-
-APPVER   = 5.02
+!IF $(vsversion) < $(vers_vs2008)
+!ERROR Hercules requires Visual Studio 9 (VS2008 Express) or later.
+!ELSE
+APPVER   = 5.02     # Windows Server 2003 (or Windows XP 64-Bit) or greater
 TARGETOS = WINNT
-
-!ELSE # 32 bit build
-
-!IF $(vsversion) <= $(vers_vs2005)
-
-APPVER   = 4.0
-TARGETOS = BOTH
-
-!ELSE # $(vsversion) >= $(vers_vs2008)
-
-APPVER   = 5.0
-TARGETOS = WINNT
-
-!ENDIF # vsversion test
-
-!ENDIF # 32/64 bit test
+!ENDIF

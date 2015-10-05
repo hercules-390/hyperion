@@ -125,6 +125,7 @@ typedef u_int32_t           in_addr_t;
 #define HAVE_U_INT8_T
 #define HAVE_LIBMSVCRT
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
+#define HAVE_ASSERT_H
 
 #ifndef MAX_CPU_ENGINES
 #define MAX_CPU_ENGINES  8
