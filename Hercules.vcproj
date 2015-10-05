@@ -1361,6 +1361,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hatomic.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hbyteswp.h"
 							>
 						</File>

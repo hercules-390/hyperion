@@ -710,6 +710,7 @@
     <ClInclude Include="fthreads.h" />
     <ClInclude Include="getopt.h" />
     <ClInclude Include="hbyteswp.h" />
+    <ClInclude Include="hatomic.h" />
     <ClInclude Include="hchan.h" />
     <ClInclude Include="hconsole.h" />
     <ClInclude Include="hconsts.h" />

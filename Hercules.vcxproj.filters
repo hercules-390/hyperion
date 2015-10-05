@@ -1444,6 +1444,9 @@
     <ClInclude Include="getopt.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hatomic.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="hbyteswp.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
