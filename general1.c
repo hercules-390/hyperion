@@ -245,7 +245,7 @@ BYTE   *dest;                           /* Pointer to target byte    */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* AND byte with immediate operand, setting condition code */
-    regs->psw.cc = (__atomic_and_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
+    regs->psw.cc = (H_ATOMIC_OP(dest, i2, and, And, &) != 0);
 
     /* Update interval timer if necessary */
     ITIMER_UPDATE(effective_addr1, 0, regs);
@@ -4214,7 +4214,7 @@ BYTE   *dest;                           /* Pointer to target byte    */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* XOR byte with immediate operand, setting condition code */
-    regs->psw.cc = (__atomic_xor_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
+    regs->psw.cc = (H_ATOMIC_OP(dest, i2, xor, Xor, ^) != 0);
 
     ITIMER_UPDATE(effective_addr1, 0, regs);
 }

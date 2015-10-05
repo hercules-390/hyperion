@@ -98,7 +98,7 @@ BYTE   *dest;                           /* Pointer to target byte    */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* OR byte with immediate operand, setting condition code */
-    regs->psw.cc = (__atomic_or_fetch(dest, i2, __ATOMIC_RELAXED) != 0);
+    regs->psw.cc = (H_ATOMIC_OP(dest, i2, or, Or, |) != 0);
     ITIMER_UPDATE(effective_addr1, 0, regs);
 }
 

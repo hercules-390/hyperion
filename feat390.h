@@ -54,8 +54,7 @@
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
-#if !defined(_MSVC_)
-   /* MSVC does not support the atomic_and_fetch etc.                */
+#if defined(CAN_IAF2)
    /* Feature is available in ESA mode on z processors               */
    #define FEATURE_INTERLOCKED_ACCESS_FACILITY_2
 #endif

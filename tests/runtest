@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Note: UNIX and REXX required.
+
+# This  file  was  put  into  the  public  domain 2015-10-05 by John P.
+# Hartmann.   You  can  use  it  for anything you like, as long as this
+# notice remains.
+
+# This script should be invoked from the top level object directory,
+# hyperion if you configured in the source tree; the external object
+# directory if you configured elsewhere.
+
+# Having done "make" to build the executable, issue "./hercules" to make
+# libtool create an actual executable.
+
+# You can now run a test case by "../hyperion/tests/runtest <fname>"
+# be sure to omit the extension.
+
+wfn=allTests
+echo exit|cat ../hyperion/tests/*.tst - >$wfn.tst
+./hercules -f ../hyperion/tests/tests.conf -r $wfn.tst >$wfn.out
+stty echo
+sed -n -e '/^HHC01603I \*Testcase/,/^HHC01603I \*Done/p' >$wfn.sout $wfn.out
+rexx ../hyperion/tests/redtest.rexx $wfn.sout

@@ -1,0 +1,27 @@
+* Set storage key extended test case.                                   00010000
+* This file was put into the public domain 2015-10-05                   00020000
+* by John P. Hartmann.  You can use it for anything you like,           00030000
+* as long as this notice remains.                                       00040000
+ punch ':test sske#1'                                                   00050000
+ punch ':btst z'                                                        00060000
+sske start 0                                                            00070000
+ using *,0                                                              00080000
+ org sske+x'1a0'                                                        00090000
+ dc x'0001000180000000'                                                 00100000
+ dc ad(go)                                                              00110000
+ org sske+x'1d0'                                                        00120000
+ dc x'0002000180000000'                                                 00130000
+ dc ad(x'deaddead') Program new PSW                                     00140000
+ org sske+x'200'                                                        00150000
+go ds 0d                                                                00160000
+ lhi 2,x'2000'  Starting address                                        00170000
+ lhi 3,x'f0'                                                            00180000
+ sske 3,2                                                               00190000
+ lpswe notgood                                                          00200000
+notgood ds 0d                                                           00210000
+ dc x'0002000180000000'                                                 00220000
+ dc ad(x'bad')                                                          00230000
+ punch '* *Program 0002' Expect program check                           00240000
+ punch ':etst 1'                                                        00250000
+ punch '* *Done'                                                        00260000
+ end                                                                    00270000
