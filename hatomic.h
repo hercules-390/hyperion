@@ -95,13 +95,17 @@
    /* cases  that  are not true and which the compiler later deletes */
    /* as dead code.                                                  */
 
+   /* Note that the 64-bit intrinsic function is not available in 32 */
+   /* bit  windows,  hence  the  library  function  is used; it will */
+   /* compile as the intrinsic function on 64 bit.                   */
+
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                      \
    (                                                                                    \
       sizeof(*(ptr)) == 8 ? ( Interlocked ## Op ## 64((unsigned __int64 *) ptr, imm ) fallback imm ) :  \
       sizeof(*(ptr)) == 4 ? (_Interlocked ## Op      ((unsigned     int *) ptr, imm ) fallback imm ) :  \
       sizeof(*(ptr)) == 2 ? (_Interlocked ## Op ## 16((unsigned   short *) ptr, imm ) fallback imm ) :  \
       sizeof(*(ptr)) == 1 ? (_Interlocked ## Op ## 8( (unsigned    char *) ptr, imm ) fallback imm ) :  \
-      (assert(0), *(ptr) fallback ## = imm)                                                             \
+      (assert(0) /* returns void */, 0 /* to get integral result */)                                                             \
    )
 
    #define CAN_IAF2 1

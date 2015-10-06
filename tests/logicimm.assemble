@@ -2,82 +2,167 @@
 * This file was put into the public domain 2015-10-05                   00020000
 * by John P. Hartmann.  You can use it for anything you like,           00030000
 * as long as this notice remains.                                       00040000
- punch ':test logicImmediate'                                           00050000
- punch ':btst z'                                                        00060000
-ni start 0                                                              00070000
- org ni+x'1a0'                                                          00080000
- dc x'0000000180000000'                                                 00090000
- dc ad(go_ni)                                                           00100000
- org ni+x'1d0'                                                          00110000
- dc x'0002000180000000'                                                 00120000
- dc ad(x'deaddead') Program new PSW                                     00130000
- org ni+x'200'                                                          00140000
- using ni,0                                                             00150000
-go_ni ds 0d                                                             00160000
- sr 0,0 Store one dword                                                 00170000
- stfle facilities                                                       00180000
- mvc faclist,facilities Save for display                                00190000
- la 0,8                                                                 00200000
- la 1,1                                                                 00210000
- la 2,nibytes                                                           00220000
-loop ds 0h                                                              00230000
- ex 1,inst_ni                                                           00240000
- ex 1,inst_niy                                                          00250000
- ex 1,inst_oi                                                           00260000
- ex 1,inst_oiy                                                          00270000
- ex 1,inst_xi                                                           00280000
- ex 1,inst_xiy                                                          00290000
- la 2,1(,2)                                                             00300000
- sll 1,1                                                                00310000
- bct 0,loop                                                             00320000
- nc facilities,fmask  Select bit 52                                     00330000
- lpswe stop                                                             00340000
- drop 0                                                                 00350000
- using nibytes,2                                                        00360000
-inst_ni ni nibytes,0                                                    00370000
-inst_niy niy niybytes,0                                                 00380000
-inst_oi oi oibytes,0                                                    00390000
-inst_oiy oiy oiybytes,0                                                 00400000
-inst_xi xi xibytes,0                                                    00410000
-inst_xiy xiy xiybytes,0                                                 00420000
-stop ds 0d                                                              00430000
- dc x'0002000180000000'                                                 00440000
- dc ad(0)                                                               00450000
- org ni+x'800' To specific address                                      00460000
-nibytes dc 8x'ff'                                                       00470000
-oibytes dc 8x'00'                                                       00480000
-xibytes dc 8x'ff'                                                       00490000
- org ni+x'880' To specific address                                      00500000
-facilities ds d                                                         00510000
-faclist ds d Original                                                   00520000
-fmask dc (52/8)x'00',x'08',x'00'                                        00530000
- org ni+x'2000' To be sure long displacement is used                    00540000
-niybytes dc 8x'ff'                                                      00550000
-oiybytes dc 8x'00'                                                      00560000
-xiybytes dc 8x'ff'                                                      00570000
- punch ':etst 1'                                                        00580000
- punch '* *Compare'                                                     00590000
- punch '* r 800.8'                                                      00600000
- punch '* *Want               01020408 10204080'                        00610000
- punch '* *Compare'                                                     00620000
- punch '* r 808.8'                                                      00630000
- punch '* *Want               01020408 10204080'                        00640000
- punch '* *Compare'                                                     00650000
- punch '* r 810.8'                                                      00660000
- punch '* *Want               FEFDFBF7 EFDFBF7F'                        00670000
- punch '* *Compare'                                                     00680000
- punch '* r 2000.8'                                                     00690000
- punch '* *Want               01020408 10204080'                        00700000
- punch '* *Compare'                                                     00710000
- punch '* r 2008.8'                                                     00720000
- punch '* *Want               01020408 10204080'                        00730000
- punch '* *Compare'                                                     00740000
- punch '* r 2010.8'                                                     00750000
- PUNCH '* *Want               FEFDFBF7 EFDFBF7F'                        00760000
- punch '* *Compare'                                                     00770000
- punch '* r 880.8'                                                      00780000
- PUNCH '* *Want "Facilities list bit 52"   00000000 00000800'           00790000
- punch '* * First doubleword of facilities list'                        00800000
- punch '* r 888.8'                                                      00810000
- punch '* *Done'                                                        00820000
- end                                                                    00830000
+                                                                        00050000
+ni start 0                                                              00060000
+ gbla &a Compensate for SETA limitation                                 00070000
+                                                                        00080000
+ macro                                                                  00090000
+ display &len                                                           00100000
+ gbla &a                                                                00110000
+&ac setc a2x(&a)                                                        00120000
+ punch '* r &ac..&len'                                                  00130000
+ mend                                                                   00140000
+                                                                        00150000
+ macro                                                                  00160000
+ comp &len,&want,&text=                                                 00170000
+ punch '* *Compare'                                                     00180000
+ display &len                                                           00190000
+&wt setc '&want'(2,k'&want-2)                                           00200000
+ aif (k'&text gt 0).havetxt                                             00210000
+ punch '* *Want               &wt.'                                     00220000
+ mexit                                                                  00230000
+.havetxt anop ,                                                         00240000
+&ts setc '&text'(2,k'&text-2)                                           00250000
+ punch '* *Want "&ts." &wt.'                                            00260000
+ mend                                                                   00270000
+                                                                        00280000
+ macro                                                                  00290000
+ dotest &op                                                             00300000
+ ex 1,inst_&op                                                          00310000
+ ipm 4                                                                  00320000
+ stcm 4,8,b.&op.cc                                                      00330000
+ ex 1,inst_&op.y                                                        00340000
+ ipm 4                                                                  00350000
+ stcm 4,8,b.&op.ycc                                                     00360000
+ mend                                                                   00370000
+                                                                        00380000
+ punch ':test logicImmediate'                                           00390000
+ punch ':btst z'                                                        00400000
+ ds xl(x'1a0')                                                          00410000
+ dc x'0000000180000000'                                                 00420000
+ dc ad(go_ni)                                                           00430000
+ ds xl(x'1d0'-x'1a0'-16)                                                00440000
+ dc x'0002000180000000'                                                 00450000
+ dc ad(x'deaddead') Program new PSW                                     00460000
+ ds xl(x'200'-x'1d0'-16)                                                00470000
+ using ni,0                                                             00480000
+go_ni ds 0d                                                             00490000
+ sr 0,0 Store one dword                                                 00500000
+ stfle facilities                                                       00510000
+ mvc faclist,facilities Save for display                                00520000
+ nc facilities,fmask  Select bit 52                                     00530000
+ la 0,8                                                                 00540000
+ la 1,1                                                                 00550000
+ la 2,nibytes                                                           00560000
+b using nibytes,2                                                       00570000
+ sr 4,4                                                                 00580000
+loop ds 0h                                                              00590000
+   dotest ni                                                            00600000
+   dotest oi                                                            00610000
+   dotest xi                                                            00620000
+   la 2,1(,2)                                                           00630000
+   sll 1,1                                                              00640000
+ brct 0,loop                                                            00650000
+ sr 4,4                                                                 00660000
+ sr 5,5                                                                 00670000
+ ni nizero,0                                                            00680000
+ ipm 5                                                                  00690000
+ oi nizero+1,0                                                          00700000
+ ipm 5                                                                  00710000
+ xi nizero+2,x'ff'                                                      00720000
+ ipm 5                                                                  00730000
+ sldl 4,8                                                               00740000
+ lr 3,4                                                                 00750000
+ sr 4,4                                                                 00760000
+ niy niyzero,0                                                          00770000
+ ipm 5                                                                  00780000
+ oiy niyzero+1,0                                                        00790000
+ ipm 5                                                                  00800000
+ xiy niyzero+2,x'ff'                                                    00810000
+ ipm 5                                                                  00820000
+ sldl 4,8                                                               00830000
+ lpswe stop                                                             00840000
+ drop 0                                                                 00850000
+ using nibytes,2                                                        00860000
+inst_ni ni nibytes,0                                                    00870000
+inst_niy niy niybytes,0                                                 00880000
+inst_oi oi oibytes,0                                                    00890000
+inst_oiy oiy oiybytes,0                                                 00900000
+inst_xi xi xibytes,0                                                    00910000
+inst_xiy xiy xiybytes,0                                                 00920000
+stop ds 0d                                                              00930000
+ dc x'0002000180000000'                                                 00940000
+ dc ad(0)                                                               00950000
+ org ni+x'800'                                                          00960000
+nibytes dc 8x'ff'                                                       00970000
+oibytes dc 8x'00'                                                       00980000
+xibytes dc 8x'ff'                                                       00990000
+nicc dc 8x'0'                                                           01000000
+niycc dc 8x'0'                                                          01010000
+oicc dc 8x'0'                                                           01020000
+oiycc dc 8x'0'                                                          01030000
+xicc dc 8x'0'                                                           01040000
+xiycc dc 8x'0'                                                          01050000
+nizero dc al1(x'ff',0,x'ff',0)                                          01060000
+niyzero dc al1(x'ff',0,x'ff',0)                                         01070000
+ org ni+x'880' To specific address                                      01080000
+facilities ds d                                                         01090000
+faclist ds d Original                                                   01100000
+fmask dc (52/8)x'00',x'08',x'00'                                        01110000
+ org ni+x'2000' To be sure long displacement is used                    01120000
+niybytes dc 8x'ff'                                                      01130000
+oiybytes dc 8x'00'                                                      01140000
+xiybytes dc 8x'ff'                                                      01150000
+ punch ':etst 1'                                                        01160000
+tmp1 equ nibytes-ni                                                     01170000
+&a seta tmp1                                                            01180000
+ comp 8,'01020408 10204080'                                             01190000
+tmp8 equ oibytes-ni                                                     01200000
+&a seta tmp8                                                            01210000
+ comp 8,'01020408 10204080'                                             01220000
+tmp9 equ xibytes-ni                                                     01230000
+&a seta tmp9                                                            01240000
+ comp 8,'FEFDFBF7 EFDFBF7F'                                             01250000
+* Condition codes                                                       01260000
+ccni equ nicc-ni                                                        01270000
+&a seta ccni                                                            01280000
+ comp 8,'10101010 10101010'                                             01290000
+ccoi equ oicc-ni                                                        01300000
+&a seta ccoi                                                            01310000
+ comp 8,'10101010 10101010'                                             01320000
+ccxi equ xicc-ni                                                        01330000
+&a seta ccxi                                                            01340000
+ comp 8,'10101010 10101010'                                             01350000
+niyo equ niybytes-ni                                                    01360000
+&a seta niyo                                                            01370000
+ comp 8,'01020408 10204080'                                             01380000
+oiyo equ oiybytes-ni                                                    01390000
+&a seta oiyo                                                            01400000
+ comp 8,'01020408 10204080'                                             01410000
+xiyo equ xiybytes-ni                                                    01420000
+&a seta xiyo                                                            01430000
+ comp 8,'FEFDFBF7 EFDFBF7F'                                             01440000
+ccniy equ niycc-ni                                                      01450000
+&a seta ccniy                                                           01460000
+ comp 8,'10101010 10101010'                                             01470000
+ccoiy equ oiycc-ni                                                      01480000
+&a seta ccoiy                                                           01490000
+ comp 8,'10101010 10101010'                                             01500000
+ccxiy equ xiycc-ni                                                      01510000
+&a seta ccxiy                                                           01520000
+ comp 8,'10101010 10101010'                                             01530000
+tmp2 equ facilities-ni                                                  01540000
+&a seta tmp2                                                            01550000
+ comp  8,'00000000 00000800',text='Facilities list bit 52'              01560000
+ punch '* * First doubleword of facilities list'                        01570000
+tmp3 equ faclist-ni                                                     01580000
+&a seta tmp3                                                            01590000
+ display  8                                                             01600000
+n0 equ nizero-ni                                                        01610000
+&a seta n0                                                              01620000
+ comp    8,'00000000 00000000'                                          01630000
+ punch '*gpr'                                                           01640000
+ punch '* *Gpr R3 00000000'                                             01650000
+ punch '* *Gpr R4 00000000'                                             01660000
+ punch '* *Done'                                                        01670000
+ end                                                                    01680000

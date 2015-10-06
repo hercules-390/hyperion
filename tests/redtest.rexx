@@ -36,6 +36,8 @@ do while lines(in) > 0
          Then
             If comparing & left(rest, 2) ^= 'K:'
                then parse var rest display +36 /* Save for compare order */
+      When msg = 'HHC02269I'
+         then call gprs
       otherwise
    end
 end
@@ -56,6 +58,8 @@ Select
       Then comparing = 1
    When verb = '*Want'
       Then call want
+   When verb = '*Gpr'
+      Then call wantgpr
    When verb = '*Program'
       Then
          Do
@@ -79,6 +83,7 @@ wantpgm = ''
 havepgm = ''
 rv = 0
 pgmok = 0                             /* Program check not expected  */
+gpr.=''
 return
 
 endtest:
@@ -112,6 +117,18 @@ say 'Compare mismatch. ' info 'Want:' rest 'got' display
 rv = rv + 1
 return
 
+wantgpr:
+parse var rest r want
+If gpr.r = want
+   Then
+      Do
+         oks = oks + 1
+         return
+      End
+say 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
+rv = rv + 1
+return
+
 waitstate:
 havewait = 1
 parse var rest 'wait state' psw1 psw2
@@ -123,6 +140,16 @@ say 'Received unexpected wait state: ' psw1 psw2
 rv = rv + 1
 return
 say 'have' havepgm 'want' wantpgm (havepgm = wantpgm)
+
+gprs:
+If verb = 'General'
+   Then return
+todo = verb rest
+Do while todo \= ''
+   parse var todo r '=' val todo
+   gpr.r = val
+End
+return
 
 figurePgm:
 If havepgm = wantpgm
