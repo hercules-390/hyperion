@@ -34,7 +34,7 @@ do while lines(in) > 0
          Then call waitstate
       When msg = 'HHC02290I'
          Then
-            If comparing & left(rest, 2) ^= 'K:'
+            If comparing & left(rest, 2) \= 'K:'
                then parse var rest display +36 /* Save for compare order */
       When msg = 'HHC02269I'
          then call gprs
@@ -88,12 +88,12 @@ return
 
 endtest:
 Select
-   When havepgm ^= ''
+   When havepgm \= ''
       Then call figurePgm
    otherwise
 end
 
-If ^havewait
+If \havewait
    Then
       Do
          say 'No wait state encountered.'
@@ -101,7 +101,7 @@ If ^havewait
       end
 say 'Test' testcase'. ' oks 'OK compares.  rv='rv
 done = done + 1
-fail = rv ^= 0
+fail = rv \= 0
 fails.fail = fails.fail + 1
 return
 
@@ -134,7 +134,7 @@ havewait = 1
 parse var rest 'wait state' psw1 psw2
 If psw2 = 0
    Then return
-If psw2 = 'FFFFFFFFDEADDEAD' & havepgm ^= '' & havepgm = wantpgm
+If psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm
    Then return
 say 'Received unexpected wait state: ' psw1 psw2
 rv = rv + 1
@@ -156,9 +156,9 @@ If havepgm = wantpgm
    Then return
 rv = rv + 1
 Select
-   When havepgm ^= '' & wantpgm ^= ''
+   When havepgm \= '' & wantpgm \= ''
       Then say 'Expect pgm type' wantpgm', but have type' havepgm'.'
-   When havepgm ^= ''
+   When havepgm \= ''
       Then say 'Unexpected pgm type' havepgm' havepgm.'
    Otherwise
       say 'Expect pgm type' wantpgm', but none happened.'

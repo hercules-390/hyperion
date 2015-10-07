@@ -2840,6 +2840,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\logicimm.listing"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\logicimm.tst"
 						>
 					</File>
@@ -2880,6 +2884,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\README"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\redtest.rexx"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\res40002.txt"
 						>
 					</File>
@@ -2893,6 +2905,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\rrxtr.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\runtest.cmd"
 						>
 					</File>
 					<File
