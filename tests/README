@@ -23,20 +23,32 @@ without program checks.
 ----
 
 Files  that  have  a  tst extension are to be run by the "runtest" shell
-script.    They  are  run  and  the  console  output  is  inspected  for
-correctness.
+script  or  "runtest.cmd" command script.  They are run and the Hercules
+console  output is inspected for correctness.  You can create .tst files
+either  "by  hand"; or by assembly on a /360 system (VM, MVS, DOS), then
+TEXT decks then need to be processed into .tst files.
 
-Assuming  that  your  are building outside the source tree in the "atom"
-directory such that the source is ../hyperion, issue this command to run
-and verify the test cases:
+On  UNIX, assuming that your are building outside the source tree in the
+"atom" directory such that the source is ../hyperion, issue this command
+to run and verify the test cases:
 
    ../hyperion/tests/runtest
 
-This script first creates a composite set of test cases and then invokes
-Hercules to run them using the configuration file tests.conf.  This will
-make the screen flicker while Hercules runs.  When it completes, the
+On  Windows,  the  command  script  runtest.cmd runs the test cases.  It
+requires  a  first  parameter to specify the location of the test files.
+Refer to the comments at the beginning of the file
 
-An early sample output is:
+In  either  case,  runtest  first  creates a composite set of test cases
+(allTests.tst  in  the  current  working  directory)  and  then  invokes
+Hercules  to run them using the configuration file tests.conf and the rc
+file  just  created.   This  will make the screen flicker while Hercules
+runs.   When  it  completes,  the console output (allTests.out) is pared
+down   by  a  sed  script  (to  allTests.sout)  and  then  inspected  by
+redtest.rexx.
+
+The runtest return code is the number of failed test cases.
+
+The tail end of an early sample output is:
 
 HHC02264I Script 1: file allTests.tst processing ended
 HHC00101I Thread id b6e78700, prio 2147483647, name Control panel ended
@@ -48,5 +60,40 @@ Done 2 tests. 0 failed; 2 OK.
 .assemble
 ---------
 
-Source files for the .tst test cases.  These are assembled on VM and
-processed by BLDHTC EXEC.
+Source  files  for  the  .tst  test cases.  On z/VM with HLASM, the test
+cases can be prepared by BLDHTC EXEC.  ASMTST XEDIT is a sample macro to
+perform the build step from within the Xedit session.
+
+On  VM/370,  you  can use the system assembler to assemble, but you must
+somehow  process  the  TEXT  deck  yourself.   Perhaps  download and run
+through a command script?
+
+.tst file directives
+--------------------
+
+.tst  files  are executed as Hercules rc files, so they contain Hercules
+console  commands.   A  number  of  loud  comments  (beginning  with  an
+asterisk) are processed by redtest.rexx:
+
+*           Comment; ignored.  There must be a blank after the asterisk.
+
+*Testcase   Identify beginning of a test case.
+
+*Compare    An  r  command  follows  and the output should be stored for
+            later comparison.
+
+*Want       The  expected  r  command  output.  A string identifying the
+            comparison  may  be  enclosed  in  double  quotes before the
+            compare data.
+
+*Gpr        A  previous  gpr  console command should have been issued to
+            display  the  general  registers.  The specified register is
+            compared with the data.
+
+*Program    A  program  check  is expected, for example to verify that a
+            privileged operation causes an 0c2.
+
+*Done       End of a test case.
+
+logicimm.tst  shows  examples  of  all  directives, except *Program; see
+sske.tst for an example of this.

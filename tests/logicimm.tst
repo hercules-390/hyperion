@@ -1,4 +1,4 @@
-*Testcase logicImmediate assembled 6 Oct 2015 15:21:59 by BLDHTC EXEC
+*Testcase logicImmediate assembled 7 Oct 2015 12:58:37 by BLDHTC EXEC
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -41,15 +41,6 @@ r 00000808.8
 r 00000810.8
 *Want               FEFDFBF7 EFDFBF7F
 *Compare
-r 00000818.8
-*Want               10101010 10101010
-*Compare
-r 00000828.8
-*Want               10101010 10101010
-*Compare
-r 00000838.8
-*Want               10101010 10101010
-*Compare
 r 00002000.8
 *Want               01020408 10204080
 *Compare
@@ -58,6 +49,15 @@ r 00002008.8
 *Compare
 r 00002010.8
 *Want               FEFDFBF7 EFDFBF7F
+*Compare
+r 00000818.8
+*Want               10101010 10101010
+*Compare
+r 00000828.8
+*Want               10101010 10101010
+*Compare
+r 00000838.8
+*Want               10101010 10101010
 *Compare
 r 00000820.8
 *Want               10101010 10101010
