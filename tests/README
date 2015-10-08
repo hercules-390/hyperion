@@ -88,12 +88,16 @@ asterisk) are processed by redtest.rexx:
 
 *Gpr        A  previous  gpr  console command should have been issued to
             display  the  general  registers.  The specified register is
-            compared with the data.
+            compared  with  the stored data.  Specify a decimal register
+            number with no leading zero.
+
+*Key        Compare  the  specified key against the key displayed in the
+            previous r command.
 
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
 *Done       End of a test case.
 
-logicimm.tst  shows  examples  of  all  directives, except *Program; see
-sske.tst for an example of this.
+logicimm.tst shows examples of all directives, except *Key and *Program;
+see sske.tst for an example of these.

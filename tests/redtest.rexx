@@ -16,8 +16,10 @@ testcase = '<unknown>'
 rv = 0
 fails. = 0
 done = 0
+lineno = 0
 
 do while lines(in) > 0
+   lineno = lineno + 1
    l = linein(in)
    parse var l msg verb rest
    Select
@@ -34,8 +36,18 @@ do while lines(in) > 0
          Then call waitstate
       When msg = 'HHC02290I'
          Then
-            If comparing & left(rest, 2) \= 'K:'
-               then parse var rest display +36 /* Save for compare order */
+            If comparing
+               Then
+                  Do
+                     parse var rest 'K:' key .
+                     If key = ''
+                        Then parse var rest display +36 /* Save for compare order */
+                        else
+                           Do
+                              keyaddr = substr(verb, 3)
+                              lastkey = key
+                           End
+                  End
       When msg = 'HHC02269I'
          then call gprs
       otherwise
@@ -60,11 +72,10 @@ Select
       Then call want
    When verb = '*Gpr'
       Then call wantgpr
+   When verb = '*Key'
+      Then call wantkey
    When verb = '*Program'
-      Then
-         Do
-            wantpgm = rest
-         End
+      Then wantpgm = rest
    When verb = '*Done'
       Then call endtest
    otherwise
@@ -84,6 +95,8 @@ havepgm = ''
 rv = 0
 pgmok = 0                             /* Program check not expected  */
 gpr.=''
+lastkey = ''
+keyaddr = '<unknown>'
 return
 
 endtest:
@@ -113,8 +126,7 @@ If rest = display
          return
       End
 notoks = notoks + 1
-say 'Compare mismatch. ' info 'Want:' rest 'got' display
-rv = rv + 1
+call failtest 'Storage at' lastkey 'compare mismatch. ' info 'Want:' rest 'got' display
 return
 
 wantgpr:
@@ -125,8 +137,21 @@ If gpr.r = want
          oks = oks + 1
          return
       End
-say 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
-rv = rv + 1
+call failtest 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
+return
+
+wantkey:
+parse var rest want
+
+If lastkey = want
+   Then
+      Do
+         oks = oks + 1
+         return
+      End
+If lastkey = ''
+   Then call failtest 'No key saved from r command.'
+   Else call failtest 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
 return
 
 waitstate:
@@ -136,17 +161,16 @@ If psw2 = 0
    Then return
 If psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm
    Then return
-say 'Received unexpected wait state: ' psw1 psw2
-rv = rv + 1
+call failtest 'Received unexpected wait state: ' psw1 psw2
 return
-say 'have' havepgm 'want' wantpgm (havepgm = wantpgm)
 
 gprs:
 If verb = 'General'
    Then return
 todo = verb rest
 Do while todo \= ''
-   parse var todo r '=' val todo
+   parse var todo 'R' r '=' val todo
+   r = x2d(r)
    gpr.r = val
 End
 return
@@ -154,13 +178,17 @@ return
 figurePgm:
 If havepgm = wantpgm
    Then return
-rv = rv + 1
 Select
    When havepgm \= '' & wantpgm \= ''
-      Then say 'Expect pgm type' wantpgm', but have type' havepgm'.'
+      Then call failtest 'Expect pgm type' wantpgm', but have type' havepgm'.'
    When havepgm \= ''
-      Then say 'Unexpected pgm type' havepgm' havepgm.'
+      Then call failtest 'Unexpected pgm type' havepgm' havepgm.'
    Otherwise
-      say 'Expect pgm type' wantpgm', but none happened.'
+      call failtest 'Expect pgm type' wantpgm', but none happened.'
 end
+return
+
+failtest:
+say '>>>>> line' right(lineno, 5)':'  arg(1)
+rv = rv + 1
 return

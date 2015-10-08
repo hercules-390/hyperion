@@ -13,12 +13,23 @@
 # Having done "make" to build the executable, issue "./hercules" to make
 # libtool create an actual executable.
 
-# You can now run a test case by "../hyperion/tests/runtest <fname>"
-# be sure to omit the extension.
+# You  can  run a test case by "../hyperion/tests/runtest <fname>".  Be
+# sure  to  omit  the extension.  Omit the file name or specify '*' (an
+# asterisk  enclosed  in  single  quotes)  to  run  all  test that have
+# extension .tst.
+
+# Specify  noexit  as  the second argument to suppress the exit command
+# that normally terminates the test cases.  This will allow you to poke
+# around.
 
 wfn=allTests
-echo exit|cat ../hyperion/tests/*.tst - >$wfn.tst
-./hercules -f ../hyperion/tests/tests.conf -r $wfn.tst >$wfn.out
+dir=../hyperion/tests
+fns=${1:-*}
+cat $dir/$fns.tst >$wfn.tst
+if [ "$2" != "noexit" ] ; then
+        echo exit >>$wfn.tst
+fi
+./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out
 stty echo
 sed -n -e '/^HHC01603I \*Testcase/,/^HHC01603I \*Done/p' >$wfn.sout $wfn.out
-rexx ../hyperion/tests/redtest.rexx $wfn.sout
+rexx $dir/redtest.rexx $wfn.sout

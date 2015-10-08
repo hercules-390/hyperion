@@ -1,508 +1,483 @@
-1                                         High Level Assembler Option Summary                                   Page    1                                                                                                                                      
--                                                                                            HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0  No Overriding ASMAOPT Parameters                                                                                                                                                                                                                            
-   Overriding Parameters-  NODECK,OBJECT,EXIT(INEXIT(FPLHLASX(00D85138)),OBJEXIT(FPLHLASX(00D85138)),PRTEXIT(FPLHLASX(00D                                                                                                                                      
-   85138)),ADEXIT(FPLHLASX(00D85138))),ADATA,asa                                                                                                                                                                                                               
-   No Process Statements                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                                               
-   Options for this Assembly                                                                                                                                                                                                                                   
-03   ADATA                                                                                                                                                                                                                                                     
-     ALIGN                                                                                                                                                                                                                                                     
- 3   ASA                                                                                                                                                                                                                                                       
-     BATCH                                                                                                                                                                                                                                                     
-     CODEPAGE(047C)                                                                                                                                                                                                                                            
-   NOCOMPAT                                                                                                                                                                                                                                                    
-   NODBCS                                                                                                                                                                                                                                                      
- 3 NODECK                                                                                                                                                                                                                                                      
-     DXREF                                                                                                                                                                                                                                                     
-     ESD                                                                                                                                                                                                                                                       
-     EXIT                                                                                                                                                                                                                                                      
- 3       INEXIT(FPLHLASX(00D85138))                                                                                                                                                                                                                            
-       NOLIBEXIT                                                                                                                                                                                                                                               
- 3       PRTEXIT(FPLHLASX(00D85138))                                                                                                                                                                                                                           
- 3       OBJEXIT(FPLHLASX(00D85138))                                                                                                                                                                                                                           
- 3       ADEXIT(FPLHLASX(00D85138))                                                                                                                                                                                                                            
-       NOTRMEXIT                                                                                                                                                                                                                                               
-     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                                                                                                                                                                    
-   NOFOLD                                                                                                                                                                                                                                                      
-   NOGOFF                                                                                                                                                                                                                                                      
-   NOINFO                                                                                                                                                                                                                                                      
-     LANGUAGE(EN)                                                                                                                                                                                                                                              
-   NOLIBMAC                                                                                                                                                                                                                                                    
-     LINECOUNT(60)                                                                                                                                                                                                                                             
-     LIST(121)                                                                                                                                                                                                                                                 
-     MACHINE(,NOLIST)                                                                                                                                                                                                                                          
-     MXREF(SOURCE)                                                                                                                                                                                                                                             
- 3   OBJECT                                                                                                                                                                                                                                                    
-     OPTABLE(UNI,NOLIST)                                                                                                                                                                                                                                       
-   NOPCONTROL                                                                                                                                                                                                                                                  
-   NOPESTOP                                                                                                                                                                                                                                                    
-   NOPROFILE                                                                                                                                                                                                                                                   
-   NORA2                                                                                                                                                                                                                                                       
-   NORENT                                                                                                                                                                                                                                                      
-     RLD                                                                                                                                                                                                                                                       
-     RXREF                                                                                                                                                                                                                                                     
-     SECTALGN(8)                                                                                                                                                                                                                                               
-     SIZE(MAX)                                                                                                                                                                                                                                                 
-   NOSUPRWARN                                                                                                                                                                                                                                                  
-     SYSPARM()                                                                                                                                                                                                                                                 
-   NOTERM                                                                                                                                                                                                                                                      
-   NOTEST                                                                                                                                                                                                                                                      
-     THREAD                                                                                                                                                                                                                                                    
-   NOTRANSLATE                                                                                                                                                                                                                                                 
-     TYPECHECK(MAGNITUDE,REGISTER)                                                                                                                                                                                                                             
-     USING(NOLIMIT,MAP,WARN(15))                                                                                                                                                                                                                               
-   NOWORKFILE                                                                                                                                                                                                                                                  
-     XREF(SHORT,UNREFS)                                                                                                                                                                                                                                        
-1                                         High Level Assembler Option Summary                                   Page    2                                                                                                                                      
--                                                                                            HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0                                                                                                                                                                                                                                                              
-   No Overriding DD Names                                                                                                                                                                                                                                      
-1                                              External Symbol Dictionary                                       Page    3                                                                                                                                      
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                            HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0NI        SD 00000001 00000000 00002018             00                                                                                                                                                                                                        
-1                                                                                                               Page    4                                                                                                                                      
-   Active Usings: None                                                                                                                                                                                                                                         
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0                                      1 * Stand-alone test for NI, NIY, OI, OIY, XI, XIY                        00010000                                                                                                                                      
-0                                      3 * This file was put into the public domain 2015-10-05                   00030000                                                                                                                                      
-                                       4 * by John P. Hartmann.  You can use it for anything you like,           00040000                                                                                                                                      
-                                       5 * as long as this notice remains.                                       00050000                                                                                                                                      
-0000000                00000 02018     7 ni start 0                                                              00070000                                                                                                                                      
-                                       8  gbla &a Compensate for SETA limitation                                 00080000                                                                                                                                      
-0                                     10  macro                                                                  00100000                                                                                                                                      
-                                      11  display &addr,&len                                                     00110000                                                                                                                                      
-                                      12 &l setc 'equ&sysndx'                                                    00120000                                                                                                                                      
-                                      13 &l equ &addr-&sysect                                                    00130000                                                                                                                                      
-                                      14  ainsert '&&a seta &l',back                                             00140000                                                                                                                                      
-                                      15  ainsert '&&ac setc a2x(&&a)',back                                      00150000                                                                                                                                      
-                                      16  ainsert ' punch ''* r &&ac..&len''',back                               00160000                                                                                                                                      
-                                      17  mend                                                                   00170000                                                                                                                                      
-0                                     19  macro                                                                  00190000                                                                                                                                      
-                                      20  comp &addr,&len,&want,&text=                                           00200000                                                                                                                                      
-                                      21  punch '* *Compare'                                                     00210000                                                                                                                                      
-                                      22  display &addr,&len                                                     00220000                                                                                                                                      
-                                      23 &wt setc '&want'(2,k'&want-2)                                           00230000                                                                                                                                      
-                                      24  aif (k'&text gt 0).havetxt                                             00240000                                                                                                                                      
-                                      25  ainsert ' punch ''* *Want               &wt.''',back                   00250000                                                                                                                                      
-                                      26  mexit                                                                  00260000                                                                                                                                      
-                                      27 .havetxt anop ,                                                         00270000                                                                                                                                      
-                                      28 &ts setc '&text'(2,k'&text-2)                                           00280000                                                                                                                                      
-                                      29  ainsert ' punch ''* *Want "&ts." &wt.''',back                          00290000                                                                                                                                      
-                                      30  mend                                                                   00300000                                                                                                                                      
-0                                     32  macro                                                                  00320000                                                                                                                                      
-                                      33  dotest &op                                                             00330000                                                                                                                                      
-                                      34  ex 1,inst_&op                                                          00340000                                                                                                                                      
-                                      35  ipm 4                                                                  00350000                                                                                                                                      
-                                      36  stcm 4,8,b.&op.cc                                                      00360000                                                                                                                                      
-                                      37  ex 1,inst_&op.y                                                        00370000                                                                                                                                      
-                                      38  ipm 4                                                                  00380000                                                                                                                                      
-                                      39  stcm 4,8,b.&op.ycc                                                     00390000                                                                                                                                      
-                                      40  mend                                                                   00400000                                                                                                                                      
-0                                     42  punch ':test logicImmediate'                                           00420000                                                                                                                                      
-                                      43  punch ':btst z'                                                        00430000                                                                                                                                      
- 000000                               44  ds xl(x'1a0')                                                          00440000                                                                                                                                      
- 0001A0 0000000180000000              45  dc x'0000000180000000'                                                 00450000                                                                                                                                      
- 0001A8 0000000000000200              46  dc ad(go_ni)                                                           00460000                                                                                                                                      
- 0001B0                               47  ds xl(x'1d0'-x'1a0'-16)                                                00470000                                                                                                                                      
- 0001D0 0002000180000000              48  dc x'0002000180000000'                                                 00480000                                                                                                                                      
- 0001D8 FFFFFFFFDEADDEAD              49  dc ad(x'deaddead') Program new PSW                                     00490000                                                                                                                                      
- 0001E0                               50  ds xl(x'200'-x'1d0'-16)                                                00500000                                                                                                                                      
-                  R:0  00000          51  using ni,0                                                             00510000                                                                                                                                      
- 000200                               52 go_ni ds 0d                                                             00520000                                                                                                                                      
- 000200 1B00                          53  sr 0,0 Store one dword                                                 00530000                                                                                                                                      
- 000202 B2B0 0880      00880          54  stfle facilities                                                       00540000                                                                                                                                      
- 000206 D207 0888 0880 00888 00880    55  mvc faclist,facilities Save for display                                00550000                                                                                                                                      
-1                                                                                                               Page    5                                                                                                                                      
-   Active Usings: ni,R0                                                                                                                                                                                                                                        
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-000020C D407 0880 0890 00880 00890    56  nc facilities,fmask  Select bit 52                                     00560000                                                                                                                                      
- 000212 4100 0008            00008    57  la 0,8                                                                 00570000                                                                                                                                      
- 000216 4110 0001            00001    58  la 1,1                                                                 00580000                                                                                                                                      
- 00021A 4120 0800            00800    59  la 2,nibytes                                                           00590000                                                                                                                                      
-                  R:2  00800          60 b using nibytes,2                                                       00600000                                                                                                                                      
- 00021E 1B44                          61  sr 4,4                                                                 00610000                                                                                                                                      
- 000220                               62 loop ds 0h                                                              00620000                                                                                                                                      
-                                      63    dotest ni                                                            00630000                                                                                                                                      
- 000220 4410 02BE            002BE    64+ ex 1,inst_ni                                                           01-00034                                                                                                                                      
- 000224 B222 0040                     65+ ipm 4                                                                  01-00035                                                                                                                                      
- 000228 BE48 2018            00818    66+ stcm 4,8,b.nicc                                                        01-00036                                                                                                                                      
- 00022C 4410 02C2            002C2    67+ ex 1,inst_niy                                                          01-00037                                                                                                                                      
- 000230 B222 0040                     68+ ipm 4                                                                  01-00038                                                                                                                                      
- 000234 BE48 2020            00820    69+ stcm 4,8,b.niycc                                                       01-00039                                                                                                                                      
-                                      70    dotest oi                                                            00640000                                                                                                                                      
- 000238 4410 02C8            002C8    71+ ex 1,inst_oi                                                           01-00034                                                                                                                                      
- 00023C B222 0040                     72+ ipm 4                                                                  01-00035                                                                                                                                      
- 000240 BE48 2028            00828    73+ stcm 4,8,b.oicc                                                        01-00036                                                                                                                                      
- 000244 4410 02CC            002CC    74+ ex 1,inst_oiy                                                          01-00037                                                                                                                                      
- 000248 B222 0040                     75+ ipm 4                                                                  01-00038                                                                                                                                      
- 00024C BE48 2030            00830    76+ stcm 4,8,b.oiycc                                                       01-00039                                                                                                                                      
-                                      77    dotest xi                                                            00650000                                                                                                                                      
- 000250 4410 02D2            002D2    78+ ex 1,inst_xi                                                           01-00034                                                                                                                                      
- 000254 B222 0040                     79+ ipm 4                                                                  01-00035                                                                                                                                      
- 000258 BE48 2038            00838    80+ stcm 4,8,b.xicc                                                        01-00036                                                                                                                                      
- 00025C 4410 02D6            002D6    81+ ex 1,inst_xiy                                                          01-00037                                                                                                                                      
- 000260 B222 0040                     82+ ipm 4                                                                  01-00038                                                                                                                                      
- 000264 BE48 2040            00840    83+ stcm 4,8,b.xiycc                                                       01-00039                                                                                                                                      
- 000268 4120 2001            00001    84    la 2,1(,2)                                                           00660000                                                                                                                                      
- 00026C 8910 0001            00001    85    sll 1,1                                                              00670000                                                                                                                                      
- 000270 A706 FFD8            00220    86  brct 0,loop                                                            00680000                                                                                                                                      
- 000274 1B44                          87  sr 4,4                                                                 00690000                                                                                                                                      
- 000276 1B55                          88  sr 5,5                                                                 00700000                                                                                                                                      
- 000278 9400 0848      00848          89  ni nizero,0                                                            00710000                                                                                                                                      
- 00027C B222 0050                     90  ipm 5                                                                  00720000                                                                                                                                      
- 000280 9600 0849      00849          91  oi nizero+1,0                                                          00730000                                                                                                                                      
- 000284 B222 0050                     92  ipm 5                                                                  00740000                                                                                                                                      
- 000288 97FF 084A      0084A          93  xi nizero+2,x'ff'                                                      00750000                                                                                                                                      
- 00028C B222 0050                     94  ipm 5                                                                  00760000                                                                                                                                      
- 000290 8D40 0008            00008    95  sldl 4,8                                                               00770000                                                                                                                                      
- 000294 1834                          96  lr 3,4                                                                 00780000                                                                                                                                      
- 000296 1B44                          97  sr 4,4                                                                 00790000                                                                                                                                      
- 000298 EB00 084C 0054 0084C          98  niy niyzero,0                                                          00800000                                                                                                                                      
- 00029E B222 0050                     99  ipm 5                                                                  00810000                                                                                                                                      
- 0002A2 EB00 084D 0056 0084D         100  oiy niyzero+1,0                                                        00820000                                                                                                                                      
- 0002A8 B222 0050                    101  ipm 5                                                                  00830000                                                                                                                                      
- 0002AC EBFF 084E 0057 0084E         102  xiy niyzero+2,x'ff'                                                    00840000                                                                                                                                      
- 0002B2 B222 0050                    103  ipm 5                                                                  00850000                                                                                                                                      
- 0002B6 8D40 0008            00008   104  sldl 4,8                                                               00860000                                                                                                                                      
- 0002BA B2B2 02E0      002E0         105  lpswe stop                                                             00870000                                                                                                                                      
-                                     106  drop 0                                                                 00880000                                                                                                                                      
-                  R:2  00800         107  using nibytes,2                                                        00890000                                                                                                                                      
- 0002BE 9400 2000      00800         108 inst_ni ni nibytes,0                                                    00900000                                                                                                                                      
- 0002C2 EB00 2800 0154 02000         109 inst_niy niy niybytes,0                                                 00910000                                                                                                                                      
- 0002C8 9600 2008      00808         110 inst_oi oi oibytes,0                                                    00920000                                                                                                                                      
-1                                                                                                               Page    6                                                                                                                                      
-   Active Usings: nibytes,R2  b.nibytes,R2                                                                                                                                                                                                                     
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-00002CC EB00 2808 0156 02008         111 inst_oiy oiy oiybytes,0                                                 00930000                                                                                                                                      
- 0002D2 9700 2010      00810         112 inst_xi xi xibytes,0                                                    00940000                                                                                                                                      
- 0002D6 EB00 2810 0157 02010         113 inst_xiy xiy xiybytes,0                                                 00950000                                                                                                                                      
- 0002E0                              114 stop ds 0d                                                              00960000                                                                                                                                      
- 0002E0 0002000180000000             115  dc x'0002000180000000'                                                 00970000                                                                                                                                      
- 0002E8 0000000000000000             116  dc ad(0)                                                               00980000                                                                                                                                      
- 0002F0                002F0 00800   117  org ni+x'800'                                                          00990000                                                                                                                                      
- 000800 FFFFFFFFFFFFFFFF             118 nibytes dc 8x'ff'                                                       01000000                                                                                                                                      
- 000808 0000000000000000             119 oibytes dc 8x'00'                                                       01010000                                                                                                                                      
- 000810 FFFFFFFFFFFFFFFF             120 xibytes dc 8x'ff'                                                       01020000                                                                                                                                      
- 000818 0000000000000000             121 nicc dc 8x'0'                                                           01030000                                                                                                                                      
- 000820 0000000000000000             122 niycc dc 8x'0'                                                          01040000                                                                                                                                      
- 000828 0000000000000000             123 oicc dc 8x'0'                                                           01050000                                                                                                                                      
- 000830 0000000000000000             124 oiycc dc 8x'0'                                                          01060000                                                                                                                                      
- 000838 0000000000000000             125 xicc dc 8x'0'                                                           01070000                                                                                                                                      
- 000840 0000000000000000             126 xiycc dc 8x'0'                                                          01080000                                                                                                                                      
- 000848 FF00FF00                     127 nizero dc al1(x'ff',0,x'ff',0)                                          01090000                                                                                                                                      
- 00084C FF00FF00                     128 niyzero dc al1(x'ff',0,x'ff',0)                                         01100000                                                                                                                                      
- 000850                00850 00880   129  org ni+x'880' To specific address                                      01110000                                                                                                                                      
- 000880                              130 facilities ds d                                                         01120000                                                                                                                                      
- 000888                              131 faclist ds d Original                                                   01130000                                                                                                                                      
- 000890 0000000000000800             132 fmask dc (52/8)x'00',x'08',x'00'                                        01140000                                                                                                                                      
- 000898                00898 02000   133  org ni+x'2000' To be sure long displacement is used                    01150000                                                                                                                                      
- 002000 FFFFFFFFFFFFFFFF             134 niybytes dc 8x'ff'                                                      01160000                                                                                                                                      
- 002008 0000000000000000             135 oiybytes dc 8x'00'                                                      01170000                                                                                                                                      
- 002010 FFFFFFFFFFFFFFFF             136 xiybytes dc 8x'ff'                                                      01180000                                                                                                                                      
-                                     137  punch ':etst 1'                                                        01190000                                                                                                                                      
-                                     138  comp nibytes,8,'01020408 10204080'                                     01200000                                                                                                                                      
-                                     139+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00800         141+equ0005 equ nibytes-ni                                                  02-00013                                                                                                                                      
-                                     142+ ainsert '&&a seta equ0005',back                                        02-00014                                                                                                                                      
-                                     143+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     144+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     145+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00025                                                                                                                                      
-                                     146>&a seta equ0005                                                                                                                                                                                                       
-                                     147>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     148> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000800.8'                                                                                                                                                                                               
-                                     149> punch '* *Want               01020408 10204080'                                                                                                                                                                      
-                                     150  comp oibytes,8,'01020408 10204080'                                     01210000                                                                                                                                      
-                                     151+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00808         153+equ0007 equ oibytes-ni                                                  02-00013                                                                                                                                      
-                                     154+ ainsert '&&a seta equ0007',back                                        02-00014                                                                                                                                      
-                                     155+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     156+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     157+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00025                                                                                                                                      
-                                     158>&a seta equ0007                                                                                                                                                                                                       
-                                     159>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     160> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000808.8'                                                                                                                                                                                               
-                                     161> punch '* *Want               01020408 10204080'                                                                                                                                                                      
-                                     162  comp xibytes,8,'FEFDFBF7 EFDFBF7F'                                     01220000                                                                                                                                      
-                                     163+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00810         165+equ0009 equ xibytes-ni                                                  02-00013                                                                                                                                      
-                                     166+ ainsert '&&a seta equ0009',back                                        02-00014                                                                                                                                      
-1                                                                                                               Page    7                                                                                                                                      
-   Active Usings: nibytes,R2  b.nibytes,R2                                                                                                                                                                                                                     
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0                                    167+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     168+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     169+ ainsert ' punch ''* *Want               FEFDFBF7 EFDFBF7F''',back      01-00025                                                                                                                                      
-                                     170>&a seta equ0009                                                                                                                                                                                                       
-                                     171>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     172> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000810.8'                                                                                                                                                                                               
-                                     173> punch '* *Want               FEFDFBF7 EFDFBF7F'                                                                                                                                                                      
-                                     174  comp niybytes,8,'01020408 10204080'                                    01230000                                                                                                                                      
-                                     175+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       02000         177+equ0011 equ niybytes-ni                                                 02-00013                                                                                                                                      
-                                     178+ ainsert '&&a seta equ0011',back                                        02-00014                                                                                                                                      
-                                     179+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     180+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     181+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00025                                                                                                                                      
-                                     182>&a seta equ0011                                                                                                                                                                                                       
-                                     183>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     184> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00002000.8'                                                                                                                                                                                               
-                                     185> punch '* *Want               01020408 10204080'                                                                                                                                                                      
-                                     186  comp oiybytes,8,'01020408 10204080'                                    01240000                                                                                                                                      
-                                     187+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       02008         189+equ0013 equ oiybytes-ni                                                 02-00013                                                                                                                                      
-                                     190+ ainsert '&&a seta equ0013',back                                        02-00014                                                                                                                                      
-                                     191+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     192+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     193+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00025                                                                                                                                      
-                                     194>&a seta equ0013                                                                                                                                                                                                       
-                                     195>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     196> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00002008.8'                                                                                                                                                                                               
-                                     197> punch '* *Want               01020408 10204080'                                                                                                                                                                      
-                                     198  comp xiybytes,8,'FEFDFBF7 EFDFBF7F'                                    01250000                                                                                                                                      
-                                     199+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       02010         201+equ0015 equ xiybytes-ni                                                 02-00013                                                                                                                                      
-                                     202+ ainsert '&&a seta equ0015',back                                        02-00014                                                                                                                                      
-                                     203+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     204+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     205+ ainsert ' punch ''* *Want               FEFDFBF7 EFDFBF7F''',back      01-00025                                                                                                                                      
-                                     206>&a seta equ0015                                                                                                                                                                                                       
-                                     207>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     208> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00002010.8'                                                                                                                                                                                               
-                                     209> punch '* *Want               FEFDFBF7 EFDFBF7F'                                                                                                                                                                      
-                                     210 * Condition codes                                                       01260000                                                                                                                                      
-                                     211  comp nicc,8,'10101010 10101010'                                        01270000                                                                                                                                      
-                                     212+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00818         214+equ0017 equ nicc-ni                                                     02-00013                                                                                                                                      
-                                     215+ ainsert '&&a seta equ0017',back                                        02-00014                                                                                                                                      
-                                     216+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     217+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     218+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     219>&a seta equ0017                                                                                                                                                                                                       
-                                     220>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     221> punch '* r &ac..8'                                                                                                                                                                                                   
-1                                                                                                               Page    8                                                                                                                                      
-   Active Usings: nibytes,R2  b.nibytes,R2                                                                                                                                                                                                                     
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0                                       + punch '* r 00000818.8'                                                                                                                                                                                               
-                                     222> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     223  comp oicc,8,'10101010 10101010'                                        01280000                                                                                                                                      
-                                     224+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00828         226+equ0019 equ oicc-ni                                                     02-00013                                                                                                                                      
-                                     227+ ainsert '&&a seta equ0019',back                                        02-00014                                                                                                                                      
-                                     228+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     229+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     230+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     231>&a seta equ0019                                                                                                                                                                                                       
-                                     232>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     233> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000828.8'                                                                                                                                                                                               
-                                     234> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     235  comp xicc,8,'10101010 10101010'                                        01290000                                                                                                                                      
-                                     236+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00838         238+equ0021 equ xicc-ni                                                     02-00013                                                                                                                                      
-                                     239+ ainsert '&&a seta equ0021',back                                        02-00014                                                                                                                                      
-                                     240+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     241+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     242+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     243>&a seta equ0021                                                                                                                                                                                                       
-                                     244>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     245> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000838.8'                                                                                                                                                                                               
-                                     246> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     247  comp niycc,8,'10101010 10101010'                                       01300000                                                                                                                                      
-                                     248+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00820         250+equ0023 equ niycc-ni                                                    02-00013                                                                                                                                      
-                                     251+ ainsert '&&a seta equ0023',back                                        02-00014                                                                                                                                      
-                                     252+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     253+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     254+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     255>&a seta equ0023                                                                                                                                                                                                       
-                                     256>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     257> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000820.8'                                                                                                                                                                                               
-                                     258> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     259  comp oiycc,8,'10101010 10101010'                                       01310000                                                                                                                                      
-                                     260+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00830         262+equ0025 equ oiycc-ni                                                    02-00013                                                                                                                                      
-                                     263+ ainsert '&&a seta equ0025',back                                        02-00014                                                                                                                                      
-                                     264+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     265+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     266+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     267>&a seta equ0025                                                                                                                                                                                                       
-                                     268>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     269> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000830.8'                                                                                                                                                                                               
-                                     270> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     271  comp xiycc,8,'10101010 10101010'                                       01320000                                                                                                                                      
-                                     272+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00840         274+equ0027 equ xiycc-ni                                                    02-00013                                                                                                                                      
-                                     275+ ainsert '&&a seta equ0027',back                                        02-00014                                                                                                                                      
-                                     276+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-1                                                                                                               Page    9                                                                                                                                      
-   Active Usings: nibytes,R2  b.nibytes,R2                                                                                                                                                                                                                     
-0  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0                                    277+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     278+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00025                                                                                                                                      
-                                     279>&a seta equ0027                                                                                                                                                                                                       
-                                     280>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     281> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000840.8'                                                                                                                                                                                               
-                                     282> punch '* *Want               10101010 10101010'                                                                                                                                                                      
-                                     283  comp  facilities,8,'00000000 00000800',text='Facilities list bit 52'   01330000                                                                                                                                      
-                                     284+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00880         286+equ0029 equ facilities-ni                                               02-00013                                                                                                                                      
-                                     287+ ainsert '&&a seta equ0029',back                                        02-00014                                                                                                                                      
-                                     288+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     289+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     290+ ainsert ' punch ''* *Want "Facilities list bit 52" 00000000 00000800''X01-00029                                                                                                                                      
-                                        +               ',back                                                                                                                                                                                                 
-                                     291>&a seta equ0029                                                                                                                                                                                                       
-                                     292>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     293> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000880.8'                                                                                                                                                                                               
-                                     294> punch '* *Want "Facilities list bit 52" 00000000 00000800'                                                                                                                                                           
-                                     295  punch '* * First doubleword of facilities list'                        01340000                                                                                                                                      
-                                     296  display  faclist,8                                                     01350000                                                                                                                                      
-                       00888         297+equ0030 equ faclist-ni                                                  01-00013                                                                                                                                      
-                                     298+ ainsert '&&a seta equ0030',back                                        01-00014                                                                                                                                      
-                                     299+ ainsert '&&ac setc a2x(&&a)',back                                      01-00015                                                                                                                                      
-                                     300+ ainsert ' punch ''* r &&ac..8''',back                                  01-00016                                                                                                                                      
-                                     301>&a seta equ0030                                                                                                                                                                                                       
-                                     302>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     303> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000888.8'                                                                                                                                                                                               
-                                     304  comp   nizero,8,'00000000 00000000'                                    01360000                                                                                                                                      
-                                     305+ punch '* *Compare'                                                     01-00021                                                                                                                                      
-                       00848         307+equ0032 equ nizero-ni                                                   02-00013                                                                                                                                      
-                                     308+ ainsert '&&a seta equ0032',back                                        02-00014                                                                                                                                      
-                                     309+ ainsert '&&ac setc a2x(&&a)',back                                      02-00015                                                                                                                                      
-                                     310+ ainsert ' punch ''* r &&ac..8''',back                                  02-00016                                                                                                                                      
-                                     311+ ainsert ' punch ''* *Want               00000000 00000000''',back      01-00025                                                                                                                                      
-                                     312>&a seta equ0032                                                                                                                                                                                                       
-                                     313>&ac setc a2x(&a)                                                                                                                                                                                                      
-                                     314> punch '* r &ac..8'                                                                                                                                                                                                   
-                                        + punch '* r 00000848.8'                                                                                                                                                                                               
-                                     315> punch '* *Want               00000000 00000000'                                                                                                                                                                      
-                                     316  punch '*gpr'                                                           01370000                                                                                                                                      
-                                     317  punch '* *Gpr R3 00000000'                                             01380000                                                                                                                                      
-                                     318  punch '* *Gpr R4 00000000'                                             01390000                                                                                                                                      
-                                     319  punch '* *Done'                                                        01400000                                                                                                                                      
-                                     320  end                                                                    01410000                                                                                                                                      
-1                                                 Relocation Dictionary                                         Page   10                                                                                                                                      
--   Pos.Id   Rel.Id   Address  Type  Action                                                  HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0  00000001 00000001 000001A8   A 8     +                                                                                                                                                                                                                      
-1                               Ordinary Symbol and Literal Cross Reference                                     Page   11                                                                                                                                      
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                     HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0b        ***QUALIFIER*** 00000001     U                   60   66    69    73    76    80    83                                                                                                                                                               
- facilities                                                                                                                                                                                                                                                    
-               8 00000880 00000001     D  D               130   54M   55    56M  286                                                                                                                                                                           
- faclist       8 00000888 00000001     D  D               131   55M  297                                                                                                                                                                                       
- fmask         1 00000890 00000001     X  X               132   56                                                                                                                                                                                             
- go_ni         8 00000200 00000001     D  D                52   46                                                                                                                                                                                             
- inst_ni       4 000002BE 00000001     I                  108   64X                                                                                                                                                                                            
- inst_niy      6 000002C2 00000001     I                  109   67X                                                                                                                                                                                            
- inst_oi       4 000002C8 00000001     I                  110   71X                                                                                                                                                                                            
- inst_oiy      6 000002CC 00000001     I                  111   74X                                                                                                                                                                                            
- inst_xi       4 000002D2 00000001     I                  112   78X                                                                                                                                                                                            
- inst_xiy      6 000002D6 00000001     I                  113   81X                                                                                                                                                                                            
- loop          2 00000220 00000001     H  H                62   86B                                                                                                                                                                                            
- ni            1 00000000 00000001     J                    7   51U  117   129   133   141   153   165   177   189   201                                                                                                                                       
-                                                               214   226   238   250   262   274   286   297   307                                                                                                                                             
- nibytes       1 00000800 00000001     X  X               118   59    60U  107U  108M  141                                                                                                                                                                     
- nicc          1 00000818 00000001     X  X               121   66M  214                                                                                                                                                                                       
- niybytes      1 00002000 00000001     X  X               134  109M  177                                                                                                                                                                                       
- niycc         1 00000820 00000001     X  X               122   69M  250                                                                                                                                                                                       
- niyzero       1 0000084C 00000001     R  A               128   98M  100M  102M                                                                                                                                                                                
- nizero        1 00000848 00000001     R  A               127   89M   91M   93M  307                                                                                                                                                                           
- oibytes       1 00000808 00000001     X  X               119  110M  153                                                                                                                                                                                       
- oicc          1 00000828 00000001     X  X               123   73M  226                                                                                                                                                                                       
- oiybytes      1 00002008 00000001     X  X               135  111M  189                                                                                                                                                                                       
- oiycc         1 00000830 00000001     X  X               124   76M  262                                                                                                                                                                                       
- stop          8 000002E0 00000001     D  D               114  105                                                                                                                                                                                             
- xibytes       1 00000810 00000001     X  X               120  112M  165                                                                                                                                                                                       
- xicc          1 00000838 00000001     X  X               125   80M  238                                                                                                                                                                                       
- xiybytes      1 00002010 00000001     X  X               136  113M  201                                                                                                                                                                                       
- xiycc         1 00000840 00000001     X  X               126   83M  274                                                                                                                                                                                       
-1                                  Unreferenced Symbols Defined in CSECTs                                       Page   12                                                                                                                                      
--  Defn  Symbol                                                                              HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0   141  equ0005                                                                                                                                                                                                                                               
-    153  equ0007                                                                                                                                                                                                                                               
-    165  equ0009                                                                                                                                                                                                                                               
-    177  equ0011                                                                                                                                                                                                                                               
-    189  equ0013                                                                                                                                                                                                                                               
-    201  equ0015                                                                                                                                                                                                                                               
-    214  equ0017                                                                                                                                                                                                                                               
-    226  equ0019                                                                                                                                                                                                                                               
-    238  equ0021                                                                                                                                                                                                                                               
-    250  equ0023                                                                                                                                                                                                                                               
-    262  equ0025                                                                                                                                                                                                                                               
-    274  equ0027                                                                                                                                                                                                                                               
-    286  equ0029                                                                                                                                                                                                                                               
-    297  equ0030                                                                                                                                                                                                                                               
-    307  equ0032                                                                                                                                                                                                                                               
-1                                          Macro and Copy Code Source Summary                                   Page   13                                                                                                                                      
-- Con Source                                        Volume    Members                        HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0     PRIMARY INPUT                                           COMP     DISPLAY  DOTEST                                                                                                                                                                         
-1                                                      Using Map                                                Page   14                                                                                                                                      
--                                                                                            HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text                                                                                                                                                
-           Count      Id           Type          Value    Range     Id        Disp    Stmt                                                                                                                                                                     
-0    51  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00890    105 ni,0                                                                                                                                                                
-     60  0000021E  00000001 USING  LABELED     00000800 00001000 00000001   2 00040     83 b.nibytes,2                                                                                                                                                         
-    106  000002BE  00000001 DROP                                            0              0                                                                                                                                                                   
-    107  000002BE  00000001 USING  ORDINARY    00000800 00001000 00000001   2 01810    113 nibytes,2                                                                                                                                                           
-1                                   General Purpose Register Cross Reference                                    Page   15                                                                                                                                      
-- Register  References (M=modified, B=branch, U=USING, D=DROP, N=index)                      HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0    0(0)      51U   53M   53    54    54M   57M   86M  106D                                                                                                                                                                                                   
-     1(1)      58M   64    67    71    74    78    81    85M                                                                                                                                                                                                   
-     2(2)      59M   60U   84M   84   107U                                                                                                                                                                                                                     
-     3(3)      96M                                                                                                                                                                                                                                             
-     4(4)      61M   61    65M   66    68M   69    72M   73    75M   76    79M   80    82M   83    87M   87    95M   96                                                                                                                                        
-               97M   97   104M                                                                                                                                                                                                                                 
-     5(5)      88M   88    90M   92M   94M   95M   99M  101M  103M  104M                                                                                                                                                                                       
-     6(6)    (no references identified)                                                                                                                                                                                                                        
-     7(7)    (no references identified)                                                                                                                                                                                                                        
-     8(8)    (no references identified)                                                                                                                                                                                                                        
-     9(9)    (no references identified)                                                                                                                                                                                                                        
-    10(A)    (no references identified)                                                                                                                                                                                                                        
-    11(B)    (no references identified)                                                                                                                                                                                                                        
-    12(C)    (no references identified)                                                                                                                                                                                                                        
-    13(D)    (no references identified)                                                                                                                                                                                                                        
-    14(E)    (no references identified)                                                                                                                                                                                                                        
-    15(F)    (no references identified)                                                                                                                                                                                                                        
-1                                  Diagnostic Cross Reference and Assembler Summary                             Page   16                                                                                                                                      
--                                                                                            HLASM R6.0  2015/10/07 12.58                                                                                                                                      
-0     No Statements Flagged in this Assembly                                                                                                                                                                                                                   
- HIGH LEVEL ASSEMBLER, 5696-234, RELEASE 6.0                                                                                                                                                                                                                   
-0SYSTEM: CMS 22                     JOBNAME: (NOJOB)     STEPNAME: (NOSTEP)   PROCSTEP: (NOPROC)                                                                                                                                                               
-0Data Sets Allocated for this Assembly                                                                                                                                                                                                                         
-  Con DDname   Data Set Name                                Volume  Member                                                                                                                                                                                     
-   P1 SYSIN    (UNKNOWN.EXIT.LIBRARY)                                                                                                                                                                                                                          
-   P2          .pseudo.pipeline.                            .none.  pipe                                                                                                                                                                                       
-   L1 SYSLIB   FPLGPI   MACLIB   A1                         JPH100                                                                                                                                                                                             
-   L2          FPLOM    MACLIB   A1                         JPH100                                                                                                                                                                                             
-   L3          DMSGPI   MACLIB   S2                         MNT190                                                                                                                                                                                             
-   L4          DMSOM    MACLIB   S2                         MNT190                                                                                                                                                                                             
-                                                                                                                                                                                                                                                               
- Input/Output Exit Statistics                                                                                                                                                                                                                                  
- Exit Type  Name      Calls  ---Records---  Diagnostic                                                                                                                                                                                                         
-                             Added Deleted  Messages                                                                                                                                                                                                           
- ADATA      FPLHLASX    530      0       0        0                                                                                                                                                                                                            
- LISTING    FPLHLASX    510      0       0        0                                                                                                                                                                                                            
- OBJECT     FPLHLASX     67      0       0        0                                                                                                                                                                                                            
- SOURCE     FPLHLASX    144      1       0        0                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                               
-   34793K allocated to Buffer Pool       Storage required     200K                                                                                                                                                                                             
-     142 Primary Input Records Read            0 Library Records Read                  0 Work File Reads                                                                                                                                                       
-       0 ASMAOPT Records Read                  4 Primary Print Records Written         0 Work File Writes                                                                                                                                                      
-       0 Object Records Written                2 ADATA Records Written                                                                                                                                                                                         
-0Assembly Start Time: 12.58.37 Stop Time: 12.58.53 Processor Time: 00.00.00.5532                                                                                                                                                                               
- Return Code 000                                                                                                                                                                                                                                               
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2015/10/08 15.55
+0  No Overriding ASMAOPT Parameters                                                                                      
+   No Overriding Parameters                                                                                              
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+   NOTERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1                                              External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/08 15.55
+0NI        SD 00000001 00000000 00002018             00                                                                  
+1                                                                                                               Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+0                                               1 * Stand-alone test for NI, NIY, OI, OIY, XI, XIY                        00010000
+0                                               3 * This file was put into the public domain 2015-10-05                   00030000
+                                                4 * by John P. Hartmann.  You can use it for anything you like,           00040000
+                                                5 * as long as this notice remains.                                       00050000
+000000000                00000000 00002018      7 ni start 0                                                              00070000
+                                                8  gbla &a Compensate for SETA limitation                                 00080000
+0                                              10  macro                                                                  00100000
+                                               11  display &addr,&len                                                     00110000
+                                               12 &l setc 'equ&sysndx'                                                    00120000
+                                               13 &l equ &addr-&sysect                                                    00130000
+                                               14  ainsert '&&a seta &l',back                                             00140000
+                                               15  ainsert '&&ac setc a2x(&&a)',back                                      00150000
+                                               16  ainsert ' punch ''* r &&ac..&len''',back                               00160000
+                                               17  mend                                                                   00170000
+0                                              19  macro                                                                  00190000
+                                               20  comp &addr,&len,&want,&text=                                           00200000
+                                               21  punch '* *Compare'                                                     00210000
+                                               22  display &addr,&len                                                     00220000
+                                               23 &wt setc '&want'(2,k'&want-2)                                           00230000
+                                               24  aif (k'&text gt 0).havetxt                                             00240000
+                                               25  ainsert ' punch ''* *Want               &wt.''',back                   00250000
+                                               26  mexit                                                                  00260000
+                                               27 .havetxt anop ,                                                         00270000
+                                               28 &ts setc '&text'(2,k'&text-2)                                           00280000
+                                               29  ainsert ' punch ''* *Want "&ts." &wt.''',back                          00290000
+                                               30  mend                                                                   00300000
+0                                              32  macro                                                                  00320000
+                                               33  dotest &op                                                             00330000
+                                               34  ex 1,inst_&op                                                          00340000
+                                               35  ipm 4                                                                  00350000
+                                               36  stcm 4,8,b.&op.cc                                                      00360000
+                                               37  ex 1,inst_&op.y                                                        00370000
+                                               38  ipm 4                                                                  00380000
+                                               39  stcm 4,8,b.&op.ycc                                                     00390000
+                                               40  mend                                                                   00400000
+0                                              42  punch ':test logicImmediate'                                           00420000
+                                               43  punch ':btst z'                                                        00430000
+ 00000000                                      44  ds xl(x'1a0')                                                          00440000
+ 000001A0 0000000180000000                     45  dc x'0000000180000000'                                                 00450000
+ 000001A8 0000000000000200                     46  dc ad(go_ni)                                                           00460000
+ 000001B0                                      47  ds xl(x'1d0'-x'1a0'-16)                                                00470000
+ 000001D0 0002000180000000                     48  dc x'0002000180000000'                                                 00480000
+ 000001D8 FFFFFFFFDEADDEAD                     49  dc ad(x'deaddead') Program new PSW                                     00490000
+ 000001E0                                      50  ds xl(x'200'-x'1d0'-16)                                                00500000
+                     R:0 00000000              51  using ni,0                                                             00510000
+ 00000200                                      52 go_ni ds 0d                                                             00520000
+ 00000200 1B00                                 53  sr 0,0 Store one dword                                                 00530000
+ 00000202 B2B0 0880      00000880              54  stfle facilities                                                       00540000
+ 00000206 D207 0888 0880 00000888 00000880     55  mvc faclist,facilities Save for display                                00550000
+1                                                                                                               Page    4
+   Active Usings: NI,R0                                                                                                  
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+00000020C D407 0880 0890 00000880 00000890     56  nc facilities,fmask  Select bit 52                                     00560000
+ 00000212 4100 0008               00000008     57  la 0,8                                                                 00570000
+ 00000216 4110 0001               00000001     58  la 1,1                                                                 00580000
+ 0000021A 4120 0800               00000800     59  la 2,nibytes                                                           00590000
+                     R:2 00000800              60 b using nibytes,2                                                       00600000
+ 0000021E 1B44                                 61  sr 4,4                                                                 00610000
+ 00000220                                      62 loop ds 0h                                                              00620000
+                                               63    dotest ni                                                            00630000
+ 00000220 4410 02BE               000002BE     64+ ex 1,inst_ni                                                           01-00000034
+ 00000224 B222 0040                            65+ ipm 4                                                                  01-00000035
+ 00000228 BE48 2018               00000818     66+ stcm 4,8,b.nicc                                                        01-00000036
+ 0000022C 4410 02C2               000002C2     67+ ex 1,inst_niy                                                          01-00000037
+ 00000230 B222 0040                            68+ ipm 4                                                                  01-00000038
+ 00000234 BE48 2020               00000820     69+ stcm 4,8,b.niycc                                                       01-00000039
+                                               70    dotest oi                                                            00640000
+ 00000238 4410 02C8               000002C8     71+ ex 1,inst_oi                                                           01-00000034
+ 0000023C B222 0040                            72+ ipm 4                                                                  01-00000035
+ 00000240 BE48 2028               00000828     73+ stcm 4,8,b.oicc                                                        01-00000036
+ 00000244 4410 02CC               000002CC     74+ ex 1,inst_oiy                                                          01-00000037
+ 00000248 B222 0040                            75+ ipm 4                                                                  01-00000038
+ 0000024C BE48 2030               00000830     76+ stcm 4,8,b.oiycc                                                       01-00000039
+                                               77    dotest xi                                                            00650000
+ 00000250 4410 02D2               000002D2     78+ ex 1,inst_xi                                                           01-00000034
+ 00000254 B222 0040                            79+ ipm 4                                                                  01-00000035
+ 00000258 BE48 2038               00000838     80+ stcm 4,8,b.xicc                                                        01-00000036
+ 0000025C 4410 02D6               000002D6     81+ ex 1,inst_xiy                                                          01-00000037
+ 00000260 B222 0040                            82+ ipm 4                                                                  01-00000038
+ 00000264 BE48 2040               00000840     83+ stcm 4,8,b.xiycc                                                       01-00000039
+ 00000268 4120 2001               00000001     84    la 2,1(,2)                                                           00660000
+ 0000026C 8910 0001               00000001     85    sll 1,1                                                              00670000
+ 00000270 A706 FFD8               00000220     86  brct 0,loop                                                            00680000
+ 00000274 1B44                                 87  sr 4,4                                                                 00690000
+ 00000276 1B55                                 88  sr 5,5                                                                 00700000
+ 00000278 9400 0848      00000848              89  ni nizero,0                                                            00710000
+ 0000027C B222 0050                            90  ipm 5                                                                  00720000
+ 00000280 9600 0849      00000849              91  oi nizero+1,0                                                          00730000
+ 00000284 B222 0050                            92  ipm 5                                                                  00740000
+ 00000288 97FF 084A      0000084A              93  xi nizero+2,x'ff'                                                      00750000
+ 0000028C B222 0050                            94  ipm 5                                                                  00760000
+ 00000290 8D40 0008               00000008     95  sldl 4,8                                                               00770000
+ 00000294 1834                                 96  lr 3,4                                                                 00780000
+ 00000296 1B44                                 97  sr 4,4                                                                 00790000
+ 00000298 EB00 084C 0054 0000084C              98  niy niyzero,0                                                          00800000
+ 0000029E B222 0050                            99  ipm 5                                                                  00810000
+ 000002A2 EB00 084D 0056 0000084D             100  oiy niyzero+1,0                                                        00820000
+ 000002A8 B222 0050                           101  ipm 5                                                                  00830000
+ 000002AC EBFF 084E 0057 0000084E             102  xiy niyzero+2,x'ff'                                                    00840000
+ 000002B2 B222 0050                           103  ipm 5                                                                  00850000
+ 000002B6 8D40 0008               00000008    104  sldl 4,8                                                               00860000
+ 000002BA B2B2 02E0      000002E0             105  lpswe stop                                                             00870000
+                                              106  drop 0                                                                 00880000
+                     R:2 00000800             107  using nibytes,2                                                        00890000
+ 000002BE 9400 2000      00000800             108 inst_ni ni nibytes,0                                                    00900000
+ 000002C2 EB00 2800 0154 00002000             109 inst_niy niy niybytes,0                                                 00910000
+ 000002C8 9600 2008      00000808             110 inst_oi oi oibytes,0                                                    00920000
+1                                                                                                               Page    5
+   Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+0000002CC EB00 2808 0156 00002008             111 inst_oiy oiy oiybytes,0                                                 00930000
+ 000002D2 9700 2010      00000810             112 inst_xi xi xibytes,0                                                    00940000
+ 000002D6 EB00 2810 0157 00002010             113 inst_xiy xiy xiybytes,0                                                 00950000
+ 000002E0                                     114 stop ds 0d                                                              00960000
+ 000002E0 0002000180000000                    115  dc x'0002000180000000'                                                 00970000
+ 000002E8 0000000000000000                    116  dc ad(0)                                                               00980000
+ 000002F0                000002F0 00000800    117  org ni+x'800'                                                          00990000
+ 00000800 FFFFFFFFFFFFFFFF                    118 nibytes dc 8x'ff'                                                       01000000
+ 00000808 0000000000000000                    119 oibytes dc 8x'00'                                                       01010000
+ 00000810 FFFFFFFFFFFFFFFF                    120 xibytes dc 8x'ff'                                                       01020000
+ 00000818 0000000000000000                    121 nicc dc 8x'0'                                                           01030000
+ 00000820 0000000000000000                    122 niycc dc 8x'0'                                                          01040000
+ 00000828 0000000000000000                    123 oicc dc 8x'0'                                                           01050000
+ 00000830 0000000000000000                    124 oiycc dc 8x'0'                                                          01060000
+ 00000838 0000000000000000                    125 xicc dc 8x'0'                                                           01070000
+ 00000840 0000000000000000                    126 xiycc dc 8x'0'                                                          01080000
+ 00000848 FF00FF00                            127 nizero dc al1(x'ff',0,x'ff',0)                                          01090000
+ 0000084C FF00FF00                            128 niyzero dc al1(x'ff',0,x'ff',0)                                         01100000
+ 00000850                00000850 00000880    129  org ni+x'880' To specific address                                      01110000
+ 00000880                                     130 facilities ds d                                                         01120000
+ 00000888                                     131 faclist ds d Original                                                   01130000
+ 00000890 0000000000000800                    132 fmask dc (52/8)x'00',x'08',x'00'                                        01140000
+ 00000898                00000898 00002000    133  org ni+x'2000' To be sure long displacement is used                    01150000
+ 00002000 FFFFFFFFFFFFFFFF                    134 niybytes dc 8x'ff'                                                      01160000
+ 00002008 0000000000000000                    135 oiybytes dc 8x'00'                                                      01170000
+ 00002010 FFFFFFFFFFFFFFFF                    136 xiybytes dc 8x'ff'                                                      01180000
+                                              137  punch ':etst 1'                                                        01190000
+                                              138  comp nibytes,8,'01020408 10204080'                                     01200000
+                                              139+ punch '* *Compare'                                                     01-00000021
+                         00000800             141+equ0005 equ nibytes-ni                                                  02-00000013
+                                              142+ ainsert '&&a seta equ0005',back                                        02-00000014
+                                              143+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              144+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              145+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00000025
+                                              146>&a seta equ0005                                                        
+                                              147>&ac setc a2x(&a)                                                       
+                                              148> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000800.8'                                                
+                                              149> punch '* *Want               01020408 10204080'                       
+                                              150  comp oibytes,8,'01020408 10204080'                                     01210000
+                                              151+ punch '* *Compare'                                                     01-00000021
+                         00000808             153+equ0007 equ oibytes-ni                                                  02-00000013
+                                              154+ ainsert '&&a seta equ0007',back                                        02-00000014
+                                              155+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              156+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              157+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00000025
+                                              158>&a seta equ0007                                                        
+                                              159>&ac setc a2x(&a)                                                       
+                                              160> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000808.8'                                                
+                                              161> punch '* *Want               01020408 10204080'                       
+                                              162  comp xibytes,8,'FEFDFBF7 EFDFBF7F'                                     01220000
+                                              163+ punch '* *Compare'                                                     01-00000021
+                         00000810             165+equ0009 equ xibytes-ni                                                  02-00000013
+                                              166+ ainsert '&&a seta equ0009',back                                        02-00000014
+1                                                                                                               Page    6
+   Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+0                                             167+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              168+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              169+ ainsert ' punch ''* *Want               FEFDFBF7 EFDFBF7F''',back      01-00000025
+                                              170>&a seta equ0009                                                        
+                                              171>&ac setc a2x(&a)                                                       
+                                              172> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000810.8'                                                
+                                              173> punch '* *Want               FEFDFBF7 EFDFBF7F'                       
+                                              174  comp niybytes,8,'01020408 10204080'                                    01230000
+                                              175+ punch '* *Compare'                                                     01-00000021
+                         00002000             177+equ0011 equ niybytes-ni                                                 02-00000013
+                                              178+ ainsert '&&a seta equ0011',back                                        02-00000014
+                                              179+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              180+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              181+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00000025
+                                              182>&a seta equ0011                                                        
+                                              183>&ac setc a2x(&a)                                                       
+                                              184> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00002000.8'                                                
+                                              185> punch '* *Want               01020408 10204080'                       
+                                              186  comp oiybytes,8,'01020408 10204080'                                    01240000
+                                              187+ punch '* *Compare'                                                     01-00000021
+                         00002008             189+equ0013 equ oiybytes-ni                                                 02-00000013
+                                              190+ ainsert '&&a seta equ0013',back                                        02-00000014
+                                              191+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              192+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              193+ ainsert ' punch ''* *Want               01020408 10204080''',back      01-00000025
+                                              194>&a seta equ0013                                                        
+                                              195>&ac setc a2x(&a)                                                       
+                                              196> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00002008.8'                                                
+                                              197> punch '* *Want               01020408 10204080'                       
+                                              198  comp xiybytes,8,'FEFDFBF7 EFDFBF7F'                                    01250000
+                                              199+ punch '* *Compare'                                                     01-00000021
+                         00002010             201+equ0015 equ xiybytes-ni                                                 02-00000013
+                                              202+ ainsert '&&a seta equ0015',back                                        02-00000014
+                                              203+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              204+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              205+ ainsert ' punch ''* *Want               FEFDFBF7 EFDFBF7F''',back      01-00000025
+                                              206>&a seta equ0015                                                        
+                                              207>&ac setc a2x(&a)                                                       
+                                              208> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00002010.8'                                                
+                                              209> punch '* *Want               FEFDFBF7 EFDFBF7F'                       
+                                              210 * Condition codes                                                       01260000
+                                              211  comp nicc,8,'10101010 10101010'                                        01270000
+                                              212+ punch '* *Compare'                                                     01-00000021
+                         00000818             214+equ0017 equ nicc-ni                                                     02-00000013
+                                              215+ ainsert '&&a seta equ0017',back                                        02-00000014
+                                              216+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              217+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              218+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              219>&a seta equ0017                                                        
+                                              220>&ac setc a2x(&a)                                                       
+                                              221> punch '* r &ac..8'                                                    
+1                                                                                                               Page    7
+   Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+0                                                + punch '* r 00000818.8'                                                
+                                              222> punch '* *Want               10101010 10101010'                       
+                                              223  comp oicc,8,'10101010 10101010'                                        01280000
+                                              224+ punch '* *Compare'                                                     01-00000021
+                         00000828             226+equ0019 equ oicc-ni                                                     02-00000013
+                                              227+ ainsert '&&a seta equ0019',back                                        02-00000014
+                                              228+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              229+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              230+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              231>&a seta equ0019                                                        
+                                              232>&ac setc a2x(&a)                                                       
+                                              233> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000828.8'                                                
+                                              234> punch '* *Want               10101010 10101010'                       
+                                              235  comp xicc,8,'10101010 10101010'                                        01290000
+                                              236+ punch '* *Compare'                                                     01-00000021
+                         00000838             238+equ0021 equ xicc-ni                                                     02-00000013
+                                              239+ ainsert '&&a seta equ0021',back                                        02-00000014
+                                              240+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              241+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              242+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              243>&a seta equ0021                                                        
+                                              244>&ac setc a2x(&a)                                                       
+                                              245> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000838.8'                                                
+                                              246> punch '* *Want               10101010 10101010'                       
+                                              247  comp niycc,8,'10101010 10101010'                                       01300000
+                                              248+ punch '* *Compare'                                                     01-00000021
+                         00000820             250+equ0023 equ niycc-ni                                                    02-00000013
+                                              251+ ainsert '&&a seta equ0023',back                                        02-00000014
+                                              252+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              253+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              254+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              255>&a seta equ0023                                                        
+                                              256>&ac setc a2x(&a)                                                       
+                                              257> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000820.8'                                                
+                                              258> punch '* *Want               10101010 10101010'                       
+                                              259  comp oiycc,8,'10101010 10101010'                                       01310000
+                                              260+ punch '* *Compare'                                                     01-00000021
+                         00000830             262+equ0025 equ oiycc-ni                                                    02-00000013
+                                              263+ ainsert '&&a seta equ0025',back                                        02-00000014
+                                              264+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              265+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              266+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              267>&a seta equ0025                                                        
+                                              268>&ac setc a2x(&a)                                                       
+                                              269> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000830.8'                                                
+                                              270> punch '* *Want               10101010 10101010'                       
+                                              271  comp xiycc,8,'10101010 10101010'                                       01320000
+                                              272+ punch '* *Compare'                                                     01-00000021
+                         00000840             274+equ0027 equ xiycc-ni                                                    02-00000013
+                                              275+ ainsert '&&a seta equ0027',back                                        02-00000014
+                                              276+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+1                                                                                                               Page    8
+   Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/08 15.55
+0                                             277+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              278+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
+                                              279>&a seta equ0027                                                        
+                                              280>&ac setc a2x(&a)                                                       
+                                              281> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000840.8'                                                
+                                              282> punch '* *Want               10101010 10101010'                       
+                                              283  comp  facilities,8,'00000000 00000800',text='Facilities list bit 52'   01330000
+                                              284+ punch '* *Compare'                                                     01-00000021
+                         00000880             286+equ0029 equ facilities-ni                                               02-00000013
+                                              287+ ainsert '&&a seta equ0029',back                                        02-00000014
+                                              288+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              289+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              290+ ainsert ' punch ''* *Want "Facilities list bit 52" 00000000 00000800''X01-00000029
+                                                 +               ',back                                                  
+                                              291>&a seta equ0029                                                        
+                                              292>&ac setc a2x(&a)                                                       
+                                              293> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000880.8'                                                
+                                              294> punch '* *Want "Facilities list bit 52" 00000000 00000800'            
+                                              295  punch '* * First doubleword of facilities list'                        01340000
+                                              296  display  faclist,8                                                     01350000
+                         00000888             297+equ0030 equ faclist-ni                                                  01-00000013
+                                              298+ ainsert '&&a seta equ0030',back                                        01-00000014
+                                              299+ ainsert '&&ac setc a2x(&&a)',back                                      01-00000015
+                                              300+ ainsert ' punch ''* r &&ac..8''',back                                  01-00000016
+                                              301>&a seta equ0030                                                        
+                                              302>&ac setc a2x(&a)                                                       
+                                              303> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000888.8'                                                
+                                              304  comp   nizero,8,'00000000 00000000'                                    01360000
+                                              305+ punch '* *Compare'                                                     01-00000021
+                         00000848             307+equ0032 equ nizero-ni                                                   02-00000013
+                                              308+ ainsert '&&a seta equ0032',back                                        02-00000014
+                                              309+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
+                                              310+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
+                                              311+ ainsert ' punch ''* *Want               00000000 00000000''',back      01-00000025
+                                              312>&a seta equ0032                                                        
+                                              313>&ac setc a2x(&a)                                                       
+                                              314> punch '* r &ac..8'                                                    
+                                                 + punch '* r 00000848.8'                                                
+                                              315> punch '* *Want               00000000 00000000'                       
+                                              316  punch '*gpr'                                                           01370000
+                                              317  punch '* *Gpr 3 00000000'                                              01380000
+                                              318  punch '* *Gpr 4 00000000'                                              01390000
+                                              319  punch '* *Done'                                                        01400000
+                                              320  end                                                                    01410000
+1                                                 Relocation Dictionary                                         Page    9
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/10/08 15.55
+0  00000001 00000001 000001A8   A 8     +                                                                                
+1                               Ordinary Symbol and Literal Cross Reference                                     Page   10
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/08 15.55
+0b        ***QUALIFIER*** 00000001     U                   60   66    69    73    76    80    83                         
+ facilities                                                                                                              
+               8 00000880 00000001     D  D               130   54M   55    56M  286                                     
+ faclist       8 00000888 00000001     D  D               131   55S  297                                                 
+ fmask         1 00000890 00000001     X  X               132   56                                                       
+ go_ni         8 00000200 00000001     D  D                52   46                                                       
+ inst_ni       4 000002BE 00000001     I                  108   64X                                                      
+ inst_niy      6 000002C2 00000001     I                  109   67X                                                      
+ inst_oi       4 000002C8 00000001     I                  110   71X                                                      
+ inst_oiy      6 000002CC 00000001     I                  111   74X                                                      
+ inst_xi       4 000002D2 00000001     I                  112   78X                                                      
+ inst_xiy      6 000002D6 00000001     I                  113   81X                                                      
+ loop          2 00000220 00000001     H  H                62   86B                                                      
+ ni            1 00000000 00000001     J                    7   51U  117   129   133   141   153   165   177   189   201   214   226
+                                                               238   250   262   274   286   297   307                   
+ nibytes       1 00000800 00000001     X  X               118   59    60U  107U  108M  141                               
+ nicc          1 00000818 00000001     X  X               121   66S  214                                                 
+ niybytes      1 00002000 00000001     X  X               134  109M  177                                                 
+ niycc         1 00000820 00000001     X  X               122   69S  250                                                 
+ niyzero       1 0000084C 00000001     R  A               128   98M  100M  102M                                          
+ nizero        1 00000848 00000001     R  A               127   89M   91M   93M  307                                     
+ oibytes       1 00000808 00000001     X  X               119  110M  153                                                 
+ oicc          1 00000828 00000001     X  X               123   73S  226                                                 
+ oiybytes      1 00002008 00000001     X  X               135  111M  189                                                 
+ oiycc         1 00000830 00000001     X  X               124   76S  262                                                 
+ stop          8 000002E0 00000001     D  D               114  105                                                       
+ xibytes       1 00000810 00000001     X  X               120  112M  165                                                 
+ xicc          1 00000838 00000001     X  X               125   80S  238                                                 
+ xiybytes      1 00002010 00000001     X  X               136  113M  201                                                 
+ xiycc         1 00000840 00000001     X  X               126   83S  274                                                 
+1                                  Unreferenced Symbols Defined in CSECTs                                       Page   11
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/10/08 15.55
+0   141  equ0005                                                                                                         
+    153  equ0007                                                                                                         
+    165  equ0009                                                                                                         
+    177  equ0011                                                                                                         
+    189  equ0013                                                                                                         
+    201  equ0015                                                                                                         
+    214  equ0017                                                                                                         
+    226  equ0019                                                                                                         
+    238  equ0021                                                                                                         
+    250  equ0023                                                                                                         
+    262  equ0025                                                                                                         
+    274  equ0027                                                                                                         
+    286  equ0029                                                                                                         
+    297  equ0030                                                                                                         
+    307  equ0032                                                                                                         
+1                                          Macro and Copy Code Source Summary                                   Page   12
+- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/08 15.55
+0     PRIMARY INPUT                                           COMP     DISPLAY  DOTEST                                   
+1                                                      Using Map                                                Page   13
+-                                                                                           jHLASM 1.0   2015/10/08 15.55
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0    51  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00890    105 ni,0                          
+     60  0000021E  00000001 USING  LABELED     00000800 00001000 00000001   2 00040     83 b.nibytes,2                   
+    106  000002BE  00000001 DROP                                            0              0                             
+    107  000002BE  00000001 USING  ORDINARY    00000800 00001000 00000001   2 01810    113 nibytes,2                     
+1                                   General Purpose Register Cross Reference                                    Page   14
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/08 15.55
+0    0(0)      51U   53S   53    54    54M   57S   86M  106D                                                             
+     1(1)      58S   64    67    71    74    78    81    85M                                                             
+     2(2)      59S   60U   84S   84   107U                                                                               
+     3(3)      96S                                                                                                       
+     4(4)      61M   61    65M   66    68M   69    72M   73    75M   76    79M   80    82M   83    87M   87    95M   96    97M   97
+              104M                                                                                                       
+     5(5)      88M   88    90M   92M   94M   95M   99M  101M  103M  104M                                                 
+     6(6)    (no references identified)                                                                                  
+     7(7)    (no references identified)                                                                                  
+     8(8)    (no references identified)                                                                                  
+     9(9)    (no references identified)                                                                                  
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)    (no references identified)                                                                                  
+    15(F)    (no references identified)                                                                                  
+1                                  Diagnostic Cross Reference and Assembler Summary                             Page   15
+-                                                                                           jHLASM 1.0   2015/10/08 15.55
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
+0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
+0Data Sets Allocated for this Assembly                                                                                   
+  Con DDname   Data Set Name                                Volume  Member                                               
+   P1 SYSIN    logicimm.assemble                                                                                         
+0Assembly Start Time: 15.55.25 Stop Time: 15.55.25 Processor Time: 00.00.00.0419.
+ 
+                                     
+ Return Code 000                                                                                                         

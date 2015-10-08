@@ -135,7 +135,7 @@ xiybytes dc 8x'ff'                                                      01180000
  display  faclist,8                                                     01350000
  comp   nizero,8,'00000000 00000000'                                    01360000
  punch '*gpr'                                                           01370000
- punch '* *Gpr R3 00000000'                                             01380000
- punch '* *Gpr R4 00000000'                                             01390000
+ punch '* *Gpr 3 00000000'                                              01380000
+ punch '* *Gpr 4 00000000'                                              01390000
  punch '* *Done'                                                        01400000
  end                                                                    01410000
