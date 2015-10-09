@@ -86,6 +86,7 @@
    /* C11 standard operation                                         */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (atomic_fetch_ ## op(ptr, imm) fallback imm)
    #define CAN_IAF2 1
+   #define H_ATOMIC_TYPE _Atomic
 
 #elif defined(_MSVC_)
 
@@ -109,16 +110,19 @@
    )
 
    #define CAN_IAF2 1
+   #define H_ATOMIC_TYPE volatile
 
 #elif defined(__GCC_ATOMIC_CHAR_LOCK_FREE) && __GCC_ATOMIC_CHAR_LOCK_FREE
    /* GCC/CLANG intrinsics                                           */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
    #define CAN_IAF2 1
+   #define H_ATOMIC_TYPE volatile
 
 #else
    /* Atomics not available                                          */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (*ptr fallback ## = imm)
    #undef CAN_IAF2
+   #define H_ATOMIC_TYPE
 
 #endif
 

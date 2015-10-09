@@ -6652,7 +6652,7 @@ DEF_INST(and_immediate_y)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    *dest;                          /* Result byte address       */
+H_ATOMIC_TYPE  BYTE   *dest;          /* Pointer to target byte      */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -7032,7 +7032,7 @@ DEF_INST(exclusive_or_immediate_y)
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    *dest;                          /* Result byte address       */
+H_ATOMIC_TYPE  BYTE   *dest;          /* Pointer to target byte      */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -7400,7 +7400,7 @@ DEF_INST(or_immediate_y)
 BYTE    i2;                             /* Immediate operand byte    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    *dest;                          /* Result byte address       */
+H_ATOMIC_TYPE  BYTE   *dest;          /* Pointer to target byte      */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
