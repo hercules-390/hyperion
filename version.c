@@ -265,6 +265,11 @@ static const char *build_info[] = {
   #endif
   #if defined( CAN_IAF2 )
                     " hatomics"
+    #if CAN_IAF2 == 3
+      "=C11"
+    #elif CAN_IAF2 == 2
+      "=gccIntrinsics"
+    #endif
   #endif
     ,
 #endif
