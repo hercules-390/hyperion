@@ -82,7 +82,21 @@
    #include <stdatomic.h>
 #endif
 
-#if defined(ATOMIC_CHAR_LOCK_FREE) && ATOMIC_CHAR_LOCK_FREE
+/* CLANG  3.5  and  earlier  implements  the  lock  free macros as a */
+/* callable  function,  which  means  that  it  cannot  be tested at */
+/* preprocessor  time.   The  situation  with GCC and stdatomic.c is */
+/* currently  (2015-10)  unclear,  so we disable this test; the test */
+/* for GCC intrinsics will still define the atomic operation.        */
+
+#if defined(ATOMIC_CHAR_LOCK_FREE) &&                                  \
+   (                                                                   \
+      (defined(__clang__) && ( __clang_major__ > 3                     \
+         || (__clang_major__ == 3 && __clang_minor__ > 5)))            \
+   ||                                                                  \
+      (defined(__GNUC__) && 0 )                                        \
+   )                                                                   \
+   && ATOMIC_CHAR_LOCK_FREE
+
    /* C11 standard operation                                         */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (atomic_fetch_ ## op(ptr, imm) fallback imm)
    #define CAN_IAF2 1
@@ -92,13 +106,18 @@
 
    /* Microsoft functions, as per Fish                               */
 
-   /* The  casts  here are to silence pointer warnings for the three */
-   /* cases  that  are not true and which the compiler later deletes */
-   /* as dead code.                                                  */
+   /* The  casts  of  the  function  arguments  here  are to silence */
+   /* pointer  warnings  for  the  three cases that are not true and */
+   /* which the compiler later deletes as dead code.                 */
 
    /* Note that the 64-bit intrinsic function is not available in 32 */
    /* bit  windows,  hence  the  library  function  is used; it will */
    /* compile as the intrinsic function on 64 bit.                   */
+
+   /* It  appears  _InterlockedXor8  has  a  compiler  bug that sign */
+   /* extends a zero result with one bits, which is not good for the */
+   /* condition  code  when  the  result  is  0.   Hence the cast to */
+   /* unsigned of the result.                                        */
 
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                                             \
    (                                                                                                                           \
