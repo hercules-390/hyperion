@@ -94,55 +94,63 @@
          || (__clang_major__ == 3 && __clang_minor__ > 5)))            \
    ||                                                                  \
       (defined(__GNUC__) && 0 )                                        \
-   )                                                                   \
-   && ATOMIC_CHAR_LOCK_FREE
-
-   /* C11 standard operation                                         */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (atomic_fetch_ ## op(ptr, imm) fallback imm)
-   #define CAN_IAF2 3
-   #define H_ATOMIC_TYPE _Atomic
-
-#elif defined(_MSVC_)
-
-   /* Microsoft functions, as per Fish                               */
-
-   /* The  casts  of  the  function  arguments  here  are to silence */
-   /* pointer  warnings  for  the  three cases that are not true and */
-   /* which the compiler later deletes as dead code.                 */
-
-   /* Note that the 64-bit intrinsic function is not available in 32 */
-   /* bit  windows,  hence  the  library  function  is used; it will */
-   /* compile as the intrinsic function on 64 bit.                   */
-
-   /* It  appears  _InterlockedXor8  has  a  compiler  bug that sign */
-   /* extends a zero result with one bits, which is not good for the */
-   /* condition  code  when  the  result  is  0.   Hence the cast to */
-   /* unsigned of the result.                                        */
-
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                                             \
-   (                                                                                                                           \
-      (sizeof(*(ptr)) == 8) ? (((unsigned __int64)  Interlocked ## Op ## 64 ((unsigned __int64*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 4) ? (((unsigned     int) _Interlocked ## Op       ((unsigned     int*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 2) ? (((unsigned   short) _Interlocked ## Op ## 16 ((unsigned   short*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 1) ? (((unsigned    char) _Interlocked ## Op ## 8  ((unsigned    char*) ptr, imm )) fallback imm ) :  \
-      (assert(0) /* returns void */, 0 /* to get integral result */)                                                           \
    )
 
-   #define CAN_IAF2 1
-   #define H_ATOMIC_TYPE volatile
+   /* Test  this macro for being defined to a number only when using */
+   /* compilers that we know define the macro "right".               */
 
-#elif defined(__GCC_ATOMIC_CHAR_LOCK_FREE) && __GCC_ATOMIC_CHAR_LOCK_FREE
-   /* GCC/CLANG intrinsics                                           */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
-   #define CAN_IAF2 2
-   #define H_ATOMIC_TYPE volatile
+   #if ATOMIC_CHAR_LOCK_FREE
 
-#else
-   /* Atomics not available                                          */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (*ptr fallback ## = imm)
-   #undef CAN_IAF2
-   #define H_ATOMIC_TYPE
+      /* C11 standard operation                                         */
+      #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (atomic_fetch_ ## op(ptr, imm) fallback imm)
+      #define CAN_IAF2 3
+      #define H_ATOMIC_TYPE _Atomic
+   #endif
+#endif
 
+#if !defined(CAN_IAF2)
+   #if defined(_MSVC_)
+
+      /* Microsoft functions, as per Fish                            */
+
+      /* The  casts  of  the  function arguments here are to silence */
+      /* pointer  warnings for the three cases that are not true and */
+      /* which the compiler later deletes as dead code.              */
+
+      /* Note that the 64-bit intrinsic function is not available in */
+      /* 32 bit windows, hence the library function is used; it will */
+      /* compile as the intrinsic function on 64 bit.                */
+
+      /* It  appears  _InterlockedXor8  has a compiler bug that sign */
+      /* extends  a zero result with one bits, which is not good for */
+      /* the condition code when the result is 0.  Hence the cast to */
+      /* unsigned of the result.                                     */
+
+      #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                                             \
+      (                                                                                                                           \
+         (sizeof(*(ptr)) == 8) ? (((unsigned __int64)  Interlocked ## Op ## 64 ((unsigned __int64*) ptr, imm )) fallback imm ) :  \
+         (sizeof(*(ptr)) == 4) ? (((unsigned     int) _Interlocked ## Op       ((unsigned     int*) ptr, imm )) fallback imm ) :  \
+         (sizeof(*(ptr)) == 2) ? (((unsigned   short) _Interlocked ## Op ## 16 ((unsigned   short*) ptr, imm )) fallback imm ) :  \
+         (sizeof(*(ptr)) == 1) ? (((unsigned    char) _Interlocked ## Op ## 8  ((unsigned    char*) ptr, imm )) fallback imm ) :  \
+         (assert(0) /* returns void */, 0 /* to get integral result */)                                                           \
+      )
+
+      #define CAN_IAF2 1
+      #define H_ATOMIC_TYPE volatile
+
+   #elif defined(__GCC_ATOMIC_CHAR_LOCK_FREE) && __GCC_ATOMIC_CHAR_LOCK_FREE
+      /* GCC/CLANG intrinsics                                           */
+      #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
+      #define CAN_IAF2 2
+      #define H_ATOMIC_TYPE volatile
+
+   #else
+      /* Atomics not available                                          */
+      #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (*ptr fallback ## = imm)
+      #undef CAN_IAF2
+      #define H_ATOMIC_TYPE
+
+   #endif
 #endif
 
 #endif
