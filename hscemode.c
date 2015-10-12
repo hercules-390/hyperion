@@ -719,7 +719,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    alter_display_real (regs, argc-1, argv+1, cmdline);
+    alter_display_real (regs, argc, argv, cmdline);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

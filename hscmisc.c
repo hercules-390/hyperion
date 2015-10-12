@@ -1857,7 +1857,7 @@ int     stid;                           /* Segment table indication  */
 /*   adr      Cosmetic address of start of page                      */
 /*   offset   Offset from start of page where to begin dumping       */
 /*   amt      Number of bytes to dump                                */
-/*   real     1 = alter_display_real call, 0 = alter_display_virt    */
+/*   real     0 = alter_display_virt; 'A' absolute; 'R' real         */
 /*   wid      Width of addresses in bits (32 or 64)                  */
 /*                                                                   */
 /* Message number HHC02290 used if real == 1, otherwise HHC02291.    */
@@ -1906,7 +1906,7 @@ static int ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
     }
 
     /* Format string each dump line should be prefixed with */
-    MSGBUF( pfx, "%sI %c:", msgnum, real ? 'R' : 'V' );
+    MSGBUF( pfx, "%sI %c:", msgnum, real ? real : 'V' );
 
     /* Point to first byte of actual real storage to be dumped */
     dumpdata = (char*) regs->mainstor + aaddr + offset;
@@ -2105,11 +2105,14 @@ int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
 char    buf[64];                        /* MSGBUF work buffer        */
+char    absorr[8];                    /* Uppercase command           */
 
     UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    opnd = cmdline+1;
+    for (i = 0; argv[0][i]; i++)
+      absorr[i] = toupper(argv[0][i]);
+    absorr[i] = 0;
+    opnd = cmdline + i;
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -2125,7 +2128,7 @@ char    buf[64];                        /* MSGBUF work buffer        */
 
     if (regs->mainlim == 0)
     {
-        MSGBUF( buf, "R:"F_RADR"  Real address is not valid", saddr );
+        MSGBUF( buf, "%c:"F_RADR"  Real address is not valid", absorr[0], saddr );
         WRMSG( HHC02290, "I", buf );
         return;
     }
@@ -2136,12 +2139,12 @@ char    buf[64];                        /* MSGBUF work buffer        */
         for (i = 0; i < len && raddr+i <= regs->mainlim; i++)
         {
             aaddr = raddr + i;
-            aaddr = APPLY_PREFIXING (aaddr, regs->PX);
+            if ('R' == absorr[0]) aaddr = APPLY_PREFIXING (aaddr, regs->PX);
 
             /* Validate real address */
             if (aaddr > regs->mainlim)
             {
-                MSGBUF( buf, "R:"F_RADR"  Addressing exception", aaddr );
+                MSGBUF( buf, "%c:"F_RADR"  Addressing exception", absorr[0], aaddr );
                 WRMSG( HHC02290, "I", buf );
                 return;
             }
@@ -2171,19 +2174,20 @@ char    buf[64];                        /* MSGBUF work buffer        */
         for (;;)
         {
             /* Check for addressing exception */
-            if ((pageadr = APPLY_PREFIXING( pageadr, regs->PX )) > regs->mainlim)
+            if ('R' == absorr[0]) pageadr = APPLY_PREFIXING( pageadr, regs->PX );
+            if (pageadr > regs->mainlim)
             {
-                MSGBUF( buf, "R:"F_RADR"  Addressing exception", pageadr );
+                MSGBUF( buf, "%c:"F_RADR"  Addressing exception", absorr[0], pageadr );
                 WRMSG( HHC02290, "I", buf );
                 break;
             }
 
             /* Display address and storage key */
-            MSGBUF( buf, "R:"F_RADR"  K:%2.2X", pageadr, STORAGE_KEY( pageadr, regs ));
+            MSGBUF( buf, "%c:"F_RADR"  K:%2.2X", absorr[0], pageadr, STORAGE_KEY( pageadr, regs ));
             WRMSG( HHC02290, "I", buf );
 
             /* Now hexdump that entire page */
-            VERIFY( ARCH_DEP( dump_real_page )( regs, pageadr, pageadr, pageoff, pageamt, 1, addrwid ) == 0);
+            VERIFY( ARCH_DEP( dump_real_page )( regs, pageadr, pageadr, pageoff, pageamt, absorr[0], addrwid ) == 0);
 
             /* Check if we're done */
             if (!(totamt -= pageamt))

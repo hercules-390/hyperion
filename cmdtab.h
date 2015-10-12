@@ -77,6 +77,13 @@
   "with a period.\n"
 
 #define quest_cmd_desc          "alias for help"
+#define abs_cmd_desc            "Display or alter absolute storage"
+#define abs_cmd_help            \
+                                \
+  "Format: \"abs addr[.len]\" or \"abs addr[-addr2]\" to display up to 64K\n"        \
+  "of absolute storage, or \"abs addr=value\" to alter up to 32 bytes of absolute\n"       \
+  "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
+
 #define aea_cmd_desc            "Display AEA tables"
 #define aia_cmd_desc            "Display AIA fields"
 #define alrf_cmd_desc           "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
@@ -1535,6 +1542,7 @@ CMDABBR( "qstor",   5,              qstor_cmd,              SYSCMD,             
 COMMAND( "start",                   start_cmd,              SYSCMD,             start_cmd_desc,         start_cmd_help      )
 COMMAND( "stop",                    stop_cmd,               SYSCMD,             stop_cmd_desc,          stop_cmd_help       )
 
+COMMAND( "abs",                     r_cmd,                  SYSCMDNOPER,        abs_cmd_desc,           abs_cmd_help        )
 COMMAND( "aea",                     aea_cmd,                SYSCMDNOPER,        aea_cmd_desc,           NULL                )
 COMMAND( "aia",                     aia_cmd,                SYSCMDNOPER,        aia_cmd_desc,           NULL                )
 COMMAND( "ar",                      ar_cmd,                 SYSCMDNOPER,        ar_cmd_desc,            NULL                )

@@ -1,4 +1,4 @@
-*Testcase sske#1 processed  8 Oct 2015 17:18:48 by bldhtc.rexx
+*Testcase sske#1 processed 12 Oct 2015 16:06:13 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00010001800000000000000000000200
@@ -9,7 +9,7 @@ r    210=00020001800000000000000000000BAD
 restart
 pause 1
 *Done
-*Testcase sske#2 processed  8 Oct 2015 17:18:48 by bldhtc.rexx
+*Testcase sske#2 processed 12 Oct 2015 16:06:13 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -23,6 +23,7 @@ r 2000.8
 *Key F0
 gpr
 *Gpr 2 2004
+* Test prefixing with single page frame.
 sysclear
 archmode z
 r    1A0=00000001800000000000000000002000
@@ -34,11 +35,14 @@ r   2020=000000000000000000004000
 restart
 pause 1
 *Compare
-r 1000.8
+abs 1000.8
 *Key 00
-*Compare
-r 5000.8
+r 1000.8
 *Key F0
+abs 5000.8
+*Key F0
+r 5000.8
+*Key 00
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -58,6 +62,7 @@ r 100000.8
 *Key 00
 gpr
 *Gpr 2 100004
+* Test prefixing with multiple page frames.
 sysclear
 archmode z
 r    1A0=00000001800000000000000000002000
@@ -69,10 +74,16 @@ r   2020=000000000000000000004000
 restart
 pause 1
 *Compare
-r    0.8
+abs  0.8
 *Key 06
+r    0.8
+*Key f0
+abs 1000.8
+*Key F0
 r 1000.8
 *Key F0
+abs 2000.8
+*Key F4
 r 2000.8
 *Key F4
 r 5000.8

@@ -70,10 +70,11 @@ go ds 0h =x'200'
  punch '* gpr'                                                                  
  punch '* *Gpr 2 2004'                                                          
                                                                                 
-* Test prefixing with single key.                                               
+* Test prefixing with single page frame                                         
 * Make the fourth page the prefix.  Note that the prefix is two                 
 * pages                                                                         
                                                                                 
+ punch '* * Test prefixing with single page frame.'                             
  punch ':btst z' Reset machine                                          00060000
  supsws prefix=yes                                                              
  lhi 2,x'1004'                                                                  
@@ -82,11 +83,14 @@ go ds 0h =x'200'
  stop                                                                           
  punch ':etst 1'                                                        00250000
  punch '* *Compare'                                                             
- punch '* r 1000.8' r command displays absolute storage                         
+ punch '* abs 1000.8'                                                           
  punch '* *Key 00'                                                              
- punch '* *Compare'                                                             
- punch '* r 5000.8'                                                             
+ punch '* r 1000.8'                                                             
  punch '* *Key F0'                                                              
+ punch '* abs 5000.8'                                                           
+ punch '* *Key F0'                                                              
+ punch '* r 5000.8'                                                             
+ punch '* *Key 00'                                                              
                                                                                 
 * Set multiple keys.  Requires 1M page support                                  
                                                                                 
@@ -115,6 +119,7 @@ go ds 0h =x'200'
 * Same  with prefixing.  The point being that this variation of       *         
 * the instruction is not subject to prefixing,                        *         
                                                                                 
+ punch '* * Test prefixing with multiple page frames.'                          
  punch ':btst z' Reset machine                                          00060000
  supsws prefix=yes                                                              
  lhi 2,x'1004'  Starting address                                        00170000
@@ -123,10 +128,16 @@ go ds 0h =x'200'
  stop                                                                           
  punch ':etst 1'                                                        00250000
  punch '* *Compare'                                                             
- punch '* r    0.8' r command displays absolute storage                         
+ punch '* abs  0.8' r command displays absolute storage                         
  punch '* *Key 06'                                                              
+ punch '* r    0.8' r command displays absolute storage                         
+ punch '* *Key f0'                                                              
+ punch '* abs 1000.8' r command displays absolute storage                       
+ punch '* *Key F0'                                                              
  punch '* r 1000.8' r command displays absolute storage                         
  punch '* *Key F0'                                                              
+ punch '* abs 2000.8' r command displays absolute storage                       
+ punch '* *Key F4'                                                              
  punch '* r 2000.8' r command displays absolute storage                         
  punch '* *Key F4'                                                              
  punch '* r 5000.8'                                                             

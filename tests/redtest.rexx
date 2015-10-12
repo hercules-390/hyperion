@@ -140,8 +140,13 @@ If gpr.r = want
 call failtest 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
 return
 
+/*********************************************************************/
+/* Verify  that  the  key  of  the  last page frame displayed is the */
+/* specified one.                                                    */
+/*********************************************************************/
+
 wantkey:
-parse var rest want
+parse upper var rest want
 
 If lastkey = want
    Then
