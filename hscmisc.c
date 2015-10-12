@@ -2157,7 +2157,7 @@ char    buf[64];                        /* MSGBUF work buffer        */
         for (;;)
         {
             /* Check for addressing exception */
-            if (APPLY_PREFIXING( pageadr, regs->PX ) > regs->mainlim)
+            if ((pageadr = APPLY_PREFIXING( pageadr, regs->PX )) > regs->mainlim)
             {
                 MSGBUF( buf, "R:"F_RADR"  Addressing exception", pageadr );
                 WRMSG( HHC02290, "I", buf );
@@ -2310,7 +2310,7 @@ size_t  totamt;                         /* Total amount to be dumped */
             xcode = ARCH_DEP( virt_to_abs )( &raddr, &stid, pageadr, arn, regs, ACCTYPE_LRA );
 
             /* Check for addressing exception */
-            if (APPLY_PREFIXING( raddr, regs->PX ) > regs->mainlim)
+            if ((raddr = APPLY_PREFIXING( raddr, regs->PX )) > regs->mainlim)
             {
                 MSGBUF( buf, "R:"F_RADR"  Addressing exception", raddr );
                 WRMSG( HHC02291, "I", buf );
