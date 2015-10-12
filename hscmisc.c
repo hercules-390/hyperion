@@ -735,7 +735,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h2 < 0)
             {
-                s -= 2
+                s -= 2;
                 WRMSG(HHC02205, "E", s, ": invalid hex pair");
                 return -1;
             }
