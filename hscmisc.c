@@ -741,7 +741,8 @@ BYTE    c;                              /* Character work area       */
             }
             if (n >= 32)
             {
-                WRMSG(HHC02205, "E", --s, ": only a maximum of 32 bytes may be altered");
+                s -= 2
+                WRMSG(HHC02205, "E", s, ": only a maximum of 32 bytes may be altered");
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
