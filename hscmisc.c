@@ -741,7 +741,7 @@ BYTE    c;                              /* Character work area       */
             }
             if (n >= 32)
             {
-                s -= 2
+                s -= 2;
                 WRMSG(HHC02205, "E", s, ": only a maximum of 32 bytes may be altered");
                 return -1;
             }
