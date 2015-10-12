@@ -714,21 +714,34 @@ BYTE    c;                              /* Character work area       */
     if (rc > 2 && delim == '=' && newval)
     {
         s = strchr (operand, '=');
-        for (n = 0; n < 32;)
+        n = 0;
+        while (1)
         {
             h1 = *(++s);
             if (h1 == '\0'  || h1 == '#' ) break;
             if (h1 == SPACE || h1 == '\t') continue;
             h1 = toupper(h1);
-            h2 = *(++s);
-            h2 = toupper(h2);
             h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
                  (h1 >= 'A' && h1 <= 'F') ? h1 - 'A' + 10 : -1;
+            if (h1 < 0)
+            {
+                s -= 1;
+                WRMSG(HHC02205, "E", s, ": invalid hex digit");
+                return -1;
+            }
+            h2 = *(++s);
+            h2 = toupper(h2);
             h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' :
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
-            if (h1 < 0 || h2 < 0 || n >= 32)
+            if (h2 < 0)
             {
-                WRMSG(HHC02205, "E", s, "");
+                s -= 2
+                WRMSG(HHC02205, "E", s, ": invalid hex pair");
+                return -1;
+            }
+            if (n >= 32)
+            {
+                WRMSG(HHC02205, "E", --s, ": only a maximum of 32 bytes may be altered");
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;

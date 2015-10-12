@@ -1092,7 +1092,7 @@
 #define r_cmd_help              \
                                 \
   "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display up to 64K\n"        \
-  "of real storage, or \"r addr=value\" to alter up to 64 bytes of real\n"       \
+  "of real storage, or \"r addr=value\" to alter up to 32 bytes of real\n"       \
   "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
 
 #define restart_cmd_desc        "Generate restart interrupt"
@@ -1448,7 +1448,7 @@
                                 \
   "Format: \"v [P|S|H]addr[.len]\" or \"v [P|S|H]addr[-addr2]\" to display\n"   \
   "up to 64K of virtual storage, or \"v [P|S|H]addr=value\" to alter up to\n"   \
-  "64 bytes of virtual storage, where 'value' is a string of up to 32 pairs\n"  \
+  "32 bytes of virtual storage, where 'value' is a string of up to 32 pairs\n"  \
   "of hex digits. The optional P, S or H address prefix character forces\n"     \
   "Primary, Secondary or Home Space address translation mode instead of\n"  \
   "using the current PSW mode, which is the default.\n"
