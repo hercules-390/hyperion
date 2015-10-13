@@ -100,7 +100,9 @@ asterisk) are processed by redtest.rexx:
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
-*Done       End of a test case.
+*Done       End  of a test case.  Specify "nowait" if the test case does
+            not  end  by  loading  a  disabled PSW, for example, when it
+            tests just console commands without running any code.
 
 logicimm.tst shows examples of all directives, except *Key and *Program;
 see sske.tst for an example of these.
