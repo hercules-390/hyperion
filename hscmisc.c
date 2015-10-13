@@ -1894,7 +1894,7 @@ static int ARCH_DEP( dump_real_page )( REGS *regs, RADR raddr, RADR adr,
     ITIMER_SYNC( raddr + offset, amt, regs );
 
     /* Get absolute address of page */
-    aaddr = APPLY_PREFIXING( raddr, regs->PX );
+    aaddr = real == 'A' ? raddr : APPLY_PREFIXING( raddr, regs->PX );
     if (aaddr > regs->mainlim)
     {
         MSGBUF( pfx, "R:"F_RADR"  Addressing exception", raddr );
@@ -2109,8 +2109,7 @@ char    absorr[8];                    /* Uppercase command           */
 
     UNREFERENCED(argc);
 
-    for (i = 0; argv[0][i]; i++)
-      absorr[i] = toupper(argv[0][i]);
+    for (i = 0; argv[0][i]; i++) absorr[i] = toupper(argv[0][i]);
     absorr[i] = 0;
     opnd = cmdline + i;
 
@@ -2133,7 +2132,7 @@ char    absorr[8];                    /* Uppercase command           */
         return;
     }
 
-    /* Alter real storage */
+    /* Alter real or absolute storage */
     if (len > 0)
     {
         for (i = 0; i < len && raddr+i <= regs->mainlim; i++)
@@ -2162,6 +2161,7 @@ char    absorr[8];                    /* Uppercase command           */
     if ((totamt = (eaddr - saddr) + 1) > 0)
     {
         RADR    pageadr  = saddr & PAGEFRAME_PAGEMASK;
+        RADR    abspage  = 'A' == absorr[0] ? pageadr : APPLY_PREFIXING( pageadr, regs->PX );
         size_t  pageoff  = saddr - pageadr;
         size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
         BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
@@ -2169,21 +2169,20 @@ char    absorr[8];                    /* Uppercase command           */
         if (pageamt > totamt)
             pageamt = totamt;
 
+        /* Check for addressing exception                            */
+        if (abspage > regs->mainlim)
+        {
+            MSGBUF( buf, "%c:"F_RADR"  Addressing exception", absorr[0], pageadr );
+            WRMSG( HHC02290, "I", buf );
+            return;
+        }
+
         /* Dump requested real storage one whole page at a time */
 
         for (;;)
         {
-            /* Check for addressing exception */
-            if ('R' == absorr[0]) pageadr = APPLY_PREFIXING( pageadr, regs->PX );
-            if (pageadr > regs->mainlim)
-            {
-                MSGBUF( buf, "%c:"F_RADR"  Addressing exception", absorr[0], pageadr );
-                WRMSG( HHC02290, "I", buf );
-                break;
-            }
-
             /* Display address and storage key */
-            MSGBUF( buf, "%c:"F_RADR"  K:%2.2X", absorr[0], pageadr, STORAGE_KEY( pageadr, regs ));
+            MSGBUF( buf, "%c:"F_RADR"  K:%2.2X", absorr[0], pageadr, STORAGE_KEY( abspage, regs ));
             WRMSG( HHC02290, "I", buf );
 
             /* Now hexdump that entire page */

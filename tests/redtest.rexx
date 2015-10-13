@@ -34,6 +34,8 @@ do while lines(in) > 0
             End
       When msg = 'HHC00809I'
          Then call waitstate
+      When msg = 'HHC02277I'
+         Then parse var rest . prefix .
       When msg = 'HHC02290I'
          Then
             If comparing
@@ -74,6 +76,8 @@ Select
       Then call wantgpr
    When verb = '*Key'
       Then call wantkey
+   When verb = '*Prefix'
+      Then call wantprefix
    When verb = '*Program'
       Then wantpgm = rest
    When verb = '*Done'
@@ -97,6 +101,7 @@ pgmok = 0                             /* Program check not expected  */
 gpr.=''
 lastkey = ''
 keyaddr = '<unknown>'
+prefix = ''
 return
 
 endtest:
@@ -106,7 +111,7 @@ Select
    otherwise
 end
 
-If \havewait
+If \havewait & rest \= 'nowait'
    Then
       Do
          say 'No wait state encountered.'
@@ -157,6 +162,24 @@ If lastkey = want
 If lastkey = ''
    Then call failtest 'No key saved from r command.'
    Else call failtest 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
+return
+
+/*********************************************************************/
+/* Verify that the prefix register contains the specified value.     */
+/*********************************************************************/
+
+wantprefix:
+parse upper var rest want
+
+If prefix = want
+   Then
+      Do
+         oks = oks + 1
+         return
+      End
+If prefix = ''
+   Then call failtest 'No prefix register saved from pr command.'
+   Else call failtest 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
 return
 
 waitstate:

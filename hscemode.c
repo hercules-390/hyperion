@@ -432,10 +432,9 @@ int pr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 char buf[32];
+U64 newpx;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -447,13 +446,49 @@ char buf[32];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    if ( regs->arch_mode == ARCH_900 )
-        MSGBUF( buf, I64_FMTX, (U64)regs->PX_G);
-    else
-        MSGBUF( buf, I32_FMTX, (U32)regs->PX_L);
-    WRMSG(HHC02277, "I", buf);
+    if (1 < argc)                     /* Setting prefix              */
+    {
+      U64 testpx;
 
+      if (!sscanf(argv[1], "%"I64_FMT"x", &newpx))
+      {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        WRMSG(HHC02205, "E", argv[1], "");
+        return -1;
+      }
+      /* As SPX ignores non-page address bits, so should we here.    */
+      if (regs->arch_mode == ARCH_900)
+      {
+        newpx &= 0x7fffe000;
+        testpx = newpx + 0x1000;      /* Prefix is two pages         */
+      }
+      else
+      {
+        newpx &= 0x7ffff000;
+        testpx = newpx;               /* Prefix is one page          */
+      }
+      if (testpx > regs->mainlim)
+      {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        MSGBUF( buf, "A:"F_RADR"  Addressing exception", testpx );
+        WRMSG( HHC02290, "I", buf );
+        return -1;
+      }
+    }
+
+    if ( regs->arch_mode == ARCH_900 )
+    {
+       if (1 < argc) regs->PX_G = newpx;           /* Setting prefix */
+       MSGBUF( buf, I64_FMTX, (U64)regs->PX_G);
+    }
+    else
+    {
+       if (1 < argc) regs->PX_L = newpx;           /* Setting prefix */
+       MSGBUF( buf, I32_FMTX, (U32)regs->PX_L);
+    }
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    WRMSG(HHC02277, "I", buf);
 
     return 0;
 }

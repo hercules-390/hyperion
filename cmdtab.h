@@ -924,7 +924,7 @@
   "interruption.\n"
 
 #define plant_cmd_desc          "Set STSI plant code"
-#define pr_cmd_desc             "Display prefix register"
+#define pr_cmd_desc             "Display or alter prefix register"
 #define pscp_cmd_desc           "Send prio message scp command"
 #define pscp_cmd_help           \
                                 \

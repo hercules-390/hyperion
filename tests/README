@@ -94,6 +94,9 @@ asterisk) are processed by redtest.rexx:
 *Key        Compare  the  specified key against the key displayed in the
             previous r command.
 
+*Prefix     Compre  the  specified  value  to the contents of the prefix
+            register displayed by a previous pr command.
+
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
