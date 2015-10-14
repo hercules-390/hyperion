@@ -26,7 +26,7 @@
 
 #include "hercules.h"
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(HAVE_SYS_SYSCTL_H)
 #include <sys/sysctl.h>
 #endif
 
