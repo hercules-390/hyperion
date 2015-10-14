@@ -431,7 +431,7 @@ char buf[384];
 int pr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-char buf[32];
+char buf[64];
 U64 newpx;
 
     UNREFERENCED(cmdline);
@@ -471,7 +471,7 @@ U64 newpx;
       {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         MSGBUF( buf, "A:"F_RADR"  Addressing exception", testpx );
-        WRMSG( HHC02290, "I", buf );
+        WRMSG( HHC02290, "E", buf );
         return -1;
       }
     }

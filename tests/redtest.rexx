@@ -22,11 +22,9 @@ do while lines(in) > 0
    lineno = lineno + 1
    l = linein(in)
    parse var l msg verb rest
+   If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
+      Then lasterror = l
    Select
-      When msg = 'HHC01603I'
-         Then
-            If left(verb, 1) = '*'
-               Then call order
       When msg = 'HHC00801I'
          Then
             Do
@@ -34,6 +32,12 @@ do while lines(in) > 0
             End
       When msg = 'HHC00809I'
          Then call waitstate
+      When msg = 'HHC01603I'
+         Then
+            If left(verb, 1) = '*'
+               Then call order
+      When msg = 'HHC02269I'
+         then call gprs
       When msg = 'HHC02277I'
          Then parse var rest . prefix .
       When msg = 'HHC02290I'
@@ -50,12 +54,17 @@ do while lines(in) > 0
                               lastkey = key
                            End
                   End
-      When msg = 'HHC02269I'
-         then call gprs
       otherwise
    end
 end
-say 'Done' done 'tests. ' fails.1 'failed;' fails.0 'OK.'
+Select
+   When fails.1 = 0
+      Then msg = 'All OK.'
+   otherwise
+      msg = fails.1 'failed;' fails.0 'OK.'
+end
+
+say 'Done' done 'tests. ' msg
 exit fails.1
 
 order:
@@ -72,6 +81,8 @@ Select
       Then comparing = 1
    When verb = '*Want'
       Then call want
+   When verb = '*Error'
+      Then call emsg
    When verb = '*Gpr'
       Then call wantgpr
    When verb = '*Key'
@@ -102,6 +113,7 @@ gpr.=''
 lastkey = ''
 keyaddr = '<unknown>'
 prefix = ''
+lasterror = ''
 return
 
 endtest:
@@ -117,11 +129,23 @@ If \havewait & rest \= 'nowait'
          say 'No wait state encountered.'
          rv = rv + 1
       end
-say 'Test' testcase'. ' oks 'OK compares.  rv='rv
+Select
+   When rv = 0
+      Then msg ='All pass.'
+   When rv = 1
+      Then msg ='One failure.'
+   otherwise
+      msg = rv 'failures.'
+end
+say 'Test' testcase'. ' oks 'OK compares. ' msg
 done = done + 1
 fail = rv \= 0
-fails.fail = fails.fail + 1
+fails.fail = fails.fail + 1           /* Ok or fail                  */
 return
+
+/*********************************************************************/
+/* Compare storage display atainst wanted contents.                  */
+/*********************************************************************/
 
 want:
 If rest = display
@@ -134,8 +158,12 @@ notoks = notoks + 1
 call failtest 'Storage at' lastkey 'compare mismatch. ' info 'Want:' rest 'got' display
 return
 
+/*********************************************************************/
+/* Verify contents of a general register.                            */
+/*********************************************************************/
+
 wantgpr:
-parse var rest r want
+parse upper var rest r want
 If gpr.r = want
    Then
       Do
@@ -182,6 +210,27 @@ If prefix = ''
    Else call failtest 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
 return
 
+/*********************************************************************/
+/* Verify the last issued error message.                             */
+/*********************************************************************/
+
+emsg:
+If lasterror = rest
+   Then
+      Do
+         oks = oks + 1
+         return
+      End
+If lasterror = ''
+   Then call failtest 'No error message saved for' rest
+   Else call failtest 'Error message mismatch. ' info ,,
+      'Want:' rest, 'Got: ' lasterror
+return
+
+/*********************************************************************/
+/* Decode disabled wait state message.                               */
+/*********************************************************************/
+
 waitstate:
 havewait = 1
 parse var rest 'wait state' psw1 psw2
@@ -191,6 +240,10 @@ If psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm
    Then return
 call failtest 'Received unexpected wait state: ' psw1 psw2
 return
+
+/*********************************************************************/
+/* Save general registers for later test.                            */
+/*********************************************************************/
 
 gprs:
 If verb = 'General'
@@ -202,6 +255,11 @@ Do while todo \= ''
    gpr.r = val
 End
 return
+
+/*********************************************************************/
+/* Process  a  program check, which is identified by the IA field of */
+/* the disabled wait PSW.                                            */
+/*********************************************************************/
 
 figurePgm:
 If havepgm = wantpgm
@@ -216,7 +274,15 @@ Select
 end
 return
 
+/*********************************************************************/
+/* Display message about a failed test.                              */
+/*********************************************************************/
+
 failtest:
-say '>>>>> line' right(lineno, 5)':'  arg(1)
+! = '>>>>> line' right(lineno, 5)':'
+say ! arg(1)
+do ? = 2 to arg()
+   say left(' ', length(!)) arg(?)
+end
 rv = rv + 1
 return

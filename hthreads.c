@@ -931,12 +931,13 @@ static int  hthread_setschedprio( TID tid, int prio, const char* location )
 {
     int rc;
     struct sched_param param;
+
     memset( &param, 0, sizeof( param ));
     if (equal_threads(tid,0))
         tid = thread_id();
     param.sched_priority = prio;
     rc = hthread_setschedparam( tid, herc_policy, &param );
-    if (rc != 0)
+    if (rc != 0 && EPERM != rc)
         // "'%s' failed at loc=%s: rc=%d: %s"
         WRMSG( HHC90020, "W", "set_thread_priority",
             TRIMLOC( location ), rc, strerror( rc ));

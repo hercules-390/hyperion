@@ -100,9 +100,13 @@ asterisk) are processed by redtest.rexx:
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
+*Error      Specify the complete error message string to compare against
+            the last issued error message.
+
 *Done       End  of a test case.  Specify "nowait" if the test case does
             not  end  by  loading  a  disabled PSW, for example, when it
             tests just console commands without running any code.
 
-logicimm.tst shows examples of all directives, except *Key and *Program;
-see sske.tst for an example of these.
+logicimm.tst shows examples of all directives, except *Key, *Prefix, and
+*Program;  see sske.tst for an example of *Key and *program.  See pr.tst
+for *Prefix.

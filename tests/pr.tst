@@ -26,4 +26,11 @@ r   0.4
 r   4000.4
 *Want 01000000
 abs 0.4
+
+pr 800000
+*Error HHC02290E A:00801000  Addressing exception
+# we get one page more because the prefix area is
+# two frames in z/Architecture
+pr fffff
+*Prefix 00000000000fe000
 *Done nowait

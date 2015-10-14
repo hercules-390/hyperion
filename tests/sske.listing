@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/10/12 16.06
+-                                                                                           jHLASM 1.0   2015/10/14 12.35
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/12 16.06
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/14 12.35
 0SSKE      SD 00000001 00000000 000041E0             00                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/12 16.06
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
 0                                               1 * Set storage key extended test case.                                   00010000
 0                                               3 * This file was put into the public domain 2015-10-05                   00020000
                                                 4 * by John P. Hartmann.  You can use it for anything you like,           00030000
@@ -63,255 +63,439 @@
 0                                               7 * We load code at x'200' unless prefixing is indicated, in which       
                                                 8 * case we load at x'2000'                                              
 0                                              10  macro                                                                 
-                                               11  supsws &problem=0,&prefix=no                                          
-                                               12 &havepx setb ('&prefix' eq 'yes')                                      
-                                               13 &org(1) setc 'x''200''','x''2000'''                                    
-                                               14  org sske+x'1a0'                                                        00090000
-                                               15  dc x'000&problem.000180000000'                                         00100000
-                                               16  dc ad(&org(&havepx+1))                                                 00110000
-                                               17  org sske+x'1d0'                                                        00120000
-                                               18  dc x'0002000180000000'                                                 00130000
-                                               19  dc ad(x'deaddead') Program new PSW                                     00140000
-                                               20  aif (&havepx).px                                                      
-                                               21  org &sysect+x'200'                                                     00150000
-                                               22  using &sysect,0                                                       
-                                               23  mexit                                                                 
-                                               24 .px anop                                                               
-                                               25  org &sysect+x'41d0'                                                    00120000
-                                               26  dc x'0002000180000000'                                                 00130000
-                                               27  dc ad(x'deadbeaf') Program new PSW in prefix                           00140000
-                                               28  org &sysect+x'2000' Get out of the prefix page                        
-                                               29  drop 0                                                                
-                                               30  basr 12,0                                                             
-                                               31  using *,12                                                            
-                                               32  spx =a(x'4000') Load prefix                                           
-                                               33 .x mend                                                                
-0                                              35  macro                                                                 
-                                               36  stop &rc=0                                                            
-                                               37  lpswe psw&sysndx                                                      
-                                               38 psw&sysndx dc 0d,x'0002000180000000',ad(&rc)                           
-                                               39  ltorg                                                                 
-                                               40  mend                                                                  
-0                                              42 * Test for instruction being privileged                                
-0                                              44  punch ':test sske#1'                                                   00050000
-                                               45  punch ':btst z'                                                        00060000
- 00000000                00000000 000041E0     46 sske start 0                                                            00070000
-                                               47  supsws problem=1                                                      
- 00000000                00000000 000001A0     48+ org sske+x'1a0'                                                        01-00000014
- 000001A0 0001000180000000                     49+ dc x'0001000180000000'                                                 01-00000015
- 000001A8 0000000000000200                     50+ dc ad(x'200')                                                          01-00000016
- 000001B0                000001B0 000001D0     51+ org sske+x'1d0'                                                        01-00000017
- 000001D0 0002000180000000                     52+ dc x'0002000180000000'                                                 01-00000018
- 000001D8 FFFFFFFFDEADDEAD                     53+ dc ad(x'deaddead') Program new PSW                                     01-00000019
- 000001E0                000001E0 00000200     54+ org sske+x'200'                                                        01-00000021
-                     R:0 00000000              55+ using sske,0                                                           01-00000022
+                                               11  supsws &problem=0,&prefix=no,&am=18,&arch=z                           
+                                               12  gblb using0                                                           
+                                               13  gblb &havepx Prefixing?                                               
+                                               14 &havepx setb ('&prefix' eq 'yes')                                      
+                                               15 &org(1) setc 'x''200''','x''2000'''                                    
+                                               16  punch ':btst &arch'                                                    00060000
+                                               17  org sske+x'1a0'                                                        00090000
+                                               18  dc x'000&problem.000&am.0000000'                                       00100000
+                                               19  dc ad(&org(&havepx+1))                                                 00110000
+                                               20  org sske+x'1d0'                                                        00120000
+                                               21  dc x'0002000180000000'                                                 00130000
+                                               22  dc ad(x'deaddead') Program new PSW                                     00140000
+                                               23  aif (&havepx).px                                                      
+                                               24  org &sysect+x'200'                                                     00150000
+                                               25  using &sysect,0                                                       
+                                               26 &using0 setb 1                                                         
+                                               27  mexit                                                                 
+                                               28 .px anop                                                               
+                                               29  org &sysect+x'41d0'                                                    00120000
+                                               30  dc x'0002000180000000'                                                 00130000
+                                               31  dc ad(x'deadbeaf') Program new PSW in prefix                           00140000
+                                               32  org &sysect+x'2000' Get out of the prefix page                        
+                                               33  aif (not &using0).nodrop                                              
+                                               34  drop 0                                                                
+                                               35 &using0 setb 0                                                         
+                                               36 .nodrop anop                                                           
+                                               37  basr 12,0                                                             
+                                               38  using *,12                                                            
+                                               39  spx =a(x'4000') Load prefix                                           
+                                               40 .x mend                                                                
+0                                              42  macro                                                                 
+                                               43  stop &rc=0                                                            
+                                               44  lpswe psw&sysndx                                                      
+                                               45 psw&sysndx dc 0d,x'0002000180000000',ad(&rc)                           
+                                               46  ltorg                                                                 
+                                               47  mend                                                                  
+0                                              49 * Macro to perform multiple key assignments                            
+0                                              51  macro                                                                 
+                                               52  dosskemf &addr,&r2hi=00000000,&p1key=F0                               
+                                               53  gblb &havepx Prefixing?                                               
+                                               54  lg  2,=ad(&addr)  Starting address                                     00170000
+                                               55  lhi 3,x'f0'                                                            00180000
 1                                                                                                               Page    4
-   Active Usings: SSKE,R0                                                                                                
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/12 16.06
-000000200                                      56 go ds 0h =x'200'                                                       
- 00000200 A728 2004               00002004     57  lhi 2,x'2004'  Starting address                                        00170000
- 00000204 A738 00F0               000000F0     58  lhi 3,x'f0'                                                            00180000
- 00000208 B22B 0032                            59  sske 3,2                                                               00190000
-                                               60  stop rc=x'bad'                                                         00200000
- 0000020C B2B2 0210      00000210              61+ lpswe psw0002                                                          01-00000037
- 00000210 0002000180000000                     62+psw0002    dc 0d,x'0002000180000000',ad(x'bad')                         01-00000038
- 00000220                                      63+ ltorg                                                                  01-00000039
-                                               64  punch '* *Program 0002' Expect program check                           00240000
-                                               65  punch ':etst 1'                                                        00250000
-                                               66  punch '* *Done'                                                        00260000
-0                                              68 * Test ability to set a key                                            
-                                               69  punch ':test sske#2'                                                   00050000
-                                               70  punch ':btst z'                                                        00060000
-                                               71  supsws                                                                
- 00000220                00000220 000001A0     72+ org sske+x'1a0'                                                        01-00000014
- 000001A0 0000000180000000                     73+ dc x'0000000180000000'                                                 01-00000015
- 000001A8 0000000000000200                     74+ dc ad(x'200')                                                          01-00000016
- 000001B0                000001B0 000001D0     75+ org sske+x'1d0'                                                        01-00000017
- 000001D0 0002000180000000                     76+ dc x'0002000180000000'                                                 01-00000018
- 000001D8 FFFFFFFFDEADDEAD                     77+ dc ad(x'deaddead') Program new PSW                                     01-00000019
- 000001E0                000001E0 00000200     78+ org sske+x'200'                                                        01-00000021
-                     R:0 00000000              79+ using sske,0                                                           01-00000022
- 00000200                00000200 00000200     80  org go                                                                
- 00000200 A728 2004               00002004     81  lhi 2,x'2004'                                                         
- 00000204 4130 00F0               000000F0     82  la  3,x'f0'                                                           
- 00000208 B22B 0032                            83  SSKE    3,2                                                           
-                                               84  stop                                                                  
- 0000020C B2B2 0210      00000210              85+ lpswe psw0004                                                          01-00000037
- 00000210 0002000180000000                     86+psw0004    dc 0d,x'0002000180000000',ad(0)                              01-00000038
- 00000220                                      87+ ltorg                                                                  01-00000039
-                                               88  punch ':etst 1'                                                        00250000
-                                               89  punch '* *Compare'                                                    
-                                               90  punch '* r 2000.8'                                                    
-                                               91  punch '* *Key F0'                                                     
-                                               92  punch '* gpr'                                                         
-                                               93  punch '* *Gpr 2 2004'                                                 
-0                                              95 * Test prefixing with single page frame                                
-                                               96 * Make the fourth page the prefix.  Note that the prefix is two        
-                                               97 * pages                                                                
-0                                              99  punch '* * Test prefixing with single page frame.'                    
-                                              100  punch ':btst z' Reset machine                                          00060000
-                                              101  supsws prefix=yes                                                     
- 00000220                00000220 000001A0    102+ org sske+x'1a0'                                                        01-00000014
- 000001A0 0000000180000000                    103+ dc x'0000000180000000'                                                 01-00000015
- 000001A8 0000000000002000                    104+ dc ad(x'2000')                                                         01-00000016
- 000001B0                000001B0 000001D0    105+ org sske+x'1d0'                                                        01-00000017
- 000001D0 0002000180000000                    106+ dc x'0002000180000000'                                                 01-00000018
- 000001D8 FFFFFFFFDEADDEAD                    107+ dc ad(x'deaddead') Program new PSW                                     01-00000019
- 000001E0                000001E0 000041D0    108+ org sske+x'41d0'                                                       01-00000025
- 000041D0 0002000180000000                    109+ dc x'0002000180000000'                                                 01-00000026
- 000041D8 FFFFFFFFDEADBEAF                    110+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000027
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                              56  sske 3,2,1                                                             00190000
+                                               57  stop                                                                  
+                                               58  punch ':etst 1'                                                        00250000
+                                               59  punch '* *Compare'                                                    
+                                               60  punch '* abs  0.8'                                                    
+                                               61  punch '* *Key 06'                                                     
+                                               62  punch '* abs 1000.8'                                                  
+                                               63  punch '* *Key &p1key.'                                                
+                                               64  punch '* r ff000.8'                                                   
+                                               65  punch '* *Key F0'                                                     
+                                               66  punch '* r ff000.8'                                                   
+                                               67  punch '* *Key F0'                                                     
+                                               68  punch '* r 100000.8'                                                  
+                                               69  punch '* *Key 00'                                                     
+                                               70  punch '* gpr'                                                         
+                                               71  punch '* *Gpr 2 &r2hi.00100004'                                       
+                                               72  aif (not &havepx).x                                                   
+                                               73  punch '* r    0.8'                                                    
+                                               74  punch '* *Key f0'                                                     
+                                               75  punch '* r 1000.8'                                                    
+                                               76  punch '* *Key F0'                                                     
+                                               77  punch '* abs 2000.8'                                                  
+                                               78  punch '* *Key F4'                                                     
+                                               79  punch '* r 2000.8'                                                    
+                                               80  punch '* *Key F4'                                                     
+                                               81  punch '* r 5000.8'                                                    
+                                               82  punch '* *Key F0'                                                     
+                                               83 .x mend                                                                
+0                                              85 * Test for instruction being privileged                                
+0                                              87  punch ':test sske#1'                                                   00050000
+                                               88  punch '* * sske#1:  Test for sske being privileged.'                  
+ 00000000                00000000 000041E0     89 sske start 0                                                            00070000
+                                               90  supsws problem=1                                                      
+                                               91+ punch ':btst z'                                                        01-00000016
+ 00000000                00000000 000001A0     92+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0001000180000000                     93+ dc x'0001000180000000'                                                 01-00000018
+ 000001A8 0000000000000200                     94+ dc ad(x'200')                                                          01-00000019
+ 000001B0                000001B0 000001D0     95+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                     96+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                     97+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 00000200     98+ org sske+x'200'                                                        01-00000024
+                     R:0 00000000              99+ using sske,0                                                           01-00000025
+ 00000200                                     100 go ds 0h =x'200'                                                       
+ 00000200 A728 2004               00002004    101  lhi 2,x'2004'  Starting address                                        00170000
+ 00000204 A738 00F0               000000F0    102  lhi 3,x'f0'                                                            00180000
+ 00000208 B22B 0032                           103  sske 3,2                                                               00190000
+                                              104  stop rc=x'bad'                                                         00200000
+ 0000020C B2B2 0210      00000210             105+ lpswe psw0002                                                          01-00000044
+ 00000210 0002000180000000                    106+psw0002    dc 0d,x'0002000180000000',ad(x'bad')                         01-00000045
+ 00000220                                     107+ ltorg                                                                  01-00000046
+                                              108  punch '* *Program 0002' Expect program check                           00240000
+                                              109  punch ':etst 1'                                                        00250000
+                                              110  punch '* *Done'                                                        00260000
 1                                                                                                               Page    5
    Active Usings: SSKE,R0                                                                                                
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/12 16.06
-0000041E0                000041E0 00002000    111+ org sske+x'2000'    Get out of the prefix page                         01-00000028
-                                              112+ drop 0                                                                 01-00000029
- 00002000 0DC0                                113+ basr 12,0                                                              01-00000030
-                     R:C 00002002             114+ using *,12                                                             01-00000031
- 00002002 B210 C026      00002028             115+ spx =a(x'4000') Load prefix                                            01-00000032
- 00002006 A728 1004               00001004    116  lhi 2,x'1004'                                                         
- 0000200A 4130 00F0               000000F0    117  la  3,x'f0'                                                           
- 0000200E B22B 0032                           118  SSKE    3,2                                                           
-                                              119  stop                                                                  
- 00002012 B2B2 C016      00002018             120+ lpswe psw0006                                                          01-00000037
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                             112 * Test ability to set a key                                            
+                                              113  punch ':test sske#2'                                                   00050000
+                                              114  punch '* * sske#2:  Basic set key operation.'                         
+                                              115  supsws                                                                
+                                              116+ punch ':btst z'                                                        01-00000016
+ 00000220                00000220 000001A0    117+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000180000000                    118+ dc x'0000000180000000'                                                 01-00000018
+ 000001A8 0000000000000200                    119+ dc ad(x'200')                                                          01-00000019
+ 000001B0                000001B0 000001D0    120+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    121+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    122+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 00000200    123+ org sske+x'200'                                                        01-00000024
+                     R:0 00000000             124+ using sske,0                                                           01-00000025
+ 00000200                00000200 00000200    125  org go                                                                
+ 00000200 A728 2004               00002004    126  lhi 2,x'2004'                                                         
+ 00000204 4130 00F0               000000F0    127  la  3,x'f0'                                                           
+ 00000208 B22B 0032                           128  SSKE    3,2                                                           
+                                              129  stop                                                                  
+ 0000020C B2B2 0210      00000210             130+ lpswe psw0004                                                          01-00000044
+ 00000210 0002000180000000                    131+psw0004    dc 0d,x'0002000180000000',ad(0)                              01-00000045
+ 00000220                                     132+ ltorg                                                                  01-00000046
+                                              133  punch ':etst 1'                                                        00250000
+                                              134  punch '* *Compare'                                                    
+                                              135  punch '* r 2000.8'                                                    
+                                              136  punch '* *Key F0'                                                     
+                                              137  punch '* gpr'                                                         
+                                              138  punch '* *Gpr 2 2004'                                                 
+0                                             140 * Test prefixing with single page frame                                
+                                              141 * Make the fourth page the prefix.  Note that the prefix is two        
+                                              142 * pages                                                                
+0                                             144  punch '* * sske#3:  Test prefixing with single page frame.'           
+                                              145  supsws prefix=yes                                                     
+                                              146+ punch ':btst z'                                                        01-00000016
+ 00000220                00000220 000001A0    147+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000180000000                    148+ dc x'0000000180000000'                                                 01-00000018
+ 000001A8 0000000000002000                    149+ dc ad(x'2000')                                                         01-00000019
+ 000001B0                000001B0 000001D0    150+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    151+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    152+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 000041D0    153+ org sske+x'41d0'                                                       01-00000029
+ 000041D0 0002000180000000                    154+ dc x'0002000180000000'                                                 01-00000030
+ 000041D8 FFFFFFFFDEADBEAF                    155+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000031
+ 000041E0                000041E0 00002000    156+ org sske+x'2000'    Get out of the prefix page                         01-00000032
+                                              157+ drop 0                                                                 01-00000034
+ 00002000 0DC0                                158+ basr 12,0                                                              01-00000037
+                     R:C 00002002             159+ using *,12                                                             01-00000038
+ 00002002 B210 C026      00002028             160+ spx =a(x'4000') Load prefix                                            01-00000039
+ 00002006 A728 1004               00001004    161  lhi 2,x'1004'                                                         
+ 0000200A 4130 00F0               000000F0    162  la  3,x'f0'                                                           
+ 0000200E B22B 0032                           163  SSKE    3,2                                                           
+                                              164  stop                                                                  
+ 00002012 B2B2 C016      00002018             165+ lpswe psw0006                                                          01-00000044
  00002016 0000                                                                                                           
- 00002018 0002000180000000                    121+psw0006    dc 0d,x'0002000180000000',ad(0)                              01-00000038
- 00002028                                     122+ ltorg                                                                  01-00000039
- 00002028 00004000                            123                =a(x'4000')                                             
-                                              124  punch ':etst 1'                                                        00250000
-                                              125  punch '* *Compare'                                                    
-                                              126  punch '* abs 1000.8'                                                  
-                                              127  punch '* *Key 00'                                                     
-                                              128  punch '* r 1000.8'                                                    
-                                              129  punch '* *Key F0'                                                     
-                                              130  punch '* abs 5000.8'                                                  
-                                              131  punch '* *Key F0'                                                     
-                                              132  punch '* r 5000.8'                                                    
-                                              133  punch '* *Key 00'                                                     
-0                                             135 * Set multiple keys.  Requires 1M page support                         
-0                                             137 * Setting  multiple keys without prefixing.  The low 12 bits of       *
-                                              138 * R2 should remain unchanged.                                         *
-0                                             140  punch ':btst z' Reset machine                                          00060000
-                                              141  supsws                                                                
- 0000202C                0000202C 000001A0    142+ org sske+x'1a0'                                                        01-00000014
- 000001A0 0000000180000000                    143+ dc x'0000000180000000'                                                 01-00000015
- 000001A8 0000000000000200                    144+ dc ad(x'200')                                                          01-00000016
- 000001B0                000001B0 000001D0    145+ org sske+x'1d0'                                                        01-00000017
- 000001D0 0002000180000000                    146+ dc x'0002000180000000'                                                 01-00000018
- 000001D8 FFFFFFFFDEADDEAD                    147+ dc ad(x'deaddead') Program new PSW                                     01-00000019
- 000001E0                000001E0 00000200    148+ org sske+x'200'                                                        01-00000021
-                     R:0 00000000             149+ using sske,0                                                           01-00000022
- 00000200 A728 2004               00002004    150  lhi 2,x'2004'  Starting address                                        00170000
- 00000204 A738 00F0               000000F0    151  lhi 3,x'f0'                                                            00180000
- 00000208 B22B 1032                           152  sske 3,2,1                                                             00190000
-                                              153  stop                                                                  
- 0000020C B2B2 0210      00000210             154+ lpswe psw0008                                                          01-00000037
- 00000210 0002000180000000                    155+psw0008    dc 0d,x'0002000180000000',ad(0)                              01-00000038
- 00000220                                     156+ ltorg                                                                  01-00000039
-                                              157  punch ':etst 1'                                                        00250000
-                                              158  punch '* *Compare'                                                    
-                                              159  punch '* r 2000.8' r command displays absolute storage                
-                                              160  punch '* *Key F0'                                                     
-                                              161  punch '* r 5000.8'                                                    
-                                              162  punch '* *Key F0'                                                     
-                                              163  punch '* r ff000.8'                                                   
-                                              164  punch '* *Key F0'                                                     
 1                                                                                                               Page    6
-   Active Usings: SSKE,R0  SSKE+X'2002',R12                                                                              
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/12 16.06
-0                                             165  punch '* r 100000.8'                                                  
-                                              166  punch '* *Key 00'                                                     
-                                              167  punch '* gpr'                                                         
-                                              168  punch '* *Gpr 2 100004'                                               
-0                                             170 * Same  with prefixing.  The point being that this variation of       *
-                                              171 * the instruction is not subject to prefixing,                        *
-0                                             173  punch '* * Test prefixing with multiple page frames.'                 
-                                              174  punch ':btst z' Reset machine                                          00060000
-                                              175  supsws prefix=yes                                                     
- 00000220                00000220 000001A0    176+ org sske+x'1a0'                                                        01-00000014
- 000001A0 0000000180000000                    177+ dc x'0000000180000000'                                                 01-00000015
- 000001A8 0000000000002000                    178+ dc ad(x'2000')                                                         01-00000016
- 000001B0                000001B0 000001D0    179+ org sske+x'1d0'                                                        01-00000017
- 000001D0 0002000180000000                    180+ dc x'0002000180000000'                                                 01-00000018
- 000001D8 FFFFFFFFDEADDEAD                    181+ dc ad(x'deaddead') Program new PSW                                     01-00000019
- 000001E0                000001E0 000041D0    182+ org sske+x'41d0'                                                       01-00000025
- 000041D0 0002000180000000                    183+ dc x'0002000180000000'                                                 01-00000026
- 000041D8 FFFFFFFFDEADBEAF                    184+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000027
- 000041E0                000041E0 00002000    185+ org sske+x'2000'    Get out of the prefix page                         01-00000028
-                                              186+ drop 0                                                                 01-00000029
- 00002000 0DC0                                187+ basr 12,0                                                              01-00000030
-                     R:C 00002002             188+ using *,12                                                             01-00000031
- 00002002 B210 C026      00002028             189+ spx =a(x'4000') Load prefix                                            01-00000032
- 00002006 A728 1004               00001004    190  lhi 2,x'1004'  Starting address                                        00170000
- 0000200A A738 00F0               000000F0    191  lhi 3,x'f0'                                                            00180000
- 0000200E B22B 1032                           192  sske 3,2,1                                                             00190000
-                                              193  stop                                                                  
- 00002012 B2B2 C016      00002018             194+ lpswe psw0010                                                          01-00000037
- 00002016 0000                                                                                                           
- 00002018 0002000180000000                    195+psw0010    dc 0d,x'0002000180000000',ad(0)                              01-00000038
- 00002028                                     196+ ltorg                                                                  01-00000039
- 00002028 00004000                            197                =a(x'4000')                                             
-                                              198  punch ':etst 1'                                                        00250000
-                                              199  punch '* *Compare'                                                    
-                                              200  punch '* abs  0.8' r command displays absolute storage                
-                                              201  punch '* *Key 06'                                                     
-                                              202  punch '* r    0.8' r command displays absolute storage                
-                                              203  punch '* *Key f0'                                                     
-                                              204  punch '* abs 1000.8' r command displays absolute storage              
-                                              205  punch '* *Key F0'                                                     
-                                              206  punch '* r 1000.8' r command displays absolute storage                
-                                              207  punch '* *Key F0'                                                     
-                                              208  punch '* abs 2000.8' r command displays absolute storage              
-                                              209  punch '* *Key F4'                                                     
-                                              210  punch '* r 2000.8' r command displays absolute storage                
-                                              211  punch '* *Key F4'                                                     
-                                              212  punch '* r 5000.8'                                                    
-                                              213  punch '* *Key F0'                                                     
-                                              214  punch '* r ff000.8'                                                   
-                                              215  punch '* *Key F0'                                                     
-                                              216  punch '* r 100000.8'                                                  
-                                              217  punch '* *Key 00'                                                     
-                                              218  punch '* gpr'                                                         
-1                                                                                                               Page    7
    Active Usings: SSKE+X'2002',R12                                                                                       
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/12 16.06
-0                                             219  punch '* *Gpr 2 100004'                                               
-0                                             221 * Insert more here                                                     
-0                                             223  punch '* *Done'                                                        00260000
-                                              224  end                                                                    00270000
-1                               Ordinary Symbol and Literal Cross Reference                                     Page    8
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/12 16.06
-0go            2 00000200 00000001     H  H                56   80                                                       
- psw0002       8 00000210 00000001     D  D                62   61                                                       
- psw0004       8 00000210 00000001     D  D                86   85                                                       
- psw0006       8 00002018 00000001     D  D               121  120                                                       
- psw0008       8 00000210 00000001     D  D               155  154                                                       
- psw0010       8 00002018 00000001     D  D               195  194                                                       
- sske          1 00000000 00000001     J                   46   48    51    54    55U   72    75    78    79U  102   105   108   111
-                                                               142   145   148   149U  176   179   182   185             
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+000002018 0002000180000000                    166+psw0006    dc 0d,x'0002000180000000',ad(0)                              01-00000045
+ 00002028                                     167+ ltorg                                                                  01-00000046
+ 00002028 00004000                            168                =a(x'4000')                                             
+                                              169  punch ':etst 1'                                                        00250000
+                                              170  punch '* *Compare'                                                    
+                                              171  punch '* abs 1000.8'                                                  
+                                              172  punch '* *Key 00'                                                     
+                                              173  punch '* r 1000.8'                                                    
+                                              174  punch '* *Key F0'                                                     
+                                              175  punch '* abs 5000.8'                                                  
+                                              176  punch '* *Key F0'                                                     
+                                              177  punch '* r 5000.8'                                                    
+                                              178  punch '* *Key 00'                                                     
+0                                             180 * Set multiple keys.  Requires 1M page support                         
+0                                             182 * Setting  multiple keys without prefixing.  The low 12 bits of       *
+                                              183 * R2 should remain unchanged.                                         *
+0                                             185  punch '* * sske#4:  Setting multiple keys without prefixing.'         
+                                              186  supsws                                                                
+                                              187+ punch ':btst z'                                                        01-00000016
+ 0000202C                0000202C 000001A0    188+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000180000000                    189+ dc x'0000000180000000'                                                 01-00000018
+ 000001A8 0000000000000200                    190+ dc ad(x'200')                                                          01-00000019
+ 000001B0                000001B0 000001D0    191+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    192+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    193+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 00000200    194+ org sske+x'200'                                                        01-00000024
+                     R:0 00000000             195+ using sske,0                                                           01-00000025
+                                              196  dosskemf x'2004',p1key=00                                              00170000
+ 00000200 E320 0228 0004          00000228    197+ lg  2,=ad(x'2004')                                                    X01-00000054
+                                                 +                   Starting address                                    
+ 00000206 A738 00F0               000000F0    198+ lhi 3,x'f0'                                                            01-00000055
+ 0000020A B22B 1032                           199+ sske 3,2,1                                                             01-00000056
+ 0000020E B2B2 0218      00000218             201+ lpswe psw0009                                                          02-00000044
+ 00000212 000000000000                                                                                                   
+ 00000218 0002000180000000                    202+psw0009    dc 0d,x'0002000180000000',ad(0)                              02-00000045
+ 00000228                                     203+ ltorg                                                                  02-00000046
+ 00000228 0000000000002004                    204                =ad(x'2004')                                            
+                                              205+ punch ':etst 1'                                                        01-00000058
+                                              206+ punch '* *Compare'                                                     01-00000059
+                                              207+ punch '* abs  0.8'                                                     01-00000060
+                                              208+ punch '* *Key 06'                                                      01-00000061
+                                              209+ punch '* abs 1000.8'                                                   01-00000062
+                                              210+ punch '* *Key 00'                                                      01-00000063
+                                              211+ punch '* r ff000.8'                                                    01-00000064
+                                              212+ punch '* *Key F0'                                                      01-00000065
+                                              213+ punch '* r ff000.8'                                                    01-00000066
+                                              214+ punch '* *Key F0'                                                      01-00000067
+                                              215+ punch '* r 100000.8'                                                   01-00000068
+                                              216+ punch '* *Key 00'                                                      01-00000069
+                                              217+ punch '* gpr'                                                          01-00000070
+                                              218+ punch '* *Gpr 2 0000000000100004'                                      01-00000071
+                                              219  punch '* r 2000.8'                                                    
+1                                                                                                               Page    7
+   Active Usings: SSKE,R0  SSKE+X'2002',R12                                                                              
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                             220  punch '* *Key F0'                                                     
+                                              221  punch '* r 5000.8'                                                    
+                                              222  punch '* *Key F0'                                                     
+0                                             224 * Same  with prefixing.  The point being that this variation of       *
+                                              225 * the instruction is not subject to prefixing,                        *
+0                                             227  punch '* * SSKE#5: Test prefixing with multiple page frames.'         
+                                              228  supsws prefix=yes                                                     
+                                              229+ punch ':btst z'                                                        01-00000016
+ 00000230                00000230 000001A0    230+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000180000000                    231+ dc x'0000000180000000'                                                 01-00000018
+ 000001A8 0000000000002000                    232+ dc ad(x'2000')                                                         01-00000019
+ 000001B0                000001B0 000001D0    233+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    234+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    235+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 000041D0    236+ org sske+x'41d0'                                                       01-00000029
+ 000041D0 0002000180000000                    237+ dc x'0002000180000000'                                                 01-00000030
+ 000041D8 FFFFFFFFDEADBEAF                    238+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000031
+ 000041E0                000041E0 00002000    239+ org sske+x'2000'    Get out of the prefix page                         01-00000032
+                                              240+ drop 0                                                                 01-00000034
+ 00002000 0DC0                                241+ basr 12,0                                                              01-00000037
+                     R:C 00002002             242+ using *,12                                                             01-00000038
+ 00002002 B210 C02E      00002030             243+ spx =a(x'4000') Load prefix                                            01-00000039
+                                              244  dosskemf x'1004'  Starting address                                     00170000
+ 00002006 E320 C026 0004          00002028    245+ lg  2,=ad(x'1004')                                                    X01-00000054
+                                                 +                   Starting address                                    
+ 0000200C A738 00F0               000000F0    246+ lhi 3,x'f0'                                                            01-00000055
+ 00002010 B22B 1032                           247+ sske 3,2,1                                                             01-00000056
+ 00002014 B2B2 C016      00002018             249+ lpswe psw0012                                                          02-00000044
+ 00002018 0002000180000000                    250+psw0012    dc 0d,x'0002000180000000',ad(0)                              02-00000045
+ 00002028                                     251+ ltorg                                                                  02-00000046
+ 00002028 0000000000001004                    252                =ad(x'1004')                                            
+ 00002030 00004000                            253                =a(x'4000')                                             
+                                              254+ punch ':etst 1'                                                        01-00000058
+                                              255+ punch '* *Compare'                                                     01-00000059
+                                              256+ punch '* abs  0.8'                                                     01-00000060
+                                              257+ punch '* *Key 06'                                                      01-00000061
+                                              258+ punch '* abs 1000.8'                                                   01-00000062
+                                              259+ punch '* *Key F0'                                                      01-00000063
+                                              260+ punch '* r ff000.8'                                                    01-00000064
+                                              261+ punch '* *Key F0'                                                      01-00000065
+                                              262+ punch '* r ff000.8'                                                    01-00000066
+                                              263+ punch '* *Key F0'                                                      01-00000067
+                                              264+ punch '* r 100000.8'                                                   01-00000068
+                                              265+ punch '* *Key 00'                                                      01-00000069
+                                              266+ punch '* gpr'                                                          01-00000070
+                                              267+ punch '* *Gpr 2 0000000000100004'                                      01-00000071
+                                              268+ punch '* r    0.8'                                                     01-00000073
+                                              269+ punch '* *Key f0'                                                      01-00000074
+                                              270+ punch '* r 1000.8'                                                     01-00000075
+                                              271+ punch '* *Key F0'                                                      01-00000076
+                                              272+ punch '* abs 2000.8'                                                   01-00000077
+                                              273+ punch '* *Key F4'                                                      01-00000078
+                                              274+ punch '* r 2000.8'                                                     01-00000079
+1                                                                                                               Page    8
+   Active Usings: SSKE+X'2002',R12                                                                                       
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                             275+ punch '* *Key F4'                                                      01-00000080
+                                              276+ punch '* r 5000.8'                                                     01-00000081
+                                              277+ punch '* *Key F0'                                                      01-00000082
+0                                             279 * When  multiple-block  processing  occurs in the 24-bit or 31-       *
+                                              280 * bit addressing modes, the leftmost bits which are not part of       *
+                                              281 * the address in bit positions 32-63 of general register R2 are       *
+                                              282 * set to zeros; bits 0-31 of the register are unchanged.              *
+0                                             284  supsws prefix=yes,am=08 31 bit addressing mode                        
+                                              285+ punch ':btst z'                                                        01-00000016
+ 00002034                00002034 000001A0    286+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000080000000                    287+ dc x'0000000080000000'                                                 01-00000018
+ 000001A8 0000000000002000                    288+ dc ad(x'2000')                                                         01-00000019
+ 000001B0                000001B0 000001D0    289+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    290+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    291+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 000041D0    292+ org sske+x'41d0'                                                       01-00000029
+ 000041D0 0002000180000000                    293+ dc x'0002000180000000'                                                 01-00000030
+ 000041D8 FFFFFFFFDEADBEAF                    294+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000031
+ 000041E0                000041E0 00002000    295+ org sske+x'2000'    Get out of the prefix page                         01-00000032
+ 00002000 0DC0                                296+ basr 12,0                                                              01-00000037
+                     R:C 00002002             297+ using *,12                                                             01-00000038
+ 00002002 B210 C02E      00002030             298+ spx =a(x'4000') Load prefix                                            01-00000039
+                                              299  dosskemf  x'80001004',r2hi=ffffffff   Starting address                 00170000
+ 00002006 E320 C026 0004          00002028    300+ lg  2,=ad(x'80001004')                                                X01-00000054
+                                                 +                   Starting address                                    
+ 0000200C A738 00F0               000000F0    301+ lhi 3,x'f0'                                                            01-00000055
+ 00002010 B22B 1032                           302+ sske 3,2,1                                                             01-00000056
+ 00002014 B2B2 C016      00002018             304+ lpswe psw0015                                                          02-00000044
+ 00002018 0002000180000000                    305+psw0015    dc 0d,x'0002000180000000',ad(0)                              02-00000045
+ 00002028                                     306+ ltorg                                                                  02-00000046
+ 00002028 FFFFFFFF80001004                    307                =ad(x'80001004')                                        
+ 00002030 00004000                            308                =a(x'4000')                                             
+                                              309+ punch ':etst 1'                                                        01-00000058
+                                              310+ punch '* *Compare'                                                     01-00000059
+                                              311+ punch '* abs  0.8'                                                     01-00000060
+                                              312+ punch '* *Key 06'                                                      01-00000061
+                                              313+ punch '* abs 1000.8'                                                   01-00000062
+                                              314+ punch '* *Key F0'                                                      01-00000063
+                                              315+ punch '* r ff000.8'                                                    01-00000064
+                                              316+ punch '* *Key F0'                                                      01-00000065
+                                              317+ punch '* r ff000.8'                                                    01-00000066
+                                              318+ punch '* *Key F0'                                                      01-00000067
+                                              319+ punch '* r 100000.8'                                                   01-00000068
+                                              320+ punch '* *Key 00'                                                      01-00000069
+                                              321+ punch '* gpr'                                                          01-00000070
+                                              322+ punch '* *Gpr 2 ffffffff00100004'                                      01-00000071
+                                              323+ punch '* r    0.8'                                                     01-00000073
+                                              324+ punch '* *Key f0'                                                      01-00000074
+                                              325+ punch '* r 1000.8'                                                     01-00000075
+                                              326+ punch '* *Key F0'                                                      01-00000076
+                                              327+ punch '* abs 2000.8'                                                   01-00000077
+                                              328+ punch '* *Key F4'                                                      01-00000078
+                                              329+ punch '* r 2000.8'                                                     01-00000079
+1                                                                                                               Page    9
+   Active Usings: SSKE+X'2002',R12                                                                                       
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                             330+ punch '* *Key F4'                                                      01-00000080
+                                              331+ punch '* r 5000.8'                                                     01-00000081
+                                              332+ punch '* *Key F0'                                                      01-00000082
+0                                             334  supsws prefix=yes,am=00 24 bit addressing mode                        
+                                              335+ punch ':btst z'                                                        01-00000016
+ 00002034                00002034 000001A0    336+ org sske+x'1a0'                                                        01-00000017
+ 000001A0 0000000000000000                    337+ dc x'0000000000000000'                                                 01-00000018
+ 000001A8 0000000000002000                    338+ dc ad(x'2000')                                                         01-00000019
+ 000001B0                000001B0 000001D0    339+ org sske+x'1d0'                                                        01-00000020
+ 000001D0 0002000180000000                    340+ dc x'0002000180000000'                                                 01-00000021
+ 000001D8 FFFFFFFFDEADDEAD                    341+ dc ad(x'deaddead') Program new PSW                                     01-00000022
+ 000001E0                000001E0 000041D0    342+ org sske+x'41d0'                                                       01-00000029
+ 000041D0 0002000180000000                    343+ dc x'0002000180000000'                                                 01-00000030
+ 000041D8 FFFFFFFFDEADBEAF                    344+ dc ad(x'deadbeaf') Program new PSW in prefix                           01-00000031
+ 000041E0                000041E0 00002000    345+ org sske+x'2000'    Get out of the prefix page                         01-00000032
+ 00002000 0DC0                                346+ basr 12,0                                                              01-00000037
+                     R:C 00002002             347+ using *,12                                                             01-00000038
+ 00002002 B210 C02E      00002030             348+ spx =a(x'4000') Load prefix                                            01-00000039
+                                              349  dosskemf x'ff001004',r2hi=ffffffff                                    
+ 00002006 E320 C026 0004          00002028    350+ lg  2,=ad(x'ff001004')                                                X01-00000054
+                                                 +                   Starting address                                    
+ 0000200C A738 00F0               000000F0    351+ lhi 3,x'f0'                                                            01-00000055
+ 00002010 B22B 1032                           352+ sske 3,2,1                                                             01-00000056
+ 00002014 B2B2 C016      00002018             354+ lpswe psw0018                                                          02-00000044
+ 00002018 0002000180000000                    355+psw0018    dc 0d,x'0002000180000000',ad(0)                              02-00000045
+ 00002028                                     356+ ltorg                                                                  02-00000046
+ 00002028 FFFFFFFFFF001004                    357                =ad(x'ff001004')                                        
+ 00002030 00004000                            358                =a(x'4000')                                             
+                                              359+ punch ':etst 1'                                                        01-00000058
+                                              360+ punch '* *Compare'                                                     01-00000059
+                                              361+ punch '* abs  0.8'                                                     01-00000060
+                                              362+ punch '* *Key 06'                                                      01-00000061
+                                              363+ punch '* abs 1000.8'                                                   01-00000062
+                                              364+ punch '* *Key F0'                                                      01-00000063
+                                              365+ punch '* r ff000.8'                                                    01-00000064
+                                              366+ punch '* *Key F0'                                                      01-00000065
+                                              367+ punch '* r ff000.8'                                                    01-00000066
+                                              368+ punch '* *Key F0'                                                      01-00000067
+                                              369+ punch '* r 100000.8'                                                   01-00000068
+                                              370+ punch '* *Key 00'                                                      01-00000069
+                                              371+ punch '* gpr'                                                          01-00000070
+                                              372+ punch '* *Gpr 2 ffffffff00100004'                                      01-00000071
+                                              373+ punch '* r    0.8'                                                     01-00000073
+                                              374+ punch '* *Key f0'                                                      01-00000074
+                                              375+ punch '* r 1000.8'                                                     01-00000075
+                                              376+ punch '* *Key F0'                                                      01-00000076
+                                              377+ punch '* abs 2000.8'                                                   01-00000077
+                                              378+ punch '* *Key F4'                                                      01-00000078
+                                              379+ punch '* r 2000.8'                                                     01-00000079
+                                              380+ punch '* *Key F4'                                                      01-00000080
+                                              381+ punch '* r 5000.8'                                                     01-00000081
+                                              382+ punch '* *Key F0'                                                      01-00000082
+0                                             384 * Insert more here                                                     
+1                                                                                                               Page   10
+   Active Usings: SSKE+X'2002',R12                                                                                       
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0                                             386  punch '* *Done'                                                        00260000
+                                              387  end                                                                    00270000
+1                               Ordinary Symbol and Literal Cross Reference                                     Page   11
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/14 12.35
+0go            2 00000200 00000001     H  H               100  125                                                       
+ psw0002       8 00000210 00000001     D  D               106  105                                                       
+ psw0004       8 00000210 00000001     D  D               131  130                                                       
+ psw0006       8 00002018 00000001     D  D               166  165                                                       
+ psw0009       8 00000218 00000001     D  D               202  201                                                       
+ psw0012       8 00002018 00000001     D  D               250  249                                                       
+ psw0015       8 00002018 00000001     D  D               305  304                                                       
+ psw0018       8 00002018 00000001     D  D               355  354                                                       
+ sske          1 00000000 00000001     J                   89   92    95    98    99U  117   120   123   124U  147   150   153   156
+                                                               188   191   194   195U  230   233   236   239   286   289   292   295
+                                                               336   339   342   345                                     
  =a(x'4000')                                                                                                             
-               4 00002028 00000001     A                  123  115                                                       
+               4 00002028 00000001     A                  168  160                                                       
  =a(x'4000')                                                                                                             
-               4 00002028 00000001     A                  197  189                                                       
-1                                          Macro and Copy Code Source Summary                                   Page    9
-- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/12 16.06
-0     PRIMARY INPUT                                           STOP     SUPSWS                                            
-1                                                      Using Map                                                Page   10
--                                                                                           jHLASM 1.0   2015/10/12 16.06
+               4 00002030 00000001     A                  253  243                                                       
+ =a(x'4000')                                                                                                             
+               4 00002030 00000001     A                  308  298                                                       
+ =a(x'4000')                                                                                                             
+               4 00002030 00000001     A                  358  348                                                       
+ =ad(x'1004')                                                                                                            
+               8 00002028 00000001     A                  252  245                                                       
+ =ad(x'2004')                                                                                                            
+               8 00000228 00000001     A                  204  197                                                       
+ =ad(x'80001004')                                                                                                        
+               8 00002028 00000001     A                  307  300                                                       
+ =ad(x'ff001004')                                                                                                        
+               8 00002028 00000001     A                  357  350                                                       
+1                                          Macro and Copy Code Source Summary                                   Page   12
+- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/14 12.35
+0     PRIMARY INPUT                                           DOSSKEMF STOP     SUPSWS                                   
+1                                                      Using Map                                                Page   13
+-                                                                                           jHLASM 1.0   2015/10/14 12.35
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
-0    55  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210     61 sske,0                        
-     79  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210     85 sske,0                        
-    112  00002000  00000001 DROP                                            0              0                             
-    114  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 00026    120 *,12                          
-    149  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210    154 sske,0                        
-    186  00002000  00000001 DROP                                            0              0                             
-    188  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 00026    194 *,12                          
-1                                   General Purpose Register Cross Reference                                    Page   11
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/12 16.06
-0    0(0)      55U   79U  112D  149U  186D                                                                               
+0    99  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210    105 sske,0                        
+    124  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210    130 sske,0                        
+    157  00002000  00000001 DROP                                            0              0                             
+    159  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 00026    165 *,12                          
+    195  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00228    201 sske,0                        
+    240  00002000  00000001 DROP                                            0              0                             
+    242  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 0002E    249 *,12                          
+    297  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 0002E    304 *,12                          
+    347  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 0002E    354 *,12                          
+1                                   General Purpose Register Cross Reference                                    Page   14
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/14 12.35
+0    0(0)      99U  124U  157D  195U  240D                                                                               
      1(1)    (no references identified)                                                                                  
-     2(2)      57S   59    81S   83   116S  118   150S  152   190S  192                                                  
-     3(3)      58S   59M   82S   83M  117S  118M  151S  152M  191S  192M                                                 
+     2(2)     101S  103   126S  128   161S  163   197S  199   245S  247   300S  302   350S  352                          
+     3(3)     102S  103M  127S  128M  162S  163M  198S  199M  246S  247M  301S  302M  351S  352M                         
      4(4)    (no references identified)                                                                                  
      5(5)    (no references identified)                                                                                  
      6(6)    (no references identified)                                                                                  
@@ -320,19 +504,19 @@
      9(9)    (no references identified)                                                                                  
     10(A)    (no references identified)                                                                                  
     11(B)    (no references identified)                                                                                  
-    12(C)     113S  114U  187S  188U                                                                                     
+    12(C)     158S  159U  241S  242U  296S  297U  346S  347U                                                             
     13(D)    (no references identified)                                                                                  
     14(E)    (no references identified)                                                                                  
     15(F)    (no references identified)                                                                                  
-1                                  Diagnostic Cross Reference and Assembler Summary                             Page   12
--                                                                                           jHLASM 1.0   2015/10/12 16.06
+1                                  Diagnostic Cross Reference and Assembler Summary                             Page   15
+-                                                                                           jHLASM 1.0   2015/10/14 12.35
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    sske.assemble                                                                                             
-0Assembly Start Time: 16.06.13 Stop Time: 16.06.13 Processor Time: 00.00.00.0273.
+0Assembly Start Time: 12.35.35 Stop Time: 12.35.35 Processor Time: 00.00.00.0337.
  
                                      
  Return Code 000                                                                                                         

@@ -8,11 +8,14 @@
 * case we load at x'2000'                                                       
                                                                                 
  macro                                                                          
- supsws &problem=0,&prefix=no                                                   
+ supsws &problem=0,&prefix=no,&am=18,&arch=z                                    
+ gblb using0                                                                    
+ gblb &havepx Prefixing?                                                        
 &havepx setb ('&prefix' eq 'yes')                                               
 &org(1) setc 'x''200''','x''2000'''                                             
+ punch ':btst &arch'                                                    00060000
  org sske+x'1a0'                                                        00090000
- dc x'000&problem.000180000000'                                         00100000
+ dc x'000&problem.000&am.0000000'                                       00100000
  dc ad(&org(&havepx+1))                                                 00110000
  org sske+x'1d0'                                                        00120000
  dc x'0002000180000000'                                                 00130000
@@ -20,13 +23,17 @@
  aif (&havepx).px                                                               
  org &sysect+x'200'                                                     00150000
  using &sysect,0                                                                
+&using0 setb 1                                                                  
  mexit                                                                          
 .px anop                                                                        
  org &sysect+x'41d0'                                                    00120000
  dc x'0002000180000000'                                                 00130000
  dc ad(x'deadbeaf') Program new PSW in prefix                           00140000
  org &sysect+x'2000' Get out of the prefix page                                 
+ aif (not &using0).nodrop                                                       
  drop 0                                                                         
+&using0 setb 0                                                                  
+.nodrop anop                                                                    
  basr 12,0                                                                      
  using *,12                                                                     
  spx =a(x'4000') Load prefix                                                    
@@ -39,10 +46,46 @@ psw&sysndx dc 0d,x'0002000180000000',ad(&rc)
  ltorg                                                                          
  mend                                                                           
                                                                                 
+* Macro to perform multiple key assignments                                     
+                                                                                
+ macro                                                                          
+ dosskemf &addr,&r2hi=00000000,&p1key=F0                                        
+ gblb &havepx Prefixing?                                                        
+ lg  2,=ad(&addr)  Starting address                                     00170000
+ lhi 3,x'f0'                                                            00180000
+ sske 3,2,1                                                             00190000
+ stop                                                                           
+ punch ':etst 1'                                                        00250000
+ punch '* *Compare'                                                             
+ punch '* abs  0.8'                                                             
+ punch '* *Key 06'                                                              
+ punch '* abs 1000.8'                                                           
+ punch '* *Key &p1key.'                                                         
+ punch '* r ff000.8'                                                            
+ punch '* *Key F0'                                                              
+ punch '* r ff000.8'                                                            
+ punch '* *Key F0'                                                              
+ punch '* r 100000.8'                                                           
+ punch '* *Key 00'                                                              
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 &r2hi.00100004'                                                
+ aif (not &havepx).x                                                            
+ punch '* r    0.8'                                                             
+ punch '* *Key f0'                                                              
+ punch '* r 1000.8'                                                             
+ punch '* *Key F0'                                                              
+ punch '* abs 2000.8'                                                           
+ punch '* *Key F4'                                                              
+ punch '* r 2000.8'                                                             
+ punch '* *Key F4'                                                              
+ punch '* r 5000.8'                                                             
+ punch '* *Key F0'                                                              
+.x mend                                                                         
+                                                                                
 * Test for instruction being privileged                                         
                                                                                 
  punch ':test sske#1'                                                   00050000
- punch ':btst z'                                                        00060000
+ punch '* * sske#1:  Test for sske being privileged.'                           
 sske start 0                                                            00070000
  supsws problem=1                                                               
 go ds 0h =x'200'                                                                
@@ -56,7 +99,7 @@ go ds 0h =x'200'
                                                                                 
 * Test ability to set a key                                                     
  punch ':test sske#2'                                                   00050000
- punch ':btst z'                                                        00060000
+ punch '* * sske#2:  Basic set key operation.'                                  
  supsws                                                                         
  org go                                                                         
  lhi 2,x'2004'                                                                  
@@ -74,8 +117,7 @@ go ds 0h =x'200'
 * Make the fourth page the prefix.  Note that the prefix is two                 
 * pages                                                                         
                                                                                 
- punch '* * Test prefixing with single page frame.'                             
- punch ':btst z' Reset machine                                          00060000
+ punch '* * sske#3:  Test prefixing with single page frame.'                    
  supsws prefix=yes                                                              
  lhi 2,x'1004'                                                                  
  la  3,x'f0'                                                                    
@@ -97,57 +139,31 @@ go ds 0h =x'200'
 * Setting  multiple keys without prefixing.  The low 12 bits of       *         
 * R2 should remain unchanged.                                         *         
                                                                                 
- punch ':btst z' Reset machine                                          00060000
+ punch '* * sske#4:  Setting multiple keys without prefixing.'                  
  supsws                                                                         
- lhi 2,x'2004'  Starting address                                        00170000
- lhi 3,x'f0'                                                            00180000
- sske 3,2,1                                                             00190000
- stop                                                                           
- punch ':etst 1'                                                        00250000
- punch '* *Compare'                                                             
- punch '* r 2000.8' r command displays absolute storage                         
+ dosskemf x'2004',p1key=00                                              00170000
+ punch '* r 2000.8'                                                             
  punch '* *Key F0'                                                              
  punch '* r 5000.8'                                                             
  punch '* *Key F0'                                                              
- punch '* r ff000.8'                                                            
- punch '* *Key F0'                                                              
- punch '* r 100000.8'                                                           
- punch '* *Key 00'                                                              
- punch '* gpr'                                                                  
- punch '* *Gpr 2 100004'                                                        
                                                                                 
 * Same  with prefixing.  The point being that this variation of       *         
 * the instruction is not subject to prefixing,                        *         
                                                                                 
- punch '* * Test prefixing with multiple page frames.'                          
- punch ':btst z' Reset machine                                          00060000
+ punch '* * SSKE#5: Test prefixing with multiple page frames.'                  
  supsws prefix=yes                                                              
- lhi 2,x'1004'  Starting address                                        00170000
- lhi 3,x'f0'                                                            00180000
- sske 3,2,1                                                             00190000
- stop                                                                           
- punch ':etst 1'                                                        00250000
- punch '* *Compare'                                                             
- punch '* abs  0.8' r command displays absolute storage                         
- punch '* *Key 06'                                                              
- punch '* r    0.8' r command displays absolute storage                         
- punch '* *Key f0'                                                              
- punch '* abs 1000.8' r command displays absolute storage                       
- punch '* *Key F0'                                                              
- punch '* r 1000.8' r command displays absolute storage                         
- punch '* *Key F0'                                                              
- punch '* abs 2000.8' r command displays absolute storage                       
- punch '* *Key F4'                                                              
- punch '* r 2000.8' r command displays absolute storage                         
- punch '* *Key F4'                                                              
- punch '* r 5000.8'                                                             
- punch '* *Key F0'                                                              
- punch '* r ff000.8'                                                            
- punch '* *Key F0'                                                              
- punch '* r 100000.8'                                                           
- punch '* *Key 00'                                                              
- punch '* gpr'                                                                  
- punch '* *Gpr 2 100004'                                                        
+ dosskemf x'1004'  Starting address                                     00170000
+                                                                                
+* When  multiple-block  processing  occurs in the 24-bit or 31-       *         
+* bit addressing modes, the leftmost bits which are not part of       *         
+* the address in bit positions 32-63 of general register R2 are       *         
+* set to zeros; bits 0-31 of the register are unchanged.              *         
+                                                                                
+ supsws prefix=yes,am=08 31 bit addressing mode                                 
+ dosskemf  x'80001004',r2hi=ffffffff   Starting address                 00170000
+                                                                                
+ supsws prefix=yes,am=00 24 bit addressing mode                                 
+ dosskemf x'ff001004',r2hi=ffffffff                                             
                                                                                 
 * Insert more here                                                              
                                                                                 
