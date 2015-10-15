@@ -130,7 +130,8 @@ static TID   hwl_tid;                   /* Thread id of the hardware
                                            loader                    */
 static char  *hwl_fn[HWL_MAXFILETYPE];  /* Files by type             */
 
-
+#if 0
+all of this is dead code
 #if 1
 static inline void DUMP(char* name, void* ptr, int len)
 {
@@ -147,6 +148,7 @@ int i;
 }
 #else
  #define DUMP(_name, _ptr, _len)
+#endif
 #endif
 
 #endif /*defined(_FEATURE_HARDWARE_LOADER)*/
