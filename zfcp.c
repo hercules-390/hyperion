@@ -142,6 +142,8 @@ static BYTE zfcp_immed_commands [256] =
 
 
 #if defined(ZFCP_DEBUG)
+#if 0
+dead code
 static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
 {
 int i;
@@ -158,6 +160,7 @@ int i;
     }
     logmsg(_("\n"));
 }
+#endif
 #define DBGTRC(_dev, ...)                          \
 do {                                               \
   if(((ZFCP_GRP*)((_dev)->group->grp_data))->debug) \
@@ -186,7 +189,8 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
     }
 }
 
-
+#if 0
+dead code
 /*-------------------------------------------------------------------*/
 /* Clear Adapter Local Summary Indicator bits                        */
 /*-------------------------------------------------------------------*/
@@ -202,6 +206,7 @@ static inline void clr_alsi(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -224,6 +229,8 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 }
 
 
+#if 0
+dead code
 /*-------------------------------------------------------------------*/
 /* Clear Device State Change Indicator bits                          */
 /*-------------------------------------------------------------------*/
@@ -239,6 +246,7 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#endif
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
 

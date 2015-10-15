@@ -113,11 +113,14 @@ static TOD universal_clock(void) /* really: any clock used as a base */
     return (universal_tod.high);
 }
 
+#if 0
+dead code
 static TOD universal_clock_extended(ETOD* ETOD)
 {
     host_ETOD(ETOD);
     return (ETOD->high);
 }
+#endif
 
 
 /* The hercules hardware clock, based on the universal clock, but    */

@@ -202,6 +202,8 @@ static inline void missing_devnum()
     WRMSG(HHC02201,"E");
 }
 
+#if 0
+dead code
 /* Check for all processors stopped */
 #define ALL_STOPPED all_stopped()
 static inline int all_stopped()
@@ -214,6 +216,7 @@ static inline int all_stopped()
             return 0;
     return 1;
 }
+#endif
 
 
 /**********************************************************************/

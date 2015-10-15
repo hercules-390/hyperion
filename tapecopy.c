@@ -639,7 +639,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
     /* Display tape status information */
     for (i = 0; tapeinfo[i].t_type != 0
-                && tapeinfo[i].t_type != mtget.mt_type; i++);
+                && tapeinfo[i].t_type != mtget.mt_type; i++)
+        /* empty */ ;
 
     {
         char msgbuf[64];
@@ -657,7 +658,8 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
                 >> MT_ST_DENSITY_SHIFT;
 
     for (i = 0; densinfo[i].t_type != 0
-                && densinfo[i].t_type != density; i++);
+                && densinfo[i].t_type != density; i++)
+         /* empty */ ;
 
     {
         char msgbuf[64];

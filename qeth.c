@@ -398,6 +398,8 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
 #define SET_ALSI(_dev,_bits)    set_alsi((_dev),(_bits))
 
 
+#if 0
+dead code and also over in zfcp.c
 /*-------------------------------------------------------------------*/
 /* Clear Adapter Local Summary Indicator bits                        */
 /*-------------------------------------------------------------------*/
@@ -413,6 +415,7 @@ static inline void clr_alsi(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#endif
 #define CLR_ALSI(_dev,_bits)    clr_alsi((_dev),(_bits))
 
 
@@ -437,6 +440,8 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 #define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
 
 
+#if 0
+dead code and also over in zfcp.c
 /*-------------------------------------------------------------------*/
 /* Clear Device State Change Indicator bits                          */
 /*-------------------------------------------------------------------*/
@@ -452,6 +457,7 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+#endif
 #define CLR_DSCI(_dev,_bits)    clr_dsci((_dev),(_bits))
 
 #else /*!defined(_FEATURE_QDIO_THININT)*/

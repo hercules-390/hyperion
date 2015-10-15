@@ -639,6 +639,7 @@ BYTE    workarea[17];                   /* Character string work     */
 } /* end function format_iobuf_data */
 
 
+#if DEBUG_DUMP
 /*-------------------------------------------------------------------*/
 /* Dump data block                                                   */
 /*-------------------------------------------------------------------*/
@@ -718,7 +719,7 @@ char    msgbuf[133];                    /* Message buffer            */
     }
 
 } /* end function dump_storage */
-
+#endif
 
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL COMMAND WORD AND DATA                             */
