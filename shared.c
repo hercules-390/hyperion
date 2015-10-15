@@ -896,6 +896,10 @@ int             sz;                     /* Size so far               */
     return sz;
 }
 
+#if 0
+Perhaps these functions should have not been static.  They are
+dead code and identified as such.
+
 #if defined( OPTION_SHARED_DEVICES ) && defined(FBA_SHARED)
 /*-------------------------------------------------------------------
  * Shared fba read block exit (client side)
@@ -1056,7 +1060,6 @@ int             rc;                     /* Return code               */
     return len;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Calculate length of an FBA block group                            */
 /*-------------------------------------------------------------------*/
@@ -1072,6 +1075,7 @@ off_t   offset;                         /* Offset of block group     */
 }
 
 #endif /* FBA_SHARED */
+#endif
 
 /*-------------------------------------------------------------------
  * Shared usage exit (client side)

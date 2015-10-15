@@ -144,8 +144,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #  include <dmalloc.h>
 #endif
 
-
-
+/* #include "hscutl.h" is not a good idea                            */
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
 /* --- WINDOWS SUPPORT --- */
 
@@ -2099,8 +2100,7 @@ presym_close (loader_data, module)
      lt_module module;
 {
 UNREFERENCED(loader_data);
-  /* Just to silence gcc -Wall */
-  module = 0;
+  UNREFERENCED(module);
   return 0;
 }
 
