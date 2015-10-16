@@ -815,7 +815,7 @@ noinst_HEADERS = hostinfo.h	  \
 					  cmpscput.h	  \
 					  hqainc.h		  \
 					  hqadefs.h 	  \
-					  hatomic.h 	  \
+					  hatomic.h
 					  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
@@ -883,3 +883,9 @@ uninstall-hook:
 
 %.s: %.c
 	$(COMPILE) -S $<
+
+%.i: %.c
+	$(COMPILE) -E $< >$@
+
+check:
+	../hyperion/tests/runtest

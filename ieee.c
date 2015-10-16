@@ -88,15 +88,21 @@ static const float128  float128_zero   = { LIT64(0), LIT64( 0x0000000000000000 )
 static const float64   float64_zero    =             LIT64( 0x0000000000000000 );
 static const float32   float32_zero    =                    0x00000000;
 /*                                           low       high                 */
+#if 0
 static const float128  float128_neg0   = { LIT64(0), LIT64( 0x8000000000000000 ) };
+#endif
 static const float64   float64_neg0    =             LIT64( 0x8000000000000000 );
 static const float32   float32_neg0    =                    0x80000000;
 /*                                           low       high                 */
+#if 0
 static const float128  float128_inf    = { LIT64(0), LIT64( 0x7FFF000000000000 ) };
+#endif
 static const float64   float64_inf     = {           LIT64( 0x7FF0000000000000 ) };
 static const float32   float32_inf     =                    0x7F800000;
 /*                                           low       high                 */
+#if 0
 static const float128  float128_neginf = { LIT64(0), LIT64( 0xFFFF000000000000 ) };
+#endif
 static const float64   float64_neginf  = {           LIT64( 0xFFF0000000000000 ) };
 static const float32   float32_neginf  =                    0xFF800000;
 

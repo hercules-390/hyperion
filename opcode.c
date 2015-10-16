@@ -10,6 +10,17 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
+/* A  number  of  dummy functions are defined by UNDEF_INST that are */
+/* never  referenced  because the actual instruction does not define */
+/* the instruction for a particular architecture.  This applies, for */
+/* example  to  z900_insert_storage_key and s390_insert_storage_key. */
+/* With  clang,  the z900 instruction is diagnosed, but the s390 one */
+/* is  not.   Go  figure.   Trying to fix this through the morass of */
+/* recursive #include is not compatible with retaining one's sanity. */
+/* Thus, for this module, we shoot the messenger.                    */
+
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)

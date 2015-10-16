@@ -53,6 +53,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 /*----------------------------------------------------------------------------
 | Shifts `a' right by the number of bits given in `count'.  If any nonzero
 | bits are shifted off, they are ``jammed'' into the least significant bit of
@@ -741,3 +744,4 @@ static INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 
 }
 
+#pragma GCC diagnostic pop

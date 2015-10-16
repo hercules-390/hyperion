@@ -59,6 +59,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 /*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/
@@ -338,4 +341,5 @@ static float128 propagateFloat128NaN( void* ctx, float128 a, float128 b )
     }
 }
 
+#pragma GCC diagnostic pop
 #endif

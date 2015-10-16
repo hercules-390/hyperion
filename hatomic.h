@@ -83,7 +83,7 @@
 #endif
 
 
-#if defined(ATOMIC_CHAR_LOCK_FREE) && 2 == ATOMIC_CHAR_LOCK_FREE
+#if 2 == ATOMIC_CHAR_LOCK_FREE
 
    /* C11 standard operation.  2 specifies always lock free          */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)    \
@@ -118,7 +118,7 @@
 
    #define CAN_IAF2 1
 
-#elif defined(__GCC_ATOMIC_CHAR_LOCK_FREE) && 2 == __GCC_ATOMIC_CHAR_LOCK_FREE
+#elif 2 == __GCC_ATOMIC_CHAR_LOCK_FREE
    /* GCC/CLANG intrinsics                                           */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
    #define CAN_IAF2 2
@@ -126,7 +126,7 @@
 #else
    /* Atomics not available                                          */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (*ptr fallback ## = imm)
-   #undef CAN_IAF2
+   /* #undef CAN_IAF2 */
 
 #endif
 
