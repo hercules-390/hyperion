@@ -62,13 +62,6 @@
 
 -------------------------------------------------------------------------------
 
-  "Generic-ize" the 'qd' command so that it works for ANY device
-  instead of just dasd devices. SenseId and RDC (Read Device
-  Characteristics) information is valuable information to display
-  for devices other than dasd! (e.g. tape devices for example)
-
--------------------------------------------------------------------------------
-
   BUG: instruction tracing: control registers not being shown for some
   instructions which use/modify them. We need a better way to determine
   if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
@@ -137,7 +130,6 @@
 
   Design a more platform generic host cpu features runtime check that
   checks for the availability of certain host processor features
-  
   and then point any needed function-pointers to the correct function.
   That way we can exploit certain host processor features when they're
   available. Going through a function pointer is inefficient of course
