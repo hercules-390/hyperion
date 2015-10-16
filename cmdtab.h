@@ -80,9 +80,10 @@
 #define abs_cmd_desc            "Display or alter absolute storage"
 #define abs_cmd_help            \
                                 \
-  "Format: \"abs addr[.len]\" or \"abs addr[-addr2]\" to display up to 64K\n"        \
-  "of absolute storage, or \"abs addr=value\" to alter up to 32 bytes of absolute\n"       \
-  "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
+  "Format: \"abs addr[.len]\" or \"abs addr[-addr2]\" to display up to 64K\n"   \
+  "of absolute storage, or \"abs addr=value\" to alter up to 32 bytes of\n"     \
+  "absolute storage, where 'value' is a string of up to 32 pairs of hex\n"      \
+  "digits.\n"
 
 #define aea_cmd_desc            "Display AEA tables"
 #define aia_cmd_desc            "Display AIA fields"
@@ -907,6 +908,7 @@
 
 #define pgmprdos_cmd_desc       "Set LPP license setting"
 #define pgmprdos_cmd_help       \
+                                \
   "Format: \"pgmprdos restricted | licensed\"\n\n"                               \
   "Note: It is YOUR responsibility to comply with the terms of the license for\n"\
   "      the operating system you intend to run on Hercules. If you specify\n"   \
@@ -925,6 +927,13 @@
 
 #define plant_cmd_desc          "Set STSI plant code"
 #define pr_cmd_desc             "Display or alter prefix register"
+#define pr_cmd_help             \
+                                \
+  "Format: \"pr [value]\" where the optional 'value' operand is the new\n"       \
+  "prefix register value for the current CPU. Enter just 'pr' by itself\n"       \
+  "to display the current value. Use the'cpu' command beforehand to choose\n"    \
+  "which processor's prefix register should be displayed or altered.\n"
+
 #define pscp_cmd_desc           "Send prio message scp command"
 #define pscp_cmd_help           \
                                 \
@@ -1455,10 +1464,10 @@
                                 \
   "Format: \"v [P|S|H]addr[.len]\" or \"v [P|S|H]addr[-addr2]\" to display\n"   \
   "up to 64K of virtual storage, or \"v [P|S|H]addr=value\" to alter up to\n"   \
-  "32 bytes of virtual storage, where 'value' is a string of up to 32 pairs\n"  \
-  "of hex digits. The optional P, S or H address prefix character forces\n"     \
-  "Primary, Secondary or Home Space address translation mode instead of\n"  \
-  "using the current PSW mode, which is the default.\n"
+  "32 bytes of virtual storage, where 'value' is a string of up to 32\n"        \
+  "pairs of hex digits. The optional P, S or H address prefix character\n"      \
+  "forces Primary, Secondary or Home Space address translation mode\n"          \
+  "instead of using the current PSW mode, which is the default.\n"
 
 #define version_cmd_desc        "Display version information"
 #define xpndsize_cmd_desc       "Define/Display xpndsize parameter"
@@ -1575,7 +1584,7 @@ COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        
 COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
 COMMAND( "ostailor",                ostailor_cmd,           SYSCMDNOPER,        ostailor_cmd_desc,      ostailor_cmd_help   )
 COMMAND( "pgmtrace",                pgmtrace_cmd,           SYSCMDNOPER,        pgmtrace_cmd_desc,      pgmtrace_cmd_help   )
-COMMAND( "pr",                      pr_cmd,                 SYSCMDNOPER,        pr_cmd_desc,            NULL                )
+COMMAND( "pr",                      pr_cmd,                 SYSCMDNOPER,        pr_cmd_desc,            pr_cmd_help         )
 COMMAND( "psw",                     psw_cmd,                SYSCMDNOPER,        psw_cmd_desc,           psw_cmd_help        )
 COMMAND( "ptp",                     ptp_cmd,                SYSCMDNOPER,        ptp_cmd_desc,           ptp_cmd_help        )
 COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        ptt_cmd_desc,           ptt_cmd_help        )
