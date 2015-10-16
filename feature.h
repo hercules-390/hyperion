@@ -458,58 +458,88 @@ z900_ ## _name
 
 #else
 
-#warning __GEN_ARCH must be 370, 390, 900 or undefined
+  WARNING( "__GEN_ARCH must be 370, 390, 900 or undefined" )
 
 #endif
+
+
+/*-------------------------------------------------------------------*/
+/* PAGEFRAME-size related constants                                  */
+/*-------------------------------------------------------------------*/
+
+// FIXME: Why do we have separate STORAGE_KEY_xxx and PAGEFRAME_xxx constants?
+// FIXME: Choose one or the other. Inconsistent usage is confusing and dangerous.
 
 #undef PAGEFRAME_PAGESIZE
 #undef PAGEFRAME_PAGESHIFT
 #undef PAGEFRAME_BYTEMASK
 #undef PAGEFRAME_PAGEMASK
 #undef MAXADDRESS
+
 #if defined(FEATURE_ESAME)
- #define PAGEFRAME_PAGESIZE 4096
- #define PAGEFRAME_PAGESHIFT    12
- #define PAGEFRAME_BYTEMASK 0x00000FFF
- #define PAGEFRAME_PAGEMASK 0xFFFFFFFFFFFFF000ULL
- #define MAXADDRESS             0xFFFFFFFFFFFFFFFFULL
+  #define PAGEFRAME_PAGESIZE        4096
+  #define PAGEFRAME_PAGESHIFT       12
+  #define PAGEFRAME_BYTEMASK        0x00000FFF
+  #define PAGEFRAME_PAGEMASK        0xFFFFFFFFFFFFF000ULL
+  #define MAXADDRESS                0xFFFFFFFFFFFFFFFFULL
 #elif defined(FEATURE_S390_DAT)
- #define PAGEFRAME_PAGESIZE 4096
- #define PAGEFRAME_PAGESHIFT    12
- #define PAGEFRAME_BYTEMASK 0x00000FFF
- #define PAGEFRAME_PAGEMASK 0x7FFFF000
- #define MAXADDRESS             0x7FFFFFFF
+  #define PAGEFRAME_PAGESIZE        4096
+  #define PAGEFRAME_PAGESHIFT       12
+  #define PAGEFRAME_BYTEMASK        0x00000FFF
+  #define PAGEFRAME_PAGEMASK        0x7FFFF000
+  #define MAXADDRESS                0x7FFFFFFF
 #else /* S/370 */
- #define PAGEFRAME_PAGESIZE 2048
- #define PAGEFRAME_PAGESHIFT    11
- #define PAGEFRAME_BYTEMASK 0x000007FF
- #define PAGEFRAME_PAGEMASK 0x7FFFF800
- #if defined(FEATURE_370E_EXTENDED_ADDRESSING)
-  #define MAXADDRESS             0x03FFFFFF
- #else
-  #define MAXADDRESS             0x00FFFFFF
- #endif
+  #define PAGEFRAME_PAGESIZE        2048
+  #define PAGEFRAME_PAGESHIFT       11
+  #define PAGEFRAME_BYTEMASK        0x000007FF
+  #define PAGEFRAME_PAGEMASK        0x7FFFF800
+  #if defined(FEATURE_370E_EXTENDED_ADDRESSING)
+    #define MAXADDRESS              0x03FFFFFF
+  #else
+    #define MAXADDRESS              0x00FFFFFF
+  #endif
 #endif
 
+/*-------------------------------------------------------------------*/
+/* EXPANDED STORAGE page-size related constants                      */
+/*-------------------------------------------------------------------*/
+
+#define XSTORE_INCREMENT_SIZE       0x00100000
+#define XSTORE_PAGESHIFT            12
+#define XSTORE_PAGESIZE             4096
+#undef  XSTORE_PAGEMASK
+#if defined(FEATURE_ESAME) || defined(_FEATURE_ZSIE)
+  #define XSTORE_PAGEMASK           0xFFFFFFFFFFFFF000ULL
+#else
+  #define XSTORE_PAGEMASK           0x7FFFF000
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Interval Timer update and synchronization macros                  */
+/*-------------------------------------------------------------------*/
 
 #undef ITIMER_UPDATE
 #undef ITIMER_SYNC
+
 #if defined(FEATURE_INTERVAL_TIMER)
- #define ITIMER_UPDATE(_addr, _len, _regs)       \
+  #define ITIMER_UPDATE(_addr, _len, _regs)      \
     do {                                         \
-    if( ITIMER_ACCESS((_addr), (_len)) )     \
+    if( ITIMER_ACCESS((_addr), (_len)) )         \
             ARCH_DEP(fetch_int_timer) ((_regs)); \
     } while(0)
- #define ITIMER_SYNC(_addr, _len, _regs)         \
+  #define ITIMER_SYNC(_addr, _len, _regs)        \
     do {                                         \
         if( ITIMER_ACCESS((_addr), (_len)) )     \
-        ARCH_DEP(store_int_timer) ((_regs)); \
+        ARCH_DEP(store_int_timer) ((_regs));     \
     } while (0)
 #else
- #define ITIMER_UPDATE(_addr, _len, _regs)
- #define ITIMER_SYNC(_addr, _len, _regs)
+  #define ITIMER_UPDATE(_addr, _len, _regs)
+  #define ITIMER_SYNC(_addr, _len, _regs)
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Storage Key related constants                                     */
+/*-------------------------------------------------------------------*/
 
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
  #define STORAGE_KEY_UNITSIZE 4096
@@ -550,16 +580,6 @@ z900_ ## _name
     (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)&~1]
  #define STORAGE_KEY2(_addr, _pointer) \
     (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
-#endif
-
-#define XSTORE_INCREMENT_SIZE   0x00100000
-#define XSTORE_PAGESHIFT    12
-#define XSTORE_PAGESIZE     4096
-#undef   XSTORE_PAGEMASK
-#if defined(FEATURE_ESAME) || defined(_FEATURE_ZSIE)
- #define XSTORE_PAGEMASK    0xFFFFFFFFFFFFF000ULL
-#else
- #define XSTORE_PAGEMASK    0x7FFFF000
 #endif
 
 /*-------------------------------------------------------------------*/

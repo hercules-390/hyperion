@@ -377,7 +377,7 @@
 /*-------------------------------------------------------------------*/
 #else                                   /* "Other platform" options  */
 
-#warning hostopts.h: unknown target platform: defaulting to generic platform settings.
+WARNING( "unknown target platform: defaulting to generic platform settings" )
 
 #define DLL_IMPORT   extern             /* (a safe default)          */
 #define DLL_EXPORT

@@ -468,6 +468,11 @@
  #error Storage keys must be 2K or 4K
 #endif
 
+#if defined(FEATURE_2K_STORAGE_KEYS) \
+ && defined(FEATURE_4K_STORAGE_KEYS)
+ #error Storage keys must be 2K or 4K
+#endif
+
 #if defined(FEATURE_EXTENDED_STORAGE_KEYS)
  #if !defined(FEATURE_S370E_EXTENDED_ADDRESSING)
   #define FEATURE_S370E_EXTENDED_ADDRESSING

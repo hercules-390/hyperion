@@ -151,7 +151,7 @@ int cpu;
     /* Round requested storage size to architectural segment boundaries
      *    ARCH_370  1   4K page
      *    ARCH_390  256 4K pages (or 1M)
-     *    ARCH_900  256 4K oages (or 1M)
+     *    ARCH_900  256 4K pages (or 1M)
      */
     if (mainsize)
     {

@@ -46,11 +46,7 @@
   The 'VERSION' string can be any value the user wants.
 */
 #if !defined(VERSION)
-  #ifndef _MSVC_
-    #warning No version specified
-  #else
-    WARNING("No version specified")
-  #endif
+  WARNING("No version specified")
   #define VERSION              "(unknown!)"
   #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"
 #endif
