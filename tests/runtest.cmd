@@ -1,33 +1,82 @@
 @if defined TRACEON (@echo on) else (@echo off)
 
-  REM Print what arguments were passed to us
-  echo %*
+  REM  If this batch file works, then it was written by Fish.
+  REM  If it doesn't then I don't know who the heck wrote it.
+
+  goto :init
+
 
 ::-----------------------------------------------------------------------------
-::                              runtest.cmd
+::                              RUNTEST.CMD
 ::-----------------------------------------------------------------------------
-::
-::  Arg #1 (required) is the required name of the base Hercules directory.
-::
-::  Arg #2 (optional) is either 32 or 64 indicating which binaries directory
-::                    to use (i.e. 32-bit or 64-bit) The default is 64-bit.
-::
-::  Arg #3 (optional) is 'debug' to indicate the non-optimized debug version
-::                    of Hercules should be used rather than the optimized
-::                    version. The default is to use the optimized version.
-::
+:help
+
+  echo.
+  echo     NAME
+  echo.
+  echo         %~n0:    Run Hercules automated test(s).
+  echo.
+  echo     SYNOPSIS
+  echo.
+  echo         %~n0     [tstname]  [64 ^| 32]  [build]
+  echo.
+  echo     ARGUMENTS
+  echo.
+  echo         tstname     The specific test to be run. If specified, only
+  echo                     the base filename should be given; the filename
+  echo                     extension of .tst is presumed. If not specified
+  echo                     then all *.tst tests will be run.
+  echo.
+  echo         64,32       Which CPU architecture of Hercules binaries
+  echo                     should be used: the 64-bit version or the 32-
+  echo                     bit version. Optional. The default is 64-bit.
+  echo.
+  echo         build       Either 'DEBUG' or 'RETAIL' indicating which build
+  echo                     of Hercules should be used: the UNoptimized Debug
+  echo                     build or the optimized Release build.  Optional.
+  echo                     The default is to use the optimized Release build.
+  echo.
+  echo     NOTES
+  echo.
+  echo         %~nx0 requires both %tool1% and %tool2% to be installed.
+  echo         %~n0 expects to be run from within the 'tests' subdirectory
+  echo         where %~nx0 itself and all of the *.tst files exist.
+  echo.
+  echo     EXIT STATUS
+  echo.
+  echo         n           Number of tests which have failed: 0 if all
+  echo                     tests passed (success). Non-zero otherwise.
+  echo.
+  echo     AUTHOR
+  echo.
+  echo         "Fish"      (David B. Trout)
+  echo.
+  echo     VERSION
+  echo.
+  echo         1.2         (October 12, 2015)
+  echo.
+
+  set /a "rc=1"
+  %exit%
+
+
 ::-----------------------------------------------------------------------------
+::                               INIT
+::-----------------------------------------------------------------------------
+:init
 
   setlocal
   pushd .
 
-  set "tool1=sed.exe"
-  set "tool2=rexx.exe"
+  set "tool1=rexx.exe"
+  set "tool2=sed.exe"
 
-  set "wfn=allTests"
   set "return=goto :EOF"
   set "exit=goto :exit"
+  set "TRACE=if defined DEBUG echo"
   set "rc=0"
+
+  set "wfn=allTests"
 
   goto :begin
 
@@ -46,9 +95,22 @@
 ::-----------------------------------------------------------------------------
 :begin
 
+  if /i "%~1" == "?"       goto :help
+  if /i "%~1" == "/?"      goto :help
+  if /i "%~1" == "-?"      goto :help
+  if /i "%~1" == "-h"      goto :help
+  if /i "%~1" == "--help"  goto :help
+
   call :load_tools
   if not "%rc%" == "0" %exit%
 
+  
+  if "%*" == "" (
+    echo INFO:  Begin "%~n0" ...
+  ) else (
+    echo INFO:  Begin "%~n0 %*" ...
+  )
+  echo.
   goto :parse_args
 
 
@@ -59,13 +121,15 @@
 
   call :findtool "%tool1%"
   if not defined # (
-    echo ERROR: "%tool1%" not found. 1>&2
+    echo ERROR: "%tool1%" not found.       1>&2
+    echo INFO:  Use "%~n0 /?" to get help. 1>&2
     set /a "rc=1"
   )
 
   call :findtool "%tool2%"
   if not defined # (
-    echo ERROR: "%tool2%" not found. 1>&2
+    echo ERROR: "%tool2%" not found.       1>&2
+    echo INFO:  Use "%~n0 /?" to get help. 1>&2
     set /a "rc=1"
   )
 
@@ -85,49 +149,75 @@
 
 
 ::-----------------------------------------------------------------------------
-::                  Parse arg 1:  base hercules directory
+::                             isdir
+::-----------------------------------------------------------------------------
+:isdir
+
+  if not exist "%~1" (
+    set "isdir="
+    %return%
+  )
+  set "isdir=%~a1"
+  if defined isdir (
+    if /i not "%isdir:~0,1%" == "d" set "isdir="
+  )
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                  Parse arg 1:  which test ro run
 ::-----------------------------------------------------------------------------
 :parse_args
 
-  set "hercdir=%~a1"
-  if defined hercdir (
-    if /i not "%hercdir:~0,1%" == "d" set "hercdir="
-  )
-  if not defined hercdir (
-    echo ERROR: Argument 1 must be the name of the base Hercules directory.
+  set "tstname=%~1"
+  if not exist "%tstname%*.tst" (
+    echo ERROR: Test^(s^) "%tstname%*.tst" not found. 1>&2
+    echo INFO:  Use "%~n0 /?" to get help.            1>&2
     %exit%
   )
-  set "hercdir=%~1"
 
 
 ::-----------------------------------------------------------------------------
-::    Parse arg 3:  debug option (only first character is checked)
+::    Parse arg 3:  retail/debug build option (only first char is checked)
 ::-----------------------------------------------------------------------------
 
-  set "debug=%~3"
-  if not "%debug%" == "" (
-    if /i not "%debug:~0,1%" == "d" (
-      echo ERROR: Argument 3 must be either debug or unspecified.
-      %exit%
+  set "dbg=%~3"
+  if not "%dbg%" == "" (
+    if /i not "%dbg:~0,1%" == "d" (
+      if /i not "%dbg:~0,1%" == "r" (
+        echo ERROR: Argument 3 must be either Retail or Debug. 1>&2
+        echo INFO:  Use "%~n0 /?" to get help.                 1>&2
+        %exit%
+      )
     )
-    set "debug=debug."
+    if /i "%dbg:~0,1%" == "r" set "dbg="
+    if /i "%dbg:~0,1%" == "d" set "dbg=debug."
   )
+
 
 ::-----------------------------------------------------------------------------
 ::    Parse arg 2:  which herc binaries directory (32-bit or 64-bit)
 ::-----------------------------------------------------------------------------
 
-  set "hbindir=%~2"
-  if "%hbindir%" == "" set "hbindir=64"
-  if "%hbindir%" == "64" (
-    set "hbindir=msvc.%debug%AMD64.bin"
+  set "bitness=%~2"
+  if "%bitness%" == "" set "bitness=64"
+  if "%bitness%" == "64" (
+    set "hbindir=msvc.%dbg%AMD64.bin"
   ) else (
-    if "%hbindir%" == "32" (
-      set "hbindir=msvc.%debug%dllmod.bin"
+    if "%bitness%" == "32" (
+      set "hbindir=msvc.%dbg%dllmod.bin"
     ) else (
-      echo ERROR: Argument 2 must be either 32 or 64.
+      echo ERROR: Argument 2 must be either 64 or 32. 1>&2
+      echo INFO   Use "%~n0 /?" to get help.          1>&2
       %exit%
     )
+  )
+  call :isdir "..\%hbindir%"
+  if defined dbg set "xxx=debug "
+  if not defined isdir (
+    echo ERROR: %bitness%-bit %xxx%directory "..\%hbindir%" does not exist. 1>&2
+    echo INFO:  Use "%~n0 /?" to get help. 1>&2
+    %exit%
   )
 
 
@@ -145,8 +235,8 @@
 ::   Build test script consisting of all *.tst files concatenated together
 ::-----------------------------------------------------------------------------
 
-  for %%a in (%hercdir%\tests\*.tst) do type "%%a" >> %wfn%.tst
-  echo pause 1 >> %wfn%.tst
+  for %%a in (%tstname%*.tst) do type "%%a" >> %wfn%.tst
+  echo pause 0.1 >> %wfn%.tst
   echo exit >> %wfn%.tst
 
 
@@ -163,7 +253,7 @@
 ::    Start Hercules using specified .rc file which calls our test script
 ::-----------------------------------------------------------------------------
 
-  %hercdir%\%hbindir%\hercules.exe -f %hercdir%\tests\tests.conf -r %wfn%.rc > %wfn%.out
+  ..\%hbindir%\hercules.exe -f tests.conf -r %wfn%.rc > %wfn%.out 2>&1
 
 
 ::-----------------------------------------------------------------------------
@@ -177,8 +267,12 @@
 :: Call rexx helper script to parse the selected log lines and generate report
 ::-----------------------------------------------------------------------------
 
-  rexx.exe %hercdir%\tests\redtest.rexx %wfn%.sout
+  rexx.exe redtest.rexx %wfn%.sout
+  set /a "rc=%errorlevel%"
 
+  echo.
+  if %rc% EQU 0 echo INFO:  End.  All tests passed.
+  if %rc% NEQ 0 echo INFO:  End.  One or more tests have failed.
 
 ::-----------------------------------------------------------------------------
 ::                              ALL DONE!
