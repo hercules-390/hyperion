@@ -765,25 +765,25 @@ void *panel_command (void *cmdline)
     else
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
     {
-        if (hercecho && *cmd)
-            EchoHercCmdLine( cmd );
-
 #if defined( ENABLE_SYSTEM_SYMBOLS )
+        /* Perform variable substitution */
+        char *cl;
 #if defined( ENABLE_BUILTIN_SYMBOLS )
         set_symbol( "CUU",  "$(CUU)"  );
         set_symbol( "CCUU", "$(CCUU)" );
         set_symbol( "DEVN", "$(DEVN)" );
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
-        /* Perform variable substitution */
+#endif /* ENABLE_BUILTIN_SYMBOLS */
+        cl = resolve_symbol_string( cmd );
+        if (cl)
         {
-            char *cl = resolve_symbol_string( cmd );
-            rc = HercCmdLine( cl );
+            strlcpy( cmd, cl, sizeof( cmd ));
             free( cl );
         }
-#else /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+#endif /* ENABLE_SYSTEM_SYMBOLS */
+
+        if (hercecho && *cmd)
+            EchoHercCmdLine( cmd );
         rc = HercCmdLine( cmd );
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
     }
 
     return (void*)((uintptr_t)rc);

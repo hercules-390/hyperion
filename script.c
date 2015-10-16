@@ -168,14 +168,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                 || buf[stmtlen-1] == '\t')) stmtlen--;
         buf[stmtlen] = '\0';
 
-        /* Loud comments should always be logged */
-        if (stmtlen != 0 && buf[0] == '*')
-            WRMSG( HHC01603, "I", buf );  // "%s"
-
-        /* Ignore null statements and comments */
-        if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
-           continue;
-
 #if defined(ENABLE_SYSTEM_SYMBOLS)
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
@@ -197,8 +189,17 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             }
             strlcpy(buf,buf1,buflen);
             free(buf1);
+            stmtlen = strlen( buf );
         }
 #endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
+
+        /* Loud comments should always be logged */
+        if (stmtlen != 0 && buf[0] == '*')
+            WRMSG( HHC01603, "I", buf );  // "%s"
+
+        /* Ignore null statements and comments */
+        if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
+           continue;
 
         /* Special handling for 'pause' statement */
         if (strncasecmp( buf, "pause ", 6 ) == 0)

@@ -514,15 +514,6 @@ void*  gui_panel_command (char* pszCommand)
 
 NotSpecialGUICommand:
 
-    // Ignore "commands" that are actually just comments (start with '*' or '#')
-
-    if ('*' == pszCommand[0] || '#' == pszCommand[0])
-    {
-        if ('*' == pszCommand[0])       // (LOUD comment?)
-            logmsg("%s\n",pszCommand);  // (then log to console)
-        return NULL;                    // (and otherwise ignore it)
-    }
-
     // Otherwise it's not a command that we handle. Call the next higher
     // level command handler which, under normal circumstances SHOULD be
     // Hercules's "panel_command" function, but which MAY have been over-
