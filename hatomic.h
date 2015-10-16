@@ -75,13 +75,12 @@
 /*********************************************************************/
 
 
-#if !defined(_JPH_HATOMIC_H)
+#ifndef _JPH_HATOMIC_H
 #define _JPH_HATOMIC_H
 
 #if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
    #include <stdatomic.h>
 #endif
-
 
 #if 2 == ATOMIC_CHAR_LOCK_FREE
 
@@ -98,22 +97,25 @@
    /* pointer  warnings for the three cases that are not true and */
    /* which the compiler later deletes as dead code.              */
 
+   /* Due to MSVC's _Interlocked intrinsics being typed to return */
+   /* a signed value coupled with C language rules pertaining to  */
+   /* second and third operands of the ?: conditional operator as */
+   /* well as the order of our sizeof() tests the results of each */
+   /* intrinsic must also be cast to unsigned in order to prevent */
+   /* sign extension of the intrinsic return value with one bits, */
+   /* thereby causing an incorrect condition code 1 instead of 0. */
+
    /* Note that the 64-bit intrinsic function is not available in */
    /* 32 bit windows, hence the library function is used; it will */
    /* compile as the intrinsic function on 64 bit.                */
 
-   /* It  appears  _InterlockedXor8  has a compiler bug that sign */
-   /* extends  a zero result with one bits, which is not good for */
-   /* the condition code when the result is 0.  Hence the cast to */
-   /* unsigned of the result.                                     */
-
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                                             \
-   (                                                                                                                           \
-      (sizeof(*(ptr)) == 8) ? (((unsigned __int64)  Interlocked ## Op ## 64 ((unsigned __int64*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 4) ? (((unsigned     int) _Interlocked ## Op       ((unsigned     int*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 2) ? (((unsigned   short) _Interlocked ## Op ## 16 ((unsigned   short*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 1) ? (((unsigned    char) _Interlocked ## Op ## 8  ((unsigned    char*) ptr, imm )) fallback imm ) :  \
-      (assert(0) /* returns void */, 0 /* to get integral result */)                                                           \
+   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                   \
+   (                                                                                                 \
+      (sizeof(*(ptr)) == 8) ? (((U64)  Interlocked ## Op ## 64 ((U64*) ptr, imm )) fallback imm ) :  \
+      (sizeof(*(ptr)) == 4) ? (((U32) _Interlocked ## Op       ((U32*) ptr, imm )) fallback imm ) :  \
+      (sizeof(*(ptr)) == 2) ? (((U16) _Interlocked ## Op ## 16 ((U16*) ptr, imm )) fallback imm ) :  \
+      (sizeof(*(ptr)) == 1) ? (((U8)  _Interlocked ## Op ## 8  ((U8*)  ptr, imm )) fallback imm ) :  \
+      (assert(0) /* returns void */, 0 /* to get integral result */)                                 \
    )
 
    #define CAN_IAF2 1
@@ -130,4 +132,4 @@
 
 #endif
 
-#endif
+#endif /* _JPH_HATOMIC_H */
