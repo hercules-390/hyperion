@@ -2391,9 +2391,9 @@ static void*  CTCE_RecvThread( void* argp )
             // "%1d:%04X CTCE: Zero length read from %s"
             WRMSG( HHC05020, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum,
                    pDEVBLK->filename );
-            // "%1d:%04X CTCE: %lld MB received in %lld packets"
+            // "%1d:%04X CTCE: %llu MB received in %llu packets"
             WRMSG( HHC05021, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum,
-                   ctceBytCnt / 1048576 , ctcePktSeq );
+                   ctceBytCnt >> SHIFT_MEGABYTE, ctcePktSeq );
             free( buf );
             return NULL;    // make compiler happy
         }
