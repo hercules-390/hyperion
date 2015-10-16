@@ -28,6 +28,7 @@
 #define WARN_LINE               QLINE "warning : "
 #define FIXME_LINE              QLINE "FIXME : "
 #define TODO_LINE               QLINE "TODO : "
+#define NOTE_LINE               QLINE "NOTE : "
 
 /*-------------------------------------------------------------------*/
 /* Macro to suppress compiler "unreferenced variable" warnings       */
@@ -93,6 +94,20 @@
 
 #ifndef   WARNING
   #define WARNING( _msg )       /* (do nothing) */
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Same idea, but for issuing an informative note during compile     */
+/*-------------------------------------------------------------------*/
+
+#if defined( _MSVC_ )
+  #define NOTE( _msg )          __pragma( message( NOTE_LINE  _msg ))
+#elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
+  #define NOTE( _msg )          QPRAGMA( message( _msg ))
+#endif
+
+#ifndef   NOTE
+  #define NOTE( _msg )          /* (do nothing) */
 #endif
 
 #endif /* _CCFIXME_H_ */
