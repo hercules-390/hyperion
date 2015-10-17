@@ -140,14 +140,14 @@ int readpos(
 /*-------------------------------------------------------------------*/
 /* decomptrk - decompress track data                                 */
 /*-------------------------------------------------------------------*/
-int decomptrk(
+static int decomptrk(
               BYTE *ibuf,         /* input buffer address            */
               int ibuflen,        /* input buffer length             */
               BYTE *obuf,         /* output buffer address           */
               int obuflen,        /* output buffer length            */
               int heads,          /* >=0 means CKD, else FBA         */
               int trk,            /* relative track or block number  */
-              char *msg           /* addr of 80 byte msg buf or NULL */
+              char *emsg          /* addr of 81 byte msg buf or NULL */
              )
 /* ibuf points at CKDDASD_TRKHDR header followed by track data       */
 /* ibuflen specifies length of TRKHDR and data                       */
@@ -187,11 +187,16 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
                          &ibuf[CKDDASD_TRKHDR_SIZE],
                          ibuflen);
         if (rc != Z_OK) {
-            if (msg)
+            if (emsg)
+            {
+                char msg[81];
+
                 MSGBUF(msg, "%s %d uncompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);
+                memcpy(emsg, msg, 81);
+            }
             return -1;
         }
         bufl += CKDDASD_TRKHDR_SIZE;

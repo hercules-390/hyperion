@@ -123,7 +123,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         ctlreq.iCtlOp = TUNSETIFF;
         ctlreq.iProcID = fd;
         memcpy (&ctlreq.iru.hifr, hifr, sizeof (struct hifr));
-        write (ifd[1], &ctlreq, CTLREQ_SIZE);
+        VERIFY(CTLREQ_SIZE == write (ifd[1], &ctlreq, CTLREQ_SIZE));
 
         /* Get response, if any, from hercifc */
         FD_ZERO (&selset);
@@ -1061,7 +1061,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     TRACE(MSG(HHC00149,"I",request_name,ifc_fd[0],ifc_fd[1]));
 
-    write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
+    VERIFY(CTLREQ_SIZE == write( ifc_fd[0], &ctlreq, CTLREQ_SIZE ));
 
     return 0;
 }   // End of function  IFC_IOCtl()

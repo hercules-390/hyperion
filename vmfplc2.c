@@ -319,7 +319,7 @@ int write_tape_block(struct options *opts,struct TAPE_BLOCK *tb,size_t mod,size_
 /* Write a collection of blocks to tape */
 int write_tape_blocks(struct options *opts,struct TAPE_BLOCKS *tbs)
 {
-    int     rc;
+    int     rc = 0;
     struct TAPE_BLOCK *tb;
 
     tb=tbs->first;

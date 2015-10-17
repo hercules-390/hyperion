@@ -93,6 +93,12 @@ would be:
 make
 ./hercules
 
+or better:
+
+../hyperion/configure
+make
+make check
+
 Installation Names
 ==================
 

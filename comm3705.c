@@ -1036,8 +1036,8 @@ static void connect_message(int sfd, int na, int flag) {
         MSGBUF( msgtext, "%s:%d VTAM CONNECTION TERMINATED",
                 ipaddr, (int)ntohs(client.sin_port));
     WRMSG( HHC01047, "I", msgtext );
-    write(sfd, msgtext, (u_int)strlen(msgtext));
-    write(sfd, "\r\n", 2);
+    VERIFY(0 <= write(sfd, msgtext, (u_int)strlen(msgtext)));
+    VERIFY(2 == write(sfd, "\r\n", 2));
 }
 
 static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
@@ -1438,7 +1438,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     initialize_condition(&dev->commadpt->ipc_halt);
 
     /* Allocate I/O -> Thread signaling pipe */
-    create_pipe(dev->commadpt->pipe);
+    VERIFY(!create_pipe(dev->commadpt->pipe));
 
     /* Obtain the CA lock */
     obtain_lock(&dev->commadpt->lock);

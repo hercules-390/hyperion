@@ -241,6 +241,11 @@ int cpu;
         /* Previously allocated storage to be freed, update actual
          * storage pointers and adjust new storage to page boundary.
          */
+#if defined(__GNUC__) || defined(_clang_)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#endif
         dofree = config_allocmaddr,
         config_allocmsize = storsize,
         config_allocmaddr = storkeys,
@@ -255,6 +260,7 @@ int cpu;
     }
 
     /* Mainstor is located beyond the storage key array on a page boundary */
+    /* Isn't the storage key array already at a page boundary?  jph  */
     mainstor = (BYTE*)((U64)(storkeys + (skeysize << 12)));
 
     /* Set in sysblk */
@@ -404,6 +410,9 @@ int  cpu;
         xpndstor = (BYTE*)(((U64)xpndstor + (ONE_MEGABYTE - 1)) &
                            ~((U64)ONE_MEGABYTE - 1)),
         sysblk.xpndstor = xpndstor;
+#if defined(__GNUC__) || defined(_clang_)
+#pragma GCC diagnostic pop
+#endif
     }
     else
     {

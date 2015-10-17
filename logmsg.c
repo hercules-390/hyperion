@@ -473,7 +473,7 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
            if this is a utility message
         */
         if (stdout == f && logger_syslogfd[ LOG_WRITE ])
-            write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ));
+            VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
         else
             fprintf( f, "%s", msg );
 
@@ -491,7 +491,7 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
     {
         /* (same as above but allow message to be captured as well) */
         if (stdout == f && logger_syslogfd[ LOG_WRITE ])
-            write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ));
+            VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
         else
             fprintf( f, "%s", msg );
 

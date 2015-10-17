@@ -193,6 +193,12 @@ Examples:
 /* the last message with a newline, and then write the entire group  */
 /* in one fell swoop.                                                */
 /*                                                                   */
+/* NOTE:  Use  the  MSGBUF  macro *only* when the buffer is declared */
+/* locally as an array of characters.  *Never* use it with a pointer */
+/* passed  to  a function; sizeof(_buf) will be 4 or 8, depending on */
+/* the  size  of  a  pointer.  GCC will warn you, but the warning is */
+/* rather obscure and chances are you'll ignore it.                  */
+/*                                                                   */
 /* For example:                                                      */
 /*                                                                   */
 /*    #define HHC00001 "%s%s%s%s" // message group                   */

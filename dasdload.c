@@ -4211,7 +4211,9 @@ int             fsflag = 0;             /* 1=Free space message sent */
 
         /* Indicate output file progess */
         if ((outcyl % 10) == 0)
+        {
             EXTGUIMSG( "OUTCYL=%d\n", outcyl );
+        }
 
         /* Initialize track buffer with empty track */
         init_track (trklen, cif->trkbuf, outcyl, outhead, &outusedv);
