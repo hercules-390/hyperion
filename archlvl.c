@@ -72,6 +72,7 @@ static ARCHTAB archtab[] =
 /* S/370 - ALS0 */
 ARCHLVL(_ARCH_370_NAME,  ARCH_370, ALS0)
 ARCHLVL("S370",          ARCH_370, ALS0)
+ARCHLVL("S/370",         ARCH_370, ALS0)
 ARCHLVL("ALS0",          ARCH_370, ALS0)
 #endif
 
