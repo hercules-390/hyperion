@@ -16,7 +16,7 @@
 /* be properly investigated and resolved.                            */
 /*-------------------------------------------------------------------*/
 
-#include "ccfixme.h"            /* need "QSTR" macro, etc */
+#include "ccfixme.h"      /* need HAVE_GCC_DIAG_PRAGMA, QPRAGMA, etc */
 
 #ifndef _CCNOWARN_H_
 #define _CCNOWARN_H_
@@ -27,11 +27,11 @@
 
   #if defined( _MSVC_ )
 
-    #define DISABLE_MSVC_WARNING( _num, _msg )      \
+    #define DISABLE_MSVC_WARNING( _num )            \
                                                     \
         __pragma( warning( push ) )                 \
-        __pragma( warning( disable : _num ) )       \
-                           FIXME(    _msg )
+        __pragma( warning( disable : _num ) )
+
     #define ENABLE_MSVC_WARNING( _num )             \
                                                     \
         __pragma( warning( pop ) )
@@ -49,8 +49,8 @@
   #endif
 
   #ifndef   DISABLE_MSVC_WARNING
-    #define DISABLE_MSVC_WARNING( _opt, _msg )      /* (do nothing) */
-    #define ENABLE_MSVC_WARNING(  _opt )            /* (do nothing) */
+    #define DISABLE_MSVC_WARNING( _str )            /* (do nothing) */
+    #define ENABLE_MSVC_WARNING(  _str )            /* (do nothing) */
   #endif
 
   /*---------------------------------------------------------------*/
@@ -58,36 +58,39 @@
   /*---------------------------------------------------------------*/
 
   #if defined( __GNUC__ )
-    #ifdef HAVE_GCC_DIAG_PRAGMA
-      #define PRAGMA_GCC_DIAG( _opt )               _Pragma( GCC diagnostic _opt )
-      #define GCC_WARNING_ON(   _opt )              PRAGMA_GCC_DIAG( warning QSTR2( -W, _opt ) )
-      #define GCC_WARNING_OFF(  _opt, _msg )        PRAGMA_GCC_DIAG( ignored QSTR2( -W, _opt ) )  \
-                                                                      FIXME(            _msg )
-      #ifdef HAVE_GCC_DIAG_PUSHPOP
-        #define DISABLE_GCC_WARNING( _opt, _msg )   PRAGMA_GCC_DIAG( push )  \
-                                                    GCC_WARNING_OFF( _opt, _msg )
-        #define ENABLE_GCC_WARNING(  _opt )         PRAGMA_GCC_DIAG( pop )
+    #if defined( HAVE_GCC_DIAG_PRAGMA )
+
+      #define GCC_WARNING_ON(  _str )               QPRAGMA( GCC diagnostic warning _str )
+      #define GCC_WARNING_OFF( _str )               QPRAGMA( GCC diagnostic ignored _str )
+
+      #if defined( HAVE_GCC_DIAG_PUSHPOP )
+        #define DISABLE_GCC_WARNING( _str )         QPRAGMA( GCC diagnostic push )  \
+                                                    GCC_WARNING_OFF( _str )
+        #define ENABLE_GCC_WARNING(  _str )         QPRAGMA( GCC diagnostic pop  )
       #else
-        #define DISABLE_GCC_WARNING( _opt, _msg )   GCC_WARNING_OFF( _opt, _msg )
-        #define ENABLE_GCC_WARNING(  _opt )         GCC_WARNING_ON(  _opt )
+        #define DISABLE_GCC_WARNING( _str )         GCC_WARNING_OFF( _str )
+        #define ENABLE_GCC_WARNING(  _str )         GCC_WARNING_ON(  _str )
       #endif
 
       /* Globally disable some rather annoying GCC compiler warnings which */
       /* frequently occurs due to our build multiple architectures design. */
 
       #if GCC_VERSION >= 40304
-      #pragma GCC diagnostic ignored "-Wunused-function"          // "'xxxxxxxx' defined but not used"
+        /* 'xxxxxxxx' defined but not used */
+        DISABLE_GCC_WARNING( "-Wunused-function" )
       #endif
+
       #if GCC_VERSION >= 40600
-      #pragma GCC diagnostic ignored "-Wunused-but-set-variable"  // "variable 'xxx' set but not used"
+        /* variable 'xxx' set but not used */
+        DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
       #endif
 
     #endif
   #endif
 
   #ifndef   DISABLE_GCC_WARNING
-    #define DISABLE_GCC_WARNING( _opt, _msg )       /* (do nothing) */
-    #define ENABLE_GCC_WARNING(  _opt )             /* (do nothing) */
+    #define DISABLE_GCC_WARNING( _str )             /* (do nothing) */
+    #define ENABLE_GCC_WARNING(  _str )             /* (do nothing) */
   #endif
 
   /*---------------------------------------------------------------*/

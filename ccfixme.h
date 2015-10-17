@@ -22,7 +22,6 @@
 
 #define Q( _s )                 #_s
 #define QSTR( _s )              Q( _s )
-#define QSTR2( _s1, _s2 )       QSTR( _s1 ## _s2 )
 #define QLINE                   __FILE__ "(" QSTR( __LINE__ ) ") : "
 
 #define WARN_LINE               QLINE "warning : "
@@ -59,13 +58,13 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define FIXME( _msg )         __pragma( message( FIXME_LINE  _msg ))
+  #define FIXME( _str )         __pragma( message( FIXME_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define FIXME( _msg )         QPRAGMA( message( _msg ))
+  #define FIXME( _str )         QPRAGMA( message( _str ))
 #endif
 
 #ifndef   FIXME
-  #define FIXME( _msg )         /* (do nothing) */
+  #define FIXME( _str )         /* (do nothing) */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -73,13 +72,13 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define TODO( _msg )          __pragma( message( TODO_LINE  _msg ))
+  #define TODO( _str )          __pragma( message( TODO_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define TODO( _msg )          QPRAGMA( message( _msg ))
+  #define TODO( _str )          QPRAGMA( message( _str ))
 #endif
 
 #ifndef   TODO
-  #define TODO( _msg )          /* (do nothing) */
+  #define TODO( _str )          /* (do nothing) */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -87,13 +86,13 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define WARNING( _msg )       __pragma( message( WARN_LINE  _msg ))
+  #define WARNING( _str )       __pragma( message( WARN_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define WARNING( _msg )       QPRAGMA( message( _msg ))
+  #define WARNING( _str )       QPRAGMA( message( _str ))
 #endif
 
 #ifndef   WARNING
-  #define WARNING( _msg )       /* (do nothing) */
+  #define WARNING( _str )       /* (do nothing) */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -101,13 +100,13 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define NOTE( _msg )          __pragma( message( NOTE_LINE  _msg ))
+  #define NOTE( _str )          __pragma( message( NOTE_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define NOTE( _msg )          QPRAGMA( message( _msg ))
+  #define NOTE( _str )          QPRAGMA( message( _str ))
 #endif
 
 #ifndef   NOTE
-  #define NOTE( _msg )          /* (do nothing) */
+  #define NOTE( _str )          /* (do nothing) */
 #endif
 
 #endif /* _CCFIXME_H_ */
