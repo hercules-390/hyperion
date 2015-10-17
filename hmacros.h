@@ -651,26 +651,26 @@ typedef int CMPFUNC(const void*, const void*);
 
 #define _SETMODE_INIT \
 do { \
-    getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid); \
-    getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid); \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid); \
-    setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid); \
+    VERIFY(!getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid)); \
+    VERIFY(!getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid)); \
+    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid)); \
+    VERIFY(!setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid)); \
 } while(0)
 
 #define _SETMODE_ROOT \
 do { \
-    setresuid(sysblk.suid,sysblk.suid,sysblk.ruid); \
+    VERIFY(!setresuid(sysblk.suid,sysblk.suid,sysblk.ruid)); \
 } while(0)
 
 #define _SETMODE_USER \
 do { \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid); \
+    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid)); \
 } while(0)
 
 #define _SETMODE_TERM \
 do { \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid); \
-    setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid); \
+    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid)); \
+    VERIFY(!setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid)); \
 } while(0)
 
 #elif defined(HAVE_SETREUID)
@@ -681,26 +681,26 @@ do { \
     sysblk.euid = geteuid(); \
     sysblk.rgid = getgid(); \
     sysblk.egid = getegid(); \
-    setreuid(sysblk.euid, sysblk.ruid); \
-    setregid(sysblk.egid, sysblk.rgid); \
+    VERIFY(!setreuid(sysblk.euid, sysblk.ruid)); \
+    VERIFY(!setregid(sysblk.egid, sysblk.rgid)); \
 } while (0)
 
 #define _SETMODE_ROOT \
 do { \
-    setreuid(sysblk.ruid, sysblk.euid); \
-    setregid(sysblk.rgid, sysblk.egid); \
+    VERIFY(!setreuid(sysblk.ruid, sysblk.euid)); \
+    VERIFY(!setregid(sysblk.rgid, sysblk.egid)); \
 } while (0)
 
 #define _SETMODE_USER \
 do { \
-    setregid(sysblk.egid, sysblk.rgid); \
-    setreuid(sysblk.euid, sysblk.ruid); \
+    VERIFY(!setregid(sysblk.egid, sysblk.rgid)); \
+    VERIFY(!setreuid(sysblk.euid, sysblk.ruid)); \
 } while (0)
 
 #define _SETMODE_TERM \
 do { \
-    setuid(sysblk.ruid); \
-    setgid(sysblk.rgid); \
+    VERIFY(!setuid(sysblk.ruid)); \
+    VERIFY(!setgid(sysblk.rgid)); \
 } while (0)
 
 #else /* defined(HAVE_SETRESUID) || defined(HAVE_SETEREUID) */

@@ -229,7 +229,15 @@ int main( int argc, char **argv )
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                      _("HHCIF004W %s: Unknown request: %lX\n"),
                      pszProgName, ctlreq.iCtlOp );
-            write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+            /* This  is  a  splendid  example  of a potential buffer */
+            /* overrun.   If  the message is longer than the buffer, */
+            /* snprintf  will  return  the  required buffer size and */
+            /* leave  the  buffer  unterminated.   And  strlen  will */
+            /* overshoot into the wilderness.  jph                   */
+            szMsgBuffer[sizeof(szMsgBuffer) - 1] = 0; /* Be sure to terminate */
+            VERIFY(0 <= write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) ));
+            /* Of course, all of this would be done a lot simpler by */
+            /* fprintf(stderr, ...) jph 2015-10-17.                  */
             continue;
         }
 
@@ -238,7 +246,8 @@ int main( int argc, char **argv )
                  _("HHCIF006I %s: Doing %s on %s\n"),
                  pszProgName, pOp, pIF);
 
-        write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+        szMsgBuffer[sizeof(szMsgBuffer) - 1] = 0; /* Be sure to terminate */
+        VERIFY(0 <= write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) ));
 #endif /*defined(DEBUG) || defined(_DEBUG)*/
 
         rc = ioctl( fd, ctlreq.iCtlOp, pArg );
@@ -263,12 +272,13 @@ int main( int argc, char **argv )
                      _("HHCIF005E %s: ioctl error doing %s on %s: %d %s\n"),
                      pszProgName, pOp, pIF, errno, strerror( errno ) );
 
-                write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+                szMsgBuffer[sizeof(szMsgBuffer) - 1] = 0; /* Be sure to terminate */
+                VERIFY(0 <= write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) ));
             }
         }
         else if (answer)
         {
-            write( STDOUT_FILENO, &ctlreq, CTLREQ_SIZE );
+            VERIFY(0 <= write( STDOUT_FILENO, &ctlreq, CTLREQ_SIZE ));
         }
     }
 

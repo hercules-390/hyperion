@@ -829,7 +829,7 @@ comp_restart:
     off = (off_t)spctab[s-1].pos;
     if (off < fst.st_size)
     {
-        ftruncate (fd, off);
+        VERIFY(!ftruncate (fd, off));
         if(dev->batch)
             fprintf(stdout, MSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                     fst.st_size - off));
@@ -2688,7 +2688,7 @@ cdsk_return_ok:
 
         off = CCKD_DEVHDR_POS;
         if (lseek (fd, CCKD_DEVHDR_POS, SEEK_SET) >= 0)
-            write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+            VERIFY(CCKD_DEVHDR_SIZE == write (fd, &cdevhdr, CCKD_DEVHDR_SIZE));
         gui_fprintf (stderr, "POS=%"I64_FMT"u\n", (U64) lseek( fd, 0, SEEK_CUR ));
     }
 

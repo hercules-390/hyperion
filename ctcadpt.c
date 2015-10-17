@@ -1412,8 +1412,8 @@ char *ipaddress;
         /* child */
         close (0);
         close (1);
-        dup (sockfd[1]);
-        dup (sockfd[1]);
+        VERIFY(0 <= dup (sockfd[1])); /* Same one twice??  jph       */
+        VERIFY(0 <= dup (sockfd[1])); /* Same one twice??  jph       */
         r = (sockfd[0] > sockfd[1]) ? sockfd[0] : sockfd[1];
         for (i = 3; i <= r; i++) {
             close (i);
@@ -1433,8 +1433,8 @@ char *ipaddress;
      * up correctly.  I don't feel like implementing a complete login
      * scripting facility here...
      */
-    write(dev->fd, ipaddress, (u_int)strlen(ipaddress));
-    write(dev->fd, "\n", 1);
+    VERIFY(0 <= write(dev->fd, ipaddress, (u_int)strlen(ipaddress)));
+    VERIFY(1 == write(dev->fd, "\n", 1));
     return 0;
 }
 
@@ -1494,10 +1494,10 @@ U16 lcss;
 static int VMNET_Write(DEVBLK *dev, BYTE *iobuf, U32 count, BYTE *unitstat)
 {
 U32 blklen = (iobuf[0]<<8) | iobuf[1];
-U32 pktlen;
+int pktlen;
 BYTE *p = iobuf + 2;
 BYTE *buffer = dev->buf;
-U32 len = 0, rem;
+int len = 0, rem;
 
     if (count < blklen) {
         WRMSG (HHC00975, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "block", count, blklen);
@@ -1537,7 +1537,7 @@ U32 len = 0, rem;
             p++;
         }
         buffer[len++] = SLIP_END;
-        write(dev->fd, buffer, len);   /* should check error conditions? */
+        VERIFY(len == write(dev->fd, buffer, len));   /* should check error conditions? */  /* Very good idea!  How about it?  jph */
         len = 0;
     }
 

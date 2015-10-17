@@ -513,7 +513,7 @@ ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
     if(dev->scsw.flag2 & SCSW2_Q)
     {
         dev->scsw.flag2 &= ~SCSW2_Q;
-        write_pipe(grp->ppfd[1],"*",1);
+        VERIFY(1 == write_pipe(grp->ppfd[1],"*",1));
     }
     else
         if(dev->group->acount == ZFCP_GROUP_SIZE)
@@ -593,7 +593,8 @@ logmsg(_("ZFCP Experimental Driver - Incomplete - Work In Progress\n"));
             initialize_lock(&grp->qlock);
 
             /* Open write signalling pipe */
-            create_pipe(grp->ppfd);
+            /* Check your retrun codes, Jan.                         */
+            VERIFY(!create_pipe(grp->ppfd));
             grp->ttfd = grp->ppfd[0]; // ZZ TEMP
 
             /* Set Non-Blocking mode */
@@ -1268,7 +1269,7 @@ U32 num;                                /* Number of bytes to move   */
             if(FD_ISSET(grp->ppfd[0],&readset))
             {
             char c;
-                read_pipe(grp->ppfd[0],&c,1);
+                VERIFY(1 == read_pipe(grp->ppfd[0],&c,1));
 
                 if(dev->qdio.o_qmask)
                 {
@@ -1357,7 +1358,7 @@ int noselrd;
 
     /* Send signal to QDIO thread */
     if(noselrd && dev->qdio.i_qmask)
-        write_pipe(grp->ppfd[1],"*",1);
+        VERIFY(1 == write_pipe(grp->ppfd[1],"*",1));
 
     return 0;
 }
@@ -1395,7 +1396,7 @@ ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
 
     /* Send signal to QDIO thread */
     if(dev->qdio.o_qmask)
-        write_pipe(grp->ppfd[1],"*",1);
+        VERIFY(1 == write_pipe(grp->ppfd[1],"*",1));
 
     return 0;
 }

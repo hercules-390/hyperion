@@ -2327,7 +2327,7 @@ int did_read = 0;                       /* Indicates some data read  */
     char buff[4096];
         DBGTRC(dev, "Input dropped (No available buffers)\n");
         PTT_QETH_TRACE( "*prcinq drop", dev->qdio.i_qmask, 0, 0 );
-        TUNTAP_Read( grp->ttfd, buff, sizeof(buff) );
+        VERIFY(TUNTAP_Read( grp->ttfd, buff, sizeof(buff)));
         /* No available/empty Input Queues were to be found */
         /* Wake up the program so it can process its queues */
         grp->iqPCI = TRUE;
@@ -2572,7 +2572,8 @@ int i;
             initialize_lock( &grp->qblock );
 
             /* Creat ACTIVATE QUEUES signalling pipe */
-            create_pipe(grp->ppfd);
+            /* Check your return codes, Jan.                         */
+            VERIFY(!create_pipe(grp->ppfd));
 
             /* Set Non-Blocking mode */
             VERIFY( socket_set_blocking_mode(grp->ppfd[0],0) == 0);

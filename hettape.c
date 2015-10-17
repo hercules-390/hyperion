@@ -266,7 +266,7 @@ off_t           cursize;                /* Current size for size chk */
                 WRMSG (HHC00209, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "het");
                 het_bsb(dev->hetb);
                 cursize=het_tell(dev->hetb);
-                ftruncate(dev->hetb->fd,cursize);
+                VERIFY(!ftruncate(dev->hetb->fd, cursize));
                 dev->hetb->truncated=TRUE; /* SHOULD BE IN HETLIB */
             }
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);

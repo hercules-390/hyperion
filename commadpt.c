@@ -738,7 +738,7 @@ static int commadpt_connout(COMMADPT *ca)
         }
         else
         {
-            strerror_r(HSO_errno,wbfr,256);
+            VERIFY(!strerror_r(HSO_errno,wbfr,256));
             intmp.s_addr=ca->rhost;
             WRMSG(HHC01001, "I",
                     SSID_TO_LCSS(ca->dev->ssid),
@@ -886,13 +886,13 @@ char        msgtext[256];
             MSG( HHC01073, "I", ipaddr, (int)ntohs(client.sin_port),
                            devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741" ) );
 
-    write(sfd, msgtext, (u_int)strlen(msgtext));
-    write(sfd, "\r\n", 2);
+    VERIFY(0 <= write(sfd, msgtext, (u_int)strlen(msgtext)));
+    VERIFY(2 == write(sfd, "\r\n", 2));
 
     WRMSG(HHC01073,"I", ipaddr, (int)ntohs(client.sin_port), devnum, (term == COMMADPT_TERM_TTY) ? "TTY" : "2741");
 
     if (binary_opt)
-        write(sfd, telnet_binary, sizeof(telnet_binary));
+        VERIFY(sizeof(telnet_binary) == write(sfd, telnet_binary, sizeof(telnet_binary)));
 
     return;
 }
@@ -1398,7 +1398,7 @@ static void *commadpt_thread(void *vca)
                     if(rc!=0)
                     {
                         /* Ignore any other command at this stage */
-                        read_pipe(ca->pipe[1],&b,1);
+                        VERIFY(0 <= read_pipe(ca->pipe[1],&b,1));
                         ca->curpending=COMMADPT_PEND_IDLE;
                         signal_condition(&ca->ipc);
                     }
@@ -2004,7 +2004,7 @@ static void *commadpt_thread(void *vca)
 /*-------------------------------------------------------------------*/
 static void commadpt_wakeup(COMMADPT *ca,BYTE code)
 {
-    write_pipe(ca->pipe[1],&code,1);
+    VERIFY(1 == write_pipe(ca->pipe[1],&code,1));
 }
 
 /*-------------------------------------------------------------------*/
@@ -2622,7 +2622,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     initialize_condition(&dev->commadpt->ipc_halt);
 
     /* Allocate I/O -> Thread signaling pipe */
-    create_pipe(dev->commadpt->pipe);
+    VERIFY(!create_pipe(dev->commadpt->pipe));
 
     /* Obtain the CA lock */
     obtain_lock(&dev->commadpt->lock);
