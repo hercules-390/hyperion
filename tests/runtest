@@ -29,7 +29,6 @@ cat $dir/$fns.tst >$wfn.tst
 if [ "$2" != "noexit" ] ; then
         echo exit >>$wfn.tst
 fi
-./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out
-stty echo
+./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out 2>&1
 sed -n -e '/^HHC01603I \*Testcase/,/^HHC01603I \*Done/p' >$wfn.sout $wfn.out
 rexx $dir/redtest.rexx $wfn.sout
