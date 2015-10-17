@@ -322,6 +322,13 @@ Examples:
 // 00156 - 00159 unused
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
+#define HHC00162 "%s: Must be called from within Hercules."
+#define HHC00163 "%s: Cannot obtain %s socket: %s"
+#define HHC00164 "%s: I/O error on read: %s."
+#define HHC00165 "%s: Unknown request: %lX"
+#define HHC00166 "%s: ioctl error doing %s on %s: %d %s"
+#define HHC00167 "%s: Doing %s on %s"
+#define HHC00168 "%s: Hercules disappeared!! .. exiting"
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file %s, type %s: tape closed"
