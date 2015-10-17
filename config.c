@@ -241,11 +241,11 @@ int cpu;
         /* Previously allocated storage to be freed, update actual
          * storage pointers and adjust new storage to page boundary.
          */
-#if defined(__GNUC__) || defined(_clang_)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-#endif
+
+        PUSH_GCC_WARNINGS()
+        DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )
+        DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
+
         dofree = config_allocmaddr,
         config_allocmsize = storsize,
         config_allocmaddr = storkeys,
@@ -410,9 +410,8 @@ int  cpu;
         xpndstor = (BYTE*)(((U64)xpndstor + (ONE_MEGABYTE - 1)) &
                            ~((U64)ONE_MEGABYTE - 1)),
         sysblk.xpndstor = xpndstor;
-#if defined(__GNUC__) || defined(_clang_)
-#pragma GCC diagnostic pop
-#endif
+
+        POP_GCC_WARNINGS()
     }
     else
     {
