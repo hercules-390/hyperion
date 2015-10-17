@@ -845,7 +845,7 @@ void storage_clear()
     if (!sysblk.main_clear)
     {
         if (sysblk.mainstor) memset( sysblk.mainstor, 0x00, sysblk.mainsize );
-        if (sysblk.storkeys) memset( sysblk.storkeys, 0x00, sysblk.mainsize / STORAGE_KEY_UNITSIZE );
+        if (sysblk.storkeys) memset( sysblk.storkeys, 0x00, sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE );
         sysblk.main_clear = 1;
     }
 }

@@ -17,6 +17,13 @@
   #include  "featchk.h"
   #undef    FEATCHK_CHECK_ALL
   #define   FEATCHK_CHECK_DONE
+
+  #if defined(_FEATURE_2K_STORAGE_KEYS)
+    #define _STORKEY_ARRAY_UNITSIZE   2048
+  #else
+    #define _STORKEY_ARRAY_UNITSIZE   4096
+  #endif
+
 #endif /*!defined(FEATCHK_CHECK_DONE)*/
 
 #undef __GEN_ARCH
@@ -211,6 +218,33 @@ s370_ ## _name
 #define ASD_PRIVATE   SEGTAB_370_CMN
 #define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
 
+// 370
+
+#undef STORAGE_KEY_PAGESHIFT
+#undef STORAGE_KEY_PAGESIZE
+#undef STORAGE_KEY_BYTEMASK
+#undef STORAGE_KEY_PAGEMASK
+#undef STORAGE_KEY
+
+#if defined(FEATURE_2K_STORAGE_KEYS)
+
+  #define STORAGE_KEY_PAGESHIFT     11
+  #define STORAGE_KEY_PAGESIZE      2048
+  #define STORAGE_KEY_BYTEMASK      0x000007FF
+  #define STORAGE_KEY_PAGEMASK      0x7FFFF800
+
+#else /* FEATURE_4K_STORAGE_KEYS */
+
+  #define STORAGE_KEY_PAGESHIFT     12
+  #define STORAGE_KEY_PAGESIZE      4096
+  #define STORAGE_KEY_BYTEMASK      0x00000FFF
+  #define STORAGE_KEY_PAGEMASK      0x7FFFF000
+
+#endif
+
+#define STORAGE_KEY(_addr, _pointer) \
+   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
+
 #elif __GEN_ARCH == 390
 
 #define ARCH_MODE   ARCH_390
@@ -324,6 +358,32 @@ s390_ ## _name
 #else
  #define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
 #endif /* FEATURE_ACCESS_REGISTERS */
+
+// 390
+
+#undef STORAGE_KEY_PAGESHIFT
+#undef STORAGE_KEY_PAGESIZE
+#undef STORAGE_KEY_BYTEMASK
+#undef STORAGE_KEY_PAGEMASK
+#undef STORAGE_KEY
+
+#if defined(FEATURE_2K_STORAGE_KEYS)
+  #error FEATURE_2K_STORAGE_KEYS unsupported for __GEN_ARCH == 390!
+#else /* FEATURE_4K_STORAGE_KEYS */
+
+  #define STORAGE_KEY_PAGESHIFT     12
+  #define STORAGE_KEY_PAGESIZE      4096
+  #define STORAGE_KEY_BYTEMASK      0x00000FFF
+  #if !defined(FEATURE_ESAME)
+    #define STORAGE_KEY_PAGEMASK    0x7FFFF000
+  #else
+    #define STORAGE_KEY_PAGEMASK    0xFFFFFFFFFFFFF000ULL
+  #endif
+
+#endif
+
+#define STORAGE_KEY(_addr, _pointer) \
+   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
 #elif __GEN_ARCH == 900
 
@@ -456,12 +516,47 @@ z900_ ## _name
  #define CHANNEL_MASKS(_regs) ((_regs) -> CR(2))
 #endif /* FEATURE_ACCESS_REGISTERS */
 
+// 900
+
+#undef STORAGE_KEY_PAGESHIFT
+#undef STORAGE_KEY_PAGESIZE
+#undef STORAGE_KEY_BYTEMASK
+#undef STORAGE_KEY_PAGEMASK
+#undef STORAGE_KEY
+
+#if defined(FEATURE_2K_STORAGE_KEYS)
+  #error FEATURE_2K_STORAGE_KEYS unsupported for __GEN_ARCH == 900!
+#else /* FEATURE_4K_STORAGE_KEYS */
+
+  #define STORAGE_KEY_PAGESHIFT     12
+  #define STORAGE_KEY_PAGESIZE      4096
+  #define STORAGE_KEY_BYTEMASK      0x00000FFF
+  #if !defined(FEATURE_ESAME)
+    #define STORAGE_KEY_PAGEMASK    0x7FFFF000
+  #else
+    #define STORAGE_KEY_PAGEMASK    0xFFFFFFFFFFFFF000ULL
+  #endif
+
+#endif
+
+#define STORAGE_KEY(_addr, _pointer) \
+   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
+
 #else
 
   WARNING( "__GEN_ARCH must be 370, 390, 900 or undefined" )
 
 #endif
 
+#undef STORAGE_KEY1
+#undef STORAGE_KEY2
+
+#if defined(_FEATURE_2K_STORAGE_KEYS)
+  #define STORAGE_KEY1(_addr, _pointer) \
+    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)&~1]
+  #define STORAGE_KEY2(_addr, _pointer) \
+    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
+#endif
 
 /*-------------------------------------------------------------------*/
 /* PAGEFRAME-size related constants                                  */
@@ -535,51 +630,6 @@ z900_ ## _name
 #else
   #define ITIMER_UPDATE(_addr, _len, _regs)
   #define ITIMER_SYNC(_addr, _len, _regs)
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Storage Key related constants                                     */
-/*-------------------------------------------------------------------*/
-
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
- #define STORAGE_KEY_UNITSIZE 4096
-#else
- #define STORAGE_KEY_UNITSIZE 2048
-#endif
-
- #undef STORAGE_KEY
- #undef STORAGE_KEY_PAGESHIFT
- #undef STORAGE_KEY_PAGESIZE
- #undef STORAGE_KEY_PAGEMASK
- #undef STORAGE_KEY_BYTEMASK
-#ifdef FEATURE_4K_STORAGE_KEYS
- #if defined(_FEATURE_2K_STORAGE_KEYS)
-  #define STORAGE_KEY_PAGESHIFT 11
- #else
-  #define STORAGE_KEY_PAGESHIFT 12
- #endif
- #define STORAGE_KEY_PAGESIZE   4096
- #if defined(FEATURE_ESAME)
-  #define STORAGE_KEY_PAGEMASK  0xFFFFFFFFFFFFF000ULL
- #else
-  #define STORAGE_KEY_PAGEMASK  0x7FFFF000
- #endif
- #define STORAGE_KEY_BYTEMASK   0x00000FFF
-#else
- #define STORAGE_KEY_PAGESHIFT  11
- #define STORAGE_KEY_PAGESIZE   2048
- #define STORAGE_KEY_PAGEMASK   0x7FFFF800
- #define STORAGE_KEY_BYTEMASK   0x000007FF
-#endif
-
-#define STORAGE_KEY(_addr, _pointer) \
-   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
-
-#if defined(_FEATURE_2K_STORAGE_KEYS)
- #define STORAGE_KEY1(_addr, _pointer) \
-    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)&~1]
- #define STORAGE_KEY2(_addr, _pointer) \
-    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
 #endif
 
 /*-------------------------------------------------------------------*/

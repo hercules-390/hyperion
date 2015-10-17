@@ -181,7 +181,7 @@ int cpu;
     }
 
     /* Storage key array size rounded to next page boundary */
-    switch (STORAGE_KEY_UNITSIZE)
+    switch (_STORKEY_ARRAY_UNITSIZE)
     {
         case 2048:
             skeysize = storsize << 1;
@@ -284,8 +284,8 @@ int cpu;
 
 #if 0   /*DEBUG-JJ-20/03/2000*/
     /* Mark selected frames invalid for debugging purposes */
-    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
-        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
+    for (i = 64 ; i < (sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE); i += 2)
+        if (i < (sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE) - 64)
             sysblk.storkeys[i] = STORKEY_BADFRM;
         else
             sysblk.storkeys[i++] = STORKEY_BADFRM;
