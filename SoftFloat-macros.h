@@ -53,6 +53,7 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+PUSH_GCC_WARNINGS()
 DISABLE_GCC_WARNING( "-Wunused-function" )
 
 /*----------------------------------------------------------------------------
@@ -743,4 +744,4 @@ static INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 
 }
 
-ENABLE_GCC_WARNING( "-Wunused-function" )
+POP_GCC_WARNINGS()
