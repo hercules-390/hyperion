@@ -735,9 +735,9 @@ char  buf[512];
 
 
 /*-------------------------------------------------------------------*/
-/* r command - display or alter real storage                         */
+/* abs or r command - display or alter absolute or real storage      */
 /*-------------------------------------------------------------------*/
-int r_cmd(int argc, char *argv[], char *cmdline)
+int abs_or_r_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 
@@ -754,7 +754,7 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    alter_display_real (regs, argc, argv, cmdline);
+    alter_display_real_or_abs (regs, argc, argv, cmdline);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

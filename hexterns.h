@@ -573,7 +573,7 @@ HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t 
 HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRNI( BYTE* iobuf, int num, char* buf, size_t bufsz );
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
-void alter_display_real (REGS *regs, int argc, char *argv[], char *cmdline);
+void alter_display_real_or_abs (REGS *regs, int argc, char *argv[], char *cmdline);
 void alter_display_virt (REGS *regs, int argc, char *argv[], char *cmdline);
 void disasm_stor        (REGS *regs, int argc, char *argv[], char *cmdline);
 int drop_privileges(int capa);

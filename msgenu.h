@@ -1336,8 +1336,8 @@ Examples:
 #define HHC02287 "No SIE performance data"
 #define HHC02288 "Commands are sent to %s"
 #define HHC02289 "%s" // disasm_stor
-#define HHC02290 "%s" // dump_real_page
-#define HHC02291 "%s" // dump_real_page
+#define HHC02290 "%s" // 'abs', 'r' and 'v' commands, and 'dump_abs_page' function
+#define HHC02291 "%s" // 'abs', 'r' and 'v' commands, and 'dump_abs_page' function
 #define HHC02292 "%s" // icount_cmd
 #define HHC02293 "%s" // history.c: command history
 #define HHC02294 "%s" // cachestats_cmd
@@ -1373,6 +1373,9 @@ Examples:
 #define HHC02324 "%s"     // (instruction tracing)
 #define HHC02325 "%s%s"   // (instruction tracing: instr fetch error)
 #define HHC02326 "%s"     // (instruction tracing: storage line)
+#define HHC02327 "%c:"F_RADR"  Storage address is not valid"
+#define HHC02328 "%c:"F_RADR"  Addressing exception"
+#define HHC02329 "%c:"F_RADR"  Translation exception %4.4hX  %s"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

@@ -1551,7 +1551,7 @@ CMDABBR( "qstor",   5,              qstor_cmd,              SYSCMD,             
 COMMAND( "start",                   start_cmd,              SYSCMD,             start_cmd_desc,         start_cmd_help      )
 COMMAND( "stop",                    stop_cmd,               SYSCMD,             stop_cmd_desc,          stop_cmd_help       )
 
-COMMAND( "abs",                     r_cmd,                  SYSCMDNOPER,        abs_cmd_desc,           abs_cmd_help        )
+COMMAND( "abs",                     abs_or_r_cmd,           SYSCMDNOPER,        abs_cmd_desc,           abs_cmd_help        )
 COMMAND( "aea",                     aea_cmd,                SYSCMDNOPER,        aea_cmd_desc,           NULL                )
 COMMAND( "aia",                     aia_cmd,                SYSCMDNOPER,        aia_cmd_desc,           NULL                )
 COMMAND( "ar",                      ar_cmd,                 SYSCMDNOPER,        ar_cmd_desc,            NULL                )
@@ -1591,7 +1591,7 @@ COMMAND( "ptt",                     EXTCMD( ptt_cmd ),      SYSCMDNOPER,        
 COMMAND( "qd",                      qd_cmd,                 SYSCMDNOPER,        qd_cmd_desc,            qd_cmd_help         )
 COMMAND( "qeth",                    qeth_cmd,               SYSCMDNOPER,        qeth_cmd_desc,          qeth_cmd_help       )
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
-COMMAND( "r",                       r_cmd,                  SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )
+COMMAND( "r",                       abs_or_r_cmd,           SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )
 COMMAND( "resume",                  resume_cmd,             SYSCMDNOPER,        resume_cmd_desc,        NULL                )
 COMMAND( "s-",                      trace_cmd,              SYSCMDNOPER,        sminus_cmd_desc,        NULL                )
 COMMAND( "s",                       trace_cmd,              SYSCMDNOPER,        s_cmd_desc,             s_cmd_help          )
