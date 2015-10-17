@@ -165,7 +165,7 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
 #if !defined( HAVE_LIBZ ) && !defined( CCKD_BZIP2 )
     UNREFERENCED(heads);
     UNREFERENCED(trk);
-    UNREFERENCED(msg);
+    UNREFERENCED(emsg);
 #endif
 
     memset(obuf, 0, obuflen);  /* clear output buffer             */
@@ -213,11 +213,17 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
                  (char *)&ibuf[CKDDASD_TRKHDR_SIZE],
                  ibuflen, 0, 0);
         if (rc != BZ_OK) {
-            if (msg)
+
+            if (emsg)
+            {
+                char msg[81];
+
                 MSGBUF(msg, "%s %d decompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);
+                memcpy(emsg, msg, 81);
+            }
             return -1;
         }
         bufl=ubufl;
