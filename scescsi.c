@@ -6,29 +6,20 @@
 
 #include "hstdinc.h"
 
-#ifdef UNUSED_FUNCTION_WARNING
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "service.h"
-
 
 #if defined(_FEATURE_HARDWARE_LOADER)
 
 #if !defined(_SCEHWL_C)
+
 #define _SCEHWL_C
-
-
 #define BOOT_PARM_ADDR             0x01FFD000
-
 #define SDIAS_STORE_STATUS_MAXSIZE 0x02000000
-
 #define HWL_MAXFILETYPE            8    /* Number of supported files */
 
 

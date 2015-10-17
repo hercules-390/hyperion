@@ -17,17 +17,6 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/*      Compiler unused function warning                             */
-/*-------------------------------------------------------------------*/
-
-#undef UNUSED_FUNCTION_WARNING
-#if defined(__GNUC__)
-  #if  __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ > 5 )
-    #define UNUSED_FUNCTION_WARNING
-  #endif
-#endif
-
-/*-------------------------------------------------------------------*/
 /*      UNREACHABLE_CODE         code that should NEVER be reached   */
 /*-------------------------------------------------------------------*/
 

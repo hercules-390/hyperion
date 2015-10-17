@@ -105,9 +105,7 @@
 
 #include "hstdinc.h"
 
-#ifdef UNUSED_FUNCTION_WARNING
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #include "hercules.h"
 #include "devtype.h"
@@ -187,8 +185,8 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
 
 /* (trace I/O data buffers if debugging) */
 #if defined( QETH_DUMP_DATA )
-  #define MPC_DUMP_DATA(_msg,_adr,_len,_dir)  \
-    mpc_display_stuff( dev, _msg, _adr, _len, _dir )
+  #define MPC_DUMP_DATA(_str,_adr,_len,_dir)  \
+    mpc_display_stuff( dev, _str, _adr, _len, _dir )
 #else
   #define MPC_DUMP_DATA(...)    __noop()
 #endif // QETH_DUMP_DATA

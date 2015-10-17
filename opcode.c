@@ -19,9 +19,9 @@
 /* recursive #include is not compatible with retaining one's sanity. */
 /* Thus, for this module, we shoot the messenger.                    */
 
-#pragma GCC diagnostic ignored "-Wunused-function"
-
 #include "hstdinc.h"
+
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
@@ -32,10 +32,6 @@
 #endif
 
 #include "feature.h"
-
-#ifdef UNUSED_FUNCTION_WARNING
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
 
 #if !defined(_GEN_ARCH)
 

@@ -49,20 +49,15 @@
 
 #include "hstdinc.h"
 
-#ifdef UNUSED_FUNCTION_WARNING
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "sr.h"
 
 #if !defined(_CLOCK_C_)

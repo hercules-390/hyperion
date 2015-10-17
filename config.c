@@ -7,9 +7,7 @@
 
 #include "hstdinc.h"
 
-#ifdef UNUSED_FUNCTION_WARNING
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #ifndef _CONFIG_C_
 #define _CONFIG_C_

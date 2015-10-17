@@ -53,8 +53,7 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
+DISABLE_GCC_WARNING( "-Wunused-function" )
 
 /*----------------------------------------------------------------------------
 | Shifts `a' right by the number of bits given in `count'.  If any nonzero
@@ -744,4 +743,4 @@ static INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 
 }
 
-#pragma GCC diagnostic pop
+ENABLE_GCC_WARNING( "-Wunused-function" )
