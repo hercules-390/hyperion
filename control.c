@@ -1141,7 +1141,7 @@ BYTE    storkey;
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
                 regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1212,7 +1212,7 @@ BYTE    storkey;
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     regs->GR_LHLCL(r1) = storkey
                                        | (STORAGE_KEY(n, regs) & 0xFE);
 #else
@@ -1223,7 +1223,7 @@ BYTE    storkey;
             }
         }
         else /* !sie_pref */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
             regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1232,7 +1232,7 @@ BYTE    storkey;
     else /* !SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
         /* Insert the storage key into R1 register bits 24-31 */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_2K_STORAGE_KEYS)
         regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1293,7 +1293,7 @@ BYTE    storkey;
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
                 /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
                 regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1373,7 +1373,7 @@ BYTE    storkey;
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     regs->GR_LHLCL(r1) = storkey | (STORAGE_KEY(n, regs) & 0xFE);
 #else
                     regs->GR_LHLCL(r1) = storkey | ((STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE);
@@ -1383,7 +1383,7 @@ BYTE    storkey;
     }
         else /* sie_pref */
             /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
             regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1392,7 +1392,7 @@ BYTE    storkey;
     else /* !SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
         /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -4036,14 +4036,14 @@ BYTE    storkey;                        /* Storage key               */
               && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n, regs);
 #else
                 storkey = STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
 
                 /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
                 STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4096,7 +4096,7 @@ BYTE    storkey;                        /* Storage key               */
                                          regs->hostregs, ACCTYPE_SIE))
                 {
                     ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     realkey = STORAGE_KEY(ra, regs)
 #else
                     realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
@@ -4104,7 +4104,7 @@ BYTE    storkey;                        /* Storage key               */
                             & (STORKEY_REF | STORKEY_CHANGE);
 
                     /* Reset reference and change bits in storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
 #else
                     STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
@@ -4129,13 +4129,13 @@ BYTE    storkey;                        /* Storage key               */
         }
         else /* regs->sie_perf */
         {
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_2K_STORAGE_KEYS)
             storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
             /* Reset the reference bit in the storage key */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4146,13 +4146,13 @@ BYTE    storkey;                        /* Storage key               */
     else
 #endif /*defined(_FEATURE_SIE)*/
     {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         storkey =  STORAGE_KEY(n, regs);
 #else
         storkey =  STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
             /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4217,7 +4217,7 @@ BYTE    storkey;                        /* Storage key               */
               ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs)
@@ -4225,7 +4225,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                         ;
             /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4286,7 +4286,7 @@ BYTE    storkey;                        /* Storage key               */
                                          regs->hostregs, ACCTYPE_SIE))
                 {
                     ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF | STORKEY_CHANGE);
 #else
                     realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
@@ -4294,7 +4294,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                     /* Reset the reference and change bits in
                        the real machine storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
 #else
                     STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
@@ -4319,7 +4319,7 @@ BYTE    storkey;                        /* Storage key               */
         }
         else
         {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs)
@@ -4327,7 +4327,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                     ;
             /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4338,7 +4338,7 @@ BYTE    storkey;                        /* Storage key               */
     else
 #endif /*defined(_FEATURE_SIE)*/
     {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         storkey = STORAGE_KEY(n, regs);
 #else
         storkey = STORAGE_KEY1(n, regs)
@@ -4346,7 +4346,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                 ;
         /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -5004,7 +5004,7 @@ RADR    n;                              /* Absolute storage addr     */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     realkey =
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                               STORAGE_KEY(n, regs)
 #else
                               (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
@@ -5030,7 +5030,7 @@ RADR    n;                              /* Absolute storage addr     */
                 if(!sr)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                     STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1)
                                     & (STORKEY_KEY | STORKEY_FETCH);
@@ -5048,7 +5048,7 @@ RADR    n;                              /* Absolute storage addr     */
         else
         {
             /* Update the storage key from R1 register bits 24-30 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
             STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else
@@ -5063,7 +5063,7 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Update the storage key from R1 register bits 24-30 */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
         STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else
@@ -5316,7 +5316,7 @@ BYTE    r1key;
                         n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                         protkey =
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                                   STORAGE_KEY(n, regs)
 #else
                                   (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
@@ -5349,7 +5349,7 @@ BYTE    r1key;
                     if(!sr)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                     {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                         STORAGE_KEY(n, regs) |= r1key
                                         & (STORKEY_KEY | STORKEY_FETCH);
@@ -5369,7 +5369,7 @@ BYTE    r1key;
 #if defined(FEATURE_CONDITIONAL_SSKE)
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
                         STORAGE_KEY(n, regs),
 #else
                         (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
@@ -5378,7 +5378,7 @@ BYTE    r1key;
                     return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
                 /* Update the storage key from R1 register bits 24-30 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                 STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else
@@ -5395,7 +5395,7 @@ BYTE    r1key;
 #if defined(FEATURE_CONDITIONAL_SSKE)
             /* Perform conditional SSKE procedure */
             if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(n, regs),
 #else
                     (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
@@ -5405,7 +5405,7 @@ BYTE    r1key;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
 
             /* Update the storage key from R1 register bits 24-30 */
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
             STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else

@@ -5063,7 +5063,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif /*defined(_FEATURE_ZSIE)*/
                   ) && SIE_STATB(regs, RCPO2, RCPBY))
                 {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     storkey = STORAGE_KEY(n, regs);
 #else
                     storkey = STORAGE_KEY1(n, regs)
@@ -5071,7 +5071,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif
                                                                     ;
                         /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
                     STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -5132,7 +5132,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                                              regs->hostregs, ACCTYPE_SIE))
                     {
                         ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                         realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF);
 #else
                         realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
@@ -5140,7 +5140,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif
                         /* Reset the reference and change bits in
                            the real machine storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                         STORAGE_KEY(ra, regs) &= ~(STORKEY_REF);
 #else
                         STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF);
@@ -5165,7 +5165,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
             }
             else
             {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n, regs);
 #else
                 storkey = STORAGE_KEY1(n, regs)
@@ -5173,7 +5173,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif
                                     ;
                 /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
                 STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -5184,7 +5184,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
         else
 #endif /*defined(_FEATURE_SIE)*/
         {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
             storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs)
@@ -5192,7 +5192,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif
                                                              ;
             /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -5402,7 +5402,7 @@ int     page_offset;                    /* Low order bits of R2      */
                             n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                             protkey =
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                                       STORAGE_KEY(n, regs)
 #else
                                       (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
@@ -5430,7 +5430,7 @@ int     page_offset;                    /* Low order bits of R2      */
                         if(!sr)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                         {
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                             STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
                             STORAGE_KEY(aaddr, regs) |= sk
                                             & (STORKEY_KEY | STORKEY_FETCH);
@@ -5448,7 +5448,7 @@ int     page_offset;                    /* Low order bits of R2      */
                 else
                 {
                     /* Update the storage key from R1 register bits 24-30 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(FEATURE_2K_STORAGE_KEYS)
                     STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
                     STORAGE_KEY(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
 #else
@@ -5464,7 +5464,7 @@ int     page_offset;                    /* Low order bits of R2      */
             {
 
                 /* Update the storage key from R1 register bits 24-30 */
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
                 STORAGE_KEY(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
 #else
