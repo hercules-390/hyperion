@@ -16,10 +16,10 @@
 /* be properly investigated and resolved.                            */
 /*-------------------------------------------------------------------*/
 
-#include "ccfixme.h"      /* need HAVE_GCC_DIAG_PRAGMA, QPRAGMA, etc */
-
 #ifndef _CCNOWARN_H_
 #define _CCNOWARN_H_
+
+#include "ccfixme.h"      /* need HAVE_GCC_DIAG_PRAGMA, QPRAGMA, etc */
 
   /*---------------------------------------------------------------*/
   /*                            MSVC                               */
@@ -56,30 +56,28 @@
   /*                       GCC or CLANG                            */
   /*---------------------------------------------------------------*/
 
-  #if defined( __GNUC__ ) || defined( _clang_ )
-    #if defined( HAVE_GCC_DIAG_PRAGMA )
+  #if defined( HAVE_GCC_DIAG_PRAGMA )
 
-      #define DISABLE_GCC_WARNING( _str )   QPRAGMA( GCC diagnostic ignored _str )
-      #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
+    #define DISABLE_GCC_WARNING( _str )   QPRAGMA( GCC diagnostic ignored _str )
+    #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
 
-      #define PUSH_GCC_WARNINGS()           QPRAGMA( GCC diagnostic push )
-      #define POP_GCC_WARNINGS()            QPRAGMA( GCC diagnostic pop  )
+    #define PUSH_GCC_WARNINGS()           QPRAGMA( GCC diagnostic push )
+    #define POP_GCC_WARNINGS()            QPRAGMA( GCC diagnostic pop  )
 
-      /* Globally disable some rather annoying GCC compiler warnings which */
-      /* frequently occurs due to our build multiple architectures design. */
+    /* Globally disable some rather annoying GCC compiler warnings which */
+    /* frequently occurs due to our build multiple architectures design. */
 
-      #if GCC_VERSION >= 40304
-        /* 'xxxxxxxx' defined but not used */
-        DISABLE_GCC_WARNING( "-Wunused-function" )
-      #endif
+    #if GCC_VERSION >= 40304
+      /* 'xxxxxxxx' defined but not used */
+      DISABLE_GCC_WARNING( "-Wunused-function" )
+    #endif
 
-      #if GCC_VERSION >= 40600
-        /* variable 'xxx' set but not used */
-        DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
-      #endif
+    #if GCC_VERSION >= 40600
+      /* variable 'xxx' set but not used */
+      DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
+    #endif
 
-    #endif /* defined( HAVE_GCC_DIAG_PRAGMA ) */
-  #endif /* defined( __GNUC__ ) || defined( _clang_ ) */
+  #endif /* defined( HAVE_GCC_DIAG_PRAGMA ) */
 
   #ifndef   DISABLE_GCC_WARNING
     #define DISABLE_GCC_WARNING( _str )     /* (do nothing) */

@@ -414,6 +414,7 @@ AH_TEMPLATE( [HAVE_HQA_H],              [Define to if header "hqa.h" exists in H
 AH_TEMPLATE( [HAVE_FULL_KEEPALIVE],     [Define if symbols 'TCP_KEEPIDLE', 'TCP_KEEPINTVL' and 'TCP_KEEPCNT' are ALL available ] )
 AH_TEMPLATE( [HAVE_PARTIAL_KEEPALIVE],  [Define if symbol  'TCP_KEEPIDLE', 'TCP_KEEPINTVL' or 'TCP_KEEPCNT' is available ] )
 AH_TEMPLATE( [HAVE_BASIC_KEEPALIVE],    [Define if symbol  'SO_KEEPALIVE' or 'TCP_KEEPALIVE' is available] )
+AH_TEMPLATE( [DISABLE_IAF2],            [Define if enable_interlocked_access_facility_2 is to be forced off] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1869,6 +1870,16 @@ AC_ARG_ENABLE( multi-cpu,
     [hc_cv_opt_num_cpu_engines=8]
 )
 
+AC_ARG_ENABLE( interlocked-access-facility-2,
+
+    AC_HELP_STRING( [--enable-interlocked-access-facility-2=yes|no],
+
+        [enable/disable Interlocked Access Facility 2 (default yes)]
+    ),
+    ,
+    [enable_interlocked_access_facility_2=yes]
+)
+
 AC_ARG_ENABLE( capabilities,
 
     AC_HELP_STRING([--disable-capabilities],
@@ -2351,6 +2362,7 @@ test "$hc_cv_ena_ipv6"                    = "yes"  &&  AC_DEFINE(ENABLE_IPV6)
 test "$hc_cv_have_full_keepalive"         = "yes"  &&  AC_DEFINE(HAVE_FULL_KEEPALIVE)
 test "$hc_cv_have_partial_keepalive"      = "yes"  &&  AC_DEFINE(HAVE_PARTIAL_KEEPALIVE)
 test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
+test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

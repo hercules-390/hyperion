@@ -42,12 +42,18 @@
 /* Determine GCC diagnostic pragma support level                     */
 /*-------------------------------------------------------------------*/
 
-#if defined( __GNUC__ ) || defined( _clang_ )
-  #define GCC_VERSION ((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
-  #if GCC_VERSION >= 40600
+#if defined(__clang__)
+  /* Clang also defines __GNUC__ and 3.6 defines GCC 4.2.1           */
+  #define CLANG_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
     #define HAVE_GCC_DIAG_PRAGMA
-    #define QPRAGMA( x )                _Pragma( #x )
+#elif defined( __GNUC__ )
+  #define GCC_VERSION ((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
+  #if (GCC_VERSION >= 40600)
+    #define HAVE_GCC_DIAG_PRAGMA
   #endif
+#endif
+#if defined(HAVE_GCC_DIAG_PRAGMA)
+  #define QPRAGMA( x )                _Pragma( #x )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -104,20 +110,6 @@
 
 #ifndef   NOTE
   #define NOTE( _str )          /* (do nothing) */
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Same idea, but for issuing an informative note during compile     */
-/*-------------------------------------------------------------------*/
-
-#if defined( _MSVC_ )
-  #define NOTE( _msg )          __pragma( message( NOTE_LINE  _msg ))
-#elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define NOTE( _msg )          QPRAGMA( message( _msg ))
-#endif
-
-#ifndef   NOTE
-  #define NOTE( _msg )          /* (do nothing) */
 #endif
 
 #endif /* _CCFIXME_H_ */

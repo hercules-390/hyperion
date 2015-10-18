@@ -16,6 +16,9 @@
 /* and  CLANG  the  underlying intrinsic function is overloaded, but */
 /* this is not the case for MSVC.                                    */
 /*                                                                   */
+/* Support   for   IAF2  can  be  disabled  by  the  configure  flag */
+/* --disable-interlocked-update-facility-2                           */
+/*                                                                   */
 /* Note that we need an atomic fetch and update, not just the atomic */
 /* update.   C11  defines  atomic  fetch  and  update,  that  is the */
 /* function  result  is the value before the operation, but that can */
@@ -78,18 +81,18 @@
 #ifndef _JPH_HATOMIC_H
 #define _JPH_HATOMIC_H
 
-#if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
+#if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__) && !defined(DISABLE_IAF2)
    #include <stdatomic.h>
 #endif
 
-#if 2 == ATOMIC_CHAR_LOCK_FREE
+#if 2 == ATOMIC_CHAR_LOCK_FREE && !defined(DISABLE_IAF2)
 
    /* C11 standard operation.  2 specifies always lock free          */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)    \
       (atomic_fetch_ ## op((_Atomic BYTE *) ptr, imm) fallback imm)
    #define CAN_IAF2 3
 
-#elif defined(_MSVC_)
+#elif defined(_MSVC_) && !defined(DISABLE_IAF2)
 
    /* Microsoft functions, as per Fish                            */
 
@@ -120,7 +123,7 @@
 
    #define CAN_IAF2 1
 
-#elif 2 == __GCC_ATOMIC_CHAR_LOCK_FREE
+#elif 2 == __GCC_ATOMIC_CHAR_LOCK_FREE && !defined(DISABLE_IAF2)
    /* GCC/CLANG intrinsics                                           */
    #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
    #define CAN_IAF2 2
