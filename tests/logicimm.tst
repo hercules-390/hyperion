@@ -1,4 +1,4 @@
-*Testcase logicImmediate processed  8 Oct 2015 15:55:25 by bldhtc.rexx
+*Testcase logicImmediate processed 18 Oct 2015 14:17:36 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -18,19 +18,19 @@ r    2A0=0050EB00084D0056
 r    2A8=B2220050EBFF084E0057B22200508D40
 r    2B8=0008B2B202E094002000EB0028000154
 r    2C8=96002008EB002808015697002010EB00
-r    2D8=2810015720202020
+r    2D8=28100157
 r    2E0=00020001800000000000000000000000
 r    800=FFFFFFFFFFFFFFFF0000000000000000
 r    810=FFFFFFFFFFFFFFFF0000000000000000
 r    820=00000000000000000000000000000000
 r    830=0000000000000000
 r    838=00000000000000000000000000000000
-r    848=FF00FF00FF00FF002020202020202020
-r    890=00000000000008002020202020202020
+r    848=FF00FF00FF00FF00
+r    890=0000000000000800
 r   2000=FFFFFFFFFFFFFFFF0000000000000000
-r   2010=FFFFFFFFFFFFFFFF2020202020202020
+r   2010=FFFFFFFFFFFFFFFF
 restart
-pause 0.1
+pause .1
 *Compare
 r 00000800.8
 *Want               01020408 10204080
@@ -67,6 +67,13 @@ r 00000830.8
 *Compare
 r 00000840.8
 *Want               10101010 10101010
+*Explain The failure of this test indicates either that
+*Explain your C compiler lacks stdatomic.h and the GCC
+*Explain intrinsic atomic operations, or that the atomic
+*Explain operations are not lock free, or that Interlocked
+*Explain Access Facility 2 has been unconfigured when
+*Explain Hercules was built, or finally that Hercules
+*Explain simply lacks the support for IAF2.
 *Compare
 r 00000880.8
 *Want "Facilities list bit 52" 00000000 00000800

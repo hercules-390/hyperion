@@ -17,6 +17,9 @@ rv = 0
 fails. = 0
 done = 0
 lineno = 0
+facility.=0                           /* No facilities installed     */
+active = 1                            /* We do produce output        */
+nest=0                                /* If/then/else nesting        */
 
 do while lines(in) > 0
    lineno = lineno + 1
@@ -32,6 +35,18 @@ do while lines(in) > 0
             End
       When msg = 'HHC00809I'
          Then call waitstate
+      When msg = 'HHC01417I'
+         Then
+            If verb = 'Machine'
+               Then
+                  Do
+                     parse var rest 'dependent assists:' rest
+                     Do while rest \= ''
+                        parse var rest fac rest
+                        facility.fac = 1
+                        /* say 'facility' fac */
+                     End
+                  End
       When msg = 'HHC01603I'
          Then
             If left(verb, 1) = '*'
@@ -83,10 +98,16 @@ Select
       Then call want
    When verb = '*Error'
       Then call emsg
+   When verb = '*Explain'
+      Then call explain
    When verb = '*Gpr'
       Then call wantgpr
    When verb = '*Key'
       Then call wantkey
+   When verb = '*Message'
+      Then
+         If active
+            Then say rest
    When verb = '*Prefix'
       Then call wantprefix
    When verb = '*Program'
@@ -104,7 +125,6 @@ testcase = rest
 comparing = 0
 havewait = 0
 oks = 0
-notoks = 0
 wantpgm = ''
 havepgm = ''
 rv = 0
@@ -114,6 +134,7 @@ lastkey = ''
 keyaddr = '<unknown>'
 prefix = ''
 lasterror = ''
+expl.0 = 0
 return
 
 endtest:
@@ -148,14 +169,7 @@ return
 /*********************************************************************/
 
 want:
-If rest = display
-   Then
-      Do
-         oks = oks + 1
-         return
-      End
-notoks = notoks + 1
-call failtest 'Storage at' lastkey 'compare mismatch. ' info 'Want:' rest 'got' display
+call test rest = display, 'Storage at' lastkey 'compare mismatch. ' info 'Want:' rest 'got' display
 return
 
 /*********************************************************************/
@@ -164,13 +178,7 @@ return
 
 wantgpr:
 parse upper var rest r want
-If gpr.r = want
-   Then
-      Do
-         oks = oks + 1
-         return
-      End
-call failtest 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
+call test gpr.r = want, 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
 return
 
 /*********************************************************************/
@@ -180,16 +188,9 @@ return
 
 wantkey:
 parse upper var rest want
-
-If lastkey = want
-   Then
-      Do
-         oks = oks + 1
-         return
-      End
 If lastkey = ''
-   Then call failtest 'No key saved from r command.'
-   Else call failtest 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
+   Then call test 0, 'No key saved from r command.'
+   Else call test lastkey = want, 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
 return
 
 /*********************************************************************/
@@ -198,16 +199,9 @@ return
 
 wantprefix:
 parse upper var rest want
-
-If prefix = want
-   Then
-      Do
-         oks = oks + 1
-         return
-      End
 If prefix = ''
-   Then call failtest 'No prefix register saved from pr command.'
-   Else call failtest 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
+   Then call test 0, 'No prefix register saved from pr command.'
+   Else call test prefix = want, 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
 return
 
 /*********************************************************************/
@@ -215,15 +209,9 @@ return
 /*********************************************************************/
 
 emsg:
-If lasterror = rest
-   Then
-      Do
-         oks = oks + 1
-         return
-      End
 If lasterror = ''
-   Then call failtest 'No error message saved for' rest
-   Else call failtest 'Error message mismatch. ' info ,,
+   Then call test 0, 'No error message saved for' rest
+   Else call test lasterror = rest, 'Error message mismatch. ' info ,,
       'Want:' rest, 'Got: ' lasterror
 return
 
@@ -234,11 +222,8 @@ return
 waitstate:
 havewait = 1
 parse var rest 'wait state' psw1 psw2
-If psw2 = 0
-   Then return
-If psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm
-   Then return
-call failtest 'Received unexpected wait state: ' psw1 psw2
+cond = psw2 = 0 | (psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm)
+call test cond, 'Received unexpected wait state: ' psw1 psw2
 return
 
 /*********************************************************************/
@@ -257,20 +242,28 @@ End
 return
 
 /*********************************************************************/
+/* Save explain text in explain array.                               */
+/*********************************************************************/
+
+explain:
+? = expl.0 + 1
+expl.? = rest
+expl.0 = ?
+return
+
+/*********************************************************************/
 /* Process  a  program check, which is identified by the IA field of */
 /* the disabled wait PSW.                                            */
 /*********************************************************************/
 
 figurePgm:
-If havepgm = wantpgm
-   Then return
 Select
    When havepgm \= '' & wantpgm \= ''
-      Then call failtest 'Expect pgm type' wantpgm', but have type' havepgm'.'
+      Then call test havepgm = wantpgm, 'Expect pgm type' wantpgm', but have type' havepgm'.'
    When havepgm \= ''
-      Then call failtest 'Unexpected pgm type' havepgm' havepgm.'
+      Then call test 0, 'Unexpected pgm type' havepgm' havepgm.'
    Otherwise
-      call failtest 'Expect pgm type' wantpgm', but none happened.'
+      call test 0, 'Expect pgm type' wantpgm', but none happened.'
 end
 return
 
@@ -278,11 +271,23 @@ return
 /* Display message about a failed test.                              */
 /*********************************************************************/
 
-failtest:
+test:
+If \active                            /* suppress any noise          */
+   Then return
 ! = '>>>>> line' right(lineno, 5)':'
-say ! arg(1)
-do ? = 2 to arg()
-   say left(' ', length(!)) arg(?)
-end
-rv = rv + 1
+!! = left(' ', length(!))
+If arg(1)
+   Then oks = oks + 1
+   Else
+      Do
+         say ! arg(2)
+         do ? = 3 to arg()
+            say !! arg(?)
+         end
+         rv = rv + 1
+         Do ? = 1 to expl.0           /* Further explanation         */
+            say !! expl.?
+         End
+      End
+expl.0 = 0                            /* Be quiet next time          */
 return

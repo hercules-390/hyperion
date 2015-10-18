@@ -13,22 +13,38 @@
 # Having done "make" to build the executable, issue "./hercules" to make
 # libtool create an actual executable.
 
-# You  can  run a test case by "../hyperion/tests/runtest <fname>".  Be
-# sure  to  omit  the extension.  Omit the file name or specify '*' (an
-# asterisk  enclosed  in  single  quotes)  to  run  all  test that have
-# extension .tst.
+# Arguments:
+# 1     Path  from the current directory to the tests source directory.
+#       Specify - for the default ../hyperion/tests
+# 2     File  name  if  test  case  omitting  the .tst extension or the
+#       default * for all .tst files.  But see #4.
+# 3     Specify  noexit  to  suppress  the  exit  command that normally
+#       terminates  the test cases.  This will allow you to poke around
+#       fwith  console commands.  Anything else, including nothing adds
+#       an exit command at the end of the composite script.
+# 4     File type of test cases.  Default .tst.
 
-# Specify  noexit  as  the second argument to suppress the exit command
-# that normally terminates the test cases.  This will allow you to poke
-# around.
+# You  can  run  a  specific  test case by "../hyperion/tests/runtest -
+# <fname>".  Be sure to omit the extension.
+
+# Tests  are  normally  done alphabetically.  You can use the scripting
+# facilities  to  include specific test case files in any order, but do
+# not  give these embedded files the default extension (unless you want
+# them run twice!).
 
 wfn=allTests
-dir=../hyperion/tests
-fns=${1:-*}
-cat $dir/$fns.tst >$wfn.tst
-if [ "$2" != "noexit" ] ; then
+dir=${1:-../hyperion/tests}
+if [ "$dir" == "-" ] ; then
+        dir=../hyperion/tests
+fi
+
+fns=${2:-*}
+ftype=${4:-tst}
+
+cat $dir/$fns.$ftype >$wfn.tst
+if [ "$3" != "noexit" ] ; then
         echo exit >>$wfn.tst
 fi
+
 ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out 2>&1
-sed -n -e '/^HHC01603I \*Testcase/,/^HHC01603I \*Done/p' >$wfn.sout $wfn.out
-rexx $dir/redtest.rexx $wfn.sout
+rexx $dir/redtest.rexx $wfn.out

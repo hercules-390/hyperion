@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/10/14 12.35
+-                                                                                           jHLASM 1.0   2015/10/18 13.18
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/14 12.35
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/18 13.18
 0SSKE      SD 00000001 00000000 000041E0             00                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                               1 * Set storage key extended test case.                                   00010000
 0                                               3 * This file was put into the public domain 2015-10-05                   00020000
                                                 4 * by John P. Hartmann.  You can use it for anything you like,           00030000
@@ -107,10 +107,10 @@
                                                55  lhi 3,x'f0'                                                            00180000
 1                                                                                                               Page    4
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                              56  sske 3,2,1                                                             00190000
                                                57  stop                                                                  
-                                               58  punch ':etst 1'                                                        00250000
+                                               58  punch ':etst .1'                                                       00250000
                                                59  punch '* *Compare'                                                    
                                                60  punch '* abs  0.8'                                                    
                                                61  punch '* *Key 06'                                                     
@@ -163,7 +163,7 @@
                                               110  punch '* *Done'                                                        00260000
 1                                                                                                               Page    5
    Active Usings: SSKE,R0                                                                                                
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                             112 * Test ability to set a key                                            
                                               113  punch ':test sske#2'                                                   00050000
                                               114  punch '* * sske#2:  Basic set key operation.'                         
@@ -219,7 +219,7 @@
  00002016 0000                                                                                                           
 1                                                                                                               Page    6
    Active Usings: SSKE+X'2002',R12                                                                                       
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 000002018 0002000180000000                    166+psw0006    dc 0d,x'0002000180000000',ad(0)                              01-00000045
  00002028                                     167+ ltorg                                                                  01-00000046
  00002028 00004000                            168                =a(x'4000')                                             
@@ -257,7 +257,7 @@
  00000218 0002000180000000                    202+psw0009    dc 0d,x'0002000180000000',ad(0)                              02-00000045
  00000228                                     203+ ltorg                                                                  02-00000046
  00000228 0000000000002004                    204                =ad(x'2004')                                            
-                                              205+ punch ':etst 1'                                                        01-00000058
+                                              205+ punch ':etst .1'                                                       01-00000058
                                               206+ punch '* *Compare'                                                     01-00000059
                                               207+ punch '* abs  0.8'                                                     01-00000060
                                               208+ punch '* *Key 06'                                                      01-00000061
@@ -274,7 +274,7 @@
                                               219  punch '* r 2000.8'                                                    
 1                                                                                                               Page    7
    Active Usings: SSKE,R0  SSKE+X'2002',R12                                                                              
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                             220  punch '* *Key F0'                                                     
                                               221  punch '* r 5000.8'                                                    
                                               222  punch '* *Key F0'                                                     
@@ -307,7 +307,7 @@
  00002028                                     251+ ltorg                                                                  02-00000046
  00002028 0000000000001004                    252                =ad(x'1004')                                            
  00002030 00004000                            253                =a(x'4000')                                             
-                                              254+ punch ':etst 1'                                                        01-00000058
+                                              254+ punch ':etst .1'                                                       01-00000058
                                               255+ punch '* *Compare'                                                     01-00000059
                                               256+ punch '* abs  0.8'                                                     01-00000060
                                               257+ punch '* *Key 06'                                                      01-00000061
@@ -330,7 +330,7 @@
                                               274+ punch '* r 2000.8'                                                     01-00000079
 1                                                                                                               Page    8
    Active Usings: SSKE+X'2002',R12                                                                                       
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                             275+ punch '* *Key F4'                                                      01-00000080
                                               276+ punch '* r 5000.8'                                                     01-00000081
                                               277+ punch '* *Key F0'                                                      01-00000082
@@ -363,7 +363,7 @@
  00002028                                     306+ ltorg                                                                  02-00000046
  00002028 FFFFFFFF80001004                    307                =ad(x'80001004')                                        
  00002030 00004000                            308                =a(x'4000')                                             
-                                              309+ punch ':etst 1'                                                        01-00000058
+                                              309+ punch ':etst .1'                                                       01-00000058
                                               310+ punch '* *Compare'                                                     01-00000059
                                               311+ punch '* abs  0.8'                                                     01-00000060
                                               312+ punch '* *Key 06'                                                      01-00000061
@@ -386,7 +386,7 @@
                                               329+ punch '* r 2000.8'                                                     01-00000079
 1                                                                                                               Page    9
    Active Usings: SSKE+X'2002',R12                                                                                       
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                             330+ punch '* *Key F4'                                                      01-00000080
                                               331+ punch '* r 5000.8'                                                     01-00000081
                                               332+ punch '* *Key F0'                                                      01-00000082
@@ -415,7 +415,7 @@
  00002028                                     356+ ltorg                                                                  02-00000046
  00002028 FFFFFFFFFF001004                    357                =ad(x'ff001004')                                        
  00002030 00004000                            358                =a(x'4000')                                             
-                                              359+ punch ':etst 1'                                                        01-00000058
+                                              359+ punch ':etst .1'                                                       01-00000058
                                               360+ punch '* *Compare'                                                     01-00000059
                                               361+ punch '* abs  0.8'                                                     01-00000060
                                               362+ punch '* *Key 06'                                                      01-00000061
@@ -442,11 +442,11 @@
 0                                             384 * Insert more here                                                     
 1                                                                                                               Page   10
    Active Usings: SSKE+X'2002',R12                                                                                       
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/14 12.35
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 13.18
 0                                             386  punch '* *Done'                                                        00260000
                                               387  end                                                                    00270000
 1                               Ordinary Symbol and Literal Cross Reference                                     Page   11
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/14 12.35
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/18 13.18
 0go            2 00000200 00000001     H  H               100  125                                                       
  psw0002       8 00000210 00000001     D  D               106  105                                                       
  psw0004       8 00000210 00000001     D  D               131  130                                                       
@@ -475,10 +475,10 @@
  =ad(x'ff001004')                                                                                                        
                8 00002028 00000001     A                  357  350                                                       
 1                                          Macro and Copy Code Source Summary                                   Page   12
-- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/14 12.35
+- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/18 13.18
 0     PRIMARY INPUT                                           DOSSKEMF STOP     SUPSWS                                   
 1                                                      Using Map                                                Page   13
--                                                                                           jHLASM 1.0   2015/10/14 12.35
+-                                                                                           jHLASM 1.0   2015/10/18 13.18
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    99  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00210    105 sske,0                        
@@ -491,7 +491,7 @@
     297  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 0002E    304 *,12                          
     347  00002002  00000001 USING  ORDINARY    00002002 00001000 00000001  12 0002E    354 *,12                          
 1                                   General Purpose Register Cross Reference                                    Page   14
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/14 12.35
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/18 13.18
 0    0(0)      99U  124U  157D  195U  240D                                                                               
      1(1)    (no references identified)                                                                                  
      2(2)     101S  103   126S  128   161S  163   197S  199   245S  247   300S  302   350S  352                          
@@ -509,14 +509,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)    (no references identified)                                                                                  
 1                                  Diagnostic Cross Reference and Assembler Summary                             Page   15
--                                                                                           jHLASM 1.0   2015/10/14 12.35
+-                                                                                           jHLASM 1.0   2015/10/18 13.18
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    sske.assemble                                                                                             
-0Assembly Start Time: 12.35.35 Stop Time: 12.35.35 Processor Time: 00.00.00.0337.
+0Assembly Start Time: 13.18.48 Stop Time: 13.18.48 Processor Time: 00.00.00.0428.
  
                                      
  Return Code 000                                                                                                         

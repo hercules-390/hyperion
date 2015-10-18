@@ -47,10 +47,10 @@ endif
 # even be *attempted* to be "built" if support for building dynamic modules
 # doesn't even exist on the system doing the building.
 
-dynamic_SRC 		 = dyngui.c   \
-							dyninst.c  \
+dynamic_SRC 		 = dyngui.c	 \
+							dyninst.c	\
 							s37x.c	  \
-							s37xmod.c  \
+							s37xmod.c	\
 							hdteq.c
 
 dyndev_SRC			 = commadpt.c	\
@@ -87,11 +87,11 @@ dyndev_SRC			 = commadpt.c	\
 
 # -module			: create a dlopen'able module
 # -no-undefined	: required on all platform that do not allow shared modules
-#						  to have undefined symbols
+#							to have undefined symbols
 # $(LDADD)			: Misc Linker flags set by autoconf
 # -export-dynamic : so dlsym works (to be verified - not sure it is necessary)
 # -avoid-version	: needed.. Otherwise libtool gives crazy names to Windows
-#						  DLLs
+#							DLLs
 #
 
 if BUILD_SHARED
@@ -136,10 +136,10 @@ endif
   HERCLIBS =
 
   HERCLIBS2 = libhercs.la	\
-				  libhercu.la \
-				  libherct.la \
-				  libhercd.la \
-				  libherc.la
+					libhercu.la \
+					libherct.la \
+					libhercd.la \
+					libherc.la
 
   HERCMODS = dyngui.la	 \
 				 dyninst.la  \
@@ -323,7 +323,7 @@ endif
 								parser.c 	 \
 								hthreads.c	 \
 								pttrace.c	 \
-								$(FTHREADS)  \
+								$(FTHREADS)	\
 								$(LTDL)
 
   libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -335,82 +335,82 @@ endif
 #
 
   libherc_la_SOURCES = hconsole.c	\
-							  w32util.c 	\
-							  strsignal.c	\
-							  impl.c 		\
-							  config.c		\
-							  bldcfg.c		\
-							  script.c		\
-							  archlvl.c 	\
-							  panel.c		\
-							  history.c 	\
-							  fillfnam.c	\
-							  ipl.c			\
-							  assist.c		\
-							  dat.c			\
-							  stack.c		\
-							  cpu.c			\
-							  vstore.c		\
-							  general1.c	\
-							  general2.c	\
-							  general3.c	\
-							  pfpo.c 		\
-							  plo.c			\
-							  control.c 	\
-							  crypto.c		\
-							  io.c			\
-							  decimal.c 	\
-							  service.c 	\
-							  scedasd.c 	\
-							  scescsi.c 	\
-							  losc.c 		\
-							  chsc.c 		\
-							  opcode.c		\
-							  diagnose.c	\
-							  diagmssf.c	\
-							  vm.c			\
-							  vmd250.c		\
-							  hdiagf18.c	\
-							  dyn76.c		\
-							  channel.c 	\
-							  external.c	\
-							  float.c		\
-							  trace.c		\
-							  machchk.c 	\
-							  vector.c		\
-							  xstore.c		\
-							  cmpsc_2012.c \
-							  cmpscdbg.c	\
-							  cmpscdct.c	\
-							  cmpscget.c	\
-							  cmpscmem.c	\
-							  cmpscput.c	\
-							  sie.c			\
-							  qdio.c 		\
-							  clock.c		\
-							  timer.c		\
-							  esame.c		\
-							  ieee.c 		\
-							  SoftFloat.c	\
-							  dfp.c			\
-							  machdep.h 	\
-							  httpserv.c	\
-							  cgibin.c		\
-							  loadmem.c 	\
-							  loadparm.c	\
-							  hsccmd.c		\
-							  hscemode.c	\
-							  hscpufun.c	\
-							  hscloc.c		\
-							  cmdtab.c		\
-							  hao.c			\
-							  hscmisc.c 	\
-							  sr.c			\
-							  $(DYNSRC) 	\
-							  ecpsvm.c		\
-							  hRexx.c		\
-							  hRexx_o.c 	\
-							  hRexx_r.c
+								w32util.c 	\
+								strsignal.c	\
+								impl.c 		\
+								config.c		\
+								bldcfg.c		\
+								script.c		\
+								archlvl.c 	\
+								panel.c		\
+								history.c 	\
+								fillfnam.c	\
+								ipl.c			\
+								assist.c		\
+								dat.c			\
+								stack.c		\
+								cpu.c			\
+								vstore.c		\
+								general1.c	\
+								general2.c	\
+								general3.c	\
+								pfpo.c 		\
+								plo.c			\
+								control.c 	\
+								crypto.c		\
+								io.c			\
+								decimal.c 	\
+								service.c 	\
+								scedasd.c 	\
+								scescsi.c 	\
+								losc.c 		\
+								chsc.c 		\
+								opcode.c		\
+								diagnose.c	\
+								diagmssf.c	\
+								vm.c			\
+								vmd250.c		\
+								hdiagf18.c	\
+								dyn76.c		\
+								channel.c 	\
+								external.c	\
+								float.c		\
+								trace.c		\
+								machchk.c 	\
+								vector.c		\
+								xstore.c		\
+								cmpsc_2012.c \
+								cmpscdbg.c	\
+								cmpscdct.c	\
+								cmpscget.c	\
+								cmpscmem.c	\
+								cmpscput.c	\
+								sie.c			\
+								qdio.c 		\
+								clock.c		\
+								timer.c		\
+								esame.c		\
+								ieee.c 		\
+								SoftFloat.c	\
+								dfp.c			\
+								machdep.h 	\
+								httpserv.c	\
+								cgibin.c		\
+								loadmem.c 	\
+								loadparm.c	\
+								hsccmd.c		\
+								hscemode.c	\
+								hscpufun.c	\
+								hscloc.c		\
+								cmdtab.c		\
+								hao.c			\
+								hscmisc.c 	\
+								sr.c			\
+								$(DYNSRC) 	\
+								ecpsvm.c		\
+								hRexx.c		\
+								hRexx_o.c 	\
+								hRexx_r.c
 
   EXTRA_libherc_la_SOURCES = $(fthreads_SRC)  \
 									  memrchr.c 		 \
@@ -421,7 +421,7 @@ endif
 
   libherc_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libherc_la_LIBADD = libhercs.la	  \
+  libherc_la_LIBADD = libhercs.la		\
 							 libhercu.la	  \
 							 libherct.la	  \
 							 libhercd.la	  \
@@ -460,25 +460,25 @@ else
 				 -dlopen hdtptp.la	 \
 				 -dlopen altcmpsc.la
 
-  HDEPS	  = dyngui.la	  \
-				 dyninst.la   \
+  HDEPS	  = dyngui.la		\
+				 dyninst.la	\
 				 s37x.la 	  \
 				 hdteq.la	  \
-				 hdt1403.la   \
-				 hdt3420.la   \
-				 hdt2703.la   \
-				 hdt3705.la   \
-				 hdt3088.la   \
-				 hdt3270.la   \
-				 hdt3505.la   \
-				 hdt3525.la   \
-				 hdtqeth.la   \
-				 hdtzfcp.la   \
-				 hdt1052c.la  \
+				 hdt1403.la	\
+				 hdt3420.la	\
+				 hdt2703.la	\
+				 hdt3705.la	\
+				 hdt3088.la	\
+				 hdt3270.la	\
+				 hdt3505.la	\
+				 hdt3525.la	\
+				 hdtqeth.la	\
+				 hdtzfcp.la	\
+				 hdt1052c.la	\
 				 hdtptp.la	  \
-				 altcmpsc.la  \
-				 libherc.la   \
-				 libherct.la  \
+				 altcmpsc.la	\
+				 libherc.la	\
+				 libherct.la	\
 				 libhercd.la
 endif
 
@@ -629,39 +629,39 @@ EXTRA_DIST = autoconf/config.rpath \
 				 INSTALL 				  \
 				 CHANGES 				  \
 				 RELEASE.NOTES 		  \
-				 .gitignore 			  \
-				 _build					  \
-				 README.AIX 			  \
+				 .gitignore 				\
+				 _build						\
+				 README.AIX 				\
 				 README.APL360 		  \
-				 README.BSD 			  \
-				 README.COMMADPT		  \
+				 README.BSD 				\
+				 README.COMMADPT			\
 				 README.CMPSC			  \
 				 README.DECNUMBER 	  \
 				 README.DYNMOD 		  \
 				 README.ECPSVM 		  \
-				 README.HAO 			  \
-				 README.HDL 			  \
-				 README.HERCLOGO		  \
-				 README.HQA 			  \
-				 README.HRAF			  \
+				 README.HAO 				\
+				 README.HDL 				\
+				 README.HERCLOGO			\
+				 README.HQA 				\
+				 README.HRAF				\
 				 README.IOARCH 		  \
 				 README.ISSUES 		  \
 				 README.MINGW			  \
-				 README.MSVC			  \
+				 README.MSVC				\
 				 README.NETWORKING	  \
-				 README.OSX 			  \
-				 README.PTT 			  \
-				 README.REXX			  \
-				 README.RXVT4APL		  \
-				 README.S37X			  \
+				 README.OSX 				\
+				 README.PTT 				\
+				 README.REXX				\
+				 README.RXVT4APL			\
+				 README.S37X				\
 				 README.SETUID 		  \
 				 README.SOFTFLOAT 	  \
-				 README.SUN 			  \
-				 README.TAPE			  \
+				 README.SUN 				\
+				 README.TAPE				\
 				 README.WIN64			  \
 				 _TODO.txt				  \
 				 makefile.msvc 		  \
-				 makefile-dllmod.msvc  \
+				 makefile-dllmod.msvc	\
 				 msvc.makefile.includes/BZIP2_DIR.msvc 	\
 				 msvc.makefile.includes/BZIP2_FLAGS.msvc	\
 				 msvc.makefile.includes/BZIP2_RULES.msvc	\
@@ -688,22 +688,22 @@ EXTRA_DIST = autoconf/config.rpath \
 				 msvc.makefile.includes/ZLIB_FLAGS.msvc	\
 				 msvc.makefile.includes/ZLIB_RULES.msvc	\
 				 makefile.bat			  \
-				 dynmake.bat			  \
+				 dynmake.bat				\
 				 Hercules.dsp			  \
 				 Hercules.dsw			  \
-				 Hercules.vcproj		  \
+				 Hercules.vcproj			\
 				 Hercules.sln			  \
-				 hercver.rc2			  \
-				 hercules.rc			  \
+				 hercver.rc2				\
+				 hercules.rc				\
 				 hercules.ico			  \
-				 hercdasd.rc			  \
+				 hercdasd.rc				\
 				 hercdasd.ico			  \
-				 hercmisc.rc			  \
+				 hercmisc.rc				\
 				 hercmisc.ico			  \
-				 herctape.rc			  \
+				 herctape.rc				\
 				 herctape.ico			  \
-				 build_pch.c			  \
-				 conspawn.c 			  \
+				 build_pch.c				\
+				 conspawn.c 				\
 				 getopt.c				  \
 				 herclogo.txt			  \
 				 targetver.h
@@ -711,7 +711,7 @@ EXTRA_DIST = autoconf/config.rpath \
 #
 # Source Header files. No 'build' for those
 #
-noinst_HEADERS = hostinfo.h	  \
+noinst_HEADERS = hostinfo.h		\
 					  cpuint.h		  \
 					  feat370.h 	  \
 					  feat390.h 	  \
@@ -721,7 +721,7 @@ noinst_HEADERS = hostinfo.h	  \
 					  feature.h 	  \
 					  esa390.h		  \
 					  opcode.h		  \
-					  clock.h		  \
+					  clock.h			\
 					  hercules.h	  \
 					  hinlines.h	  \
 					  inline.h		  \
@@ -730,15 +730,15 @@ noinst_HEADERS = hostinfo.h	  \
 					  hbyteswp.h	  \
 					  dasdblks.h	  \
 					  hetlib.h		  \
-					  ftlib.h		  \
+					  ftlib.h			\
 					  version.h 	  \
 					  parser.h		  \
 					  dasdtab.h 	  \
-					  sllib.h		  \
+					  sllib.h			\
 					  htypes.h		  \
 					  fthreads.h	  \
 					  w32ctca.h 	  \
-					  hifr.h 		  \
+					  hifr.h 			\
 					  tt32if.h		  \
 					  tt32api.h 	  \
 					  resolve.h 	  \
@@ -756,7 +756,7 @@ noinst_HEADERS = hostinfo.h	  \
 					  commadpt.h	  \
 					  comm3705.h	  \
 					  cnsllogo.h	  \
-					  cache.h		  \
+					  cache.h			\
 					  ecpsvm.h		  \
 					  memrchr.h 	  \
 					  shared.h		  \
@@ -765,18 +765,18 @@ noinst_HEADERS = hostinfo.h	  \
 					  cmdtab.h		  \
 					  hdl.h			  \
 					  sockdev.h 	  \
-					  ltdl.h 		  \
+					  ltdl.h 			\
 					  herc_getopt.h  \
 					  service.h 	  \
-					  chsc.h 		  \
-					  qeth.h 		  \
-					  qdio.h 		  \
-					  zfcp.h 		  \
+					  chsc.h 			\
+					  qeth.h 			\
+					  qdio.h 			\
+					  zfcp.h 			\
 					  mpc.h			  \
 					  pttrace.h 	  \
 					  history.h 	  \
 					  sr.h			  \
-					  hchan.h		  \
+					  hchan.h			\
 					  fillfnam.h	  \
 					  hthreads.h	  \
 					  hostopts.h	  \
@@ -794,7 +794,7 @@ noinst_HEADERS = hostinfo.h	  \
 					  hstdint.h 	  \
 					  hsocket.h 	  \
 					  w32stape.h	  \
-					  w32dl.h		  \
+					  w32dl.h			\
 					  hercwind.h	  \
 					  getopt.h		  \
 					  w32mtio.h 	  \
@@ -802,11 +802,11 @@ noinst_HEADERS = hostinfo.h	  \
 					  msgenu.h		  \
 					  hdiagf18.h	  \
 					  dbgtrace.h	  \
-					  chain.h		  \
-					  extstring.h	  \
-					  hRexx.h		  \
+					  chain.h			\
+					  extstring.h		\
+					  hRexx.h			\
 					  hRexxapi.h	  \
-					  cmpsc.h		  \
+					  cmpsc.h			\
 					  cmpscbit.h	  \
 					  cmpscdbg.h	  \
 					  cmpscdct.h	  \
@@ -819,10 +819,10 @@ noinst_HEADERS = hostinfo.h	  \
 					  $(extra_dynamic_SRC)
 
 cckd: cckd2ckd$(EXEEXT)  \
-		cckdcdsk$(EXEEXT)  \
-		cckddiag$(EXEEXT)  \
-		cckdcomp$(EXEEXT)  \
-		cckdswap$(EXEEXT)  \
+		cckdcdsk$(EXEEXT)	\
+		cckddiag$(EXEEXT)	\
+		cckdcomp$(EXEEXT)	\
+		cckdswap$(EXEEXT)	\
 		dasdcopy$(EXEEXT)
 
 #########################################################
@@ -888,4 +888,4 @@ uninstall-hook:
 	$(COMPILE) -E $< >$@
 
 check:
-	../hyperion/tests/runtest
+	$(top_srcdir)/tests/runtest $(top_srcdir)/tests

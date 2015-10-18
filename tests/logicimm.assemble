@@ -116,7 +116,7 @@ fmask dc (52/8)x'00',x'08',x'00'                                        01140000
 niybytes dc 8x'ff'                                                      01160000
 oiybytes dc 8x'00'                                                      01170000
 xiybytes dc 8x'ff'                                                      01180000
- punch ':etst 1'                                                        01190000
+ punch ':etst .1'                                                       01190000
  comp nibytes,8,'01020408 10204080'                                     01200000
  comp oibytes,8,'01020408 10204080'                                     01210000
  comp xibytes,8,'FEFDFBF7 EFDFBF7F'                                     01220000
@@ -130,6 +130,13 @@ xiybytes dc 8x'ff'                                                      01180000
  comp niycc,8,'10101010 10101010'                                       01300000
  comp oiycc,8,'10101010 10101010'                                       01310000
  comp xiycc,8,'10101010 10101010'                                       01320000
+ punch '* *Explain The failure of this test indicates either that'              
+ punch '* *Explain your C compiler lacks stdatomic.h and the GCC'               
+ punch '* *Explain intrinsic atomic operations, or that the atomic'             
+ punch '* *Explain operations are not lock free, or that Interlocked'           
+ punch '* *Explain Access Facility 2 has been unconfigured when'                
+ punch '* *Explain Hercules was built, or finally that Hercules'                
+ punch '* *Explain simply lacks the support for IAF2.'                          
  comp  facilities,8,'00000000 00000800',text='Facilities list bit 52'   01330000
  punch '* * First doubleword of facilities list'                        01340000
  display  faclist,8                                                     01350000

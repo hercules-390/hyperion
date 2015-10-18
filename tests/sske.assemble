@@ -55,7 +55,7 @@ psw&sysndx dc 0d,x'0002000180000000',ad(&rc)
  lhi 3,x'f0'                                                            00180000
  sske 3,2,1                                                             00190000
  stop                                                                           
- punch ':etst 1'                                                        00250000
+ punch ':etst .1'                                                       00250000
  punch '* *Compare'                                                             
  punch '* abs  0.8'                                                             
  punch '* *Key 06'                                                              

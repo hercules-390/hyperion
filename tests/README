@@ -103,6 +103,13 @@ asterisk) are processed by redtest.rexx:
 *Error      Specify the complete error message string to compare against
             the last issued error message.
 
+*Explain    Specify   the  explanatory  text  to  write  when  the  next
+            comparison  fails.  You can specify as many *Explains as you
+            like  for  multiline messages.  The explain array is cleared
+            once a test has been done, whether OK or not.
+
+*Message    Print a message on the output.
+
 *Done       End  of a test case.  Specify "nowait" if the test case does
             not  end  by  loading  a  disabled PSW, for example, when it
             tests just console commands without running any code.
