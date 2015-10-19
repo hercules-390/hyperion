@@ -470,9 +470,9 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
     {
         /* Send message through logger facility pipe to panel.c,
            or display it directly to the terminal via fprintf
-           if this is a utility message
+           if this is a utility message or we're shutting down.
         */
-        if (stdout == f && logger_syslogfd[ LOG_WRITE ])
+        if (!sysblk.shutdown && stdout == f && logger_syslogfd[ LOG_WRITE ])
             VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
         else
             fprintf( f, "%s", msg );
@@ -490,7 +490,7 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
     if (slot < 0 || panel > 0) /* Capture only or display & capture */
     {
         /* (same as above but allow message to be captured as well) */
-        if (stdout == f && logger_syslogfd[ LOG_WRITE ])
+        if (!sysblk.shutdown && stdout == f && logger_syslogfd[ LOG_WRITE ])
             VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
         else
             fprintf( f, "%s", msg );
