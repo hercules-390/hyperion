@@ -415,6 +415,10 @@ AH_TEMPLATE( [HAVE_FULL_KEEPALIVE],     [Define if symbols 'TCP_KEEPIDLE', 'TCP_
 AH_TEMPLATE( [HAVE_PARTIAL_KEEPALIVE],  [Define if symbol  'TCP_KEEPIDLE', 'TCP_KEEPINTVL' or 'TCP_KEEPCNT' is available ] )
 AH_TEMPLATE( [HAVE_BASIC_KEEPALIVE],    [Define if symbol  'SO_KEEPALIVE' or 'TCP_KEEPALIVE' is available] )
 AH_TEMPLATE( [DISABLE_IAF2],            [Define if enable_interlocked_access_facility_2 is to be forced off] )
+AH_TEMPLATE( [HAVE_GCC_DIAG_PRAGMA],         [Define if _Pragma GCC diagnostic is supported] )
+AH_TEMPLATE( [HAVE_GCC_DIAG_PUSHPOP],        [Define if _Pragma GCC diagnostic push/pop is supported] )
+AH_TEMPLATE( [HAVE_GCC_UNUSED_FUNC_WARNING], [Define if GCC issues 'defined but not used' warnings] )
+AH_TEMPLATE( [HAVE_GCC_SET_UNUSED_WARNING],  [Define if GCC issues 'variable set but not used' warnings] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1257,6 +1261,135 @@ if test "$GCC" = "yes"; then
     )
 else
     hc_cv_regparm_attr_supported=no
+fi
+
+#--------------------------------------------------------#
+#  Check if GCC supports diagnostic pragma               #
+#--------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether GCC supports diagnostic pragma],
+
+        [hc_cv_have_gcc_diag_pragma],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    #pragma GCC diagnostic ignored "-Wunused-function"
+                ],
+                [hc_cv_have_gcc_diag_pragma=yes],
+                [hc_cv_have_gcc_diag_pragma=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_have_gcc_diag_pragma=no
+fi
+
+#--------------------------------------------------------#
+#  Check if GCC supports diagnostic push/pop pragma      #
+#--------------------------------------------------------#
+
+if test "$hc_cv_have_gcc_diag_pragma" = "yes"  &&
+   test "$GCC"                        = "yes"; then
+
+    AC_CACHE_CHECK( [whether GCC supports diagnostic push/pop pragma],
+
+        [hc_cv_have_gcc_diag_pushpop],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    #pragma GCC diagnostic push
+                ],
+                [hc_cv_have_gcc_diag_pushpop=yes],
+                [hc_cv_have_gcc_diag_pushpop=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_have_gcc_diag_pushpop=no
+fi
+
+#--------------------------------------------------------#
+#  Check if GCC issues func defined but not used warning #
+#--------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    # Note: success/failure is reversed for this test.
+
+    AC_CACHE_CHECK( [whether GCC issues 'function defined but not used' warnings],
+
+        [hc_cv_have_gcc_unused_func_warning],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    static int unused() {return 1;}
+                    int main(int argc, char *argv[])
+                    {
+                        return 0;
+                    }
+                ],
+                [hc_cv_have_gcc_unused_func_warning=no],
+                [hc_cv_have_gcc_unused_func_warning=yes]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_have_gcc_unused_func_warning=no
+fi
+
+#--------------------------------------------------------#
+#  Check if GCC issues variable set but not used warning #
+#--------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    # Note: success/failure is reversed for this test.
+
+    AC_CACHE_CHECK( [whether GCC issues 'variable set but not used' warnings],
+
+        [hc_cv_have_gcc_set_unused_warning],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    int main(int argc, char *argv[])
+                    {
+                        int rc = 0;
+                        int variable = 1;
+                    #if defined( FEATURE_XXX )
+                         rc = variable;
+                    #endif
+                        return rc;
+                    }
+                ],
+                [hc_cv_have_gcc_set_unused_warning=no],
+                [hc_cv_have_gcc_set_unused_warning=yes]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_have_gcc_set_unused_warning=no
 fi
 
 #---------------------------------------------------#
@@ -2363,6 +2496,10 @@ test "$hc_cv_have_full_keepalive"         = "yes"  &&  AC_DEFINE(HAVE_FULL_KEEPA
 test "$hc_cv_have_partial_keepalive"      = "yes"  &&  AC_DEFINE(HAVE_PARTIAL_KEEPALIVE)
 test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
+test "$hc_cv_have_gcc_diag_pragma"         = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
+test "$hc_cv_have_gcc_diag_pushpop"        = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
+test "$hc_cv_have_gcc_unused_func_warning" = "yes"  &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
+test "$hc_cv_have_gcc_set_unused_warning"  = "yes"  &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

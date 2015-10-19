@@ -21,8 +21,6 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
-
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
 #endif

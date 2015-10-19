@@ -54,8 +54,6 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
-
 #ifndef _HSCCMD_C_
 #define _HSCCMD_C_
 #endif

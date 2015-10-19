@@ -7,8 +7,6 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
-
 #define _HERCULES_SHARED_C
 #define _SHARED_C_
 #define _HDASD_DLL_

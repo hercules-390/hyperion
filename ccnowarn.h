@@ -56,24 +56,26 @@
   /*                       GCC or CLANG                            */
   /*---------------------------------------------------------------*/
 
-  #if defined( HAVE_GCC_DIAG_PRAGMA )
+  #if defined(HAVE_GCC_DIAG_PRAGMA)
 
     #define DISABLE_GCC_WARNING( _str )   QPRAGMA( GCC diagnostic ignored _str )
     #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
 
-    #define PUSH_GCC_WARNINGS()           QPRAGMA( GCC diagnostic push )
-    #define POP_GCC_WARNINGS()            QPRAGMA( GCC diagnostic pop  )
+    #if defined(HAVE_GCC_DIAG_PUSHPOP)
+      #define PUSH_GCC_WARNINGS()         QPRAGMA( GCC diagnostic push )
+      #define POP_GCC_WARNINGS()          QPRAGMA( GCC diagnostic pop  )
+    #endif
 
     /* Globally disable some rather annoying GCC compiler warnings which */
     /* frequently occurs due to our build multiple architectures design. */
 
-    #if GCC_VERSION >= 40304
-      /* 'xxxxxxxx' defined but not used */
+    #ifdef HAVE_GCC_UNUSED_FUNC_WARNING
+      /* Suppress "function 'xxx' defined but not used" warnings */
       DISABLE_GCC_WARNING( "-Wunused-function" )
     #endif
 
-    #if GCC_VERSION >= 40600
-      /* variable 'xxx' set but not used */
+    #ifdef HAVE_GCC_SET_UNUSED_WARNING
+      /* Suppress "variable 'xxx' set but not used" warnings */
       DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
     #endif
 
@@ -82,6 +84,9 @@
   #ifndef   DISABLE_GCC_WARNING
     #define DISABLE_GCC_WARNING( _str )     /* (do nothing) */
     #define ENABLE_GCC_WARNING(  _str )     /* (do nothing) */
+  #endif
+
+  #ifndef   PUSH_GCC_WARNINGS
     #define PUSH_GCC_WARNINGS()             /* (do nothing) */
     #define POP_GCC_WARNINGS()              /* (do nothing) */
   #endif

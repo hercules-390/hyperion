@@ -7,8 +7,6 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
-
 #ifndef _CONFIG_C_
 #define _CONFIG_C_
 #endif
@@ -102,6 +100,10 @@ int configure_memfree(int mfree)
     config_mfree = (RADR)mfree << SHIFT_MEGABYTE;
     return 0;
 }
+
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )
+DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
 
 /* storage configuration */
 static U64   config_allocmsize = 0;
@@ -241,11 +243,6 @@ int cpu;
         /* Previously allocated storage to be freed, update actual
          * storage pointers and adjust new storage to page boundary.
          */
-
-        PUSH_GCC_WARNINGS()
-        DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )
-        DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
-
         dofree = config_allocmaddr,
         config_allocmsize = storsize,
         config_allocmaddr = storkeys,
@@ -410,8 +407,6 @@ int  cpu;
         xpndstor = (BYTE*)(((U64)xpndstor + (ONE_MEGABYTE - 1)) &
                            ~((U64)ONE_MEGABYTE - 1)),
         sysblk.xpndstor = xpndstor;
-
-        POP_GCC_WARNINGS()
     }
     else
     {
@@ -461,6 +456,8 @@ int  cpu;
 
     return 0;
 }
+
+POP_GCC_WARNINGS()
 
 /* 4 next functions used for fast device lookup cache management */
 

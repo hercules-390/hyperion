@@ -30,8 +30,6 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
-
 #include "hercules.h"
 #include "devtype.h"
 #include "chsc.h"

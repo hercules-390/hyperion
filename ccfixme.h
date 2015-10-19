@@ -42,18 +42,8 @@
 /* Determine GCC diagnostic pragma support level                     */
 /*-------------------------------------------------------------------*/
 
-#if defined(__clang__)
-  /* Clang also defines __GNUC__ and 3.6 defines GCC 4.2.1           */
-  #define CLANG_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
-    #define HAVE_GCC_DIAG_PRAGMA
-#elif defined( __GNUC__ )
-  #define GCC_VERSION ((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100) + __GNUC_PATCHLEVEL__)
-  #if (GCC_VERSION >= 40600)
-    #define HAVE_GCC_DIAG_PRAGMA
-  #endif
-#endif
 #if defined(HAVE_GCC_DIAG_PRAGMA)
-  #define QPRAGMA( x )                _Pragma( #x )
+  #define QPRAGMA( x )          _Pragma( #x )
 #endif
 
 /*-------------------------------------------------------------------*/
