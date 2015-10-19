@@ -12,6 +12,9 @@ dist_pkgdata_DATA =     \
 
 EXTRA_DIST =            \
     agf.txt             \
+    agf.assemble        \
+    agf.listing         \
+    agf.tst             \
     alsi.txt            \
     asmtst.xedit        \
     axtr.txt            \
