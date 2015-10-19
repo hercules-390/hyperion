@@ -1622,6 +1622,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hercdasd.rc"
+				>
+			</File>
+			<File
 				RelativePath=".\hercmisc.ico"
 				>
 			</File>
