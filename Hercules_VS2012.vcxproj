@@ -770,7 +770,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="decNumber\decNumber.rc" />
-    <ResourceCompile Include="hercules.rc" />
+    <ResourceCompile Include="hercprod.rc" />
     <ResourceCompile Include="hercdasd.rc" />
     <ResourceCompile Include="herctape.rc" />
     <ResourceCompile Include="hercmisc.rc" />

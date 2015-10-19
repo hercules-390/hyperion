@@ -693,8 +693,8 @@ EXTRA_DIST = autoconf/config.rpath \
 				 Hercules.dsw			  \
 				 Hercules.vcproj			\
 				 Hercules.sln			  \
-				 hercver.rc2				\
-				 hercules.rc				\
+				 hercver.rc2			  \
+				 hercprod.rc			  \
 				 hercules.ico			  \
 				 hercdasd.rc				\
 				 hercdasd.ico			  \

@@ -1614,7 +1614,7 @@
     <ResourceCompile Include="decNumber\decNumber.rc">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="hercules.rc">
+    <ResourceCompile Include="hercprod.rc">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
     </ResourceCompile>
     <ResourceCompile Include="hercdasd.rc">

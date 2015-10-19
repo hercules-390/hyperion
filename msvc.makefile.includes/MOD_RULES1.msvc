@@ -8,8 +8,8 @@
 #
 # ***************************************************************************
 
-$(O)hercules.res: hercules.rc hercver.rc2
-    $(rc) $(rcflags) $(rcvars) -fo $(O)hercules.res hercules.rc
+$(O)hercprod.res: hercprod.rc hercver.rc2
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercprod.res hercprod.rc
 
 $(O)hercdasd.res: hercdasd.rc hercver.rc2
     $(rc) $(rcflags) $(rcvars) -fo $(O)hercdasd.res hercdasd.rc

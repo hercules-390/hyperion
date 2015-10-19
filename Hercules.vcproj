@@ -1622,15 +1622,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\hercdasd.rc"
-				>
-			</File>
-			<File
 				RelativePath=".\hercmisc.ico"
 				>
 			</File>
 			<File
 				RelativePath=".\hercmisc.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\hercprod.rc"
 				>
 			</File>
 			<File
@@ -1643,10 +1643,6 @@
 			</File>
 			<File
 				RelativePath=".\hercules.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\hercules.rc"
 				>
 			</File>
 			<File
@@ -2982,9 +2978,17 @@
 							RelativePath=".\tests\runtest.cmd"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\tests.conf"
+							>
+						</File>
 						<Filter
 							Name="assemble"
 							>
+							<File
+								RelativePath=".\tests\agf.assemble"
+								>
+							</File>
 							<File
 								RelativePath=".\tests\logicimm.assemble"
 								>
@@ -2997,6 +3001,10 @@
 						<Filter
 							Name="tst scripts"
 							>
+							<File
+								RelativePath=".\tests\agf.tst"
+								>
+							</File>
 							<File
 								RelativePath=".\tests\logicimm.tst"
 								>
@@ -3013,6 +3021,10 @@
 						<Filter
 							Name="listing"
 							>
+							<File
+								RelativePath=".\tests\agf.listing"
+								>
+							</File>
 							<File
 								RelativePath=".\tests\logicimm.listing"
 								>
