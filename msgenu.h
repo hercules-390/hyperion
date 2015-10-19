@@ -1375,7 +1375,7 @@ Examples:
 #define HHC02326 "%s"     // (instruction tracing: storage line)
 #define HHC02327 "%c:"F_RADR"  Storage address is not valid"
 #define HHC02328 "%c:"F_RADR"  Addressing exception"
-#define HHC02329 "%c:"F_RADR"  Translation exception %4.4hX  %s"
+#define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX  %s"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

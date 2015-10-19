@@ -45,7 +45,6 @@ int main( int argc, char **argv )
     int         rc;                     // Return code
     pid_t       ppid;                   // Parent's PID
     int         answer;                 // 1 = write answer to stdout
-    char        szMsgBuffer[255];
 
     UNREFERENCED( argc );
 
