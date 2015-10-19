@@ -2703,10 +2703,12 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 //                           BuildOAT
 // ====================================================================
 
+#define OAT_STMT_BUFSZ      255
+
 static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 {
     FILE*       fp;
-    char        szBuff[255];
+    char        szBuff[OAT_STMT_BUFSZ];
 
     int         i;
     char        c;                      // Character work area
@@ -2763,6 +2765,26 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         // Make a copy of the OAT statement
         pszStatement = strdup( szBuff );
 
+#if defined( ENABLE_SYSTEM_SYMBOLS )
+        {
+            /* Perform variable substitution */
+            char *cl;
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+            set_symbol( "CUU",  "$(CUU)"  );
+            set_symbol( "CCUU", "$(CCUU)" );
+            set_symbol( "DEVN", "$(DEVN)" );
+#endif /* ENABLE_BUILTIN_SYMBOLS */
+            cl = resolve_symbol_string( pszStatement );
+            if (cl)
+            {
+                strlcpy( szBuff, cl, sizeof( szBuff ));
+                free( cl );
+                free( pszStatement );
+                pszStatement = strdup( szBuff );
+            }
+        }
+#endif /* ENABLE_SYSTEM_SYMBOLS */
+
         sPort        = 0;
         bMode        = 0;
         sDevNum      = 0;
@@ -2782,7 +2804,9 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
              argc < MAX_ARGS &&
                  ( argv[argc] = strtok_r( NULL, " \t", &strtok_str ) ) != NULL &&
                  argv[argc][0] != '#';
-             argc++ );
+             argc++ )
+                 /* nop */
+                 ;
 
         // Clear any unused argument pointers
         for( i = argc; i < MAX_ARGS; i++ )
@@ -3049,7 +3073,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
                 continue;
 
             // Check that statement does not overflow bufffer
-            if( iLen >= 255 )
+            if( iLen >= OAT_STMT_BUFSZ )
             {
                 // "CTC: error in file %s: line %d is too long"
                 WRMSG( HHC00963, "E", pszOATName, iLine );
