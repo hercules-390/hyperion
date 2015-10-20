@@ -66,21 +66,6 @@
       #define POP_GCC_WARNINGS()          QPRAGMA( GCC diagnostic pop  )
     #endif
 
-    /* Globally disable some rather annoying GCC compiler warnings which */
-    /* frequently occurs due to our build multiple architectures design. */
-
-    #ifdef HAVE_GCC_UNUSED_FUNC_WARNING
-      /* Suppress "function 'xxx' defined but not used" warnings */
-      DISABLE_GCC_WARNING( "-Wunused-function" )
-    #endif
-
-    #ifdef HAVE_GCC_SET_UNUSED_WARNING
-      /* Suppress "variable 'xxx' set but not used" warnings */
-      #if defined(_MSVC_)
-        DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
-      #endif
-    #endif
-
   #endif /* defined( HAVE_GCC_DIAG_PRAGMA ) */
 
   #ifndef   DISABLE_GCC_WARNING

@@ -6,6 +6,8 @@
 
 #include "hstdinc.h"
 
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"

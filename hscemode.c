@@ -10,6 +10,8 @@
 
 #include "hstdinc.h"
 
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 #define _HSCEMODE_C_
 #define _HENGINE_DLL_
 

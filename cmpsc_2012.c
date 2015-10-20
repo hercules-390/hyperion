@@ -42,6 +42,8 @@
 
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
 #endif
@@ -161,6 +163,9 @@ static CMPSC_INLINE void (CMPSC_FASTCALL ARCH_DEP( ZeroPadOp1 ))( CMPSCBLK* pCMP
 #ifndef CMPSC_RETFUNCS              // (one time if Utility, each time if Herc)
 #define CMPSC_RETFUNCS              // (one time if Utility, each time if Herc)
 
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( ERR ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
 {
     UNREFERENCED( pOp1MemBlk );
@@ -212,6 +217,8 @@ static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( EXPCC0 ))( CMPSCBLK* pCMPSCBLK,
 {
     pEXPBLK->rc = ARCH_DEP( CC0 )( pCMPSCBLK, &pEXPBLK->op1blk ); return FALSE; // (break)
 }
+
+POP_GCC_WARNINGS()
 
 //-----------------------------------------------------------------------------
 // (define simpler macros to make calling the return functions much easier)

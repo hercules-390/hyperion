@@ -59,6 +59,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 /*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/
@@ -338,4 +341,5 @@ static float128 propagateFloat128NaN( void* ctx, float128 a, float128 b )
     }
 }
 
+POP_GCC_WARNINGS()
 #endif
