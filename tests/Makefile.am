@@ -30,6 +30,13 @@ EXTRA_DIST =            \
     cgxr.txt            \
     cgxtr.txt           \
     channel-370.txt     \
+    cmd-abs.tst         \
+    cmd-abs-2K.txt      \
+    cmd-abs-4K.txt      \
+    cmd-rv.tst          \
+    cmd-rv-2K.txt       \
+    cmd-rv-4K-32.txt    \
+    cmd-rv-4K-64.txt    \
     comments.txt        \
     cpsdr.txt           \
     csst.txt            \
