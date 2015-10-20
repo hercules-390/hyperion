@@ -76,7 +76,9 @@
 
     #ifdef HAVE_GCC_SET_UNUSED_WARNING
       /* Suppress "variable 'xxx' set but not used" warnings */
-      DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
+      #if defined(_MSVC_)
+        DISABLE_GCC_WARNING( "-Wunused-but-set-variable" )
+      #endif
     #endif
 
   #endif /* defined( HAVE_GCC_DIAG_PRAGMA ) */
