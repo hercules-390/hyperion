@@ -1,0 +1,1195 @@
+#-------------------------
+*
+defsym begpage0   0000
+defsym midpage0   0400
+defsym endpage0   07ff
+*
+defsym begpage1   0800
+defsym midpage1   0c00
+defsym endpage1   0fff
+*
+defsym begpage2   1000
+defsym midpage2   1400
+defsym endpage2   17ff
+*
+defsym begpage3   1800
+defsym midpage3   1c00
+defsym endpage3   1fff
+*
+defsym begpagepr4 2000
+defsym midpagepr4 2400
+defsym endpagepr4 27ff
+*
+defsym begpagepr5 2800
+defsym midpagepr5 2c00
+defsym endpagepr5 2fff
+*
+defsym begpage6   3000
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-0
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpage0)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-1
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpage1)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-2
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpage2)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpage2).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-3
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpage3)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpage3).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-pr4
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpagepr4)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpage0).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-pr5
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpagepr5)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(midpage1).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-6
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(begpage6)=AA
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  06
+*Want AA
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-0x1
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpage0)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  06
+*Want BB
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-1x2
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpage1)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  06
+*Want BB
+*
+*Compare
+abs   $(midpage2).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-2x3
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpage2)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpage3).1
+*Key  06
+*Want BB
+*
+*Compare
+abs   $(midpage3).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-3xpr4
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpage3)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  06
+*Want BB
+*
+*Compare
+abs   $(midpage0).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-pr4xpr5
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpagepr4)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpage1).1
+*Key  06
+*Want BB
+*
+*Compare
+abs   $(midpage1).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  00
+*Want 00
+*
+*Done nowait
+*
+#-------------------------
+*Testcase $(arch)-$(cmd)-pr5x6
+*
+sysclear
+archmode $(arch)
+pr $(begpagepr4)
+*
+$(cmd) $(endpagepr5)=AABB
+*
+*Compare
+abs   $(begpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage0).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage1).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(midpage1).1
+*Key  06
+*Want 00
+*
+*Compare
+abs   $(endpage1).1
+*Key  06
+*Want AA
+*
+*Compare
+abs   $(begpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage2).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpage3).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr4).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(midpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(endpagepr5).1
+*Key  00
+*Want 00
+*
+*Compare
+abs   $(begpage6).1
+*Key  06
+*Want BB
+*
+*Done nowait

@@ -35,8 +35,11 @@ to run and verify the test cases:
    ../hyperion/tests/runtest
 
 On  Windows,  the  command  script  runtest.cmd runs the test cases.  It
-requires  a  first  parameter to specify the location of the test files.
-Refer to the comments at the beginning of the file
+requires the  current directory to be the 'tests' subdirectory where the
+scripts lives.  The first parameter  is  an optional test name  to allow
+running just  one specific test (or set  of tests if a wilcard is used).
+It also supports additional parameters.  Enter "runtest /? or --help for
+more information.
 
 In  either  case,  runtest  first  creates a composite set of test cases
 (allTests.tst  in  the  current  working  directory)  and  then  invokes
@@ -73,7 +76,8 @@ through a command script?
 
 .tst  files  are executed as Hercules rc files, so they contain Hercules
 console  commands.   A  number  of  loud  comments  (beginning  with  an
-asterisk) are processed by redtest.rexx:
+asterisk) are interpretted by redtest.rexx as directives. All directives
+are case sensitive. Using "*testcase" for example accomplishes nothing.
 
 *           Comment; ignored.  There must be a blank after the asterisk.
 
@@ -94,7 +98,7 @@ asterisk) are processed by redtest.rexx:
 *Key        Compare  the  specified key against the key displayed in the
             previous r command.
 
-*Prefix     Compre  the  specified  value  to the contents of the prefix
+*Prefix     Compare the  specified  value  to the contents of the prefix
             register displayed by a previous pr command.
 
 *Program    A  program  check  is expected, for example to verify that a

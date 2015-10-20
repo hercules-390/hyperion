@@ -104,13 +104,12 @@
   call :load_tools
   if not "%rc%" == "0" %exit%
 
-  
+
   if "%*" == "" (
-    echo INFO:  Begin "%~n0" ...
+    echo Begin: "%~n0" ...
   ) else (
-    echo INFO:  Begin "%~n0 %*" ...
+    echo Begin: "%~n0 %*" ...
   )
-  echo.
   goto :parse_args
 
 
@@ -270,9 +269,11 @@
   rexx.exe redtest.rexx %wfn%.sout
   set /a "rc=%errorlevel%"
 
-  echo.
-  if %rc% EQU 0 echo INFO:  End.  All tests passed.
-  if %rc% NEQ 0 echo INFO:  End.  One or more tests have failed.
+  if %rc% EQU 0 (
+    echo End: ** Success! **
+  ) else (
+    echo End: ** FAILURE! **
+  )
 
 ::-----------------------------------------------------------------------------
 ::                              ALL DONE!

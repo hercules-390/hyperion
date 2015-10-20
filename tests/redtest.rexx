@@ -55,7 +55,7 @@ do while lines(in) > 0
          then call gprs
       When msg = 'HHC02277I'
          Then parse var rest . prefix .
-      When msg = 'HHC02290I'
+      When (msg = 'HHC02290I' | msg = 'HHC02291I')
          Then
             If comparing
                Then
