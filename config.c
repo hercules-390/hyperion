@@ -7,6 +7,8 @@
 
 #include "hstdinc.h"
 
+DISABLE_GCC_WARNING( "-Wunused-function" )
+
 #ifndef _CONFIG_C_
 #define _CONFIG_C_
 #endif
