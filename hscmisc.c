@@ -2107,7 +2107,7 @@ char    absorr[8];                      /* Uppercase command         */
     for (i = 0; argv[0][i]; i++)
         absorr[i] = toupper(argv[0][i]);
     absorr[i] = 0;
-    opnd = cmdline + i;
+    opnd = argv[1];
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
