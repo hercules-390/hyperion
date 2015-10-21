@@ -8,12 +8,12 @@ mainsize          2M
 *
 * page addresses
 *
-defsym  page0     00000000  # (pr0)
-defsym  page1     00001000  # (pr1)
+defsym  page0     00000000  # (pr)
+defsym  page1     00001000
 defsym  page2     00002000
 defsym  page3     00003000
-defsym  page4     00004000  #  pr0
-defsym  page5     00005000  #  pr1
+defsym  page4     00004000  #  pr
+defsym  page5     00005000
 defsym  page6     00006000
 defsym  nextlast  001FE000
 defsym  lastpage  001FF000
