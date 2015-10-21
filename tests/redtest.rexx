@@ -177,7 +177,7 @@ return
 /*********************************************************************/
 
 wantgpr:
-parse upper var rest r want
+parse upper var rest r want '#' .
 call test gpr.r = want, 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
 return
 
@@ -187,7 +187,7 @@ return
 /*********************************************************************/
 
 wantkey:
-parse upper var rest want
+parse upper var rest want '#' .
 If lastkey = ''
    Then call test 0, 'No key saved from r command.'
    Else call test lastkey = want, 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
@@ -198,7 +198,7 @@ return
 /*********************************************************************/
 
 wantprefix:
-parse upper var rest want
+parse upper var rest want '#' .
 If prefix = ''
    Then call test 0, 'No prefix register saved from pr command.'
    Else call test prefix = want, 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
@@ -222,7 +222,7 @@ return
 waitstate:
 havewait = 1
 parse var rest 'wait state' psw1 psw2
-cond = psw2 = 0 | (psw2 = 'FFFFFFFFDEADDEAD' & havepgm \= '' & havepgm = wantpgm)
+cond = psw2 = 0 | ((psw2 = 'FFFFFFFFDEADDEAD' | psw2 = '0000DEAD') & havepgm \= '' & havepgm = wantpgm)
 call test cond, 'Received unexpected wait state: ' psw1 psw2
 return
 
