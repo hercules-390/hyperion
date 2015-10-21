@@ -32,6 +32,11 @@
 #include "inline.h"
 #include "clock.h"
 
+/* When an operation code has unused operand(s) (IPK, e.g.), it will */
+/* attract  a diagnostic for a set, but unused variable.  Fixing the */
+/* macros to support e.g., RS_NOOPS is not productive, so:           */
+DISABLE_GCC_UNUSED_SET_WARNING
+
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
 /* B29C STFPC - Store FPC                                        [S] */

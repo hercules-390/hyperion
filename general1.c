@@ -49,6 +49,10 @@
 #undef DEF_INST_EXPORT
 #define DEF_INST_EXPORT DLL_EXPORT
 
+/* When an operation code has unused operand(s) (IPK, e.g.), it will */
+/* attract  a diagnostic for a set, but unused variable.  Fixing the */
+/* macros to support e.g., RS_NOOPS is not productive, so:           */
+DISABLE_GCC_UNUSED_SET_WARNING
 
 /*-------------------------------------------------------------------*/
 /* 1A   AR    - Add Register                                    [RR] */

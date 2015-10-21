@@ -1278,7 +1278,8 @@ if test "$GCC" = "yes"; then
 
             AC_COMPILE_IFELSE(
                 [
-                    #pragma GCC diagnostic ignored "-Wunused-function"
+                    /* Test an ancient diagnostic                    */
+                    #pragma GCC diagnostic ignored "-Wformat"
                 ],
                 [hc_cv_have_gcc_diag_pragma=yes],
                 [hc_cv_have_gcc_diag_pragma=no]
@@ -1338,7 +1339,7 @@ if test "$GCC" = "yes"; then
             AC_COMPILE_IFELSE(
                 [
                     static int unused() {return 1;}
-                    int main(int argc, char *argv[])
+                    int main(int argc, char **argv)
                     {
                         return 0;
                     }
@@ -1371,14 +1372,11 @@ if test "$GCC" = "yes"; then
 
             AC_COMPILE_IFELSE(
                 [
-                    int main(int argc, char *argv[])
+                    int main(int argc, char **argv)
                     {
-                        int rc = 0;
-                        int variable = 1;
-                    #if defined( FEATURE_XXX )
-                         rc = variable;
-                    #endif
-                        return rc;
+                        int rc;
+                         rc = 2;
+                        return 0;
                     }
                 ],
                 [hc_cv_have_gcc_set_unused_warning=no],

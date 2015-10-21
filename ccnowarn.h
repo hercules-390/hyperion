@@ -61,6 +61,14 @@
     #define DISABLE_GCC_WARNING( _str )   QPRAGMA( GCC diagnostic ignored _str )
     #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
 
+    #if defined(HAVE_GCC_SET_UNUSED_WARNING)
+      #define DISABLE_GCC_UNUSED_SET_WARNING DISABLE_GCC_WARNING("-Wunused-but-set-variable")
+    #endif
+
+    #if defined(HAVE_GCC_UNUSED_FUNC_WARNING)
+      #define DISABLE_GCC_UNUSED_FUNCTION_WARNING DISABLE_GCC_WARNING("-Wunused-function")
+    #endif
+
     #if defined(HAVE_GCC_DIAG_PUSHPOP)
       #define PUSH_GCC_WARNINGS()         QPRAGMA( GCC diagnostic push )
       #define POP_GCC_WARNINGS()          QPRAGMA( GCC diagnostic pop  )
@@ -71,6 +79,14 @@
   #ifndef   DISABLE_GCC_WARNING
     #define DISABLE_GCC_WARNING( _str )     /* (do nothing) */
     #define ENABLE_GCC_WARNING(  _str )     /* (do nothing) */
+  #endif
+
+  #if !defined(DISABLE_GCC_UNUSED_SET_WARNING)
+    #define DISABLE_GCC_UNUSED_SET_WARNING                 /* Ignore */
+  #endif
+
+  #if !defined(DISABLE_GCC_UNUSED_FUNCTION_WARNING)
+    #define DISABLE_GCC_UNUSED_FUNCTION_WARNING            /* Ignore */
   #endif
 
   #ifndef   PUSH_GCC_WARNINGS

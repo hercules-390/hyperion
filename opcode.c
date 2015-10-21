@@ -10,6 +10,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
 
+#include "hstdinc.h"
+
 /* A  number  of  dummy functions are defined by UNDEF_INST that are */
 /* never  referenced  because the actual instruction does not define */
 /* the instruction for a particular architecture.  This applies, for */
@@ -19,9 +21,7 @@
 /* recursive #include is not compatible with retaining one's sanity. */
 /* Thus, for this module, we shoot the messenger.                    */
 
-#include "hstdinc.h"
-
-DISABLE_GCC_WARNING( "-Wunused-function" )
+DISABLE_GCC_UNUSED_FUNCTION_WARNING
 
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
