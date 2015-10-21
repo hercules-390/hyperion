@@ -175,6 +175,9 @@ EXTRA_DIST =            \
     sske.assemble       \
     sske.listing        \
     sske.tst            \
+    ssk370.tst          \
+    sske370.tst         \
+    sske390.tst         \
     stfle.txt           \
     stidp.txt           \
     stsi.txt            \
