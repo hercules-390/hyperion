@@ -3026,7 +3026,19 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ssk370.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\sske.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\sske370.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\sske390.tst"
 								>
 							</File>
 						</Filter>
