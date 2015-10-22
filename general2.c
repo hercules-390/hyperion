@@ -50,7 +50,7 @@
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
 /* macros to support e.g., RS_NOOPS is not productive, so:           */
-DISABLE_GCC_UNUSED_SET_WARNING
+// DISABLE_GCC_UNUSED_SET_WARNING
 
 /*-------------------------------------------------------------------*/
 /* 16   OR    - Or Register                                     [RR] */
@@ -1509,7 +1509,6 @@ TMgen(01)
 DEF_INST(test_under_mask_high)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
@@ -1539,7 +1538,6 @@ U16     h2;                             /* 16-bit operand values     */
 DEF_INST(test_under_mask_low)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
