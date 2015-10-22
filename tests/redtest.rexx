@@ -120,6 +120,10 @@ Select
 end
 return
 
+/*********************************************************************/
+/* Initialise variable store for new test case                       */
+/*********************************************************************/
+
 begtest:
 testcase = rest
 comparing = 0
@@ -222,7 +226,7 @@ return
 waitstate:
 havewait = 1
 parse var rest 'wait state' psw1 psw2
-cond = psw2 = 0 | ((psw2 = 'FFFFFFFFDEADDEAD' | psw2 = '0000DEAD') & havepgm \= '' & havepgm = wantpgm)
+cond = psw2 = 0 | (right(psw2, 4) = 'DEAD' & havepgm \= '' & havepgm = wantpgm)
 call test cond, 'Received unexpected wait state: ' psw1 psw2
 return
 
@@ -291,3 +295,9 @@ If arg(1)
       End
 expl.0 = 0                            /* Be quiet next time          */
 return
+
+novalue:
+parse source . . fn ft fm .
+say 'Novalue in' fn ft fm '-- variable' condition('D')
+say right(sigl, 6) '>>>' sourceline(sigl)
+signal value lets_get_a_traceback

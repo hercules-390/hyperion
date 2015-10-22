@@ -1,0 +1,82 @@
+ILC      TITLE 'Instruction length code tests.'                                 
+                                                                                
+* This file was put into the public domain 2015-10-22                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+                                                                                
+* Since  relocate,  the  instruction  length code is not in the       *         
+* observable  PSW;  it  is  stored  as  part  of, e.g., program       *         
+* exceptions and is thus observable by PER interrupts.                *         
+                                                                                
+* To  turn  on  PER,  we  must  be  paging,  but that is easily       *         
+* accomplished with a primary real space token.                       *         
+                                                                                
+ punch '* *Testcase ilc'                                                        
+ punch '* sysclear'                                                             
+ punch '* archmode z'                                                           
+                                                                                
+ilc start 0                                                                     
+ print data                                                                     
+ using ilc,0                                                                    
+ org ilc+x'60' Unused bcmode stuff as scratch                                   
+stop dc x'0002 0000',f'0',ad(0)                                                 
+abort dc x'0002 0000',f'0',ad(x'dead')                                          
+* x'80'                                                                         
+ ds f External interrupt parameter                                              
+ ds h CPU address                                                               
+ ds h External interrupt code                                                   
+ ds f SVC ident                                                                 
+pgmident ds f Program interrupt identification                                  
+* x'90'                                                                         
+dxc ds f Data exception code                                                    
+ ds h monitor code                                                              
+percode ds h                                                                    
+peraddr ds d                                                                    
+xaid ds x                                                                       
+peraid ds x PER access identification                                           
+oaid ds x Operand access identification                                         
+ ds x                                                                           
+ org ilc+x'150' Program old psw                                                 
+pgmold ds d                                                                     
+ org ilc+x'1a0' Restart                                                         
+ dc x'0000 0001 8000 0000',ad(go)                                               
+ org ilc+x'1d0' Program                                                         
+ dc x'0000 0001 8000 0000',ad(pgm)                                              
+ org ilc+x'200'  Set PER tracing on.  Must be in relocate mode, so              
+go ds 0h                                                                        
+ la 15,trtbl Address first trace table entry                                    
+ la 2,x'21'                                                                     
+ lctlg 1,1,cr1                                                                  
+ lctlg 9,11,cr9                                                                 
+ stosm 0,x'44' Per and relocate                                                 
+perstart equ *                                                                  
+ mhi 2,2                                                                        
+perstop equ *                                                                   
+ lpswe stop                                                                     
+* Program interrupt handler                                                     
+pgm ds 0d                                                                       
+ mvc 0(20,15),pgmident                                                          
+ la 15,32(,15)                                                                  
+ clc =x'0080',pgmident+2                                                        
+ bne badpgm                                                                     
+ lpswe pgmold                                                                   
+badpgm ds 0h                                                                    
+ lpswe abort                                                                    
+cr1 dc ad(x'20') Real space mode                                                
+cr9 dc f'0',x'40 00 00 00',ad(perstart,perstop-1)                               
+ ltorg                                                                          
+ org *+(x'c00'-*+ilc) Trace table and fail if overflow                          
+trtbl ds d                                                                      
+ ds 0d                                                                          
+ punch '* restart'                                                              
+ punch '* pause .1'                                                             
+ punch '* *Compare'                                                             
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0042'                                                          
+ punch '* r 8c.14 # last program check for info'                                
+ punch '* r c00.14'                                                             
+ punch '* r c00.c'                                                              
+ punch '* *Want "MHI ilc" 00040080 00000000 000040F0'                           
+ punch '* r c20.14'                                                             
+ punch '* *Done'                                                                
+ end                                                                            
