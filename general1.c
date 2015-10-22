@@ -52,7 +52,7 @@
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
 /* macros to support e.g., RS_NOOPS is not productive, so:           */
-// DISABLE_GCC_UNUSED_SET_WARNING
+DISABLE_GCC_UNUSED_SET_WARNING
 
 /*-------------------------------------------------------------------*/
 /* 1A   AR    - Add Register                                    [RR] */
@@ -138,6 +138,7 @@ S32     n;                              /* 32-bit operand values     */
 DEF_INST(add_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit immediate op       */
 
     RI(inst, regs, r1, opcd, i2);
@@ -1658,6 +1659,7 @@ S32     i, j;                           /* Integer work areas        */
 DEF_INST(branch_relative_and_save)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI_B(inst, regs, r1, opcd, i2);
@@ -1686,6 +1688,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(branch_relative_on_count)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI_B(inst, regs, r1, opcd, i2);
@@ -2426,6 +2429,7 @@ S32     n;                              /* 32-bit operand values     */
 DEF_INST(compare_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -4850,6 +4854,7 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -5950,6 +5955,7 @@ S32     n;                              /* 32-bit operand values     */
 DEF_INST(multiply_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
     RI0(inst, regs, r1, opcd, i2);

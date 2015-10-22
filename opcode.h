@@ -1920,9 +1920,6 @@ do { \
 #undef RI0
 #undef RI_B
 
-/* Note  that  the  opcode  parameter  is  ignored in the macro that */
-/* generates code.                                                   */
-
 #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RI)
  #define RI(_inst, _regs, _r1, _op, _i2) \
          RI_DECODER(_inst, _regs, _r1, _op, _i2, 4, 4)
@@ -1942,12 +1939,14 @@ do { \
 #define RI_DECODER(_inst, _regs, _r1, _op, _i2, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
+            (_op) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
 #define RI_DECODER_TEST(_inst, _regs, _r1, _op, _i2) \
     {   U32 temp = fetch_fw(_inst); \
+            (_op) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
             (_r1) = (temp >> 20) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
@@ -2069,6 +2068,7 @@ do { \
 #define RIL_DECODER(_inst, _regs, _r1, _op, _i2, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
+            (_op) = (temp >> 16) & 0xf; \
             (_i2) = ((temp & 0xffff) << 16) \
           | ((_inst)[4] << 8) \
           | (_inst)[5]; \
@@ -2078,6 +2078,7 @@ do { \
 #define RIL_DECODER_TEST(_inst, _regs, _r1, _op, _i2, _len, _ilc) \
     { \
             (_i2) = fetch_fw(&(_inst)[2]); \
+            (_op) = ((_inst)[1]     ) & 0xf; \
             (_r1) = ((_inst)[1] >> 4) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }

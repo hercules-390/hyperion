@@ -35,7 +35,7 @@
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
 /* macros to support e.g., RS_NOOPS is not productive, so:           */
-// DISABLE_GCC_UNUSED_SET_WARNING
+DISABLE_GCC_UNUSED_SET_WARNING
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
@@ -1688,6 +1688,7 @@ int     r1, unused;                     /* Value of R field          */
 DEF_INST(load_address_relative_long)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -1707,6 +1708,7 @@ U32     i2;                             /* 32-bit operand values     */
 DEF_INST(insert_immediate_high_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1724,6 +1726,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(insert_immediate_high_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1741,6 +1744,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(insert_immediate_low_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1758,6 +1762,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(insert_immediate_low_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1775,6 +1780,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(and_immediate_high_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1795,6 +1801,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(and_immediate_high_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1815,6 +1822,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(and_immediate_low_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1835,6 +1843,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(and_immediate_low_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1855,6 +1864,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(or_immediate_high_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1875,6 +1885,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(or_immediate_high_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1895,6 +1906,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(or_immediate_low_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1915,6 +1927,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(or_immediate_low_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1935,6 +1948,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(load_logical_immediate_high_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1952,6 +1966,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(load_logical_immediate_high_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1969,6 +1984,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(load_logical_immediate_low_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -1986,6 +2002,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(load_logical_immediate_low_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -2003,6 +2020,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(branch_relative_on_condition_long)
 {
 //int     r1;                             /* Register number           */
+//int     opcd;                           /* Opcode                    */
 //U32     i2;                             /* 32-bit operand values     */
 
 //  RIL(inst, regs, r1, opcd, i2);
@@ -2024,6 +2042,7 @@ DEF_INST(branch_relative_on_condition_long)
 DEF_INST(branch_relative_and_save_long)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
     RIL_B(inst, regs, r1, opcd, i2);
@@ -3145,6 +3164,7 @@ S64     gpr2l;
 DEF_INST(test_under_mask_high_high)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
@@ -3175,6 +3195,7 @@ U16     h2;                             /* 16-bit operand values     */
 DEF_INST(test_under_mask_high_low)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
@@ -3205,6 +3226,7 @@ U16     h2;                             /* 16-bit operand values     */
 DEF_INST(branch_relative_on_count_long)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI_B(inst, regs, r1, opcd, i2);
@@ -3580,6 +3602,7 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_long_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -3598,6 +3621,7 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST(add_long_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit immediate op       */
 
     RI(inst, regs, r1, opcd, i2);
@@ -3622,6 +3646,7 @@ U16     i2;                             /* 16-bit immediate op       */
 DEF_INST(multiply_long_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -3640,6 +3665,7 @@ U16     i2;                             /* 16-bit operand            */
 DEF_INST(compare_long_halfword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
     RI0(inst, regs, r1, opcd, i2);
@@ -7770,6 +7796,7 @@ BYTE    tbyte;                          /* Work byte                 */
 DEF_INST(add_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL(inst, regs, r1, opcd, i2);
@@ -7792,6 +7819,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(add_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL(inst, regs, r1, opcd, i2);
@@ -7814,6 +7842,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(add_logical_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7832,6 +7861,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(add_logical_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7850,6 +7880,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(and_immediate_high_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7869,6 +7900,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(and_immediate_low_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7888,6 +7920,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(compare_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7905,6 +7938,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(compare_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7922,6 +7956,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(compare_logical_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7939,6 +7974,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(compare_logical_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7956,6 +7992,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(exclusive_or_immediate_high_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7975,6 +8012,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(exclusive_or_immediate_low_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -7994,6 +8032,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(insert_immediate_high_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8010,6 +8049,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(insert_immediate_low_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8026,6 +8066,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(load_logical_immediate_high_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8044,6 +8085,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(load_logical_immediate_low_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8061,6 +8103,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(load_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8077,6 +8120,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(or_immediate_high_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8096,6 +8140,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(or_immediate_low_fullword)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8115,6 +8160,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(subtract_logical_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
@@ -8133,6 +8179,7 @@ U32     i2;                             /* 32-bit operand value      */
 DEF_INST(subtract_logical_long_fullword_immediate)
 {
 int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
