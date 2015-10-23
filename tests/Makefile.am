@@ -50,6 +50,9 @@ EXTRA_DIST =            \
     fiebr.txt           \
     fixtr.txt           \
     iedtr.txt           \
+    ilc.assemble        \
+    ilc.listing         \
+    ilc.tst             \
     kimd0.txt           \
     kimd1.txt           \
     kimd2.txt           \
@@ -157,6 +160,9 @@ EXTRA_DIST =            \
     lxdtr.txt           \
     maer.txt            \
     Makefile.am         \
+    mhi.assemble        \
+    mhi.listing         \
+    mhi.tst             \
     mvcos.txt           \
     mxtr.txt            \
     popcnt.txt          \

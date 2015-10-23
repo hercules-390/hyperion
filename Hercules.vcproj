@@ -2994,7 +2994,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ilc.assemble"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\logicimm.assemble"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mhi.assemble"
 								>
 							</File>
 							<File
@@ -3010,7 +3018,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\cmd-abs-2K.txt"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-abs-4K.txt"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\cmd-abs.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-2K.txt"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-4K-32.txt"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-4K-64.txt"
 								>
 							</File>
 							<File
@@ -3018,7 +3046,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ilc.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\logicimm.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mhi.tst"
 								>
 							</File>
 							<File
@@ -3050,7 +3086,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ilc.listing"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\logicimm.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mhi.listing"
 								>
 							</File>
 							<File
