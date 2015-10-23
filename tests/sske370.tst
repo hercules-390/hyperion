@@ -50,6 +50,7 @@ r 208=B22B0001                # SSKE R0,R1
 r 20C=82000300                # LPSW DONEPSW
 *
 r 300=000A000000000000        # EC mode end-of-test PSW
+r 308=00003fff                # "bad" page6 address
 *
 r $(apage0)=$(page0)          # table of page addresses...
 r $(apage1)=$(page1)
@@ -62,13 +63,17 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart
+restart               # ---------- BEGIN TEST -----------
 pause 0.1
+*
+*Compare
+abs $(page6).1
+*Key F0               # SSKE target
 *
 *Done
 *
 * -----------------------------------------------------------------
-*Testcase SSKE S/370 Successful (high reg bits)
+*Testcase SSKE S/370 Successful (high reg bit)
 *
 sysclear
 archmode S/370
@@ -83,6 +88,7 @@ r 208=B22B0001                # SSKE R0,R1
 r 20C=82000300                # LPSW DONEPSW
 *
 r 300=000A000000000000        # EC mode end-of-test PSW
+r 308=80003000                # "bad" page6 address
 *
 r $(apage0)=$(page0)          # table of page addresses...
 r $(apage1)=$(page1)
@@ -95,8 +101,12 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart
+restart               # ---------- BEGIN TEST -----------
 pause 0.1
+*
+*Compare
+abs $(page6).1
+*Key F0               # SSKE target
 *
 *Done
 *
