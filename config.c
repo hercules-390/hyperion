@@ -122,20 +122,8 @@ U32   skeysize;
 int cpu;
 
     /* Ensure all CPUs have been stopped */
-    if (sysblk.cpus)
-    {
-        OBTAIN_INTLOCK(NULL);
-        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
-        {
-            if (IS_CPU_ONLINE(cpu) &&
-                sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                return HERRCPUONL;
-            }
-        }
-        RELEASE_INTLOCK(NULL);
-    }
+    if (!are_all_cpus_stopped())
+        return HERRCPUONL;
 
     /* Release storage and return if deconfiguring */
     if (mainsize == ~0ULL)
@@ -334,20 +322,8 @@ REGS *regs;
 int  cpu;
 
     /* Ensure all CPUs have been stopped */
-    if (sysblk.cpus)
-    {
-        OBTAIN_INTLOCK(NULL);
-        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
-        {
-            if (IS_CPU_ONLINE(cpu) &&
-                sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                return HERRCPUONL;
-            }
-        }
-        RELEASE_INTLOCK(NULL);
-    }
+    if (!are_all_cpus_stopped())
+        return HERRCPUONL;
 
     /* Release storage and return if zero or deconfiguring */
     if (!xpndsize ||

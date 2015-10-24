@@ -28,6 +28,38 @@
 #define _HSCMISC_C
 
 /*-------------------------------------------------------------------*/
+/* Test if all CPUs are in stopped state      (INTLOCK held)         */
+/*-------------------------------------------------------------------*/
+int are_all_cpus_stopped_intlock_held()
+{
+int cpu;
+
+    if (sysblk.cpus)
+        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+            if (IS_CPU_ONLINE( cpu ) &&
+                sysblk.regs[ cpu ]->cpustate != CPUSTATE_STOPPED)
+                return FALSE;
+    return TRUE;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Test if all CPUs are in stopped state      (INTLOCK not held)     */
+/*-------------------------------------------------------------------*/
+int are_all_cpus_stopped()
+{
+int all_stopped;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        all_stopped = are_all_cpus_stopped_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+    return all_stopped;
+}
+
+
+/*-------------------------------------------------------------------*/
 /*                System Shutdown Processing                         */
 /*-------------------------------------------------------------------*/
 
@@ -52,15 +84,13 @@ int pending;
 
 static void wait_sigq_resp()
 {
-int pending, i;
+int pending;
     /* Wait for all CPU's to stop */
     do
     {
         OBTAIN_INTLOCK(NULL);
         wait_sigq_pending = 0;
-        for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+        if (!are_all_cpus_stopped_intlock_held())
             wait_sigq_pending = 1;
         pending = wait_sigq_pending;
         RELEASE_INTLOCK(NULL);

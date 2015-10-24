@@ -402,17 +402,12 @@ int      numconfdev=0;
 
     /* Make sure all CPUs are deconfigured or stopped */
     TRACE("SR: Waiting for CPUs to stop...\n");
-    OBTAIN_INTLOCK(NULL);
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
-        {
-            RELEASE_INTLOCK(NULL);
-            // "SR: all processors must be stopped to resume"
-            WRMSG(HHC02005, "E");
-            return -1;
-        }
-    RELEASE_INTLOCK(NULL);
+    if (!are_all_cpus_stopped())
+    {
+        // "SR: all processors must be stopped to resume"
+        WRMSG(HHC02005, "E");
+        return -1;
+    }
 
     file = SR_OPEN (fn, "rb");
     if (file == NULL)

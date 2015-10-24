@@ -1060,7 +1060,7 @@ char   *archlvl_func;
 /*-------------------------------------------------------------------*/
 int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
 {
-    int bits, i;
+    int bits;
     const char* ptr;
     char* nxt;
     char buf[8];
@@ -1078,19 +1078,12 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
 
     OBTAIN_INTLOCK( NULL );
 
-    if (sysblk.cpus)
+    if (!are_all_cpus_stopped_intlock_held())
     {
-        for (i = 0; i < sysblk.maxcpu; i++)
-        {
-            if (IS_CPU_ONLINE( i ) &&
-                sysblk.regs[ i ]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK( NULL );
-                // "CPUs must be offline or stopped"
-                WRMSG( HHC02389, "E" );
-                return HERRCPUONL;
-            }
-        }
+        RELEASE_INTLOCK( NULL );
+        // "CPUs must be offline or stopped"
+        WRMSG( HHC02389, "E" );
+        return HERRCPUONL;
     }
 
     if ( argc == 2 )

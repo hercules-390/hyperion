@@ -646,8 +646,6 @@ BYTE als =
 
 int archlvl_cmd(int argc, char *argv[], char *cmdline)
 {
-    int i;
-
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -718,17 +716,12 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
     }
 
     /* Make sure all CPUs are deconfigured or stopped */
-
-    OBTAIN_INTLOCK(NULL);
-    if(sysblk.cpus)
-        for(i = 0; i < sysblk.maxcpu; i++)
-            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                WRMSG( HHC02253, "E" );
-                return HERRCPUONL;
-            }
-    RELEASE_INTLOCK(NULL);
+    if (!are_all_cpus_stopped())
+    {
+        // "All CPU's must be stopped to change architecture"
+        WRMSG( HHC02253, "E" );
+        return HERRCPUONL;
+    }
 
     if(!set_archlvl(argv[1]))
         if(update_archlvl(argc, argv))

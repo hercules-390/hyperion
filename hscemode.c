@@ -30,22 +30,6 @@ static inline void missing_devnum()
     WRMSG(HHC02201,"E");
 }
 
-#if 0
-dead code and a copy to boot
-/* Check for all processors stopped */
-#define ALL_STOPPED all_stopped()
-static inline int all_stopped()
-{
-    int   i;
-
-    for ( i = 0; i < sysblk.maxcpu; i++)
-        if ( IS_CPU_ONLINE(i) &&
-             sysblk.regs[i]->cpustate != CPUSTATE_STOPPED )
-            return 0;
-    return 1;
-}
-#endif
-
 
 static inline char *aea_mode_str(BYTE mode)
 {
