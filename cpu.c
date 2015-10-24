@@ -1620,14 +1620,9 @@ cpustate_stopping:
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
             char buf[40];
-            extern void wake_suspend(void);           /* In script.c */
-
             WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
-            /* This  seems  to be the only place where we can detect */
-            /* that a CPU goes to the stopped state.                 */
-            if (sysblk.started_mask == regs->cpubit) wake_suspend();
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 

@@ -1,4 +1,4 @@
-*Testcase logicImmediate processed 24 Oct 2015 14:09:18 by bldhtc.rexx
+*Testcase logicImmediate processed 18 Oct 2015 14:17:36 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -30,7 +30,7 @@ r    890=0000000000000800
 r   2000=FFFFFFFFFFFFFFFF0000000000000000
 r   2010=FFFFFFFFFFFFFFFF
 restart
-suspend .1
+pause .1
 *Compare
 r 00000800.8
 *Want               01020408 10204080

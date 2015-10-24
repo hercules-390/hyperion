@@ -69,7 +69,7 @@ cr9 dc f'0',x'40 00 00 00',ad(perstart,perstop-1)
 trtbl ds d                                                                      
  ds 0d                                                                          
  punch '* restart'                                                              
- punch '* suspend .1'                                                           
+ punch '* pause .1'                                                             
  punch '* *Compare'                                                             
  punch '* gpr'                                                                  
  punch '* *Gpr 2 0042'                                                          

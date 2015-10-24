@@ -1,4 +1,4 @@
-*Testcase agf processed 24 Oct 2015 14:09:18 by bldhtc.rexx
+*Testcase agf processed 19 Oct 2015 13:26:56 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -20,7 +20,7 @@ r    2B0=00000001000000000000000100000000
 r    2C0=0000000100000000FFFFFFFF00000000
 r    2D0=000000000000000000000000
 restart
-suspend .1
+pause .1
 *Compare
 r 900.9
 *Want 00000000 00000008 20

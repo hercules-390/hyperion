@@ -1245,7 +1245,7 @@ Examples:
 #define HHC02197 "Symbol name %s is reserved"
 /* 2198 moved to config.c                                            */
 #define HHC02199 "Symbol %-12s %s"
-// reserve 02200 - 02369 for command processing; script.c */
+// reserve 02200 - 02369 for command processing */
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
 #define HHC02202 "Missing argument(s). Type 'help %s' for assistance."
@@ -1376,8 +1376,6 @@ Examples:
 #define HHC02327 "%c:"F_RADR"  Storage address is not valid"
 #define HHC02328 "%c:"F_RADR"  Addressing exception"
 #define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX  %s"
-#define HHC02330 "Cannot %s suspend semaphore:  %s"
-#define HHC02331 "Suspend semaphore:  %s"
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

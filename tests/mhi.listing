@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/10/24 14.09
+-                                                                                           jHLASM 1.0   2015/10/22 15.10
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/24 14.09
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/22 15.10
 0MHI       SD 00000001 00000000 00000218             00                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/22 15.10
 0                                               1 * Multiply halfword immediate test                                     
 0                                               3 * This file was put into the public domain 2015-10-22                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
@@ -81,7 +81,7 @@
  00000210 4132 2001               00000001     25  la 3,1(2,2)                                                           
  00000214 B2B2 0060      00000060              26  lpswe stop                                                            
                                                27  punch '* restart'                                                     
-                                               28  punch '* suspend .1'                                                  
+                                               28  punch '* pause .1'                                                    
                                                29  punch '* *Compare'                                                    
                                                30  punch '* gpr'                                                         
                                                31  punch '* *Gpr 2 0042'                                                 
@@ -90,20 +90,20 @@
                                                34  punch '* *Done'                                                       
                                                35  end                                                                   
 1                                                 Relocation Dictionary                                         Page    4
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/10/24 14.09
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/10/22 15.10
 0  00000001 00000001 000001A8   A 8     +                                                                                
 1                               Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/24 14.09
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/22 15.10
 0go            1 00000200 00000001     U                   19   15                                                       
  mhi           1 00000000 00000001     J                   10   11U   12    14    16    18                               
  stop          4 00000060 00000001     X  X                13   26                                                       
 1                                                      Using Map                                                Page    6
--                                                                                           jHLASM 1.0   2015/10/24 14.09
+-                                                                                           jHLASM 1.0   2015/10/22 15.10
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    11  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00060     26 mhi,0                         
 1                                   General Purpose Register Cross Reference                                    Page    7
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/24 14.09
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/22 15.10
 0    0(0)      11U                                                                                                       
      1(1)    (no references identified)                                                                                  
      2(2)      20S   21    22M   23    25    25N                                                                         
@@ -121,14 +121,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)    (no references identified)                                                                                  
 1                                  Diagnostic Cross Reference and Assembler Summary                             Page    8
--                                                                                           jHLASM 1.0   2015/10/24 14.09
+-                                                                                           jHLASM 1.0   2015/10/22 15.10
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    mhi.assemble                                                                                              
-0Assembly Start Time: 14.09.18 Stop Time: 14.09.18 Processor Time: 00.00.00.0056.
+0Assembly Start Time: 15.10.31 Stop Time: 15.10.31 Processor Time: 00.00.00.0057.
  
                                      
  Return Code 000                                                                                                         
