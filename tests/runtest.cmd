@@ -189,8 +189,8 @@
         %exit%
       )
     )
-    if /i "%dbg:~0,1%" == "r" set "dbg="
     if /i "%dbg:~0,1%" == "d" set "dbg=debug."
+    if /i "%dbg:~0,1%" == "r" set "dbg="
   )
 
 
@@ -212,8 +212,8 @@
     )
   )
   call :isdir "..\%hbindir%"
-  if defined dbg set "xxx=debug "
   if not defined isdir (
+    if defined dbg set "xxx=debug "
     echo ERROR: %bitness%-bit %xxx%directory "..\%hbindir%" does not exist. 1>&2
     echo INFO:  Use "%~n0 /?" to get help. 1>&2
     %exit%
