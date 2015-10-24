@@ -44,6 +44,16 @@
  #undef   _GEN_ARCH
 #endif
 
+#if defined(HAVE_SEMAPHORE_H)
+   #include <semaphore.h>
+   static sem_t suspend_semaphore;
+#endif
+static int suspend_semaphore_OK;
+struct SCRCTL;
+
+/* Forward declarations:                                             */
+static int do_pause(char *fname, int *inc_stmtnum, struct SCRCTL * pCtl, char * p);
+/* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -201,52 +211,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-        /* Special handling for 'pause' statement */
-        if (strncasecmp( buf, "pause ", 6 ) == 0)
-        {
-            double pauseamt     =  0.0;   /* (secs to pause) */
-            struct timespec ts  = {0,0};  /* (nanosleep arg) */
-            U64 i, nsecs        =   0;    /* (nanoseconds)   */
-
-            pauseamt = atof( &buf[6] );
-
-            if (pauseamt < 0.0 || pauseamt > 999.0)
-            {
-                // "Config file[%d] %s: error processing statement: %s"
-                WRMSG( HHC01441, "W", *inc_stmtnum, fname, "syntax error; statement ignored" );
-                continue; /* (go on to next statement) */
-            }
-
-            /* We sleep in 1/4 second increments at first */
-            nsecs = (U64) (pauseamt * 1000000000.0);
-            ts.tv_nsec = 250000000; /* 1/4th of a second */
-            ts.tv_sec  = 0;
-
-            if (MLVL( VERBOSE ))
-            {
-                // "Config file[%d] %s: processing paused for %d milliseconds..."
-                WRMSG( HHC02318, "I", *inc_stmtnum, fname, (int)(pauseamt * 1000.0) );
-            }
-
-            /* Sleep for 1/4 second increments */
-            for (i = nsecs; i >= (U64) ts.tv_nsec; i -= (U64) ts.tv_nsec)
-                nanosleep( &ts, NULL );
-
-            /* Sleep for remainder of time period */
-            if (i)
-            {
-                ts.tv_nsec = (long) i;
-                nanosleep( &ts, NULL );
-            }
-
-            if (MLVL( VERBOSE ))
-            {
-                // "Config file[%d] %s: processing resumed..."
-                WRMSG( HHC02319, "I", *inc_stmtnum, fname );
-            }
-
-            continue;  /* (go on to next statement) */
-        }
+        if (do_pause(fname, inc_stmtnum, NULL, buf)) continue;
 
         break;
     } /* end while */
@@ -863,6 +828,19 @@ TID     tid         = thread_id();      /* Our thread Id             */
 char   *p;                              /* (work)                    */
 int     rc;                             /* (work)                    */
 
+#if defined(HAVE_SEMAPHORE_H)
+    if (!suspend_semaphore_OK)
+    {
+        if (!sem_init(&suspend_semaphore, 0, 0))
+        {
+           suspend_semaphore_OK = 1;
+           /* fprintf(stderr, "Semaphore init'd.\n");                */
+           /* fflush(stderr);                                        */
+        }
+        else WRMSG( HHC02330, "E", "initalise", strerror( errno ));
+    }
+#endif
+
     /* Retrieve our control entry */
     if (!(pCtl = FindSCRCTL( tid )))
     {
@@ -957,57 +935,7 @@ int     rc;                             /* (work)                    */
         for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
-        /* Special handling for 'pause' statement */
-        if (strncasecmp( p, "pause ", 6 ) == 0)
-        {
-            double pauseamt     =  0.0;   /* (secs to pause) */
-            struct timespec ts  = {0,0};  /* (nanosleep arg) */
-            U64 i, nsecs        =   0;    /* (nanoseconds)   */
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-            {
-                char *secs = resolve_symbol_string( p+6 );
-                pauseamt = atof( secs );
-                free( secs );
-            }
-#else
-            pauseamt = atof( p+6 );
-#endif
-
-            if (pauseamt < 0.0 || pauseamt > 999.0)
-            {
-                // "Script %d: file statement only; %s ignored"
-                WRMSG( HHC02261, "W", pCtl->scr_id, p+6 );
-                continue; /* (go on to next statement) */
-            }
-
-            nsecs = (U64) (pauseamt * 1000000000.0);
-            ts.tv_nsec = 250000000; /* 1/4th of a second */
-            ts.tv_sec  = 0;
-
-            if (!script_abort( pCtl ) && MLVL( VERBOSE ))
-            {
-                // "Script %d: processing paused for %d milliseconds..."
-                WRMSG( HHC02262, "I", pCtl->scr_id, (int)(pauseamt * 1000.0) );
-            }
-
-            for (i = nsecs; i >= (U64) ts.tv_nsec && !script_abort( pCtl ); i -= (U64) ts.tv_nsec)
-                nanosleep( &ts, NULL );
-
-            if (i && !script_abort( pCtl ))
-            {
-                ts.tv_nsec = (long) i;
-                nanosleep( &ts, NULL );
-            }
-
-            if (!script_abort( pCtl ) && MLVL( VERBOSE ))
-            {
-                // "Script %d: processing resumed..."
-                WRMSG( HHC02263, "I", pCtl->scr_id );
-            }
-            continue;  /* (go on to next statement) */
-        }
-        /* (end 'pause' stmt) */
+        if (do_pause(NULL, NULL, pCtl, p)) continue; /* Test for pause and suspend */
 
         /* Process statement as command */
         panel_command( p );
@@ -1163,5 +1091,178 @@ int script_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 /* end script_cmd */
+
+/*********************************************************************/
+/* Process  pause  and  suspend.   If  semaphores are not available, */
+/* suspend  is treated as pause except that it does not wait when no */
+/* CPUs are active.                                                  */
+/*                                                                   */
+/* Either  first  two  parameters  are  active or the third is; this */
+/* distinguishes between config file and script file.  A distinction */
+/* that is more or less void these days                              */
+/*                                                                   */
+/* The  problem  I  want to solve with the suspend command is not to */
+/* wait  while  all CPUs are stopped.  This will speed up make check */
+/* considerably; the more the more test cases we write.              */
+/*                                                                   */
+/* A  test  case  typically  contains a number of r commands to load */
+/* storage  with a program (they can be generated automatically from */
+/* ASSEMBLE  files)  and the fire the test case by system restart or */
+/* similar.  The test case ends by loading a disabled PSW.           */
+/*                                                                   */
+/* The  final wrinkle is when the pause command is used and disabled */
+/* wait posts the semaphore.  Then we need to suspend first to clear */
+/* the semaphore.                                                    */
+/*********************************************************************/
+
+static int
+do_pause(char *fname, int *inc_stmtnum, struct SCRCTL * pCtl, char * p)
+{
+   double pauseamt     =  0.0;   /* (secs to pause) */
+   struct timespec ts  = {0,0};  /* (nanosleep arg) */
+   long long i;
+   long long nsecs     =   0;    /* (nanoseconds)   */
+   int issuspend = 0;
+
+   /* Special handling for 'suspend' statement */
+   if (!strncasecmp( p, "pause ", 6 )) p += 6;
+   else if (!pCtl) return 0;        /* Not valid in configuration file */
+   else if (!strncasecmp( p, "suspend ", 8 ))
+   {
+      if (suspend_semaphore_OK) issuspend = 1;
+      p += 8;
+   }
+   else return 0;                     /* Neither pause nor suspend   */
+
+   if (issuspend)                     /* Wanted and can do           */
+   {
+#if defined(HAVE_SEMAPHORE_H)
+      int wcount;
+
+      sem_getvalue(&suspend_semaphore, &wcount);
+      if (MLVL( VERBOSE ))
+      {
+         if (wcount)
+         {
+            char bfr[128];
+
+            sprintf(bfr, "Wait count %d.  Drain one", wcount);
+            WRMSG( HHC02331, "I", bfr);
+         }
+         else WRMSG( HHC02331, "I", "Wait for semaphore");
+      }
+      if (sem_wait(&suspend_semaphore))
+         WRMSG( HHC02330, "E", "wait for", strerror( errno ));
+      else
+      {
+         if (MLVL( VERBOSE ))
+            WRMSG( HHC02331, "I", "finished wait");
+         return 1;
+      }
+#endif
+   }
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+   {
+       char *secs = resolve_symbol_string( p );
+
+       pauseamt = atof( secs );
+       free( secs );
+   }
+#else
+   pauseamt = atof( p );
+#endif
+
+   if (pauseamt < 0.0 || pauseamt > 999.0)
+   {
+      if (fname)
+         // "Config file[%d] %s: error processing statement: %s"
+         WRMSG( HHC01441, "W", *inc_stmtnum, fname, "syntax error; statement ignored" );
+      else
+         // "Script %d: file statement only; %s ignored"
+         WRMSG( HHC02261, "W", pCtl->scr_id, p );
+       return 1;                      /* (go on to next statement)   */
+   }
+
+   nsecs = pauseamt * 1000000000.0;
+   ts.tv_nsec = 250000000; /* 1/4th of a second */
+   ts.tv_sec  = 0;
+
+   if (pCtl && script_abort( pCtl )) return 1;
+
+   if (MLVL( VERBOSE ))
+   {
+      if (fname)
+         // "Config file[%d] %s: processing paused for %d milliseconds..."
+         WRMSG( HHC02318, "I", *inc_stmtnum, fname, (int)(pauseamt * 1000.0) );
+      else
+         // "Script %d: processing paused for %d milliseconds..."
+         WRMSG( HHC02262, "I", pCtl->scr_id, (int)(pauseamt * 1000.0) );
+   }
+
+   for (i = nsecs; i >= ts.tv_nsec; i -= ts.tv_nsec)
+   {
+      if (pCtl && script_abort( pCtl )) goto resume;
+      nanosleep( &ts, NULL );
+   }
+   if (pCtl && script_abort( pCtl )) goto resume;
+
+   if (i)
+   {
+       ts.tv_nsec = (long) i;
+       nanosleep( &ts, NULL );
+   }
+
+resume:
+   if (MLVL( VERBOSE ))
+   {
+      if (fname)
+         // "Config file[%d] %s: processing resumed..."
+         WRMSG( HHC02319, "I", *inc_stmtnum, fname );
+      else
+         // "Script %d: processing resumed..."
+         WRMSG( HHC02263, "I", pCtl->scr_id );
+   }
+
+#if defined(HAVE_SEMAPHORE_H)
+   {
+      /* Drain any posts                                       */
+      int wcount;
+
+      sem_getvalue(&suspend_semaphore, &wcount);
+      if (!wcount)
+      {
+         if (MLVL( VERBOSE ))
+            WRMSG( HHC02331, "I", "No posts");
+      }
+      else while (0 < wcount--)
+      {
+         if (sem_trywait(&suspend_semaphore))
+            WRMSG( HHC02330, "E", "draining", strerror( errno ));
+         else if (MLVL( VERBOSE ))
+            WRMSG( HHC02331, "I", "drained one post");
+      }
+   }
+#endif
+
+   return 1;
+}
+
+/*********************************************************************/
+/* All CPUs are stopped.  Release semaphore to run suspended script. */
+/*********************************************************************/
+
+void
+wake_suspend(void)
+{
+#if defined(HAVE_SEMAPHORE_H)
+   if (!suspend_semaphore_OK)
+      WRMSG( HHC02331, "I", "not initialised for post");
+   else if (sem_post(&suspend_semaphore))
+      WRMSG( HHC02330, "E", "post", strerror( errno ));
+   else if (MLVL( VERBOSE ))
+      WRMSG( HHC02331, "I", "posted");
+#endif
+}
 
 #endif /*!defined(_GEN_ARCH)*/

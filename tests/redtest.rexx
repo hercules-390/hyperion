@@ -9,11 +9,9 @@
 
 Signal on novalue
 
-parse arg in .
-comparing = 0
-havewait = 0
+parse arg in opts
+quiet = wordpos('quiet', opts) > 0
 testcase = '<unknown>'
-rv = 0
 fails. = 0
 done = 0
 lineno = 0
@@ -300,4 +298,6 @@ novalue:
 parse source . . fn ft fm .
 say 'Novalue in' fn ft fm '-- variable' condition('D')
 say right(sigl, 6) '>>>' sourceline(sigl)
+say '  This is often caused by missing or misspelled *Testcase'
+say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
 signal value lets_get_a_traceback

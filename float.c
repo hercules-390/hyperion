@@ -47,6 +47,11 @@
 #include "opcode.h"
 #include "inline.h"
 
+/* When an operation code has unused operand(s) (IPK, e.g.), it will */
+/* attract  a diagnostic for a set, but unused variable.  Fixing the */
+/* macros to support e.g., RS_NOOPS is not productive, so:           */
+DISABLE_GCC_UNUSED_SET_WARNING
+
 #if defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
 
 /* Rename all inline functions for multi architectural support *JJ   */

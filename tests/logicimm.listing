@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/10/18 14.17
+-                                                                                           jHLASM 1.0   2015/10/24 14.09
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/18 14.17
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/24 14.09
 0NI        SD 00000001 00000000 00002018             00                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 0                                               1 * Stand-alone test for NI, NIY, OI, OIY, XI, XIY                        00010000
 0                                               3 * This file was put into the public domain 2015-10-05                   00030000
                                                 4 * by John P. Hartmann.  You can use it for anything you like,           00040000
@@ -107,7 +107,7 @@
  00000206 D207 0888 0880 00000888 00000880     55  mvc faclist,facilities Save for display                                00550000
 1                                                                                                               Page    4
    Active Usings: NI,R0                                                                                                  
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 00000020C D407 0880 0890 00000880 00000890     56  nc facilities,fmask  Select bit 52                                     00560000
  00000212 4100 0008               00000008     57  la 0,8                                                                 00570000
  00000216 4110 0001               00000001     58  la 1,1                                                                 00580000
@@ -165,7 +165,7 @@
  000002C8 9600 2008      00000808             110 inst_oi oi oibytes,0                                                    00920000
 1                                                                                                               Page    5
    Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 0000002CC EB00 2808 0156 00002008             111 inst_oiy oiy oiybytes,0                                                 00930000
  000002D2 9700 2010      00000810             112 inst_xi xi xibytes,0                                                    00940000
  000002D6 EB00 2810 0157 00002010             113 inst_xiy xiy xiybytes,0                                                 00950000
@@ -223,7 +223,7 @@
                                               166+ ainsert '&&a seta equ0009',back                                        02-00000014
 1                                                                                                               Page    6
    Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 0                                             167+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
                                               168+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
                                               169+ ainsert ' punch ''* *Want               FEFDFBF7 EFDFBF7F''',back      01-00000025
@@ -281,7 +281,7 @@
                                               221> punch '* r &ac..8'                                                    
 1                                                                                                               Page    7
    Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 0                                                + punch '* r 00000818.8'                                                
                                               222> punch '* *Want               10101010 10101010'                       
                                               223  comp oicc,8,'10101010 10101010'                                        01280000
@@ -339,7 +339,7 @@
                                               276+ ainsert '&&ac setc a2x(&&a)',back                                      02-00000015
 1                                                                                                               Page    8
    Active Usings: NIBYTES,R2  B.NIBYTES,R2                                                                               
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/18 14.17
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/24 14.09
 0                                             277+ ainsert ' punch ''* r &&ac..8''',back                                  02-00000016
                                               278+ ainsert ' punch ''* *Want               10101010 10101010''',back      01-00000025
                                               279>&a seta equ0027                                                        
@@ -395,10 +395,10 @@
                                               326  punch '* *Done'                                                        01400000
                                               327  end                                                                    01410000
 1                                                 Relocation Dictionary                                         Page    9
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/10/18 14.17
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/10/24 14.09
 0  00000001 00000001 000001A8   A 8     +                                                                                
 1                               Ordinary Symbol and Literal Cross Reference                                     Page   10
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/18 14.17
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/24 14.09
 0b        ***QUALIFIER*** 00000001     U                   60   66    69    73    76    80    83                         
  facilities                                                                                                              
                8 00000880 00000001     D  D               130   54M   55    56M  293                                     
@@ -430,7 +430,7 @@
  xiybytes      1 00002010 00000001     X  X               136  113M  201                                                 
  xiycc         1 00000840 00000001     X  X               126   83S  274                                                 
 1                                  Unreferenced Symbols Defined in CSECTs                                       Page   11
--  Defn  Symbol                                                                             jHLASM 1.0   2015/10/18 14.17
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/10/24 14.09
 0   141  equ0005                                                                                                         
     153  equ0007                                                                                                         
     165  equ0009                                                                                                         
@@ -447,10 +447,10 @@
     304  equ0030                                                                                                         
     314  equ0032                                                                                                         
 1                                          Macro and Copy Code Source Summary                                   Page   12
-- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/18 14.17
+- Con Source                                        Volume    Members                       jHLASM 1.0   2015/10/24 14.09
 0     PRIMARY INPUT                                           COMP     DISPLAY  DOTEST                                   
 1                                                      Using Map                                                Page   13
--                                                                                           jHLASM 1.0   2015/10/18 14.17
+-                                                                                           jHLASM 1.0   2015/10/24 14.09
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    51  00000200  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00890    105 ni,0                          
@@ -458,7 +458,7 @@
     106  000002BE  00000001 DROP                                            0              0                             
     107  000002BE  00000001 USING  ORDINARY    00000800 00001000 00000001   2 01810    113 nibytes,2                     
 1                                   General Purpose Register Cross Reference                                    Page   14
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/18 14.17
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/24 14.09
 0    0(0)      51U   53S   53    54    54M   57S   86M  106D                                                             
      1(1)      58S   64    67    71    74    78    81    85M                                                             
      2(2)      59S   60U   84S   84   107U                                                                               
@@ -477,14 +477,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)    (no references identified)                                                                                  
 1                                  Diagnostic Cross Reference and Assembler Summary                             Page   15
--                                                                                           jHLASM 1.0   2015/10/18 14.17
+-                                                                                           jHLASM 1.0   2015/10/24 14.09
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    logicimm.assemble                                                                                         
-0Assembly Start Time: 14.17.36 Stop Time: 14.17.36 Processor Time: 00.00.00.0361.
+0Assembly Start Time: 14.09.18 Stop Time: 14.09.18 Processor Time: 00.00.00.0412.
  
                                      
  Return Code 000                                                                                                         
