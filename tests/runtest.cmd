@@ -244,7 +244,6 @@
 ::-----------------------------------------------------------------------------
 
   echo msglevel -debug  >> %wfn%.rc
-  echo t+               >> %wfn%.rc
   echo script %wfn%.tst >> %wfn%.rc
 
 
