@@ -2132,6 +2132,7 @@ char    buf[64];                        /* MSGBUF work buffer        */
 char    absorr[8];                      /* Uppercase command         */
 
     UNREFERENCED(argc);
+    UNREFERENCED(cmdline);
 
     /* Convert command to uppercase */
     for (i = 0; argv[0][i]; i++)
