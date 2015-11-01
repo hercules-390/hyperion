@@ -8,6 +8,11 @@
 #ifndef _HINLINES_H
 #define _HINLINES_H
 
+/* Define inline assembly styles for GNU C compatible compilers */
+#if defined(__ICC)
+    #define asm __asm__
+#endif
+
 #if !defined(round_to_hostpagesize)
 static INLINE U64 round_to_hostpagesize(U64 n)
 {
@@ -601,5 +606,8 @@ static INLINE void Release_Interrupt_Lock( REGS* regs )
     sysblk.intowner = LOCK_OWNER_NONE;
     release_lock( &sysblk.intlock );
 }
+
+
+#undef asm
 
 #endif // _HINLINES_H

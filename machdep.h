@@ -250,19 +250,17 @@
 /*-------------------------------------------------------------------
  * GNU C or other compiler...   (i.e. NON-Microsoft C/C++)
  *-------------------------------------------------------------------*/
-  #if defined(__i686__) || defined(__pentiumpro__) || \
-      defined(__pentium4__) || defined(__athlon__) || \
-      defined(__athlon)
+  #if   defined(__i686__) || defined(__pentiumpro__) || \
+        defined(__pentium4__) || defined(__athlon__) || \
+        defined(__athlon)
     #define _ext_ia32
-  #endif
 
-  #if defined(__amd64__)
+  #elif defined(__amd64__)
     #define _ext_amd64
-  #endif
 
-  #if defined(__powerpc__) || defined(__ppc__) || \
-      defined(__POWERPC__) || defined(__PPC__) || \
-      defined(_POWER)
+  #elif defined(__powerpc__) || defined(__ppc__) || \
+        defined(__POWERPC__) || defined(__PPC__) || \
+        defined(_POWER)
     #define _ext_ppc
   #endif
 
