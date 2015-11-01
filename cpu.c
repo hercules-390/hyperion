@@ -1620,9 +1620,20 @@ cpustate_stopping:
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
             char buf[40];
+            // "Processor %s%02X: disabled wait state %s"
             WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
+
+            /* Let waiting script know about disabled wait. */
+            obtain_lock( &sysblk.scrlock );
+            if (sysblk.scrtest)
+            {
+                sysblk.scrtest++;
+                broadcast_condition( &sysblk.scrcond );
+            }
+            release_lock( &sysblk.scrlock );
+
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 

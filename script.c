@@ -44,6 +44,10 @@
  #undef   _GEN_ARCH
 #endif
 
+/* Forward declarations:                                             */
+struct SCRCTL;
+static int do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p);
+/* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -201,52 +205,9 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-        /* Special handling for 'pause' statement */
-        if (strncasecmp( buf, "pause ", 6 ) == 0)
-        {
-            double pauseamt     =  0.0;   /* (secs to pause) */
-            struct timespec ts  = {0,0};  /* (nanosleep arg) */
-            U64 i, nsecs        =   0;    /* (nanoseconds)   */
-
-            pauseamt = atof( &buf[6] );
-
-            if (pauseamt < 0.0 || pauseamt > 999.0)
-            {
-                // "Config file[%d] %s: error processing statement: %s"
-                WRMSG( HHC01441, "W", *inc_stmtnum, fname, "syntax error; statement ignored" );
-                continue; /* (go on to next statement) */
-            }
-
-            /* We sleep in 1/4 second increments at first */
-            nsecs = (U64) (pauseamt * 1000000000.0);
-            ts.tv_nsec = 250000000; /* 1/4th of a second */
-            ts.tv_sec  = 0;
-
-            if (MLVL( VERBOSE ))
-            {
-                // "Config file[%d] %s: processing paused for %d milliseconds..."
-                WRMSG( HHC02318, "I", *inc_stmtnum, fname, (int)(pauseamt * 1000.0) );
-            }
-
-            /* Sleep for 1/4 second increments */
-            for (i = nsecs; i >= (U64) ts.tv_nsec; i -= (U64) ts.tv_nsec)
-                nanosleep( &ts, NULL );
-
-            /* Sleep for remainder of time period */
-            if (i)
-            {
-                ts.tv_nsec = (long) i;
-                nanosleep( &ts, NULL );
-            }
-
-            if (MLVL( VERBOSE ))
-            {
-                // "Config file[%d] %s: processing resumed..."
-                WRMSG( HHC02319, "I", *inc_stmtnum, fname );
-            }
-
-            continue;  /* (go on to next statement) */
-        }
+        /* Special handling for 'pause' and 'wait' statements */
+        if (do_special(fname, inc_stmtnum, NULL, buf))
+            continue;
 
         break;
     } /* end while */
@@ -800,6 +761,7 @@ int cscript_cmd( int argc, char *argv[], char *cmdline )
         if (first)
         {
             pCtl->scr_flags |= SCR_CANCEL;
+            broadcast_condition( &sysblk.scrcond );
             release_lock( &sysblk.scrlock );
             return 0;
         }
@@ -815,6 +777,9 @@ int cscript_cmd( int argc, char *argv[], char *cmdline )
             break;
         }
     }
+
+    if (count)
+        broadcast_condition( &sysblk.scrcond );
 
     release_lock( &sysblk.scrlock );
 
@@ -957,57 +922,9 @@ int     rc;                             /* (work)                    */
         for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
-        /* Special handling for 'pause' statement */
-        if (strncasecmp( p, "pause ", 6 ) == 0)
-        {
-            double pauseamt     =  0.0;   /* (secs to pause) */
-            struct timespec ts  = {0,0};  /* (nanosleep arg) */
-            U64 i, nsecs        =   0;    /* (nanoseconds)   */
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-            {
-                char *secs = resolve_symbol_string( p+6 );
-                pauseamt = atof( secs );
-                free( secs );
-            }
-#else
-            pauseamt = atof( p+6 );
-#endif
-
-            if (pauseamt < 0.0 || pauseamt > 999.0)
-            {
-                // "Script %d: file statement only; %s ignored"
-                WRMSG( HHC02261, "W", pCtl->scr_id, p+6 );
-                continue; /* (go on to next statement) */
-            }
-
-            nsecs = (U64) (pauseamt * 1000000000.0);
-            ts.tv_nsec = 250000000; /* 1/4th of a second */
-            ts.tv_sec  = 0;
-
-            if (!script_abort( pCtl ) && MLVL( VERBOSE ))
-            {
-                // "Script %d: processing paused for %d milliseconds..."
-                WRMSG( HHC02262, "I", pCtl->scr_id, (int)(pauseamt * 1000.0) );
-            }
-
-            for (i = nsecs; i >= (U64) ts.tv_nsec && !script_abort( pCtl ); i -= (U64) ts.tv_nsec)
-                nanosleep( &ts, NULL );
-
-            if (i && !script_abort( pCtl ))
-            {
-                ts.tv_nsec = (long) i;
-                nanosleep( &ts, NULL );
-            }
-
-            if (!script_abort( pCtl ) && MLVL( VERBOSE ))
-            {
-                // "Script %d: processing resumed..."
-                WRMSG( HHC02263, "I", pCtl->scr_id );
-            }
-            continue;  /* (go on to next statement) */
-        }
-        /* (end 'pause' stmt) */
+        /* Special handling for 'pause' and 'wait' statements */
+        if (do_special(NULL, NULL, pCtl, p))
+            continue;
 
         /* Process statement as command */
         panel_command( p );
@@ -1163,5 +1080,157 @@ int script_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 /* end script_cmd */
+
+/*-------------------------------------------------------------------*/
+/* returns:  0 = not pause or wait stmt,  1 = pause/wait completed   */
+/*-------------------------------------------------------------------*/
+static int
+do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p)
+{
+    struct timeval beg, now, dur;   /* To calculate remaining time   */
+    double secs;                    /* Seconds to pause or wait      */
+    U32 msecs;                      /* Same thing in milliseconds    */
+    U32 usecs;                      /* Same thing in microseconds    */
+    U32 elapsed_usecs;              /* To calculate remaining time   */
+    int iswait;                     /* 1 == wait, 0 == pause         */
+    int rc;                         /* Return code from timed wait   */
+
+    /* Determine if pause statement or wait statement or neither  */
+    if (!strncasecmp( p, "pause ", 6 ))
+    {
+        p += 6;
+        iswait = 0;
+    }
+    else if (!strncasecmp( p, "wait ", 5 ))
+    {
+        p += 5;
+
+        if (fname)
+        {
+            // "Config file[%d] %s: Wait invalid for config files; pausing instead"
+            WRMSG( HHC02330, "W", *inc_stmtnum, fname );
+            iswait = 0;
+        }
+        else
+            iswait = 1;
+    }
+    else if (!strncasecmp( p, "*TestCase ", 10 ))
+    {
+        sysblk.scrtest = 1;
+        return 0;   /* Must be processed normally too */
+    }
+    else
+        return 0;   /* Neither pause nor wait nor TestCase */
+
+    /* Determine maximum pause or wait duration in seconds */
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    {
+        char *p2 = resolve_symbol_string( p );
+        if (p2)
+        {
+            secs = atof( p2 );
+            free( p2 );
+        }
+        else
+            secs = atof( p );
+    }
+#else
+    secs = atof( p );
+#endif
+
+    if (secs < 0.0 || secs > 999.0)
+    {
+        if (fname)
+            // "Config file[%d] %s: error processing statement: %s"
+            WRMSG( HHC01441, "W", *inc_stmtnum, fname, "syntax error; statement ignored" );
+        else
+            // "Script %d: file statement only; %s ignored"
+            WRMSG( HHC02261, "W", pCtl->scr_id, p );
+        return 1;   /* (go on to next statement)   */
+    }
+
+    /* Convert floating point seconds to other subsecond work values */
+    msecs = (U32) (secs * 1000.0); 
+    usecs = (msecs * 1000);
+
+    if (MLVL( VERBOSE ))
+    {
+        if (iswait)
+        {
+            // "Script %d: Waiting %d milliseconds for CPU(s) to enter disabled wait..."
+            WRMSG( HHC02331, "I", pCtl->scr_id, msecs );
+        }
+        else if (fname)
+        {
+            // "Config file[%d] %s: processing paused for %d milliseconds..."
+            WRMSG( HHC02318, "I", *inc_stmtnum, fname, msecs );
+        }
+        else
+        {
+            // "Script %d: processing paused for %d milliseconds..."
+            WRMSG( HHC02262, "I", pCtl->scr_id, msecs );
+        }
+    }
+
+    obtain_lock( &sysblk.scrlock );
+    ASSERT((!iswait && !sysblk.scrtest) || (iswait && sysblk.scrtest));
+    gettimeofday( &beg, NULL );
+    for (;;)
+    {
+        /* Check for cancelled script */
+        if (pCtl && script_abort( pCtl ))
+        {
+            sysblk.scrtest = 0;
+            release_lock( &sysblk.scrlock );
+            return 1;
+        }
+
+        /* Have all CPUs entered disabled wait yet? */
+        if (iswait && sysblk.scrtest > sysblk.cpus)
+        {
+            rc = 0;
+            break;
+        }
+
+        /* Not all CPUs are in a disabled wait yet */
+        /* Calculate how long to continue waiting  */
+        gettimeofday( &now, NULL );
+        timeval_subtract( &beg, &now, &dur );
+        elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;
+
+        /* Is there any time remaining on the clock? */
+        if (elapsed_usecs >= (msecs * 1000))
+        {
+            rc = ETIMEDOUT;
+            break;
+        }
+
+        /* Wait for (another) CPU to go into disabled wait */
+        usecs = ((msecs * 1000) - elapsed_usecs);
+        timed_wait_condition_relative_usecs(
+            &sysblk.scrcond, &sysblk.scrlock, usecs, NULL );
+    }
+    sysblk.scrtest = 0;
+    release_lock( &sysblk.scrlock );
+
+    if (iswait && ETIMEDOUT == rc)
+    {
+        // HHC02332 "Script %d: Wait timeout"
+        WRMSG( HHC02332, "W", pCtl->scr_id );
+    }
+
+    /* Pause or wait completed */
+    if (MLVL( VERBOSE ))
+    {
+        if (fname)
+            // "Config file[%d] %s: processing resumed..."
+            WRMSG( HHC02319, "I", *inc_stmtnum, fname );
+        else
+            // "Script %d: processing resumed..."
+            WRMSG( HHC02263, "I", pCtl->scr_id );
+    }
+
+    return 1;  /* pause or wait complete */
+}
 
 #endif /*!defined(_GEN_ARCH)*/

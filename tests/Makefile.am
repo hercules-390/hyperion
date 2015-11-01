@@ -199,4 +199,5 @@ EXTRA_DIST =            \
     tests.conf          \
     thder.txt           \
     trace.txt           \
-    trte.txt
+    trte.txt            \
+    wait.tst

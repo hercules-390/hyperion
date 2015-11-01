@@ -619,6 +619,7 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.sigplock);
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
+    initialize_condition (&sysblk.scrcond);
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);

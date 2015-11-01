@@ -594,6 +594,8 @@ struct SYSBLK {
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
         LOCK    scrlock;                /* Script processing lock    */
+        COND    scrcond;                /* Test script condition     */
+        int     scrtest;                /* 1 == test script running  */
         TID     cmdtid;                 /* Active command thread     */
         char   *cmdsep;                 /* Single Char cmd Sep       */
         BYTE    sysgroup;               /* Panel Command grouping    */

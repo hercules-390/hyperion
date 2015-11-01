@@ -2280,6 +2280,10 @@
 					RelativePath=".\util\TMOUNT.txt"
 					>
 				</File>
+				<File
+					RelativePath=".\util\zzsacard.bin"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="tests"
@@ -3075,6 +3079,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\sske390.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\wait.tst"
 								>
 							</File>
 						</Filter>
