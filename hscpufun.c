@@ -1078,7 +1078,7 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
 
     OBTAIN_INTLOCK( NULL );
 
-    if (!are_all_cpus_stopped_intlock_held())
+    if (are_any_cpus_started_intlock_held())
     {
         RELEASE_INTLOCK( NULL );
         // "CPUs must be offline or stopped"

@@ -561,6 +561,8 @@ int herc_system (char* command);
 void do_shutdown();
 int are_all_cpus_stopped();
 int are_all_cpus_stopped_intlock_held();
+int are_any_cpus_started();
+int are_any_cpus_started_intlock_held();
 int display_gregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
 int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);

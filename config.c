@@ -122,7 +122,7 @@ U32   skeysize;
 int cpu;
 
     /* Ensure all CPUs have been stopped */
-    if (!are_all_cpus_stopped())
+    if (are_any_cpus_started())
         return HERRCPUONL;
 
     /* Release storage and return if deconfiguring */
@@ -322,7 +322,7 @@ REGS *regs;
 int  cpu;
 
     /* Ensure all CPUs have been stopped */
-    if (!are_all_cpus_stopped())
+    if (are_any_cpus_started())
         return HERRCPUONL;
 
     /* Release storage and return if zero or deconfiguring */

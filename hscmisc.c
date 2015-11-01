@@ -28,6 +28,22 @@
 #define _HSCMISC_C
 
 /*-------------------------------------------------------------------*/
+/* Test if any CPUs are in started state      (INTLOCK held)         */
+/*-------------------------------------------------------------------*/
+int are_any_cpus_started_intlock_held()
+{
+int cpu;
+
+    if (sysblk.cpus)
+        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+            if (IS_CPU_ONLINE( cpu ) &&
+                sysblk.regs[ cpu ]->cpustate == CPUSTATE_STARTED)
+                return TRUE;
+    return FALSE;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Test if all CPUs are in stopped state      (INTLOCK held)         */
 /*-------------------------------------------------------------------*/
 int are_all_cpus_stopped_intlock_held()
@@ -40,6 +56,22 @@ int cpu;
                 sysblk.regs[ cpu ]->cpustate != CPUSTATE_STOPPED)
                 return FALSE;
     return TRUE;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Test if any CPUs are in started state      (INTLOCK not held)     */
+/*-------------------------------------------------------------------*/
+int are_any_cpus_started()
+{
+int any_started;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        any_started = are_any_cpus_started_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+    return any_started;
 }
 
 
