@@ -1278,7 +1278,7 @@ if test "$GCC" = "yes"; then
 
             AC_COMPILE_IFELSE(
                 [
-                    /* Test an ancient diagnostic                    */
+                    /* Test an ancient diagnostic */
                     #pragma GCC diagnostic ignored "-Wformat"
                 ],
                 [hc_cv_have_gcc_diag_pragma=yes],

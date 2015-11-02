@@ -174,6 +174,7 @@
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
+/*  ** NOTE **  'siz' is size of DESTINATION buffer, NOT src!  */
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncpy! */
 HUT_DLL_IMPORT size_t
 strlcpy(char *dst, const char *src, size_t siz);
@@ -195,6 +196,8 @@ strlcpy(char *dst, const char *src, size_t siz);
  * Returns strlen(src) + MIN(siz, strlen(initial dst)).
  * If retval >= siz, truncation occurred.
  */
+/*  ** NOTE **  'siz' is size of DESTINATION buffer (disregarding
+                any existing data!), NOT size of src argument! */
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncat! */
 HUT_DLL_IMPORT size_t
 strlcat(char *dst, const char *src, size_t siz);

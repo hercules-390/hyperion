@@ -279,15 +279,17 @@ strdup(str)
      const char *str;
 {
   char *tmp = 0;
+  size_t size;
 
   if (str)
+  {
+    size = strlen(str)+1;
+    tmp = LT_DLMALLOC (char, size);
+    if (tmp)
     {
-      tmp = LT_DLMALLOC (char, 1+ strlen (str));
-      if (tmp)
-    {
-      strlcpy(tmp, str, strlen(str)+1);
+      strlcpy(tmp, str, size);
     }
-    }
+  }
 
   return tmp;
 }

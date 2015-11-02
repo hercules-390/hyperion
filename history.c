@@ -36,9 +36,10 @@ int history_requested = 0;
 
 void copy_to_historyCmdLine(char* cmdline)
 {
+  size_t size = strlen(cmdline)+1;
   if (historyCmdLine) free(historyCmdLine);
-  historyCmdLine = malloc(strlen(cmdline)+1);
-  strlcpy(historyCmdLine, cmdline, strlen(cmdline)+1 );
+  historyCmdLine = malloc(size);
+  strlcpy(historyCmdLine, cmdline, size);
 }
 
 /* initialize environment */
@@ -56,6 +57,7 @@ int history_init() {
 /* add commandline to history list */
 int history_add(char *cmdline) {
   HISTORY *tmp;
+  size_t size;
 
   /* if there is some backup line remaining, remove it */
   if (backup != NULL) {
@@ -74,8 +76,9 @@ int history_add(char *cmdline) {
   }
   /* allocate space and copy string */
   tmp = (HISTORY*) malloc(sizeof(HISTORY));
-  tmp->cmdline = (char*) malloc(strlen(cmdline) + 1);
-  strlcpy(tmp->cmdline, cmdline,strlen(cmdline)+1);
+  size = strlen(cmdline) + 1;
+  tmp->cmdline = (char*) malloc(size);
+  strlcpy(tmp->cmdline, cmdline, size);
   tmp->next = NULL;
   tmp->prev = NULL;
   tmp->number = ++history_count;

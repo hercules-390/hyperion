@@ -21,9 +21,9 @@
 
 #include "ccfixme.h"      /* need HAVE_GCC_DIAG_PRAGMA, QPRAGMA, etc */
 
-  /*---------------------------------------------------------------*/
-  /*                            MSVC                               */
-  /*---------------------------------------------------------------*/
+  /*-----------------------------------------------------------------*/
+  /*                            MSVC                                 */
+  /*-----------------------------------------------------------------*/
 
   #if defined( _MSVC_ )
 
@@ -33,7 +33,7 @@
     #define PUSH_MSVC_WARNINGS()            __pragma( warning( push ))
     #define POP_MSVC_WARNINGS()             __pragma( warning( pop  ))
 
-    /* Globally disable some uninteresting MSVC compiler warnings */
+    /* Globally disable some uninteresting MSVC compiler warnings    */
 
     DISABLE_MSVC_WARNING( 4127 ) // "conditional expression is constant"
     DISABLE_MSVC_WARNING( 4142 ) // "benign redefinition of type"
@@ -46,15 +46,15 @@
   #endif /* defined( _MSVC_ ) */
 
   #ifndef   PUSH_MSVC_WARNINGS
-    #define PUSH_MSVC_WARNINGS()            /* (do nothing) */
-    #define POP_MSVC_WARNINGS()             /* (do nothing) */
-    #define DISABLE_MSVC_WARNING( _str )    /* (do nothing) */
-    #define ENABLE_MSVC_WARNING(  _str )    /* (do nothing) */
+    #define PUSH_MSVC_WARNINGS()                     /* (do nothing) */
+    #define POP_MSVC_WARNINGS()                      /* (do nothing) */
+    #define DISABLE_MSVC_WARNING( _str )             /* (do nothing) */
+    #define ENABLE_MSVC_WARNING(  _str )             /* (do nothing) */
   #endif
 
-  /*---------------------------------------------------------------*/
-  /*                       GCC or CLANG                            */
-  /*---------------------------------------------------------------*/
+  /*-----------------------------------------------------------------*/
+  /*                       GCC or CLANG                              */
+  /*-----------------------------------------------------------------*/
 
   #if defined(HAVE_GCC_DIAG_PRAGMA)
 
@@ -62,11 +62,13 @@
     #define ENABLE_GCC_WARNING(  _str )   QPRAGMA( GCC diagnostic warning _str )
 
     #if defined(HAVE_GCC_SET_UNUSED_WARNING)
-      #define DISABLE_GCC_UNUSED_SET_WARNING DISABLE_GCC_WARNING("-Wunused-but-set-variable")
+      #define DISABLE_GCC_UNUSED_SET_WARNING            \
+              DISABLE_GCC_WARNING("-Wunused-but-set-variable")
     #endif
 
     #if defined(HAVE_GCC_UNUSED_FUNC_WARNING)
-      #define DISABLE_GCC_UNUSED_FUNCTION_WARNING DISABLE_GCC_WARNING("-Wunused-function")
+      #define DISABLE_GCC_UNUSED_FUNCTION_WARNING       \
+              DISABLE_GCC_WARNING("-Wunused-function")
     #endif
 
     #if defined(HAVE_GCC_DIAG_PUSHPOP)
@@ -77,27 +79,27 @@
   #endif /* defined( HAVE_GCC_DIAG_PRAGMA ) */
 
   #ifndef   DISABLE_GCC_WARNING
-    #define DISABLE_GCC_WARNING( _str )     /* (do nothing) */
-    #define ENABLE_GCC_WARNING(  _str )     /* (do nothing) */
+    #define DISABLE_GCC_WARNING( _str )              /* (do nothing) */
+    #define ENABLE_GCC_WARNING(  _str )              /* (do nothing) */
   #endif
 
   #if !defined(DISABLE_GCC_UNUSED_SET_WARNING)
-    #define DISABLE_GCC_UNUSED_SET_WARNING                 /* Ignore */
+    #define DISABLE_GCC_UNUSED_SET_WARNING           /* (do nothing) */
   #endif
 
   #if !defined(DISABLE_GCC_UNUSED_FUNCTION_WARNING)
-    #define DISABLE_GCC_UNUSED_FUNCTION_WARNING            /* Ignore */
+    #define DISABLE_GCC_UNUSED_FUNCTION_WARNING      /* (do nothing) */
   #endif
 
   #ifndef   PUSH_GCC_WARNINGS
-    #define PUSH_GCC_WARNINGS()             /* (do nothing) */
-    #define POP_GCC_WARNINGS()              /* (do nothing) */
+    #define PUSH_GCC_WARNINGS()                      /* (do nothing) */
+    #define POP_GCC_WARNINGS()                       /* (do nothing) */
   #endif
 
-  /*---------------------------------------------------------------*/
-  /*            define support for other compilers here            */
-  /*---------------------------------------------------------------*/
+  /*-----------------------------------------------------------------*/
+  /*            define support for other compilers here              */
+  /*-----------------------------------------------------------------*/
 
-  /* Don't forget to define all of the "FIXME" et al. macros too!  */
+  /* Don't forget to define all of the "FIXME" et al. macros too!    */
 
 #endif /* _CCNOWARN_H_ */

@@ -382,7 +382,8 @@ DLL_EXPORT void del_symbol(const char *sym)
 #if defined(ENABLE_BUILTIN_SYMBOLS)
 DLL_EXPORT void set_symbol(const char *sym, const char *value)
 {
-    SYMBOL_TOKEN        *tok;
+    SYMBOL_TOKEN *tok;
+    size_t size;
 
     if ( sym == NULL || value == NULL || strlen(sym) == 0 )
         return;
@@ -396,12 +397,13 @@ DLL_EXPORT void set_symbol(const char *sym, const char *value)
     {
         free(tok->val);
     }
-    tok->val=malloc(strlen(value)+1);
+    size = strlen(value)+1;
+    tok->val=malloc(size);
     if(tok->val==NULL)
     {
         return;
     }
-    strlcpy(tok->val,value,strlen(value)+1);
+    strlcpy(tok->val,value,size);
     return;
 }
 #endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */

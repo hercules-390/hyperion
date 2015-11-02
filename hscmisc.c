@@ -2280,11 +2280,12 @@ char    absorr[8];                      /* Uppercase command         */
 /*-------------------------------------------------------------------*/
 /* HELPER for virtual storage alter or display command               */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP( bldtrans )(REGS *regs, int arn, int stid, char *trans)
+static void ARCH_DEP( bldtrans )(REGS *regs, int arn, int stid,
+                                 char *trans, size_t size)
 {
     /* Build string indicating how virtual address was translated    */
 
-    char    buf[16];    /* Caller's buffer must be at least this big */
+    char    buf[16];  /* Caller's buffer should be at least this big */
 
          if (REAL_MODE( &regs->psw )) MSGBUF( buf, "%s", "(dat off)"   );
     else if (stid == TEA_ST_PRIMARY)  MSGBUF( buf, "%s", "(primary)"   );
@@ -2292,7 +2293,7 @@ static void ARCH_DEP( bldtrans )(REGS *regs, int arn, int stid, char *trans)
     else if (stid == TEA_ST_HOME)     MSGBUF( buf, "%s", "(home)"      );
     else                              MSGBUF( buf, "(AR%2.2d)", arn    );
 
-    strlcpy( trans, buf, sizeof( buf ));
+    strlcpy( trans, buf, size);
 }
 
 
@@ -2381,7 +2382,7 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Convert virtual address to real address */
             xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, vaddr,
                 arn, regs, ACCTYPE_LRA);
-            ARCH_DEP( bldtrans )(regs, arn, stid, trans);
+            ARCH_DEP( bldtrans )(regs, arn, stid, trans, sizeof(trans));
 
             /* Check for Translation Exception */
             if (0 != xcode)
@@ -2433,7 +2434,7 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Convert virtual address to real address */
             xcode = ARCH_DEP( virt_to_real )( &raddr, &stid, vaddr,
                 arn, regs, ACCTYPE_LRA );
-            ARCH_DEP( bldtrans )(regs, arn, stid, trans);
+            ARCH_DEP( bldtrans )(regs, arn, stid, trans, sizeof(trans));
 
             /* Check for Translation Exception */
             if (0 != xcode)
