@@ -518,23 +518,14 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                     else
                         MSGBUF(retcode, "%d", pttrace[i].rc);
                 }
-                logmsg
-                (
-                    "%-18s "                           // File name (string; 18 chars)
-                    "%s "                              // Time of day (HH:MM:SS.usecs)
-                    I32_FMTX" "                        // Thread id (low 32 bits)
-                    "%-18s "                           // Trace message (string; 18 chars)
-                    PTR_FMTx" "                        // Data value 1
-                    PTR_FMTx" "                        // Data value 2
-                    "%s\n"                             // Return code (or empty string)
-
-                    ,pttrace[i].loc                    // File name (string; 18 chars)
-                    ,&tod[11]                          // Time of day (HH:MM:SS.usecs)
-                    ,(U32)(uintptr_t)(pttrace[i].tid)  // Thread id (low 32 bits)
-                    ,pttrace[i].msg                    // Trace message (string; 18 chars)
-                    ,(uintptr_t)pttrace[i].data1       // Data value 1
-                    ,(uintptr_t)pttrace[i].data2       // Data value 2
-                    ,retcode                           // Return code (or empty string)
+                WRMSG( HHC90021, "I"
+                    , pttrace[i].loc                    // File name (string; 18 chars)
+                    , &tod[11]                          // Time of day (HH:MM:SS.usecs)
+                    , (U32)(uintptr_t)(pttrace[i].tid)  // Thread id (low 32 bits)
+                    , pttrace[i].msg                    // Trace message (string; 18 chars)
+                    , (uintptr_t)pttrace[i].data1       // Data value 1
+                    , (uintptr_t)pttrace[i].data2       // Data value 2
+                    , retcode                           // Return code (or empty string)
                 );
                 count++;
             }

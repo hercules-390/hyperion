@@ -2082,6 +2082,8 @@ Examples:
 #define HHC90018 "Total locks defined: %d"
 #define HHC90019 "No locks found for thread "TIDPAT"."
 #define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
+#define HHC90021 "%-18s %s "I32_FMTX" %-18s "PTR_FMTx" "PTR_FMTx" %s"
+
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
