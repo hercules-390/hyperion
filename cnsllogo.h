@@ -10,10 +10,6 @@
 #ifndef _CNSLLOGO_H_
 #define _CNSLLOGO_H_
 
-#if !defined SHORT_HOSTINFO && !defined LONG_HOSTINFO
-#define SHORT_HOSTINFO
-#endif
-
 /* The following is an extract from the README.HERCLOGO file
 
 Each line in the array represent either an order or a plain text line.
@@ -74,10 +70,10 @@ static char *herclogo[]={
 "Host OS           :",
 "@SF HP",
 
-#ifdef SHORT_HOSTINFO
-"$(HOSTOS)-$(HOSTOSREL)",
-#else
+#if defined( OPTION_LONG_HOSTINFO )
 "$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
+#else
+"$(HOSTOS)-$(HOSTOSREL)",
 #endif
 
 "@NL",

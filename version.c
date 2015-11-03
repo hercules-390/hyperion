@@ -32,6 +32,7 @@ static const char *build_info[] = {
     CUSTOM_BUILD_STRING,
 #endif
 
+    "Built with: "
 
 /*  Report compiler environment
  *
@@ -143,7 +144,7 @@ static const char *build_info[] = {
     "MetaWare High C",
 #elif defined(__MWERKS__)
     "Metrowerks CodeWarrior",
-#elif defined(__MSC_VER)
+#elif defined(_MSC_VER)
     "Microsoft Visual C " value(_MSC_FULL_VER)
     #if defined(_MSC_BUILD)
         " " value(_MSC_BUILD)
@@ -291,6 +292,8 @@ static const char *build_info[] = {
 #else
   #define QSTR_HOST_ARCH         HOST_ARCH
 #endif
+
+    "Build type: "
 
 #if   defined(_AIX)
     "AIX"
@@ -780,14 +783,6 @@ DLL_EXPORT void display_build_options( FILE* f, int httpfd )
 {
     unsigned int i;
     const char** ppszBldInfoStr = NULL;
-
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01416, "I" ));
-        else
-            fprintf( f, MSG( HHC01416, "I" ));
-    else
-        WRMSG( HHC01416, "I" );
 
     if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
     {

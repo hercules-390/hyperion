@@ -969,8 +969,8 @@ Examples:
 /* version.c */
 #define HHC01413 "%s version %s"
 #define HHC01414 "%s"
-#define HHC01415 "Built on %s at %s"
-#define HHC01416 "Build information:"
+#define HHC01415 "Build date: %s at %s"
+//efine HHC01416 (available)
 #define HHC01417 "%s"
 
 #define HHC01418 "Symbol expansion will result in buffer overflow; ignored"

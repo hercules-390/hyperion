@@ -85,6 +85,7 @@
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
+//#define OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
 
 #if defined(OPTION_SYNCIO) && defined(OPTION_NOSYNCIO)
   #error Either OPTION_SYNCIO or OPTION_NOSYNCIO must be specified, not both

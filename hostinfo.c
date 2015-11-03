@@ -20,10 +20,6 @@
 #define _HUTIL_DLL_
 #endif
 
-#if !defined SHORT_HOSTINFO && !defined LONG_HOSTINFO
-#define SHORT_HOSTINFO
-#endif
-
 #include "hercules.h"
 
 #if defined(HAVE_SYS_SYSCTL_H)
@@ -284,22 +280,22 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
                 strlcpy( num_procs,   "",  sizeof(num_procs) );
         }
 
-#ifdef SHORT_HOSTINFO
+#if defined( OPTION_LONG_HOSTINFO )
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            _("Running on: %s (%s-%s %s) %s"),
+            "Running on %s %s-%s. %s, %s%s",
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,
+            pHostInfo->version,     // (show host version too)
             pHostInfo->machine,
             num_procs
         );
-#else
+#else // (short: no host version info)
         snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
-            _("Running on %s %s-%s. %s, %s%s"),
+            "Running on: %s (%s-%s %s)%s",
             pHostInfo->nodename,
             pHostInfo->sysname,
             pHostInfo->release,
-            pHostInfo->version,
             pHostInfo->machine,
             num_procs
         );
