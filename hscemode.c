@@ -463,12 +463,12 @@ U64 newpx;
     if ( regs->arch_mode == ARCH_900 )
     {
        if (1 < argc) regs->PX_G = newpx;           /* Setting prefix */
-       MSGBUF( buf, I64_FMTX, (U64)regs->PX_G);
+       MSGBUF( buf, "%16.16"PRIX64, (U64)regs->PX_G);
     }
     else
     {
        if (1 < argc) regs->PX_L = newpx;           /* Setting prefix */
-       MSGBUF( buf, I32_FMTX, (U32)regs->PX_L);
+       MSGBUF( buf, "%8.8"PRIX32, (U32)regs->PX_L);
     }
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 

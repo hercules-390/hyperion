@@ -238,7 +238,7 @@ Examples:
 #define HHC00001 "%s"
 #define HHC00002 "SCLP console not receiving %s"
 #define HHC00003 "Empty SCP command issued"
-#define HHC00004 "Control program identification: type %s, name %s, sysplex %s, level %"I64_FMT"X"
+#define HHC00004 "Control program identification: type %s, name %s, sysplex %s, level %"PRIX64
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface %s"
 #define HHC00007 "Previous message from function '%s' at %s(%d)"
@@ -316,7 +316,7 @@ Examples:
 #define HHC00145 "Net device %s: Invalid MAC address %s"
 #define HHC00146 "Net device %s: Invalid gateway address %s"
 #define HHC00147 "Executing %s to configure interface"
-#define HHC00148 "Closing %" I64_FMT "d files"
+#define HHC00148 "Closing %"PRId64" files"
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
 #define HHC00150 "%s module loaded%s"
 #define HHC00151 "Activated facility: %s"
@@ -337,22 +337,22 @@ Examples:
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file %s, type %s: tape closed"
-#define HHC00202 "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x"I64_FMTX""
-#define HHC00203 "%1d:%04X Tape file %s, type %s: invalid tapemark at offset 0x"I64_FMTX""
-#define HHC00204 "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+#define HHC00202 "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x%16.16"PRIX64
+#define HHC00203 "%1d:%04X Tape file %s, type %s: invalid tapemark at offset 0x%16.16"PRIX64
+#define HHC00204 "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
 #define HHC00205 "%1d:%04X Tape file %s, type %s: error in function %s: %s"
 #define HHC00206 "%1d:%04X Tape file %s, type %s: not a valid file"
 #define HHC00207 "%1d:%04X Tape file %s, type %s: line %d: %s"
 #define HHC00208 "%1d:%04X Tape file %s, type %s: maximum tape capacity exceeded"
 #define HHC00209 "%1d:%04X Tape file %s, type %s: maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file %s, type %s: tape unloaded"
-#define HHC00211 "%1d:%04X Tape file %s, type scsi status %s, sstat 0x"I32_FMTX": %s %s%s%s%s%s%s%s"
+#define HHC00211 "%1d:%04X Tape file %s, type scsi status %s, sstat 0x%8.8"PRIX32": %s %s%s%s%s%s%s%s"
 #define HHC00212 "%1d:%04X Tape file %s, type %s: data chaining not supported for CCW %2.2X"
 #define HHC00213 "%1d:%04X Tape file %s, type %s: Error opening: errno=%d: %s"
 #define HHC00214 "%1d:%04X Tape file %s, type %s: auto-mount rejected: drive not empty"
 #define HHC00215 "%1d:%04X Tape file %s, type %s: auto-mounted"
 #define HHC00216 "%1d:%04X Tape file %s, type %s: auto-unmounted"
-#define HHC00217 "%1d:%04X Tape file %s, type %s: locate block 0x"I32_FMTX""
+#define HHC00217 "%1d:%04X Tape file %s, type %s: locate block 0x%8.8"PRIX32
 #define HHC00218 "%1d:%04X Tape file %s, type %s: display %s until unmounted"
 #define HHC00219 "%1d:%04X Tape file %s, type %s: display %s until unmounted, then %s until mounted"
 #define HHC00220 "%1d:%04X Tape file %s, type %s: format type is not determinable, presumed %s"
@@ -383,9 +383,9 @@ Examples:
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
 #define HHC00301 "%1d:%04X CCKD file[%d] %s: error in function %s: %s"
-#define HHC00302 "%1d:%04X CCKD file[%d] %s: error in function %s at offset 0x"I64_FMTX": %s"
+#define HHC00302 "%1d:%04X CCKD file[%d] %s: error in function %s at offset 0x%16.16"PRIX64": %s"
 #define HHC00303 "%1d:%04X CCKD file: error in function %s: %s"
-#define HHC00304 "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"U64_FMT"dM"
+#define HHC00304 "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"PRId64"M"
 #define HHC00305 "%1d:%04X CCKD file[%d] %s: device header id error"
 #define HHC00306 "%1d:%04X CCKD file[%d] %s: trklen error for %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00307 "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
@@ -417,13 +417,13 @@ Examples:
 #define HHC00333 "%1d:%04X           size free  nbr st   reads  writes l2reads    hits switches"
 #define HHC00334 "%1d:%04X                                                  readaheads   misses"
 #define HHC00335 "%1d:%04X --------------------------------------------------------------------"
-#define HHC00336 "%1d:%04X [*] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d    %7.7d %7.7d %7.7d %7.7d  %7.7d"
+#define HHC00336 "%1d:%04X [*] %10.10"PRId64" %3.3"PRId64" %% %4.4d    %7.7d %7.7d %7.7d %7.7d  %7.7d"
 #define HHC00337 "%1d:%04X                                                     %7.7d  %7.7d"
 #define HHC00338 "%1d:%04X %s"
-#define HHC00339 "%1d:%04X [0] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d %s %7.7d %7.7d %7.7d"
+#define HHC00339 "%1d:%04X [0] %10.10"PRId64" %3.3"PRId64" %% %4.4d %s %7.7d %7.7d %7.7d"
 #define HHC00340 "%1d:%04X %s"
-#define HHC00341 "%1d:%04X [%d] %10.10" I64_FMT "d %3.3" I64_FMT "d" "%%" " %4.4d %s %7.7d %7.7d %7.7d"
-#define HHC00342 "%1d:%04X CCKD file[%d] %s: offset 0x"I64_FMTx" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
+#define HHC00341 "%1d:%04X [%d] %10.10"PRId64" %3.3"PRId64" %% %4.4d %s %7.7d %7.7d %7.7d"
+#define HHC00342 "%1d:%04X CCKD file[%d] %s: offset 0x%16.16"PRIx64" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] %s: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] %s: compression %s not supported"
 /* HHC00345 cckd help output */
@@ -438,24 +438,24 @@ Examples:
 #define HHC00352 "%1d:%04X CCKD file %s: opened bit is on, use -f"
 #define HHC00353 "%1d:%04X CCKD file %s: check disk errors"
 #define HHC00354 "%1d:%04X CCKD file %s: error in function %s: %s"
-#define HHC00355 "%1d:%04X CCKD file %s: error in function %s at offset 0x"I64_FMTX": %s"
+#define HHC00355 "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
 #define HHC00356 "%1d:%04X CCKD file %s: not a compressed dasd file"
 #define HHC00357 "%1d:%04X CCKD file %s: converting to %s"
 #define HHC00358 "%1d:%04X CCKD file %s: file already compressed"
-#define HHC00359 "%1d:%04X CCKD file %s: compress succesful, %"I64_FMT"d bytes released"
+#define HHC00359 "%1d:%04X CCKD file %s: compress succesful, %"PRId64" bytes released"
 #define HHC00360 "%1d:%04X CCKD file %s: compress succesful, L2 tables relocated"
 #define HHC00361 "%1d:%04X CCKD file %s: dasd lookup error type %02X cylinders %d"
 #define HHC00362 "%1d:%04X CCKD file %s: bad %s %d, expecting %d"
 #define HHC00363 "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
 #define HHC00364 "%1d:%04X CCKD file %s: forcing check level %d"
-#define HHC00365 "%1d:%04X CCKD file %s: %s offset 0x"I32_FMTX" len %d is out of bounds"
-#define HHC00366 "%1d:%04X CCKD file %s: %s offset 0x"I32_FMTX" len %d overlaps %s offset 0x"I32_FMTX
+#define HHC00365 "%1d:%04X CCKD file %s: %s offset 0x%8.8"PRIX32" len %d is out of bounds"
+#define HHC00366 "%1d:%04X CCKD file %s: %s offset 0x%8.8"PRIX32" len %d overlaps %s offset 0x%"PRIX32
 #define HHC00367 "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %d, size %d"
 #define HHC00368 "%1d:%04X CCKD file %s: free space errors detected"
-#define HHC00369 "%1d:%04X CCKD file %s: %s[%d] hdr error offset 0x"I64_FMTX": %2.2X%2.2X%2.2X%2.2X%2.2X"
+#define HHC00369 "%1d:%04X CCKD file %s: %s[%d] hdr error offset 0x%16.16"PRIX64": %2.2X%2.2X%2.2X%2.2X%2.2X"
 #define HHC00370 "%1d:%04X CCKD file %s: %s[%d] compressed using %s, not supported"
-#define HHC00371 "%1d:%04X CCKD file %s: %s[%d] offset 0x"I64_FMTX" len %d validation error"
-#define HHC00372 "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x"I64_FMTX" len %d"
+#define HHC00371 "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %d validation error"
+#define HHC00372 "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %d"
 #define HHC00373 "%1d:%04X CCKD file %s: %d %s images recovered"
 #define HHC00374 "%1d:%04X CCKD file %s: not enough file space for recovery"
 #define HHC00375 "%1d:%04X CCKD file %s: recovery not completed: %s"
@@ -498,7 +498,7 @@ Examples:
 #define HHC00426 "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
 #define HHC00427 "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
 #define HHC00428 "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
-#define HHC00429 "%1d:%04X CKD file %s: read trk %d reading file %d offset %" I64_FMT "d len %d"
+#define HHC00429 "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
 #define HHC00430 "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
 #define HHC00431 "%1d:%04X CKD file %s: seeking to cyl %d head %d"
 #define HHC00432 "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
@@ -534,7 +534,7 @@ Examples:
 #define HHC00461 "%1d:%04X CKD file %s: %s count %u is outside range %u-%u"
 #define HHC00462 "%1d:%04X CKD file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
 #define HHC00463 "%1d:%04X CKD file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
-#define HHC00464 "%1d:%04X CKD file %s: file size too large: %"I64_FMT"u [%d]"
+#define HHC00464 "%1d:%04X CKD file %s: file size too large: %"PRIu64" [%d]"
 #define HHC00465 "%1d:%04X CKD file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
@@ -548,7 +548,7 @@ Examples:
 #define HHC00504 "%1d:%04X FBA file %s: REAL FBA opened"
 #define HHC00505 "%1d:%04X FBA file %s: invalid device origin block number %s"
 #define HHC00506 "%1d:%04X FBA file %s: invalid device block count %s"
-#define HHC00507 "%1d:%04X FBA file %s: origin %"I64_FMT"d, blks %d"
+#define HHC00507 "%1d:%04X FBA file %s: origin %"PRId64", blks %d"
 #define HHC00508 "%1d:%04X FBA file %s: device type %4.4X not found in dasd table"
 #define HHC00509 "%1d:%04X FBA file %s: define extent data too short: %d bytes"
 #define HHC00510 "%1d:%04X FBA file %s: second define extent in chain"
@@ -560,8 +560,8 @@ Examples:
 #define HHC00516 "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
 #define HHC00517 "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
 #define HHC00518 "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
-#define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"I64_FMT"d len %d"
-#define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"I64_FMT"X %"I64_FMT"d"
+#define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+#define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
 
 // reserve 006xx for sce dasd device related messages
@@ -627,7 +627,7 @@ Examples:
 #define HHC00804 "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
 #define HHC00805 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
 #define HHC00806 "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X id %8.8X"
-#define HHC00807 "Processor %s%02X: machine check code %16.16"I64_FMT"u"
+#define HHC00807 "Processor %s%02X: machine check code %16.16"PRIu64
 #define HHC00808 "Processor %s%02X: store status completed"
 #define HHC00809 "Processor %s%02X: disabled wait state %s"
 #define HHC00810 "Processor %s%02X: ipl failed: %s"
@@ -644,7 +644,7 @@ Examples:
 #define HHC00821 "Processor %s%02X: vector facility configured %s"
 #define HHC00822 "Processor %s%02X: machine check due to host error: %s"
 #define HHC00823 "Processor %s%02X: check-stop due to host error: %s"
-#define HHC00824 "Processor %s%02X: machine check code "I64_FMTX""
+#define HHC00824 "Processor %s%02X: machine check code %16.16"PRIX64
 #define HHC00825 "USR2 signal received for undetermined device"
 #define HHC00826 "%1d:%04X: USR2 signal received"
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
@@ -663,9 +663,9 @@ Examples:
 /* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
-#define HHC00842 "External interrupt: CPU timer="I64_FMTX""
+#define HHC00842 "External interrupt: CPU timer=%16.16"PRIX64
 #define HHC00843 "External interrupt: interval timer"
-#define HHC00844 "%1d:%04X: processing block I/O interrupt: code %4.4X parm "I64_FMTX" status %2.2X subcode %2.2X"
+#define HHC00844 "%1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
 #define HHC00845 "External interrupt: block I/O %s"
 #define HHC00846 "External interrupt: service signal %8.8X"
 
@@ -686,10 +686,10 @@ Examples:
 #define HHC00864 "Processor %s%02X: lock %sheld"
 #define HHC00865 "Processor %s%02X: connected to channelset %s"
 #define HHC00866 "Processor %s%02X: state %s"
-#define HHC00867 "Processor %s%02X: instcount %" I64_FMT "d"
-#define HHC00868 "Processor %s%02X: siocount %" I64_FMT "d"
+#define HHC00867 "Processor %s%02X: instcount %"PRId64
+#define HHC00868 "Processor %s%02X: siocount %"PRId64
 #define HHC00869 "Processor %s%02X: psw %s"
-#define HHC00870 "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP""
+#define HHC00870 "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP
 #define HHC00871 "syncbc mask "F_CPU_BITMAP" %s"
 #define HHC00872 "signaling facility %sbusy"
 #define HHC00873 "TOD lock %sheld"
@@ -916,9 +916,9 @@ Examples:
 // reserve 013xx for channel related messages
 /* channel.c */
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"
-#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"I16_FMT"X %16.16"I64_FMT"X: %s"
-#define HHC01302 "%1d:%04X CHAN: idaw %8.8"I32_FMT"X, len %3.3"I16_FMT"X: %s"
-#define HHC01303 "%1d:%04X CHAN: idaw %16.16"I64_FMT"X, len %4.4"I16_FMT"X: %s"
+#define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
+#define HHC01302 "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
+#define HHC01303 "%1d:%04X CHAN: idaw %16.16"PRIX64", len %4.4"PRIX16": %s"
 #define HHC01304 "%1d:%04X CHAN: attention signaled"
 #define HHC01305 "%1d:%04X CHAN: attention"
 #define HHC01306 "%1d:%04X CHAN: initial status interrupt"
@@ -1173,33 +1173,33 @@ Examples:
 #define HHC01902 "Waiting 1 second for cpu's to stop"
 
 /* vmd250.c */
-#define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm "I64_FMTX" status %2.2X subcode %2.2X"
-#define HHC01906 "%04X d250_init32 s %i o %"I64_FMT"i b %"I64_FMT"i e %"I64_FMT"i"
+#define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
+#define HHC01906 "%04X d250_init32 s %i o %"PRIi64" b %"PRIi64" e %"PRIi64
 #define HHC01907 "%04X d250_init BLKTAB: type %4.4X arch %i 512 %i 1024 %i 2048 %i 4096 %i"
 #define HHC01908 "Error in function %s: %s"
 #define HHC01909 "%04X d250_preserve pending sense preserved"
 #define HHC01920 "%04X d250_restore pending sense restored"
 #define HHC01921 "%04X d250_remove block I/O environment removed"
-#define HHC01922 "%04X d250_read %d-byte block (rel. to 0): %"I64_FMT"d"
+#define HHC01922 "%04X d250_read %d-byte block (rel. to 0): %"PRId64
 #define HHC01923 "%04X d250_read FBA unit status %2.2X residual %d"
 #define HHC01924 "%04X async biopl %8.8X entries %d key %2.2X intp %8.8X"
 #define HHC01925 "%04X d250_iorq32 sync bioel %8.8X entries %d key %2.2X"
 #define HHC01926 "%04X d250_iorq32 psc %d succeeded %d failed %d"
 #define HHC01927 "d250_list32 error: psc %i"
 #define HHC01928 "%04X d250_list32 bios %i addr "F_RADR" I/O key %2.2X"
-#define HHC01929 "%04X d250_list32 xcode %4.4X bioe32 %8.8"I64_FMT"X-%8.8"I64_FMT"X fetch key %2.2X"
-#define HHC01930 "%04X d250_list32 bioe %8.8"I64_FMT"X oper %2.2X block %i buffer %8.8"I64_FMT"X"
-#define HHC01931 "%04X d250_list32 xcode %4.4X rdbuf %8.8"I64_FMT"X-%8.8"I64_FMT"X fetch key %2.2X"
-#define HHC01932 "%04X d250_list32 xcode %4.4X wrbuf %8.8"I64_FMT"X-%8.8"I64_FMT"X store key %2.2X"
-#define HHC01933 "%04X d250_list32 xcode %4.4X status %8.8"I64_FMT"X-%8.8"I64_FMT"X  store key %2.2X"
-#define HHC01934 "%04X d250_list32 bioe %8.8"I64_FMT"X status %2.2X"
-#define HHC01935 "%04X async bioel "I64_FMTX" entries %"I64_FMT"d key %2.2X intp "I64_FMTX""
-#define HHC01936 "%04X d250_iorq64 sync bioel "I64_FMTX" entries %"I64_FMT"d key %2.2X"
+#define HHC01929 "%04X d250_list32 xcode %4.4X bioe32 %8.8"PRIX64"-%8.8"PRIX64" fetch key %2.2X"
+#define HHC01930 "%04X d250_list32 bioe %8.8"PRIX64" oper %2.2X block %i buffer %8.8"PRIX64
+#define HHC01931 "%04X d250_list32 xcode %4.4X rdbuf %8.8"PRIX64"-%8.8"PRIX64" fetch key %2.2X"
+#define HHC01932 "%04X d250_list32 xcode %4.4X wrbuf %8.8"PRIX64"-%8.8"PRIX64" store key %2.2X"
+#define HHC01933 "%04X d250_list32 xcode %4.4X status %8.8"PRIX64"-%8.8"PRIX64"  store key %2.2X"
+#define HHC01934 "%04X d250_list32 bioe %8.8"PRIX64" status %2.2X"
+#define HHC01935 "%04X async bioel %16.16"PRIX64" entries %"PRId64" key %2.2X intp %16.16"PRIX64
+#define HHC01936 "%04X d250_iorq64 sync bioel %16.16"PRIX64" entries %"PRId64" key %2.2X"
 #define HHC01937 "%04X d250_iorq64 psc %d succeeded %d failed %d"
 #define HHC01938 "d250_list64 error: psc %i"
-#define HHC01939 "%04X d250_list64 bioes %"I64_FMT"i addr "F_RADR" I/O key %2.2X"
+#define HHC01939 "%04X d250_list64 bioes %"PRIi64" addr "F_RADR" I/O key %2.2X"
 #define HHC01940 "%04X d250_list64 xcode %4.4X bioe64 "F_RADR"-"F_RADR" fetch key %2.2X"
-#define HHC01941 "%04X d250_list64 bioe "F_RADR" oper %2.2X block %"I64_FMT"i buffer "F_RADR""
+#define HHC01941 "%04X d250_list64 bioe "F_RADR" oper %2.2X block %"PRIi64" buffer "F_RADR
 #define HHC01942 "%04X d250_list64 xcode %4.4X readbuf "F_RADR"-"F_RADR" fetch key %2.2X"
 #define HHC01943 "%04X d250_list64 xcode %4.4X writebuf "F_RADR"-"F_RADR" store key %2.2X"
 #define HHC01944 "%04X d250_list64 xcode %4.4X status "F_RADR"-"F_RADR" store key %2.2X"
@@ -1290,8 +1290,8 @@ Examples:
 #define HHC02236 "IPL rejected: All CPU's must be stopped"
 #define HHC02237 "Not all devices shown (max %d)"
 #define HHC02238 "Device numbers can only be redefined within the same Logical Channel SubSystem"
-#define HHC02239 "%1d:%04X synchronous: %12" I64_FMT "d asynchronous: %12" I64_FMT "d"
-#define HHC02240 "Total synchronous: %13" I64_FMT "d asynchronous: %12" I64_FMT "d  %3" I64_FMT "d%%"
+#define HHC02239 "%1d:%04X synchronous: %12"PRId64" asynchronous: %12"PRId64
+#define HHC02240 "Total synchronous: %13"PRId64" asynchronous: %12"PRId64"  %3"PRId64"%%"
 #define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"
 #define HHC02243 "%1d:%04X reinit rejected; drive not empty"
@@ -1305,8 +1305,8 @@ Examples:
 #define HHC02251 "Address exceeds main storage size"
 #define HHC02252 "Sorry, too many instructions"
 #define HHC02253 "All CPU's must be stopped to change architecture"
-#define HHC02254 " i: %12" I64_FMT "d"
-#define HHC02255 "%3d: %12" I64_FMT "d"
+#define HHC02254 " i: %12"PRId64
+#define HHC02255 "%3d: %12"PRId64
 #define HHC02256 "Command %s is deprecated, use %s instead"
 #define HHC02257 "%s%7d"
 #define HHC02258 "Only 1 %s may be invoked from the panel at any time"
@@ -1327,7 +1327,7 @@ Examples:
 #define HHC02273 "Index %2d: %s"
 #define HHC02274 "%s" // 'clocks' command
 #define HHC02275 "SCSI auto-mount: %s"
-#define HHC02276 "Floating point control register: %08"I32_FMT"X"
+#define HHC02276 "Floating point control register: %08"PRIX32
 #define HHC02277 "Prefix register: %s"
 #define HHC02278 "Program status word: %s"
 #define HHC02279 "%s" // devlist command
@@ -1351,14 +1351,14 @@ Examples:
 #define HHC02297 "MIP capping is not enabled"
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
-#define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X"
+#define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"PRIX64
 #define HHC02301 "%s: Unexpected read length at record %d; expected %d-byte record"
 #define HHC02302 "%s: Record %d is unknown record type %s; skipped"
 #define HHC02303 "%s: GOFF object found at record %d; aborting"
 #define HHC02304 "%s: Record %d is unknown record type; skipped"
 #define HHC02305 "%s: Record %d is unknown record type; aborting"
 #define HHC02306 "%s: Address %s not on quadword boundary"
-#define HHC02307 "%s: Record %d relocation value %6.6"I64_FMT"X address exceeds main storage size"
+#define HHC02307 "%s: Record %d relocation value %6.6"PRIX64" address exceeds main storage size"
 #define HHC02308 "%s: Warning messages issued, review before executing"
 #define HHC02309 "%s: Record %d is unsupported record type %s; skipped"
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
@@ -1775,7 +1775,7 @@ Examples:
 #define HHC02718 "Tape %s: Device type%s"
 #define HHC02719 "Tape %s: Device density%s"
 #define HHC02720 "File %s: Error opening: errno=%d: %s"
-#define HHC02721 "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+#define HHC02721 "File No. %u: Blocks=%u, Bytes=%"PRId64", Block size min=%u, max=%u, avg=%u"
 #define HHC02722 "Tape Label: %s"
 #define HHC02723 "File No. %u: Block %u"
 #define HHC02724 "Successful completion"
@@ -1816,8 +1816,8 @@ Examples:
        "                -v   verbose (debug) information\n" \
        "                -z   use ZLIB compression\n"
 #define HHC02731 "          (tapemark)"
-#define HHC02732 "Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u"
-#define HHC02733 "Bytes written: %"I64_FMT"d (%3.1f MB)"
+#define HHC02732 "Bytes read:    %"PRId64" (%3.1f MB), Blocks=%u, avg=%u"
+#define HHC02733 "Bytes written: %"PRId64" (%3.1f MB)"
 
 #define HHC02738 "%s"
 #define HHC02739 "Usage: %s [options] infile outtmplt\n" \
@@ -1939,7 +1939,7 @@ Examples:
 #define HHC04101 "%s Statistics:"
 #define HHC04102 "One of the GetProcAddress calls failed"
 #define HHC04103 "  %s%5luK"
-#define HHC04104 "  %12" I64_FMT "d  %s"
+#define HHC04104 "  %12"PRId64"  %s"
 //efine HHC04105 (available)
 //efine HHC04106 (available)
 //efine HHC04107 (available)
@@ -1978,7 +1978,7 @@ Examples:
 #define HHC05017 "%1d:%04X CTCE: Halt or Clear Recognized"
 #define HHC05018 "%1d:%04X CTCE: Read thread started for %s (bufsize=%d,%d)"
 #define HHC05020 "%1d:%04X CTCE: Zero length read from %s"
-#define HHC05021 "%1d:%04X CTCE: %"U64_FMT"u MB received in %"U64_FMT"u packets"
+#define HHC05021 "%1d:%04X CTCE: %"PRIu64" MB received in %"PRIu64" packets"
 #define HHC05022 "%1d:%04X CTCE: bufsize parameter %d is too small; increase at least to %d"
 #define HHC05023 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X l=%4.4X k=%8.8X"
 #define HHC05024 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X: wait RC=%d"
@@ -2015,7 +2015,7 @@ Examples:
 #define HHC17001 "%s server listening %s"
 #define HHC17002 "%s server inactive"
 #define HHC17003 "%-8s storage is %s (%ssize); storage is %slocked"
-#define HHC17004 "CPUID  = "I64_FMTX""
+#define HHC17004 "CPUID  = %16.16"PRIX64
 #define HHC17005 "CPC SI = %4.4X.%s.%s.%s.%16.16X"
 #define HHC17006 "LPARNAME[%2.2X] = %s"
 #define HHC17007 "NumCPU = %2.2d, NumVEC = %2.2d, ReservedCPU = %2.2d, MaxCPU = %2.2d"
@@ -2087,7 +2087,7 @@ Examples:
 #define HHC90018 "Total locks defined: %d"
 #define HHC90019 "No locks found for thread "TIDPAT"."
 #define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
-#define HHC90021 "%-18s %s "I32_FMTX" %-18s "PTR_FMTx" "PTR_FMTx" %s"
+#define HHC90021 "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
 
 
 /* from crypto/dyncrypt.c when compiled with debug on */
@@ -2185,8 +2185,8 @@ Examples:
 #define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
 #define HHC90403 "SHOWTRK Compressed track header and data"
 #define HHC90404 "SHOWTRK Decompressed track header and data"
-#define HHC90405 "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d"
-#define HHC90406 "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d"
+#define HHC90405 "OFFTIFY string %s hex %8.8"PRIX64" decimal %"PRId64
+#define HHC90406 "OFFTIFY string %s decimal %"PRIX64" %"PRId64
 #define HHC90407 "%s device has %d heads/cylinder"
 
 // range 90500 - 90599 available

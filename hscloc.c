@@ -127,7 +127,7 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
         /* verify head, tail, length and address */
         if ( loc != (U64)((uintptr_t)&sysblk) )
         {
-            MSGBUF( msgbuf, "SYSBLK moved; was 0x"I64_FMTX", is 0x%p", loc, &sysblk );
+            MSGBUF( msgbuf, "SYSBLK moved; was 0x%16.16"PRIX64", is 0x%p", loc, &sysblk );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
@@ -284,7 +284,7 @@ int locate_regs(int argc, char *argv[], char *cmdline)
         /* verify head, tail, length and address */
         if ( loc != (U64)((uintptr_t)regs) )
         {
-            MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x"I64_FMTX", is 0x%p",
+            MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x%16.16"PRIX64", is 0x%p",
                             cpu, loc, regs );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
@@ -419,7 +419,7 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
     /* verify head, tail, length and address */
         if ( loc != (U64)((uintptr_t)&hostinfo) )
         {
-            MSGBUF( msgbuf, "HOSTINFO moved; was 0x"I64_FMTX", is 0x%p", loc, &hostinfo );
+            MSGBUF( msgbuf, "HOSTINFO moved; was 0x%16.16"PRIX64", is 0x%p", loc, &hostinfo );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }

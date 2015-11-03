@@ -452,7 +452,7 @@ void*  gui_panel_command (char* pszCommand)
 
     if (strncasecmp(pszCommand,"MAINSTOR=",9) == 0)
     {
-        gui_fprintf(fStatusStream,"MAINSTOR=%"UINT_PTR_FMT"d\n",(uintptr_t)pTargetCPU_REGS->mainstor);
+        gui_fprintf(fStatusStream,"MAINSTOR=%"PRId64"\n",(uintptr_t)pTargetCPU_REGS->mainstor);
 
         // Here's a trick! Hercules reports its version number to the GUI
         // by means of the MAINSIZE value! Later releases of HercGUI know
@@ -484,7 +484,7 @@ void*  gui_panel_command (char* pszCommand)
         if (gui_version < 1.12)
             gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
         else
-            gui_fprintf(fStatusStream,"MAINSIZE=%"UINT_PTR_FMT"d\n",(uintptr_t)sysblk.mainsize);
+            gui_fprintf(fStatusStream,"MAINSIZE=%"PRId64"\n",(uintptr_t)sysblk.mainsize);
         return NULL;
     }
 

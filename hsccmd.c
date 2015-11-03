@@ -6149,7 +6149,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         if (sysblk.pgminttr == 0                    )   sostailor = "QUIET";
         if (sysblk.pgminttr == OS_NONE              )   sostailor = "DEFAULT";
         if ( sostailor == NULL )
-            MSGBUF( msgbuf, "Custom(0x"I64_FMTX")", sysblk.pgminttr );
+            MSGBUF( msgbuf, "Custom(0x%16.16"PRIX64")", sysblk.pgminttr );
         else
             MSGBUF( msgbuf, "%s", sostailor );
         WRMSG(HHC02203, "I", argv[0], msgbuf);
@@ -7165,7 +7165,7 @@ REGS *regs;
     {
         char buf[40];
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        MSGBUF( buf, I64_FMTX"-"I64_FMTX, (U64) aaddr, (U64) aaddr2);
+        MSGBUF( buf, "%16.16"PRIX64"-%16.16"PRIX64, (U64) aaddr, (U64) aaddr2);
         // "Invalid argument %s%s"
         WRMSG(HHC02205, "W", buf, ": invalid range" );
         return -1;

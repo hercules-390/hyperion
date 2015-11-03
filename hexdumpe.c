@@ -145,14 +145,14 @@ void _hexdumpxn( const char *pfx, char **buf, const char *dat, size_t skp,
             return;
     }
     for (; (skp+amt) >= bpl; adr+=bpl, p+=lbs) {
-        sprintf( &p[0], "%s%0*" U64_FMT "X  ", pfx, hxd, adr );
+        sprintf( &p[0], "%s%0*"PRIX64"  ", pfx, hxd, adr );
         _hexlinex( &p[n+hxd+2], dat, skp, (bpl-skp), bpg, gpl, x2x );
         dat += (bpl - skp);
         amt -= (bpl - skp);
         skp = 0;
     }
     if (amt) {
-        sprintf( &p[0], "%s%0*" U64_FMT "X  ", pfx, hxd, adr );
+        sprintf( &p[0], "%s%0*"PRIX64"  ", pfx, hxd, adr );
         _hexlinex( &p[n+hxd+2], dat, skp, amt, bpg, gpl, x2x );
     }
 }

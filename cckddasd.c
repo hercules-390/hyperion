@@ -659,7 +659,7 @@ int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] read, off 0x"I64_FMTx" len %d",
+    cckd_trace (dev, "file[%d] fd[%d] read, off 0x%16.16"PRIx64" len %d",
                 sfx, cckd->fd[sfx], off, len);
 
     /* Seek to specified offset */
@@ -703,7 +703,7 @@ int             rc = 0;                 /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] write, off 0x"I64_FMTx" len %d",
+    cckd_trace (dev, "file[%d] fd[%d] write, off 0x%16.16"PRIx64" len %d",
                 sfx, cckd->fd[sfx], off, len);
 
     /* Seek to specified offset */
@@ -745,7 +745,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x"I64_FMTx,
+    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x%16.16"PRIx64,
                 sfx, cckd->fd[sfx], off);
 
     /* Truncate the file */
@@ -1993,7 +1993,7 @@ off_t           fpos;
         for (n = 0, i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
             if (++n > cckd->freenbr) break;
-            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos "I64_FMTx" len %8d "I64_FMTx" pend %d",
+            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %16.16"PRIx64" len %8d %16.16"PRIx64" pend %d",
                         n, i, cckd->free[i].prev, cckd->free[i].next,
                         fpos, cckd->free[i].len,
                         fpos + cckd->free[i].len, cckd->free[i].pending);
@@ -2049,7 +2049,7 @@ cckd_get_space_atend:
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((fpos + len) > cckd->maxsize)
         {
-            // "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"U64_FMT"dM"
+            // "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"PRId64"M"
             WRMSG (HHC00304, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
                 (S64) (cckd->maxsize >> 20) + 1);
             return -1;
@@ -2057,7 +2057,7 @@ cckd_get_space_atend:
         cckd->cdevhdr[sfx].size += len;
         cckd->cdevhdr[sfx].used += len;
 
-        cckd_trace (dev, "get_space atend 0x"I64_FMTx" len %d",fpos, len);
+        cckd_trace (dev, "get_space atend 0x%16.16"PRIx64" len %d",fpos, len);
 
         return fpos;
     }
@@ -2139,7 +2139,7 @@ cckd_get_space_atend:
 
     cckd->cdevhdr[sfx].free_imbed += *size - len;
 
-    cckd_trace (dev, "get_space found 0x"I64_FMTx" len %d size %d",
+    cckd_trace (dev, "get_space found 0x%16.16"PRIx64" len %d size %d",
                 fpos, len, *size);
 
     return fpos;
@@ -2164,7 +2164,7 @@ int             fsize = size;           /* Free space size           */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "rel_space offset 0x"I64_FMTx" len %d size %d",
+    cckd_trace (dev, "rel_space offset 0x%16.16"PRIx64" len %d size %d",
                 pos, len, size);
 
     if (!cckd->free) cckd_read_fsp (dev);
@@ -2320,7 +2320,7 @@ U32             ppos, pos;              /* Free space offsets        */
         i = p;
         p = cckd->free[i].prev;
 
-        cckd_trace (dev, "file[%d] rel_flush_space atend 0x"I64_FMTx" len %d",
+        cckd_trace (dev, "file[%d] rel_flush_space atend 0x%16.16"PRIx64" len %d",
                     sfx, ppos, cckd->free[i].len);
 
         /* Remove the entry from the chain */
@@ -2526,7 +2526,7 @@ off_t           off;                    /* Offset to l1 entry        */
     sfx = cckd->sfn;
     off = (off_t)(CCKD_L1TAB_POS + l1x * CCKD_L1ENT_SIZE);
 
-    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x"I64_FMTx,
+    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x%16.16"PRIx64,
                 sfx, l1x, off);
 
     if (cckd_write (dev, sfx, off, &cckd->l1[sfx][l1x], CCKD_L1ENT_SIZE) < 0)
@@ -2865,7 +2865,7 @@ int             nullfmt;                /* Null track format         */
         if (cckd->swapend[sfx])
             cckd_swapend_l2 (buf);
 
-        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x"I32_FMTx,
+        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x%8.8"PRIx32,
                     sfx, lru, l1x, cckd->l1[sfx][l1x]);
 
         cckd->l2reads[sfx]++;
@@ -4911,7 +4911,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         if (ulen > flen + 65536) ulen = flen + 65536;
         if (ulen > sizeof(buf))  ulen = sizeof(buf);
 
-        cckd_trace (dev, "gcperc selected space 0x"I64_FMTx" len %d", upos, ulen);
+        cckd_trace (dev, "gcperc selected space 0x%16.16"PRIx64" len %d", upos, ulen);
 
         if (cckd_read (dev, sfx, upos, buf, ulen) < 0)
             goto cckd_gc_perc_error;
@@ -4929,7 +4929,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 /* Moving a level 2 table */
                 len = CCKD_L2TAB_SIZE;
                 if (i + len > ulen) break;
-                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x"I64_FMTx" len %d",
+                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x%16.16"PRIx64" len %d",
                             j, upos + i, len);
 
                 /* Make the level 2 table active */
@@ -4957,7 +4957,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 len = (int)l2.size;
                 if (i + l2.len > (int)ulen) break;
 
-                cckd_trace (dev, "gcperc move trk %d at pos 0x"I64_FMTx" len %h",
+                cckd_trace (dev, "gcperc move trk %d at pos 0x%16.16"PRIx64" len %h",
                             trk, upos + i, l2.len);
 
                 /* Relocate the track image somewhere else */

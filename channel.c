@@ -703,7 +703,7 @@ char    msgbuf[133];                    /* Message buffer            */
         if (sysblk.mainsize > 2*ONE_GIGABYTE)
             for (; storage < limit; addr += 16, storage += 16, k -= 16)
             {
-                MSGBUF(msgbuf, I64_FMTX" => ", addr);
+                MSGBUF(msgbuf, "%16.16"PRIX64" => ", addr);
                 format_data(msgbuf+20, sizeof(msgbuf)-20, storage, k);
                 WRMSG(HHC90000, "I", msgbuf);
             }
@@ -869,7 +869,7 @@ char    msgbuf[133];
                "%2.2X "         /* Channel Status                    */
                "%8.8X "         /* CCW Address (SCSW CCW Address)    */
                "%8.8X "         /* Data length                       */
-               I64_FMTX" "      /* Data address                      */
+              "%16.16"PRIX64" " /* Data address                      */
                "%2.2X "         /* CCW Flags                         */
                "%8.8X "         /* CCW Count                         */
                "%8.8X "         /* IDAW Address                      */

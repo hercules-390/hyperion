@@ -222,8 +222,6 @@ typedef pthread_rwlock_t        HRWLOCK;
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
-#define TIDPAT              TID_FMTx    /* TID printf pattern        */
-#define SCN_TIDPAT      "%" TID_FMT "x" /* TID sscanf pattern        */
 #if !defined(EOWNERDEAD)
   /* PROGRAMMING NOTE: we use a purposely large value to try and
      prevent collision with any existing threading return value.     */

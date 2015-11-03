@@ -269,7 +269,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Check that block length will not exceed buffer size */
         if (blklen + seglen > MAX_BLKLEN)
         {
-            // "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x"I64_FMTX""
+            // "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x%16.16"PRIX64
             WRMSG (HHC00202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws",
                     (int)MAX_BLKLEN, blkpos);
 
@@ -282,7 +282,7 @@ U16             seglen;                 /* Data length of segment    */
         if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK)
             && blklen + seglen > 0)
         {
-            // "%1d:%04X Tape file %s, type %s: invalid tapemark at offset 0x"I64_FMTX""
+            // "%1d:%04X Tape file %s, type %s: invalid tapemark at offset 0x%16.16"PRIX64
             WRMSG (HHC00203, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", blkpos);
 
             /* Set unit check with data check */
@@ -300,7 +300,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle read error condition */
         if (rc < 0)
         {
-            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
             WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read()", blkpos, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -311,7 +311,7 @@ U16             seglen;                 /* Data length of segment    */
         /* Handle end of file within data block */
         if (rc < seglen)
         {
-            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
             WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read_awstape()", blkpos, "end of file within data block");
 
             /* Set unit check with data check and partial record */
@@ -430,7 +430,7 @@ U16             prvblkl;                /* Length of previous chunk  */
         rc = write (dev->fd, &awshdr, sizeof(awshdr));
         if (rc < (int)sizeof(awshdr))
         {
-            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
             WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                 "aws", "write()", blkpos, strerror(errno));
             if (ENOSPC == errno)
@@ -449,7 +449,7 @@ U16             prvblkl;                /* Length of previous chunk  */
         rc = write (dev->fd, buf, chksize);
         if (rc < (int)chksize)
         {
-            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+            // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
             WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                 "aws", "write()", blkpos + sizeof(awshdr), strerror(errno));
             if (ENOSPC == errno)
@@ -488,7 +488,7 @@ U16             prvblkl;                /* Length of previous chunk  */
     /* Handle write error condition */
     if (rc != 0)
     {
-        // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x"I64_FMTX": %s"
+        // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
         WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
             "aws", "ftruncate()", blkpos, strerror(errno));
 

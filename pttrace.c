@@ -514,14 +514,14 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                        thread class, format it as a +/- decimal value.
                     */
                     if((pttrace[i].trclass & ~PTT_CL_THR))
-                        MSGBUF(retcode, I32_FMTx, pttrace[i].rc);
+                        MSGBUF(retcode, "%8.8"PRIx32, pttrace[i].rc);
                     else
                         MSGBUF(retcode, "%d", pttrace[i].rc);
                 }
                 WRMSG( HHC90021, "I"
                     , pttrace[i].loc                    // File name (string; 18 chars)
                     , &tod[11]                          // Time of day (HH:MM:SS.usecs)
-                    , (U32)(uintptr_t)(pttrace[i].tid)  // Thread id (low 32 bits)
+                    , pttrace[i].tid                    // Thread id
                     , pttrace[i].msg                    // Trace message (string; 18 chars)
                     , (uintptr_t)pttrace[i].data1       // Data value 1
                     , (uintptr_t)pttrace[i].data2       // Data value 2

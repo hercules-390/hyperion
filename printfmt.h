@@ -37,59 +37,78 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Hercules fixed-width, zero padded hex values                      */
+/* C99 ISO Standard Names             (most of them but not all)     */
 /*-------------------------------------------------------------------*/
 
-#define  I16_FMTx           "%4.4" I16_FMT "x"  // complete format spec
-#define  I32_FMTx           "%8.8" I32_FMT "x"  // complete format spec
-#define  I64_FMTx         "%16.16" I64_FMT "x"  // complete format spec
+#if !defined( PRId64 )
 
-#define  I16_FMTX           "%4.4" I16_FMT "X"  // complete format spec
-#define  I32_FMTX           "%8.8" I32_FMT "X"  // complete format spec
-#define  I64_FMTX         "%16.16" I64_FMT "X"  // complete format spec
+#define PRId16                     I16_FMT "d"  // without leading "%"
+#define PRId32                     I32_FMT "d"  // without leading "%"
+#define PRId64                     I64_FMT "d"  // without leading "%"
+
+#define PRIi16                     I16_FMT "i"  // without leading "%"
+#define PRIi32                     I32_FMT "i"  // without leading "%"
+#define PRIi64                     I64_FMT "i"  // without leading "%"
+
+#define PRIu16                     I16_FMT "u"  // without leading "%"
+#define PRIu32                     I32_FMT "u"  // without leading "%"
+#define PRIu64                     I64_FMT "u"  // without leading "%"
+
+#define PRIx16                     I16_FMT "x"  // without leading "%"
+#define PRIx32                     I32_FMT "x"  // without leading "%"
+#define PRIx64                     I64_FMT "x"  // without leading "%"
+
+#define PRIX16                     I16_FMT "X"  // without leading "%"
+#define PRIX32                     I32_FMT "X"  // without leading "%"
+#define PRIX64                     I64_FMT "X"  // without leading "%"
+
+#if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
+#define PRIdPTR                    I64_FMT "d"  // without leading "%"
+#define PRIiPTR                    I64_FMT "i"  // without leading "%"
+#define PRIuPTR                    I64_FMT "u"  // without leading "%"
+#define PRIxPTR                    I64_FMT "x"  // without leading "%"
+#define PRIXPTR                    I64_FMT "X"  // without leading "%"
+#else
+#define PRIdPTR                    I32_FMT "d"  // without leading "%"
+#define PRIiPTR                    I32_FMT "i"  // without leading "%"
+#define PRIuPTR                    I32_FMT "u"  // without leading "%"
+#define PRIxPTR                    I32_FMT "x"  // without leading "%"
+#define PRIXPTR                    I32_FMT "X"  // without leading "%"
+#endif
+
+#define SCNd16                     PRId16       // without leading "%"
+#define SCNd32                     PRId32       // without leading "%"
+#define SCNd64                     PRId64       // without leading "%"
+
+#define SCNi16                     PRIi16       // without leading "%"
+#define SCNi32                     PRIi32       // without leading "%"
+#define SCNi64                     PRIi64       // without leading "%"
+
+#define SCNu16                     PRIu16       // without leading "%"
+#define SCNu32                     PRIu32       // without leading "%"
+#define SCNu64                     PRIu64       // without leading "%"
+
+#define SCNx16                     PRIx16       // without leading "%"
+#define SCNx32                     PRIx32       // without leading "%"
+#define SCNx64                     PRIx64       // without leading "%"
+
+#define SCNdPTR                    PRIdPTR      // without leading "%"
+#define SCNiPTR                    PRIiPTR      // without leading "%"
+#define SCNuPTR                    PRIuPTR      // without leading "%"
+#define SCNxPTR                    PRIxPTR      // without leading "%"
+
+#endif // !defined( PRId64 )
 
 /*-------------------------------------------------------------------*/
-/* U16/U32/U64 typedef names might be easier to remember             */
-/*-------------------------------------------------------------------*/
-
-#define  U16_FMT                   I16_FMT      // length modifier only
-#define  U32_FMT                   I32_FMT      // length modifier only
-#define  U64_FMT                   I64_FMT      // length modifier only
-
-#define  U16_FMTx                  I16_FMTx     // complete format spec
-#define  U32_FMTx                  I32_FMTx     // complete format spec
-#define  U64_FMTx                  I64_FMTx     // complete format spec
-
-#define  U16_FMTX                  I16_FMTX     // complete format spec
-#define  U32_FMTX                  I32_FMTX     // complete format spec
-#define  U64_FMTX                  I64_FMTX     // complete format spec
-
-/*-------------------------------------------------------------------*/
-/* Hercules pointer format                                           */
+/* Hercules pointer/address formats                                  */
 /*-------------------------------------------------------------------*/
 
 #if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
- #define UINT_PTR_FMT              I64_FMT      // length modifier only
- #define      PTR_FMTx             I64_FMTx     // complete format spec
- #define      PTR_FMTX             I64_FMTX     // complete format spec
+ #define PTR_FMTx          "%16.16"PRIx64       // complete format spec
+ #define PTR_FMTX          "%16.16"PRIX64       // complete format spec
 #else
- #define UINT_PTR_FMT              I32_FMT      // length modifier only
- #define      PTR_FMTx             I32_FMTx     // complete format spec
- #define      PTR_FMTX             I32_FMTX     // complete format spec
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Hercules size_t format                                            */
-/*-------------------------------------------------------------------*/
-
-#if defined( SIZEOF_SIZE_T ) && SIZEOF_SIZE_T >= 8
-  #define  SIZE_T_FMT              I64_FMT      // length modifier only
-  #define  SIZE_T_FMTx             I64_FMTx     // complete format spec
-  #define  SIZE_T_FMTX             I64_FMTX     // complete format spec
-#else
-  #define  SIZE_T_FMT              I32_FMT      // length modifier only
-  #define  SIZE_T_FMTx             I32_FMTx     // complete format spec
-  #define  SIZE_T_FMTX             I32_FMTX     // complete format spec
+ #define PTR_FMTx           "%8.8" PRIx32       // complete format spec
+ #define PTR_FMTX           "%8.8" PRIX32       // complete format spec
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -97,17 +116,14 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define  TID_FMT                 U32_FMT      // length modifier only
-  #define  TID_FMTx                U32_FMTx     // complete format spec
-  #define  TID_FMTX                U32_FMTX     // complete format spec
+  #define TIDPAT             "%8.8"PRIx32       // complete format spec
+  #define SCN_TIDPAT            "%"PRIx32       // complete format spec
 #elif defined( SIZEOF_PTHREAD_T ) && SIZEOF_PTHREAD_T >= 8
-  #define  TID_FMT                 U64_FMT      // length modifier only
-  #define  TID_FMTx                U64_FMTx     // complete format spec
-  #define  TID_FMTX                U64_FMTX     // complete format spec
+  #define TIDPAT           "%16.16"PRIx64       // complete format spec
+  #define SCN_TIDPAT            "%"PRIx64       // complete format spec
 #else
-  #define  TID_FMT                 U32_FMT      // length modifier only
-  #define  TID_FMTx                U32_FMTx     // complete format spec
-  #define  TID_FMTX                U32_FMTX     // complete format spec
+  #define TIDPAT             "%8.8"PRIx32       // complete format spec
+  #define SCN_TIDPAT            "%"PRIx32       // complete format spec
 #endif
 
 #endif // _PRINTFMT_H_
