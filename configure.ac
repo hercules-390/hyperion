@@ -1094,6 +1094,10 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
 AC_CHECK_SIZEOF(off_t)
 
+if test "$hc_cv_have_pthread_h" == "yes"; then
+  AC_CHECK_SIZEOF(pthread_t)
+fi
+
 #----------------------------------#
 #  Structure alignment/size test   #
 #----------------------------------#

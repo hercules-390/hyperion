@@ -2049,8 +2049,9 @@ cckd_get_space_atend:
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((fpos + len) > cckd->maxsize)
         {
+            // "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"U64_FMT"dM"
             WRMSG (HHC00304, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx),
-                  (long long)    (cckd->maxsize >> 20) + 1);
+                (S64) (cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;

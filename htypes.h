@@ -53,56 +53,6 @@ typedef  uint8_t    DBLWRD[8];  // unsigned doubleword (8 bytes)
 typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 
 /*-------------------------------------------------------------------*/
-/* Format size modifiers for printf and scanf                        */
-/*-------------------------------------------------------------------*/
-
-#if defined(_MSVC_)
-  #define  I16_FMT                  "h"
-  #define  I32_FMT                 "I32"
-  #define  I64_FMT                 "I64"
-#elif defined(__PRI_64_LENGTH_MODIFIER__) // MAC
-  #define  I16_FMT                  "h"
-  #define  I32_FMT                  ""
-  #define  I64_FMT                  __PRI_64_LENGTH_MODIFIER__
-#elif defined(SIZEOF_LONG) && SIZEOF_LONG >= 8
-  #define  I16_FMT                  "h"
-  #define  I32_FMT                  ""
-  #define  I64_FMT                  "l"
-#else // !defined(SIZEOF_LONG) || SIZEOF_LONG < 8
-  #define  I16_FMT                  "h"
-  #define  I32_FMT                  ""
-  #define  I64_FMT                  "ll"
-#endif
-
-#define  I16_FMTx           "%4.4" I16_FMT "x"
-#define  I32_FMTx           "%8.8" I32_FMT "x"
-#define  I64_FMTx         "%16.16" I64_FMT "x"
-
-#define  I16_FMTX           "%4.4" I16_FMT "X"
-#define  I32_FMTX           "%8.8" I32_FMT "X"
-#define  I64_FMTX         "%16.16" I64_FMT "X"
-
-#if defined(SIZEOF_INT_P) && SIZEOF_INT_P >= 8
- #define UINT_PTR_FMT              I64_FMT
- #define      PTR_FMTx             I64_FMTx
- #define      PTR_FMTX             I64_FMTX
-#else // !defined(SIZEOF_INT_P) || SIZEOF_INT_P < 8
- #define UINT_PTR_FMT              I32_FMT
- #define      PTR_FMTx             I32_FMTx
- #define      PTR_FMTX             I32_FMTX
-#endif
-
-#if defined(SIZEOF_SIZE_T) && SIZEOF_SIZE_T >= 8
-  #define  SIZE_T_FMT              I64_FMT
-  #define  SIZE_T_FMTx             I64_FMTx
-  #define  SIZE_T_FMTX             I64_FMTX
-#else // !defined(SIZEOF_SIZE_T) || SIZEOF_SIZE_T < 8
-  #define  SIZE_T_FMT              I32_FMT
-  #define  SIZE_T_FMTx             I32_FMTx
-  #define  SIZE_T_FMTX             I32_FMTX
-#endif
-
-/*-------------------------------------------------------------------*/
 /* Socket stuff                                                      */
 /*-------------------------------------------------------------------*/
 

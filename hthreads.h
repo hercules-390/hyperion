@@ -78,7 +78,7 @@
 #if defined( OPTION_FTHREADS )
 typedef fthread_t               hthread_t;
 typedef hthread_t               HID;    /* Hercules thread-id type   */
-typedef U64                     TID;    /* Generic thread-id type    */
+typedef HID                     TID;    /* Generic thread-id type    */
 typedef fthread_cond_t          COND;
 typedef fthread_attr_t          ATTR;
 typedef fthread_mutexattr_t     MATTR;
@@ -159,7 +159,7 @@ typedef fthread_mutex_t         HLOCK;
 #if !defined( OPTION_FTHREADS )
 typedef pthread_t               hthread_t;
 typedef hthread_t               HID;    /* Hercules thread-id type   */
-typedef pthread_t               TID;    /* Generic thread-id type    */
+typedef HID                     TID;    /* Generic thread-id type    */
 typedef pthread_cond_t          COND;
 typedef pthread_attr_t          ATTR;
 typedef pthread_mutexattr_t     MATTR;
@@ -222,16 +222,8 @@ typedef pthread_rwlock_t        HRWLOCK;
 /*-------------------------------------------------------------------*/
 #define PTT_LOC             __FILE__ ":" QSTR( __LINE__ )
 typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
-#if defined(_MSVC_)
-  #define TIDPAT            "%lld"      /* TID printf pattern        */
-#else
-    /* Non-Windows: typedef unsigned long int pthread_t; */
-  #if defined(SIZEOF_LONG) && SIZEOF_LONG >= 8
-    #define TIDPAT          "%llx"      /* TID printf pattern        */
-  #else
-    #define TIDPAT          "%lx"       /* TID printf pattern        */
-  #endif
-#endif
+#define TIDPAT              TID_FMTx    /* TID printf pattern        */
+#define SCN_TIDPAT      "%" TID_FMT "x" /* TID sscanf pattern        */
 #if !defined(EOWNERDEAD)
   /* PROGRAMMING NOTE: we use a purposely large value to try and
      prevent collision with any existing threading return value.     */

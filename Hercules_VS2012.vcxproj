@@ -758,6 +758,7 @@
     <ClInclude Include="msgenu.h" />
     <ClInclude Include="opcode.h" />
     <ClInclude Include="parser.h" />
+    <ClInclude Include="printfmt.h" />
     <ClInclude Include="pttrace.h" />
     <ClInclude Include="service.h" />
     <ClInclude Include="sr.h" />

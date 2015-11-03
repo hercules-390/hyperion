@@ -1564,6 +1564,9 @@
     <ClInclude Include="parser.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="printfmt.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="pttrace.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

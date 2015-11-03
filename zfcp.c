@@ -319,7 +319,7 @@ int mq = dev->qdio.i_qcnt;
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
+                        DBGTRC(dev, _("STORCHK ERROR sa(" U64_FMTx "), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
                         return;
                     }
                     sbal = (QDIO_SBAL*)(dev->mainstor + sa);
@@ -338,7 +338,7 @@ int mq = dev->qdio.i_qcnt;
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
+                            DBGTRC(dev, _("STORCHK ERROR la(" U64_FMTx "), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
@@ -434,7 +434,7 @@ int mq = dev->qdio.o_qcnt;
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%llx), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
+                        DBGTRC(dev, _("STORCHK ERROR sa("U64_FMTx"), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
                         return;
                     }
                     sbal = (QDIO_SBAL*)(dev->mainstor + sa);
@@ -453,7 +453,7 @@ int mq = dev->qdio.o_qcnt;
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%llx), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
+                            DBGTRC(dev, _("STORCHK ERROR la("U64_FMTx"), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);

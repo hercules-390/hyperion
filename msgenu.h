@@ -12,6 +12,11 @@
 /* the various components of the Hercules mainframe emulator.        */
 /*-------------------------------------------------------------------*/
 
+#ifndef _MSGENU_H_
+#define _MSGENU_H_
+
+#include "printfmt.h"       /* Hercules printf/sscanf format strings */
+
 /*
 -----------------------------------------------------------------------
                         Message principles
@@ -380,7 +385,7 @@ Examples:
 #define HHC00301 "%1d:%04X CCKD file[%d] %s: error in function %s: %s"
 #define HHC00302 "%1d:%04X CCKD file[%d] %s: error in function %s at offset 0x"I64_FMTX": %s"
 #define HHC00303 "%1d:%04X CCKD file: error in function %s: %s"
-#define HHC00304 "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %lluM"
+#define HHC00304 "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"U64_FMT"dM"
 #define HHC00305 "%1d:%04X CCKD file[%d] %s: device header id error"
 #define HHC00306 "%1d:%04X CCKD file[%d] %s: trklen error for %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00307 "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
@@ -1973,7 +1978,7 @@ Examples:
 #define HHC05017 "%1d:%04X CTCE: Halt or Clear Recognized"
 #define HHC05018 "%1d:%04X CTCE: Read thread started for %s (bufsize=%d,%d)"
 #define HHC05020 "%1d:%04X CTCE: Zero length read from %s"
-#define HHC05021 "%1d:%04X CTCE: %llu MB received in %llu packets"
+#define HHC05021 "%1d:%04X CTCE: %"U64_FMT"u MB received in %"U64_FMT"u packets"
 #define HHC05022 "%1d:%04X CTCE: bufsize parameter %d is too small; increase at least to %d"
 #define HHC05023 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X l=%4.4X k=%8.8X"
 #define HHC05024 "%1d:%04X CTCE: Send %4.4X->%s %s=%2.2X x=%2.2X y=%2.2X: wait RC=%d"
@@ -2219,3 +2224,5 @@ Examples:
 // range 97000 - 97999 available
 // range 98000 - 98999 available
 // range 99000 - 99999 available
+
+#endif // _MSGENU_H_

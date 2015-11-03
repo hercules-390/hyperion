@@ -736,6 +736,7 @@ noinst_HEADERS = hostinfo.h		\
 					  dasdtab.h 	  \
 					  sllib.h			\
 					  htypes.h		  \
+					  printfmt.h	  \
 					  fthreads.h	  \
 					  w32ctca.h 	  \
 					  hifr.h 			\

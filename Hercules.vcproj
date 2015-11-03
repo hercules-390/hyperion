@@ -1529,6 +1529,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\printfmt.h"
+							>
+						</File>
+						<File
 							RelativePath=".\pttrace.h"
 							>
 						</File>
