@@ -196,7 +196,7 @@ static const char *build_info[] = {
     #if defined(__RENESAS__)
         "Renesas C " value(__RENESAS_VERSION__)
     #else
-        "Hitachi C " value(__HITACHI_VERSION__
+        "Hitachi C " value(__HITACHI_VERSION__)
     #endif
     ,   /* Don't forget the comma to keep the compiler happy! */
 #elif defined(SASC) || defined(__SASC) || defined(__SASC__)
