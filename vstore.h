@@ -759,7 +759,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
 
 #if !((defined(SIZEOF_LONG) && SIZEOF_LONG > 7) || (defined(SIZEOF_INT_P) && SIZEOF_INT_P > 7) || defined(OPTION_STRICT_ALLIGNMENT))
   /* Code for 32bit machines */
-  /* Copy full words in right conditon, on enough length and src - dst distance */
+  /* Copy full words in right condition, on enough length and src - dst distance */
   if(n && regs->cpubit == regs->sysblk->started_mask && abs(u8d - u8s) > 3)
   {
     while(n > 3)
@@ -776,7 +776,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
 #endif /* Hercules for 32bit machine builds */
 
   /* Copy double words on enough length and src - dst distance */
-  if(n && abs(u8d - u8s) > 7)
+  if(n && labs(u8d - u8s) > 7)
   {
     while(n > 7)
     {
