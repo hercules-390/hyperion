@@ -8,8 +8,8 @@
 #ifndef _HINLINES_H
 #define _HINLINES_H
 
-/* Define inline assembly styles for GNU C compatible compilers */
-#if defined(__ICC)
+/* Define inline assembly style for GNU C compatible compilers */
+#if defined(__GNUC__)
     #define asm __asm__
 #endif
 
