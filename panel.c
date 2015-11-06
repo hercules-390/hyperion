@@ -554,7 +554,7 @@ static void draw_fw (U32 fw)
 static void draw_dw (U64 dw)
 {
     char buf[17];
-    snprintf (buf, sizeof(buf), "%16.16"I64_FMT"X", dw);
+    snprintf (buf, sizeof(buf), "%16.16"PRIX64, dw);
     draw_text (buf);
 }
 
@@ -3096,7 +3096,7 @@ FinishShutdown:
                     len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
                                    fetch_fw(curpsw), fetch_fw(curpsw+4));
                     if (regs->arch_mode == ARCH_900)
-                        len += sprintf (buf+len, "%16.16"I64_FMT"X ",
+                        len += sprintf (buf+len, "%16.16"PRIX64" ",
                                         fetch_dw (curpsw+8));
 #if defined(_FEATURE_SIE)
                     else

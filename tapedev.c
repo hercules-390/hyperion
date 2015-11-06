@@ -1509,7 +1509,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 BYTE    f       = '\0';
                 BYTE    c       = '\0';
 
-                rc = sscanf((const char*)res.str, "%"I64_FMT"u%c%c", &maxsize, &f, &c);
+                rc = sscanf((const char*)res.str, "%"SCNu64"%c%c", &maxsize, &f, &c);
                 if ( rc < 1 || rc > 2 )
                 {
                     WRMSG( HHC01451, "E", res.str, "maxsize" );
@@ -1572,7 +1572,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 BYTE    f           = '\0';
                 BYTE    c           = '\0';
 
-                rc = sscanf((const char*)res.str, "%"I64_FMT"u%c%c", &eotmargin, &f, &c);
+                rc = sscanf((const char*)res.str, "%"SCNu64"%c%c", &eotmargin, &f, &c);
                 if ( rc < 1 || rc > 2 )
                 {
                     WRMSG( HHC01451, "E", res.str, "eotmargin" );
@@ -1794,7 +1794,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
                 mem >>= 10;
             }
         }
-        MSGBUF( fmt_mem, " maxsize=%"I64_FMT"u%c", mem, suffix[i]);
+        MSGBUF( fmt_mem, " maxsize=%"PRIu64"%c", mem, suffix[i]);
 
         mem = (U64)dev->eotmargin;
 
@@ -1808,7 +1808,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
                 mem >>= 10;
             }
         }
-        MSGBUF( fmt_eot, " eotmargin=%"I64_FMT"u%c", mem, suffix[i]);
+        MSGBUF( fmt_eot, " eotmargin=%"PRIu64"%c", mem, suffix[i]);
     }
 
     if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
@@ -1827,7 +1827,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
-        snprintf(buffer, buflen, "%s%s%s IO[%" I64_FMT "u]%s%s deonirq=%c",
+        snprintf(buffer, buflen, "%s%s%s IO[%"PRIu64"]%s%s deonirq=%c",
             devparms,
             dev->tdparms.displayfeat ? ", Display: " : "",
             dev->tdparms.displayfeat ?    dispmsg    : "",
@@ -1843,7 +1843,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
-            MSGBUF( tapepos, "[%d:%08"I64_FMT"X] ", dev->curfilen, dev->nxtblkpos );
+            MSGBUF( tapepos, "[%d:%08"PRIX64"] ", dev->curfilen, dev->nxtblkpos );
         }
 #if defined(OPTION_SCSI_TAPE)
         else // (this is a SCSI tape drive)
@@ -1881,7 +1881,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 
-            snprintf( buffer, buflen, "%s%s %s%s%s IO[%" I64_FMT "u]",
+            snprintf( buffer, buflen, "%s%s %s%s%s IO[%"PRIu64"]",
                 devparms, (dev->readonly ? " ro" : ""),
                 tapepos,
                 dev->tdparms.displayfeat ? "Display: " : "",
@@ -1893,7 +1893,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
         {
             // UNmounted SCSI tape...
 
-            snprintf( buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%" I64_FMT "u]",
+            snprintf( buffer, buflen, "%s%s (%sNOTAPE)%s%s IO[%"PRIu64"]",
                 devparms, (dev->readonly ? " ro" : ""),
                 dev->fd < 0              ?   "closed; "  : "",
                 dev->tdparms.displayfeat ? ", Display: " : "",

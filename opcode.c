@@ -1572,7 +1572,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,%"I32_FMT"d",r1,i2);
+    DISASM_PRINT("%d,%"PRId32,r1,i2);
 
 DISASM_TYPE(RIL_A);
 int r1,i2;
@@ -1580,7 +1580,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,*%+"I64_FMT"d",r1,i2*Two_S64);
+    DISASM_PRINT("%d,*%+"PRId64,r1,i2*Two_S64);
 
 DISASM_TYPE(RIS);
 int r1,i2,m3,b4,d4;

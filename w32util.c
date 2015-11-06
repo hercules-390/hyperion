@@ -1615,12 +1615,13 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
     ms.dwLength = sizeof(ms);
     GlobalMemoryStatusEx(&ms);
-    pHostInfo->TotalPhys = ms.ullTotalPhys;
-    pHostInfo->AvailPhys = ms.ullAvailPhys;
+
+    pHostInfo->TotalPhys     = ms.ullTotalPhys;
+    pHostInfo->AvailPhys     = ms.ullAvailPhys;
     pHostInfo->TotalPageFile = ms.ullTotalPageFile;
     pHostInfo->AvailPageFile = ms.ullAvailPageFile;
-    pHostInfo->TotalVirtual = ms.ullTotalVirtual;
-    pHostInfo->AvailVirtual = ms.ullAvailVirtual;
+    pHostInfo->TotalVirtual  = ms.ullTotalVirtual;
+    pHostInfo->AvailVirtual  = ms.ullAvailVirtual;
 
     pHostInfo->maxfilesopen = _getmaxstdio();
 
@@ -1665,10 +1666,10 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             DWORD byteOffset = 0;
             ptr = buffer;
 
-            pHostInfo->cachelinesz = 0;
+            pHostInfo->cachelinesz      = 0;
             pHostInfo->num_physical_cpu = 0;       /* #of cores                 */
-            pHostInfo->num_logical_cpu = 0;        /* #of of hyperthreads       */
-            pHostInfo->num_packages = 0;           /* #of CPU "chips"           */
+            pHostInfo->num_logical_cpu  = 0;       /* #of of hyperthreads       */
+            pHostInfo->num_packages     = 0;       /* #of CPU "chips"           */
 
             while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= retlen)
             {
@@ -1690,29 +1691,29 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     Cache = &ptr->Cache;
 
                     if ( pHostInfo->cachelinesz == 0 )
-                        pHostInfo->cachelinesz = Cache->LineSize;
+                        pHostInfo->cachelinesz = (U64) Cache->LineSize;
 
                     if (Cache->Level == 1 && Cache->Type == CacheData)
                     {
-                        pHostInfo->L1Dcachesz = Cache->Size;
+                        pHostInfo->L1Dcachesz = (U64) Cache->Size;
                     }
                     if (Cache->Level == 1 && Cache->Type == CacheInstruction)
                     {
-                        pHostInfo->L1Icachesz = Cache->Size;
+                        pHostInfo->L1Icachesz = (U64) Cache->Size;
                     }
                     if (Cache->Type == CacheUnified)
                     {
                         if (Cache->Level == 1)
                         {
-                            pHostInfo->L1Ucachesz = Cache->Size;
+                            pHostInfo->L1Ucachesz = (U64) Cache->Size;
                         }
                         if (Cache->Level == 2)
                         {
-                            pHostInfo->L2cachesz = Cache->Size;
+                            pHostInfo->L2cachesz = (U64) Cache->Size;
                         }
                         if (Cache->Level == 3)
                         {
-                            pHostInfo->L3cachesz = Cache->Size;
+                            pHostInfo->L3cachesz = (U64) Cache->Size;
                         }
                     }
                 }
@@ -1741,7 +1742,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             Pwrinfo = (CNPI)GetProcAddress(LoadLibrary(TEXT("powrprof.dll")), "CallNtPowerInformation");
 
             if ( (LONG)0 == Pwrinfo(ProcessorInformation, NULL, 0, ppi, size) )
-                pHostInfo->cpu_speed = (U64)((U64)ppi->MaxMhz * (U64)ONE_MILLION);
+                pHostInfo->cpu_speed = ((U64)ppi->MaxMhz * ONE_MILLION);
 
             free(ppi);
         }
@@ -2298,7 +2299,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     }
 
     pHostInfo->num_procs = si.dwNumberOfProcessors;
-    pHostInfo->AllocationGranularity = si.dwAllocationGranularity;
+    pHostInfo->AllocationGranularity = (U64) si.dwAllocationGranularity;
 
     InitializeCriticalSection( &cs );
 

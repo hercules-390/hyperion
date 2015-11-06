@@ -1305,7 +1305,7 @@ DLL_EXPORT char *fmt_memsize_rounded( const U64 memsize, char* buf, const size_t
         for (; i < sizeof(suffix) && !(mem & 0x03FF); mem >>= 10, ++i);
     }
 
-    MSGBUF( fmt_mem, "%5"I64_FMT"u%c", mem, suffix[i]);
+    MSGBUF( fmt_mem, "%5"PRIu64"%c", mem, suffix[i]);
     strlcpy( buf, fmt_mem, bufsz );
     return buf;
 }

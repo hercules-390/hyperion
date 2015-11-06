@@ -350,13 +350,13 @@ char               *p;
             for (v = 0; isxdigit(*s); ++s)
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug)
-                // "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d"
+                // "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
                 WRMSG( HHC90405, "D", p, (U64) v, (U64) v );
             return v;
         } else {                                 /* decimal input */
             v = (off_t) atoll(s);
             if (debug)
-                // "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d"
+                // "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
                 WRMSG( HHC90406, "D", p, (U64) v, (U64) v );
             return v;
         }

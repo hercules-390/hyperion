@@ -388,17 +388,17 @@ DLL_EXPORT int cachestats_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02294, "I", buf);
         MSGBUF( buf, "waits ........... %10d", cacheblk[ix].waits);
         WRMSG(HHC02294, "I", buf);
-        MSGBUF( buf, "buf size ........ %10" I64_FMT "d", cacheblk[ix].size);
+        MSGBUF( buf, "buf size ........ %10"PRId64, cacheblk[ix].size);
         WRMSG(HHC02294, "I", buf);
-        MSGBUF( buf, "hits ............ %10" I64_FMT "d", cacheblk[ix].hits);
+        MSGBUF( buf, "hits ............ %10"PRId64, cacheblk[ix].hits);
         WRMSG(HHC02294, "I", buf);
-        MSGBUF( buf, "fast hits ....... %10" I64_FMT "d", cacheblk[ix].fasthits);
+        MSGBUF( buf, "fast hits ....... %10"PRId64, cacheblk[ix].fasthits);
         WRMSG(HHC02294, "I", buf);
-        MSGBUF( buf, "misses .......... %10" I64_FMT "d", cacheblk[ix].misses);
+        MSGBUF( buf, "misses .......... %10"PRId64, cacheblk[ix].misses);
         WRMSG(HHC02294, "I", buf);
         MSGBUF( buf, "hit%% ............ %10d", cache_hit_percent(ix));
         WRMSG(HHC02294, "I", buf);
-        MSGBUF( buf, "age ............. %10" I64_FMT "d", cacheblk[ix].age);
+        MSGBUF( buf, "age ............. %10"PRId64, cacheblk[ix].age);
         WRMSG(HHC02294, "I", buf);
         MSGBUF( buf, "last adjusted ... %s", cacheblk[ix].atime == 0 ? "none\n" : ctime(&cacheblk[ix].atime));
         buf[strlen(buf)-1] = '\0';
@@ -412,7 +412,7 @@ DLL_EXPORT int cachestats_cmd(int argc, char *argv[], char *cmdline)
         if (argc > 1)
           for (i = 0; i < cacheblk[ix].nbr; i++)
           {
-            MSGBUF( buf, "[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d",
+            MSGBUF( buf, "[%4d] %16.16"PRIx64" %8.8x %10p %6d %10"PRId64,
               i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
               cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
               cacheblk[ix].cache[i].age);

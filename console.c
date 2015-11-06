@@ -2620,7 +2620,7 @@ loc3270_query_device (DEVBLK *dev, char **devclass,
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s IO[%" I64_FMT "u]",
+        snprintf (buffer, buflen, "%s IO[%"PRIu64"]",
             inet_ntoa(dev->ipaddr), dev->excps );
         buffer[buflen-1] = '\0';
     }
@@ -2650,7 +2650,7 @@ loc3270_query_device (DEVBLK *dev, char **devclass,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s IO[%" I64_FMT "u]",
+                "GROUP=%s%s%s IO[%"PRIu64"]",
                 dev->filename, acc[0] ? " " : "", acc, dev->excps );
             buffer[buflen-1] = '\0';
         }
@@ -2659,13 +2659,13 @@ loc3270_query_device (DEVBLK *dev, char **devclass,
             if (acc[0])
             {
                 snprintf(buffer, buflen,
-                    "* %s IO[%" I64_FMT "u]", acc, dev->excps );
+                    "* %s IO[%"PRIu64"]", acc, dev->excps );
                 buffer[buflen-1] = '\0';
             }
             else
             {
                 snprintf(buffer, buflen,
-                    "* IO[%" I64_FMT "u]", dev->excps );
+                    "* IO[%"PRIu64"]", dev->excps );
                 buffer[buflen-1] = '\0';
             }
         }
@@ -2925,7 +2925,7 @@ constty_query_device (DEVBLK *dev, char **devclass,
 
     if (dev->connected)
     {
-        snprintf (buffer, buflen, "%s%s IO[%" I64_FMT "u]",
+        snprintf (buffer, buflen, "%s%s IO[%"PRIu64"]",
             inet_ntoa(dev->ipaddr),
             dev->prompt1052 ? "" : " noprompt",
             dev->excps );
@@ -2957,7 +2957,7 @@ constty_query_device (DEVBLK *dev, char **devclass,
         if (dev->filename[0])
         {
             snprintf(buffer, buflen,
-                "GROUP=%s%s%s%s IO[%" I64_FMT "u]",
+                "GROUP=%s%s%s%s IO[%"PRIu64"]",
                 dev->filename,
                 !dev->prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
@@ -2970,7 +2970,7 @@ constty_query_device (DEVBLK *dev, char **devclass,
             {
                 if (!dev->prompt1052)
                 {
-                    snprintf(buffer, buflen, "noprompt %s IO[%" I64_FMT "u]",
+                    snprintf(buffer, buflen, "noprompt %s IO[%"PRIu64"]",
                                              acc, dev->excps );
                     buffer[buflen-1] = '\0';
                 }
@@ -2984,12 +2984,12 @@ constty_query_device (DEVBLK *dev, char **devclass,
             {
                 if (!dev->prompt1052)
                 {
-                    snprintf( buffer, buflen, "noprompt IO[%" I64_FMT "u]", dev->excps );
+                    snprintf( buffer, buflen, "noprompt IO[%"PRIu64"]", dev->excps );
                     buffer[buflen-1] = '\0';
                 }
                 else
                 {
-                    snprintf( buffer, buflen, "IO[%" I64_FMT "u]", dev->excps );
+                    snprintf( buffer, buflen, "IO[%"PRIu64"]", dev->excps );
                     buffer[buflen-1] = '\0';
                 }
             }

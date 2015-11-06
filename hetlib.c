@@ -2396,7 +2396,7 @@ het_error( int rc )
                     rwptr = het_tell( hetb );
                     if( rwptr >= 0 )
                     {
-                        printf( "Current offset is %" I64_FMT "d\n" , (U64)rwptr);
+                        printf( "Current offset is %"PRId64"\n" , (U64)rwptr);
                     }
                 }
 

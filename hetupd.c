@@ -150,7 +150,7 @@ copytape( void )
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
-                EXTGUIMSG( "IPOS=%" I64_FMT "d\n", (U64)curpos );
+                EXTGUIMSG( "IPOS=%"PRId64"\n", (U64)curpos );
             }
         }
 #endif /*EXTERNALGUI*/

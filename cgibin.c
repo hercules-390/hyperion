@@ -74,7 +74,7 @@ int i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            hprintf(webblk->sock, "CR%1.1X=%16.16" I64_FMT "X%s", i,
+            hprintf(webblk->sock, "CR%1.1X=%16.16"PRIX64"%s", i,
                 (U64)regs->CR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");
 
     hprintf(webblk->sock, "</PRE>\n");
@@ -103,7 +103,7 @@ int i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            hprintf(webblk->sock, "GR%1.1X=%16.16" I64_FMT "X%s", i,
+            hprintf(webblk->sock, "GR%1.1X=%16.16"PRIX64"%s", i,
                 (U64)regs->GR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");
 
     hprintf(webblk->sock, "</PRE>\n");
@@ -408,9 +408,9 @@ REGS *regs;
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900)
-                    sscanf(value,"%"I32_FMT"x",&(regs->GR_L(i)));
+                    sscanf(value,"%"SCNx32,&(regs->GR_L(i)));
                 else
-                    sscanf(value,"%"I64_FMT"x",&(regs->GR_G(i)));
+                    sscanf(value,"%"SCNx64,&(regs->GR_G(i)));
             }
         }
     }
@@ -424,9 +424,9 @@ REGS *regs;
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900)
-                    sscanf(value,"%"I32_FMT"x",&(regs->CR_L(i)));
+                    sscanf(value,"%"SCNx32,&(regs->CR_L(i)));
                 else
-                    sscanf(value,"%"I64_FMT"x",&(regs->CR_G(i)));
+                    sscanf(value,"%"SCNx64,&(regs->CR_G(i)));
             }
         }
     }
@@ -492,7 +492,7 @@ REGS *regs;
                   (i&3)==0?"<tr>\n":"",i,i,regs->GR_L(i),((i&3)==3)?"</tr>\n":"");
             else
                 hprintf(webblk->sock,"%s<td>GR%d</td><td><input type=text name=alter_gr%d size=16 "
-                  "value=%16.16" I64_FMT "X></td>\n%s",
+                  "value=%16.16"PRIX64"></td>\n%s",
                   (i&3)==0?"<tr>\n":"",i,i,(U64)regs->GR_G(i),((i&3)==3)?"</tr>\n":"");
         }
         hprintf(webblk->sock,"</table>\n"
@@ -536,7 +536,7 @@ REGS *regs;
                   (i&3)==0?"<tr>\n":"",i,i,regs->CR_L(i),((i&3)==3)?"</tr>\n":"");
             else
                 hprintf(webblk->sock,"%s<td>CR%d</td><td><input type=text name=alter_cr%d size=16 "
-                  "value=%16.16" I64_FMT "X></td>\n%s",
+                  "value=%16.16"PRIX64"></td>\n%s",
                   (i&3)==0?"<tr>\n":"",i,i,(U64)regs->CR_G(i),((i&3)==3)?"</tr>\n":"");
         }
         hprintf(webblk->sock,"</table>\n"

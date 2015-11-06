@@ -664,7 +664,7 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s IO[%" I64_FMT "u]",
+    snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s IO[%"PRIu64"]",
                  dev->filename,
                 (dev->bs         ? " sockdev"      : ""),
                 (dev->crlf       ? " crlf"         : ""),

@@ -2450,7 +2450,7 @@ int             i;                      /* Work integer              */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_l1 offset 0x%"I64_FMT"x",
+    cckd_trace (dev, "file[%d] read_l1 offset 0x%"PRIx64,
                 sfx, (U64)CCKD_L1TAB_POS);
 
     /* Free the old level 1 table if it exists */
@@ -2503,7 +2503,7 @@ int             len;                    /* Length of level 1 table   */
     sfx = cckd->sfn;
     len = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
 
-    cckd_trace (dev, "file[%d] write_l1 0x%"I64_FMT"x len %d",
+    cckd_trace (dev, "file[%d] write_l1 0x%"PRIx64" len %d",
                 sfx, (U64)CCKD_L1TAB_POS, len);
 
     if (cckd_write (dev, sfx, CCKD_L1TAB_POS, cckd->l1[sfx], len) < 0)
@@ -5484,41 +5484,41 @@ void cckd_command_stats()
 
     WRMSG( HHC00347, "I", "cckd stats:" );
 
-    MSGBUF( msgbuf, "  reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  reads....%10"PRId64" Kbytes...%10"PRId64,
                     cckdblk.stats_reads, cckdblk.stats_readbytes >> 10 );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  writes...%10"PRId64" Kbytes...%10"PRId64,
                     cckdblk.stats_writes, cckdblk.stats_writebytes >> 10 );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  readaheads%9" I64_FMT "d misses...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  readaheads%9"PRId64" misses...%10"PRId64,
                     cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses );
     WRMSG( HHC00347, "I", msgbuf );
 
 #ifdef OPTION_SYNCIO
-    MSGBUF( msgbuf, "  syncios..%10" I64_FMT "d misses...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  syncios..%10"PRId64" misses...%10"PRId64,
                     cckdblk.stats_syncios, cckdblk.stats_synciomisses );
     WRMSG( HHC00347, "I", msgbuf );
 #endif // OPTION_SYNCIO
 
-    MSGBUF( msgbuf, "  switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d strs wrt.%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  switches.%10"PRId64" l2 reads.%10"PRId64" strs wrt.%10"PRId64,
                     cckdblk.stats_switches, cckdblk.stats_l2reads, cckdblk.stats_stresswrites );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  cachehits%10" I64_FMT "d misses...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  cachehits%10"PRId64" misses...%10"PRId64,
                     cckdblk.stats_cachehits, cckdblk.stats_cachemisses );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  l2 hits..%10"PRId64" misses...%10"PRId64,
                     cckdblk.stats_l2cachehits, cckdblk.stats_l2cachemisses );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  waits............   i/o......%10" I64_FMT "d cache....%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  waits............   i/o......%10"PRId64" cache....%10"PRId64,
                     cckdblk.stats_iowaits, cckdblk.stats_cachewaits );
     WRMSG( HHC00347, "I", msgbuf );
 
-    MSGBUF( msgbuf, "  garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d",
+    MSGBUF( msgbuf, "  garbage collector   moves....%10"PRId64" Kbytes...%10"PRId64,
                     cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10 );
     WRMSG( HHC00347, "I", msgbuf );
 

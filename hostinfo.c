@@ -227,7 +227,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     }
 #endif
 
-    pHostInfo->hostpagesz = (RADR) HPAGESIZE();
+    pHostInfo->hostpagesz = (U64) HPAGESIZE();
 
     if ( pHostInfo->cachelinesz == 0 )
     {
@@ -237,13 +237,13 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 
     if ( pHostInfo->L1Dcachesz == 0 && pHostInfo->L1Icachesz == 0 && pHostInfo->L1Ucachesz == 0 )
     {
-        pHostInfo->L1Dcachesz = pHostInfo->L1Icachesz = (RADR)((RADR)8 << SHIFT_KILOBYTE );
+        pHostInfo->L1Dcachesz = pHostInfo->L1Icachesz = ((U64)8 << SHIFT_KILOBYTE );
         pHostInfo->valid_cache_nums = FALSE;
     }
 
     if ( pHostInfo->L2cachesz == 0 )
     {
-        pHostInfo->L2cachesz = (RADR)((RADR)256 << SHIFT_KILOBYTE );
+        pHostInfo->L2cachesz = ((U64)256 << SHIFT_KILOBYTE );
         pHostInfo->valid_cache_nums = FALSE;
     }
 

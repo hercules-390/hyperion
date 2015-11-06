@@ -30,12 +30,6 @@
 #define  I64_FMT                    "ll"        // length modifier only
 #endif
 
-#if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
-#define  PTR_FMT                    I64_FMT     // length modifier only
-#else
-#define  PTR_FMT                    I32_FMT     // length modifier only
-#endif
-
 /*-------------------------------------------------------------------*/
 /* C99 ISO Standard Names             (most of them but not all)     */
 /*-------------------------------------------------------------------*/

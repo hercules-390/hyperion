@@ -325,7 +325,7 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int b
         {
             len+=snprintf(buf+len,buflen-len-1,"%s", " ");
         }
-        len+=snprintf(buf+len,buflen-len-1,"%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len-1,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
     }
     len+=snprintf(buf+len,buflen-len-1,"%s","\n");
     return(len);
@@ -364,7 +364,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
         {
             len+=snprintf(buf+len,buflen-len-1,"%s"," ");
         }
-        len+=snprintf(buf+len,buflen-len-1,"%s%1.1X=%16.16"I64_FMT"X",hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len-1,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
     }
     len+=snprintf(buf+len,buflen-len-1,"%s","\n");
     return(len);
@@ -769,7 +769,7 @@ char    *s;                             /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
-    rc = sscanf(operand, "%"I64_FMT"x%c%"I64_FMT"x%c",
+    rc = sscanf(operand, "%"SCNx64"%c%"SCNx64"%c",
                 &opnd1, &delim, &opnd2, &c);
 
     /* Process storage alteration operand */

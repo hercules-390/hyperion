@@ -4539,7 +4539,7 @@ U64     dreg;                           /* Clock value               */
 
     RETURN_INTCHECK(regs);
 
-//  /*debug*/logmsg("Set TOD clock=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set TOD clock=%16.16"PRIX64"\n", dreg);
 
 }
 
@@ -4568,7 +4568,7 @@ U64     dreg;                           /* Clock value               */
     /* Fetch clock comparator value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
-//  /*debug*/logmsg("Set clock comparator=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set clock comparator=%16.16"PRIX64"\n", dreg);
 
     dreg >>= 8;
 
@@ -4646,7 +4646,7 @@ S64     dreg;                           /* Timer value               */
 
     RELEASE_INTLOCK(regs);
 
-//  /*debug*/logmsg("Set CPU timer=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Set CPU timer=%16.16"PRIX64"\n", dreg);
 
     RETURN_INTCHECK(regs);
 }
@@ -6309,7 +6309,7 @@ U64     dreg;                           /* Clock value               */
     /* Store clock comparator value at operand location */
     ARCH_DEP(vstore8) ((dreg << 8), effective_addr2, b2, regs );
 
-//  /*debug*/logmsg("Store clock comparator=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Store clock comparator=%16.16"PRIX64"\n", dreg);
 
     RETURN_INTCHECK(regs);
 }
@@ -6463,7 +6463,7 @@ S64     dreg;                           /* Double word workarea      */
     /* Store CPU timer value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-//  /*debug*/logmsg("Store CPU timer=%16.16" I64_FMT "X\n", dreg);
+//  /*debug*/logmsg("Store CPU timer=%16.16"PRIX64"\n", dreg);
 
     RETURN_INTCHECK(regs);
 }

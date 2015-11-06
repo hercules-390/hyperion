@@ -38,6 +38,7 @@ typedef struct HOST_INFO
         char    version[64];
         char    machine[64];
         char    cpu_brand[64];          /* x86/x64 cpu brand string  */
+
         int     trycritsec_avail;       /* 1=TryEnterCriticalSection */
         int     maxfilesopen;           /* Max num of open files     */
 
@@ -45,29 +46,31 @@ typedef struct HOST_INFO
         int     num_physical_cpu;       /* #of cores                 */
         int     num_logical_cpu;        /* #of of hyperthreads       */
         int     num_packages;           /* #of physical CPUS         */
-        U64     bus_speed;              /* Motherboard BUS Speed   Hz*/
-        U64     cpu_speed;              /* Maximum CPU speed       Hz*/
+
         int     vector_unit;            /* CPU has vector processor  */
         int     fp_unit;                /* CPU has Floating Point    */
-        int     cpu_64bits;             /* cpu is 64 bit             */
-        int     cpu_aes_extns;          /* cpu supports aes extension*/
-
+        int     cpu_64bits;             /* CPU is 64 bit             */
+        int     cpu_aes_extns;          /* CPU supports aes extension*/
         int     valid_cache_nums;       /* Cache nums are obtained   */
-        RADR    cachelinesz;            /* cache line size           */
-        RADR    L1Icachesz;             /* cache size L1 Inst        */
-        RADR    L1Dcachesz;             /* cache size L1 Data        */
-        RADR    L1Ucachesz;             /* cache size L1 Unified     */
-        RADR    L2cachesz;              /* cache size L2             */
-        RADR    L3cachesz;              /* cache size L3             */
 
-        RADR    hostpagesz;             /* Host page size            */
-        RADR    AllocationGranularity;  /*                           */
-        RADR    TotalPhys;              /* Installed Real Memory     */
-        RADR    AvailPhys;              /* Available Read Memory     */
-        RADR    TotalPageFile;          /* Size of Swap/Page         */
-        RADR    AvailPageFile;          /* Free Amt of Swap/Page     */
-        RADR    TotalVirtual;           /* Virtual Space max         */
-        RADR    AvailVirtual;           /* Virtual Space in use      */
+        U64     bus_speed;              /* Motherboard BUS Speed   Hz*/
+        U64     cpu_speed;              /* Maximum CPU speed       Hz*/
+
+        U64     cachelinesz;            /* cache line size           */
+        U64     L1Icachesz;             /* cache size L1 Inst        */
+        U64     L1Dcachesz;             /* cache size L1 Data        */
+        U64     L1Ucachesz;             /* cache size L1 Unified     */
+        U64     L2cachesz;              /* cache size L2             */
+        U64     L3cachesz;              /* cache size L3             */
+
+        U64     hostpagesz;             /* Host page size            */
+        U64     AllocationGranularity;  /*                           */
+        U64     TotalPhys;              /* Installed Real Memory     */
+        U64     AvailPhys;              /* Available Read Memory     */
+        U64     TotalPageFile;          /* Size of Swap/Page         */
+        U64     AvailPageFile;          /* Free Amt of Swap/Page     */
+        U64     TotalVirtual;           /* Virtual Space max         */
+        U64     AvailVirtual;           /* Virtual Space in use      */
 
 /*-------------------- TLR \/ ---------------------------------------*/
         BLOCK_TRAILER;                  /* eye-end                   */

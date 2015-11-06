@@ -87,7 +87,6 @@
 #undef RSTNEW
 #undef RADR
 #undef F_RADR
-#undef FRADR
 #undef VADR
 #undef VADR_L
 #undef F_VADR
@@ -184,22 +183,20 @@ s370_ ## _name
 #define RSTNEW  iplpsw
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
-#define F_RADR  "%8.8"I32_FMT"X"
-#define FRADR   I32_FMT
+#define F_RADR  "%8.8"PRIX32
 #else
 #define RADR    U64
-#define F_RADR  "%8.8"I64_FMT"X"
-#define FRADR   I64_FMT
+#define F_RADR  "%8.8"PRIX64
 #endif
 #define VADR    U32
 #define VADR_L  VADR
-#define F_VADR  "%8.8"I32_FMT"X"
+#define F_VADR  "%8.8"PRIX32
 #define GREG    U32
-#define F_GREG  "%8.8"I32_FMT"X"
+#define F_GREG  "%8.8"PRIX32
 #define CREG    U32
-#define F_CREG  "%8.8"I32_FMT"X"
+#define F_CREG  "%8.8"PRIX32
 #define AREG    U32
-#define F_AREG  "%8.8"I32_FMT"X"
+#define F_AREG  "%8.8"PRIX32
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
@@ -321,22 +318,20 @@ s390_ ## _name
 #define RSTOLD  iplccw1
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
-#define F_RADR  "%8.8"I32_FMT"X"
-#define FRADR   I32_FMT
+#define F_RADR  "%8.8"PRIX32
 #else
 #define RADR    U64
-#define F_RADR  "%8.8"I64_FMT"X"
-#define FRADR   I64_FMT
+#define F_RADR  "%8.8"PRIX64
 #endif
 #define VADR    U32
 #define VADR_L  VADR
-#define F_VADR  "%8.8"I32_FMT"X"
+#define F_VADR  "%8.8"PRIX32
 #define GREG    U32
-#define F_GREG  "%8.8"I32_FMT"X"
+#define F_GREG  "%8.8"PRIX32
 #define CREG    U32
-#define F_CREG  "%8.8"I32_FMT"X"
+#define F_CREG  "%8.8"PRIX32
 #define AREG    U32
-#define F_AREG  "%8.8"I32_FMT"X"
+#define F_AREG  "%8.8"PRIX32
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
@@ -474,26 +469,21 @@ z900_ ## _name
 #define PX_MASK 0x7FFFE000
 #define RSTOLD  rstold
 #define RSTNEW  rstnew
-#if 0
-#define RADR    U32
-#else
 #define RADR    U64
-#endif
-#define F_RADR  "%16.16"I64_FMT"X"
-#define FRADR   I64_FMT
+#define F_RADR  "%16.16"PRIX64
 #define VADR    U64
 #if SIZEOF_INT == 4
 #define VADR_L  U32
 #else
 #define VADR_L  VADR
 #endif
-#define F_VADR  "%16.16"I64_FMT"X"
+#define F_VADR  "%16.16"PRIX64
 #define GREG    U64
-#define F_GREG  "%16.16"I64_FMT"X"
+#define F_GREG  "%16.16"PRIX64
 #define CREG    U64
-#define F_CREG  "%16.16"I64_FMT"X"
+#define F_CREG  "%16.16"PRIX64
 #define AREG    U32
-#define F_AREG  "%8.8"I32_FMT"X"
+#define F_AREG  "%8.8"PRIX32
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
 #define AIV     AIV_G

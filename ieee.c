@@ -589,7 +589,7 @@ static void get_lbfp(struct lbfp *op, U32 *fpr)
     op->sign = (fpr[0] & 0x80000000) != 0;
     op->exp = (fpr[0] & 0x7FF00000) >> 20;
     op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
-    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%" I64_FMT "x\n", fpr[0], fpr[1], op->exp, op->fract);
+    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%"PRIx64"\n", fpr[0], fpr[1], op->exp, op->fract);
 }
 
 static void get_sbfp(struct sbfp *op, U32 *fpr)
@@ -607,7 +607,7 @@ static void put_lbfp(struct lbfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<20) | (op->fract>>32);
     fpr[1] = op->fract & 0xFFFFFFFF;
-    //logmsg("lput exp=%d fract=%" I64_FMT "x r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
+    //logmsg("lput exp=%d fract=%"PRIx64" r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
 }
 
 static void put_sbfp(struct sbfp *op, U32 *fpr)
@@ -659,7 +659,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
         cc = op->sign ? 1 : 2;
         break;
     case FP_NORMAL:
-        //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"I64_FMT"x\n",
+        //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"PRIx64"\n",
         //        op->exp, op->exp, op->fract);
         /* Insert an implied 1. in front of the 52 bit binary
            fraction and lengthen the result to 56 bits */
@@ -669,7 +669,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
            adjusted by 1 to move the point before the 56 bit fraction */
         exp = op->exp - 1023 + 1;
 
-        //logmsg("ieee: adjusted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
+        //logmsg("ieee: adjusted exp=%d\tfract=%16.16"PRIx64"\n", exp, fract);
         /* Shift the fraction right one bit at a time until
            the binary exponent becomes a multiple of 4 */
         while (exp & 3)
@@ -677,7 +677,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
             exp++;
             fract >>= 1;
         }
-        //logmsg("ieee:  shifted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
+        //logmsg("ieee:  shifted exp=%d\tfract=%16.16"PRIx64"\n", exp, fract);
 
         /* Convert the binary exponent into a hexadecimal exponent
            by dropping the last two bits (which are now zero) */

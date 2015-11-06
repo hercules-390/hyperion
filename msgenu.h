@@ -2185,8 +2185,8 @@ Examples:
 #define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
 #define HHC90403 "SHOWTRK Compressed track header and data"
 #define HHC90404 "SHOWTRK Decompressed track header and data"
-#define HHC90405 "OFFTIFY string %s hex %8.8"PRIX64" decimal %"PRId64
-#define HHC90406 "OFFTIFY string %s decimal %"PRIX64" %"PRId64
+#define HHC90405 "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
+#define HHC90406 "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90407 "%s device has %d heads/cylinder"
 
 // range 90500 - 90599 available

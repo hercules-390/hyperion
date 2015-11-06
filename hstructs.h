@@ -27,10 +27,10 @@
 
 #if MAX_CPU_ENGINES <= 32
     typedef U32                 CPU_BITMAP;
-    #define F_CPU_BITMAP        "%8.8"I32_FMT"X"
+    #define F_CPU_BITMAP        "%8.8"PRIX32
 #elif MAX_CPU_ENGINES <= 64
     typedef U64                 CPU_BITMAP;
-    #define F_CPU_BITMAP        "%16.16"I64_FMT"X"
+    #define F_CPU_BITMAP        "%16.16"PRIX64
 #elif MAX_CPU_ENGINES <= 128
  #if SIZEOF_SIZE_T == 4
    #error MAX_CPU_ENGINES > 64 only supported on 64 bit platforms
@@ -39,13 +39,13 @@
  #if defined(_MSVC_)
     WARNING( "MAX_CPU_ENGINES in Windows is 64" )
     typedef U64                 CPU_BITMAP;
-    #define F_CPU_BITMAP        "%16.16"I64_FMT"X"
+    #define F_CPU_BITMAP        "%16.16"PRIX64
     #undef  MAX_CPU_ENGINES
     #define MAX_CPU_ENGINES     64
  #else
     typedef __uint128_t         CPU_BITMAP;
  // ZZ FIXME: No printf format support for __int128 yet, so we will incorrectly display...
-    #define F_CPU_BITMAP        "%16.16"I64_FMT"X"
+    #define F_CPU_BITMAP        "%16.16"PRIX64
  #endif
 
 #else

@@ -394,7 +394,7 @@ void  CTCX_Query( DEVBLK* pDEVBLK,
 {
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
-    snprintf( pBuffer, iBufLen-1, "%s IO[%" I64_FMT "u]", pDEVBLK->filename, pDEVBLK->excps );
+    snprintf( pBuffer, iBufLen-1, "%s IO[%"PRIu64"]", pDEVBLK->filename, pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------

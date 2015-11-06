@@ -813,11 +813,11 @@ int rc = 0;
 
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-        MSGBUF( buf, "tod = %16.16" I64_FMT "X    %s",
+        MSGBUF( buf, "tod = %16.16"PRIX64"    %s",
                 ETOD2TOD(tod_now), format_tod(clock_buf,tod_now.high,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
-        MSGBUF( buf, "h/w = %16.16" I64_FMT "X    %s",
+        MSGBUF( buf, "h/w = %16.16"PRIX64"    %s",
                 ETOD2TOD(hw_now), format_tod(clock_buf,hw_now.high,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
@@ -831,26 +831,26 @@ int rc = 0;
             epoch_now_abs = epoch_now;
             epoch_sign = ' ';
         }
-        MSGBUF( buf, "off = %16.16" I64_FMT "X   %c%s",
+        MSGBUF( buf, "off = %16.16"PRIX64"   %c%s",
                 etod2tod(epoch_now), epoch_sign,
                 format_tod(clock_buf,epoch_now_abs,FALSE) );
         WRMSG(HHC02274, "I", buf);
 
-        MSGBUF( buf, "ckc = %16.16" I64_FMT "X    %s",
+        MSGBUF( buf, "ckc = %16.16"PRIX64"    %s",
                 etod2tod(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
-            MSGBUF( buf, "cpt = %16.16" I64_FMT "X", cpt_now );
+            MSGBUF( buf, "cpt = %16.16"PRIX64, cpt_now );
         else
-            MSGBUF( buf, "cpt = %16.16" I64_FMT "X         not decrementing", cpt_now );
+            MSGBUF( buf, "cpt = %16.16"PRIX64"         not decrementing", cpt_now );
         WRMSG(HHC02274, "I", buf);
 
 #if defined(_FEATURE_SIE)
         if (sie_flag)
         {
 
-            MSGBUF( buf, "vtod = %16.16" I64_FMT "X    %s",
+            MSGBUF( buf, "vtod = %16.16"PRIX64"    %s",
                     etod2tod(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
@@ -864,23 +864,23 @@ int rc = 0;
                 vepoch_now_abs = vepoch_now;
                 vepoch_sign = ' ';
             }
-            MSGBUF( buf, "voff = %16.16" I64_FMT "X   %c%s",
+            MSGBUF( buf, "voff = %16.16"PRIX64"   %c%s",
                     etod2tod(vepoch_now), vepoch_sign,
                     format_tod(clock_buf,vepoch_now_abs,FALSE) );
             WRMSG(HHC02274, "I", buf);
 
-            MSGBUF( buf, "vckc = %16.16" I64_FMT "X    %s",
+            MSGBUF( buf, "vckc = %16.16"PRIX64"    %s",
                     etod2tod(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
-            MSGBUF( buf, "vcpt = %16.16" I64_FMT "X", vcpt_now );
+            MSGBUF( buf, "vcpt = %16.16"PRIX64, vcpt_now );
             WRMSG(HHC02274, "I", buf);
         }
 #endif
 
         if (arch370_flag)
         {
-            MSGBUF( buf, "itm = %8.8" I32_FMT "X                     %s",
+            MSGBUF( buf, "itm = %8.8"PRIX32"                     %s",
                    itimer, itimer_formatted );
             WRMSG(HHC02274, "I", buf);
         }

@@ -383,12 +383,12 @@ int  display_tt32_stats( int fd )
         // "%s Statistics:"
         WRMSG( HHC04101, "I", g_tt32_dllname );
 
-        // "          %s%5luK"
+        // "  %s%5luK"
         WRMSG( HHC04103, "I", "Size of Kernel Hold Buffer:      ", (stats.dwKernelBuffSize   + 1023) / 1024 );
         WRMSG( HHC04103, "I", "Size of DLL I/O Buffer:          ", (stats.dwReadBuffSize     + 1023) / 1024 );
         WRMSG( HHC04103, "I", "Maximum DLL I/O Bytes Received:  ", (stats.dwMaxBytesReceived + 1023) / 1024 );
 
-        // "          %12" I64_FMT "d  %s"
+        // "  %12"PRId64"  %s"
         WRMSG( HHC04104, "I", stats.n64WriteCalls,             "Total Write Calls" );
         WRMSG( HHC04104, "I", stats.n64WriteIOs,               "Total Write I/Os" );
         WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsWritten,  "Packets To All Zeroes MAC Written" );
@@ -415,7 +415,7 @@ int  display_tt32_stats( int fd )
         WRMSG( HHC04103, "I", "Size of DLL I/O Buffer:          ", (stats.dwReadBuffSize     + 1023) / 1024 );
         WRMSG( HHC04103, "I", "Maximum DLL I/O Bytes Received:  ", (stats.dwMaxBytesReceived + 1023) / 1024 );
 
-        // "  %12" I64_FMT "d  %s"
+        // "  %12"PRId64"  %s"
         WRMSG( HHC04104, "I", stats.n64WriteCalls,             "Total Write Calls" );
         WRMSG( HHC04104, "I", stats.n64WriteIOs,               "Total Write I/Os" );
 //      WRMSG( HHC04104, "I", stats.n64ZeroMACPacketsWritten,  "Packets To All Zeroes MAC Written" );

@@ -1488,7 +1488,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
 
-    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%" I64_FMT "u]",
+    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%"PRIu64"]",
         dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
 

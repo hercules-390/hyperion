@@ -527,10 +527,10 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
         MSGBUF( msgbuf, "%-17s = %3d", "num_logical_cpu", pHostInfo->num_logical_cpu );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %sHz", "bus_speed", fmt_decimal((U64)pHostInfo->bus_speed) );
+        MSGBUF( msgbuf, "%-17s = %sHz", "bus_speed", fmt_decimal(pHostInfo->bus_speed) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %sHz", "cpu_speed", fmt_decimal((U64)pHostInfo->cpu_speed) );
+        MSGBUF( msgbuf, "%-17s = %sHz", "cpu_speed", fmt_decimal(pHostInfo->cpu_speed) );
         WRMSG( HHC90000, "D", msgbuf );
 
         MSGBUF( msgbuf, "%-17s = %s", "vector_unit", pHostInfo->vector_unit ? "YES" : " NO" );
@@ -550,59 +550,59 @@ int locate_hostinfo(int argc, char *argv[], char *cmdline)
         MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : " NO" );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %5"FRADR"u B", "cachelinesz", pHostInfo->cachelinesz );
+        MSGBUF( msgbuf, "%-17s = %5"PRIu64" B", "cachelinesz", pHostInfo->cachelinesz );
         WRMSG( HHC90000, "D", msgbuf );
 
         if ( pHostInfo->L1Dcachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize_rounded((U64)pHostInfo->L1Dcachesz,fmt_mem,sizeof(fmt_mem)) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize_rounded(pHostInfo->L1Dcachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Icachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize_rounded((U64)pHostInfo->L1Icachesz,fmt_mem,sizeof(fmt_mem)) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize_rounded(pHostInfo->L1Icachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
         if ( pHostInfo->L1Ucachesz != 0 )
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize_rounded((U64)pHostInfo->L1Ucachesz,fmt_mem,sizeof(fmt_mem)) );
+            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize_rounded(pHostInfo->L1Ucachesz,fmt_mem,sizeof(fmt_mem)) );
             WRMSG( HHC90000, "D", msgbuf );
         }
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize_rounded((U64)pHostInfo->L2cachesz,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize_rounded(pHostInfo->L2cachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize_rounded((U64)pHostInfo->L3cachesz,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize_rounded((U64)pHostInfo->hostpagesz,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize_rounded((U64)pHostInfo->AllocationGranularity,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize_rounded(pHostInfo->L3cachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
         WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize_rounded((U64)pHostInfo->TotalPhys,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize_rounded(pHostInfo->hostpagesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize_rounded((U64)pHostInfo->AvailPhys,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize_rounded(pHostInfo->AllocationGranularity,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize_rounded((U64)pHostInfo->TotalPageFile,fmt_mem,sizeof(fmt_mem)) );
+        WRMSG( HHC90000, "D", "" );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize_rounded(pHostInfo->TotalPhys,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize_rounded((U64)pHostInfo->AvailPageFile,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize_rounded(pHostInfo->AvailPhys,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize_rounded((U64)pHostInfo->TotalVirtual,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize_rounded(pHostInfo->TotalPageFile,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize_rounded((U64)pHostInfo->AvailVirtual,fmt_mem,sizeof(fmt_mem)) );
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize_rounded(pHostInfo->AvailPageFile,fmt_mem,sizeof(fmt_mem)) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize_rounded(pHostInfo->TotalVirtual,fmt_mem,sizeof(fmt_mem)) );
+        WRMSG( HHC90000, "D", msgbuf );
+
+        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize_rounded(pHostInfo->AvailVirtual,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
 
     return rc;

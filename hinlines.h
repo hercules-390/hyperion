@@ -16,7 +16,7 @@
 #if !defined(round_to_hostpagesize)
 static INLINE U64 round_to_hostpagesize(U64 n)
 {
-    register U64 factor = (U64)hostinfo.hostpagesz - 1;
+    register U64 factor = hostinfo.hostpagesz - 1;
     return ((n + factor) & ~factor);
 }
 #endif
@@ -215,7 +215,7 @@ _fmt_memsize( const U64 memsize, const u_int n )
              i < sizeof(suffix) && !(mem & 0x03FF);
              mem >>= 10, ++i);
 
-    MSGBUF( fmt_mem, "%"I64_FMT"u%c", mem, suffix[i]);
+    MSGBUF( fmt_mem, "%"PRIu64"%c", mem, suffix[i]);
 
     return (fmt_mem);
 }

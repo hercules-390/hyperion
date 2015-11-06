@@ -365,7 +365,7 @@ U64  syslevel;
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     {
         char buf[128];
-        MSGBUF(buf, "%"I64_FMT"X", syslevel );
+        MSGBUF(buf, "%"PRIX64, syslevel );
         set_symbol("SYSTYPE", systype);
         set_symbol("SYSNAME", sysname);
         set_symbol("SYSPLEX", sysplex);

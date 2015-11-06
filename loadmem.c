@@ -49,7 +49,7 @@ REGS *regs;
     {
         loadaddr = argv[2];
 
-        if (sscanf(loadaddr, "%"I64_FMT"x", &work64) !=1)
+        if (sscanf(loadaddr, "%"SCNx64, &work64) !=1)
         {
             WRMSG(HHC02205, "E", loadaddr, ": invalid address" );
             return -1;
@@ -78,7 +78,7 @@ REGS *regs;
     // "Loading file %s to location %s"
     {
         char buf1[32];
-        MSGBUF( buf1, "%"I64_FMT"X", (U64) aaddr );
+        MSGBUF( buf1, "%"PRIX64, (U64) aaddr );
         WRMSG(HHC02250, "I", fname, buf1 );
     }
 
@@ -204,7 +204,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     {
         loadaddr = argv[2];
 
-        if (sscanf(loadaddr, "%"I64_FMT"x", &work64) !=1)
+        if (sscanf(loadaddr, "%"SCNx64, &work64) !=1)
         {
             WRMSG(HHC02205, "E", loadaddr, ": invalid address" );
             return -1;

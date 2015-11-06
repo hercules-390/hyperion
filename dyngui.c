@@ -773,7 +773,7 @@ void  UpdateCPUStatus ()
 
             "%c%c%c%c%c%c%c%c "
 
-            "instcount=%" I64_FMT "u\n"
+            "instcount=%"PRIu64"\n"
 
             ,PTYPSTR(pTargetCPU_REGS->cpuad), pTargetCPU_REGS->cpuad
 
@@ -854,8 +854,8 @@ void  UpdateCPUStatus ()
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
 
-#define REG32FMT  "%8.8"I32_FMT"X"
-#define REG64FMT  "%16.16"I64_FMT"X"
+#define REG32FMT  "%8.8"PRIX32
+#define REG64FMT  "%16.16"PRIX64
 
 void  UpdateRegisters ()
 {

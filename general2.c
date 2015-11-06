@@ -991,7 +991,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     /* Shift out epoch */
     dreg = ETOD2TOD(ETOD);
 
-// /*debug*/logmsg("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
+// /*debug*/logmsg("Store TOD clock=%16.16"PRIX64"\n", dreg);
 
     /* Store TOD clock value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
@@ -1034,14 +1034,14 @@ ETOD    ETOD;                           /* Extended clock work area  */
     /* Retrieve the extended format TOD clock */
     etod_clock(regs, &ETOD, ETOD_extended);
 
-//  /*debug*/logmsg("Store TOD clock extended: +0=%16.16" I64_FMT "X\n",
+//  /*debug*/logmsg("Store TOD clock extended: +0=%16.16"PRIX64"\n",
 //  /*debug*/       dreg);
 
     /* Store the 8 bit TOD epoch, clock bits 0-51, and bits
        20-23 of the TOD uniqueness value at operand address */
     ARCH_DEP(vstore8) ( ETOD.high, effective_addr2, b2, regs );
 
-//  /*debug*/logmsg("Store TOD clock extended: +8=%16.16" I64_FMT "X\n",
+//  /*debug*/logmsg("Store TOD clock extended: +8=%16.16"PRIX64"\n",
 //  /*debug*/       dreg);
 
     /* Store second doubleword value at operand+8 */

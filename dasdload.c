@@ -3653,7 +3653,7 @@ static int      stmtno = 0;             /* Statement number          */
         }
 
         /* Indicate input file progess */
-        EXTGUIMSG( "IPOS=%" I64_FMT "d\n", (U64) ftell( cfp ));
+        EXTGUIMSG( "IPOS=%"PRId64"\n", (U64) ftell( cfp ));
 
         /* Check for DOS end of file character */
         if (stmt[0] == '\x1A')

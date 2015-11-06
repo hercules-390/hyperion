@@ -898,7 +898,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 #if defined(ENABLE_IPV6)
     if (pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec)
     {
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%" I64_FMT "u]",
+        snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr4,
                   pPTPBLK->szDriveIPAddr4,
@@ -911,7 +911,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     else if (pPTPBLK->fIPv4Spec)
     {
 #endif /* defined(ENABLE_IPV6) */
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%" I64_FMT "u]",
+        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr4,
                   pPTPBLK->szDriveIPAddr4,
@@ -922,7 +922,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     }
     else
     {
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%" I64_FMT "u]",
+        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pPTPBLK->szGuestIPAddr6,
                   pPTPBLK->szDriveIPAddr6,

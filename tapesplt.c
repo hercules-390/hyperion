@@ -177,7 +177,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 /* Print summary of current file */
                 if (blkcount)
-                    // "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+                    // "File No. %u: Blocks=%u, Bytes=%"PRId64", Block size min=%u, max=%u, avg=%u"
                     WRMSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount );
 
                 /* Reset counters for next file */

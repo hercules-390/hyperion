@@ -3281,7 +3281,7 @@ BYTE    f = ' ', c = '\0';
     }
 
     /* Parse main storage size operand */
-    rc = sscanf(argv[1], "%"I64_FMT"u%c%c", &mainsize, &f, &c);
+    rc = sscanf(argv[1], "%"SCNu64"%c%c", &mainsize, &f, &c);
 
     if ( rc < 1 || rc > 2 )
     {
@@ -3423,7 +3423,7 @@ BYTE    f = ' ', c = '\0';
 /*-------------------------------------------------------------------*/
 int xpndsize_cmd(int argc, char *argv[], char *cmdline)
 {
-RADR    xpndsize;
+U64     xpndsize;
 BYTE    f = ' ', c = '\0';
 int     rc;
 u_int   i;
@@ -3440,10 +3440,11 @@ u_int   locktype = 0;
     }
 
     /* Parse expanded storage size operand */
-    rc = sscanf(argv[1], "%"FRADR"u%c%c", &xpndsize, &f, &c);
+    rc = sscanf(argv[1], "%"SCNu64"%c%c", &xpndsize, &f, &c);
 
     if (rc > 2 )
     {
+        // "Invalid value %s specified for %s"
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
@@ -3451,7 +3452,8 @@ u_int   locktype = 0;
     /* Handle size suffix and suffix overflow */
     {
         register U64 shiftsize = xpndsize;
-
+        size_t sizeof_RADR = (ARCH_900 == sysblk.arch_mode) ? sizeof(U64)
+                                                            : sizeof(U32);
         if ( rc == 2 )
         {
             switch (toupper(f))
@@ -3488,11 +3490,19 @@ u_int   locktype = 0;
             }
         }
 
-        if ((xpndsize && !shiftsize) ||                                 /* Overflow specification           */
-            (sizeof(xpndsize) < 8 &&                                    /* 4G maximum for 32-bit addressing */
-             shiftsize > 0x0000000000001000ULL) ||                      /* ...                              */
-            shiftsize > 0x0000100000000000ULL)                          /* 16E maximum                      */
+        if (0
+            || (xpndsize && !shiftsize)               /* Overflow occurred */
+            || (1
+                && sizeof_RADR <= sizeof(U32)         /* 32-bit addressing */
+                && shiftsize > 0x0000000000001000ULL  /* 4G maximum        */
+                )
+            || (1
+                && sizeof_RADR >= sizeof(U64)         /* 32-bit addressing */
+                && shiftsize > 0x0000100000000000ULL  /* 16E maximum       */
+                )
+        )
         {
+            // "Invalid value %s specified for %s"
             WRMSG( HHC01451, "E", argv[1], argv[0]);
             return (-1);
         }
@@ -3505,8 +3515,7 @@ u_int   locktype = 0;
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
 #if 0   // Interim - Storage is not locked yet in config.c
-        if (strabbrev("LOCKED", check, 1) &&
-            xpndsize)
+        if (strabbrev("LOCKED", check, 1) && xpndsize)
         {
             lockreq = 1;
             locktype = 1;
@@ -3520,6 +3529,7 @@ u_int   locktype = 0;
         }
         else
         {
+            // "Invalid value %s specified for %s"
             WRMSG( HHC01451, "E", argv[i], argv[0] );
             return -1;
         }
@@ -3541,10 +3551,12 @@ u_int   locktype = 0;
     {
         if ( rc == HERRCPUONL )
         {
+            // "CPUs must be offline or stopped"
             WRMSG( HHC02389, "E" );
         }
         else
         {
+            // "Configure expanded storage error %d"
             WRMSG( HHC02387, "E", rc );
         }
     }
@@ -7113,7 +7125,7 @@ REGS *regs;
         else
             aaddr &= ~0xFFF;
     }
-    else if (sscanf(loadaddr, "%"I64_FMT"x%c", &work64, &c) !=1
+    else if (sscanf(loadaddr, "%"SCNx64"%c", &work64, &c) !=1
         || work64 >= (U64) sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -7142,7 +7154,7 @@ REGS *regs;
             return -1;
         }
     }
-    else if (sscanf(loadaddr, "%"I64_FMT"x%c", &work64, &c) !=1
+    else if (sscanf(loadaddr, "%"SCNx64"%c", &work64, &c) !=1
         || work64 >= (U64) sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -7175,8 +7187,8 @@ REGS *regs;
     {
         char buf1[32];
         char buf2[32];
-        MSGBUF( buf1, "%"I64_FMT"X", (U64) aaddr );
-        MSGBUF( buf2, "%"I64_FMT"X", (U64) aaddr2 );
+        MSGBUF( buf1, "%"PRIX64, (U64) aaddr );
+        MSGBUF( buf2, "%"PRIX64, (U64) aaddr2 );
         WRMSG(HHC02248, "I", buf1, buf2, fname );
     }
 
@@ -7422,7 +7434,7 @@ BYTE c;                                 /* Character work area       */
 
     // f- and f+ commands - mark frames unusable/usable
 
-    if ((cmd[0] == 'f') && sscanf(cmd+2, "%"I64_FMT"x%c", &work64, &c) == 1)
+    if ((cmd[0] == 'f') && sscanf(cmd+2, "%"SCNx64"%c", &work64, &c) == 1)
     {
         char buf[40];
         aaddr = (RADR) work64;
@@ -8416,7 +8428,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 if (kdd)
                 {
                     kss %= 86400;
-                    MSGBUF( kdays, "%"I64_FMT"u/", kdd);
+                    MSGBUF( kdays, "%"PRIu64"/", kdd);
                 }
                 else
                     kdays[0] = 0;
@@ -8434,7 +8446,7 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
                 if (udd)
                 {
                     uss %= 86400;
-                    MSGBUF( udays, "%"I64_FMT"u/", udd);
+                    MSGBUF( udays, "%"PRIu64"/", udd);
                 }
                 else
                     udays[0] = 0;

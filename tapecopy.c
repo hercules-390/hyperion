@@ -789,7 +789,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             {
                 ASSERT( file_bytes ); // (sanity check)
 
-                // "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+                // "File No. %u: Blocks=%u, Bytes=%"PRId64", Block size min=%u, max=%u, avg=%u"
                 WRMSG( HHC02721, "I", fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount );
             }
             else
@@ -864,14 +864,14 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     // "Successful completion"
     WRMSG( HHC02724, "I" );
 
-    // "Bytes read:    %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u"
+    // "Bytes read:    %"PRId64" (%3.1f MB), Blocks=%u, avg=%u"
     WRMSG( HHC02732, "I",
         bytes_read,
         (double) (bytes_read + HALF_MEGABYTE) / (double) ONE_MEGABYTE,
         totalblks,
         totalblks ? (int) bytes_read/totalblks : -1 );
 
-    // "Bytes written: %"I64_FMT"d (%3.1f MB)"
+    // "Bytes written: %"PRId64" (%3.1f MB)"
     WRMSG( HHC02733, "I",
         bytes_written,
         (double) (bytes_written + HALF_MEGABYTE) / (double) ONE_MEGABYTE );

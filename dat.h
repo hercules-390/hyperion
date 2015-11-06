@@ -1133,7 +1133,7 @@ U16     sx, px;                         /* Segment and page index,
     /* Extract the private space bit from the ASCE */
     regs->dat.pvtaddr = ((regs->dat.asd & (ASCE_P|ASCE_R)) != 0);
 
-//  logmsg("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
+//  logmsg("asce=%16.16"PRIX64"\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
     if (   ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
@@ -1221,7 +1221,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r1te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r1te:%16.16"PRIX64"=>%16.16"PRIX64"\n",rto,rte);
 
                 /* Region-first translation exception if the bit 58 of
                    the region-first table entry is set (region invalid) */
@@ -1275,7 +1275,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r2te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r2te:%16.16"PRIX64"=>%16.16"PRIX64"\n",rto,rte);
 
                 /* Region-second translation exception if the bit 58 of
                    the region-second table entry is set (region invalid) */
@@ -1329,7 +1329,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r3te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
+//              logmsg("r3te:%16.16"PRIX64"=>%16.16"PRIX64"\n",rto,rte);
 
                 /* Region-third translation exception if the bit 58 of
                    the region-third table entry is set (region invalid) */
@@ -1382,7 +1382,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch segment table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             ste = ARCH_DEP(fetch_doubleword_absolute) (sto, regs);
-//          logmsg("ste:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",sto,ste);
+//          logmsg("ste:%16.16"PRIX64"=>%16.16"PRIX64"\n",sto,ste);
 
             /* Segment translation exception if segment invalid */
             if (ste & ZSEGTAB_I)
@@ -1412,7 +1412,7 @@ U16     sx, px;                         /* Segment and page index,
                 if (unlikely(acctype & ACC_LPTEA))
                 {
                     regs->dat.raddr = sto | (regs->dat.protect ? 0x04 : 0);
-//                  logmsg("raddr:%16.16" I64_FMT "X cc=2\n",regs->dat.raddr);
+//                  logmsg("raddr:%16.16"PRIX64" cc=2\n",regs->dat.raddr);
                     regs->dat.xcode = 0;
                     cc = 2;
                     return cc;
@@ -1424,7 +1424,7 @@ U16     sx, px;                         /* Segment and page index,
                 /* Fake 4K PFRA for TLB purposes */
                 regs->dat.rpfra = ((ste & ZSEGTAB_SFAA) | (vaddr & ~ZSEGTAB_SFAA)) & PAGEFRAME_PAGEMASK;
 
-//              logmsg("raddr:%16.16" I64_FMT "X cc=0\n",regs->dat.raddr);
+//              logmsg("raddr:%16.16"PRIX64" cc=0\n",regs->dat.raddr);
 
                 /* [3.11.4.2] Place the translated address in the TLB */
                 if (!(acctype & ACC_NOTLB))
@@ -1477,7 +1477,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch the page table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             pte = ARCH_DEP(fetch_doubleword_absolute) (pto, regs);
-//          logmsg("pte:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",pto,pte);
+//          logmsg("pte:%16.16"PRIX64"=>%16.16"PRIX64"\n",pto,pte);
 
             /* Page translation exception if page invalid */
             if (pte & ZPGETAB_I)
@@ -1535,7 +1535,7 @@ address_excp:
 tran_spec_excp:
 #if defined(FEATURE_ESAME)
 //    logmsg("dat.c: translation specification exception...\n");
-//    logmsg("       pte = %16.16" I64_FMT "X, ste = %16.16" I64_FMT "X, rte=%16.16" I64_FMT "X\n",
+//    logmsg("       pte = %16.16"PRIX64", ste = %16.16"PRIX64", rte=%16.16"PRIX64"\n",
 //        pte, ste, rte);
 #else
 //    logmsg("dat.c: translation specification exception...\n");

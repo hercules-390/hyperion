@@ -2980,7 +2980,7 @@ OSA_GRP *grp;
     if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         strlcpy( active, "IDX ", sizeof( active ));
 
-    snprintf( buffer, buflen, "QDIO %s%s%s%sIO[%" I64_FMT "u]"
+    snprintf( buffer, buflen, "QDIO %s%s%s%sIO[%"PRIu64"]"
         , incomplete
         , status
         , active

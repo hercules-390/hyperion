@@ -135,7 +135,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
         {
             /* Print summary of current file */
-            // "File No. %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, max=%u, avg=%u"
+            // "File No. %u: Blocks=%u, Bytes=%"PRId64", Block size min=%u, max=%u, avg=%u"
             WRMSG( HHC02721, "I", fileno, blkcount, file_bytes,
                          minblksz, maxblksz,
                          (blkcount ? ((int)file_bytes/blkcount) : 0 ));
