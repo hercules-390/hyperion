@@ -111,18 +111,18 @@ static BYTE commadpt_immed_command[256]=
 /* PARSER TABLES                                                 */
 /*---------------------------------------------------------------*/
 static PARSER ptab[]={
-    {"lport","%s"},
-    {"lhost","%s"},
-    {"rport","%s"},
-    {"rhost","%s"},
-    {"dial","%s"},
-    {"rto","%s"},
-    {"pto","%s"},
-    {"eto","%s"},
-    {"switched","%s"},
-    {"lnctl","%s"},
-    {"debug","%s"},
-    {"emu3791","%s"},
+    {"lport",   PARSER_STR_TYPE},
+    {"lhost",   PARSER_STR_TYPE},
+    {"rport",   PARSER_STR_TYPE},
+    {"rhost",   PARSER_STR_TYPE},
+    {"dial",    PARSER_STR_TYPE},
+    {"rto",     PARSER_STR_TYPE},
+    {"pto",     PARSER_STR_TYPE},
+    {"eto",     PARSER_STR_TYPE},
+    {"switched",PARSER_STR_TYPE},
+    {"lnctl",   PARSER_STR_TYPE},
+    {"debug",   PARSER_STR_TYPE},
+    {"emu3791", PARSER_STR_TYPE},
     {NULL,NULL}
 };
 
@@ -1324,7 +1324,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     int errcnt;
     union {
         int num;
-        char text[80];
+        char text[MAX_PARSER_STRLEN+1];
     } res;
 
     /* For re-initialisation, close the existing file, if any */

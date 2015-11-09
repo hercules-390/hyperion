@@ -1250,10 +1250,10 @@ PARSER  ptab  [] =
     { "method",     "%d" },
     { "level",      "%d" },
     { "chunksize",  "%d" },
-    { "maxsize",    "%s" },
+    { "maxsize",    PARSER_STR_TYPE },
     { "maxsizeK",   "%d" },
     { "maxsizeM",   "%d" },
-    { "eotmargin",  "%s" },
+    { "eotmargin",  PARSER_STR_TYPE },
     { "strictsize", "%d" },
     { "readonly",   "%d" },
     { "ro",         NULL },
@@ -1332,10 +1332,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     char        msg[80];
     int         i;                      /* Loop control              */
     int         rc, optrc;              /* various rtns return codes */
-    union {                             /* Parser results            */
-        U32     num;                    /* Parser results            */
-        BYTE    str[ 80 ];              /* Parser results            */
-    } res;                              /* Parser results            */
+
+    union {                                 /* Parser results        */
+        U32  num;                           /* Parser results        */
+        BYTE str[ MAX_PARSER_STRLEN + 1 ];  /* Parser results        */
+    } res;                                  /* Parser results        */
 
 
     /* Release the previous OMA descriptor array if allocated */
