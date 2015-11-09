@@ -49,5 +49,5 @@ else
         ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out
 fi
 
-sed -n -e "/^HHC01603I \*Testcase/,/^HHC01603I \*Done/p" > $wfn.sout $wfn.out
-rexx $dir/redtest.rexx $wfn.sout
+# Read entire file to allow redtest to parse the features list
+rexx $dir/redtest.rexx $wfn.out
