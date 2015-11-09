@@ -45,9 +45,8 @@ In  either  case,  runtest  first  creates a composite set of test cases
 (allTests.tst  in  the  current  working  directory)  and  then  invokes
 Hercules  to run them using the configuration file tests.conf and the rc
 file  just  created.   This  will make the screen flicker while Hercules
-runs.   When  it  completes,  the console output (allTests.out) is pared
-down   by  a  sed  script  (to  allTests.sout)  and  then  inspected  by
-redtest.rexx.
+runs.   When  it  completes,  the console output (allTests.out) is  then
+inspected by redtest.rexx and the results are reported to the user.
 
 The runtest return code is the number of failed test cases.
 

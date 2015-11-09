@@ -342,4 +342,19 @@
 #define CTC_PTP        10               /* PTP link to TCP/IP stack  */
 #define CTC_CTCE       11               /* Enhanced CTC link via TCP */
 
+/*-------------------------------------------------------------------*/
+/* Minimum, maximum and default scripting timeout values             */
+/*-------------------------------------------------------------------*/
+
+#define MIN_PAUSE_TIMEOUT       0.001   /* Minimum pause seconds     */
+#define DEF_PAUSE_TIMEOUT         1.0   /* Default pause seconds     */
+#define MAX_PAUSE_TIMEOUT       999.0   /* Maximum pause seconds     */
+
+#define MIN_RUNTEST_TIMEOUT     0.001   /* Minimum runtest seconds   */
+#define DEF_RUNTEST_TIMEOUT      30.0   /* Default runtest seconds   */
+#define MAX_RUNTEST_TIMEOUT     300.0   /* Maximum runtest seconds   */
+
+#define MAX_RUNTEST_FACTOR  (((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) \
+                            / 1000000.0 /* (usecs) */                 \
+                            / MAX_RUNTEST_TIMEOUT)
 #endif // _HCONSTS_H

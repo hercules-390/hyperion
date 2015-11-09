@@ -717,8 +717,9 @@ int     dll_count;                      /* index into array          */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
+    opterr = 0; /* We'll print our own error messages thankyouverymuch */
     {
-#define  HERCULES_BASE_OPTS     "hf:r:db:v"
+#define  HERCULES_BASE_OPTS     "hf:r:db:vt::"
 #define  HERCULES_SYM_OPTS      ""
 #define  HERCULES_HDL_OPTS      ""
 
@@ -736,6 +737,7 @@ int     dll_count;                      /* index into array          */
 #if defined(HAVE_GETOPT_LONG)
     static struct option longopts[] =
     {
+        { "test",     optional_argument, NULL, 't' },
         { "help",     no_argument,       NULL, 'h' },
         { "config",   required_argument, NULL, 'f' },
         { "rcfile",   required_argument, NULL, 'r' },
@@ -759,6 +761,8 @@ int     dll_count;                      /* index into array          */
 #endif
     {
         switch (c) {
+        case 0:         /* getopt_long() set a variable; keep going */
+            break;
         case 'h':
             arg_error = 1;
             break;
@@ -830,8 +834,43 @@ int     dll_count;                      /* index into array          */
         case 'd':
             sysblk.daemon_mode = 1;
             break;
+
+        case 't':
+            sysblk.scrtest = 1;
+            sysblk.scrfactor = 1.0;
+
+            if (optarg)
+            {
+                double scrfactor;
+                double max_factor = MAX_RUNTEST_FACTOR;
+                /* Round down to nearest 10th of a second */
+                max_factor = floor( max_factor * 10.0 ) / 10.0;
+                //logmsg("*** max_factor = %3.1f\n", max_factor );
+
+                scrfactor = atof( optarg );
+
+                if (scrfactor >= 1.0 && scrfactor <= max_factor)
+                    sysblk.scrfactor = scrfactor;
+                else
+                {
+                    // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
+                    WRMSG( HHC00020, "S", optarg, max_factor );
+                    arg_error = 1;
+                }
+            }
+            break;
+
         default:
-            arg_error = 1;
+            {
+                char buf[16];
+                if (isprint( optopt ))
+                    MSGBUF( buf, "'-%c'", optopt );
+                else
+                    MSGBUF( buf, "(hex %02.2x)", optopt );
+                // "Invalid/unsupported option: %s"
+                WRMSG( HHC00023, "S", buf );
+                arg_error = 1;
+            }
 
         } /* end switch(c) */
     } /* end while */
@@ -841,8 +880,12 @@ int     dll_count;                      /* index into array          */
     if(!strcasecmp(cfgfile,"None"))
         cfgfile = NULL;
 
-    if (optind < argc)
+    while (optind < argc)
+    {
+        // "Unrecognized option: %s"
+        WRMSG( HHC00024, "S", argv[optind++] );
         arg_error = 1;
+    }
 
     /* Terminate if invalid arguments were detected */
     if (arg_error)
@@ -853,24 +896,37 @@ int     dll_count;                      /* index into array          */
 
         /* Show them all of our command-line arguments... */
 
-        WRMSG (HHC01414, "S", "");   // (blank line)
-        WRMSG (HHC01414, "S", "");   // (blank line)
+        // "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]]%s [> logfile]"
 
+        WRMSG (HHC01414, "S", "");   // (blank line)
 #if defined(OPTION_DYNAMIC_LOAD)
-        // "Usage: %s [-f config-filename] [-d] [-b logo-filename] [-s sym=val]%s [> logfile]"
         WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str),
-                             " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
+            " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
 #else
         WRMSG (HHC01407, "S", strtok_r(pgm,".", &strtok_str), "");
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-
-        WRMSG (HHC01414, "S", "");   // (blank line)
         WRMSG (HHC01414, "S", "");   // (blank line)
 
         fflush(stderr);
         fflush(stdout);
         usleep(100000);
+
+        do_shutdown();
+
+        fflush(stderr);
+        fflush(stdout);
+        usleep(100000);
+
         return(1);
+    }
+
+    if (sysblk.scrtest)
+    {
+        // "Hercules is running in test mode."
+        WRMSG (HHC00019, "W" );
+        if (sysblk.scrfactor != 1.0)
+            // "Test timeout factor = %3.1f"
+            WRMSG( HHC00021, "I", sysblk.scrfactor );
     }
 
     /* Set default TCP keepalive values */

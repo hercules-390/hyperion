@@ -19,7 +19,7 @@
 # 1     Path  from the current directory to the tests source directory.
 #       Specify - (minus, hyphen) for the default ../hyperion/tests
 
-# 2     File  name  if  test  case  omitting  the .tst extension or the
+# 2     File  name  of  test  case  omitting  the .tst extension or the
 #       default  '*'  for  all .tst files.  Quote the asterisk to avoid
 #       premature file name expansion.  But see #4.
 
@@ -41,9 +41,10 @@
 # them run twice!).
 
 wfn=allTests
+
 dir=${1:-../hyperion/tests}
 if [ "$dir" == "-" ] ; then
-        dir=../hyperion/tests
+       dir=../hyperion/tests
 fi
 
 fns=${2:-*}

@@ -27,8 +27,20 @@
 //  -------------- (template for new commands) ----------------
 //  -------------- (template for new commands) ----------------
 
+#define $locate_cmd_desc        "Display sysblk, regs or hostinfo"
 
-#define $test_cmd_desc           "Your custom command (*DANGEROUS!*)"
+#define $runtest_cmd_desc       "Start the test if test mode is active"
+#define $runtest_cmd_help       \
+                                \
+  "Issue 'restart' command and then wait for all processors to load a\n"        \
+  "disabled wait PSW. This is a scripting only command and is only valid\n"     \
+  "when test mode is active. Test mode can only be activated by specifying\n"   \
+  "the '-t' command line switch when Hercules is started. Runtest supports\n"   \
+  "a single optional argument being the expected test duration in seconds.\n"   \
+  "If not specified then a default value is used. If the test runs longer\n"    \
+  "than the expected time an error message is issued and the test aborts.\n"
+
+#define $test_cmd_desc          "Your custom command (*DANGEROUS!*)"
 #define $test_cmd_help          \
                                 \
   "Performs whatever test function *YOU* specifically coded it to do.\n\n"      \
@@ -59,7 +71,6 @@
     "is the default for Debug builds but not normal production builds).\n"      \
     "Note: it is possible to disable the $zapcmd itself so BE CAREFUL!\n"
 
-#define $locate_cmd_desc        "Display sysblk, regs or hostinfo"
 #define bangmsg_cmd_desc        "SCP priority message"
 #define bangmsg_cmd_help        \
                                 \
@@ -1505,9 +1516,10 @@
 //MMAND( "x{+/-}zz",  "flag on/off cmd", NULL,        SYSCMDNOPER, NULL )  // 'OnOffCommand'   (special handling)
 
 //       "1...5...9",               function                type flags          description             long help
+CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  $locate_cmd_desc,       NULL                )
+COMMAND( "$runtest",                $runtest_cmd,           SYSPROGDEVELDEBUG,  $runtest_cmd_desc,      $runtest_cmd_help   )
 COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
 CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  $zapcmd_cmd_desc,       $zapcmd_cmd_help    )
-CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  $locate_cmd_desc,       NULL                )
 
 COMMAND( "cache",                   cache_cmd,              SYSCONFIG,          cache_cmd_desc,         cache_cmd_help      )
 COMMAND( "cckd",                    cckd_cmd,               SYSCONFIG,          cckd_cmd_desc,          cckd_cmd_help       )

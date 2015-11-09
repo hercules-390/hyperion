@@ -358,6 +358,7 @@ extern int g_maxcpu;  /* Maximum number of CPUs */
 HCPU_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
 int start_cmd_cpu (int argc, char *argv[], char *cmdline);
 int stop_cmd_cpu (int argc, char *argv[], char *cmdline);
+int restart_cmd(int argc, char *argv[], char *cmdline);
 
 /* Functions in module hscemode.c (so PTT debugging patches can access them) */
 HCEM_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);

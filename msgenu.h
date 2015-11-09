@@ -260,10 +260,16 @@ Examples:
        "HHC00017I Action:\n" \
        "HHC00017I     %s"
 #define HHC00018 "Hercules is %srunning in elevated mode"
+#define HHC00019 "Hercules IS running in test mode"
 
-// reserve 20-39 for file related
+// reserve 20-39 for option related
+#define HHC00020 "Test timeout factor %s outside of valid range 1.0 to %3.1f"
+#define HHC00021 "Test timeout factor = %3.1f"
+//efine HHC00022 (available)
+#define HHC00023 "Invalid/unsupported option: %s"
+#define HHC00024 "Unrecognized option: %s"
 
-// reserve 43-58 for option related
+// range 00040 - 00068 available
 
 #define HHC00069 "There %s %d CPU%s still active; confirmation required"
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
@@ -292,6 +298,7 @@ Examples:
 #define HHC00087 "The defined Hercules Automatic Operator rule(s) are:"
 #define HHC00088 "Index %02d: target %s -> command %s"
 #define HHC00089 "The are no HAO rules defined"
+
 // reserve 90-99 for hao.c
 
 #define HHC00100 "Thread id "TIDPAT", prio %2d, name %s started"
@@ -959,7 +966,7 @@ Examples:
 #define HHC01404 "Cannot create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val]%s [> logfile]"
+#define HHC01407 "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
@@ -1248,8 +1255,9 @@ Examples:
 #define HHC02106 "Logger: log switched off"
 
 #define HHC02197 "Symbol name %s is reserved"
-/* 2198 moved to config.c                                            */
+//         02198 (moved to config.c)
 #define HHC02199 "Symbol %-12s %s"
+
 // reserve 02200 - 02369 for command processing; script.c
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
@@ -1279,7 +1287,7 @@ Examples:
 #define HHC02225 "HTTP server already active"
 #define HHC02226 "Held messages cleared"
 #define HHC02227 "Shell commands are disabled"
-#define HHC02228 "Key %s pressed"
+#define HHC02228 "%s key pressed"
 #define HHC02229 "Instruction %s %s %s"
 #define HHC02230 "%1d:%04X attention request raised"
 #define HHC02231 "%1d:%04X busy or interrupt pending"
@@ -1312,7 +1320,7 @@ Examples:
 #define HHC02258 "Only 1 %s may be invoked from the panel at any time"
 #define HHC02259 "Script %d aborted: %s"
 #define HHC02260 "Script %d: begin processing file %s"
-#define HHC02261 "Script %d: file statement only; %s ignored"
+#define HHC02261 "Script %d: syntax error; statement ignored: %s"
 #define HHC02262 "Script %d: processing paused for %d milliseconds..."
 #define HHC02263 "Script %d: processing resumed..."
 #define HHC02264 "Script %d: file %s processing ended"
@@ -1381,9 +1389,18 @@ Examples:
 #define HHC02327 "%c:"F_RADR"  Storage address is not valid"
 #define HHC02328 "%c:"F_RADR"  Addressing exception"
 #define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX  %s"
-#define HHC02330 "Config file[%d] %s: wait invalid for config files; pausing instead"
-#define HHC02331 "Script %d: Waiting %d milliseconds for CPU(s) to enter disabled wait..."
-#define HHC02332 "Script %d: Wait timeout"
+#define HHC02330 "Script %d: test: restart failed"
+#define HHC02331 "Script %d: test: aborted"
+#define HHC02332 "Script %d: test: timeout"
+#define HHC02333 "Script %d: test: running..."
+#define HHC02334 "Script %d: test: test ended"
+#define HHC02335 "Script %d: test: invalid timeout; set to def: %s"
+#define HHC02336 "Script %d: test: test starting"
+#define HHC02337 "runtest is only valid as a scripting command"
+#define HHC02338 "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
+#define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
+
+// range 02340 - 02369 available
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

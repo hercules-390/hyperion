@@ -1,4 +1,3 @@
-msglvl -debug
 *
 * --------------------------------------------------------------------
 *  S/370 SSKE test (Storage-key 4K-byte-block Facility NOT installed)
@@ -63,8 +62,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page6).1
@@ -101,8 +99,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page6).1
@@ -139,9 +136,7 @@ r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
 *Program 0005
-restart
-pause 0.1
-*
+runtest
 *Done
 *
 * -----------------------------------------------------------------
@@ -174,8 +169,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -238,8 +232,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -302,8 +295,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -365,8 +357,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -428,8 +419,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -491,8 +481,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(page0).1
@@ -554,8 +543,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(nextlast).1
@@ -597,8 +585,7 @@ r $(anextlast)=$(nextlast)
 r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
-restart               # ---------- BEGIN TEST -----------
-pause 0.1
+runtest               # ---------- BEGIN TEST -----------
 *
 *Compare
 abs $(nextlast).1

@@ -44,9 +44,31 @@
  #undef   _GEN_ARCH
 #endif
 
+/*-------------------------------------------------------------------*/
+/*                Script processing control                          */
+/*-------------------------------------------------------------------*/
+struct SCRCTL {                         /* Script control structure  */
+    LIST_ENTRY link;                    /* Just a link in the chain  */
+    TID     scr_tid;                    /* Script thread id. If zero
+                                           then entry is not active. */
+    int     scr_id;                     /* Script identification no. */
+    char*   scr_name;                   /* Name of script being run  */
+    char*   scr_cmdline;                /* Original command-line     */
+    int     scr_isrcfile;               /* Script is startup ".RC"   */
+    int     scr_recursion;              /* Current recursion level   */
+    int     scr_flags;                  /* Script processing flags   */
+    #define SCR_CANCEL     0x80         /* Cancel script requested   */
+    #define SCR_ABORT      0x40         /* Script abort requested    */
+    #define SCR_CANCELED   0x20         /* Script has been canceled  */
+    #define SCR_ABORTED    0x10         /* Script has been aborted   */
+};
+typedef struct SCRCTL SCRCTL;           /* typedef is easier to use  */
+static LIST_ENTRY scrlist = {0,0};      /* Script list anchor entry  */
+static int scrid = 0;                   /* Script identification no. */
+#define SCRTHREADNAME "Script Thread"   /* Name of processing thread */
+
 /* Forward declarations:                                             */
-struct SCRCTL;
-static int do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p);
+static int do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -205,7 +227,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-        /* Special handling for 'pause' and 'wait' statements */
+        /* Special handling for 'pause' and other statements */
         if (do_special(fname, inc_stmtnum, NULL, buf))
             continue;
 
@@ -511,32 +533,6 @@ rexx_done:
 #endif // defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
 } /* end function process_config */
-
-
-/*-------------------------------------------------------------------*/
-/* Script processing control                                         */
-/*-------------------------------------------------------------------*/
-struct SCRCTL {                         /* Script control structure  */
-    LIST_ENTRY link;                    /* Just a link in the chain  */
-    TID     scr_tid;                    /* Script thread id. If zero
-                                           then entry is not active. */
-    int     scr_id;                     /* Script identification no. */
-    char*   scr_name;                   /* Name of script being run  */
-    char*   scr_cmdline;                /* Original command-line     */
-    int     scr_isrcfile;               /* Script is startup ".RC"   */
-    int     scr_recursion;              /* Current recursion level   */
-    int     scr_flags;                  /* Script processing flags   */
-    #define SCR_CANCEL     0x80         /* Cancel script requested   */
-    #define SCR_ABORT      0x40         /* Script abort requested    */
-    #define SCR_CANCELED   0x20         /* Script has been canceled  */
-    #define SCR_ABORTED    0x10         /* Script has been aborted   */
-};
-typedef struct SCRCTL SCRCTL;           /* typedef is easier to use  */
-static LIST_ENTRY scrlist = {0,0};      /* Script list anchor entry  */
-static int scrid = 0;                   /* Script identification no. */
-#define SCRTHREADNAME "Script Thread"   /* Name of processing thread */
-
-//#define LOGSCRTHREADBEGEND    // TODO: make a decision about this
 
 /*-------------------------------------------------------------------*/
 /* Create new SCRCTL entry - lock must *NOT* be held      (internal) */
@@ -922,7 +918,7 @@ int     rc;                             /* (work)                    */
         for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
-        /* Special handling for 'pause' and 'wait' statements */
+        /* Special handling for 'pause' and other statements */
         if (do_special(NULL, NULL, pCtl, p))
             continue;
 
@@ -965,6 +961,8 @@ script_end:
     return 0;
 }
 /* end process_script_file */
+
+//#define LOGSCRTHREADBEGEND    // TODO: make a decision about this
 
 /*-------------------------------------------------------------------*/
 /* Script processing thread - run script in background    (internal) */
@@ -1082,72 +1080,265 @@ int script_cmd( int argc, char* argv[], char* cmdline )
 /* end script_cmd */
 
 /*-------------------------------------------------------------------*/
-/* returns:  0 = not pause or wait stmt,  1 = pause/wait completed   */
+/* $runtest command - invalid when entered as a Hercules command     */
 /*-------------------------------------------------------------------*/
-static int
-do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p)
+int $runtest_cmd(int argc,char *argv[], char *cmdline)
+{
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
+    // "runtest is only valid as a scripting command"
+    WRMSG( HHC02337, "E" );
+    return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/*                     RunTest ABORT                                 */
+/*-------------------------------------------------------------------*/
+static int test_abort( SCRCTL *pCtl )
+{
+    // TODO: decide how test abort should be handled: abort() the
+    // process, issue severity 'S' message and exit Hercules, or
+    // issue 'E' severity message and continue to let redtest.rexx
+    // test results parser script detect/report the failure, CRASH,
+    // etc.
+
+    // "Script %d: test: aborted"
+    WRMSG( HHC02331, "E", pCtl->scr_id );
+
+#if 0
+    CRASH();
+#elif 0
+    abort();
+#endif
+
+    return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/*                       is_test_done                                */
+/*-------------------------------------------------------------------*/
+static int is_test_done()
+{
+    /* If all CPUs have loaded a disabled wait PSWs then we are done */
+    if (sysblk.scrtest > sysblk.cpus)
+        return TRUE;
+
+    /* Or ... if all CPUs are/have now stopped then we are also done */
+    if (are_all_cpus_stopped())
+        return TRUE;
+
+    /* Otherwise we're not */
+    return FALSE;
+}
+
+/*-------------------------------------------------------------------*/
+/* runtest script command - begin test and wait for completion       */
+/*-------------------------------------------------------------------*/
+int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 {
     struct timeval beg, now, dur;   /* To calculate remaining time   */
-    double secs;                    /* Seconds to pause or wait      */
+    double secs;                    /* Optional timeout in seconds   */
+    U32 usecs;                      /* Same thing in microseconds    */
+    U32 sleep_usecs;                /* Remaining microseconds        */
+    U32 elapsed_usecs;              /* To calculate remaining time   */
+    int rc;                         /* Return code from timed wait   */
+
+    UNREFERENCED( cmdline );
+
+    ASSERT( sysblk.scrtest );       /* How else did we get called?   */
+
+    if (*args && *args != '#')
+    {
+        /* Parse the optional timeout value */
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+        {
+            char *p2 = resolve_symbol_string( args );
+            if (p2)
+            {
+                secs = atof( p2 );
+                free( p2 );
+            }
+            else
+                secs = atof( args );
+        }
+#else
+        secs = atof( args );
+#endif
+    }
+    else
+        secs = DEF_RUNTEST_TIMEOUT;
+
+    /* Validate optional timeout value */
+    if (secs < MIN_RUNTEST_TIMEOUT || secs > MAX_RUNTEST_TIMEOUT)
+    {
+        // "Script %d: test: invalid timeout; set to def: %s"
+        WRMSG( HHC02335, "W", pCtl->scr_id, args );
+        secs = DEF_RUNTEST_TIMEOUT;
+    }
+
+    /* Apply adjustment factor */
+    if (sysblk.scrfactor)
+        secs *= sysblk.scrfactor;
+
+    /* Calculate maximum duration */
+    usecs = (U32) (secs * 1000000.0); 
+
+    if (MLVL( VERBOSE ))
+    {
+        // "Script %d: test: test starting"
+        WRMSG( HHC02336, "I", pCtl->scr_id );
+         // "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
+        WRMSG( HHC02339, "I", pCtl->scr_id, usecs / 1000000,
+                                            usecs % 1000000 );
+    }
+
+    /* Press the restart button to start the test. NOTE: the
+       restart command itself does not require any arguments. */
+
+    sysblk.scrtest = 1; // (reset)
+    rc = restart_cmd( 0, NULL, NULL );
+
+    if (rc)
+    {
+        // "Script %d: test: restart failed"
+        WRMSG( HHC02330, "E", pCtl->scr_id );
+        return test_abort( pCtl );
+    }
+
+    if (MLVL( VERBOSE ))
+        // "Script %d: test: running..."
+        WRMSG( HHC02333, "I", pCtl->scr_id );
+
+    obtain_lock( &sysblk.scrlock );
+    gettimeofday( &beg, NULL );
+    for (;;)
+    {
+        /* Check for cancelled script */
+        if (pCtl && script_abort( pCtl ))
+        {
+            release_lock( &sysblk.scrlock );
+            return -1;
+        }
+
+        /* Has the test finished yet? */
+        if (is_test_done())
+        {
+            rc = 0;
+            break;
+        }
+
+        /* Calculate how long to continue waiting  */
+        gettimeofday( &now, NULL );
+        timeval_subtract( &beg, &now, &dur );
+        elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;
+
+        /* Is there any time remaining on the clock? */
+        if (elapsed_usecs >= usecs)
+        {
+            rc = ETIMEDOUT;
+            break;
+        }
+
+        /* Sleep until we're woken or we run out of time */
+        sleep_usecs = (usecs - elapsed_usecs);
+        timed_wait_condition_relative_usecs(
+            &sysblk.scrcond, &sysblk.scrlock, sleep_usecs, NULL );
+    }
+    gettimeofday( &now, NULL );
+    timeval_subtract( &beg, &now, &dur );
+    elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;
+    release_lock( &sysblk.scrlock );
+
+    if (ETIMEDOUT == rc)
+    {
+        // HHC02332 "Script %d: test: timeout"
+        WRMSG( HHC02332, "E", pCtl->scr_id );
+        return test_abort( pCtl );
+    }
+
+    if (MLVL( VERBOSE ))
+    {
+        // "Script %d: test: test ended"
+        WRMSG( HHC02334, "I", pCtl->scr_id );
+        // "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
+        WRMSG( HHC02338, "I", pCtl->scr_id, elapsed_usecs / 1000000,
+                                            elapsed_usecs % 1000000 );
+    }
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* returns:  TRUE == stmt processed,   FALSE == stmt NOT processed   */
+/*-------------------------------------------------------------------*/
+static int
+do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
+{
+    struct timeval beg, now, dur;   /* To calculate remaining time   */
+    double secs;                    /* Seconds to pause processing   */
     U32 msecs;                      /* Same thing in milliseconds    */
     U32 usecs;                      /* Same thing in microseconds    */
     U32 elapsed_usecs;              /* To calculate remaining time   */
-    int iswait;                     /* 1 == wait, 0 == pause         */
-    int rc;                         /* Return code from timed wait   */
+    char* p2 = p;                   /* Work ptr for stmt parsing     */
 
-    /* Determine if pause statement or wait statement or neither  */
-    if (!strncasecmp( p, "pause ", 6 ))
+    /* Determine if pause statement, special statement, or neither.  */
+    if (strncasecmp( p2, "pause ", 6 ) == 0)
     {
-        p += 6;
-        iswait = 0;
-    }
-    else if (!strncasecmp( p, "wait ", 5 ))
-    {
-        p += 5;
-
-        if (fname)
-        {
-            // "Config file[%d] %s: Wait invalid for config files; pausing instead"
-            WRMSG( HHC02330, "W", *inc_stmtnum, fname );
-            iswait = 0;
-        }
-        else
-            iswait = 1;
-    }
-    else if (!strncasecmp( p, "*TestCase ", 10 ))
-    {
-        sysblk.scrtest = 1;
-        return 0;   /* Must be processed normally too */
+        p2 += 6;
     }
     else
-        return 0;   /* Neither pause nor wait nor TestCase */
-
-    /* Determine maximum pause or wait duration in seconds */
-#if defined( ENABLE_BUILTIN_SYMBOLS )
+    /* The runtest command is only valid in scripts not config files */
+    if (1
+        && pCtl
+        && sysblk.scrtest
+        && strncasecmp( p2, "runtest", 7 ) == 0
+        && (*(p2+7) == ' ' || *(p2+7) == '\0')
+    )
     {
-        char *p2 = resolve_symbol_string( p );
-        if (p2)
+        p2 += 7;
+        /* Skip past any blanks to the first argument, if any */
+        if (*p2)
+            while (*p2 == ' ')
+                ++p2;
+        runtest( pCtl, p, p2 );
+        return TRUE;
+    }
+    else
+        return FALSE;
+
+    /* Determine maximum pause duration in seconds */
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    if (pCtl) /* only if script stmt; cfg file already did this */
+    {
+        char *p3 = resolve_symbol_string( p2 );
+        if (p3)
         {
-            secs = atof( p2 );
-            free( p2 );
+            secs = atof( p3 );
+            free( p3 );
         }
         else
-            secs = atof( p );
+            secs = atof( p2 );
     }
-#else
-    secs = atof( p );
+    else
 #endif
+    secs = atof( p2 );
 
-    if (secs < 0.0 || secs > 999.0)
+    if (secs < MIN_PAUSE_TIMEOUT || secs > MAX_PAUSE_TIMEOUT)
     {
         if (fname)
             // "Config file[%d] %s: error processing statement: %s"
-            WRMSG( HHC01441, "W", *inc_stmtnum, fname, "syntax error; statement ignored" );
+            WRMSG( HHC01441, "E", *inc_stmtnum, fname, "syntax error; statement ignored" );
         else
-            // "Script %d: file statement only; %s ignored"
-            WRMSG( HHC02261, "W", pCtl->scr_id, p );
-        return 1;   /* (go on to next statement)   */
+            // "Script %d: syntax error; statement ignored: %s"
+            WRMSG( HHC02261, "E", pCtl->scr_id, p );
+        return TRUE;
     }
+
+    /* Apply adjustment factor */
+    if (sysblk.scrfactor)
+        secs *= sysblk.scrfactor;
 
     /* Convert floating point seconds to other subsecond work values */
     msecs = (U32) (secs * 1000.0); 
@@ -1155,71 +1346,43 @@ do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p)
 
     if (MLVL( VERBOSE ))
     {
-        if (iswait)
-        {
-            // "Script %d: Waiting %d milliseconds for CPU(s) to enter disabled wait..."
-            WRMSG( HHC02331, "I", pCtl->scr_id, msecs );
-        }
-        else if (fname)
-        {
+        if (fname)
             // "Config file[%d] %s: processing paused for %d milliseconds..."
             WRMSG( HHC02318, "I", *inc_stmtnum, fname, msecs );
-        }
         else
-        {
             // "Script %d: processing paused for %d milliseconds..."
             WRMSG( HHC02262, "I", pCtl->scr_id, msecs );
-        }
     }
 
-    obtain_lock( &sysblk.scrlock );
-    ASSERT((!iswait && !sysblk.scrtest) || (iswait && sysblk.scrtest));
+    /* Initialize pause start time */
     gettimeofday( &beg, NULL );
+
+    obtain_lock( &sysblk.scrlock );
     for (;;)
     {
         /* Check for cancelled script */
         if (pCtl && script_abort( pCtl ))
         {
-            sysblk.scrtest = 0;
             release_lock( &sysblk.scrlock );
-            return 1;
+            return TRUE;
         }
 
-        /* Have all CPUs entered disabled wait yet? */
-        if (iswait && sysblk.scrtest > sysblk.cpus)
-        {
-            rc = 0;
-            break;
-        }
-
-        /* Not all CPUs are in a disabled wait yet */
-        /* Calculate how long to continue waiting  */
+        /* Calculate how long to continue pausing  */
         gettimeofday( &now, NULL );
         timeval_subtract( &beg, &now, &dur );
         elapsed_usecs = (dur.tv_sec * 1000000) + dur.tv_usec;
 
         /* Is there any time remaining on the clock? */
         if (elapsed_usecs >= (msecs * 1000))
-        {
-            rc = ETIMEDOUT;
             break;
-        }
 
-        /* Wait for (another) CPU to go into disabled wait */
+        /* Sleep until we're woken or we run out of time */
         usecs = ((msecs * 1000) - elapsed_usecs);
         timed_wait_condition_relative_usecs(
             &sysblk.scrcond, &sysblk.scrlock, usecs, NULL );
     }
-    sysblk.scrtest = 0;
     release_lock( &sysblk.scrlock );
 
-    if (iswait && ETIMEDOUT == rc)
-    {
-        // HHC02332 "Script %d: Wait timeout"
-        WRMSG( HHC02332, "W", pCtl->scr_id );
-    }
-
-    /* Pause or wait completed */
     if (MLVL( VERBOSE ))
     {
         if (fname)
@@ -1230,7 +1393,7 @@ do_special(char *fname, int *inc_stmtnum, struct SCRCTL *pCtl, char *p)
             WRMSG( HHC02263, "I", pCtl->scr_id );
     }
 
-    return 1;  /* pause or wait complete */
+    return TRUE;
 }
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -197,6 +197,7 @@ To start Hercules enter this command at the host's command prompt:
               [ -s <em>symbol=value</em> ] ...   |  [ --defsym=<em>symbol=value</em> ] ...
               [ -v ]                    |  [ --verbose ]
               [ -h ]                    |  [ --help ]
+              [ -t[factor]]             |  [ --test[=factor]]
               [ &gt; <em>logfile</em> ]
 </pre></code>
 </blockquote>
@@ -255,6 +256,30 @@ where:
         <dt><code><em>-h</em></code><p><dd>
 
             displays help information regarding the syntax of command-line arguments.
+        <p>
+        <dt><code><em>-t[factor]</em></code><p><dd>
+
+            starts Hercules in test mode, activating special .rc file script
+            commands used only by QA test scripts. Normal Hercules use should
+            never specify this switch.
+            <p>
+            <code>factor</code> is an optional test timeout factor within the
+            range 1.0 to 14.3. The test timeout factor is used to adjust each
+            test script's specified timeout value to compensate for the speed
+            of the system on which they are running.
+            <p>
+            Use a factor greater than 1.0 on slower systems to slightly increase
+            timeout values giving each test more time to complete.
+            <p>
+            Please note that due to manner in which command line arguments are
+            parsed this option must be specified as one argument. Thus "-t2.0"
+            is correct whereas "-t &nbsp;2.0" is not. Oftentimes it is easier
+            to use the long <code>--test=<i>factor</i></code> syntax instead.
+            <p>
+            Test timeout values (specified as optional arguments on the special
+            runtest script command) are a safety feature designed to prevent
+            runaway tests from never ending. Normally tests end automatically
+            the very moment they are done.
         <p>
         <dt><code><em>logfile</em></code><p><dd>
 
@@ -891,9 +916,9 @@ In addition to being able to execute any valid panel command (including the
 'sh' shell command) via the run-commands file, an additional
 '<tt><b>pause <i>nnn</i></b></tt>' command is supported in order to introduce
 a brief delay before reading and processing the next line in the file. The
-value <tt><i>nnn</i></tt> can be any number from 1 to 999 and specifies the
-number of seconds to delay before reading the next line. Creative use of the
-run-commands file can completely automate Hercules startup.
+value <tt><i>nnn</i></tt> can be any number from 0.001 to 999.0 and specifies
+the number of seconds to delay before reading the next line. Creative use of
+the run-commands file can completely automate Hercules startup.
 
 <br /><br />
 <hr width="50%">

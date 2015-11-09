@@ -23,6 +23,10 @@ nest=0                                /* If/then/else nesting        */
 do while lines(in) > 0
    lineno = lineno + 1
    l = linein(in)
+   tod = left(l,8)
+   parse var tod hh ':' mm ':' ss .
+   If datatype(hh,'N') & datatype(mm,'N') & datatype(ss,'N')
+      Then parse var l . l
    parse var l msg verb rest
    If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
       Then lasterror = l
@@ -72,7 +76,7 @@ do while lines(in) > 0
          Then
             Do
                catast = catast + 1
-               call test 0, 'Test case timed out in wait.',,
+               call test 0, "Test case timed out in 'runtest'.",,
                   'This is likely an error in Hercules.  Please report'
             end
       otherwise
@@ -310,4 +314,6 @@ say 'Novalue in' fn ft fm '-- variable' condition('D')
 say right(sigl, 6) '>>>' sourceline(sigl)
 say '  This is often caused by missing or misspelled *Testcase'
 say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
+say '  This can also be caused by a +debug msglevel. Try inserting a'
+say '  msglvl -debug command just before your *Testcase statement.'
 signal value lets_get_a_traceback

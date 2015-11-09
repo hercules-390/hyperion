@@ -83,7 +83,6 @@
                 bfr = p;                                            \
             }                                                       \
         }                                                           \
-        ASSERT(bfr);                                                \
     }                                                               \
     while (0)
 
@@ -134,7 +133,6 @@
                 bfr = p;                                            \
             }                                                       \
         }                                                           \
-        ASSERT(bfr);                                                \
     }                                                               \
     while (0)
 
@@ -438,6 +436,37 @@ DLL_EXPORT void fwritemsg( FILE* f, const char* filename, int line, const char* 
 }
 
 /*-------------------------------------------------------------------*/
+/*            internal flog_write helper function                    */
+/*-------------------------------------------------------------------*/
+static void _flog_write_pipe( FILE* f, char* msg )
+{
+    /* Send message through logger facility pipe to panel.c,
+       or display it directly to the terminal via fprintf
+       if this is a utility message or we're shutting down
+       or we're otherwise unable to send it through the pipe.
+    */
+    int rc = 0;
+    if (0
+        || sysblk.shutdown
+        || stdout != f
+        || !logger_syslogfd[ LOG_WRITE ]
+        || (rc = write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ))) < 0
+    )
+    {
+        if (rc < 0)
+        {
+            int  errnum = HSO_errno;
+            char errmsg[ 128 ];
+            MSGBUF( errmsg, "%s", strerror( errnum ));
+            fprintf( f, "*** %s: write_pipe() failed; errno=%d: %s",
+                __FUNCTION__, errnum, errmsg );
+        }
+
+        fprintf( f, "%s", msg );
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                     log_write functions                           */
 /*-------------------------------------------------------------------*/
 /* The "log_write" function is the function responsible for either   */
@@ -468,15 +497,7 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
 
     if (panel == 1)     /* Display message only; NEVER capture */
     {
-        /* Send message through logger facility pipe to panel.c,
-           or display it directly to the terminal via fprintf
-           if this is a utility message or we're shutting down.
-        */
-        if (!sysblk.shutdown && stdout == f && logger_syslogfd[ LOG_WRITE ])
-            VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
-        else
-            fprintf( f, "%s", msg );
-
+        _flog_write_pipe( f, msg );
         return;   /* panel=1: NEVER capture; return immediately */
     }
 
@@ -489,12 +510,7 @@ DLL_EXPORT void flog_write( FILE* f, int panel, char* msg )
 
     if (slot < 0 || panel > 0) /* Capture only or display & capture */
     {
-        /* (same as above but allow message to be captured as well) */
-        if (!sysblk.shutdown && stdout == f && logger_syslogfd[ LOG_WRITE ])
-            VERIFY(0 <= write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg )));
-        else
-            fprintf( f, "%s", msg );
-
+        _flog_write_pipe( f, msg );
         if (slot < 0)
             return;
     }

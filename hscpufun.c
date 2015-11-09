@@ -559,18 +559,20 @@ int     rc = HNOERROR;
 /*-------------------------------------------------------------------*/
 int restart_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
 
     /* Check that target processor type allows IPL */
     if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
      || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
     {
+        // "Processor %s%02X: not eligible for ipl nor restart"
         WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return -1;
     }
 
+    // "%s key pressed"
     WRMSG(HHC02228, "I", "restart");
 
     /* Obtain the interrupt lock */
@@ -579,8 +581,9 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         RELEASE_INTLOCK(NULL);
+        // "Processor %s%02X: processor is not %s"
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
+        return +1;
     }
 
     /* Indicate that a restart interrupt is pending */
@@ -615,6 +618,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 
     ON_IC_INTKEY;
 
+    // "%s key pressed"
     WRMSG(HHC02228, "I", "interrupt");
 
     /* Signal waiting CPUs that an interrupt is pending */

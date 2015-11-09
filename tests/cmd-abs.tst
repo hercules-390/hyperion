@@ -1,6 +1,4 @@
 *
-msglvl -debug
-*
 #--------------
 defsym cmd abs
 #--------------
